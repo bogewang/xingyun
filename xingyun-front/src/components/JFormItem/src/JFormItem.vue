@@ -1,0 +1,231 @@
+<template>
+  <transition enter-active-class="animated fadeIn">
+    <div v-show="visible && itemShow" :class="'j-form-item'" :style="{ width: itemWidth }">
+      <div
+        v-if="!hiddenLabel && !(autoHiddenLabel && !$slots.default)"
+        :class="_bordered ? 'j-form-item-label-border' : ''"
+        class="j-form-item-label"
+        :style="{ width: form.labelWidth, minWidth: form.labelWidth }"
+      >
+        <div class="j-form-item-label-wrapper">
+          <span v-if="_required" class="j-form-item-required"></span>
+          <slot name="label"></slot>
+          <span v-if="!$slots.label">{{ label }}</span>
+          <span v-if="_colon">{{ '：' }}</span>
+        </div>
+      </div>
+      <div class="j-form-item-content" :class="_bordered ? 'j-form-item-content-border' : ''">
+        <div
+          class="j-form-item-content-wrapper"
+          :style="{ width: _contentNest ? contentWidth : '100%' }"
+        >
+          <a-tooltip v-if="showTextTooltip" :title="textContent" class="j-form-item-text-tooltip">
+            <span class="j-form-item-text-ellipsis">{{ textContent }}</span>
+          </a-tooltip>
+          <template v-else>
+            <slot></slot>
+          </template>
+        </div>
+      </div>
+    </div>
+  </transition>
+</template>
+<script>
+  import { Comment, Fragment, Text, computed, defineComponent, ref, toValue, useSlots } from 'vue';
+
+  export default defineComponent({
+    name: 'JFormItem',
+
+    componentName: 'JFormItem',
+
+    props: {
+      prop: {
+        type: String,
+        default: undefined,
+      },
+      /**
+       * 文字标签内容
+       */
+      label: {
+        type: String,
+        default: '',
+      },
+      /**
+       * 内容是否用div包裹
+       */
+      contentNest: {
+        type: Boolean,
+        default: true,
+      },
+      /**
+       * 内容宽度
+       */
+      contentWidth: {
+        type: String,
+        default: '60%',
+      },
+      /**
+       * 占位列数
+       */
+      span: {
+        type: Number,
+        default: 8,
+      },
+      /**
+       * 当内容为空时， 是否自动隐藏文字标签
+       */
+      autoHiddenLabel: {
+        type: Boolean,
+        default: true,
+      },
+      /**
+       * 是否必填
+       */
+      required: {
+        type: Boolean,
+        default: false,
+      },
+      /**
+       * 是否显示冒号
+       */
+      colon: {
+        type: Boolean,
+        default: true,
+      },
+      /**
+       * 是否显示
+       */
+      itemShow: {
+        type: Boolean,
+        default: true,
+      },
+      /**
+       * 是否隐藏Label
+       */
+      hiddenLabel: {
+        type: Boolean,
+        default: false,
+      },
+
+      bordered: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    setup() {
+      const visible = ref(true);
+      const slots = useSlots();
+
+      const textSlotInfo = computed(() => {
+        const slot = slots.default;
+
+        if (!slot) {
+          return {
+            isText: false,
+            text: '',
+          };
+        }
+
+        const nodes = slot();
+
+        if (!nodes || nodes.length === 0) {
+          return {
+            isText: false,
+            text: '',
+          };
+        }
+
+        let isTextOnly = true;
+        const textSegments = [];
+
+        const extractText = (vnodes) => {
+          vnodes.forEach((node) => {
+            if (!node) {
+              return;
+            }
+
+            const { type, children } = node;
+
+            if (type === Text) {
+              textSegments.push(typeof children === 'string' ? children : '');
+              return;
+            }
+
+            if (type === Comment) {
+              return;
+            }
+
+            if (type === Fragment && Array.isArray(children)) {
+              extractText(children);
+              return;
+            }
+
+            isTextOnly = false;
+          });
+        };
+
+        extractText(nodes);
+
+        const textValue = textSegments.join('').trim();
+
+        return {
+          isText: isTextOnly && textValue.length > 0,
+          text: textValue,
+        };
+      });
+
+      const showTextTooltip = computed(() => textSlotInfo.value.isText);
+      const textContent = computed(() => textSlotInfo.value.text);
+
+      return {
+        visible,
+        showTextTooltip,
+        textContent,
+      };
+    },
+    computed: {
+      form() {
+        let parent = this.$parent;
+        let parentName = parent.$options.componentName;
+        while (parentName !== 'JForm') {
+          parent = parent.$parent;
+          parentName = parent.$options.componentName;
+        }
+        return parent;
+      },
+      itemWidth() {
+        const span = Math.max(1, Math.min(this.span, 24));
+
+        return (span / 24) * 100 + '%';
+      },
+      _required() {
+        if (this.required) {
+          return true;
+        }
+
+        const rules = toValue(this.form?.rules);
+        const prop = toValue(this.prop);
+
+        if (!rules || !prop) {
+          return false;
+        }
+
+        const validRules = this.form.rules[this.prop];
+        if (!validRules) {
+          return false;
+        }
+
+        return validRules.some((item) => item.required);
+      },
+      _bordered() {
+        return this.bordered || this.form?.bordered;
+      },
+      _contentNest() {
+        return this.contentNest && (this.form?.contentNest ?? this.contentNest);
+      },
+      _colon() {
+        return this.colon && (this.form?.colon ?? this.colon);
+      },
+    },
+  });
+</script>

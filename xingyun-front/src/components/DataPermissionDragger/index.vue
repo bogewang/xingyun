@@ -1,0 +1,302 @@
+<template>
+  <a-modal
+    v-model:open="visible"
+    v-loading="loading"
+    :mask-closable="false"
+    width="80%"
+    title="设置数据权限"
+    :style="{ top: '20px' }"
+    :footer="null"
+  >
+    <a-row>
+      <a-col :span="8">
+        <div class="panel-wrapper">
+          <a-collapse v-model:activeKey="activeKey">
+            <a-collapse-panel key="1" header="运算节点">
+              <draggable
+                :list="calcTypes"
+                item-key="id"
+                :group="{ name: 'g1', pull: 'clone', put: false }"
+                :sort="false"
+                :clone="onClone"
+              >
+                <template #item="{ element }">
+                  <div class="panel-node">
+                    <a-button type="primary" block>{{ convertNodeName(element.name) }}</a-button>
+                  </div>
+                </template>
+              </draggable>
+            </a-collapse-panel>
+            <a-collapse-panel key="2" header="条件节点">
+              <draggable
+                :list="conditions"
+                item-key="id"
+                :group="{ name: 'g1', pull: 'clone', put: false }"
+                :sort="false"
+                :clone="onClone"
+              >
+                <template #item="{ element }">
+                  <div class="panel-node">
+                    <a-tooltip :title="element.name">
+                      <a-button type="primary" block>{{ convertNodeName(element.name) }}</a-button>
+                    </a-tooltip>
+                  </div>
+                </template>
+              </draggable>
+            </a-collapse-panel>
+          </a-collapse>
+        </div>
+      </a-col>
+      <a-col :span="14" :offset="2">
+        <div class="panel-wrapper">
+          <nested-draggable :list="nodes" @removeNodes="removeNodes" />
+        </div>
+      </a-col>
+    </a-row>
+    <div class="form-modal-footer">
+      <a-space>
+        <a-button type="primary" :loading="loading" html-type="submit" @click="submit"
+          >确定</a-button
+        >
+        <a-button :loading="loading" @click="preview">预览</a-button>
+        <a-button :loading="loading" @click="closeDialog">取消</a-button>
+      </a-space>
+    </div>
+  </a-modal>
+</template>
+
+<script>
+  import Draggable from 'vuedraggable';
+  import NestedDraggable from './nested.vue';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/system/data-permission-model-detail';
+  import { uuid, isEmpty } from '@/utils/utils';
+  import { createError, createConfirm } from '@/hooks/web/msg';
+  import { SYS_DATA_PERMISSION_MODEL_DETAIL_NODE_TYPE } from '@/enums/biz/sysDataPermissionModelDetailNodeType';
+  import { SYS_DATA_PERMISSION_MODEL_DETAIL_CALC_TYPE } from '@/enums/biz/sysDataPermissionModelDetailCalcType';
+  import { SYS_DATA_PERMISSION_MODEL_DETAIL_CONDITION_TYPE } from '@/enums/biz/sysDataPermissionModelDetailConditionType';
+  import { SYS_DATA_PERMISSION_MODEL_DETAIL_INPUT_TYPE } from '@/enums/biz/sysDataPermissionModelDetailInputType';
+
+  export default defineComponent({
+    name: 'DataPermissionDragger',
+    components: {
+      Draggable,
+      NestedDraggable,
+    },
+    props: {
+      modelId: {
+        type: Number,
+        required: true,
+      },
+    },
+    data() {
+      return {
+        loading: false,
+        visible: false,
+        calcTypes: [
+          {
+            id: -1,
+            nodeType: SYS_DATA_PERMISSION_MODEL_DETAIL_NODE_TYPE.CALC.code,
+            name: SYS_DATA_PERMISSION_MODEL_DETAIL_CALC_TYPE.AND.desc,
+            calcType: SYS_DATA_PERMISSION_MODEL_DETAIL_CALC_TYPE.AND.code,
+          },
+          {
+            id: -2,
+            nodeType: SYS_DATA_PERMISSION_MODEL_DETAIL_NODE_TYPE.CALC.code,
+            name: SYS_DATA_PERMISSION_MODEL_DETAIL_CALC_TYPE.OR.desc,
+            calcType: SYS_DATA_PERMISSION_MODEL_DETAIL_CALC_TYPE.OR.code,
+          },
+        ],
+        conditions: [],
+        nodes: [],
+        activeKey: '1',
+      };
+    },
+    created() {
+      // 初始化表单数据
+      this.initFormData();
+    },
+    methods: {
+      // 打开对话框 由父页面触发
+      openDialog() {
+        this.visible = true;
+
+        this.$nextTick(() => this.open());
+      },
+      // 关闭对话框
+      closeDialog() {
+        this.visible = false;
+        this.$emit('close');
+      },
+      initFormData() {},
+      onClone(e) {
+        return Object.assign({}, e, { id: uuid(), detailId: e.id, children: [] });
+      },
+      removeNodes(e) {
+        const ids = [e];
+        this.nodes = this.nodes
+          .filter((item) => !ids.includes(item.id))
+          .map((item) => {
+            return Object.assign({}, item, {
+              children: this.buildChildren(item.children, ids),
+            });
+          });
+      },
+      buildChildren(children, ids) {
+        if (isEmpty(children)) {
+          return children;
+        }
+
+        return children
+          .filter((item) => !ids.includes(item.id))
+          .map((item) => {
+            return Object.assign({}, item, {
+              children: this.buildChildren(item.children, ids),
+            });
+          });
+      },
+      loadData() {
+        api.getByModelId(this.modelId).then((res) => {
+          this.conditions = res.map((item) => {
+            const condition = Object.assign({}, item, {
+              nodeType: SYS_DATA_PERMISSION_MODEL_DETAIL_NODE_TYPE.CONDITION.code,
+              value: undefined,
+              values: [],
+              conditionTypes: item.conditionTypes.map((t) =>
+                SYS_DATA_PERMISSION_MODEL_DETAIL_CONDITION_TYPE.getByCode(t),
+              ),
+            });
+
+            condition.conditionType = condition.conditionTypes[0].code;
+
+            return condition;
+          });
+        });
+      },
+      // 页面显示时触发
+      open() {
+        // 初始化表单数据
+        this.initFormData();
+        this.loadData();
+      },
+      getModel() {
+        return this.nodes;
+      },
+      setModel(model) {
+        this.nodes = model;
+      },
+      validModel() {
+        if (!isEmpty(this.nodes)) {
+          let flag = true;
+          for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            if (!SYS_DATA_PERMISSION_MODEL_DETAIL_NODE_TYPE.CALC.equalsCode(node.nodeType)) {
+              createError('最外层必须是运算节点');
+              flag = false;
+              break;
+            }
+
+            if (isEmpty(node.children)) {
+              createError('运算节点必须包含子节点');
+              flag = false;
+              break;
+            }
+
+            flag &= this.validChild(node.children);
+            if (!flag) {
+              break;
+            }
+          }
+
+          return flag;
+        }
+
+        return true;
+      },
+      validChild(children) {
+        if (isEmpty(children)) {
+          return true;
+        }
+
+        let flag = true;
+        for (let i = 0; i < children.length; i++) {
+          const child = children[i];
+          if (SYS_DATA_PERMISSION_MODEL_DETAIL_NODE_TYPE.CALC.equalsCode(child.nodeType)) {
+            if (isEmpty(child.children)) {
+              createError('运算节点必须包含子节点');
+              flag = false;
+              break;
+            }
+            flag &= this.validChild(child.children);
+            if (!flag) {
+              break;
+            }
+          } else {
+            if (
+              SYS_DATA_PERMISSION_MODEL_DETAIL_CONDITION_TYPE.IN.equalsCode(child.conditionType) ||
+              SYS_DATA_PERMISSION_MODEL_DETAIL_CONDITION_TYPE.NOT_IN.equalsCode(child.conditionType)
+            ) {
+              if (!SYS_DATA_PERMISSION_MODEL_DETAIL_INPUT_TYPE.SQL.equalsCode(child.inputType)) {
+                if (isEmpty(child.values)) {
+                  createError('节点：【' + child.name + '】请输入值');
+                  flag = false;
+                  break;
+                }
+              }
+            } else {
+              if (isEmpty(child.value)) {
+                createError('节点：【' + child.name + '】请输入值');
+                flag = false;
+                break;
+              }
+            }
+          }
+        }
+
+        return flag;
+      },
+      preview() {
+        if (this.validModel()) {
+          this.loading = true;
+          api
+            .preview(this.nodes)
+            .then((res) => {
+              createConfirm(res, '数据权限SQL', {
+                icon: 'check-circle',
+                footer: null,
+              });
+            })
+            .finally(() => {
+              this.loading = false;
+            });
+        }
+      },
+      submit() {
+        if (this.validModel()) {
+          this.closeDialog();
+        }
+      },
+      convertNodeName(name) {
+        if (isEmpty(name)) {
+          return '';
+        }
+
+        if (name.length <= 4) {
+          return name;
+        }
+
+        return name.substring(0, 4) + '...';
+      },
+    },
+  });
+</script>
+<style lang="less" scoped>
+  .panel-wrapper {
+    padding: 10px;
+  }
+  .panel-node {
+    width: 33%;
+    padding: 2px 4px;
+    display: inline-block;
+  }
+</style>

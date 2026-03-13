@@ -1,0 +1,240 @@
+<template>
+  <a-modal
+    v-model:open="visible"
+    :mask-closable="false"
+    width="75%"
+    title="查看"
+    :style="{ top: '20px' }"
+    :footer="null"
+  >
+    <div v-if="visible" v-permission="['stock:adjust:query']" v-loading="loading">
+      <j-border>
+        <j-form bordered>
+          <j-form-item label="仓库" required>
+            {{ formData.scName }}
+          </j-form-item>
+          <j-form-item label="业务类型" required>
+            {{ STOCK_ADJUST_SHEET_BIZ_TYPE.getDesc(formData.bizType) }}
+          </j-form-item>
+          <j-form-item label="调整原因" required>
+            {{ formData.reasonName }}
+          </j-form-item>
+          <j-form-item label="备注" :span="24">
+            <a-textarea v-model:value.trim="formData.description" readonly />
+          </j-form-item>
+          <j-form-item label="状态">
+            <span
+              v-if="STOCK_ADJUST_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status)"
+              style="color: #52c41a"
+              >{{ STOCK_ADJUST_SHEET_STATUS.getDesc(formData.status) }}</span
+            >
+            <span
+              v-else-if="STOCK_ADJUST_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
+              style="color: #f5222d"
+              >{{ STOCK_ADJUST_SHEET_STATUS.getDesc(formData.status) }}</span
+            >
+            <span v-else style="color: #303133">{{
+              STOCK_ADJUST_SHEET_STATUS.getDesc(formData.status)
+            }}</span>
+          </j-form-item>
+          <j-form-item label="拒绝理由" :span="16" :content-nest="false">
+            <a-input
+              v-if="STOCK_ADJUST_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
+              v-model:value="formData.refuseReason"
+              readonly
+            />
+          </j-form-item>
+          <j-form-item label="操作人">
+            <span>{{ formData.updateBy }}</span>
+          </j-form-item>
+          <j-form-item label="操作时间" :span="16">
+            <span>{{ formData.updateTime }}</span>
+          </j-form-item>
+          <j-form-item
+            v-if="
+              STOCK_ADJUST_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
+              STOCK_ADJUST_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
+            "
+            label="审核人"
+          >
+            <span>{{ formData.approveBy }}</span>
+          </j-form-item>
+          <j-form-item
+            v-if="
+              STOCK_ADJUST_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
+              STOCK_ADJUST_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
+            "
+            label="审核时间"
+            :span="16"
+          >
+            <span>{{ formData.approveTime }}</span>
+          </j-form-item>
+        </j-form>
+      </j-border>
+
+      <!-- 数据列表 -->
+      <vxe-grid
+        ref="grid"
+        resizable
+        show-overflow
+        highlight-hover-row
+        keep-source
+        row-id="id"
+        height="500"
+        :data="tableData"
+        :columns="tableColumn"
+      />
+
+      <order-time-line :id="id" />
+
+      <j-border title="合计">
+        <j-form bordered label-width="140px">
+          <j-form-item label="调整品种数" :span="6">
+            <a-input v-model:value="formData.productNum" class="number-input" readonly />
+          </j-form-item>
+          <j-form-item label="库存调整数量" :span="6">
+            <a-input v-model:value="formData.diffStockNum" class="number-input" readonly />
+          </j-form-item>
+        </j-form>
+      </j-border>
+    </div>
+  </a-modal>
+</template>
+<script>
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/sc/stock/adjust/stock';
+  import { isEmpty, isFloatGeZero, add } from '@/utils/utils';
+  import { STOCK_ADJUST_SHEET_BIZ_TYPE } from '@/enums/biz/stockAdjustSheetBizType';
+  import { STOCK_ADJUST_SHEET_STATUS } from '@/enums/biz/stockAdjustSheetStatus';
+  import OrderTimeLine from '@/components/OrderTimeLine';
+
+  export default defineComponent({
+    components: {
+      OrderTimeLine,
+    },
+    props: {
+      id: {
+        type: String,
+        required: true,
+      },
+    },
+    setup() {
+      return {
+        STOCK_ADJUST_SHEET_BIZ_TYPE,
+        STOCK_ADJUST_SHEET_STATUS,
+      };
+    },
+    data() {
+      return {
+        // 是否可见
+        visible: false,
+        // 是否显示加载框
+        loading: false,
+        // 表单数据
+        formData: {},
+        // 列表数据配置
+        tableColumn: [
+          { type: 'seq', width: 50 },
+          { field: 'productCode', title: '商品编号', width: 120 },
+          { field: 'productName', title: '商品名称', width: 260 },
+          { field: 'skuCode', title: '商品SKU编号', width: 120 },
+          { field: 'externalCode', title: '商品简码', width: 120 },
+          { field: 'unit', title: '单位', width: 80 },
+          { field: 'spec', title: '规格', width: 80 },
+          { field: 'categoryName', title: '商品分类', width: 120 },
+          { field: 'brandName', title: '商品品牌', width: 120 },
+          { field: 'stockNum', title: '调整库存数量', width: 120, align: 'right' },
+          { field: 'description', title: '备注', width: 200 },
+        ],
+        tableData: [],
+      };
+    },
+    computed: {},
+    created() {
+      // 初始化表单数据
+      this.initFormData();
+    },
+    methods: {
+      // 打开对话框 由父页面触发
+      openDialog() {
+        // 初始化表单数据
+        this.initFormData();
+        this.visible = true;
+        this.$nextTick(() => this.open());
+      },
+      // 关闭对话框
+      closeDialog() {
+        this.visible = false;
+        this.$emit('close');
+      },
+      // 初始化表单数据
+      initFormData() {
+        this.formData = {
+          scName: '',
+          bizType: '',
+          reasonName: '',
+          description: '',
+          updateBy: '',
+          updateTime: '',
+          approveBy: '',
+          approveTime: '',
+          status: '',
+          refuseReason: '',
+          productNum: 0,
+          diffStockNum: 0,
+        };
+
+        this.tableData = [];
+      },
+      // 页面显示时触发
+      open() {
+        // 初始化表单数据
+        this.initFormData();
+
+        this.loadData();
+      },
+      calcSum() {
+        let productNum = 0;
+        let diffStockNum = 0;
+        this.tableData.forEach((item) => {
+          if (!isEmpty(item.productId)) {
+            productNum += 1;
+
+            if (isFloatGeZero(item.stockNum)) {
+              diffStockNum = add(item.stockNum, diffStockNum);
+            }
+          }
+        });
+
+        this.formData.productNum = productNum;
+        this.formData.diffStockNum = diffStockNum;
+      },
+      async loadData() {
+        this.loading = true;
+        api
+          .getDetail(this.id)
+          .then((res) => {
+            Object.assign(this.formData, {
+              scName: res.scName,
+              bizType: res.bizType,
+              reasonName: res.reasonName,
+              description: res.description,
+              updateBy: res.updateBy,
+              updateTime: res.updateTime,
+              approveBy: res.approveBy,
+              approveTime: res.approveTime,
+              status: res.status,
+              refuseReason: res.refuseReason,
+            });
+
+            this.tableData = res.details;
+            this.calcSum();
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
+    },
+  });
+</script>
+<style></style>

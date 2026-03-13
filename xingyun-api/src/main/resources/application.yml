@@ -76,7 +76,7 @@ jugg:
   secret:
     # 秘钥，用于敏感信息加密，生产环境一定要更改此项，并且产生数据后不要更改秘钥
     # 提供了EncryptUtil工具类，包含：生成秘钥、加密、解密方法。
-    key: eRE2drUFINojkG9ivqtfOA==
+    key: O1O8N/gniv4/2sAXPymRcg==
   #默认配置
   default-setting:
     #默认的用户ID，用于写入数据库时的createById和updateById的自动赋值，如果有登录人则取登录人ID，如果没有则取默认用户ID，如果不配置，默认是1

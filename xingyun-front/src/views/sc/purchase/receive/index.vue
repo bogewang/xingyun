@@ -1,0 +1,609 @@
+<template>
+  <div>
+    <div v-permission="['purchase:receive:query']">
+      <page-wrapper content-full-height fixed-height>
+        <!-- 数据列表 -->
+        <vxe-grid
+          id="ReceiveSheet"
+          ref="grid"
+          resizable
+          show-overflow
+          highlight-hover-row
+          keep-source
+          row-id="id"
+          :proxy-config="proxyConfig"
+          :columns="tableColumn"
+          :toolbar-config="toolbarConfig"
+          :custom-config="{}"
+          :pager-config="{}"
+          :loading="loading"
+          height="auto"
+        >
+          <template #form>
+            <j-border>
+              <j-form bordered @collapse="$refs.grid.refreshColumn()">
+                <j-form-item label="单据号">
+                  <a-input v-model:value="searchFormData.code" allow-clear />
+                </j-form-item>
+
+                <j-form-item label="供应商">
+                  <supplier-selector v-model:value="searchFormData.supplierId" />
+                </j-form-item>
+
+                <j-form-item label="仓库">
+                  <store-center-selector v-model:value="searchFormData.scId" />
+                </j-form-item>
+
+                <j-form-item label="操作人">
+                  <user-selector v-model:value="searchFormData.createBy" />
+                </j-form-item>
+
+                <j-form-item label="操作日期" :content-nest="false">
+                  <div class="date-range-container">
+                    <a-date-picker
+                      v-model:value="searchFormData.createStartTime"
+                      placeholder=""
+                      value-format="YYYY-MM-DD 00:00:00"
+                    />
+                    <span class="date-split">至</span>
+                    <a-date-picker
+                      v-model:value="searchFormData.createEndTime"
+                      placeholder=""
+                      value-format="YYYY-MM-DD 23:59:59"
+                    />
+                  </div>
+                </j-form-item>
+
+                <j-form-item label="审核人">
+                  <user-selector v-model:value="searchFormData.approveBy" />
+                </j-form-item>
+
+                <j-form-item label="审核日期" :content-nest="false">
+                  <div class="date-range-container">
+                    <a-date-picker
+                      v-model:value="searchFormData.approveStartTime"
+                      placeholder=""
+                      value-format="YYYY-MM-DD 00:00:00"
+                    />
+                    <span class="date-split">至</span>
+                    <a-date-picker
+                      v-model:value="searchFormData.approveEndTime"
+                      placeholder=""
+                      value-format="YYYY-MM-DD 23:59:59"
+                    />
+                  </div>
+                </j-form-item>
+
+                <j-form-item label="状态">
+                  <a-select v-model:value="searchFormData.status" placeholder="全部" allow-clear>
+                    <a-select-option
+                      v-for="item in RECEIVE_SHEET_STATUS.values()"
+                      :key="item.code"
+                      :value="item.code"
+                      >{{ item.desc }}</a-select-option
+                    >
+                  </a-select>
+                </j-form-item>
+
+                <j-form-item label="采购员">
+                  <user-selector v-model:value="searchFormData.purchaser" />
+                </j-form-item>
+
+                <template #more>
+                  <j-form-item label="采购订单号">
+                    <a-input v-model:value="searchFormData.purchaseOrderCode" allow-clear />
+                  </j-form-item>
+
+                  <j-form-item label="结算状态">
+                    <a-select
+                      v-model:value="searchFormData.settleStatus"
+                      placeholder="全部"
+                      allow-clear
+                    >
+                      <a-select-option
+                        v-for="item in SETTLE_STATUS.values()"
+                        :key="item.code"
+                        :value="item.code"
+                        >{{ item.desc }}</a-select-option
+                      >
+                    </a-select>
+                  </j-form-item>
+                </template>
+              </j-form>
+            </j-border>
+          </template>
+          <!-- 工具栏 -->
+          <template #toolbar_buttons>
+            <a-space>
+              <a-button type="primary" :icon="h(SearchOutlined)" @click="search">查询</a-button>
+              <a-button
+                v-permission="['purchase:receive:add']"
+                type="primary"
+                :icon="h(PlusOutlined)"
+                @click="openAddDialog"
+                >新增</a-button
+              >
+              <a-button
+                v-permission="['purchase:receive:approve']"
+                :icon="h(CheckOutlined)"
+                @click="batchApprovePass"
+                >审核通过</a-button
+              >
+              <a-button
+                v-permission="['purchase:receive:approve']"
+                :icon="h(CloseOutlined)"
+                @click="batchApproveRefuse"
+                >审核拒绝</a-button
+              >
+              <a-button
+                v-permission="['purchase:receive:delete']"
+                danger
+                :icon="h(DeleteOutlined)"
+                @click="batchDelete"
+                >批量删除</a-button
+              >
+              <a-button
+                v-permission="['purchase:receive:import']"
+                :icon="h(CloudUploadOutlined)"
+                @click="$refs.importer.openDialog()"
+                >导入Excel</a-button
+              >
+              <a-button
+                v-permission="['purchase:receive:import']"
+                :icon="h(CloudUploadOutlined)"
+                @click="$refs.importer2.openDialog()"
+                >批量设置支付方式</a-button
+              >
+              <a-button
+                v-permission="['purchase:receive:export']"
+                :icon="h(DownloadOutlined)"
+                @click="exportList"
+                >导出</a-button
+              >
+            </a-space>
+          </template>
+
+          <!-- 采购订单号 列自定义内容 -->
+          <template #purchaseOrderCode_default="{ row }">
+            <span v-if="isEmpty(row.purchaseOrderCode)">-</span>
+            <span v-else>
+              <a
+                v-permission="['purchase:order:query']"
+                @click="viewPurchaseOrderDetail(row.purchaseOrderId)"
+                >{{ row.purchaseOrderCode }}</a
+              >
+              <span v-no-permission="['purchase:order:query']">{{ row.purchaseOrderCode }}</span>
+            </span>
+          </template>
+
+          <!-- 操作 列自定义内容 -->
+          <template #action_default="{ row }">
+            <table-action outside :actions="createActions(row)" />
+          </template>
+        </vxe-grid>
+      </page-wrapper>
+
+      <!-- 查看窗口 -->
+      <detail :id="id" ref="viewDialog" />
+
+      <approve-refuse ref="approveRefuseDialog" @confirm="doApproveRefuse" />
+
+      <!-- 采购订单查看窗口 -->
+      <purchase-order-detail :id="purchaseOrderId" ref="viewPurchaseOrderDetailDialog" />
+    </div>
+    <receive-sheet-importer ref="importer" @confirm="search" />
+    <receive-sheet-pay-type-importer ref="importer2" />
+    <!-- 批量操作 -->
+    <batch-handler
+      ref="batchApprovePassHandlerDialog"
+      :table-column="[
+        { field: 'code', title: '单据号', width: 180 },
+        { field: 'scCode', title: '仓库编号', width: 100 },
+        { field: 'scName', title: '仓库名称', width: 120 },
+        { field: 'supplierCode', title: '供应商编号', width: 100 },
+        { field: 'supplierName', title: '供应商名称', width: 120 },
+        { field: 'purchaserName', title: '采购员', width: 100 },
+      ]"
+      title="审核通过"
+      :tableData="batchHandleDatas"
+      :handle-fn="doBatchApprovePass"
+      @confirm="search"
+    />
+    <batch-handler
+      ref="batchApproveRefuseHandlerDialog"
+      :table-column="[
+        { field: 'code', title: '单据号', width: 180 },
+        { field: 'scCode', title: '仓库编号', width: 100 },
+        { field: 'scName', title: '仓库名称', width: 120 },
+        { field: 'supplierCode', title: '供应商编号', width: 100 },
+        { field: 'supplierName', title: '供应商名称', width: 120 },
+        { field: 'purchaserName', title: '采购员', width: 100 },
+      ]"
+      title="审核拒绝"
+      :tableData="batchHandleDatas"
+      :handle-fn="doBatchApproveRefuse"
+      @confirm="search"
+    />
+    <batch-handler
+      ref="batchDeleteHandlerDialog"
+      :table-column="[
+        { field: 'code', title: '单据号', width: 180 },
+        { field: 'scCode', title: '仓库编号', width: 100 },
+        { field: 'scName', title: '仓库名称', width: 120 },
+        { field: 'supplierCode', title: '供应商编号', width: 100 },
+        { field: 'supplierName', title: '供应商名称', width: 120 },
+        { field: 'purchaserName', title: '采购员', width: 100 },
+      ]"
+      title="批量删除"
+      :tableData="batchHandleDatas"
+      :handle-fn="doBatchDelete"
+      @confirm="search"
+    />
+  </div>
+</template>
+
+<script>
+  import { defineComponent, h } from 'vue';
+  import Detail from './detail.vue';
+  import ApproveRefuse from '@/components/ApproveRefuse';
+  import PurchaseOrderDetail from '@/views/sc/purchase/order/detail.vue';
+  import moment from 'moment';
+  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
+  import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
+  import UserSelector from '@/components/Selector/UserSelector.vue';
+  import {
+    CheckOutlined,
+    CloseOutlined,
+    CloudUploadOutlined,
+    DeleteOutlined,
+    DownloadOutlined,
+    PlusOutlined,
+    SearchOutlined,
+  } from '@ant-design/icons-vue';
+  import * as api from '@/api/sc/purchase/receive';
+  import * as configApi from '@/api/sc/purchase/config';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    isEmpty,
+    formatDateTime,
+    getDateTimeWithMinTime,
+    getDateTimeWithMaxTime,
+    buildSortPageVo,
+  } from '@/utils/utils';
+  import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
+  import ReceiveSheetImporter from '@/components/Importor/ReceiveSheetImporter.vue';
+  import ReceiveSheetPayTypeImporter from '@/components/Importor/ReceiveSheetPayTypeImporter.vue';
+  import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
+  import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
+  import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
+  import BatchHandler from '@/components/BatchHandler';
+
+  export default defineComponent({
+    name: 'ReceiveSheet',
+    components: {
+      Detail,
+      ApproveRefuse,
+      PurchaseOrderDetail,
+      ReceiveSheetImporter,
+      ReceiveSheetPayTypeImporter,
+      StoreCenterSelector,
+      SupplierSelector,
+      UserSelector,
+      BatchHandler,
+    },
+    mixins: [multiplePageMix],
+    setup() {
+      return {
+        h,
+        SearchOutlined,
+        PlusOutlined,
+        CheckOutlined,
+        CloudUploadOutlined,
+        CloseOutlined,
+        DeleteOutlined,
+        DownloadOutlined,
+        isEmpty,
+        RECEIVE_SHEET_STATUS,
+        SETTLE_STATUS,
+      };
+    },
+    data() {
+      return {
+        loading: false,
+        // 当前行数据
+        id: '',
+        purchaseOrderId: '',
+        // 查询列表的查询条件
+        searchFormData: {
+          code: '',
+          scId: '',
+          supplierId: '',
+          createBy: '',
+          createStartTime: formatDateTime(getDateTimeWithMinTime(moment().subtract(1, 'M'))),
+          createEndTime: formatDateTime(getDateTimeWithMaxTime(moment())),
+          approveBy: '',
+          approveStartTime: '',
+          approveEndTime: '',
+          status: undefined,
+          purchaser: '',
+          purchaseOrderCode: '',
+          settleStatus: undefined,
+        },
+        // 工具栏配置
+        toolbarConfig: {
+          // 自定义左侧工具栏
+          slots: {
+            buttons: 'toolbar_buttons',
+          },
+        },
+        // 列表数据配置
+        tableColumn: [
+          { type: 'checkbox', width: 45 },
+          { field: 'code', title: '单据号', width: 180, sortable: true },
+          { field: 'scCode', title: '仓库编号', width: 100 },
+          { field: 'scName', title: '仓库名称', width: 120 },
+          { field: 'supplierCode', title: '供应商编号', width: 100 },
+          { field: 'supplierName', title: '供应商名称', width: 120 },
+          { field: 'purchaserName', title: '采购员', width: 100 },
+          { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
+          { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
+          { field: 'totalGiftNum', title: '赠品数量', align: 'right', width: 120 },
+          { field: 'receiveDate', title: '实际到货日期', width: 120 },
+          { field: 'createTime', title: '操作时间', width: 170, sortable: true },
+          { field: 'createBy', title: '操作人', width: 100 },
+          {
+            field: 'status',
+            title: '状态',
+            width: 100,
+            formatter: ({ cellValue }) => {
+              return RECEIVE_SHEET_STATUS.getDesc(cellValue);
+            },
+          },
+          { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
+          { field: 'approveBy', title: '审核人', width: 100 },
+          {
+            field: 'settleStatus',
+            title: '结算状态',
+            width: 100,
+            formatter: ({ cellValue }) => {
+              return SETTLE_STATUS.getDesc(cellValue);
+            },
+          },
+          { field: 'description', title: '备注', width: 200 },
+          {
+            field: 'purchaseOrderCode',
+            title: '采购订单号',
+            width: 180,
+            slots: { default: 'purchaseOrderCode_default' },
+          },
+          { title: '操作', width: 200, fixed: 'right', slots: { default: 'action_default' } },
+        ],
+        // 请求接口配置
+        proxyConfig: {
+          props: {
+            // 响应结果列表字段
+            result: 'datas',
+            // 响应结果总条数字段
+            total: 'totalCount',
+          },
+          ajax: {
+            // 查询接口
+            query: ({ page, sorts }) => {
+              return api.query(this.buildQueryParams(page, sorts));
+            },
+          },
+        },
+        batchHandleDatas: [],
+        batchRefuseReason: '',
+      };
+    },
+    created() {},
+    methods: {
+      // 列表发生查询时的事件
+      search() {
+        this.$refs.grid.commitProxy('reload');
+      },
+      // 查询前构建查询参数结构
+      buildQueryParams(page, sorts) {
+        return {
+          ...buildSortPageVo(page, sorts),
+          ...this.buildSearchFormData(),
+        };
+      },
+      // 查询前构建具体的查询参数
+      buildSearchFormData() {
+        const params = Object.assign({}, this.searchFormData, {
+          supplierId: this.searchFormData.supplierId,
+          scId: this.searchFormData.scId,
+          createBy: this.searchFormData.createBy,
+          approveBy: this.searchFormData.approveBy,
+          purchaserId: this.searchFormData.purchaser,
+        });
+
+        return params;
+      },
+      openAddDialog() {
+        configApi.get().then((res) => {
+          if (res.receiveRequirePurchase) {
+            this.openChildPage('/purchase/receive/add/require');
+          } else {
+            this.openChildPage('/purchase/receive/add/un-require');
+          }
+        });
+      },
+      openModifyDialog(row) {
+        if (!isEmpty(row.purchaseOrderId)) {
+          this.openChildPage('/purchase/receive/modify/require/' + row.id);
+        } else {
+          this.openChildPage('/purchase/receive/modify/un-require/' + row.id);
+        }
+      },
+      // 删除订单
+      deleteOrder(row) {
+        createConfirm('对选中的采购收货单执行删除操作？').then(() => {
+          this.loading = true;
+          api
+            .deleteById(row.id)
+            .then(() => {
+              createSuccess('删除成功！');
+              this.search();
+            })
+            .finally(() => {
+              this.loading = false;
+            });
+        });
+      },
+      doBatchDelete(row) {
+        return api.batchDelete(row.id);
+      },
+      // 批量删除
+      batchDelete() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要执行操作的采购收货单！');
+          return;
+        }
+
+        for (let i = 0; i < records.length; i++) {
+          if (PURCHASE_ORDER_STATUS.APPROVE_PASS.equalsCode(records[i].status)) {
+            createError('第' + (i + 1) + '个采购收货单已审核通过，不允许执行删除操作！');
+            return;
+          }
+        }
+
+        this.batchHandleDatas = records;
+
+        this.$refs.batchDeleteHandlerDialog.openDialog();
+      },
+      doBatchApprovePass(row) {
+        return api.batchApprovePass({
+          id: row.id,
+        });
+      },
+      // 批量审核通过
+      batchApprovePass() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要执行操作的采购收货单！');
+          return;
+        }
+
+        for (let i = 0; i < records.length; i++) {
+          if (PURCHASE_ORDER_STATUS.APPROVE_PASS.equalsCode(records[i].status)) {
+            createError('第' + (i + 1) + '个采购单已审核通过，不允许继续执行审核！');
+            return;
+          }
+        }
+
+        this.batchHandleDatas = records;
+
+        this.$refs.batchApprovePassHandlerDialog.openDialog();
+      },
+      // 批量审核拒绝
+      batchApproveRefuse() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要执行操作的采购收货单！');
+          return;
+        }
+
+        for (let i = 0; i < records.length; i++) {
+          if (PURCHASE_ORDER_STATUS.APPROVE_PASS.equalsCode(records[i].status)) {
+            createError('第' + (i + 1) + '个采购收货单已审核通过，不允许继续执行审核！');
+            return;
+          }
+
+          if (PURCHASE_ORDER_STATUS.APPROVE_REFUSE.equalsCode(records[i].status)) {
+            createError('第' + (i + 1) + '个采购收货单已审核拒绝，不允许继续执行审核！');
+            return;
+          }
+        }
+
+        this.$refs.approveRefuseDialog.openDialog();
+      },
+      doBatchApproveRefuse(row) {
+        return api.batchApproveRefuse({
+          id: row.id,
+          refuseReason: this.batchRefuseReason,
+        });
+      },
+      doApproveRefuse(reason) {
+        this.batchHandleDatas = this.$refs.grid.getCheckboxRecords();
+
+        this.batchRefuseReason = reason;
+
+        this.$refs.batchApproveRefuseHandlerDialog.openDialog();
+      },
+      exportList() {
+        this.loading = true;
+        api
+          .exportList(this.buildQueryParams({}))
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
+      viewPurchaseOrderDetail(id) {
+        this.purchaseOrderId = id;
+        this.$refs.viewPurchaseOrderDetailDialog.openDialog();
+      },
+      createActions(row) {
+        return [
+          {
+            label: '查看',
+            onClick: () => {
+              this.id = row.id;
+              this.$nextTick(() => this.$refs.viewDialog.openDialog());
+            },
+          },
+          {
+            permission: ['purchase:receive:approve'],
+            label: '审核',
+            ifShow: () => {
+              return (
+                PURCHASE_ORDER_STATUS.CREATED.equalsCode(row.status) ||
+                PURCHASE_ORDER_STATUS.APPROVE_REFUSE.equalsCode(row.status)
+              );
+            },
+            onClick: () => {
+              this.openChildPage('/purchase/receive/approve/' + row.id);
+            },
+          },
+          {
+            permission: ['purchase:receive:modify'],
+            label: '修改',
+            ifShow: () => {
+              return (
+                PURCHASE_ORDER_STATUS.CREATED.equalsCode(row.status) ||
+                PURCHASE_ORDER_STATUS.APPROVE_REFUSE.equalsCode(row.status)
+              );
+            },
+            onClick: () => {
+              this.openModifyDialog(row);
+            },
+          },
+          {
+            permission: ['purchase:receive:delete'],
+            label: '删除',
+            danger: true,
+            ifShow: () => {
+              return (
+                PURCHASE_ORDER_STATUS.CREATED.equalsCode(row.status) ||
+                PURCHASE_ORDER_STATUS.APPROVE_REFUSE.equalsCode(row.status)
+              );
+            },
+            onClick: () => {
+              this.deleteOrder(row);
+            },
+          },
+        ];
+      },
+      onRefreshPage() {
+        this.search();
+      },
+    },
+  });
+</script>
+<style scoped></style>

@@ -1,0 +1,155 @@
+// j-form style begin
+.j-form-item-container {
+  display: flex;
+
+  flex-direction: row;
+  flex-wrap: wrap;
+  flex-flow: row wrap;
+  justify-content: flex-start;
+  align-items: center;
+
+  padding: 5px;
+
+  .j-form-item {
+    display: flex;
+
+    flex-direction: row;
+    flex-wrap: nowrap;
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+
+    line-height: 40px;
+    font-size: 12px;
+
+    .j-form-item-label {
+      white-space: nowrap;
+      color: rgba(0, 0, 0, 0.85);
+      text-align: right;
+      padding: 0 3px 0 3px;
+
+      .j-form-item-required:before {
+        content: '*';
+        color: @danger-color;
+        margin-right: 4px;
+      }
+    }
+
+    .j-form-item-label-border {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      border-left: 1px solid rgba(0, 0, 0, 0.08);
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .j-form-item-content:after {
+      content: '';
+      display: inline-block;
+      height: 0;
+      overflow: hidden;
+    }
+    .j-form-item-content {
+      padding: 0 3px 0 3px;
+      width: 100%;
+    }
+
+    .j-form-item-label-wrapper {
+      display: inline-block;
+      width: 100%;
+    }
+
+    .j-form-item-content-wrapper {
+      display: inline-block;
+      width: 100%;
+    }
+
+    .j-form-item-text-tooltip {
+      display: block;
+      width: 100%;
+    }
+
+    .j-form-item-text-ellipsis {
+      display: inline-block;
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    .j-form-item-content-border {
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  .ant-select,
+  .ant-cascader-picker {
+    width: 100%;
+  }
+}
+
+.j-form-item-footer-container {
+  text-align: center;
+  padding: 5px 0;
+
+  .j-form-item-footer {
+    font-size: 12px;
+  }
+}
+// j-form style end
+
+.form-modal-footer {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.date-range-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+
+  .date-split {
+    margin: 0 2px;
+  }
+}
+
+.form-item-alone {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: none !important;
+}
+
+.img-uploader-container {
+  max-width: 128px;
+  max-height: 128px;
+}
+
+.app-card-container {
+  padding: 16px;
+  background-color: #ffffff;
+  margin: 16px;
+  border-radius: 4px;
+}
+
+.app-simple-container {
+  padding: 16px;
+  border-radius: 4px;
+}
+
+.number-input {
+  text-align: right;
+  .ant-input {
+    text-align: right;
+  }
+}
+
+a {
+  background-color: transparent;
+  color: #1677ff;
+  cursor: pointer;
+}
+
+a:hover {
+  opacity: 0.75;
+}

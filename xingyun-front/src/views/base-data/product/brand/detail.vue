@@ -1,0 +1,112 @@
+<template>
+  <a-modal
+    v-model:open="visible"
+    :mask-closable="false"
+    width="40%"
+    title="查看"
+    :style="{ top: '20px' }"
+    :footer="null"
+  >
+    <div v-if="visible" v-permission="['base-data:product:brand:query']" v-loading="loading">
+      <a-descriptions :column="4" bordered>
+        <a-descriptions-item label="编号" :span="2">
+          {{ formData.code }}
+        </a-descriptions-item>
+        <a-descriptions-item label="名称" :span="2">
+          {{ formData.name }}
+        </a-descriptions-item>
+        <a-descriptions-item label="简称" :span="2">
+          {{ formData.shortName }}
+        </a-descriptions-item>
+        <a-descriptions-item label="Logo" :span="4">
+          <img v-if="!isEmpty(formData.logo)" :src="formData.logo" class="img-uploader-container" />
+        </a-descriptions-item>
+        <a-descriptions-item label="简介" :span="4">
+          {{ formData.introduction }}
+        </a-descriptions-item>
+        <a-descriptions-item label="备注" :span="4">
+          {{ formData.description }}
+        </a-descriptions-item>
+      </a-descriptions>
+    </div>
+  </a-modal>
+</template>
+<script>
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/base-data/product/brand';
+  import { isEmpty } from '@/utils/utils';
+
+  export default defineComponent({
+    // 使用组件
+    components: {},
+    props: {
+      id: {
+        type: String,
+        required: true,
+      },
+    },
+    setup() {
+      return {
+        isEmpty,
+      };
+    },
+    data() {
+      return {
+        // 是否可见
+        visible: false,
+        // 是否显示加载框
+        loading: false,
+        // 表单数据
+        formData: {},
+      };
+    },
+    created() {
+      this.initFormData();
+    },
+    methods: {
+      // 打开对话框 由父页面触发
+      openDialog() {
+        this.visible = true;
+
+        this.$nextTick(() => this.open());
+      },
+      // 关闭对话框
+      closeDialog() {
+        this.visible = false;
+        this.$emit('close');
+      },
+      // 初始化表单数据
+      initFormData() {
+        this.formData = {
+          id: '',
+          code: '',
+          name: '',
+          shortName: '',
+          logo: '',
+          introduction: '',
+          description: '',
+        };
+      },
+      // 页面显示时触发
+      open() {
+        // 初始化数据
+        this.initFormData();
+
+        // 查询数据
+        this.loadFormData();
+      },
+      // 查询数据
+      loadFormData() {
+        this.loading = true;
+        api
+          .get(this.id)
+          .then((data) => {
+            this.formData = data;
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
+    },
+  });
+</script>
