@@ -112,3 +112,7 @@ jugg:
     domain: ${jugg.upload.domain}
     # 上传文件的路径
     location: ${jugg.upload.location}
+  # 若有接口放行，可补充（非必需）
+  web:
+    filter-url: /**
+#    filter-url: /selector/list/tenant
