@@ -9,6 +9,7 @@ enum Api {
   Captcha = '/auth/captcha',
   CaptchaRequire = '/auth/captcha/require',
   TenantRequire = '/auth/tenant/require',
+  TenantList = '/selector/list/tenant',
   CheckPassword = '/auth/check/password',
 }
 
@@ -58,6 +59,15 @@ export function getTenantRequireApi() {
       url: Api.TenantRequire,
     },
     { region },
+  );
+}
+
+export function getTenantListApi<T = any>() {
+  return defHttp.get<T>(
+    {
+      url: Api.TenantList,
+    },
+    { region, withToken: false },
   );
 }
 

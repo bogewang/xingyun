@@ -14,17 +14,16 @@
         class="enter-x"
         v-if="requireTenant.enable && isEmpty(requireTenant.tenantId)"
       >
-        <a-input
+        <a-select
           size="large"
           ref="tenantInput"
           v-model:value="formData.tenantName"
-          placeholder="请输入租户名称"
+          placeholder="请选择租户"
           class="fix-auto-fill"
-        >
-          <template #prefix>
-            <ApartmentOutlined />
-          </template>
-        </a-input>
+          show-search
+          :options="tenantOptions"
+          :filter-option="filterTenantOption"
+        />
       </a-form-item>
       <a-form-item name="username" class="enter-x">
         <a-input
@@ -63,7 +62,7 @@
 </template>
 <script lang="ts" setup>
   import { computed, onMounted, reactive, ref, unref } from 'vue';
-  import { KeyOutlined, UserOutlined, ApartmentOutlined } from '@ant-design/icons-vue';
+  import { KeyOutlined, UserOutlined } from '@ant-design/icons-vue';
   import LoginFormTitle from './LoginFormTitle.vue';
   import LoginCaptchaModal from './LoginCaptchaModal.vue';
   import { useUserStore } from '/@/store/modules/user';
@@ -71,6 +70,7 @@
   import { createSuccessTip } from '@/hooks/web/msg';
   import { welcomeMsg, isEmpty } from '@/utils/utils';
   import { TenantRequireBo } from '@/api/sys/model/tenantRequireBo';
+  import { getTenantListApi } from '@/api/sys/user';
 
   const userStore = useUserStore();
   const { getLoginState } = useLoginState();
@@ -78,11 +78,12 @@
   const formRef = ref();
   const loading = ref(false);
   const requireTenant = ref({} as TenantRequireBo);
+  const tenantOptions = ref([]);
 
   const formData = reactive({
-    tenantName: '测试租户',
-    username: 'admin',
-    password: 'admin',
+    tenantName: null,
+    username: null,
+    password: null,
   });
 
   const { validForm } = useFormValid(formRef);
@@ -92,11 +93,40 @@
   const tenantInput = ref();
 
   const focusInput = () => {
-    usernameInput.value.focus();
+    if (requireTenant.value.enable && isEmpty(requireTenant.value.tenantId)) {
+      tenantInput.value?.focus?.();
+      return;
+    }
+    usernameInput.value?.focus?.();
+  };
+
+  const filterTenantOption = (inputValue, option) => {
+    return option?.label?.indexOf(inputValue) > -1;
+  };
+
+  type TenantItem = {
+    name: string;
+  };
+
+  const loadTenantOptions = async () => {
+    const result = await getTenantListApi<TenantItem[]>();
+    const datas = result || [];
+    tenantOptions.value = datas.map((item: TenantItem) => {
+      return {
+        label: item.name,
+        value: item.name,
+      };
+    });
+    if (!formData.tenantName && tenantOptions.value.length > 0) {
+      formData.tenantName = tenantOptions.value[0].value;
+    }
   };
 
   onMounted(async () => {
     requireTenant.value = await userStore.getTenantRequire();
+    if (requireTenant.value.enable && isEmpty(requireTenant.value.tenantId)) {
+      await loadTenantOptions();
+    }
 
     focusInput();
   });
