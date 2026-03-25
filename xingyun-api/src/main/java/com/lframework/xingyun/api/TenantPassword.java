@@ -8,7 +8,7 @@ public class TenantPassword {
 
     public static void main(String[] args) {
         // 租户数据库密码
-        String s = "7212413WEnmu";
+        String s = "h7ZHNYPPkP7pCC2R";
 
         // jugg.secret.key
         byte[] key = Base64.decode("O1O8N/gniv4/2sAXPymRcg==");
