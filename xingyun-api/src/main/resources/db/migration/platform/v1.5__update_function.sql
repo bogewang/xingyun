@@ -1,1 +1,0 @@
-UPDATE sys_module t SET t.description = '商品库存调整。' WHERE t.id = 10;

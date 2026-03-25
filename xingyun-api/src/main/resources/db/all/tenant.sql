@@ -63,7 +63,7 @@ CREATE TABLE `base_data_customer`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_customer
@@ -91,7 +91,7 @@ CREATE TABLE `base_data_logistics_company`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '物流公司' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '物流公司' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_logistics_company
@@ -124,7 +124,7 @@ CREATE TABLE `base_data_member`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE,
   INDEX `telephone`(`telephone`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '会员' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '会员' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_member
@@ -191,7 +191,7 @@ CREATE TABLE `base_data_product`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE,
   INDEX `sku_code`(`sku_code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_product
@@ -219,7 +219,7 @@ CREATE TABLE `base_data_product_brand`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE,
   INDEX `name`(`name`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品品牌' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品品牌' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_product_brand
@@ -245,7 +245,7 @@ CREATE TABLE `base_data_product_bundle`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `main_product_id`(`main_product_id`, `product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '组合商品' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '组合商品' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_product_bundle
@@ -271,7 +271,7 @@ CREATE TABLE `base_data_product_category`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE,
   INDEX `name`(`name`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品类目' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品类目' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_product_category
@@ -287,7 +287,7 @@ CREATE TABLE `base_data_product_category_property`  (
   `category_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '商品类目ID',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `property_id`(`property_id`, `category_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品类目和商品属性关系表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品类目和商品属性关系表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_product_category_property
@@ -316,7 +316,7 @@ CREATE TABLE `base_data_product_property`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE,
   INDEX `name`(`name`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品属性' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品属性' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_product_property
@@ -342,7 +342,7 @@ CREATE TABLE `base_data_product_property_item`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `property_id`(`property_id`, `code`) USING BTREE,
   INDEX `property_id2`(`name`, `property_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品属性值' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品属性值' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_product_property_item
@@ -361,7 +361,7 @@ CREATE TABLE `base_data_product_property_relation`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `product_id`(`product_id`, `property_id`, `property_item_id`) USING BTREE,
   INDEX `property_id`(`property_id`, `property_item_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品和商品属性关系表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品和商品属性关系表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_product_property_relation
@@ -375,7 +375,7 @@ CREATE TABLE `base_data_product_purchase`  (
   `id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'ID',
   `price` decimal(24, 6) NOT NULL COMMENT '采购价',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品采购价' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品采购价' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_product_purchase
@@ -389,7 +389,7 @@ CREATE TABLE `base_data_product_retail`  (
   `id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'ID',
   `price` decimal(24, 6) NOT NULL COMMENT '零售价',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品零售价' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品零售价' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_product_retail
@@ -403,7 +403,7 @@ CREATE TABLE `base_data_product_sale`  (
   `id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'ID',
   `price` decimal(24, 6) NOT NULL COMMENT '销售价',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品销售价' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品销售价' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_product_sale
@@ -432,7 +432,7 @@ CREATE TABLE `base_data_store_center`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '仓库' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '仓库' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_store_center
@@ -472,7 +472,7 @@ CREATE TABLE `base_data_supplier`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of base_data_supplier
@@ -507,7 +507,7 @@ CREATE TABLE `customer_settle_check_sheet`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE,
   INDEX `customer_id`(`customer_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户对账单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户对账单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of customer_settle_check_sheet
@@ -529,7 +529,7 @@ CREATE TABLE `customer_settle_check_sheet_detail`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `sheet_id`(`sheet_id`, `biz_id`) USING BTREE,
   INDEX `biz_id`(`biz_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户对账单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户对账单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of customer_settle_check_sheet_detail
@@ -560,7 +560,7 @@ CREATE TABLE `customer_settle_fee_sheet`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE,
   INDEX `customer_id`(`customer_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户费用单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户费用单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of customer_settle_fee_sheet
@@ -579,7 +579,7 @@ CREATE TABLE `customer_settle_fee_sheet_detail`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `sheet_id`(`sheet_id`, `item_id`) USING BTREE,
   INDEX `item_id`(`item_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户费用单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户费用单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of customer_settle_fee_sheet_detail
@@ -609,7 +609,7 @@ CREATE TABLE `customer_settle_pre_sheet`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE,
   INDEX `customer_id`(`customer_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户预付款单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户预付款单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of customer_settle_pre_sheet
@@ -628,7 +628,7 @@ CREATE TABLE `customer_settle_pre_sheet_detail`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `sheet_id`(`sheet_id`, `item_id`) USING BTREE,
   INDEX `item_id`(`item_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户预付款单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户预付款单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of customer_settle_pre_sheet_detail
@@ -660,7 +660,7 @@ CREATE TABLE `customer_settle_sheet`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE,
   INDEX `customer_id`(`customer_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户结算单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户结算单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of customer_settle_sheet
@@ -681,7 +681,7 @@ CREATE TABLE `customer_settle_sheet_detail`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `sheet_id`(`sheet_id`, `biz_id`) USING BTREE,
   INDEX `biz_id`(`biz_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户结算单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '客户结算单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of customer_settle_sheet_detail
@@ -700,7 +700,7 @@ CREATE TABLE `dic_city`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE,
   INDEX `parent_id`(`parent_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '地区字典表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '地区字典表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of dic_city
@@ -4172,7 +4172,7 @@ CREATE TABLE `flow_cu_approve_his`  (
   INDEX `instance_id`(`instance_id`) USING BTREE,
   INDEX `task_id`(`task_id`) USING BTREE,
   INDEX `node_code`(`node_code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '流程审核历史' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '流程审核历史' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of flow_cu_approve_his
@@ -4206,7 +4206,7 @@ CREATE TABLE `flow_cu_instance`  (
   `start_time` datetime NOT NULL COMMENT '发起时间',
   `end_time` datetime NULL DEFAULT NULL COMMENT '结束时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '流程实例扩展表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '流程实例扩展表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of flow_cu_instance
@@ -4218,23 +4218,23 @@ CREATE TABLE `flow_cu_instance`  (
 DROP TABLE IF EXISTS `flow_definition`;
 CREATE TABLE `flow_definition`  (
   `id` bigint(20) NOT NULL COMMENT '主键id',
-  `flow_code` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '流程编码',
-  `flow_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '流程名称',
-  `category` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '流程类别',
-  `version` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '流程版本',
+  `flow_code` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '流程编码',
+  `flow_name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '流程名称',
+  `category` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '流程类别',
+  `version` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '流程版本',
   `is_publish` tinyint(3) NOT NULL DEFAULT 0 COMMENT '是否发布（0未发布 1已发布 9失效）',
-  `form_custom` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'N' COMMENT '审批表单是否自定义（Y是 N否）',
-  `form_path` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '审批表单路径',
+  `form_custom` char(1) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'N' COMMENT '审批表单是否自定义（Y是 N否）',
+  `form_path` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '审批表单路径',
   `activity_status` tinyint(3) NOT NULL DEFAULT 1 COMMENT '流程激活状态（0挂起 1激活）',
-  `listener_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '监听器类型',
-  `listener_path` varchar(400) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '监听器路径',
-  `ext` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '业务详情 存业务表对象json字符串',
+  `listener_type` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '监听器类型',
+  `listener_path` varchar(400) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '监听器路径',
+  `ext` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '业务详情 存业务表对象json字符串',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
-  `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '0' COMMENT '删除标志',
-  `tenant_id` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '租户id',
+  `del_flag` char(1) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '0' COMMENT '删除标志',
+  `tenant_id` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '租户id',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '流程定义表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '流程定义表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of flow_definition
@@ -4249,27 +4249,27 @@ CREATE TABLE `flow_his_task`  (
   `definition_id` bigint(20) NOT NULL COMMENT '对应flow_definition表的id',
   `instance_id` bigint(20) NOT NULL COMMENT '对应flow_instance表的id',
   `task_id` bigint(20) NOT NULL COMMENT '对应flow_task表的id',
-  `node_code` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '开始节点编码',
-  `node_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '开始节点名称',
+  `node_code` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '开始节点编码',
+  `node_name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '开始节点名称',
   `node_type` tinyint(1) NULL DEFAULT NULL COMMENT '开始节点类型（0开始节点 1中间节点 2结束节点 3互斥网关 4并行网关）',
-  `target_node_code` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '目标节点编码',
-  `target_node_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '结束节点名称',
-  `approver` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '审批者',
+  `target_node_code` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '目标节点编码',
+  `target_node_name` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '结束节点名称',
+  `approver` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '审批者',
   `cooperate_type` tinyint(1) NOT NULL DEFAULT 0 COMMENT '协作方式(1审批 2转办 3委派 4会签 5票签 6加签 7减签)',
-  `collaborator` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '协作人',
-  `skip_type` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '流转类型（PASS通过 REJECT退回 NONE无动作）',
-  `flow_status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '流程状态（0待提交 1审批中 2审批通过 4终止 5作废 6撤销 8已完成 9已退回 10失效 11拿回）',
-  `form_custom` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'N' COMMENT '审批表单是否自定义（Y是 N否）',
-  `form_path` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '审批表单路径',
-  `message` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '审批意见',
-  `variable` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '任务变量',
-  `ext` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '业务详情 存业务表对象json字符串',
+  `collaborator` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '协作人',
+  `skip_type` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '流转类型（PASS通过 REJECT退回 NONE无动作）',
+  `flow_status` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '流程状态（0待提交 1审批中 2审批通过 4终止 5作废 6撤销 8已完成 9已退回 10失效 11拿回）',
+  `form_custom` char(1) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'N' COMMENT '审批表单是否自定义（Y是 N否）',
+  `form_path` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '审批表单路径',
+  `message` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '审批意见',
+  `variable` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '任务变量',
+  `ext` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '业务详情 存业务表对象json字符串',
   `create_time` datetime NULL DEFAULT NULL COMMENT '任务开始时间',
   `update_time` datetime NULL DEFAULT NULL COMMENT '审批完成时间',
-  `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '0' COMMENT '删除标志',
-  `tenant_id` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '租户id',
+  `del_flag` char(1) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '0' COMMENT '删除标志',
+  `tenant_id` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '租户id',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '历史任务记录表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '历史任务记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of flow_his_task
@@ -4282,22 +4282,22 @@ DROP TABLE IF EXISTS `flow_instance`;
 CREATE TABLE `flow_instance`  (
   `id` bigint(20) NOT NULL COMMENT '主键id',
   `definition_id` bigint(20) NOT NULL COMMENT '对应flow_definition表的id',
-  `business_id` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '业务id',
+  `business_id` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '业务id',
   `node_type` tinyint(1) NOT NULL COMMENT '节点类型（0开始节点 1中间节点 2结束节点 3互斥网关 4并行网关）',
-  `node_code` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '流程节点编码',
-  `node_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '流程节点名称',
-  `variable` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '任务变量',
-  `flow_status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '流程状态（0待提交 1审批中 2审批通过 4终止 5作废 6撤销 8已完成 9已退回 10失效 11拿回）',
+  `node_code` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '流程节点编码',
+  `node_name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '流程节点名称',
+  `variable` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '任务变量',
+  `flow_status` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '流程状态（0待提交 1审批中 2审批通过 4终止 5作废 6撤销 8已完成 9已退回 10失效 11拿回）',
   `activity_status` tinyint(1) NOT NULL DEFAULT 1 COMMENT '流程激活状态（0挂起 1激活）',
-  `def_json` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '流程定义json',
-  `create_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '' COMMENT '创建者',
+  `def_json` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '流程定义json',
+  `create_by` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '创建者',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
-  `ext` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '扩展字段，预留给业务系统使用',
-  `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '0' COMMENT '删除标志',
-  `tenant_id` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '租户id',
+  `ext` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '扩展字段，预留给业务系统使用',
+  `del_flag` char(1) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '0' COMMENT '删除标志',
+  `tenant_id` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '租户id',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '流程实例表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '流程实例表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of flow_instance
@@ -4311,26 +4311,26 @@ CREATE TABLE `flow_node`  (
   `id` bigint(20) NOT NULL COMMENT '主键id',
   `node_type` tinyint(1) NOT NULL COMMENT '节点类型（0开始节点 1中间节点 2结束节点 3互斥网关 4并行网关）',
   `definition_id` bigint(20) NOT NULL COMMENT '流程定义id',
-  `node_code` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '流程节点编码',
-  `node_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '流程节点名称',
-  `permission_flag` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '权限标识（权限类型:权限标识，可以多个，用@@隔开)',
+  `node_code` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '流程节点编码',
+  `node_name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '流程节点名称',
+  `permission_flag` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '权限标识（权限类型:权限标识，可以多个，用@@隔开)',
   `node_ratio` decimal(6, 3) NULL DEFAULT NULL COMMENT '流程签署比例值',
-  `coordinate` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '坐标',
-  `any_node_skip` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '任意结点跳转',
-  `listener_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '监听器类型',
-  `listener_path` varchar(400) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '监听器路径',
-  `handler_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '处理器类型',
-  `handler_path` varchar(400) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '处理器路径',
-  `form_custom` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'N' COMMENT '审批表单是否自定义（Y是 N否）',
-  `form_path` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '审批表单路径',
-  `version` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '版本',
+  `coordinate` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '坐标',
+  `any_node_skip` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '任意结点跳转',
+  `listener_type` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '监听器类型',
+  `listener_path` varchar(400) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '监听器路径',
+  `handler_type` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '处理器类型',
+  `handler_path` varchar(400) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '处理器路径',
+  `form_custom` char(1) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'N' COMMENT '审批表单是否自定义（Y是 N否）',
+  `form_path` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '审批表单路径',
+  `version` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '版本',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
-  `ext` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '扩展属性',
-  `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '0' COMMENT '删除标志',
-  `tenant_id` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '租户id',
+  `ext` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '扩展属性',
+  `del_flag` char(1) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '0' COMMENT '删除标志',
+  `tenant_id` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '租户id',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '流程节点表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '流程节点表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of flow_node
@@ -4343,20 +4343,20 @@ DROP TABLE IF EXISTS `flow_skip`;
 CREATE TABLE `flow_skip`  (
   `id` bigint(20) NOT NULL COMMENT '主键id',
   `definition_id` bigint(20) NOT NULL COMMENT '流程定义id',
-  `now_node_code` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '当前流程节点的编码',
+  `now_node_code` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '当前流程节点的编码',
   `now_node_type` tinyint(1) NULL DEFAULT NULL COMMENT '当前节点类型（0开始节点 1中间节点 2结束节点 3互斥网关 4并行网关）',
-  `next_node_code` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '下一个流程节点的编码',
+  `next_node_code` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '下一个流程节点的编码',
   `next_node_type` tinyint(1) NULL DEFAULT NULL COMMENT '下一个节点类型（0开始节点 1中间节点 2结束节点 3互斥网关 4并行网关）',
-  `skip_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '跳转名称',
-  `skip_type` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '跳转类型（PASS审批通过 REJECT退回）',
-  `skip_condition` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '跳转条件',
-  `coordinate` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '坐标',
+  `skip_name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '跳转名称',
+  `skip_type` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '跳转类型（PASS审批通过 REJECT退回）',
+  `skip_condition` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '跳转条件',
+  `coordinate` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '坐标',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
-  `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '0' COMMENT '删除标志',
-  `tenant_id` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '租户id',
+  `del_flag` char(1) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '0' COMMENT '删除标志',
+  `tenant_id` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '租户id',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '节点跳转关联表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '节点跳转关联表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of flow_skip
@@ -4370,18 +4370,18 @@ CREATE TABLE `flow_task`  (
   `id` bigint(20) NOT NULL COMMENT '主键id',
   `definition_id` bigint(20) NOT NULL COMMENT '对应flow_definition表的id',
   `instance_id` bigint(20) NOT NULL COMMENT '对应flow_instance表的id',
-  `node_code` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '节点编码',
-  `node_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '节点名称',
+  `node_code` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '节点编码',
+  `node_name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '节点名称',
   `node_type` tinyint(1) NOT NULL COMMENT '节点类型（0开始节点 1中间节点 2结束节点 3互斥网关 4并行网关）',
-  `flow_status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '流程状态（0待提交 1审批中 2审批通过 4终止 5作废 6撤销 8已完成 9已退回 10失效 11拿回）',
-  `form_custom` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'N' COMMENT '审批表单是否自定义（Y是 N否）',
-  `form_path` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '审批表单路径',
+  `flow_status` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '流程状态（0待提交 1审批中 2审批通过 4终止 5作废 6撤销 8已完成 9已退回 10失效 11拿回）',
+  `form_custom` char(1) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'N' COMMENT '审批表单是否自定义（Y是 N否）',
+  `form_path` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '审批表单路径',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
-  `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '0' COMMENT '删除标志',
-  `tenant_id` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '租户id',
+  `del_flag` char(1) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '0' COMMENT '删除标志',
+  `tenant_id` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '租户id',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '待办任务表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '待办任务表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of flow_task
@@ -4393,18 +4393,18 @@ CREATE TABLE `flow_task`  (
 DROP TABLE IF EXISTS `flow_user`;
 CREATE TABLE `flow_user`  (
   `id` bigint(20) NOT NULL COMMENT '主键id',
-  `type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '人员类型（1待办任务的审批人权限 2待办任务的转办人权限 3待办任务的委托人权限）',
-  `processed_by` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '权限人',
+  `type` char(1) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '人员类型（1待办任务的审批人权限 2待办任务的转办人权限 3待办任务的委托人权限）',
+  `processed_by` varchar(80) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '权限人',
   `associated` bigint(20) NOT NULL COMMENT '任务表id',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
-  `create_by` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '创建人',
+  `create_by` varchar(80) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '创建人',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
-  `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '0' COMMENT '删除标志',
-  `tenant_id` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '租户id',
+  `del_flag` char(1) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '0' COMMENT '删除标志',
+  `tenant_id` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '租户id',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `user_processed_type`(`processed_by`, `type`) USING BTREE,
   INDEX `user_associated`(`associated`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '流程用户表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '流程用户表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of flow_user
@@ -4419,7 +4419,7 @@ CREATE TABLE `gen_create_column_config`  (
   `required` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否必填',
   `order_no` int(11) NOT NULL COMMENT '排序编号',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '新增功能代码生成配置' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '新增功能代码生成配置' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_create_column_config
@@ -4452,7 +4452,7 @@ CREATE TABLE `gen_custom_form`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `category_id`(`category_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义对话框' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义对话框' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_custom_form
@@ -4474,7 +4474,7 @@ CREATE TABLE `gen_custom_form_category`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义列表分类' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义列表分类' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_custom_form_category
@@ -4514,7 +4514,7 @@ CREATE TABLE `gen_custom_list`  (
   `allow_export` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否允许导出',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `category_id`(`category_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义列表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义列表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_custom_list
@@ -4536,7 +4536,7 @@ CREATE TABLE `gen_custom_list_category`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义列表分类' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义列表分类' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_custom_list_category
@@ -4559,7 +4559,7 @@ CREATE TABLE `gen_custom_list_detail`  (
   `formatter` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '格式化脚本',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `custom_list_id`(`custom_list_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义列表明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义列表明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_custom_list_detail
@@ -4581,7 +4581,7 @@ CREATE TABLE `gen_custom_list_handle_column`  (
   `width` int(11) NOT NULL COMMENT '宽度',
   `order_no` int(11) NOT NULL COMMENT '排序编号',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义列表工具栏' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义列表工具栏' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_custom_list_handle_column
@@ -4604,7 +4604,7 @@ CREATE TABLE `gen_custom_list_query_params`  (
   `type` tinyint(3) NOT NULL COMMENT '类型',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `custom_list_id`(`custom_list_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义列表查询参数' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义列表查询参数' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_custom_list_query_params
@@ -4625,7 +4625,7 @@ CREATE TABLE `gen_custom_list_toolbar`  (
   `icon` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '图标',
   `order_no` int(11) NOT NULL COMMENT '排序编号',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义列表工具栏' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义列表工具栏' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_custom_list_toolbar
@@ -4650,7 +4650,7 @@ CREATE TABLE `gen_custom_page`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `category_id`(`category_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义页面' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义页面' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_custom_page
@@ -4673,7 +4673,7 @@ CREATE TABLE `gen_custom_page_category`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义页面分类' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义页面分类' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_custom_page_category
@@ -4705,7 +4705,7 @@ CREATE TABLE `gen_custom_selector`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `category_id`(`category_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义对话框' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义对话框' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_custom_selector
@@ -4727,7 +4727,7 @@ CREATE TABLE `gen_custom_selector_category`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义对话框分类' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '自定义对话框分类' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_custom_selector_category
@@ -4758,7 +4758,7 @@ CREATE TABLE `gen_data_entity`  (
   `convert_type` tinyint(3) NOT NULL COMMENT '转换方式',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `category_id`(`category_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据实体' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据实体' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_data_entity
@@ -4780,7 +4780,7 @@ CREATE TABLE `gen_data_entity_category`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据实体分类' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据实体分类' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_data_entity_category
@@ -4820,7 +4820,7 @@ CREATE TABLE `gen_data_entity_detail`  (
   `db_decimals` int(11) NULL DEFAULT NULL COMMENT '小数位数',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `entity_id`(`entity_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据实体明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据实体明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_data_entity_detail
@@ -4846,7 +4846,7 @@ CREATE TABLE `gen_data_obj`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `category_id`(`category_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据对象' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据对象' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_data_obj
@@ -4868,7 +4868,7 @@ CREATE TABLE `gen_data_obj_category`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据实体分类' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据实体分类' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_data_obj_category
@@ -4890,7 +4890,7 @@ CREATE TABLE `gen_data_obj_detail`  (
   `order_no` int(11) NOT NULL COMMENT '排序',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `data_obj_id`(`data_obj_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据对象明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据对象明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_data_obj_detail
@@ -4910,7 +4910,7 @@ CREATE TABLE `gen_data_obj_query_detail`  (
   `order_no` int(11) NOT NULL COMMENT '排序',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `data_obj_id`(`data_obj_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据对象自定义查询明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据对象自定义查询明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_data_obj_query_detail
@@ -4925,7 +4925,7 @@ CREATE TABLE `gen_detail_column_config`  (
   `span` int(11) NOT NULL COMMENT '列宽',
   `order_no` int(11) NOT NULL COMMENT '排序编号',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '详情功能代码生成配置' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '详情功能代码生成配置' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_detail_column_config
@@ -4952,7 +4952,7 @@ CREATE TABLE `gen_generate_info`  (
   `is_cache` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否应用缓存',
   `has_delete` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否内置删除功能',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '代码生成基本信息' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '代码生成基本信息' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_generate_info
@@ -4969,7 +4969,7 @@ CREATE TABLE `gen_query_column_config`  (
   `sortable` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否页面排序',
   `order_no` int(11) NOT NULL COMMENT '排序编号',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '查询功能代码生成配置' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '查询功能代码生成配置' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_query_column_config
@@ -4984,7 +4984,7 @@ CREATE TABLE `gen_query_params_column_config`  (
   `query_type` tinyint(3) NOT NULL COMMENT '查询类型',
   `order_no` int(11) NOT NULL COMMENT '排序编号',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '查询参数功能代码生成配置' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '查询参数功能代码生成配置' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_query_params_column_config
@@ -5005,7 +5005,7 @@ CREATE TABLE `gen_simple_table`  (
   `convert_type` tinyint(3) NOT NULL COMMENT '转换方式',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `table_schema`(`table_schema`, `table_name`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据库单表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据库单表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_simple_table
@@ -5028,7 +5028,7 @@ CREATE TABLE `gen_simple_table_column`  (
   `len` bigint(20) NULL DEFAULT NULL COMMENT '长度',
   `decimals` int(11) NULL DEFAULT NULL COMMENT '小数位数',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据库单表列信息' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据库单表列信息' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_simple_table_column
@@ -5043,7 +5043,7 @@ CREATE TABLE `gen_update_column_config`  (
   `required` tinyint(1) NOT NULL DEFAULT 0,
   `order_no` int(11) NOT NULL COMMENT '排序编号',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '修改功能代码生成配置' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '修改功能代码生成配置' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_update_column_config
@@ -5065,7 +5065,7 @@ CREATE TABLE `op_logs`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `create_by`(`create_by`) USING BTREE,
   INDEX `create_time`(`create_time`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '操作日志' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '操作日志' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of op_logs
@@ -5084,7 +5084,7 @@ CREATE TABLE `recursion_mapping`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `node_id`(`node_id`, `node_type`) USING BTREE,
   INDEX `node_type`(`node_type`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '树形数据节点关系表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '树形数据节点关系表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of recursion_mapping
@@ -5123,7 +5123,7 @@ CREATE TABLE `settle_check_sheet`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE,
   INDEX `supplier_id`(`supplier_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商对账单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商对账单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of settle_check_sheet
@@ -5145,7 +5145,7 @@ CREATE TABLE `settle_check_sheet_detail`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `sheet_id`(`sheet_id`, `biz_id`) USING BTREE,
   INDEX `biz_id`(`biz_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商对账单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商对账单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of settle_check_sheet_detail
@@ -5176,7 +5176,7 @@ CREATE TABLE `settle_fee_sheet`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE,
   INDEX `supplier_id`(`supplier_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商费用单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商费用单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of settle_fee_sheet
@@ -5195,7 +5195,7 @@ CREATE TABLE `settle_fee_sheet_detail`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `sheet_id`(`sheet_id`, `item_id`) USING BTREE,
   INDEX `item_id`(`item_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商费用单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商费用单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of settle_fee_sheet_detail
@@ -5219,7 +5219,7 @@ CREATE TABLE `settle_in_item`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '收入项目' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '收入项目' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of settle_in_item
@@ -5243,7 +5243,7 @@ CREATE TABLE `settle_out_item`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '支出项目' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '支出项目' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of settle_out_item
@@ -5273,7 +5273,7 @@ CREATE TABLE `settle_pre_sheet`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE,
   INDEX `supplier_id`(`supplier_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商预付款单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商预付款单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of settle_pre_sheet
@@ -5292,7 +5292,7 @@ CREATE TABLE `settle_pre_sheet_detail`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `sheet_id`(`sheet_id`, `item_id`) USING BTREE,
   INDEX `item_id`(`item_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商预付款单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商预付款单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of settle_pre_sheet_detail
@@ -5324,7 +5324,7 @@ CREATE TABLE `settle_sheet`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE,
   INDEX `supplier_id`(`supplier_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商结算单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商结算单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of settle_sheet
@@ -5345,7 +5345,7 @@ CREATE TABLE `settle_sheet_detail`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `sheet_id`(`sheet_id`, `biz_id`) USING BTREE,
   INDEX `biz_id`(`biz_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商结算单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '供应商结算单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of settle_sheet_detail
@@ -5372,7 +5372,7 @@ CREATE TABLE `sw_file_box`  (
   `update_by_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '修改人ID',
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '文件收纳箱' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '文件收纳箱' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sw_file_box
@@ -5395,7 +5395,7 @@ CREATE TABLE `sw_online_excel`  (
   `update_by_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '修改人ID',
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '在线Excel' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '在线Excel' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sw_online_excel
@@ -5420,7 +5420,7 @@ CREATE TABLE `sys_data_dic`  (
   UNIQUE INDEX `code`(`code`) USING BTREE,
   UNIQUE INDEX `name`(`name`) USING BTREE,
   INDEX `category_id`(`category_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据字典' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据字典' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_data_dic
@@ -5442,7 +5442,7 @@ CREATE TABLE `sys_data_dic_category`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据字典分类' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据字典分类' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_data_dic_category
@@ -5467,7 +5467,7 @@ CREATE TABLE `sys_data_dic_item`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `dic_id`(`dic_id`, `code`) USING BTREE,
   UNIQUE INDEX `dic_id_2`(`dic_id`, `name`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据字典' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据字典' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_data_dic_item
@@ -5485,7 +5485,7 @@ CREATE TABLE `sys_data_permission_data`  (
   `permission` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '数据权限',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `biz_id`(`biz_id`, `biz_type`, `permission_type`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据权限数据' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '数据权限数据' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_data_permission_data
@@ -5551,7 +5551,7 @@ CREATE TABLE `sys_dept`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE,
   UNIQUE INDEX `name`(`name`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '部门' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '部门' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_dept
@@ -5570,7 +5570,7 @@ CREATE TABLE `sys_generate_code`  (
   `name` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '名称',
   `config_str` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '配置信息（JSONArray）',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '编号规则' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '编号规则' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_generate_code
@@ -5631,7 +5631,7 @@ CREATE TABLE `sys_mail_message`  (
   INDEX `mail`(`mail`) USING BTREE,
   INDEX `biz_key`(`biz_key`) USING BTREE,
   INDEX `create_time`(`create_time`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '邮件消息' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '邮件消息' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_mail_message
@@ -5668,7 +5668,7 @@ CREATE TABLE `sys_menu`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`, `name`, `title`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '菜单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '菜单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_menu
@@ -5995,7 +5995,7 @@ CREATE TABLE `sys_menu_collect`  (
   `menu_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '菜单ID',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `user_id, menu_id`(`user_id`, `menu_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '菜单收藏' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '菜单收藏' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_menu_collect
@@ -6021,7 +6021,7 @@ CREATE TABLE `sys_notice`  (
   `un_read_num` int(11) NOT NULL DEFAULT 0 COMMENT '未读人数',
   `publish_time` datetime NULL DEFAULT NULL COMMENT '发布时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统通知' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统通知' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_notice
@@ -6040,7 +6040,7 @@ CREATE TABLE `sys_notice_log`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `notice_id`(`notice_id`, `user_id`) USING BTREE,
   INDEX `user_id`(`user_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统通知记录' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统通知记录' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_notice_log
@@ -6065,7 +6065,7 @@ CREATE TABLE `sys_notify_group`  (
   `available` tinyint(1) NOT NULL COMMENT '状态',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `name`(`name`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '消息通知组' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '消息通知组' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_notify_group
@@ -6081,7 +6081,7 @@ CREATE TABLE `sys_notify_group_receiver`  (
   `receiver_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '接收者ID',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `group_id`(`group_id`, `receiver_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '消息通知组-接收者关系表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '消息通知组-接收者关系表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_notify_group_receiver
@@ -6104,7 +6104,7 @@ CREATE TABLE `sys_parameter`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `pm_key`(`pm_key`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 20 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统参数' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 20 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统参数' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_parameter
@@ -6147,7 +6147,7 @@ CREATE TABLE `sys_role`  (
   INDEX `category_id`(`category_id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE,
   INDEX `name`(`name`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '角色' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '角色' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_role
@@ -6187,7 +6187,7 @@ CREATE TABLE `sys_role_menu`  (
   `menu_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '菜单ID',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `role_id, menu_id`(`role_id`, `menu_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '角色与菜单关系表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '角色与菜单关系表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_role_menu
@@ -6215,7 +6215,7 @@ CREATE TABLE `sys_site_message`  (
   INDEX `biz_key`(`biz_key`) USING BTREE,
   INDEX `receiver_id`(`receiver_id`) USING BTREE,
   INDEX `create_time`(`create_time`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '站内信' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '站内信' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_site_message
@@ -6246,7 +6246,7 @@ CREATE TABLE `sys_user`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE,
   INDEX `username`(`username`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_user
@@ -6264,7 +6264,7 @@ CREATE TABLE `sys_user_dept`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `user_id`(`user_id`, `dept_id`) USING BTREE,
   INDEX `dept_id`(`dept_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户与部门关系表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户与部门关系表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_user_dept
@@ -6289,7 +6289,7 @@ CREATE TABLE `sys_user_group`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `name`(`name`) USING BTREE,
   INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户组' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户组' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_user_group
@@ -6323,7 +6323,7 @@ CREATE TABLE `sys_user_position`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `user_id`(`user_id`, `position_id`) USING BTREE,
   INDEX `position_id`(`position_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户与岗位关系表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户与岗位关系表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_user_position
@@ -6340,7 +6340,7 @@ CREATE TABLE `sys_user_role`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `user_id, role_id`(`user_id`, `role_id`) USING BTREE,
   INDEX `role_id`(`role_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户与角色关系表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户与角色关系表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_user_role
@@ -6357,7 +6357,7 @@ CREATE TABLE `sys_user_telephone`  (
   `user_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '用户ID',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `telephone`(`telephone`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户绑定手机号表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户绑定手机号表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_user_telephone
@@ -6389,7 +6389,7 @@ CREATE TABLE `tbl_export_task`  (
   INDEX `finish_time`(`finish_time`) USING BTREE,
   INDEX `req_params_sign`(`req_params_sign`) USING BTREE,
   INDEX `create_by_id`(`create_by_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '导出任务' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '导出任务' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_export_task
@@ -6432,7 +6432,7 @@ CREATE TABLE `tbl_logistics_sheet`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE,
   INDEX `logistics_no`(`logistics_no`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '物流单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '物流单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_logistics_sheet
@@ -6450,7 +6450,7 @@ CREATE TABLE `tbl_logistics_sheet_detail`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX ```biz_id```(`biz_id`, `biz_type`) USING BTREE,
   INDEX `sheet_id`(`sheet_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '物流单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '物流单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_logistics_sheet_detail
@@ -6471,7 +6471,7 @@ CREATE TABLE `tbl_order_chart`  (
   INDEX `create_time`(`create_time`) USING BTREE,
   INDEX `create_date`(`create_date`) USING BTREE,
   INDEX `create_hour`(`create_hour`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '订单图表数据' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '订单图表数据' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_order_chart
@@ -6509,7 +6509,7 @@ CREATE TABLE `tbl_order_time_line`  (
   `biz_type` tinyint(3) NOT NULL COMMENT '业务类型',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `order_id`(`order_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '单据时间轴' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '单据时间轴' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_order_time_line
@@ -6534,7 +6534,7 @@ CREATE TABLE `tbl_pre_take_stock_sheet`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE,
   INDEX `sc_id`(`sc_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存预先盘点单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存预先盘点单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_pre_take_stock_sheet
@@ -6554,7 +6554,7 @@ CREATE TABLE `tbl_pre_take_stock_sheet_detail`  (
   `order_no` int(11) NOT NULL COMMENT '排序',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `sheet_id`(`sheet_id`, `product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存预先盘点单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存预先盘点单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_pre_take_stock_sheet_detail
@@ -6576,7 +6576,7 @@ CREATE TABLE `tbl_print_template`  (
   `update_by_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '修改人ID',
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '打印模板' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '打印模板' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_print_template
@@ -6600,7 +6600,7 @@ CREATE TABLE `tbl_print_template_comp`  (
   `comp_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '组件配置',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `template_id`(`template_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '打印模板组件' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '打印模板组件' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_print_template_comp
@@ -6632,7 +6632,7 @@ CREATE TABLE `tbl_product_stock`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `product_id`(`product_id`, `sc_id`) USING BTREE,
   INDEX `sc_id`(`sc_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品库存' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品库存' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_product_stock
@@ -6663,7 +6663,7 @@ CREATE TABLE `tbl_product_stock_log`  (
   INDEX `sc_id`(`sc_id`) USING BTREE,
   INDEX `create_time`(`create_time`) USING BTREE,
   INDEX `product_id`(`product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品库存变动记录' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '商品库存变动记录' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_product_stock_log
@@ -6688,7 +6688,7 @@ CREATE TABLE `tbl_product_stock_warning`  (
   `available` tinyint(1) NOT NULL DEFAULT 1 COMMENT '状态',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `sc_id`(`sc_id`, `product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存预警' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存预警' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_product_stock_warning
@@ -6703,7 +6703,7 @@ CREATE TABLE `tbl_product_stock_warning_notify`  (
   `notify_group_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '通知组ID',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `notify_group_id`(`notify_group_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存预警通知组' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存预警通知组' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_product_stock_warning_notify
@@ -6723,7 +6723,7 @@ CREATE TABLE `tbl_purchase_config`  (
   `purchase_return_require_receive` tinyint(1) NOT NULL DEFAULT 0 COMMENT '采购退货单是否关联采购收货单',
   `purchase_return_multiple_relate_receive` tinyint(1) NOT NULL DEFAULT 0 COMMENT '采购退货单是否多次关联采购收货单',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采购参数设置' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采购参数设置' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_purchase_config
@@ -6762,7 +6762,7 @@ CREATE TABLE `tbl_purchase_order`  (
   INDEX `supplier_id`(`supplier_id`) USING BTREE,
   INDEX `create_time`(`create_time`) USING BTREE,
   INDEX `flow_instance_id`(`flow_instance_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采购订单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采购订单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_purchase_order
@@ -6787,7 +6787,7 @@ CREATE TABLE `tbl_purchase_order_detail`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `order_id`(`order_id`) USING BTREE,
   INDEX `product_id`(`product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采购订单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采购订单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_purchase_order_detail
@@ -6943,7 +6943,7 @@ CREATE TABLE `tbl_purchase_return`  (
   INDEX `supplier_id`(`supplier_id`) USING BTREE,
   INDEX `receive_sheet_id`(`receive_sheet_id`) USING BTREE,
   INDEX `create_time`(`create_time`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采购退单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采购退单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_purchase_return
@@ -6969,7 +6969,7 @@ CREATE TABLE `tbl_purchase_return_detail`  (
   INDEX `return_id`(`return_id`) USING BTREE,
   INDEX `receive_sheet_detail_id`(`receive_sheet_detail_id`) USING BTREE,
   INDEX `product_id`(`product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采购退单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采购退单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_purchase_return_detail
@@ -7011,7 +7011,7 @@ CREATE TABLE `tbl_receive_sheet`  (
   INDEX `supplier_id`(`supplier_id`) USING BTREE,
   INDEX `purchase_order_id`(`purchase_order_id`) USING BTREE,
   INDEX `create_time`(`create_time`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采购收货单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采购收货单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_receive_sheet
@@ -7038,7 +7038,7 @@ CREATE TABLE `tbl_receive_sheet_detail`  (
   INDEX `sheet_id`(`sheet_id`) USING BTREE,
   INDEX `purchase_order_detail_id`(`purchase_order_detail_id`) USING BTREE,
   INDEX `product_id`(`product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采购收货单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '采购收货单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_receive_sheet_detail
@@ -7082,7 +7082,7 @@ CREATE TABLE `tbl_retail_config`  (
   `retail_return_require_member` tinyint(1) NOT NULL DEFAULT 1 COMMENT '零售退货单上的会员是否必填',
   `retail_out_sheet_require_logistics` tinyint(1) NOT NULL DEFAULT 0 COMMENT '零售出库单是否需要发货',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '零售参数设置' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '零售参数设置' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_retail_config
@@ -7120,7 +7120,7 @@ CREATE TABLE `tbl_retail_out_sheet`  (
   INDEX `sc_id`(`sc_id`) USING BTREE,
   INDEX `create_time`(`create_time`) USING BTREE,
   INDEX `member_id`(`member_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '零售出库单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '零售出库单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_retail_out_sheet
@@ -7149,7 +7149,7 @@ CREATE TABLE `tbl_retail_out_sheet_detail`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `sheet_id`(`sheet_id`) USING BTREE,
   INDEX `product_id`(`product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '零售出库单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '零售出库单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_retail_out_sheet_detail
@@ -7175,7 +7175,7 @@ CREATE TABLE `tbl_retail_out_sheet_detail_bundle`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `sheet_id`(`sheet_id`, `product_detail_id`) USING BTREE,
   INDEX `detail_id`(`detail_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '零售出库单组合商品明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '零售出库单组合商品明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_retail_out_sheet_detail_bundle
@@ -7195,7 +7195,7 @@ CREATE TABLE `tbl_retail_out_sheet_detail_lot`  (
   `order_no` int(11) NOT NULL COMMENT '排序编号',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `detail_id`(`detail_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '零售出库单批次明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '零售出库单批次明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_retail_out_sheet_detail_lot
@@ -7234,7 +7234,7 @@ CREATE TABLE `tbl_retail_return`  (
   INDEX `create_time`(`create_time`) USING BTREE,
   INDEX `out_sheet_id`(`out_sheet_id`) USING BTREE,
   INDEX `member_id`(`member_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '零售退单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '零售退单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_retail_return
@@ -7263,7 +7263,7 @@ CREATE TABLE `tbl_retail_return_detail`  (
   INDEX `return_id`(`return_id`) USING BTREE,
   INDEX `out_sheet_detail_id`(`out_sheet_detail_id`) USING BTREE,
   INDEX `product_id`(`product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '零售退单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '零售退单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_retail_return_detail
@@ -7281,7 +7281,7 @@ CREATE TABLE `tbl_sale_config`  (
   `sale_return_multiple_relate_out_stock` tinyint(1) NOT NULL DEFAULT 0 COMMENT '销售退货单是否多次关联销售出库单',
   `out_stock_require_logistics` tinyint(1) NOT NULL DEFAULT 0 COMMENT '销售出库单是否需要物流单',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售参数设置' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售参数设置' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_sale_config
@@ -7317,7 +7317,7 @@ CREATE TABLE `tbl_sale_order`  (
   INDEX `sc_id`(`sc_id`) USING BTREE,
   INDEX `create_time`(`create_time`) USING BTREE,
   INDEX `customer_id`(`customer_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售订单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售订单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_sale_order
@@ -7345,7 +7345,7 @@ CREATE TABLE `tbl_sale_order_detail`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `order_id`(`order_id`) USING BTREE,
   INDEX `product_id`(`product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售订单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售订单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_sale_order_detail
@@ -7371,7 +7371,7 @@ CREATE TABLE `tbl_sale_order_detail_bundle`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `order_id`(`order_id`, `product_detail_id`) USING BTREE,
   INDEX `detail_id`(`detail_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售单组合商品明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售单组合商品明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_sale_order_detail_bundle
@@ -7412,7 +7412,7 @@ CREATE TABLE `tbl_sale_out_sheet`  (
   INDEX `create_time`(`create_time`) USING BTREE,
   INDEX `customer_id`(`customer_id`) USING BTREE,
   INDEX `sale_order_id`(`sale_order_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售出库单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售出库单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_sale_out_sheet
@@ -7443,7 +7443,7 @@ CREATE TABLE `tbl_sale_out_sheet_detail`  (
   INDEX `sheet_id`(`sheet_id`) USING BTREE,
   INDEX `purchase_order_detail_id`(`sale_order_detail_id`) USING BTREE,
   INDEX `product_id`(`product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售出库单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售出库单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_sale_out_sheet_detail
@@ -7469,7 +7469,7 @@ CREATE TABLE `tbl_sale_out_sheet_detail_bundle`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `sheet_id`(`sheet_id`, `product_detail_id`) USING BTREE,
   INDEX `detail_id`(`detail_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售出库单组合商品明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售出库单组合商品明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_sale_out_sheet_detail_bundle
@@ -7489,7 +7489,7 @@ CREATE TABLE `tbl_sale_out_sheet_detail_lot`  (
   `order_no` int(11) NOT NULL COMMENT '排序编号',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `detail_id`(`detail_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售出库单批次明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售出库单批次明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_sale_out_sheet_detail_lot
@@ -7530,7 +7530,7 @@ CREATE TABLE `tbl_sale_return`  (
   INDEX `create_time`(`create_time`) USING BTREE,
   INDEX `customer_id`(`customer_id`) USING BTREE,
   INDEX `out_sheet_id`(`out_sheet_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售退单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售退单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_sale_return
@@ -7559,7 +7559,7 @@ CREATE TABLE `tbl_sale_return_detail`  (
   INDEX `return_id`(`return_id`) USING BTREE,
   INDEX `out_sheet_detail_id`(`out_sheet_detail_id`) USING BTREE,
   INDEX `product_id`(`product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售退单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '销售退单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_sale_return_detail
@@ -7655,7 +7655,7 @@ CREATE TABLE `tbl_security_upload_record`  (
   `create_by_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '创建人ID',
   `create_time` datetime NOT NULL COMMENT '创建时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '安全上传记录' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '安全上传记录' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_security_upload_record
@@ -7682,7 +7682,7 @@ CREATE TABLE `tbl_shop`  (
   `update_time` datetime NOT NULL COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '门店' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '门店' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_shop
@@ -7739,7 +7739,7 @@ CREATE TABLE `tbl_stock_adjust_sheet`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE,
   INDEX `sc_id`(`sc_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存调整单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存调整单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_stock_adjust_sheet
@@ -7758,7 +7758,7 @@ CREATE TABLE `tbl_stock_adjust_sheet_detail`  (
   `order_no` int(11) NOT NULL COMMENT '排序',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `sheet_id`(`sheet_id`, `product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存调整单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存调整单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_stock_adjust_sheet_detail
@@ -7776,7 +7776,7 @@ CREATE TABLE `tbl_take_stock_config`  (
   `allow_change_num` tinyint(1) NOT NULL DEFAULT 0 COMMENT '盘点差异单中的盘点数量是否允许手动修改',
   `cancel_hours` int(11) NOT NULL DEFAULT 24 COMMENT '盘点任务创建后多少小时内内未完成，则自动作废',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存盘点参数设置' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存盘点参数设置' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_take_stock_config
@@ -7804,7 +7804,7 @@ CREATE TABLE `tbl_take_stock_plan`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `code`(`code`) USING BTREE,
   INDEX `sc_id`(`sc_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存盘点任务' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存盘点任务' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_take_stock_plan
@@ -7827,7 +7827,7 @@ CREATE TABLE `tbl_take_stock_plan_detail`  (
   `order_no` int(11) NOT NULL DEFAULT 0 COMMENT '排序',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `plan_id`(`plan_id`, `product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存盘点任务明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存盘点任务明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_take_stock_plan_detail
@@ -7858,7 +7858,7 @@ CREATE TABLE `tbl_take_stock_sheet`  (
   UNIQUE INDEX `code`(`code`) USING BTREE,
   INDEX `plan_id`(`plan_id`) USING BTREE,
   INDEX `sc_id`(`sc_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存盘点单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存盘点单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_take_stock_sheet
@@ -7877,7 +7877,7 @@ CREATE TABLE `tbl_take_stock_sheet_detail`  (
   `order_no` int(11) NOT NULL COMMENT '排序',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `sheet_id`(`sheet_id`, `product_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存盘点单明细' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '库存盘点单明细' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tbl_take_stock_sheet_detail
