@@ -58,8 +58,12 @@
                 </j-form-item>
                 <j-form-item label="状态">
                   <a-select v-model:value="searchFormData.available" placeholder="全部" allow-clear>
+                    <a-select-option :value="undefined">全部</a-select-option>
                     <a-select-option :value="AVAILABLE.ENABLE.code">{{
-                      '仅显示' + AVAILABLE.ENABLE.desc
+                      AVAILABLE.ENABLE.desc
+                    }}</a-select-option>
+                    <a-select-option :value="AVAILABLE.UNABLE.code">{{
+                      AVAILABLE.UNABLE.desc
                     }}</a-select-option>
                   </a-select>
                 </j-form-item>
@@ -126,36 +130,36 @@
 </template>
 
 <script>
-  import { defineComponent, h } from 'vue';
-  import Add from './add.vue';
-  import Modify from './modify.vue';
-  import Detail from './detail.vue';
-  import * as api from '@/api/system/menu';
-  import {
-    CheckOutlined,
-    DownOutlined,
-    PlusOutlined,
-    SearchOutlined,
-    StopOutlined,
-  } from '@ant-design/icons-vue';
-  import {
-    isEmpty,
-    toArrayTree,
-    toString,
-    searchTree,
-    toTreeArray,
-    isEqualWithStr,
-    union,
-  } from '@/utils/utils';
-  import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
-  import { MENU_DISPLAY } from '@/enums/biz/menuDisplay';
-  import { AVAILABLE } from '@/enums/biz/available';
-  import AvailableTag from '@/components/Tag/AvailableTag.vue';
-  import MenuDisplayTag from '@/components/Tag/MenuDisplayTag.vue';
-  import BatchHandler from '@/components/BatchHandler';
-  import TenantList from '@/components/TenantList';
+import {defineComponent, h} from 'vue';
+import Add from './add.vue';
+import Modify from './modify.vue';
+import Detail from './detail.vue';
+import * as api from '@/api/system/menu';
+import {
+  CheckOutlined,
+  DownOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  StopOutlined,
+} from '@ant-design/icons-vue';
+import {
+  isEmpty,
+  isEqualWithStr,
+  searchTree,
+  toArrayTree,
+  toString,
+  toTreeArray,
+  union,
+} from '@/utils/utils';
+import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
+import {MENU_DISPLAY} from '@/enums/biz/menuDisplay';
+import {AVAILABLE} from '@/enums/biz/available';
+import AvailableTag from '@/components/Tag/AvailableTag.vue';
+import MenuDisplayTag from '@/components/Tag/MenuDisplayTag.vue';
+import BatchHandler from '@/components/BatchHandler';
+import TenantList from '@/components/TenantList';
 
-  export default defineComponent({
+export default defineComponent({
     name: 'Menu',
     components: {
       TenantList,
