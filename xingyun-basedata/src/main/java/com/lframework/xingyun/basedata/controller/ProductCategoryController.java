@@ -6,41 +6,41 @@ import com.lframework.starter.web.core.annotations.security.HasPermission;
 import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.controller.DefaultBaseController;
+import com.lframework.starter.web.core.utils.ExcelImportUtil;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.inner.service.RecursionMappingService;
 import com.lframework.xingyun.basedata.bo.product.category.GetProductCategoryBo;
 import com.lframework.xingyun.basedata.bo.product.category.ProductCategoryTreeBo;
 import com.lframework.xingyun.basedata.entity.ProductCategory;
-import com.lframework.xingyun.basedata.excel.product.category.ProductCategoryImportListener;
 import com.lframework.xingyun.basedata.excel.product.category.ProductCategoryImportModel;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.vo.product.category.CreateProductCategoryVo;
 import com.lframework.xingyun.basedata.vo.product.category.UpdateProductCategoryVo;
+import com.lframework.xingyun.core.utils.EasyExcelUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 分类管理
  *
  * @author zmj
  */
+@Slf4j
 @Api(tags = "分类管理")
 @Validated
 @RestController
@@ -143,16 +143,26 @@ public class ProductCategoryController extends DefaultBaseController {
     ExcelUtil.exportXls("分类导入模板", ProductCategoryImportModel.class);
   }
 
-  @ApiOperation("导入")
-  @HasPermission({"base-data:product:category:import"})
-  @PostMapping("/import")
-  public InvokeResult<Void> importExcel(@NotBlank(message = "ID不能为空") String id,
-      @NotNull(message = "请上传文件") MultipartFile file) {
+    @ApiOperation("导入")
+    @HasPermission({"base-data:product:category:import"})
+    @PostMapping("/import")
+    public InvokeResult<Void> importExcel(@NotBlank(message = "ID不能为空") String id,
+                                          @NotNull(message = "请上传文件") MultipartFile file) {
 
-    ProductCategoryImportListener listener = new ProductCategoryImportListener();
-    listener.setTaskId(id);
-    ExcelUtil.read(file, ProductCategoryImportModel.class, listener).sheet().doRead();
+        try {
+            List<ProductCategoryImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(), ProductCategoryImportModel.class);
+            productCategoryService.importExcel(list, id);
 
-    return InvokeResultBuilder.success();
-  }
+            // ProductCategoryImportListener listener = new ProductCategoryImportListener();
+            // listener.setTaskId(id);
+            // ExcelUtil.read(file, ProductCategoryImportModel.class, listener).sheet().doRead();
+
+            ExcelImportUtil.finished(id);
+            return InvokeResultBuilder.success();
+        } catch (IOException e) {
+            log.error("请求出错 importExcel", e);
+            ExcelImportUtil.setHasError(id, true);
+            return InvokeResultBuilder.fail();
+        }
+    }
 }
