@@ -24,7 +24,7 @@ spring:
           driver-class-name: com.mysql.cj.jdbc.Driver
           url: jdbc:mysql://127.0.0.1:3306/xingyun_platform?rewriteBatchedStatements=true&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false&autoReconnect=true&failOverReadOnly=false&serverTimezone=GMT%2B8
           username: root
-          password: 7212413WEnmu
+          password: h7ZHNYPPkP7pCC2R
           druid:
             initial-size: 10
             min-idle: 10
