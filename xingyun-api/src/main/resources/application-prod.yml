@@ -23,9 +23,9 @@ spring:
         master:
           type: com.alibaba.druid.pool.DruidDataSource
           driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://127.0.0.1:3306/platform?rewriteBatchedStatements=true&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false&autoReconnect=true&failOverReadOnly=false&serverTimezone=GMT%2B8
-          username: root
-          password: password
+          url: jdbc:mysql://127.0.0.1:8964/xingyun_platform?rewriteBatchedStatements=true&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false&autoReconnect=true&failOverReadOnly=false&serverTimezone=GMT%2B8
+          username: xingyun_platform
+          password: h7ZHNYPPkP7pCC2R
           druid:
             initial-size: 10
             min-idle: 10
@@ -44,11 +44,11 @@ spring:
     #地址
     host: 127.0.0.1
     #端口，默认为6379
-    port: 6379
+    port: 50536
     #数据库
     database: 0
     #密码
-    password: password
+    password: WYmMHbdQUHB2kc55EbFR
     #连接超时时间
     timeout: 10s
     lettuce:
@@ -63,10 +63,10 @@ spring:
         max-wait: -1ms
   #RabbitMQ配置
   rabbitmq:
-    addresses: 127.0.0.1:5672             # RabbitMQ集群地址列表，多个地址用逗号分隔
+    addresses: 127.0.0.1:28503             # RabbitMQ集群地址列表，多个地址用逗号分隔
     virtual-host: /
-    username: username
-    password: password
+    username: admin
+    password: yRNv4vs4nXuY3PDuUAf2
     connection-timeout: 60000 # 连接超时时间（毫秒），默认为60000毫秒（60秒）
     ssl:
       enabled: false       # 是否启用SSL，默认为false
