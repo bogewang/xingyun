@@ -6,6 +6,7 @@ import com.lframework.starter.web.core.annotations.security.HasPermission;
 import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.controller.DefaultBaseController;
+import com.lframework.starter.web.core.utils.EasyExcelUtils;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.inner.service.RecursionMappingService;
 import com.lframework.xingyun.basedata.bo.product.category.GetProductCategoryBo;
@@ -15,7 +16,6 @@ import com.lframework.xingyun.basedata.excel.product.category.ProductCategoryImp
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.vo.product.category.CreateProductCategoryVo;
 import com.lframework.xingyun.basedata.vo.product.category.UpdateProductCategoryVo;
-import com.lframework.xingyun.core.utils.EasyExcelUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -138,8 +138,8 @@ public class ProductCategoryController extends DefaultBaseController {
   @ApiOperation("下载导入模板")
   @HasPermission({"base-data:product:category:import"})
   @GetMapping("/import/template")
-  public void downloadImportTemplate() {
-    ExcelUtil.exportXls("分类导入模板", ProductCategoryImportModel.class);
+  public void downloadImportTemplate() throws IOException {
+    ExcelUtil.export("分类导入模板", ProductCategoryImportModel.class);
   }
 
     @ApiOperation("导入")

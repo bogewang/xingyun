@@ -1,6 +1,5 @@
 package com.lframework.xingyun.basedata.impl.product;
 
-import cn.hutool.core.date.StopWatch;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.common.collect.Lists;
@@ -42,7 +41,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -329,21 +327,11 @@ public class ProductCategoryServiceImpl extends
             throw new DefaultClientException("导入数据为空！");
         }
 
-        StopWatch stopWatch = new StopWatch("导入商品分类");
-        stopWatch.start("校验");
         List<ProductCategory> persists = Lists.newArrayList();
         checkCategory(list, persists);
-        stopWatch.stop();
 
-        stopWatch.start("持久化insertBatch");
-        saveBatch(persists, 100);
-        stopWatch.stop();
-
-        stopWatch.start("持久化saveRecursion");
+        saveBatch(persists);
         saveRecursion(true, persists);
-
-        stopWatch.stop();
-        log.info(stopWatch.prettyPrint(TimeUnit.MILLISECONDS));
     }
 
     /**
