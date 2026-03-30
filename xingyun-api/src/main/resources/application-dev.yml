@@ -3,9 +3,9 @@ logging:
     console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint}|%clr(%5p)|%clr(${PID:- }){magenta}|%clr(%15.15t){faint}|%clr(${spring.application.name}){cyan}|%clr(%X{X-B3-TraceId:-N/A}){blue}|%X{X-B3-SpanId:-N/A}|%clr(%-40.40logger{39}){cyan}|%m%n%wEx"
     file: ${logging.pattern.console}
   level:
-    com.lframework: DEBUG
+    com.lframework: INFO
     io.lettuce.core.protocol: OFF
-    org.dromara.warm.flow: DEBUG
+    org.dromara.warm.flow: INFO
 
 spring:
   servlet:
@@ -116,3 +116,6 @@ jugg:
   web:
     filter-url: /**
 #    filter-url: /selector/list/tenant
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

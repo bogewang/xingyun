@@ -58,11 +58,11 @@ public interface ProductCategoryService extends BaseMpService<ProductCategory> {
   /**
    * 保存关系
    *
-   * @param categoryId
-   * @param parentId
+   * @param isCreate
+   * @param categoryList
    */
-  void saveRecursion(Boolean isCreate, String categoryId, String parentId);
+  void saveRecursion(Boolean isCreate, List<ProductCategory> categoryList);
 
-    void importExcel(List<ProductCategoryImportModel> list, String taskId);
+    void importExcel(List<ProductCategoryImportModel> list);
 
 }

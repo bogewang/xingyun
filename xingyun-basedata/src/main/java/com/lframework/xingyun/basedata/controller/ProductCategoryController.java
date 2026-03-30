@@ -6,7 +6,6 @@ import com.lframework.starter.web.core.annotations.security.HasPermission;
 import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.controller.DefaultBaseController;
-import com.lframework.starter.web.core.utils.ExcelImportUtil;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.inner.service.RecursionMappingService;
 import com.lframework.xingyun.basedata.bo.product.category.GetProductCategoryBo;
@@ -146,23 +145,15 @@ public class ProductCategoryController extends DefaultBaseController {
     @ApiOperation("导入")
     @HasPermission({"base-data:product:category:import"})
     @PostMapping("/import")
-    public InvokeResult<Void> importExcel(@NotBlank(message = "ID不能为空") String id,
-                                          @NotNull(message = "请上传文件") MultipartFile file) {
-
+    public InvokeResult<Void> importExcel(@NotNull(message = "请上传文件") MultipartFile file) throws IOException {
         try {
             List<ProductCategoryImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(), ProductCategoryImportModel.class);
-            productCategoryService.importExcel(list, id);
+            productCategoryService.importExcel(list);
 
-            // ProductCategoryImportListener listener = new ProductCategoryImportListener();
-            // listener.setTaskId(id);
-            // ExcelUtil.read(file, ProductCategoryImportModel.class, listener).sheet().doRead();
-
-            ExcelImportUtil.finished(id);
             return InvokeResultBuilder.success();
         } catch (IOException e) {
-            log.error("请求出错 importExcel", e);
-            ExcelImportUtil.setHasError(id, true);
-            return InvokeResultBuilder.fail();
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
         }
     }
 }

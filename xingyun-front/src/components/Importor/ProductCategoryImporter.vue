@@ -11,11 +11,11 @@
 </template>
 
 <script>
-  import { defineComponent } from 'vue';
-  import ExcelImporter from '@/components/ExcelImporter';
-  import * as api from '@/api/base-data/product/category';
+import {defineComponent} from 'vue';
+import ExcelImporter from '@/components/ExcelImportorNew';
+import * as api from '@/api/base-data/product/category';
 
-  export default defineComponent({
+export default defineComponent({
     name: 'ProductCategoryImporter',
     components: { ExcelImporter },
     data() {

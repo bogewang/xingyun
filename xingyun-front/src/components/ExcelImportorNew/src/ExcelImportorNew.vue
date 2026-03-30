@@ -1,0 +1,128 @@
+<!--跟ExcelImportor不同之处是不使用taskId, 不查询进度-->
+<template>
+  <div>
+    <a-modal
+      v-model:open="visible"
+      :mask-closable="false"
+      width="40%"
+      title="导入"
+      :style="{ top: '20px' }"
+      :footer="null"
+      @cancel="visible = false"
+    >
+      <div v-loading="loading">
+        <div>
+          <a-upload-dragger
+            name="file"
+            accept=".xls,.xlsx"
+            :custom-request="doUpload"
+            :show-upload-list="false"
+          >
+            <p class="ant-upload-drag-icon">
+              <InboxOutlined/>
+            </p>
+            <p class="ant-upload-text"> 点击或拖拽文件进行导入 </p>
+            <p class="ant-upload-hint"> 仅支持xls、xlsx格式 </p>
+          </a-upload-dragger>
+          <div style="margin-bottom: 8px"></div>
+          <slot name="form"></slot>
+          <div style="padding: 0 5px">
+            <span
+              v-if="!isEmpty(tipMsg)"
+              style="font-size: 12px; color: #999999; white-space: pre-wrap"
+            >{{ tipMsg }}</span
+            >
+          </div>
+          <div class="content-wrapper">
+            <a-space>
+              <a-button type="link" block @click="doDownloadTemplate"> 下载模板文件</a-button>
+            </a-space>
+          </div>
+        </div>
+      </div>
+    </a-modal>
+  </div>
+</template>
+<script>
+import {defineComponent} from 'vue';
+import {InboxOutlined} from '@ant-design/icons-vue';
+import {isEmpty} from '@/utils/utils';
+
+export default defineComponent({
+  name: 'ExcelImporter',
+  components: {
+    InboxOutlined,
+  },
+  props: {
+    downloadTemplateUrl: {
+      type: Function,
+      required: true,
+    },
+    uploadUrl: {
+      type: Function,
+      required: true,
+    },
+    tipMsg: {
+      type: String,
+      default: '',
+    },
+    formData: {
+      type: Object,
+      default: () => ({}),
+    },
+    closeAfterFinish: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  setup() {
+    return {
+      isEmpty,
+    };
+  },
+  data() {
+    return {
+      visible: false,
+      loading: false,
+    };
+  },
+  methods: {
+    openDialog() {
+      this.visible = true;
+    },
+    closeDialog() {
+      this.visible = false;
+    },
+    doDownloadTemplate() {
+      this.loading = true;
+      this.downloadTemplateUrl(this.formData).finally(() => {
+        this.loading = false;
+      });
+    },
+    doUpload(e) {
+      this.loading = true;
+      this.uploadUrl(
+        Object.assign(
+          {
+            file: e.file,
+          },
+          this.formData,
+        ),
+      )
+        .then((res) => {
+          this.$emit('confirm', res);
+          if (this.closeAfterFinish) {
+            this.closeDialog();
+          }
+        }).finally(() => {
+        this.loading = false;
+      });
+    },
+  },
+});
+</script>
+<style lang="less" scoped>
+.content-wrapper {
+  text-align: center;
+}
+</style>
