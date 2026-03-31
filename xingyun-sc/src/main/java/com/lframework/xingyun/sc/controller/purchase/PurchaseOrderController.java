@@ -3,57 +3,36 @@ package com.lframework.xingyun.sc.controller.purchase;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.common.utils.StringUtil;
+import com.lframework.starter.mq.core.utils.ExportTaskUtil;
 import com.lframework.starter.web.core.annotations.security.HasPermission;
-import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.components.resp.PageResult;
+import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
-import com.lframework.starter.mq.core.utils.ExportTaskUtil;
-import com.lframework.xingyun.sc.bo.purchase.GetPurchaseOrderBo;
-import com.lframework.xingyun.sc.bo.purchase.PrintPurchaseOrderBo;
-import com.lframework.xingyun.sc.bo.purchase.PurchaseOrderWithReceiveBo;
-import com.lframework.xingyun.sc.bo.purchase.PurchaseProductBo;
-import com.lframework.xingyun.sc.bo.purchase.QueryPurchaseOrderBo;
-import com.lframework.xingyun.sc.bo.purchase.QueryPurchaseOrderWithReceiveBo;
+import com.lframework.xingyun.sc.bo.purchase.*;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseOrderFullDto;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseOrderWithReceiveDto;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseProductDto;
 import com.lframework.xingyun.sc.entity.PurchaseOrder;
-import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderExportTaskWorker;
-import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderImportListener;
-import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderImportModel;
-import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderPayTypeImportListener;
-import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderPayTypeImportModel;
+import com.lframework.xingyun.sc.excel.purchase.*;
 import com.lframework.xingyun.sc.service.purchase.PurchaseOrderService;
-import com.lframework.xingyun.sc.vo.purchase.ApprovePassPurchaseOrderVo;
-import com.lframework.xingyun.sc.vo.purchase.ApproveRefusePurchaseOrderVo;
-import com.lframework.xingyun.sc.vo.purchase.CreatePurchaseOrderVo;
-import com.lframework.xingyun.sc.vo.purchase.QueryPurchaseOrderVo;
-import com.lframework.xingyun.sc.vo.purchase.QueryPurchaseOrderWithReceiveVo;
-import com.lframework.xingyun.sc.vo.purchase.QueryPurchaseProductVo;
-import com.lframework.xingyun.sc.vo.purchase.UpdatePurchaseOrderVo;
+import com.lframework.xingyun.sc.vo.purchase.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 采购订单管理
@@ -305,14 +284,14 @@ public class PurchaseOrderController extends DefaultBaseController {
   @HasPermission({"purchase:order:import"})
   @GetMapping("/import/template")
   public void downloadImportTemplate() {
-    ExcelUtil.exportXls("采购订单导入模板", PurchaseOrderImportModel.class);
+    ExcelUtil.export("采购订单导入模板", PurchaseOrderImportModel.class);
   }
 
   @ApiOperation("下载导入约定支付模板")
   @HasPermission({"purchase:order:import"})
   @GetMapping("/import/template/paytype")
   public void downloadImportPayTypeTemplate() {
-    ExcelUtil.exportXls("采购订单导入约定支付模板", PurchaseOrderPayTypeImportModel.class);
+    ExcelUtil.export("采购订单导入约定支付模板", PurchaseOrderPayTypeImportModel.class);
   }
 
   @ApiOperation("导入")

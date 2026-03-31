@@ -3,15 +3,15 @@ package com.lframework.xingyun.sc.controller.logistics;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.common.utils.NumberUtil;
+import com.lframework.starter.mq.core.utils.ExportTaskUtil;
 import com.lframework.starter.web.core.annotations.security.HasPermission;
-import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.components.resp.PageResult;
+import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.utils.EnumUtil;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
-import com.lframework.starter.mq.core.utils.ExportTaskUtil;
 import com.lframework.xingyun.sc.bo.logistics.GetLogisticsSheetBo;
 import com.lframework.xingyun.sc.bo.logistics.GetLogisticsSheetDeliveryBo;
 import com.lframework.xingyun.sc.bo.logistics.QueryLogisticsSheetBizOrderBo;
@@ -20,41 +20,27 @@ import com.lframework.xingyun.sc.dto.logistics.LogisticsSheetBizOrderDto;
 import com.lframework.xingyun.sc.dto.logistics.LogisticsSheetFullDto;
 import com.lframework.xingyun.sc.entity.LogisticsSheet;
 import com.lframework.xingyun.sc.enums.LogisticsSheetDetailBizType;
-import com.lframework.xingyun.sc.excel.logistics.LogisticsSheetDeliveryImportListener;
-import com.lframework.xingyun.sc.excel.logistics.LogisticsSheetDeliveryImportModel;
-import com.lframework.xingyun.sc.excel.logistics.LogisticsSheetExportTaskWorker;
-import com.lframework.xingyun.sc.excel.logistics.LogisticsSheetImportListener;
-import com.lframework.xingyun.sc.excel.logistics.LogisticsSheetImportModel;
+import com.lframework.xingyun.sc.excel.logistics.*;
 import com.lframework.xingyun.sc.service.logistics.LogisticsSheetService;
 import com.lframework.xingyun.sc.service.retail.RetailOutSheetDetailService;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetDetailService;
-import com.lframework.xingyun.sc.vo.logistics.CreateLogisticsSheetVo;
-import com.lframework.xingyun.sc.vo.logistics.DeliveryLogisticsSheetVo;
-import com.lframework.xingyun.sc.vo.logistics.LogisticsSheetCalcWeightOrVolumeVo;
+import com.lframework.xingyun.sc.vo.logistics.*;
 import com.lframework.xingyun.sc.vo.logistics.LogisticsSheetCalcWeightOrVolumeVo.BizOrderVo;
-import com.lframework.xingyun.sc.vo.logistics.QueryLogisticsSheetBizOrderVo;
-import com.lframework.xingyun.sc.vo.logistics.QueryLogisticsSheetVo;
-import com.lframework.xingyun.sc.vo.logistics.UpdateLogisticsSheetVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 物流单管理
@@ -300,7 +286,7 @@ public class LogisticsSheetController extends DefaultBaseController {
   @HasPermission({"logistics:sheet:import"})
   @GetMapping("/import/template")
   public void downloadImportTemplate() {
-    ExcelUtil.exportXls("物流单导入模板", LogisticsSheetImportModel.class);
+    ExcelUtil.export("物流单导入模板", LogisticsSheetImportModel.class);
   }
 
   @ApiOperation("导入")
@@ -320,7 +306,7 @@ public class LogisticsSheetController extends DefaultBaseController {
   @HasPermission({"logistics:sheet:delivery"})
   @GetMapping("/import/template/delivery")
   public void downloadDeliveryImportTemplate() {
-    ExcelUtil.exportXls("物流单批量发货模板", LogisticsSheetDeliveryImportModel.class);
+    ExcelUtil.export("物流单批量发货模板", LogisticsSheetDeliveryImportModel.class);
   }
 
   @ApiOperation("批量发货")

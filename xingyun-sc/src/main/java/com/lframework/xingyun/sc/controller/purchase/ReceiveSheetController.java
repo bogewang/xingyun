@@ -2,57 +2,37 @@ package com.lframework.xingyun.sc.controller.purchase;
 
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.CollectionUtil;
+import com.lframework.starter.mq.core.utils.ExportTaskUtil;
 import com.lframework.starter.web.core.annotations.security.HasPermission;
-import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.components.resp.PageResult;
+import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
-import com.lframework.starter.mq.core.utils.ExportTaskUtil;
-import com.lframework.xingyun.sc.bo.purchase.receive.GetPaymentDateBo;
-import com.lframework.xingyun.sc.bo.purchase.receive.GetReceiveSheetBo;
-import com.lframework.xingyun.sc.bo.purchase.receive.PrintReceiveSheetBo;
-import com.lframework.xingyun.sc.bo.purchase.receive.QueryReceiveSheetBo;
-import com.lframework.xingyun.sc.bo.purchase.receive.QueryReceiveSheetWithReturnBo;
-import com.lframework.xingyun.sc.bo.purchase.receive.ReceiveSheetWithReturnBo;
+import com.lframework.xingyun.sc.bo.purchase.receive.*;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.PurchaseConfig;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
-import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetExportTaskWorker;
-import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportListener;
-import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
-import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetPayTypeImportListener;
-import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetPayTypeImportModel;
+import com.lframework.xingyun.sc.excel.purchase.receive.*;
 import com.lframework.xingyun.sc.service.purchase.PurchaseConfigService;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
-import com.lframework.xingyun.sc.vo.purchase.receive.ApprovePassReceiveSheetVo;
-import com.lframework.xingyun.sc.vo.purchase.receive.ApproveRefuseReceiveSheetVo;
-import com.lframework.xingyun.sc.vo.purchase.receive.CreateReceiveSheetVo;
-import com.lframework.xingyun.sc.vo.purchase.receive.QueryReceiveSheetVo;
-import com.lframework.xingyun.sc.vo.purchase.receive.QueryReceiveSheetWithReturnVo;
-import com.lframework.xingyun.sc.vo.purchase.receive.UpdateReceiveSheetVo;
+import com.lframework.xingyun.sc.vo.purchase.receive.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 采购收货单管理
@@ -301,14 +281,14 @@ public class ReceiveSheetController extends DefaultBaseController {
   @HasPermission({"purchase:receive:import"})
   @GetMapping("/import/template")
   public void downloadImportTemplate() {
-    ExcelUtil.exportXls("采购收货单导入模板", ReceiveSheetImportModel.class);
+    ExcelUtil.export("采购收货单导入模板", ReceiveSheetImportModel.class);
   }
 
   @ApiOperation("下载导入支付方式模板")
   @HasPermission({"purchase:receive:import"})
   @GetMapping("/import/template/paytype")
   public void downloadImportPayTypeTemplate() {
-    ExcelUtil.exportXls("采购收货单导入支付方式模板", ReceiveSheetPayTypeImportModel.class);
+    ExcelUtil.export("采购收货单导入支付方式模板", ReceiveSheetPayTypeImportModel.class);
   }
 
   @ApiOperation("导入")
