@@ -12,7 +12,7 @@ spring:
   servlet:
     multipart:
       #临时文件路径
-      location: D:\tmp\tmp-datas
+      location: /www/tmp/tmp-datas
   datasource:
     dynamic:
       # 设置默认数据源
