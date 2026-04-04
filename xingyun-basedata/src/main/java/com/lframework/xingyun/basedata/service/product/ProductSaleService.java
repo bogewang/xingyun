@@ -1,5 +1,7 @@
 package com.lframework.xingyun.basedata.service.product;
 
+import java.util.List;
+
 import com.lframework.starter.web.core.service.BaseMpService;
 import com.lframework.xingyun.basedata.entity.ProductSale;
 import com.lframework.xingyun.basedata.vo.product.sale.CreateProductSaleVo;
@@ -14,6 +16,14 @@ public interface ProductSaleService extends BaseMpService<ProductSale> {
    * @return
    */
   String create(CreateProductSaleVo vo);
+
+  /**
+   * 批量创建
+   * 
+   * @param voList
+   * @return
+   */
+  void batchCreate(List<CreateProductSaleVo> voList);
 
   /**
    * 修改

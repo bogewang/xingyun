@@ -3,11 +3,12 @@ package com.lframework.xingyun.basedata.service.product;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.service.BaseMpService;
 import com.lframework.xingyun.basedata.entity.Product;
+import com.lframework.xingyun.basedata.excel.product.ProductImportModel;
 import com.lframework.xingyun.basedata.vo.product.info.CreateProductVo;
 import com.lframework.xingyun.basedata.vo.product.info.QueryProductSelectorVo;
 import com.lframework.xingyun.basedata.vo.product.info.QueryProductVo;
 import com.lframework.xingyun.basedata.vo.product.info.UpdateProductVo;
-import java.util.Collection;
+
 import java.util.List;
 
 public interface ProductService extends BaseMpService<Product> {
@@ -104,4 +105,8 @@ public interface ProductService extends BaseMpService<Product> {
    * @return
    */
   List<Product> getByBrandIds(List<String> brandIds, Integer productType);
+
+    void importExcel(List<ProductImportModel> list);
+
+    List<Product> selectAllAvailable();
 }

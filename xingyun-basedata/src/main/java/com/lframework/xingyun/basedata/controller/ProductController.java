@@ -6,12 +6,12 @@ import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.controller.DefaultBaseController;
+import com.lframework.starter.web.core.utils.EasyExcelUtils;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.basedata.bo.product.info.GetProductBo;
 import com.lframework.xingyun.basedata.bo.product.info.QueryProductBo;
 import com.lframework.xingyun.basedata.entity.Product;
-import com.lframework.xingyun.basedata.excel.product.ProductImportListener;
 import com.lframework.xingyun.basedata.excel.product.ProductImportModel;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductPropertyRelationService;
@@ -23,6 +23,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,6 +46,7 @@ import java.util.stream.Collectors;
 @Validated
 @RestController
 @RequestMapping("/basedata/product")
+@Slf4j
 public class ProductController extends DefaultBaseController {
 
   @Autowired
@@ -156,13 +159,15 @@ public class ProductController extends DefaultBaseController {
   @ApiOperation("导入")
   @HasPermission({"base-data:product:info:import"})
   @PostMapping("/import")
-  public InvokeResult<Void> importExcel(@NotBlank(message = "ID不能为空") String id,
-      @NotNull(message = "请上传文件") MultipartFile file) {
+  public InvokeResult<Void> importExcel(@NotNull(message = "请上传文件") MultipartFile file) {
+    try {
+      List<ProductImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(), ProductImportModel.class);
+      productService.importExcel(list);
 
-    ProductImportListener listener = new ProductImportListener();
-    listener.setTaskId(id);
-    ExcelUtil.read(file, ProductImportModel.class, listener).sheet().doRead();
-
-    return InvokeResultBuilder.success();
+      return InvokeResultBuilder.success();
+    } catch (IOException e) {
+      log.error("请求出错", e);
+      return InvokeResultBuilder.fail(e.getMessage());
+    }
   }
 }

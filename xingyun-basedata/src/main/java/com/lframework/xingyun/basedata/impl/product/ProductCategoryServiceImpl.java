@@ -1,6 +1,7 @@
 package com.lframework.xingyun.basedata.impl.product;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -413,4 +414,15 @@ public class ProductCategoryServiceImpl extends
             data.setId(record.getId());
         }
     }
+
+    @Override
+    public List<ProductCategory> getCategoryByParentIds(List<String> parentIds) {
+        if (CollectionUtil.isEmpty(parentIds)) {
+            return Lists.newArrayList();
+        }
+
+        return baseMapper.selectList(new LambdaQueryWrapper<ProductCategory>()
+                .in(ProductCategory::getParentId, parentIds));
+    }
+
 }
