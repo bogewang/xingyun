@@ -9,15 +9,29 @@
       <j-border>
         <j-form bordered>
           <j-form-item label="仓库" required>
-            <store-center-selector v-model:value="formData.scId" />
+            <a-select
+              v-model:value="formData.scId"
+              placeholder="请选择仓库"
+              show-search
+              :filter-option="filterWarehouseOption"
+              @change="handleWarehouseChange"
+            >
+              <a-select-option
+                v-for="warehouse in warehouseOptions"
+                :key="warehouse.id"
+                :value="warehouse.id"
+              >
+                {{ warehouse.code }} - {{ warehouse.name }}
+              </a-select-option>
+            </a-select>
           </j-form-item>
           <j-form-item label="供应商" required>
             <supplier-selector v-model:value="formData.supplierId" @update:value="supplierChange" />
           </j-form-item>
-          <j-form-item label="采购员">
+          <!-- <j-form-item label="采购员">
             <user-selector v-model:value="formData.purchaserId" />
-          </j-form-item>
-          <j-form-item label="付款日期" required>
+          </j-form-item> -->
+          <!-- <j-form-item label="付款日期" required>
             <a-date-picker
               v-model:value="formData.paymentDate"
               placeholder=""
@@ -29,7 +43,7 @@
                 }
               "
             />
-          </j-form-item>
+          </j-form-item> -->
           <j-form-item label="实际到货日期" required>
             <a-date-picker
               v-model:value="formData.receiveDate"
@@ -37,12 +51,12 @@
               value-format="YYYY-MM-DD"
             />
           </j-form-item>
-          <j-form-item label="采购订单">
+          <!-- <j-form-item label="采购订单">
             <purchase-order-selector-with-receive
               v-model:value="formData.purchaseOrderId"
               @update:value="purchaseOrderChange"
             />
-          </j-form-item>
+          </j-form-item> -->
         </j-form>
       </j-border>
       <!-- 数据列表 -->
@@ -72,7 +86,7 @@
             <a-button :icon="h(EditOutlined)" @click="batchInputPurchasePrice"
               >批量调整采购价</a-button
             >
-            <a-button :icon="h(AlertOutlined)" @click="setGift">设置赠品</a-button>
+            <!-- <a-button :icon="h(AlertOutlined)" @click="setGift">设置赠品</a-button> -->
           </a-space>
         </template>
 
@@ -157,9 +171,9 @@
           <j-form-item label="收货数量" :span="6">
             <a-input v-model:value="formData.totalNum" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="赠品数量" :span="6">
+          <!-- <j-form-item label="赠品数量" :span="6">
             <a-input v-model:value="formData.giftNum" class="number-input" readonly />
-          </j-form-item>
+          </j-form-item> -->
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
@@ -214,11 +228,11 @@ import {
   NumberOutlined,
   PlusOutlined,
 } from '@ant-design/icons-vue';
-import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
 import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
 import UserSelector from '@/components/Selector/UserSelector.vue';
 import * as api from '@/api/sc/purchase/receive';
 import * as purchaseApi from '@/api/sc/purchase/order';
+import * as storeCenterApi from '@/api/base-data/store-center';
 import {multiplePageMix} from '@/mixins/multiplePageMix';
 import {
   add,
@@ -241,7 +255,6 @@ export default defineComponent({
     components: {
       BatchAddProduct,
       PurchaseOrderSelectorWithReceive,
-      StoreCenterSelector,
       SupplierSelector,
       UserSelector,
     },
@@ -266,6 +279,8 @@ export default defineComponent({
         loading: false,
         // 表单数据
         formData: {},
+        // 仓库选项
+        warehouseOptions: [],
         // 工具栏配置
         toolbarConfig: {
           // 缩放
@@ -289,35 +304,35 @@ export default defineComponent({
             width: 260,
             slots: { default: 'productName_default' },
           },
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          { field: 'externalCode', title: '商品简码', width: 120 },
+          // { field: 'skuCode', title: '商品SKU编号', width: 120 },
+          // { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
-          {
-            field: 'isGift',
-            title: '是否赠品',
-            width: 80,
-            formatter: ({ cellValue }) => {
-              return cellValue ? '是' : '否';
-            },
-          },
-          { field: 'taxCostPrice', title: '含税成本价（元）', align: 'right', width: 140 },
-          { field: 'stockNum', title: '库存数量', align: 'right', width: 140 },
-          {
-            field: 'purchasePrice',
-            title: '采购价（元）',
-            align: 'right',
-            width: 140,
-            slots: { default: 'purchasePrice_default' },
-          },
+          // { field: 'brandName', title: '商品品牌', width: 120 },
+          // {
+          //   field: 'isGift',
+          //   title: '是否赠品',
+          //   width: 80,
+          //   formatter: ({ cellValue }) => {
+          //     return cellValue ? '是' : '否';
+          //   },
+          // },
+          // { field: 'taxCostPrice', title: '含税成本价（元）', align: 'right', width: 140 },
+          // { field: 'stockNum', title: '库存数量', align: 'right', width: 140 },
           {
             field: 'receiveNum',
             title: '收货数量',
             align: 'right',
             width: 140,
             slots: { default: 'receiveNum_default' },
+          },
+          {
+            field: 'purchasePrice',
+            title: '采购价（元）',
+            align: 'right',
+            width: 140,
+            slots: { default: 'purchasePrice_default' },
           },
           {
             field: 'taxAmount',
@@ -387,6 +402,43 @@ export default defineComponent({
           allowModifyPaymentDate: true,
         };
 
+        this.tableData = [];
+        
+        // 加载仓库数据
+        await this.loadWarehouseOptions();
+      },
+      
+      // 加载仓库选项
+      async loadWarehouseOptions() {
+        try {
+          const response = await storeCenterApi.selector({});
+          // debugger;
+          if (response && response.datas && response.datas.length > 0) {
+            this.warehouseOptions = response.datas;
+            // 如果有数据，默认选中第一个
+            if (this.warehouseOptions.length > 0 && !this.formData.scId) {
+              this.formData.scId = this.warehouseOptions[0].id;
+            }
+          }
+        } catch (error) {
+          console.error('加载仓库数据失败:', error);
+          createError('加载仓库数据失败');
+        }
+      },
+      
+      // 仓库选择器过滤选项
+      filterWarehouseOption(input, option) {
+        const warehouse = this.warehouseOptions.find(w => w.id === option.key);
+        if (warehouse) {
+          return warehouse.code.toLowerCase().includes(input.toLowerCase()) || 
+                 warehouse.name.toLowerCase().includes(input.toLowerCase());
+        }
+        return false;
+      },
+      
+      // 仓库选择变化处理
+      handleWarehouseChange(value) {
+        // 清空表格数据，因为仓库变化后商品数据需要重新加载
         this.tableData = [];
       },
       emptyProduct() {
@@ -738,10 +790,16 @@ export default defineComponent({
         });
       },
       // 选择采购订单
-      purchaseOrderChange(e) {
+      async purchaseOrderChange(e) {
         // 只要选择了采购订单，清空所有商品，然后将采购订单中所有的明细列出来
         if (!isEmpty(e)) {
           this.loading = true;
+          
+          // 确保仓库选项已加载
+          if (this.warehouseOptions.length === 0) {
+            await this.loadWarehouseOptions();
+          }
+          
           purchaseApi
             .getWithReceive(e)
             .then((res) => {
