@@ -25,6 +25,26 @@ export interface QueryProductBo {
   skuCode: string;
 
   /**
+   * 单位
+   */
+  unit: string;
+
+  /**
+   * 规格
+   */
+  spec: string;
+
+  /**
+   * 采购价
+   */
+  purchasePrice: number;
+
+  /**
+   * 零售价
+   */
+  retailPrice: number;
+
+  /**
    * 分类名称
    */
   categoryName: string;

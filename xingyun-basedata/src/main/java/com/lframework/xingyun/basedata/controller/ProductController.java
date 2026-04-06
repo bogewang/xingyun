@@ -73,7 +73,7 @@ public class ProductController extends DefaultBaseController {
     List<QueryProductBo> results = null;
 
     if (!CollectionUtil.isEmpty(datas)) {
-
+      // todo afterInit 优化
       results = datas.stream().map(QueryProductBo::new).collect(Collectors.toList());
     }
 

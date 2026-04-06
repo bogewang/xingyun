@@ -139,27 +139,26 @@
 </template>
 
 <script>
-  import { h, defineComponent } from 'vue';
-  import Detail from './detail.vue';
-  import * as api from '@/api/base-data/product/info';
-  import {
-    CloudUploadOutlined,
-    DownOutlined,
-    PlusOutlined,
-    SearchOutlined,
-    DeleteOutlined,
-  } from '@ant-design/icons-vue';
-  import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import { buildSortPageVo, isEmpty, isEqualWithStr } from '@/utils/utils';
-  import ProductImporter from '@/components/Importor/ProductImporter.vue';
-  import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
-  import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
-  import { PRODUCT_TYPE } from '@/enums/biz/productType';
-  import BatchHandler from '@/components/BatchHandler';
-  import { createError } from '@/hooks/web/msg';
-  import CategoryTree from './category-tree.vue';
+import {defineComponent, h} from 'vue';
+import Detail from './detail.vue';
+import * as api from '@/api/base-data/product/info';
+import {
+  CloudUploadOutlined,
+  DeleteOutlined,
+  DownOutlined,
+  PlusOutlined,
+  SearchOutlined,
+} from '@ant-design/icons-vue';
+import {multiplePageMix} from '@/mixins/multiplePageMix';
+import {buildSortPageVo, isEmpty, isEqualWithStr} from '@/utils/utils';
+import ProductImporter from '@/components/Importor/ProductImporter.vue';
+import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
+import {PRODUCT_TYPE} from '@/enums/biz/productType';
+import BatchHandler from '@/components/BatchHandler';
+import {createError} from '@/hooks/web/msg';
+import CategoryTree from './category-tree.vue';
 
-  export default defineComponent({
+export default defineComponent({
     name: 'ProductInfo',
     components: {
       CategoryTree,
@@ -168,7 +167,6 @@
       Detail,
       ProductImporter,
       ProductBrandSelector,
-      ProductCategorySelector,
     },
     mixins: [multiplePageMix],
     setup() {
@@ -212,6 +210,10 @@
           { field: 'name', title: '名称', minWidth: 160, sortable: true },
           { field: 'shortName', title: '简称', width: 140 },
           { field: 'skuCode', title: 'SKU编号', width: 120 },
+          { field: 'unit', title: '单位', width: 100 },
+          { field: 'spec', title: '规格', width: 120 },
+          { field: 'purchasePrice', title: '采购价', width: 120 },
+          { field: 'retailPrice', title: '零售价', width: 120 },
           { field: 'categoryName', title: '分类', width: 120 },
           { field: 'brandName', title: '品牌', width: 120 },
           {
