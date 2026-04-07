@@ -20,8 +20,9 @@ public class ReceiveSheetImportModel implements ExcelModel {
   /**
    * 仓库编号
    */
-  @ExcelRequired
-  @ExcelProperty("仓库编号")
+  // @ExcelRequired
+  // @ExcelProperty("仓库编号")
+  @ExcelIgnore
   private String scCode;
 
   /**
@@ -33,8 +34,9 @@ public class ReceiveSheetImportModel implements ExcelModel {
   /**
    * 供应商编号
    */
-  @ExcelRequired
-  @ExcelProperty("供应商编号")
+  // @ExcelRequired
+  // @ExcelProperty("供应商编号")
+  @ExcelIgnore
   private String supplierCode;
 
   /**
@@ -46,21 +48,24 @@ public class ReceiveSheetImportModel implements ExcelModel {
   /**
    * 采购员编号
    */
-  @ExcelProperty("采购员编号")
+  // @ExcelProperty("采购员编号")
+  @ExcelIgnore
   private String purchaserCode;
 
   /**
    * 付款日期
    */
-  @ExcelRequired
-  @ExcelProperty("付款日期")
+  // @ExcelRequired
+  // @ExcelProperty("付款日期")
+  @ExcelIgnore
   private Date paymentDate;
 
   /**
    * 实际到货日期
    */
-  @ExcelRequired
-  @ExcelProperty("实际到货日期")
+  // @ExcelRequired
+  // @ExcelProperty("实际到货日期")
+  @ExcelIgnore
   private Date receiveDate;
 
   /**
@@ -72,9 +77,17 @@ public class ReceiveSheetImportModel implements ExcelModel {
   /**
    * 商品编号
    */
-  @ExcelRequired
-  @ExcelProperty("商品编号")
+  // @ExcelRequired
+  // @ExcelProperty("商品编号")
+  @ExcelIgnore
   private String productCode;
+
+  /**
+   * 商品名称
+   */
+  @ExcelRequired
+  @ExcelProperty("商品名称")
+  private String productName;
 
   /**
    * 采购价
@@ -93,19 +106,21 @@ public class ReceiveSheetImportModel implements ExcelModel {
   /**
    * 是否赠品
    */
-  @ExcelRequired
-  @ExcelProperty("是否赠品")
+  // @ExcelRequired
+  // @ExcelProperty("是否赠品")
+  @ExcelIgnore
   private String gift;
 
   /**
    * 单据明细备注
    */
-  @ExcelProperty("单据明细备注")
+  // @ExcelProperty("单据明细备注")
+  @ExcelIgnore
   private String detailDescription;
 
   /**
    * 单据备注
    */
-  @ExcelProperty("单据备注")
+  @ExcelProperty("备注")
   private String description;
 }

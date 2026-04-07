@@ -148,12 +148,12 @@
                 @click="$refs.importer.openDialog()"
                 >导入Excel</a-button
               >
-              <a-button
+              <!-- <a-button
                 v-permission="['purchase:receive:import']"
                 :icon="h(CloudUploadOutlined)"
                 @click="$refs.importer2.openDialog()"
                 >批量设置支付方式</a-button
-              >
+              > -->
               <a-button
                 v-permission="['purchase:receive:export']"
                 :icon="h(DownloadOutlined)"
