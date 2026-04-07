@@ -8,6 +8,7 @@ import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.controller.DefaultBaseController;
+import com.lframework.starter.web.core.utils.EasyExcelUtils;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.sc.bo.purchase.receive.*;
@@ -16,13 +17,17 @@ import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.PurchaseConfig;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
-import com.lframework.xingyun.sc.excel.purchase.receive.*;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetExportTaskWorker;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetPayTypeImportListener;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetPayTypeImportModel;
 import com.lframework.xingyun.sc.service.purchase.PurchaseConfigService;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
 import com.lframework.xingyun.sc.vo.purchase.receive.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,6 +49,7 @@ import java.util.stream.Collectors;
 @Validated
 @RestController
 @RequestMapping("/purchase/receive/sheet")
+@Slf4j
 public class ReceiveSheetController extends DefaultBaseController {
 
     @Autowired
@@ -291,22 +298,31 @@ public class ReceiveSheetController extends DefaultBaseController {
         ExcelUtil.export("采购收货单导入支付方式模板", ReceiveSheetPayTypeImportModel.class);
     }
 
+    /**
+     * QueryReceiveSheetBo 返回前端, 前端处理后再保存
+     * @param id
+     * @param file
+     * @return
+     */
     @ApiOperation("导入")
     @HasPermission({"purchase:receive:import"})
     @PostMapping("/import")
-    public InvokeResult<Void> importExcel(@NotBlank(message = "ID不能为空") String id,
-                                          @NotNull(message = "请上传文件") MultipartFile file) {
+    public InvokeResult<List<ReceiveProductVo>> importExcel(@NotNull(message = "请上传文件") MultipartFile file) {
 
-        PurchaseConfig config = purchaseConfigService.get();
-        if (config.getReceiveRequirePurchase()) {
-            throw new DefaultClientException("“采购收货单是否关联采购订单”必须设置为“否”才可以导入！");
+        try {
+            PurchaseConfig config = purchaseConfigService.get();
+            if (config.getReceiveRequirePurchase()) {
+                throw new DefaultClientException("“采购收货单是否关联采购订单”必须设置为“否”才可以导入！");
+            }
+
+            List<ReceiveSheetImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(), ReceiveSheetImportModel.class);
+            List<ReceiveProductVo> data = receiveSheetService.checkImport(list);
+
+            return InvokeResultBuilder.success(data);
+        } catch (IOException e) {
+            log.error("请求出错",  e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
         }
-
-        ReceiveSheetImportListener listener = new ReceiveSheetImportListener();
-        listener.setTaskId(id);
-        ExcelUtil.read(file, ReceiveSheetImportModel.class, listener).sheet().doRead();
-
-        return InvokeResultBuilder.success();
     }
 
     @ApiOperation("导入支付方式")

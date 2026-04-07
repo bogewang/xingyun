@@ -4,9 +4,10 @@ import com.alibaba.excel.annotation.ExcelIgnore;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.lframework.starter.web.core.annotations.excel.ExcelRequired;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.util.Date;
-import lombok.Data;
 
 @Data
 public class ReceiveSheetImportModel implements ExcelModel {
@@ -90,6 +91,19 @@ public class ReceiveSheetImportModel implements ExcelModel {
   private String productName;
 
   /**
+   * 商品规格
+   */
+  // @ExcelRequired
+  @ExcelProperty("规格")
+  private String spec;
+
+  /**
+   * 收货数量
+   */
+  @ExcelRequired
+  @ExcelProperty("数量")
+  private BigDecimal receiveNum;
+  /**
    * 商品单位
    */
   @ExcelRequired
@@ -102,13 +116,6 @@ public class ReceiveSheetImportModel implements ExcelModel {
   @ExcelRequired
   @ExcelProperty("单价")
   private BigDecimal purchasePrice;
-
-  /**
-   * 收货数量
-   */
-  @ExcelRequired
-  @ExcelProperty("数量")
-  private BigDecimal receiveNum;
 
   /**
    * 是否赠品

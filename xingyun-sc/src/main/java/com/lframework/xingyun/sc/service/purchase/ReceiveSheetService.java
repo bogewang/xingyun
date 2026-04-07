@@ -7,13 +7,9 @@ import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.enums.SettleStatus;
-import com.lframework.xingyun.sc.vo.purchase.receive.ApprovePassReceiveSheetVo;
-import com.lframework.xingyun.sc.vo.purchase.receive.ApproveRefuseReceiveSheetVo;
-import com.lframework.xingyun.sc.vo.purchase.receive.CreateReceiveSheetVo;
-import com.lframework.xingyun.sc.vo.purchase.receive.QueryReceiveSheetVo;
-import com.lframework.xingyun.sc.vo.purchase.receive.QueryReceiveSheetWithReturnVo;
-import com.lframework.xingyun.sc.vo.purchase.receive.ReceiveSheetSelectorVo;
-import com.lframework.xingyun.sc.vo.purchase.receive.UpdateReceiveSheetVo;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
+import com.lframework.xingyun.sc.vo.purchase.receive.*;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -159,4 +155,7 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
   List<ReceiveSheet> getApprovedList(String supplierId, LocalDateTime startTime,
       LocalDateTime endTime,
       SettleStatus settleStatus);
+
+  List<ReceiveProductVo> checkImport(List<ReceiveSheetImportModel> list);
+
 }

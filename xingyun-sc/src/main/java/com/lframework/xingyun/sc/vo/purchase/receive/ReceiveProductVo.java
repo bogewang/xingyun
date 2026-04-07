@@ -2,9 +2,10 @@ package com.lframework.xingyun.sc.vo.purchase.receive;
 
 import com.lframework.starter.web.core.vo.BaseVo;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
-import lombok.Data;
 
 @Data
 public class ReceiveProductVo implements BaseVo, Serializable {
@@ -16,6 +17,24 @@ public class ReceiveProductVo implements BaseVo, Serializable {
    */
   @ApiModelProperty("商品ID")
   private String productId;
+
+  /**
+   * 商品编号
+   */
+  @ApiModelProperty("商品编号")
+  private String productCode;
+
+  /**
+   * 商品名称
+   */
+  @ApiModelProperty("商品名称")
+  private String productName;
+
+  /**
+   * 商品单位
+   */
+  @ApiModelProperty("商品单位")
+  private String unit;
 
   /**
    * 采购价

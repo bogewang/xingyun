@@ -32,6 +32,7 @@ import com.lframework.xingyun.basedata.vo.product.retail.CreateProductRetailVo;
 import com.lframework.xingyun.basedata.vo.product.retail.UpdateProductRetailVo;
 import com.lframework.xingyun.basedata.vo.product.sale.CreateProductSaleVo;
 import com.lframework.xingyun.basedata.vo.product.sale.UpdateProductSaleVo;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -582,6 +583,17 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     @Override
     public List<Product> selectAllAvailable() {
         Wrapper<Product> checkWrapper = Wrappers.lambdaQuery(Product.class)
+                .eq(Product::getAvailable, Boolean.TRUE);
+        return getBaseMapper().selectList(checkWrapper);
+    }
+
+    @Override
+    public List<Product> selectByProductName(List<String> productNames) {
+        if (CollectionUtils.isEmpty(productNames)) {
+            return CollectionUtil.emptyList();
+        }
+        Wrapper<Product> checkWrapper = Wrappers.lambdaQuery(Product.class)
+                .in(Product::getName, productNames)
                 .eq(Product::getAvailable, Boolean.TRUE);
         return getBaseMapper().selectList(checkWrapper);
     }
