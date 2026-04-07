@@ -30,9 +30,9 @@
                   <customer-selector v-model:value="searchFormData.customerId" />
                 </j-form-item>
 
-                <j-form-item label="仓库">
-                  <store-center-selector v-model:value="searchFormData.scId" />
-                </j-form-item>
+<!--                <j-form-item label="仓库">-->
+<!--                  <store-center-selector v-model:value="searchFormData.scId" />-->
+<!--                </j-form-item>-->
 
                 <j-form-item label="操作人">
                   <user-selector v-model:value="searchFormData.createBy" />
@@ -85,9 +85,9 @@
                   </a-select>
                 </j-form-item>
 
-                <j-form-item label="销售员">
-                  <user-selector v-model:value="searchFormData.saler" />
-                </j-form-item>
+<!--                <j-form-item label="销售员">-->
+<!--                  <user-selector v-model:value="searchFormData.saler" />-->
+<!--                </j-form-item>-->
 
                 <template #more>
                   <j-form-item label="销售订单号">
@@ -184,11 +184,11 @@
         ref="batchApprovePassHandlerDialog"
         :table-column="[
           { field: 'code', title: '单据号', width: 180 },
-          { field: 'scCode', title: '仓库编号', width: 100 },
-          { field: 'scName', title: '仓库名称', width: 120 },
-          { field: 'customerCode', title: '客户编号', width: 100 },
+          // { field: 'scCode', title: '仓库编号', width: 100 },
+          // { field: 'scName', title: '仓库名称', width: 120 },
+          // { field: 'customerCode', title: '客户编号', width: 100 },
           { field: 'customerName', title: '客户名称', width: 120 },
-          { field: 'salerName', title: '销售员', width: 100 },
+          // { field: 'salerName', title: '销售员', width: 100 },
         ]"
         title="审核通过"
         :tableData="batchHandleDatas"
@@ -199,11 +199,11 @@
         ref="batchApproveRefuseHandlerDialog"
         :table-column="[
           { field: 'code', title: '单据号', width: 180 },
-          { field: 'scCode', title: '仓库编号', width: 100 },
-          { field: 'scName', title: '仓库名称', width: 120 },
-          { field: 'customerCode', title: '客户编号', width: 100 },
+          // { field: 'scCode', title: '仓库编号', width: 100 },
+          // { field: 'scName', title: '仓库名称', width: 120 },
+          // { field: 'customerCode', title: '客户编号', width: 100 },
           { field: 'customerName', title: '客户名称', width: 120 },
-          { field: 'salerName', title: '销售员', width: 100 },
+          // { field: 'salerName', title: '销售员', width: 100 },
         ]"
         title="审核拒绝"
         :tableData="batchHandleDatas"
@@ -214,11 +214,11 @@
         ref="batchDeleteHandlerDialog"
         :table-column="[
           { field: 'code', title: '单据号', width: 180 },
-          { field: 'scCode', title: '仓库编号', width: 100 },
-          { field: 'scName', title: '仓库名称', width: 120 },
-          { field: 'customerCode', title: '客户编号', width: 100 },
+          // { field: 'scCode', title: '仓库编号', width: 100 },
+          // { field: 'scName', title: '仓库名称', width: 120 },
+          // { field: 'customerCode', title: '客户编号', width: 100 },
           { field: 'customerName', title: '客户名称', width: 120 },
-          { field: 'salerName', title: '销售员', width: 100 },
+          // { field: 'salerName', title: '销售员', width: 100 },
         ]"
         title="批量删除"
         :tableData="batchHandleDatas"
@@ -321,14 +321,14 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { field: 'code', title: '单据号', width: 180, sortable: true },
-          { field: 'scCode', title: '仓库编号', width: 100 },
-          { field: 'scName', title: '仓库名称', width: 120 },
-          { field: 'customerCode', title: '客户编号', width: 100 },
+          // { field: 'scCode', title: '仓库编号', width: 100 },
+          // { field: 'scName', title: '仓库名称', width: 120 },
+          // { field: 'customerCode', title: '客户编号', width: 100 },
           { field: 'customerName', title: '客户名称', width: 120 },
-          { field: 'salerName', title: '销售员', width: 100 },
+          // { field: 'salerName', title: '销售员', width: 100 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
-          { field: 'totalGiftNum', title: '赠品数量', align: 'right', width: 120 },
+          // { field: 'totalGiftNum', title: '赠品数量', align: 'right', width: 120 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
           {
@@ -341,21 +341,21 @@
           },
           { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
           { field: 'approveBy', title: '审核人', width: 100 },
-          {
-            field: 'settleStatus',
-            title: '结算状态',
-            width: 100,
-            formatter: ({ cellValue }) => {
-              return SETTLE_STATUS.getDesc(cellValue);
-            },
-          },
+          // {
+          //   field: 'settleStatus',
+          //   title: '结算状态',
+          //   width: 100,
+          //   formatter: ({ cellValue }) => {
+          //     return SETTLE_STATUS.getDesc(cellValue);
+          //   },
+          // },
           { field: 'description', title: '备注', width: 200 },
-          {
-            field: 'saleOrderCode',
-            title: '销售订单号',
-            width: 180,
-            slots: { default: 'saleOrderCode_default' },
-          },
+          // {
+          //   field: 'saleOrderCode',
+          //   title: '销售订单号',
+          //   width: 180,
+          //   slots: { default: 'saleOrderCode_default' },
+          // },
           { title: '操作', width: 200, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
