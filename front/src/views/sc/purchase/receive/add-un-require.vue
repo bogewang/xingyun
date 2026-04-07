@@ -319,7 +319,7 @@ export default defineComponent({
           // { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
-          { field: 'categoryName', title: '商品分类', width: 120 },
+          // { field: 'categoryName', title: '商品分类', width: 120 },
           // { field: 'brandName', title: '商品品牌', width: 120 },
           // {
           //   field: 'isGift',
