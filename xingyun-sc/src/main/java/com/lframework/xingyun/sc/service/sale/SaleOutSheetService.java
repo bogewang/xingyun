@@ -7,13 +7,9 @@ import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.enums.SettleStatus;
-import com.lframework.xingyun.sc.vo.sale.out.ApprovePassSaleOutSheetVo;
-import com.lframework.xingyun.sc.vo.sale.out.ApproveRefuseSaleOutSheetVo;
-import com.lframework.xingyun.sc.vo.sale.out.CreateSaleOutSheetVo;
-import com.lframework.xingyun.sc.vo.sale.out.QuerySaleOutSheetVo;
-import com.lframework.xingyun.sc.vo.sale.out.QuerySaleOutSheetWithReturnVo;
-import com.lframework.xingyun.sc.vo.sale.out.SaleOutSheetSelectorVo;
-import com.lframework.xingyun.sc.vo.sale.out.UpdateSaleOutSheetVo;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
+import com.lframework.xingyun.sc.vo.sale.out.*;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -159,4 +155,6 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   List<SaleOutSheet> getApprovedList(String customerId, LocalDateTime startTime,
       LocalDateTime endTime,
       SettleStatus settleStatus);
+
+  List<SaleOutProductVo> checkImport(List<SaleOutSheetImportModel> list);
 }

@@ -661,26 +661,6 @@ export default defineComponent({
           this.tableData = [];
         }
 
-        if (!isEmpty(importData.scId)) {
-          this.formData.scId = importData.scId;
-        }
-        if (!isEmpty(importData.supplierId)) {
-          this.formData.supplierId = importData.supplierId;
-          this.supplierChange(this.formData.supplierId);
-        }
-        if (!isEmpty(importData.purchaserId)) {
-          this.formData.purchaserId = importData.purchaserId;
-        }
-        if (!isEmpty(importData.paymentDate)) {
-          this.formData.paymentDate = importData.paymentDate;
-        }
-        if (!isEmpty(importData.receiveDate)) {
-          this.formData.receiveDate = importData.receiveDate;
-        }
-        if (!isEmpty(importData.description)) {
-          this.formData.description = importData.description;
-        }
-
         this.calcSum();
         // createSuccess('导入成功！');
       },

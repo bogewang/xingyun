@@ -13,14 +13,15 @@ import com.lframework.xingyun.sc.service.sale.SaleConfigService;
 import com.lframework.xingyun.sc.service.sale.SaleOrderDetailService;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import lombok.Data;
 
 @Data
 public class CreateSaleOutSheetVo implements BaseVo, Serializable {
@@ -137,9 +138,9 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
 
       if (!requireSale) {
 
-        if (product.getOriPrice() == null) {
-          throw new InputErrorException("第" + orderNo + "行商品参考销售价不能为空！");
-        }
+        // if (product.getOriPrice() == null) {
+        //   throw new InputErrorException("第" + orderNo + "行商品参考销售价不能为空！");
+        // }
 
         if (product.getTaxPrice() == null) {
           throw new InputErrorException("第" + orderNo + "行商品价格不能为空！");
@@ -153,7 +154,7 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
           throw new InputErrorException("第" + orderNo + "行商品价格最多允许6位小数！");
         }
 
-        if (!NumberUtil.equal(product.getOriPrice(), 0D)) {
+        /* if (!NumberUtil.equal(product.getOriPrice(), 0D)) {
           // 由 根据原价和折扣率校验现价 更改为 根据原价、现价计算折扣率，即：不以传入的折扣率为准
           BigDecimal discountRate = NumberUtil.getNumber(
               NumberUtil.mul(NumberUtil.div(product.getTaxPrice(), product.getOriPrice()), 100), 2);
@@ -161,7 +162,7 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
         } else {
           //如果原价为0，折扣率固定为100
           product.setDiscountRate(BigDecimal.valueOf(100));
-        }
+        } */
       } else {
         if (StringUtil.isNotBlank(product.getSaleOrderDetailId())) {
           SaleOrderDetail orderDetail = saleOrderDetailService.getById(

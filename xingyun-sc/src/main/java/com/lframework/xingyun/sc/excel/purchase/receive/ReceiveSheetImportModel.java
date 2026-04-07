@@ -97,19 +97,19 @@ public class ReceiveSheetImportModel implements ExcelModel {
   @ExcelProperty("规格")
   private String spec;
 
-  /**
-   * 收货数量
-   */
-  @ExcelRequired
-  @ExcelProperty("数量")
-  private BigDecimal receiveNum;
+
   /**
    * 商品单位
    */
   @ExcelRequired
   @ExcelProperty("单位")
   private String unit;
-
+  /**
+   * 收货数量
+   */
+  @ExcelRequired
+  @ExcelProperty("数量")
+  private BigDecimal receiveNum;
   /**
    * 采购价
    */
@@ -133,7 +133,7 @@ public class ReceiveSheetImportModel implements ExcelModel {
   private String detailDescription;
 
   /**
-   * 单据备注
+   * 商品备注
    */
   @ExcelProperty("备注")
   private String description;

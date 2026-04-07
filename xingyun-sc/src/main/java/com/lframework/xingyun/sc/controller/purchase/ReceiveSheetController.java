@@ -300,7 +300,6 @@ public class ReceiveSheetController extends DefaultBaseController {
 
     /**
      * QueryReceiveSheetBo 返回前端, 前端处理后再保存
-     * @param id
      * @param file
      * @return
      */

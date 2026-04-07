@@ -1,5 +1,5 @@
 import { defHttp } from '/@/utils/http/axios';
-import { ContentTypeEnum } from '@/enums/httpEnum';
+import { ContentTypeEnum, ResponseEnum } from '@/enums/httpEnum';
 import { PageResult } from '@/api/model/pageResult';
 import { GetPaymentDateBo } from '@/api/sc/purchase/receive/model/getPaymentDateBo';
 import { QuerySaleOutSheetBo } from '@/api/sc/sale/out/model/querySaleOutSheetBo';
@@ -61,6 +61,31 @@ export function exportList(data: QuerySaleOutSheetVo): Promise<void> {
     {
       region,
       contentType: ContentTypeEnum.FORM_URLENCODED,
+    },
+  );
+}
+
+export function downloadImportTemplate(): Promise<void> {
+  return defHttp.get<void>(
+    {
+      url: baseUrl + '/import/template',
+    },
+    {
+      responseType: ResponseEnum.BLOB,
+      region,
+    },
+  );
+}
+
+export function importExcel(data: { id: string; file: Blob }): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/import',
+      data,
+    },
+    {
+      contentType: ContentTypeEnum.BLOB,
+      region,
     },
   );
 }
