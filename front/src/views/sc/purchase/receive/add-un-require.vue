@@ -199,7 +199,7 @@
         :sc-id="formData.scId"
         @confirm="batchAddProduct"
       />
-      <receive-sheet-importer ref="importer" />
+      <receive-sheet-importer ref="importer" @confirm="handleImportConfirm" />
       <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
         <a-space>
           <a-button
@@ -414,11 +414,11 @@ export default defineComponent({
         };
 
         this.tableData = [];
-        
+
         // 加载仓库数据
         await this.loadWarehouseOptions();
       },
-      
+
       // 加载仓库选项
       async loadWarehouseOptions() {
         try {
@@ -436,17 +436,19 @@ export default defineComponent({
           createError('加载仓库数据失败');
         }
       },
-      
+
       // 仓库选择器过滤选项
       filterWarehouseOption(input, option) {
-        const warehouse = this.warehouseOptions.find(w => w.id === option.key);
+        const warehouse = this.warehouseOptions.find((w) => w.id === option.key);
         if (warehouse) {
-          return warehouse.code.toLowerCase().includes(input.toLowerCase()) || 
-                 warehouse.name.toLowerCase().includes(input.toLowerCase());
+          return (
+            warehouse.code.toLowerCase().includes(input.toLowerCase()) ||
+            warehouse.name.toLowerCase().includes(input.toLowerCase())
+          );
         }
         return false;
       },
-      
+
       // 仓库选择变化处理
       handleWarehouseChange(value) {
         // 清空表格数据，因为仓库变化后商品数据需要重新加载
@@ -646,6 +648,42 @@ export default defineComponent({
           this.handleSelectProduct(this.tableData.length - 1, item);
         });
       },
+      handleImportConfirm(res) {
+        const importData = res?.data || res?.datas || res || {};
+        if (Array.isArray(importData) && importData.length > 0) {
+          this.tableData = importData.map((item) => {
+            return Object.assign(this.emptyProduct(), item, {
+              id: uuid(),
+              isFixed: false,
+            });
+          });
+        } else {
+          this.tableData = [];
+        }
+
+        if (!isEmpty(importData.scId)) {
+          this.formData.scId = importData.scId;
+        }
+        if (!isEmpty(importData.supplierId)) {
+          this.formData.supplierId = importData.supplierId;
+          this.supplierChange(this.formData.supplierId);
+        }
+        if (!isEmpty(importData.purchaserId)) {
+          this.formData.purchaserId = importData.purchaserId;
+        }
+        if (!isEmpty(importData.paymentDate)) {
+          this.formData.paymentDate = importData.paymentDate;
+        }
+        if (!isEmpty(importData.receiveDate)) {
+          this.formData.receiveDate = importData.receiveDate;
+        }
+        if (!isEmpty(importData.description)) {
+          this.formData.description = importData.description;
+        }
+
+        this.calcSum();
+        // createSuccess('导入成功！');
+      },
       // 校验数据
       validData() {
         if (isEmpty(this.formData.scId)) {
@@ -805,12 +843,12 @@ export default defineComponent({
         // 只要选择了采购订单，清空所有商品，然后将采购订单中所有的明细列出来
         if (!isEmpty(e)) {
           this.loading = true;
-          
+
           // 确保仓库选项已加载
           if (this.warehouseOptions.length === 0) {
             await this.loadWarehouseOptions();
           }
-          
+
           purchaseApi
             .getWithReceive(e)
             .then((res) => {
