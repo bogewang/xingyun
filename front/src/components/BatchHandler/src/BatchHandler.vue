@@ -53,28 +53,23 @@
   </div>
 </template>
 <script>
-  import { defineComponent } from 'vue';
-  import {
-    LoadingOutlined,
-    CheckCircleFilled,
-    CloseCircleFilled,
-    ClockCircleOutlined,
-  } from '@ant-design/icons-vue';
-  import { ConcurrentPromise } from '@/utils/concurrentPromise';
-  import { isEmpty } from '@/utils/utils';
-  import { createConfirm, createErrorDialog } from '@/hooks/web/msg';
+import {defineComponent} from 'vue';
+import {
+  CheckCircleFilled,
+  ClockCircleOutlined,
+  CloseCircleFilled,
+  LoadingOutlined,
+} from '@ant-design/icons-vue';
+import {ConcurrentPromise} from '@/utils/concurrentPromise';
+import {isEmpty} from '@/utils/utils';
+import {createConfirm, createErrorDialog} from '@/hooks/web/msg';
 
-  export default defineComponent({
+export default defineComponent({
     components: {
       LoadingOutlined,
       CheckCircleFilled,
       CloseCircleFilled,
       ClockCircleOutlined,
-    },
-    setup() {
-      return {
-        isEmpty,
-      };
     },
     props: {
       title: {
@@ -107,6 +102,11 @@
         type: String,
         default: '',
       },
+    },
+    setup() {
+      return {
+        isEmpty,
+      };
     },
     setup() {
       return {

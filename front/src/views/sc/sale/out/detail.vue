@@ -137,21 +137,27 @@
   </a-modal>
 </template>
 <script>
-  import { defineComponent } from 'vue';
-  import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
-  import * as api from '@/api/sc/sale/out';
-  import { printMix } from '@/mixins/print';
-  import { isEmpty, isFloatGeZero, getNumber, mul, add } from '@/utils/utils';
-  import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
-  import { PRINT_TYPE } from '@/enums/biz/printType';
-  import OrderTimeLine from '@/components/OrderTimeLine';
+import {defineComponent} from 'vue';
+import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
+import * as api from '@/api/sc/sale/out';
+import {printMix} from '@/mixins/print';
+import {add, getNumber, isEmpty, isFloatGeZero, mul} from '@/utils/utils';
+import {SALE_OUT_SHEET_STATUS} from '@/enums/biz/saleOutSheetStatus';
+import {PRINT_TYPE} from '@/enums/biz/printType';
+import OrderTimeLine from '@/components/OrderTimeLine';
 
-  export default defineComponent({
+export default defineComponent({
     components: {
       SaleOrderDetail,
       OrderTimeLine,
     },
     mixins: [printMix],
+    props: {
+      id: {
+        type: String,
+        required: true,
+      },
+    },
     setup() {
       return {
         isEmpty,
@@ -160,12 +166,6 @@
         mul,
         SALE_OUT_SHEET_STATUS,
       };
-    },
-    props: {
-      id: {
-        type: String,
-        required: true,
-      },
     },
     setup() {
       return {

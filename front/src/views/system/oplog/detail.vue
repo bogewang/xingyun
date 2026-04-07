@@ -30,28 +30,28 @@
   </a-modal>
 </template>
 <script>
-  import { defineComponent } from 'vue';
-  import clipboard from '@/utils/clipboard';
-  import * as api from '@/api/system/op-log';
-  import { isEmpty } from '@/utils/utils';
-  import { OP_LOG_TYPE } from '@/enums/biz/opLogType';
+import {defineComponent} from 'vue';
+import clipboard from '@/utils/clipboard';
+import * as api from '@/api/system/op-log';
+import {isEmpty} from '@/utils/utils';
+import {OP_LOG_TYPE} from '@/enums/biz/opLogType';
 
-  export default defineComponent({
+export default defineComponent({
     // 使用组件
     components: {},
-
-    setup() {
-      return {
-        isEmpty,
-        OP_LOG_TYPE,
-      };
-    },
 
     props: {
       id: {
         type: String,
         required: true,
       },
+    },
+
+    setup() {
+      return {
+        isEmpty,
+        OP_LOG_TYPE,
+      };
     },
 
     setup() {

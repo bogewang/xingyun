@@ -141,21 +141,27 @@
   </div>
 </template>
 <script>
-  import { defineComponent } from 'vue';
-  import ReceiveSheetDetail from '@/views/sc/purchase/receive/detail.vue';
-  import * as api from '@/api/sc/purchase/return';
-  import { printMix } from '@/mixins/print';
-  import { isEmpty, isFloatGeZero, getNumber, mul, add } from '@/utils/utils';
-  import { PURCHASE_RETURN_STATUS } from '@/enums/biz/purchaseReturnStatus';
-  import { PRINT_TYPE } from '@/enums/biz/printType';
-  import OrderTimeLine from '@/components/OrderTimeLine';
+import {defineComponent} from 'vue';
+import ReceiveSheetDetail from '@/views/sc/purchase/receive/detail.vue';
+import * as api from '@/api/sc/purchase/return';
+import {printMix} from '@/mixins/print';
+import {add, getNumber, isEmpty, isFloatGeZero, mul} from '@/utils/utils';
+import {PURCHASE_RETURN_STATUS} from '@/enums/biz/purchaseReturnStatus';
+import {PRINT_TYPE} from '@/enums/biz/printType';
+import OrderTimeLine from '@/components/OrderTimeLine';
 
-  export default defineComponent({
+export default defineComponent({
     components: {
       ReceiveSheetDetail,
       OrderTimeLine,
     },
     mixins: [printMix],
+    props: {
+      id: {
+        type: String,
+        required: true,
+      },
+    },
     setup() {
       return {
         isEmpty,
@@ -164,12 +170,6 @@
         mul,
         PURCHASE_RETURN_STATUS,
       };
-    },
-    props: {
-      id: {
-        type: String,
-        required: true,
-      },
     },
     setup() {
       return {

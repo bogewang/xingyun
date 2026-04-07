@@ -24,24 +24,19 @@
   </div>
 </template>
 <script>
-  import { defineComponent } from 'vue';
-  import { defHttp } from '@/utils/http/axios';
-  import * as api from '@/api/components';
-  import { ContentTypeEnum } from '@/enums/httpEnum';
-  import { LoadingOutlined, PictureOutlined } from '@ant-design/icons-vue';
-  import { isEmpty, uuid, readImg, isFunction } from '@/utils/utils';
+import {defineComponent} from 'vue';
+import {defHttp} from '@/utils/http/axios';
+import * as api from '@/api/components';
+import {ContentTypeEnum} from '@/enums/httpEnum';
+import {LoadingOutlined, PictureOutlined} from '@ant-design/icons-vue';
+import {isEmpty, isFunction, readImg, uuid} from '@/utils/utils';
 
-  export default defineComponent({
+export default defineComponent({
     name: 'JImgUpload',
     componentName: 'JImgUpload',
     components: {
       LoadingOutlined,
       PictureOutlined,
-    },
-    setup() {
-      return {
-        isEmpty,
-      };
     },
     props: {
       value: {
@@ -72,6 +67,11 @@
         type: Boolean,
         default: false,
       },
+    },
+    setup() {
+      return {
+        isEmpty,
+      };
     },
     setup() {
       return {

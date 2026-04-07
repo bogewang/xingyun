@@ -22,20 +22,14 @@
   </div>
 </template>
 <script>
-  import { defineComponent } from 'vue';
-  import { useGlobSetting } from '@/hooks/setting';
-  import { getToken } from '@/utils/auth';
-  import { isEmpty, uuid } from '@/utils/utils';
+import {defineComponent} from 'vue';
+import {useGlobSetting} from '@/hooks/setting';
+import {getToken} from '@/utils/auth';
+import {isEmpty, uuid} from '@/utils/utils';
 
-  export default defineComponent({
+export default defineComponent({
     name: 'FlowChart',
     components: {},
-    setup() {
-      return {
-        isEmpty,
-        uuid,
-      };
-    },
     props: {
       instanceId: {
         type: String,
@@ -49,6 +43,12 @@
         type: String,
         default: '',
       },
+    },
+    setup() {
+      return {
+        isEmpty,
+        uuid,
+      };
     },
     setup() {
       return {

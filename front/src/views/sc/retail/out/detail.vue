@@ -129,21 +129,27 @@
   </a-modal>
 </template>
 <script>
-  import { defineComponent } from 'vue';
-  import PayType from '@/views/sc/pay-type/index.vue';
-  import * as api from '@/api/sc/retail/out';
-  import { printMix } from '@/mixins/print';
-  import { isEmpty, isFloatGeZero, getNumber, mul, add } from '@/utils/utils';
-  import { RETAIL_OUT_SHEET_STATUS } from '@/enums/biz/retailOutSheetStatus';
-  import { PRINT_TYPE } from '@/enums/biz/printType';
-  import OrderTimeLine from '@/components/OrderTimeLine';
+import {defineComponent} from 'vue';
+import PayType from '@/views/sc/pay-type/index.vue';
+import * as api from '@/api/sc/retail/out';
+import {printMix} from '@/mixins/print';
+import {add, getNumber, isEmpty, isFloatGeZero, mul} from '@/utils/utils';
+import {RETAIL_OUT_SHEET_STATUS} from '@/enums/biz/retailOutSheetStatus';
+import {PRINT_TYPE} from '@/enums/biz/printType';
+import OrderTimeLine from '@/components/OrderTimeLine';
 
-  export default defineComponent({
+export default defineComponent({
     components: {
       PayType,
       OrderTimeLine,
     },
     mixins: [printMix],
+    props: {
+      id: {
+        type: String,
+        required: true,
+      },
+    },
     setup() {
       return {
         isEmpty,
@@ -152,12 +158,6 @@
         mul,
         RETAIL_OUT_SHEET_STATUS,
       };
-    },
-    props: {
-      id: {
-        type: String,
-        required: true,
-      },
     },
     setup() {
       return {

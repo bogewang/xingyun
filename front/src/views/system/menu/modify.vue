@@ -32,7 +32,11 @@
           <icon-picker v-model:value="formData.icon" />
         </a-form-item>
         <a-form-item label="父级菜单" name="parentId">
-          <sys-menu-selector v-model:value="formData.parentId" :tenant-id="tenantId" :only-final="false" />
+          <sys-menu-selector
+            v-model:value="formData.parentId"
+            :tenant-id="tenantId"
+            :only-final="false"
+          />
         </a-form-item>
         <a-form-item
           v-if="
@@ -157,20 +161,20 @@
   </a-modal>
 </template>
 <script>
-  import { defineComponent } from 'vue';
-  import { validCode } from '@/utils/validate';
-  import { IconPicker } from '@/components/Icon';
-  import JsonEditor from './json-editor.vue';
-  import { QuestionCircleOutlined } from '@ant-design/icons-vue';
-  import * as api from '@/api/system/menu';
-  import { isEmpty } from '@/utils/utils';
-  import { createSuccess, createConfirm } from '@/hooks/web/msg';
-  import SysMenuSelector from '@/components/Selector/SysMenuSelector.vue';
-  import { MENU_DISPLAY } from '@/enums/biz/menuDisplay';
-  import { MENU_COMPONENT_TYPE } from '@/enums/biz/menuComponentType';
-  import { AVAILABLE } from '@/enums/biz/available';
+import {defineComponent} from 'vue';
+import {validCode} from '@/utils/validate';
+import {IconPicker} from '@/components/Icon';
+import JsonEditor from './json-editor.vue';
+import {QuestionCircleOutlined} from '@ant-design/icons-vue';
+import * as api from '@/api/system/menu';
+import {isEmpty} from '@/utils/utils';
+import {createConfirm, createSuccess} from '@/hooks/web/msg';
+import SysMenuSelector from '@/components/Selector/SysMenuSelector.vue';
+import {MENU_DISPLAY} from '@/enums/biz/menuDisplay';
+import {MENU_COMPONENT_TYPE} from '@/enums/biz/menuComponentType';
+import {AVAILABLE} from '@/enums/biz/available';
 
-  export default defineComponent({
+export default defineComponent({
     components: {
       IconPicker,
       JsonEditor,
@@ -279,7 +283,7 @@
       },
       doSubmit() {
         this.loading = true;
-        const params = Object.assign({}, this.formData, {tenantId: this.tenantId});
+        const params = Object.assign({}, this.formData, { tenantId: this.tenantId });
         api
           .update(params)
           .then(() => {

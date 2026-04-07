@@ -57,27 +57,27 @@
   </a-modal>
 </template>
 <script>
-  import { defineComponent } from 'vue';
-  import * as api from '@/api/system/notice';
-  import { Tinymce } from '@/components/Tinymce';
-  import { createSuccess, createConfirm } from '@/hooks/web/msg';
-  import { AVAILABLE } from '@/enums/biz/available';
+import {defineComponent} from 'vue';
+import * as api from '@/api/system/notice';
+import {Tinymce} from '@/components/Tinymce';
+import {createConfirm, createSuccess} from '@/hooks/web/msg';
+import {AVAILABLE} from '@/enums/biz/available';
 
-  export default defineComponent({
+export default defineComponent({
     // 使用组件
     components: {
       Tinymce,
-    },
-    setup() {
-      return {
-        AVAILABLE,
-      };
     },
     props: {
       id: {
         type: String,
         required: true,
       },
+    },
+    setup() {
+      return {
+        AVAILABLE,
+      };
     },
     setup() {
       return {

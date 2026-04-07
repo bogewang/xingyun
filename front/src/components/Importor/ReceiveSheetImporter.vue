@@ -11,11 +11,11 @@
 </template>
 
 <script>
-  import { defineComponent } from 'vue';
-  import ExcelImporter from '@/components/ExcelImporter';
-  import * as api from '@/api/sc/purchase/receive';
+import {defineComponent} from 'vue';
+import ExcelImporter from '@/components/ExcelImporterNew';
+import * as api from '@/api/sc/purchase/receive';
 
-  export default defineComponent({
+export default defineComponent({
     name: 'ReceiveSheetImporter',
     components: { ExcelImporter },
     data() {

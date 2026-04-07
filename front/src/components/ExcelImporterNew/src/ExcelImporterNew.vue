@@ -19,7 +19,7 @@
             :show-upload-list="false"
           >
             <p class="ant-upload-drag-icon">
-              <InboxOutlined/>
+              <InboxOutlined />
             </p>
             <p class="ant-upload-text"> 点击或拖拽文件进行导入 </p>
             <p class="ant-upload-hint"> 仅支持xls、xlsx格式 </p>
@@ -30,7 +30,7 @@
             <span
               v-if="!isEmpty(tipMsg)"
               style="font-size: 12px; color: #999999; white-space: pre-wrap"
-            >{{ tipMsg }}</span
+              >{{ tipMsg }}</span
             >
           </div>
           <div class="content-wrapper">
@@ -49,80 +49,81 @@ import {InboxOutlined} from '@ant-design/icons-vue';
 import {isEmpty} from '@/utils/utils';
 
 export default defineComponent({
-  name: 'ExcelImporter',
-  components: {
-    InboxOutlined,
-  },
-  props: {
-    downloadTemplateUrl: {
-      type: Function,
-      required: true,
+    name: 'ExcelImporter',
+    components: {
+      InboxOutlined,
     },
-    uploadUrl: {
-      type: Function,
-      required: true,
+    props: {
+      downloadTemplateUrl: {
+        type: Function,
+        required: true,
+      },
+      uploadUrl: {
+        type: Function,
+        required: true,
+      },
+      tipMsg: {
+        type: String,
+        default: '',
+      },
+      formData: {
+        type: Object,
+        default: () => ({}),
+      },
+      closeAfterFinish: {
+        type: Boolean,
+        default: true,
+      },
     },
-    tipMsg: {
-      type: String,
-      default: '',
+    setup() {
+      return {
+        isEmpty,
+      };
     },
-    formData: {
-      type: Object,
-      default: () => ({}),
+    data() {
+      return {
+        visible: false,
+        loading: false,
+      };
     },
-    closeAfterFinish: {
-      type: Boolean,
-      default: true,
+    methods: {
+      openDialog() {
+        this.visible = true;
+      },
+      closeDialog() {
+        this.visible = false;
+      },
+      doDownloadTemplate() {
+        this.loading = true;
+        this.downloadTemplateUrl(this.formData).finally(() => {
+          this.loading = false;
+        });
+      },
+      doUpload(e) {
+        this.loading = true;
+        this.uploadUrl(
+          Object.assign(
+            {
+              file: e.file,
+            },
+            this.formData,
+          ),
+        )
+          .then((res) => {
+            this.$emit('confirm', res);
+            if (this.closeAfterFinish) {
+              this.closeDialog();
+            }
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
     },
-  },
-  setup() {
-    return {
-      isEmpty,
-    };
-  },
-  data() {
-    return {
-      visible: false,
-      loading: false,
-    };
-  },
-  methods: {
-    openDialog() {
-      this.visible = true;
-    },
-    closeDialog() {
-      this.visible = false;
-    },
-    doDownloadTemplate() {
-      this.loading = true;
-      this.downloadTemplateUrl(this.formData).finally(() => {
-        this.loading = false;
-      });
-    },
-    doUpload(e) {
-      this.loading = true;
-      this.uploadUrl(
-        Object.assign(
-          {
-            file: e.file,
-          },
-          this.formData,
-        ),
-      )
-        .then((res) => {
-          this.$emit('confirm', res);
-          if (this.closeAfterFinish) {
-            this.closeDialog();
-          }
-        }).finally(() => {
-        this.loading = false;
-      });
-    },
-  },
-});
+  });
 </script>
 <style lang="less" scoped>
-.content-wrapper {
-  text-align: center;
-}
+  .content-wrapper {
+    text-align: center;
+  }
 </style>

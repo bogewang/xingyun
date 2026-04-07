@@ -126,21 +126,27 @@
   </a-modal>
 </template>
 <script>
-  import { defineComponent } from 'vue';
-  import PayType from '@/views/sc/pay-type/index.vue';
-  import * as api from '@/api/sc/sale/order';
-  import { printMix } from '@/mixins/print';
-  import { isFloatGeZero, getNumber, mul, add } from '@/utils/utils';
-  import { SALE_ORDER_STATUS } from '@/enums/biz/saleOrderStatus';
-  import { PRINT_TYPE } from '@/enums/biz/printType';
-  import OrderTimeLine from '@/components/OrderTimeLine';
+import {defineComponent} from 'vue';
+import PayType from '@/views/sc/pay-type/index.vue';
+import * as api from '@/api/sc/sale/order';
+import {printMix} from '@/mixins/print';
+import {add, getNumber, isFloatGeZero, mul} from '@/utils/utils';
+import {SALE_ORDER_STATUS} from '@/enums/biz/saleOrderStatus';
+import {PRINT_TYPE} from '@/enums/biz/printType';
+import OrderTimeLine from '@/components/OrderTimeLine';
 
-  export default defineComponent({
+export default defineComponent({
     components: {
       PayType,
       OrderTimeLine,
     },
     mixins: [printMix],
+    props: {
+      id: {
+        type: String,
+        required: true,
+      },
+    },
     setup() {
       return {
         isFloatGeZero,
@@ -148,12 +154,6 @@
         mul,
         SALE_ORDER_STATUS,
       };
-    },
-    props: {
-      id: {
-        type: String,
-        required: true,
-      },
     },
     setup() {
       return {

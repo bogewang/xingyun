@@ -74,11 +74,6 @@ export default defineComponent({
     components: {
       InboxOutlined,
     },
-    setup() {
-      return {
-        isEmpty,
-      };
-    },
     props: {
       // 下载模板url，传入request
       downloadTemplateUrl: {
@@ -105,6 +100,11 @@ export default defineComponent({
         type: Boolean,
         default: true,
       },
+    },
+    setup() {
+      return {
+        isEmpty,
+      };
     },
     setup() {
       return {

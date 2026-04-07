@@ -51,21 +51,15 @@
 </template>
 
 <script>
-  import { defineComponent } from 'vue';
-  import { SearchOutlined } from '@ant-design/icons-vue';
-  import * as api from '@/api/system/tenant';
-  import { isEmpty } from '@/utils/utils';
-  import { AVAILABLE } from '@/enums/biz/available';
+import {defineComponent} from 'vue';
+import {SearchOutlined} from '@ant-design/icons-vue';
+import * as api from '@/api/system/tenant';
+import {isEmpty} from '@/utils/utils';
+import {AVAILABLE} from '@/enums/biz/available';
 
-  export default defineComponent({
+export default defineComponent({
     name: 'SysTenantSelector',
     components: { SearchOutlined },
-    setup() {
-      return {
-        isEmpty,
-        AVAILABLE,
-      };
-    },
     props: {
       requestParams: {
         type: Object,
@@ -73,6 +67,12 @@
           return {};
         },
       },
+    },
+    setup() {
+      return {
+        isEmpty,
+        AVAILABLE,
+      };
     },
     setup() {
       return {
