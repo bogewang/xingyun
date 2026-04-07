@@ -86,6 +86,12 @@
             <a-button :icon="h(EditOutlined)" @click="batchInputPurchasePrice"
               >批量调整采购价</a-button
             >
+            <a-button
+              v-permission="['purchase:receive:import']"
+              :icon="h(CloudUploadOutlined)"
+              @click="$refs.importer.openDialog()"
+              >导入Excel</a-button
+            >
             <!-- <a-button :icon="h(AlertOutlined)" @click="setGift">设置赠品</a-button> -->
           </a-space>
         </template>
@@ -193,6 +199,7 @@
         :sc-id="formData.scId"
         @confirm="batchAddProduct"
       />
+      <receive-sheet-importer ref="importer" />
       <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
         <a-space>
           <a-button
@@ -223,11 +230,13 @@ import PurchaseOrderSelectorWithReceive
 import Moment from 'moment';
 import {
   AlertOutlined,
+  CloudUploadOutlined,
   DeleteOutlined,
   EditOutlined,
   NumberOutlined,
   PlusOutlined,
 } from '@ant-design/icons-vue';
+import ReceiveSheetImporter from '@/components/Importor/ReceiveSheetImporter.vue';
 import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
 import UserSelector from '@/components/Selector/UserSelector.vue';
 import * as api from '@/api/sc/purchase/receive';
@@ -255,6 +264,7 @@ export default defineComponent({
     components: {
       BatchAddProduct,
       PurchaseOrderSelectorWithReceive,
+      ReceiveSheetImporter,
       SupplierSelector,
       UserSelector,
     },
@@ -267,6 +277,7 @@ export default defineComponent({
         NumberOutlined,
         EditOutlined,
         AlertOutlined,
+        CloudUploadOutlined,
         isEmpty,
         isFloatGeZero,
         getNumber,

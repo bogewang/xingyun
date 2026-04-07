@@ -90,17 +90,24 @@ public class ReceiveSheetImportModel implements ExcelModel {
   private String productName;
 
   /**
+   * 商品单位
+   */
+  @ExcelRequired
+  @ExcelProperty("单位")
+  private String unit;
+
+  /**
    * 采购价
    */
   @ExcelRequired
-  @ExcelProperty("采购价")
+  @ExcelProperty("单价")
   private BigDecimal purchasePrice;
 
   /**
    * 收货数量
    */
   @ExcelRequired
-  @ExcelProperty("收货数量")
+  @ExcelProperty("数量")
   private BigDecimal receiveNum;
 
   /**

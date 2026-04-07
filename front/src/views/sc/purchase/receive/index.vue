@@ -142,12 +142,6 @@
                 @click="batchDelete"
                 >批量删除</a-button
               >
-              <a-button
-                v-permission="['purchase:receive:import']"
-                :icon="h(CloudUploadOutlined)"
-                @click="$refs.importer.openDialog()"
-                >导入Excel</a-button
-              >
               <!-- <a-button
                 v-permission="['purchase:receive:import']"
                 :icon="h(CloudUploadOutlined)"
@@ -191,7 +185,6 @@
       <!-- 采购订单查看窗口 -->
       <purchase-order-detail :id="purchaseOrderId" ref="viewPurchaseOrderDetailDialog" />
     </div>
-    <receive-sheet-importer ref="importer" @confirm="search" />
     <receive-sheet-pay-type-importer ref="importer2" />
     <!-- 批量操作 -->
     <batch-handler
@@ -254,7 +247,6 @@
   import {
     CheckOutlined,
     CloseOutlined,
-    CloudUploadOutlined,
     DeleteOutlined,
     DownloadOutlined,
     PlusOutlined,
@@ -271,7 +263,6 @@
     buildSortPageVo,
   } from '@/utils/utils';
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
-  import ReceiveSheetImporter from '@/components/Importor/ReceiveSheetImporter.vue';
   import ReceiveSheetPayTypeImporter from '@/components/Importor/ReceiveSheetPayTypeImporter.vue';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
@@ -284,7 +275,6 @@
       Detail,
       ApproveRefuse,
       PurchaseOrderDetail,
-      ReceiveSheetImporter,
       ReceiveSheetPayTypeImporter,
       StoreCenterSelector,
       SupplierSelector,
@@ -298,7 +288,6 @@
         SearchOutlined,
         PlusOutlined,
         CheckOutlined,
-        CloudUploadOutlined,
         CloseOutlined,
         DeleteOutlined,
         DownloadOutlined,
