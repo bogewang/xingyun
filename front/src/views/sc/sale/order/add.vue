@@ -138,22 +138,15 @@
           <j-form-item label="销售数量" :span="6">
             <a-input v-model:value="formData.totalNum" class="number-input" readonly />
           </j-form-item>
-<!--          <j-form-item label="赠品数量" :span="6">-->
-<!--            <a-input v-model:value="formData.giftNum" class="number-input" readonly />-->
-<!--          </j-form-item>-->
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-        </j-form>
-      </j-border>
-
-      <j-border>
-        <j-form bordered label-width="140px">
-          <j-form-item label="备注" :span="24" :content-nest="false">
+          <j-form-item label="备注" :span="12" >
             <a-textarea v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>
+
       <batch-add-product
         ref="batchAddProductDialog"
         :sc-id="formData.scId"

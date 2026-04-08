@@ -94,11 +94,6 @@
         </j-form>
       </j-border>
 
-      <j-border>
-        <j-form bordered label-width="140px">
-
-        </j-form>
-      </j-border>
 
       <div
         v-if="

@@ -94,16 +94,12 @@
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-        </j-form>
-      </j-border>
-
-      <j-border>
-        <j-form bordered label-width="140px">
-          <j-form-item label="备注" :span="24" :content-nest="false">
+          <j-form-item label="备注" :span="12" :content-nest="false">
             <a-textarea v-model:value.trim="formData.description" maxlength="200" readonly />
           </j-form-item>
         </j-form>
       </j-border>
+
     </div>
     <template #footer>
       <div class="form-modal-footer">
@@ -136,14 +132,6 @@ export default defineComponent({
         type: String,
         required: true,
       },
-    },
-    setup() {
-      return {
-        isFloatGeZero,
-        getNumber,
-        mul,
-        SALE_ORDER_STATUS,
-      };
     },
     setup() {
       return {
