@@ -9,13 +9,24 @@
       <j-border>
         <j-form bordered>
           <j-form-item label="仓库" required>
-            <store-center-selector v-model:value="formData.scId" />
+            <a-select
+              v-model:value="formData.scId"
+              placeholder="请选择仓库"
+              show-search
+              :filter-option="filterWarehouseOption"
+              @change="handleWarehouseChange"
+            >
+              <a-select-option
+                v-for="warehouse in warehouseOptions"
+                :key="warehouse.id"
+                :value="warehouse.id"
+              >
+                {{ warehouse.code }} - {{ warehouse.name }}
+              </a-select-option>
+            </a-select>
           </j-form-item>
           <j-form-item label="客户" required>
             <customer-selector v-model:value="formData.customerId" />
-          </j-form-item>
-          <j-form-item label="销售员">
-            <user-selector v-model:value="formData.salerId" />
           </j-form-item>
         </j-form>
       </j-border>
@@ -42,7 +53,9 @@
             >
             <a-button :icon="h(NumberOutlined)" @click="batchInputOrderNum">批量录入数量</a-button>
             <a-button :icon="h(EditOutlined)" @click="batchInputTaxPrice">批量调整价格</a-button>
-<!--            <a-button :icon="h(AlertOutlined)" @click="setGift">设置赠品</a-button>-->
+            <a-button :icon="h(CloudUploadOutlined)" @click="$refs.importer.openDialog()"
+            >导入Excel
+            </a-button>
           </a-space>
         </template>
 
@@ -72,7 +85,6 @@
                 >
                   <vxe-column field="productCode" title="商品编号" width="120" />
                   <vxe-column field="productName" title="商品名称" min-width="200" />
-<!--                  <vxe-column field="skuCode" title="商品SKU编号" width="120" />-->
                   <vxe-column field="spec" title="规格" width="80" />
                   <vxe-column field="unit" title="单位" width="80" />
                   <vxe-column
@@ -141,7 +153,7 @@
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="备注" :span="12" >
+          <j-form-item label="备注" :span="12" :content-nest="false">
             <a-textarea v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
@@ -152,6 +164,7 @@
         :sc-id="formData.scId"
         @confirm="batchAddProduct"
       />
+      <sale-order-importer ref="importer" @confirm="handleImportConfirm" />
       <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
         <a-space>
           <a-button
@@ -179,6 +192,7 @@ import {defineComponent, h} from 'vue';
 import BatchAddProduct from '@/views/sc/sale/batch-add-product.vue';
 import {
   AlertOutlined,
+  CloudUploadOutlined,
   DeleteOutlined,
   EditOutlined,
   NumberOutlined,
@@ -204,11 +218,20 @@ import {
 import {createConfirm, createError, createPrompt, createSuccess} from '@/hooks/web/msg';
 import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
 import UserSelector from '@/components/Selector/UserSelector.vue';
+import * as storeCenterApi from "@/api/base-data/store-center";
+import SaleOrderImporter from "@/components/Importor/SaleOrderImporter.vue";
+import JFormItem from "@/components/JFormItem";
+import JBorder from "@/components/JBorder";
+import JForm from "@/components/JForm";
 
 export default defineComponent({
     name: 'AddSaleOrder',
     components: {
+      JForm,
+      JBorder,
+      JFormItem,
       BatchAddProduct,
+      SaleOrderImporter,
       CustomerSelector,
       StoreCenterSelector,
       UserSelector,
@@ -222,6 +245,7 @@ export default defineComponent({
         NumberOutlined,
         EditOutlined,
         AlertOutlined,
+        CloudUploadOutlined,
         isEmpty,
         isFloatGeZero,
         getNumber,
@@ -257,29 +281,9 @@ export default defineComponent({
             width: 260,
             slots: { default: 'productName_default' },
           },
-          // { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          // { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
-          { field: 'categoryName', title: '商品分类', width: 120 },
-          // { field: 'brandName', title: '商品品牌', width: 120 },
-          // { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 140 },
-          /*{
-            field: 'isGift',
-            title: '是否赠品',
-            width: 80,
-            formatter: ({ cellValue }) => {
-              return cellValue ? '是' : '否';
-            },
-          },*/
           { field: 'stockNum', title: '库存数量', align: 'right', width: 140 },
-          // {
-          //   field: 'discountRate',
-          //   title: '折扣（%）',
-          //   align: 'right',
-          //   width: 120,
-          //   slots: { default: 'discountRate_default' },
-          // },
           {
             field: 'taxPrice',
             title: '价格（元）',
@@ -301,7 +305,6 @@ export default defineComponent({
             width: 140,
             slots: { default: 'orderAmount_default' },
           },
-          // { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           {
             field: 'description',
             title: '备注',
@@ -310,6 +313,7 @@ export default defineComponent({
           },
         ],
         tableData: [],
+        warehouseOptions: [],
       };
     },
     computed: {},
@@ -342,7 +346,7 @@ export default defineComponent({
         this.closeCurrentPage();
       },
       // 初始化表单数据
-      initFormData() {
+      async initFormData() {
         this.formData = {
           scId: '',
           customerId: '',
@@ -353,6 +357,41 @@ export default defineComponent({
           description: '',
         };
 
+        this.tableData = [];
+        // 加载仓库数据
+        await this.loadWarehouseOptions();
+      },
+      async loadWarehouseOptions() {
+        try {
+          const response = await storeCenterApi.selector({});
+          if (response && response.datas && response.datas.length > 0) {
+            this.warehouseOptions = response.datas;
+            // 如果有数据，默认选中第一个
+            if (this.warehouseOptions.length > 0 && !this.formData.scId) {
+              this.formData.scId = this.warehouseOptions[0].id;
+            }
+          }
+        } catch (error) {
+          console.error('加载仓库数据失败:', error);
+          createError('加载仓库数据失败');
+        }
+      },
+
+      // 仓库选择器过滤选项
+      filterWarehouseOption(input, option) {
+        const warehouse = this.warehouseOptions.find((w) => w.id === option.key);
+        if (warehouse) {
+          return (
+            warehouse.code.toLowerCase().includes(input.toLowerCase()) ||
+            warehouse.name.toLowerCase().includes(input.toLowerCase())
+          );
+        }
+        return false;
+      },
+
+      // 仓库选择变化处理
+      handleWarehouseChange(value) {
+        // 清空表格数据，因为仓库变化后商品数据需要重新加载
         this.tableData = [];
       },
       emptyProduct() {
@@ -564,6 +603,23 @@ export default defineComponent({
           this.tableData.push(this.emptyProduct());
           this.handleSelectProduct(this.tableData.length - 1, item);
         });
+      },
+      handleImportConfirm(res) {
+        const importData = res?.data || res?.datas || res || {};
+        if (Array.isArray(importData) && importData.length > 0) {
+          this.tableData = importData.map((item) => {
+            return Object.assign(this.emptyProduct(), item, {
+              id: uuid(),
+              isFixed: false,
+              taxPrice: !isEmpty(item.taxPrice) ? item.taxPrice : item.salePrice,
+              outNum: item.orderNum,
+            });
+          });
+        } else {
+          this.tableData = [];
+        }
+
+        this.calcSum();
       },
       // 校验数据
       validData() {

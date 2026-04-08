@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Lists;
 import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.exceptions.impl.InputErrorException;
 import com.lframework.starter.common.utils.Assert;
+import com.lframework.starter.common.utils.BeanUtil;
 import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.annotations.oplog.OpLog;
@@ -45,6 +47,7 @@ import com.lframework.xingyun.sc.entity.SaleOrderDetailBundle;
 import com.lframework.xingyun.sc.enums.SaleOpLogType;
 import com.lframework.xingyun.sc.enums.SaleOrderStatus;
 import com.lframework.xingyun.sc.events.order.impl.ApprovePassSaleOrderEvent;
+import com.lframework.xingyun.sc.excel.sale.SaleOrderImportModel;
 import com.lframework.xingyun.sc.mappers.SaleOrderMapper;
 import com.lframework.xingyun.sc.service.paytype.OrderPayTypeService;
 import com.lframework.xingyun.sc.service.sale.SaleConfigService;
@@ -52,6 +55,8 @@ import com.lframework.xingyun.sc.service.sale.SaleOrderDetailBundleService;
 import com.lframework.xingyun.sc.service.sale.SaleOrderDetailService;
 import com.lframework.xingyun.sc.service.sale.SaleOrderService;
 import com.lframework.xingyun.sc.vo.sale.*;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -619,5 +624,64 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
         ApprovePassSaleOrderEvent event = new ApprovePassSaleOrderEvent(this, dto);
 
         ApplicationUtil.publishEvent(event);
+    }
+
+    @Override
+    public List<SaleProductVo> checkImport(List<SaleOrderImportModel> list) {
+        if (CollectionUtils.isEmpty(list)) {
+            return Lists.newArrayList();
+        }
+
+        // 匹配编号
+        checkImportData(list);
+
+        return list.stream()
+                .map(item -> BeanUtil.copyProperties(item, SaleProductVo.class))
+                .collect(Collectors.toList());
+    }
+
+    private void checkImportData(List<SaleOrderImportModel> list) {
+        List<String> productNames = list.stream().map(SaleOrderImportModel::getProductName).collect(Collectors.toList());
+        List<Product> products = productService.selectByProductName(productNames);
+        Map<String, Product> nameSpecUnitMap = products.stream()
+                .collect(Collectors.toMap(item -> item.getName() + item.getSpec() + item.getUnit(), item -> item));
+        Map<String, Product> nameUnitMap = products.stream()
+                .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item));
+
+        for (int i = 0; i < list.size(); i++) {
+            SaleOrderImportModel data = list.get(i);
+            int rowIndex = i + 2;
+
+            if (StringUtils.isEmpty(data.getProductName())) {
+                throw new DefaultClientException("第" + rowIndex + "行“商品名称”不能为空");
+            }
+            if (StringUtils.isEmpty(data.getUnit())) {
+                throw new DefaultClientException("第" + rowIndex + "行“单位”不能为空");
+            }
+            if (data.getTaxPrice() == null) {
+                throw new DefaultClientException("第" + rowIndex + "行“单价”不能为空");
+            }
+            if (data.getOrderNum() == null) {
+                throw new DefaultClientException("第" + rowIndex + "行“数量”不能为空");
+            }
+            if (NumberUtil.le(data.getOrderNum(), BigDecimal.ZERO)) {
+                throw new DefaultClientException("第" + rowIndex + "行“数量”必须大于0");
+            }
+            if (!NumberUtil.isNumberPrecision(data.getOrderNum(), 8)) {
+                throw new DefaultClientException("第" + rowIndex + "行“数量”最多允许8位小数");
+            }
+
+            // 匹配商品,设置商品编号
+            String nameSpecUnit = data.getProductName() + data.getSpec() + data.getUnit();
+            Product product = nameSpecUnitMap.get(nameSpecUnit);
+            if (product == null) {
+                product = nameUnitMap.get(nameSpecUnit);
+                if (product == null) {
+                    throw new DefaultClientException("第" + rowIndex + "行“商品名称”、“规格”、“单位”组合不存在");
+                }
+            }
+            data.setProductCode(product.getCode());
+            data.setProductId(product.getId());
+        }
     }
 }

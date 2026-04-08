@@ -28,28 +28,6 @@
           <j-form-item label="客户" required>
             <customer-selector v-model:value="formData.customerId" @update:value="customerChange" />
           </j-form-item>
-          <!--          <j-form-item label="销售员">
-            <user-selector v-model:value="formData.salerId"/>
-          </j-form-item>
-          <j-form-item label="付款日期" required>
-            <a-date-picker
-              v-model:value="formData.paymentDate"
-              placeholder=""
-              value-format="YYYY-MM-DD"
-              :disabled="!formData.allowModifyPaymentDate"
-              :disabled-date="
-                (current) => {
-                  return current && current < getCurrentDateTime().endOf('day');
-                }
-              "
-            />
-          </j-form-item>
-          <j-form-item label="销售订单">
-            <sale-order-selector-with-out
-              v-model:value="formData.saleOrderId"
-              @update:value="saleOrderChange"
-            />
-          </j-form-item>-->
         </j-form>
       </j-border>
       <!-- 数据列表 -->
@@ -75,7 +53,6 @@
             </a-button>
             <a-button :icon="h(NumberOutlined)" @click="batchInputOutNum">批量录入数量</a-button>
             <a-button :icon="h(EditOutlined)" @click="batchInputTaxPrice">批量调整价格</a-button>
-            <a-button :icon="h(AlertOutlined)" @click="setGift">设置赠品</a-button>
             <a-button :icon="h(CloudUploadOutlined)" @click="$refs.importer.openDialog()"
               >导入Excel</a-button
             >
@@ -108,16 +85,15 @@
                 >
                   <vxe-column field="productCode" title="商品编号" width="120" />
                   <vxe-column field="productName" title="商品名称" min-width="200" />
-                  <!--                  <vxe-column field="skuCode" title="商品SKU编号" width="120"/>-->
                   <vxe-column field="spec" title="规格" width="80" />
                   <vxe-column field="unit" title="单位" width="80" />
-                  <!--                  <vxe-column
+                  <vxe-column
                     field="salePrice"
                     title="销售价（元）"
                     width="140"
                     align="right"
-                  />-->
-                  <!--                  <vxe-column field="stockNum" title="库存数量" width="140" align="right"/>-->
+                  />
+                  <vxe-column field="stockNum" title="库存数量" width="140" align="right"/>
                 </vxe-table>
               </div>
             </template>
@@ -180,18 +156,10 @@
           <j-form-item label="出库数量" :span="6">
             <a-input v-model:value="formData.totalNum" class="number-input" readonly />
           </j-form-item>
-          <!--          <j-form-item label="赠品数量" :span="6">-->
-          <!--            <a-input v-model:value="formData.giftNum" class="number-input" readonly/>-->
-          <!--          </j-form-item>-->
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-        </j-form>
-      </j-border>
-
-      <j-border>
-        <j-form bordered label-width="140px">
-          <j-form-item label="备注" :span="24" :content-nest="false">
+          <j-form-item label="备注" :span="12" :content-nest="false">
             <a-textarea v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
@@ -320,35 +288,8 @@
             width: 260,
             slots: { default: 'productName_default' },
           },
-          // {field: 'skuCode', title: '商品SKU编号', width: 120},
-          // {field: 'externalCode', title: '商品简码', width: 120},
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
-          // {field: 'categoryName', title: '商品分类', width: 120},
-          // {field: 'brandName', title: '商品品牌', width: 120},
-          // {field: 'salePrice', title: '销售价（元）', align: 'right', width: 140},
-          /*{
-          field: 'isGift',
-          title: '是否赠品',
-          width: 80,
-          formatter: ({cellValue}) => {
-            return cellValue ? '是' : '否';
-          },
-        },
-        {
-          field: 'stockNum',
-          title: '库存数量',
-          align: 'right',
-          width: 140,
-          slots: {default: 'stockNum_default'},
-        },
-        {
-          field: 'discountRate',
-          title: '折扣（%）',
-          align: 'right',
-          width: 140,
-          slots: {default: 'discountRate_default'},
-        },*/
           {
             field: 'taxPrice',
             title: '价格（元）',
@@ -370,7 +311,6 @@
             width: 140,
             slots: { default: 'taxAmount_default' },
           },
-          // {field: 'taxRate', title: '税率（%）', align: 'right', width: 100},
           {
             field: 'description',
             title: '备注',
@@ -379,6 +319,7 @@
           },
         ],
         tableData: [],
+        warehouseOptions: [],
       };
     },
     computed: {},

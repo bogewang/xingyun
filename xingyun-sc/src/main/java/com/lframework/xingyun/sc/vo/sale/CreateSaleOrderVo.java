@@ -82,9 +82,9 @@ public class CreateSaleOrderVo implements BaseVo, Serializable {
                 throw new InputErrorException("第" + orderNo + "行商品销售数量最多允许8位小数！");
             }
 
-            if (product.getOriPrice() == null) {
-                throw new InputErrorException("第" + orderNo + "行商品参考销售价不能为空！");
-            }
+            // if (product.getOriPrice() == null) {
+            //     throw new InputErrorException("第" + orderNo + "行商品参考销售价不能为空！");
+            // }
 
             if (product.getTaxPrice() == null) {
                 throw new InputErrorException("第" + orderNo + "行商品价格不能为空！");
