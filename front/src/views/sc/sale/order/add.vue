@@ -42,7 +42,7 @@
             >
             <a-button :icon="h(NumberOutlined)" @click="batchInputOrderNum">批量录入数量</a-button>
             <a-button :icon="h(EditOutlined)" @click="batchInputTaxPrice">批量调整价格</a-button>
-            <a-button :icon="h(AlertOutlined)" @click="setGift">设置赠品</a-button>
+<!--            <a-button :icon="h(AlertOutlined)" @click="setGift">设置赠品</a-button>-->
           </a-space>
         </template>
 
@@ -72,12 +72,12 @@
                 >
                   <vxe-column field="productCode" title="商品编号" width="120" />
                   <vxe-column field="productName" title="商品名称" min-width="200" />
-                  <vxe-column field="skuCode" title="商品SKU编号" width="120" />
+<!--                  <vxe-column field="skuCode" title="商品SKU编号" width="120" />-->
                   <vxe-column field="spec" title="规格" width="80" />
                   <vxe-column field="unit" title="单位" width="80" />
                   <vxe-column
                     field="salePrice"
-                    title="参考销售价（元）"
+                    title="销售价（元）"
                     width="140"
                     align="right"
                   />
@@ -138,9 +138,9 @@
           <j-form-item label="销售数量" :span="6">
             <a-input v-model:value="formData.totalNum" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="赠品数量" :span="6">
-            <a-input v-model:value="formData.giftNum" class="number-input" readonly />
-          </j-form-item>
+<!--          <j-form-item label="赠品数量" :span="6">-->
+<!--            <a-input v-model:value="formData.giftNum" class="number-input" readonly />-->
+<!--          </j-form-item>-->
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
@@ -264,29 +264,29 @@ export default defineComponent({
             width: 260,
             slots: { default: 'productName_default' },
           },
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          { field: 'externalCode', title: '商品简码', width: 120 },
+          // { field: 'skuCode', title: '商品SKU编号', width: 120 },
+          // { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
-          { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 140 },
-          {
+          // { field: 'brandName', title: '商品品牌', width: 120 },
+          // { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 140 },
+          /*{
             field: 'isGift',
             title: '是否赠品',
             width: 80,
             formatter: ({ cellValue }) => {
               return cellValue ? '是' : '否';
             },
-          },
+          },*/
           { field: 'stockNum', title: '库存数量', align: 'right', width: 140 },
-          {
-            field: 'discountRate',
-            title: '折扣（%）',
-            align: 'right',
-            width: 120,
-            slots: { default: 'discountRate_default' },
-          },
+          // {
+          //   field: 'discountRate',
+          //   title: '折扣（%）',
+          //   align: 'right',
+          //   width: 120,
+          //   slots: { default: 'discountRate_default' },
+          // },
           {
             field: 'taxPrice',
             title: '价格（元）',
@@ -308,7 +308,7 @@ export default defineComponent({
             width: 140,
             slots: { default: 'orderAmount_default' },
           },
-          { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
+          // { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           {
             field: 'description',
             title: '备注',

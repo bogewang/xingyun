@@ -15,9 +15,6 @@
           <j-form-item label="客户">
             {{ formData.customerName }}
           </j-form-item>
-          <j-form-item label="销售员">
-            {{ formData.salerName }}
-          </j-form-item>
           <j-form-item label="状态">
             <span
               v-if="SALE_ORDER_STATUS.APPROVE_PASS.equalsCode(formData.status)"
@@ -94,17 +91,10 @@
           <j-form-item label="销售数量" :span="6">
             <a-input v-model:value="formData.totalNum" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="赠品数量" :span="6">
-            <a-input v-model:value="formData.giftNum" class="number-input" readonly />
-          </j-form-item>
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
         </j-form>
-      </j-border>
-
-      <j-border title="约定支付">
-        <pay-type ref="payType" :disabled="true" />
       </j-border>
 
       <j-border>
@@ -176,23 +166,23 @@ export default defineComponent({
           { type: 'seq', width: 50 },
           { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 260 },
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          { field: 'externalCode', title: '商品简码', width: 120 },
+          // { field: 'skuCode', title: '商品SKU编号', width: 120 },
+          // { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
-          { field: 'mainProductName', title: '所属组合商品', width: 120 },
-          { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 150 },
-          {
-            field: 'isGift',
-            title: '是否赠品',
-            width: 80,
-            formatter: ({ cellValue }) => {
-              return cellValue ? '是' : '否';
-            },
-          },
-          { field: 'discountRate', title: '折扣（%）', align: 'right', width: 120 },
+          // { field: 'brandName', title: '商品品牌', width: 120 },
+          // { field: 'mainProductName', title: '所属组合商品', width: 120 },
+          // { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 150 },
+          // {
+          //   field: 'isGift',
+          //   title: '是否赠品',
+          //   width: 80,
+          //   formatter: ({ cellValue }) => {
+          //     return cellValue ? '是' : '否';
+          //   },
+          // },
+          // { field: 'discountRate', title: '折扣（%）', align: 'right', width: 120 },
           { field: 'taxPrice', title: '价格（元）', align: 'right', width: 120 },
           { field: 'orderNum', title: '销售数量', align: 'right', width: 100 },
           {
@@ -202,7 +192,7 @@ export default defineComponent({
             width: 120,
             slots: { default: 'orderAmount_default' },
           },
-          { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
+          // { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           { field: 'description', title: '备注', width: 200 },
         ],
         tableData: [],

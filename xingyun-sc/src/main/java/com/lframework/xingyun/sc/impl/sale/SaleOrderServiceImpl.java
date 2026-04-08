@@ -8,7 +8,6 @@ import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.exceptions.impl.InputErrorException;
 import com.lframework.starter.common.utils.Assert;
-import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.annotations.oplog.OpLog;
@@ -16,11 +15,7 @@ import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.components.security.SecurityUtil;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
-import com.lframework.starter.web.core.utils.ApplicationUtil;
-import com.lframework.starter.web.core.utils.IdUtil;
-import com.lframework.starter.web.core.utils.OpLogUtil;
-import com.lframework.starter.web.core.utils.PageHelperUtil;
-import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.starter.web.core.utils.*;
 import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
@@ -43,7 +38,6 @@ import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.sale.SaleOrderFullDto;
 import com.lframework.xingyun.sc.dto.sale.SaleOrderWithOutDto;
 import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
-import com.lframework.xingyun.sc.entity.OrderPayType;
 import com.lframework.xingyun.sc.entity.SaleConfig;
 import com.lframework.xingyun.sc.entity.SaleOrder;
 import com.lframework.xingyun.sc.entity.SaleOrderDetail;
@@ -57,15 +51,11 @@ import com.lframework.xingyun.sc.service.sale.SaleConfigService;
 import com.lframework.xingyun.sc.service.sale.SaleOrderDetailBundleService;
 import com.lframework.xingyun.sc.service.sale.SaleOrderDetailService;
 import com.lframework.xingyun.sc.service.sale.SaleOrderService;
-import com.lframework.xingyun.sc.vo.sale.ApprovePassSaleOrderVo;
-import com.lframework.xingyun.sc.vo.sale.ApproveRefuseSaleOrderVo;
-import com.lframework.xingyun.sc.vo.sale.CreateSaleOrderVo;
-import com.lframework.xingyun.sc.vo.sale.QuerySaleOrderVo;
-import com.lframework.xingyun.sc.vo.sale.QuerySaleOrderWithOutVo;
-import com.lframework.xingyun.sc.vo.sale.QuerySaleProductVo;
-import com.lframework.xingyun.sc.vo.sale.SaleOrderSelectorVo;
-import com.lframework.xingyun.sc.vo.sale.SaleProductVo;
-import com.lframework.xingyun.sc.vo.sale.UpdateSaleOrderVo;
+import com.lframework.xingyun.sc.vo.sale.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -73,9 +63,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, SaleOrder> implements
@@ -290,13 +277,6 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
     }
     if (getBaseMapper().updateAllColumn(order, updateOrderWrapper) != 1) {
       throw new DefaultClientException("订单信息已过期，请刷新重试！");
-    }
-
-    if (NumberUtil.gt(order.getTotalAmount(), BigDecimal.ZERO)) {
-      List<OrderPayType> orderPayTypes = orderPayTypeService.findByOrderId(order.getId());
-      if (CollectionUtil.isEmpty(orderPayTypes)) {
-        throw new DefaultClientException("单据没有约定支付，请检查！");
-      }
     }
 
     Wrapper<SaleOrderDetail> queryDetailWrapper = Wrappers.lambdaQuery(SaleOrderDetail.class)
