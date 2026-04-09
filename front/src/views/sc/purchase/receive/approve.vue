@@ -9,26 +9,11 @@
           <j-form-item label="供应商">
             {{ formData.supplierName }}
           </j-form-item>
-          <j-form-item label="采购员">
-            {{ formData.purchaserName }}
-          </j-form-item>
           <j-form-item label="付款日期">
             {{ formData.paymentDate }}
           </j-form-item>
           <j-form-item label="实际到货日期">
             {{ formData.receiveDate }}
-          </j-form-item>
-          <j-form-item label="采购订单">
-            <div v-if="!isEmpty(formData.purchaseOrderCode)">
-              <a
-                v-permission="['purchase:order:query']"
-                @click="(e) => $refs.viewPurchaseOrderDetailDialog.openDialog()"
-                >{{ formData.purchaseOrderCode }}</a
-              >
-              <span v-no-permission="['purchase:order:query']">{{
-                formData.purchaseOrderCode
-              }}</span>
-            </div>
           </j-form-item>
           <j-form-item label="状态">
             <span
@@ -106,23 +91,14 @@
           <j-form-item label="收货数量" :span="6">
             <a-input v-model:value="formData.totalNum" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="赠品数量" :span="6">
-            <a-input v-model:value="formData.giftNum" class="number-input" readonly />
-          </j-form-item>
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-        </j-form>
-      </j-border>
-
-      <j-border>
-        <j-form bordered label-width="140px">
-          <j-form-item label="备注" :span="24" :content-nest="false">
+          <j-form-item label="备注" :span="12" :content-nest="false">
             <a-textarea v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>
-
       <div
         v-if="
           RECEIVE_SHEET_STATUS.CREATED.equalsCode(formData.status) ||
@@ -167,10 +143,14 @@
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
+  import JFormItem from "@/components/JFormItem";
+  import JBorder from "@/components/JBorder";
 
   export default defineComponent({
     name: 'ApprovePurchaseReceiveSheet',
     components: {
+      JBorder,
+      JFormItem,
       ApproveRefuse,
       PurchaseOrderDetail,
       OrderTimeLine,
@@ -197,20 +177,9 @@
           { type: 'seq', width: 50 },
           { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 260 },
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
-          {
-            field: 'isGift',
-            title: '是否赠品',
-            width: 80,
-            formatter: ({ cellValue }) => {
-              return cellValue ? '是' : '否';
-            },
-          },
           { field: 'purchasePrice', title: '采购价（元）', align: 'right', width: 120 },
           { field: 'taxCostPrice', title: '含税成本价（元）', align: 'right', width: 140 },
           { field: 'stockNum', title: '库存数量', align: 'right', width: 100 },
@@ -223,15 +192,6 @@
               return isEmpty(cellValue) ? '-' : cellValue;
             },
           },
-          {
-            field: 'remainNum',
-            title: '剩余收货数量',
-            align: 'right',
-            width: 120,
-            formatter: ({ cellValue }) => {
-              return isEmpty(cellValue) ? '-' : cellValue;
-            },
-          },
           { field: 'receiveNum', title: '收货数量', align: 'right', width: 100 },
           {
             field: 'taxAmount',
@@ -240,7 +200,6 @@
             width: 120,
             slots: { default: 'taxAmount_default' },
           },
-          { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           { field: 'description', title: '备注', width: 200 },
         ],
         tableData: [],
