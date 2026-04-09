@@ -12,60 +12,65 @@ import lombok.Data;
 @Data
 public class QueryProductVo extends SortPageVo implements BaseVo, Serializable {
 
-  private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
+	/**
+	 * 仓库ID
+	 */
+	@ApiModelProperty("仓库ID")
+	private String scId;
 
-  /**
-   * 编号
-   */
-  @ApiModelProperty("编号")
-  private String code;
+	/**
+	 * 编号
+	 */
+	@ApiModelProperty("编号")
+	private String code;
 
-  /**
-   * 名称
-   */
-  @ApiModelProperty("名称")
-  private String name;
+	/**
+	 * 名称
+	 */
+	@ApiModelProperty("名称")
+	private String name;
 
-  /**
-   * SKU
-   */
-  @ApiModelProperty("SKU")
-  private String skuCode;
+	/**
+	 * SKU
+	 */
+	@ApiModelProperty("SKU")
+	private String skuCode;
 
-  /**
-   * 简称
-   */
-  @ApiModelProperty("简称")
-  private String shortName;
+	/**
+	 * 简称
+	 */
+	@ApiModelProperty("简称")
+	private String shortName;
 
-  /**
-   * 品牌ID
-   */
-  @ApiModelProperty("品牌ID")
-  private String brandId;
+	/**
+	 * 品牌ID
+	 */
+	@ApiModelProperty("品牌ID")
+	private String brandId;
 
-  /**
-   * 分类ID
-   */
-  @ApiModelProperty("分类ID")
-  private String categoryId;
+	/**
+	 * 分类ID
+	 */
+	@ApiModelProperty("分类ID")
+	private String categoryId;
 
-  /**
-   * 商品类型
-   */
-  @ApiModelProperty("商品类型")
-  @IsEnum(message = "商品类型格式错误！", enumClass = ProductType.class)
-  private Integer productType;
+	/**
+	 * 商品类型
+	 */
+	@ApiModelProperty("商品类型")
+	@IsEnum(message = "商品类型格式错误！", enumClass = ProductType.class)
+	private Integer productType;
 
-  /**
-   * 创建起始时间
-   */
-  @ApiModelProperty("创建起始时间")
-  private LocalDateTime startTime;
+	/**
+	 * 创建起始时间
+	 */
+	@ApiModelProperty("创建起始时间")
+	private LocalDateTime startTime;
 
-  /**
-   * 创建截止时间
-   */
-  @ApiModelProperty("创建截止时间")
-  private LocalDateTime endTime;
+	/**
+	 * 创建截止时间
+	 */
+	@ApiModelProperty("创建截止时间")
+	private LocalDateTime endTime;
 }

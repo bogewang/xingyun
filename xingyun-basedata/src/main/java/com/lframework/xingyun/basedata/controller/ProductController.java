@@ -1,6 +1,5 @@
 package com.lframework.xingyun.basedata.controller;
 
-import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.web.core.annotations.security.HasPermission;
 import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
@@ -11,6 +10,7 @@ import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.basedata.bo.product.info.GetProductBo;
 import com.lframework.xingyun.basedata.bo.product.info.QueryProductBo;
+import com.lframework.xingyun.basedata.converter.ProductConverter;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.excel.product.ProductImportModel;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
@@ -35,7 +35,6 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 商品管理
@@ -62,20 +61,14 @@ public class ProductController extends DefaultBaseController {
    * 商品列表
    */
   @ApiOperation("商品列表")
-  @HasPermission({"base-data:product:info:query", "base-data:product:info:add",
-      "base-data:product:info:modify"})
+  @HasPermission({"base-data:product:info:query", "base-data:product:info:add", "base-data:product:info:modify"})
   @GetMapping("/query")
   public InvokeResult<PageResult<QueryProductBo>> query(@Valid QueryProductVo vo) {
+    // Assert.notNull(vo.getScId(), "仓库ID不能为空！");
 
     PageResult<Product> pageResult = productService.query(getPageIndex(vo), getPageSize(vo), vo);
 
-    List<Product> datas = pageResult.getDatas();
-    List<QueryProductBo> results = null;
-
-    if (!CollectionUtil.isEmpty(datas)) {
-      // todo afterInit 优化
-      results = datas.stream().map(QueryProductBo::new).collect(Collectors.toList());
-    }
+    List<QueryProductBo> results = ProductConverter.DO2BOList(pageResult.getDatas(), vo.getScId());
 
     return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
   }

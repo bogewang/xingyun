@@ -131,10 +131,16 @@ import BatchHandler from '@/components/BatchHandler';
 import {createError} from '@/hooks/web/msg';
 import PageWrapper from "@/components/Page/src/PageWrapper.vue";
 import JFormItem from "@/components/JFormItem";
+import JBorder from "@/components/JBorder";
+import JForm from "@/components/JForm";
+import {TableAction} from "@/components/Table";
 
 export default defineComponent({
     name: 'ProductInfo',
     components: {
+      TableAction,
+      JForm,
+      JBorder,
       JFormItem,
       PageWrapper,
       BatchHandler,
@@ -186,6 +192,7 @@ export default defineComponent({
           { field: 'name', title: '名称', minWidth: 160, sortable: true },
           { field: 'unit', title: '单位', width: 100 },
           { field: 'spec', title: '规格', width: 120 },
+          { field: 'stockNum', title: '库存数量', width: 120 },
           { field: 'purchasePrice', title: '采购价', width: 120 },
           { field: 'retailPrice', title: '零售价', width: 120 },
           { field: 'categoryName', title: '分类', width: 120 },
