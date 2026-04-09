@@ -38,26 +38,6 @@
                     <j-form-item label="简称">
                       <a-input v-model:value="searchFormData.shortName" allow-clear />
                     </j-form-item>
-                    <j-form-item label="SKU编号">
-                      <a-input v-model:value="searchFormData.skuCode" allow-clear />
-                    </j-form-item>
-                    <j-form-item label="品牌">
-                      <product-brand-selector v-model:value="searchFormData.brandId" />
-                    </j-form-item>
-                    <j-form-item label="商品类型">
-                      <a-select
-                        v-model:value="searchFormData.productType"
-                        placeholder="全部"
-                        allow-clear
-                      >
-                        <a-select-option
-                          v-for="item in PRODUCT_TYPE.values()"
-                          :key="item.code"
-                          :value="item.code"
-                          >{{ item.desc }}</a-select-option
-                        >
-                      </a-select>
-                    </j-form-item>
                     <j-form-item label="创建日期" :content-nest="false">
                       <div class="date-range-container">
                         <a-date-picker
@@ -157,10 +137,14 @@ import {PRODUCT_TYPE} from '@/enums/biz/productType';
 import BatchHandler from '@/components/BatchHandler';
 import {createError} from '@/hooks/web/msg';
 import CategoryTree from './category-tree.vue';
+import PageWrapper from "@/components/Page/src/PageWrapper.vue";
+import JFormItem from "@/components/JFormItem";
 
 export default defineComponent({
     name: 'ProductInfo',
     components: {
+      JFormItem,
+      PageWrapper,
       CategoryTree,
       BatchHandler,
       DownOutlined,
