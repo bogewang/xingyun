@@ -1,101 +1,93 @@
 <template>
   <div>
     <div v-show="visible" v-permission="['base-data:product:info:query']">
-      <a-row>
-        <a-col :span="4">
-          <page-wrapper content-full-height fixed-height content-class="!mr-0">
-            <category-tree style="height: 100%" @change="(e) => doSearch(e)" />
-          </page-wrapper>
-        </a-col>
-        <a-col :span="20">
-          <page-wrapper content-full-height fixed-height>
-            <!-- 数据列表 -->
-            <vxe-grid
-              id="ProductInfo"
-              ref="grid"
-              resizable
-              show-overflow
-              highlight-hover-row
-              keep-source
-              row-id="id"
-              :proxy-config="proxyConfig"
-              :columns="tableColumn"
-              :toolbar-config="toolbarConfig"
-              :custom-config="{}"
-              :pager-config="{}"
-              :loading="loading"
-              height="auto"
-            >
-              <template #form>
-                <j-border>
-                  <j-form bordered @collapse="$refs.grid.refreshColumn()">
-                    <j-form-item label="名称">
-                      <a-input v-model:value="searchFormData.name" allow-clear />
-                    </j-form-item>
-                    <j-form-item label="编号">
-                      <a-input v-model:value="searchFormData.code" allow-clear />
-                    </j-form-item>
-                    <j-form-item label="简称">
-                      <a-input v-model:value="searchFormData.shortName" allow-clear />
-                    </j-form-item>
-                    <j-form-item label="创建日期" :content-nest="false">
-                      <div class="date-range-container">
-                        <a-date-picker
-                          v-model:value="searchFormData.startTime"
-                          placeholder=""
-                          value-format="YYYY-MM-DD 00:00:00"
-                        />
-                        <span class="date-split">至</span>
-                        <a-date-picker
-                          v-model:value="searchFormData.endTime"
-                          placeholder=""
-                          value-format="YYYY-MM-DD 23:59:59"
-                        />
-                      </div>
-                    </j-form-item>
-                  </j-form>
-                </j-border>
-              </template>
-              <!-- 工具栏 -->
-              <template #toolbar_buttons>
-                <a-space>
-                  <a-button type="primary" :icon="h(SearchOutlined)" @click="search">查询</a-button>
-                  <a-button
-                    v-permission="['base-data:product:info:add']"
-                    type="primary"
-                    :icon="h(PlusOutlined)"
-                    @click="openChildPage('/product/info/add')"
-                    >新增</a-button
-                  >
-                  <a-button
-                    v-permission="['base-data:product:info:import']"
-                    :icon="h(CloudUploadOutlined)"
-                    @click="$refs.importer.openDialog()"
-                    >导入Excel</a-button
-                  >
-                  <a-dropdown>
-                    <template #overlay>
-                      <a-menu @click="handleCommand">
-                        <a-menu-item key="batchDelete" :icon="h(DeleteOutlined)">
-                          批量删除
-                        </a-menu-item>
-                      </a-menu>
-                    </template>
-                    <a-button v-permission="['base-data:product:info:delete']"
-                      >更多<DownOutlined
-                    /></a-button>
-                  </a-dropdown>
-                </a-space>
-              </template>
+      <page-wrapper content-full-height fixed-height>
+        <!-- 数据列表 -->
+        <vxe-grid
+          id="ProductInfo"
+          ref="grid"
+          resizable
+          show-overflow
+          highlight-hover-row
+          keep-source
+          row-id="id"
+          :proxy-config="proxyConfig"
+          :columns="tableColumn"
+          :toolbar-config="toolbarConfig"
+          :custom-config="{}"
+          :pager-config="{}"
+          :loading="loading"
+          height="auto"
+        >
+          <template #form>
+            <j-border>
+              <j-form bordered @collapse="$refs.grid.refreshColumn()">
+                <j-form-item label="名称">
+                  <a-input v-model:value="searchFormData.name" allow-clear />
+                </j-form-item>
+                <j-form-item label="编号">
+                  <a-input v-model:value="searchFormData.code" allow-clear />
+                </j-form-item>
+                <j-form-item label="简称">
+                  <a-input v-model:value="searchFormData.shortName" allow-clear />
+                </j-form-item>
+                <j-form-item label="商品分类">
+                  <product-category-selector v-model:value="searchFormData.categoryId" :only-final="false" />
+                </j-form-item>
+                <j-form-item label="创建日期" :content-nest="false">
+                  <div class="date-range-container">
+                    <a-date-picker
+                      v-model:value="searchFormData.startTime"
+                      placeholder=""
+                      value-format="YYYY-MM-DD 00:00:00"
+                    />
+                    <span class="date-split">至</span>
+                    <a-date-picker
+                      v-model:value="searchFormData.endTime"
+                      placeholder=""
+                      value-format="YYYY-MM-DD 23:59:59"
+                    />
+                  </div>
+                </j-form-item>
+              </j-form>
+            </j-border>
+          </template>
+          <!-- 工具栏 -->
+          <template #toolbar_buttons>
+            <a-space>
+              <a-button type="primary" :icon="h(SearchOutlined)" @click="search">查询</a-button>
+              <a-button
+                v-permission="['base-data:product:info:add']"
+                type="primary"
+                :icon="h(PlusOutlined)"
+                @click="openChildPage('/product/info/add')"
+                >新增</a-button
+              >
+              <a-button
+                v-permission="['base-data:product:info:import']"
+                :icon="h(CloudUploadOutlined)"
+                @click="$refs.importer.openDialog()"
+                >导入Excel</a-button
+              >
+              <a-dropdown>
+                <template #overlay>
+                  <a-menu @click="handleCommand">
+                    <a-menu-item key="batchDelete" :icon="h(DeleteOutlined)">
+                      批量删除
+                    </a-menu-item>
+                  </a-menu>
+                </template>
+                <a-button v-permission="['base-data:product:info:delete']">更多<DownOutlined /></a-button>
+              </a-dropdown>
+            </a-space>
+          </template>
 
-              <!-- 操作 列自定义内容 -->
-              <template #action_default="{ row }">
-                <table-action outside :actions="createActions(row)" />
-              </template>
-            </vxe-grid>
-          </page-wrapper>
-        </a-col>
-      </a-row>
+          <!-- 操作 列自定义内容 -->
+          <template #action_default="{ row }">
+            <table-action outside :actions="createActions(row)" />
+          </template>
+        </vxe-grid>
+      </page-wrapper>
 
       <!-- 查看窗口 -->
       <detail :id="id" ref="viewDialog" />
@@ -133,10 +125,10 @@ import {multiplePageMix} from '@/mixins/multiplePageMix';
 import {buildSortPageVo, isEmpty, isEqualWithStr} from '@/utils/utils';
 import ProductImporter from '@/components/Importor/ProductImporter.vue';
 import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
+import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
 import {PRODUCT_TYPE} from '@/enums/biz/productType';
 import BatchHandler from '@/components/BatchHandler';
 import {createError} from '@/hooks/web/msg';
-import CategoryTree from './category-tree.vue';
 import PageWrapper from "@/components/Page/src/PageWrapper.vue";
 import JFormItem from "@/components/JFormItem";
 
@@ -145,12 +137,12 @@ export default defineComponent({
     components: {
       JFormItem,
       PageWrapper,
-      CategoryTree,
       BatchHandler,
       DownOutlined,
       Detail,
       ProductImporter,
       ProductBrandSelector,
+      ProductCategorySelector,
     },
     mixins: [multiplePageMix],
     setup() {
@@ -192,22 +184,11 @@ export default defineComponent({
           { type: 'checkbox', width: 45 },
           { field: 'code', title: '编号', width: 120, sortable: true },
           { field: 'name', title: '名称', minWidth: 160, sortable: true },
-          { field: 'shortName', title: '简称', width: 140 },
-          { field: 'skuCode', title: 'SKU编号', width: 120 },
           { field: 'unit', title: '单位', width: 100 },
           { field: 'spec', title: '规格', width: 120 },
           { field: 'purchasePrice', title: '采购价', width: 120 },
           { field: 'retailPrice', title: '零售价', width: 120 },
           { field: 'categoryName', title: '分类', width: 120 },
-          { field: 'brandName', title: '品牌', width: 120 },
-          {
-            field: 'productType',
-            title: '商品类型',
-            width: 120,
-            formatter: ({ cellValue }) => {
-              return PRODUCT_TYPE.getDesc(cellValue);
-            },
-          },
           { field: 'createTime', title: '创建时间', width: 170, sortable: true },
           { field: 'updateTime', title: '修改时间', width: 170, sortable: true },
           { title: '操作', width: 120, fixed: 'right', slots: { default: 'action_default' } },
@@ -245,6 +226,11 @@ export default defineComponent({
       },
       // 查询前构建具体的查询参数
       buildSearchFormData() {
+        // 兼容“全部分类”的语义：如果回传 0 / '0'，则不作为筛选条件下发
+        if (isEqualWithStr(0, this.searchFormData.categoryId)) {
+          this.searchFormData.categoryId = '';
+        }
+
         return {
           ...this.searchFormData,
         };
@@ -287,19 +273,6 @@ export default defineComponent({
             },
           },
         ];
-      },
-      doSearch(categoryId) {
-        if (!isEmpty(categoryId)) {
-          if (isEqualWithStr(0, categoryId)) {
-            this.searchFormData.categoryId = '';
-          } else {
-            this.searchFormData.categoryId = categoryId;
-          }
-        } else {
-          this.searchFormData.categoryId = '';
-        }
-
-        this.search();
       },
       onRefreshPage() {
         this.search();
