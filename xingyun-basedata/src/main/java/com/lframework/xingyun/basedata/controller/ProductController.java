@@ -64,8 +64,6 @@ public class ProductController extends DefaultBaseController {
   @HasPermission({"base-data:product:info:query", "base-data:product:info:add", "base-data:product:info:modify"})
   @GetMapping("/query")
   public InvokeResult<PageResult<QueryProductBo>> query(@Valid QueryProductVo vo) {
-    // Assert.notNull(vo.getScId(), "仓库ID不能为空！");
-
     PageResult<Product> pageResult = productService.query(getPageIndex(vo), getPageSize(vo), vo);
 
     List<QueryProductBo> results = ProductConverter.DO2BOList(pageResult.getDatas(), vo.getScId());

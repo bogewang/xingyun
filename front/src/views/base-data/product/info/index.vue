@@ -192,7 +192,6 @@ export default defineComponent({
           { field: 'name', title: '名称', minWidth: 160, sortable: true },
           { field: 'unit', title: '单位', width: 100 },
           { field: 'spec', title: '规格', width: 120 },
-          { field: 'stockNum', title: '库存数量', width: 120 },
           { field: 'purchasePrice', title: '采购价', width: 120 },
           { field: 'salePrice', title: '销售价', width: 120 },
           { field: 'categoryName', title: '分类', width: 120 },

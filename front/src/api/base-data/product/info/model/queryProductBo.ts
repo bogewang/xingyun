@@ -35,11 +35,6 @@ export interface QueryProductBo {
   spec: string;
 
   /**
-   * 库存数量
-   */
-  stockNum: number;
-
-  /**
    * 采购价
    */
   purchasePrice: number;

@@ -389,7 +389,7 @@ export default defineComponent({
         loading: false,
         // 表单数据
         formData: {},
-        productType: undefined,
+        productType: PRODUCT_TYPE.NORMAL.code,
         productBundles: [],
         // 属性列表
         modelorList: [],
@@ -400,6 +400,7 @@ export default defineComponent({
             { validator: validCode, message: '编号必须由字母、数字、“-_.”组成，长度不能超过20位' },
           ],
           name: [{ required: true, message: '请输入名称' }],
+          unit: [{ required: true, message: '请输入单位' }],
           categoryId: [{ required: true, message: '请选择分类' }],
           weight: [
             {
@@ -553,6 +554,7 @@ export default defineComponent({
       // 初始化表单数据
       initFormData() {
         this.formData = {};
+        this.productType = PRODUCT_TYPE.NORMAL.code;
 
         this.modelorList = [];
 

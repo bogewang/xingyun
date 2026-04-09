@@ -200,6 +200,10 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
 
         data.setAvailable(Boolean.TRUE);
 
+        handlePurchasePrice(vo, data);
+        handleSalePrice(vo, data);
+        handleRetailPrice(vo, data);
+
         getBaseMapper().insert(data);
 
         // 组合商品
@@ -248,9 +252,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             productBundleService.saveBatch(productBundles);
         }
 
-        handlePurchasePrice(vo, data);
-        handleSalePrice(vo, data);
-        handleRetailPrice(vo, data);
+
 
         if (!CollectionUtil.isEmpty(vo.getProperties())) {
             // 商品和商品属性的关系
