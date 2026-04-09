@@ -194,7 +194,7 @@ export default defineComponent({
           { field: 'spec', title: '规格', width: 120 },
           { field: 'stockNum', title: '库存数量', width: 120 },
           { field: 'purchasePrice', title: '采购价', width: 120 },
-          { field: 'retailPrice', title: '零售价', width: 120 },
+          { field: 'salePrice', title: '销售价', width: 120 },
           { field: 'categoryName', title: '分类', width: 120 },
           { field: 'createTime', title: '创建时间', width: 170, sortable: true },
           { field: 'updateTime', title: '修改时间', width: 170, sortable: true },

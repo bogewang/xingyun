@@ -15,11 +15,7 @@ import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.components.security.SecurityUtil;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
-import com.lframework.starter.web.core.utils.ApplicationUtil;
-import com.lframework.starter.web.core.utils.IdUtil;
-import com.lframework.starter.web.core.utils.OpLogUtil;
-import com.lframework.starter.web.core.utils.PageHelperUtil;
-import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.starter.web.core.utils.*;
 import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
@@ -30,48 +26,33 @@ import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.xingyun.basedata.entity.Customer;
 import com.lframework.xingyun.basedata.entity.Product;
-import com.lframework.xingyun.basedata.entity.ProductPurchase;
 import com.lframework.xingyun.basedata.entity.StoreCenter;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
-import com.lframework.xingyun.basedata.service.product.ProductPurchaseService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetDetailLotDto;
 import com.lframework.xingyun.sc.dto.sale.returned.SaleReturnFullDto;
-import com.lframework.xingyun.sc.entity.SaleConfig;
-import com.lframework.xingyun.sc.entity.SaleOutSheet;
-import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
-import com.lframework.xingyun.sc.entity.SaleReturn;
-import com.lframework.xingyun.sc.entity.SaleReturnDetail;
+import com.lframework.xingyun.sc.entity.*;
 import com.lframework.xingyun.sc.enums.ProductStockBizType;
 import com.lframework.xingyun.sc.enums.SaleOpLogType;
 import com.lframework.xingyun.sc.enums.SaleReturnStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.events.order.impl.ApprovePassSaleReturnEvent;
 import com.lframework.xingyun.sc.mappers.SaleReturnMapper;
-import com.lframework.xingyun.sc.service.sale.SaleConfigService;
-import com.lframework.xingyun.sc.service.sale.SaleOutSheetDetailLotService;
-import com.lframework.xingyun.sc.service.sale.SaleOutSheetDetailService;
-import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
-import com.lframework.xingyun.sc.service.sale.SaleReturnDetailService;
-import com.lframework.xingyun.sc.service.sale.SaleReturnService;
+import com.lframework.xingyun.sc.service.sale.*;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
-import com.lframework.xingyun.sc.vo.sale.returned.ApprovePassSaleReturnVo;
-import com.lframework.xingyun.sc.vo.sale.returned.ApproveRefuseSaleReturnVo;
-import com.lframework.xingyun.sc.vo.sale.returned.CreateSaleReturnVo;
-import com.lframework.xingyun.sc.vo.sale.returned.QuerySaleReturnVo;
-import com.lframework.xingyun.sc.vo.sale.returned.SaleReturnProductVo;
-import com.lframework.xingyun.sc.vo.sale.returned.UpdateSaleReturnVo;
+import com.lframework.xingyun.sc.vo.sale.returned.*;
 import com.lframework.xingyun.sc.vo.stock.AddProductStockVo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SaleReturnServiceImpl extends
@@ -109,9 +90,6 @@ public class SaleReturnServiceImpl extends
 
   @Autowired
   private ProductStockService productStockService;
-
-  @Autowired
-  private ProductPurchaseService productPurchaseService;
 
   @Override
   public PageResult<SaleReturn> query(Integer pageIndex, Integer pageSize, QuerySaleReturnVo vo) {
@@ -279,13 +257,13 @@ public class SaleReturnServiceImpl extends
         .orderByAsc(SaleReturnDetail::getOrderNo);
     List<SaleReturnDetail> details = saleReturnDetailService.list(queryDetailWrapper);
     for (SaleReturnDetail detail : details) {
-      ProductPurchase productPurchase = productPurchaseService.getById(detail.getProductId());
+      Product product = productService.getById(detail.getProductId());
       AddProductStockVo addProductStockVo = new AddProductStockVo();
       addProductStockVo.setProductId(detail.getProductId());
       addProductStockVo.setScId(saleReturn.getScId());
       addProductStockVo.setStockNum(detail.getReturnNum());
       addProductStockVo.setDefaultTaxAmount(
-          NumberUtil.getNumber(NumberUtil.mul(productPurchase.getPrice(), detail.getReturnNum()),
+          NumberUtil.getNumber(NumberUtil.mul(product.getPurchasePrice(), detail.getReturnNum()),
               2));
       addProductStockVo.setBizId(saleReturn.getId());
       addProductStockVo.setBizDetailId(detail.getId());

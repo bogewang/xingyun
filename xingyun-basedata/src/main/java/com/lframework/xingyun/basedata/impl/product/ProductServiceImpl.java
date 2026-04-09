@@ -26,12 +26,6 @@ import com.lframework.xingyun.basedata.service.product.*;
 import com.lframework.xingyun.basedata.vo.product.brand.QueryProductBrandVo;
 import com.lframework.xingyun.basedata.vo.product.info.*;
 import com.lframework.xingyun.basedata.vo.product.property.realtion.CreateProductPropertyRelationVo;
-import com.lframework.xingyun.basedata.vo.product.purchase.CreateProductPurchaseVo;
-import com.lframework.xingyun.basedata.vo.product.purchase.UpdateProductPurchaseVo;
-import com.lframework.xingyun.basedata.vo.product.retail.CreateProductRetailVo;
-import com.lframework.xingyun.basedata.vo.product.retail.UpdateProductRetailVo;
-import com.lframework.xingyun.basedata.vo.product.sale.CreateProductSaleVo;
-import com.lframework.xingyun.basedata.vo.product.sale.UpdateProductSaleVo;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -50,15 +44,6 @@ import java.util.stream.Collectors;
 @Service
 public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product> implements
         ProductService {
-
-    @Autowired
-    private ProductPurchaseService productPurchaseService;
-
-    @Autowired
-    private ProductSaleService productSaleService;
-
-    @Autowired
-    private ProductRetailService productRetailService;
 
     @Autowired
     private RecursionMappingService recursionMappingService;
@@ -263,47 +248,9 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             productBundleService.saveBatch(productBundles);
         }
 
-        if (vo.getPurchasePrice() == null) {
-            throw new DefaultClientException("采购价不能为空！");
-        }
-
-        if (NumberUtil.lt(vo.getPurchasePrice(), 0)) {
-            throw new DefaultClientException("采购价不允许小于0！");
-        }
-
-        CreateProductPurchaseVo createProductPurchaseVo = new CreateProductPurchaseVo();
-        createProductPurchaseVo.setId(data.getId());
-        createProductPurchaseVo.setPrice(vo.getPurchasePrice());
-
-        productPurchaseService.create(createProductPurchaseVo);
-
-        if (vo.getSalePrice() == null) {
-            throw new DefaultClientException("销售价不能为空！");
-        }
-
-        if (NumberUtil.lt(vo.getSalePrice(), 0)) {
-            throw new DefaultClientException("销售价不允许小于0！");
-        }
-
-        CreateProductSaleVo createProductSaleVo = new CreateProductSaleVo();
-        createProductSaleVo.setId(data.getId());
-        createProductSaleVo.setPrice(vo.getSalePrice());
-
-        productSaleService.create(createProductSaleVo);
-
-        if (vo.getRetailPrice() == null) {
-            throw new DefaultClientException("零售价不能为空！");
-        }
-
-        if (NumberUtil.lt(vo.getRetailPrice(), 0D)) {
-            throw new DefaultClientException("零售价不允许小于0！");
-        }
-
-        CreateProductRetailVo createProductRetailVo = new CreateProductRetailVo();
-        createProductRetailVo.setId(data.getId());
-        createProductRetailVo.setPrice(vo.getRetailPrice());
-
-        productRetailService.create(createProductRetailVo);
+        handlePurchasePrice(vo, data);
+        handleSalePrice(vo, data);
+        handleRetailPrice(vo, data);
 
         if (!CollectionUtil.isEmpty(vo.getProperties())) {
             // 商品和商品属性的关系
@@ -351,6 +298,41 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         }
 
         return data.getId();
+    }
+
+    private void handleRetailPrice(CreateProductVo vo, Product data) {
+        if (vo.getRetailPrice() == null) {
+            throw new DefaultClientException("零售价不能为空！");
+        }
+
+        if (NumberUtil.lt(vo.getRetailPrice(), 0D)) {
+            throw new DefaultClientException("零售价不允许小于0！");
+        }
+
+        data.setRetailPrice(vo.getRetailPrice());
+    }
+
+    private void handleSalePrice(CreateProductVo vo, Product data) {
+        if (vo.getSalePrice() == null) {
+            throw new DefaultClientException("销售价不能为空！");
+        }
+
+        if (NumberUtil.lt(vo.getSalePrice(), 0)) {
+            throw new DefaultClientException("销售价不允许小于0！");
+        }
+
+        data.setSalePrice(vo.getSalePrice());
+    }
+
+    private void handlePurchasePrice(CreateProductVo vo, Product data) {
+        if (vo.getPurchasePrice() == null) {
+            throw new DefaultClientException("采购价不能为空！");
+        }
+
+        if (NumberUtil.lt(vo.getPurchasePrice(), 0)) {
+            throw new DefaultClientException("采购价不允许小于0！");
+        }
+        data.setPurchasePrice(vo.getPurchasePrice());
     }
 
     @OpLog(type = BaseDataOpLogType.class, name = "修改商品，ID：{}, 编号：{}", params = { "#id",
@@ -406,6 +388,9 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                         vo.getSaleTaxRate() == null ? BigDecimal.ZERO : vo.getSaleTaxRate())
                 .set(Product::getWeight, vo.getWeight())
                 .set(Product::getVolume, vo.getVolume())
+                .set(Product::getSalePrice, vo.getSalePrice())
+                .set(Product::getPurchasePrice, vo.getPurchasePrice())
+                .set(Product::getRetailPrice, vo.getRetailPrice())
                 .eq(Product::getId, vo.getId());
 
         getBaseMapper().update(updateWrapper);
@@ -506,36 +491,6 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             }
         }
 
-        productPurchaseService.removeById(data.getId());
-
-        if (vo.getPurchasePrice() != null) {
-
-            UpdateProductPurchaseVo updateProductPurchaseVo = new UpdateProductPurchaseVo();
-            updateProductPurchaseVo.setId(data.getId());
-            updateProductPurchaseVo.setPrice(vo.getPurchasePrice());
-
-            productPurchaseService.update(updateProductPurchaseVo);
-        }
-
-        productSaleService.removeById(data.getId());
-
-        if (vo.getSalePrice() != null) {
-            UpdateProductSaleVo updateProductSaleVo = new UpdateProductSaleVo();
-            updateProductSaleVo.setId(data.getId());
-            updateProductSaleVo.setPrice(vo.getSalePrice());
-
-            productSaleService.update(updateProductSaleVo);
-        }
-
-        productRetailService.removeById(data.getId());
-        if (vo.getRetailPrice() != null) {
-            UpdateProductRetailVo updateProductRetailVo = new UpdateProductRetailVo();
-            updateProductRetailVo.setId(data.getId());
-            updateProductRetailVo.setPrice(vo.getRetailPrice());
-
-            productRetailService.update(updateProductRetailVo);
-        }
-
         OpLogUtil.setVariable("id", data.getId());
         OpLogUtil.setVariable("code", vo.getCode());
         OpLogUtil.setExtra(vo);
@@ -606,23 +561,14 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         }
 
         this.check(list);
-        List<CreateProductPurchaseVo> createProductPurchaseVoList = Lists.newArrayList();
-        List<CreateProductSaleVo> createProductSaleVoList = Lists.newArrayList();
-        List<CreateProductRetailVo> createProductRetailVoList = Lists.newArrayList();
-        List<Product> persists = this.buildProducts(list, createProductPurchaseVoList, createProductSaleVoList, createProductRetailVoList);
+        List<Product> persists = this.buildProducts(list);
 
         if (CollectionUtil.isNotEmpty(persists)) {
             super.saveBatch(persists);
         }
-        productPurchaseService.batchCreate(createProductPurchaseVoList);
-        productSaleService.batchCreate(createProductSaleVoList);
-        productRetailService.batchCreate(createProductRetailVoList);
     }
 
-    private List<Product> buildProducts(List<ProductImportModel> list,
-            List<CreateProductPurchaseVo> createProductPurchaseVoList,
-            List<CreateProductSaleVo> createProductSaleVoList,
-            List<CreateProductRetailVo> createProductRetailVoList) {
+    private List<Product> buildProducts(List<ProductImportModel> list) {
         if (CollectionUtil.isEmpty(list)) {
             return CollectionUtil.emptyList();
         }
@@ -636,48 +582,17 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             record.setSaleTaxRate(data.getSaleTaxRate() == null ? BigDecimal.ZERO : data.getSaleTaxRate());
             record.setProductType(ProductType.NORMAL);
             record.setAvailable(Boolean.TRUE);
+            record.setSalePrice(data.getSalePrice() == null ? BigDecimal.ZERO : data.getSalePrice());
+            record.setPurchasePrice(data.getPurchasePrice() == null ? BigDecimal.ZERO : data.getPurchasePrice());
+            record.setRetailPrice(data.getRetailPrice() == null ? BigDecimal.ZERO : data.getRetailPrice());
             res.add(record);
 
             data.setId(record.getId());
 
-            generatePrice(createProductPurchaseVoList, createProductSaleVoList, createProductRetailVoList, data);
         });
 
         return res;
 
-    }
-
-    /**
-     * 生成价格
-     * 
-     * @param createProductPurchaseVoList
-     * @param createProductSaleVoList
-     * @param createProductRetailVoList
-     * @param data
-     */
-    private void generatePrice(List<CreateProductPurchaseVo> createProductPurchaseVoList,
-            List<CreateProductSaleVo> createProductSaleVoList, List<CreateProductRetailVo> createProductRetailVoList,
-            ProductImportModel data) {
-        if (data.getPurchasePrice() != null) {
-            CreateProductPurchaseVo createProductPurchaseVo = new CreateProductPurchaseVo();
-            createProductPurchaseVo.setId(data.getId());
-            createProductPurchaseVo.setPrice(data.getPurchasePrice());
-            createProductPurchaseVoList.add(createProductPurchaseVo);
-        }
-
-        if (data.getSalePrice() != null) {
-            CreateProductSaleVo createProductSaleVo = new CreateProductSaleVo();
-            createProductSaleVo.setId(data.getId());
-            createProductSaleVo.setPrice(data.getSalePrice());
-            createProductSaleVoList.add(createProductSaleVo);
-        }
-
-        if (data.getRetailPrice() != null) {
-            CreateProductRetailVo createProductRetailVo = new CreateProductRetailVo();
-            createProductRetailVo.setId(data.getId());
-            createProductRetailVo.setPrice(data.getRetailPrice());
-            createProductRetailVoList.add(createProductRetailVo);
-        }
     }
 
     private void check(List<ProductImportModel> list) {

@@ -11,24 +11,19 @@ import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductBrand;
 import com.lframework.xingyun.basedata.entity.ProductBundle;
 import com.lframework.xingyun.basedata.entity.ProductCategory;
-import com.lframework.xingyun.basedata.entity.ProductPurchase;
-import com.lframework.xingyun.basedata.entity.ProductRetail;
-import com.lframework.xingyun.basedata.entity.ProductSale;
 import com.lframework.xingyun.basedata.enums.ColumnType;
 import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.service.product.ProductBrandService;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductPropertyRelationService;
-import com.lframework.xingyun.basedata.service.product.ProductPurchaseService;
-import com.lframework.xingyun.basedata.service.product.ProductRetailService;
-import com.lframework.xingyun.basedata.service.product.ProductSaleService;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.Data;
 
 @Data
 public class GetProductBo extends BaseBo<Product> {
@@ -202,19 +197,9 @@ public class GetProductBo extends BaseBo<Product> {
       this.productBundles = bundles.stream().map(ProductBundleBo::new).collect(Collectors.toList());
     }
 
-    ProductPurchaseService productPurchaseService = ApplicationUtil.getBean(
-        ProductPurchaseService.class);
-    ProductPurchase productPurchase = productPurchaseService.getById(dto.getId());
-    this.purchasePrice = productPurchase.getPrice();
-
-    ProductSaleService productSaleService = ApplicationUtil.getBean(ProductSaleService.class);
-    ProductSale productSale = productSaleService.getById(dto.getId());
-    this.salePrice = productSale.getPrice();
-
-    ProductRetailService productRetailService = ApplicationUtil.getBean(
-        ProductRetailService.class);
-    ProductRetail productRetail = productRetailService.getById(dto.getId());
-    this.retailPrice = productRetail.getPrice();
+    this.purchasePrice = dto.getPurchasePrice();
+    this.salePrice = dto.getSalePrice();
+    this.retailPrice = dto.getRetailPrice();
 
     ProductPropertyRelationService productPropertyRelationService = ApplicationUtil.getBean(
         ProductPropertyRelationService.class);

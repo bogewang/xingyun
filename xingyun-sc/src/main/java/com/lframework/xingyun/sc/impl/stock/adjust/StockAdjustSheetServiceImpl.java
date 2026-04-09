@@ -14,19 +14,13 @@ import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.components.security.SecurityUtil;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
-import com.lframework.starter.web.core.utils.EnumUtil;
-import com.lframework.starter.web.core.utils.IdUtil;
-import com.lframework.starter.web.core.utils.OpLogUtil;
-import com.lframework.starter.web.core.utils.PageHelperUtil;
-import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.starter.web.core.utils.*;
 import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineBizType;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.xingyun.basedata.entity.Product;
-import com.lframework.xingyun.basedata.entity.ProductPurchase;
-import com.lframework.xingyun.basedata.service.product.ProductPurchaseService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.stock.adjust.stock.StockAdjustProductDto;
@@ -43,20 +37,15 @@ import com.lframework.xingyun.sc.service.stock.adjust.StockAdjustSheetDetailServ
 import com.lframework.xingyun.sc.service.stock.adjust.StockAdjustSheetService;
 import com.lframework.xingyun.sc.vo.stock.AddProductStockVo;
 import com.lframework.xingyun.sc.vo.stock.SubProductStockVo;
-import com.lframework.xingyun.sc.vo.stock.adjust.stock.ApprovePassStockAdjustSheetVo;
-import com.lframework.xingyun.sc.vo.stock.adjust.stock.ApproveRefuseStockAdjustSheetVo;
-import com.lframework.xingyun.sc.vo.stock.adjust.stock.CreateStockAdjustSheetVo;
-import com.lframework.xingyun.sc.vo.stock.adjust.stock.QueryStockAdjustProductVo;
-import com.lframework.xingyun.sc.vo.stock.adjust.stock.QueryStockAdjustSheetVo;
-import com.lframework.xingyun.sc.vo.stock.adjust.stock.StockAdjustProductVo;
-import com.lframework.xingyun.sc.vo.stock.adjust.stock.UpdateStockAdjustSheetVo;
+import com.lframework.xingyun.sc.vo.stock.adjust.stock.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class StockAdjustSheetServiceImpl extends
@@ -71,9 +60,6 @@ public class StockAdjustSheetServiceImpl extends
 
   @Autowired
   private ProductStockService productStockService;
-
-  @Autowired
-  private ProductPurchaseService productPurchaseService;
 
   @Autowired
   private ProductService productService;
@@ -246,7 +232,6 @@ public class StockAdjustSheetServiceImpl extends
 
     for (StockAdjustSheetDetail detail : details) {
       Product product = productService.findById(detail.getProductId());
-      ProductPurchase productPurchase = productPurchaseService.getById(product.getId());
       if (data.getBizType() == StockAdjustSheetBizType.IN) {
         // 入库
         AddProductStockVo addProductStockVo = new AddProductStockVo();
@@ -254,7 +239,7 @@ public class StockAdjustSheetServiceImpl extends
         addProductStockVo.setScId(data.getScId());
         addProductStockVo.setStockNum(detail.getStockNum());
         addProductStockVo.setDefaultTaxAmount(
-            NumberUtil.getNumber(NumberUtil.mul(productPurchase.getPrice(), detail.getStockNum()),
+            NumberUtil.getNumber(NumberUtil.mul(product.getPurchasePrice(), detail.getStockNum()),
                 2));
         addProductStockVo.setCreateTime(now);
         addProductStockVo.setBizId(data.getId());

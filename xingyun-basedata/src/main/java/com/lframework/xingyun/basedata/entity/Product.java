@@ -3,12 +3,13 @@ package com.lframework.xingyun.basedata.entity;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.lframework.starter.web.core.entity.BaseEntity;
 import com.lframework.starter.web.core.dto.BaseDto;
+import com.lframework.starter.web.core.entity.BaseEntity;
 import com.lframework.xingyun.basedata.enums.ProductType;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 /**
  * <p>
@@ -80,6 +81,18 @@ public class Product extends BaseEntity implements BaseDto {
    * 销项税率（%）
    */
   private BigDecimal saleTaxRate;
+  /**
+   * 销售价
+   */
+  private BigDecimal salePrice;
+  /**
+   * 进价
+   */
+  private BigDecimal purchasePrice;
+  /**
+   * 零售价
+   */
+  private BigDecimal retailPrice;
 
   /**
    * 规格
