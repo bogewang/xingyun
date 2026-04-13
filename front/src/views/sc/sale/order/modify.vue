@@ -196,10 +196,6 @@
         </j-form>
       </j-border>
 
-      <j-border title="约定支付">
-        <pay-type ref="payType" />
-      </j-border>
-
       <j-border>
         <j-form bordered label-width="140px">
           <j-form-item label="备注" :span="24" :content-nest="false">
@@ -230,7 +226,6 @@
 <script>
   import { h, defineComponent } from 'vue';
   import BatchAddProduct from '@/views/sc/sale/batch-add-product.vue';
-  import PayType from '@/views/sc/pay-type/index.vue';
   import {
     PlusOutlined,
     DeleteOutlined,
@@ -266,7 +261,6 @@
     name: 'ModifySaleOrder',
     components: {
       BatchAddProduct,
-      PayType,
       CustomerSelector,
       StoreCenterSelector,
       UserSelector,
@@ -310,6 +304,7 @@
         },
         // 列表数据配置
         tableColumn: [
+          { type: 'seq', width: 50, title: '序号' },
           { type: 'checkbox', width: 45 },
           { field: 'productCode', title: '商品编号', width: 120 },
           {
@@ -450,7 +445,6 @@
             const tableData = res.details || [];
             this.tableData = tableData.map((item) => Object.assign(this.emptyProduct(), item));
 
-            this.$refs.payType.setTableData(res.payTypes || []);
             this.calcSum();
           })
           .finally(() => {
@@ -739,17 +733,6 @@
           }
         }
 
-        if (!this.$refs.payType.validData()) {
-          return false;
-        }
-
-        const payTypes = this.$refs.payType.getTableData();
-        const totalPayAmount = payTypes.reduce((tot, item) => add(tot, item.payAmount), 0);
-        if (!eq(this.formData.totalAmount, totalPayAmount)) {
-          createError('所有约定支付的支付金额不等于含税总金额，请检查！');
-          return false;
-        }
-
         return true;
       },
       // 创建订单
@@ -764,13 +747,6 @@
           customerId: this.formData.customerId,
           salerId: this.formData.salerId || '',
           description: this.formData.description,
-          payTypes: this.$refs.payType.getTableData().map((t) => {
-            return {
-              id: t.payTypeId,
-              payAmount: t.payAmount,
-              text: t.text,
-            };
-          }),
           products: this.tableData.map((t) => {
             return {
               productId: t.productId,

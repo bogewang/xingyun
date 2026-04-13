@@ -113,7 +113,6 @@
 </template>
 <script>
 import {defineComponent} from 'vue';
-import PayType from '@/views/sc/pay-type/index.vue';
 import * as api from '@/api/sc/sale/order';
 import {printMix} from '@/mixins/print';
 import {add, getNumber, isFloatGeZero, mul} from '@/utils/utils';
@@ -123,7 +122,6 @@ import OrderTimeLine from '@/components/OrderTimeLine';
 
 export default defineComponent({
     components: {
-      PayType,
       OrderTimeLine,
     },
     mixins: [printMix],
@@ -240,7 +238,6 @@ export default defineComponent({
             };
             this.tableData = res.details || [];
 
-            this.$refs.payType.setTableData(res.payTypes || []);
             this.calcSum();
           })
           .finally(() => {
