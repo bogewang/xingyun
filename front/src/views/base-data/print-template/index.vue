@@ -38,6 +38,16 @@
               @click="$refs.addDialog.openDialog()"
               >新增</a-button
             >
+            <a-dropdown>
+              <template #overlay>
+                <a-menu @click="handleCommand">
+                  <a-menu-item key="batchDelete" :icon="h(DeleteOutlined)"> 批量删除 </a-menu-item>
+                </a-menu>
+              </template>
+              <a-button v-permission="['base-data:print-template:delete']"
+                >更多<DownOutlined
+              /></a-button>
+            </a-dropdown>
           </a-space>
         </template>
 
@@ -58,6 +68,15 @@
     <setting :id="id" ref="settingDialog" />
 
     <demo-data :id="id" ref="demoDataDialog" />
+
+    <batch-handler
+      ref="batchDeleteHandlerDialog"
+      :table-column="[{ field: 'name', title: '名称', minWidth: 180 }]"
+      title="批量删除"
+      :tableData="batchHandleDatas"
+      :handle-fn="doBatchDelete"
+      @confirm="search"
+    />
   </div>
 </template>
 
@@ -67,9 +86,11 @@
   import Modify from './modify.vue';
   import Setting from './setting.vue';
   import * as api from '@/api/base-data/print-template';
-  import { PlusOutlined, SearchOutlined } from '@ant-design/icons-vue';
+  import { PlusOutlined, SearchOutlined, DeleteOutlined, DownOutlined } from '@ant-design/icons-vue';
   import DemoData from './demo-data.vue';
-  import { buildSortPageVo } from '@/utils/utils';
+  import { buildSortPageVo, isEmpty } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import BatchHandler from '@/components/BatchHandler';
 
   export default defineComponent({
     name: 'PrintTemplate',
@@ -78,12 +99,15 @@
       Modify,
       Setting,
       DemoData,
+      BatchHandler,
     },
     setup() {
       return {
         h,
         SearchOutlined,
         PlusOutlined,
+        DeleteOutlined,
+        DownOutlined,
       };
     },
     data() {
@@ -94,6 +118,7 @@
         ids: [],
         // 查询列表的查询条件
         searchFormData: {},
+        batchHandleDatas: [],
         // 工具栏配置
         toolbarConfig: {
           // 自定义左侧工具栏
@@ -103,6 +128,7 @@
         },
         // 列表数据配置
         tableColumn: [
+          { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50 },
           { field: 'name', title: '名称', minWidth: 160, sortable: true },
           { title: '操作', width: 180, fixed: 'right', slots: { default: 'action_default' } },
@@ -129,6 +155,39 @@
       // 列表发生查询时的事件
       search() {
         this.$refs.grid.commitProxy('reload');
+      },
+      handleCommand({ key }) {
+        if (key === 'batchDelete') {
+          this.batchDelete();
+        }
+      },
+      doBatchDelete(row) {
+        return api.deleteById(row.id);
+      },
+      batchDelete() {
+        const records = this.$refs.grid.getCheckboxRecords();
+
+        if (isEmpty(records)) {
+          createError('请选择要删除的打印模板！');
+          return;
+        }
+
+        this.batchHandleDatas = records;
+        this.$refs.batchDeleteHandlerDialog.openDialog();
+      },
+      deleteRow(id) {
+        createConfirm('是否确定删除该打印模板？').then(() => {
+          this.loading = true;
+          api
+            .deleteById(id)
+            .then(() => {
+              createSuccess('删除成功！');
+              this.search();
+            })
+            .finally(() => {
+              this.loading = false;
+            });
+        });
       },
       // 查询前构建查询参数结构
       buildQueryParams(page, sorts) {
@@ -167,6 +226,14 @@
             onClick: () => {
               this.id = row.id;
               this.$nextTick(() => this.$refs.demoDataDialog.openDialog());
+            },
+          },
+          {
+            permission: ['base-data:print-template:delete'],
+            danger: true,
+            label: '删除',
+            onClick: () => {
+              this.deleteRow(row.id);
             },
           },
         ];

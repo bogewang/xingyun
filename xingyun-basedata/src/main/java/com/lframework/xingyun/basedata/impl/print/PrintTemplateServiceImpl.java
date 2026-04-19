@@ -10,8 +10,10 @@ import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.utils.PageHelperUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.basedata.entity.PrintTemplate;
+import com.lframework.xingyun.basedata.entity.PrintTemplateComp;
 import com.lframework.xingyun.basedata.enums.BaseDataOpLogType;
 import com.lframework.xingyun.basedata.mappers.PrintTemplateMapper;
+import com.lframework.xingyun.basedata.service.print.PrintTemplateCompService;
 import com.lframework.xingyun.basedata.service.print.PrintTemplateService;
 import com.lframework.xingyun.basedata.vo.print.CreatePrintTemplateVo;
 import com.lframework.xingyun.basedata.vo.print.QueryPrintTemplateVo;
@@ -21,6 +23,7 @@ import com.lframework.xingyun.basedata.vo.print.UpdatePrintTemplateVo;
 import com.lframework.starter.web.core.annotations.oplog.OpLog;
 import java.io.Serializable;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +31,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class PrintTemplateServiceImpl extends
     BaseMpServiceImpl<PrintTemplateMapper, PrintTemplate> implements
     PrintTemplateService {
+
+  @Autowired
+  private PrintTemplateCompService printTemplateCompService;
 
   @Override
   public PageResult<PrintTemplate> query(Integer pageIndex, Integer pageSize,
@@ -49,6 +55,20 @@ public class PrintTemplateServiceImpl extends
   @Override
   public PrintTemplate findById(Integer id) {
     return getById(id);
+  }
+
+  @OpLog(type = BaseDataOpLogType.class, name = "删除打印模板，ID：{}", params = {"#id"})
+  @Transactional(rollbackFor = Exception.class)
+  @Override
+  public void deleteById(Integer id) {
+    PrintTemplate data = getById(id);
+    if (data == null) {
+      throw new DefaultClientException("打印模板不存在！");
+    }
+
+    printTemplateCompService.remove(Wrappers.lambdaQuery(PrintTemplateComp.class)
+        .eq(PrintTemplateComp::getTemplateId, id));
+    getBaseMapper().deleteById(id);
   }
 
   @OpLog(type = BaseDataOpLogType.class, name = "新增打印模板，名称：{}", params = {"#vo.name"})

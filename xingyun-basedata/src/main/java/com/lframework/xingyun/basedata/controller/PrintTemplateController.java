@@ -35,6 +35,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -93,6 +94,21 @@ public class PrintTemplateController extends DefaultBaseController {
     GetPrintTemplateBo result = new GetPrintTemplateBo(data);
 
     return InvokeResultBuilder.success(result);
+  }
+
+  /**
+   * 删除
+   */
+  @ApiOperation("删除")
+  @HasPermission({"base-data:print-template:delete"})
+  @DeleteMapping
+  public InvokeResult<Void> deleteById(@NotNull(message = "ID不能为空！") Integer id) {
+
+    printTemplateService.deleteById(id);
+
+    printTemplateService.cleanCacheByKey(id);
+
+    return InvokeResultBuilder.success();
   }
 
   /**

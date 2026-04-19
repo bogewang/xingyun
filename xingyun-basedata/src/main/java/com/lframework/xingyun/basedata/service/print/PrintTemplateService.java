@@ -36,6 +36,13 @@ public interface PrintTemplateService extends BaseMpService<PrintTemplate> {
   PrintTemplate findById(Integer id);
 
   /**
+   * 删除
+   *
+   * @param id
+   */
+  void deleteById(Integer id);
+
+  /**
    * 创建
    *
    * @param vo
