@@ -14,8 +14,8 @@ import { PageWrapper } from '/@/components/Page';
 import { TableAction } from '/@/components/Table';
 import componentSetting from '/@/settings/componentSetting';
 import { defHttp } from '@/utils/http/axios';
+// 导入新的打印设计器组件与运行时打印工具。
 import PrintDesigner, { lodop } from '@/components/PrintDesigner';
-import printDesignerInstall from '@/components/PrintDesigner/install.js';
 import bpmApproveInstall from '@/components/BpmApprove';
 
 export async function registerGlobComp(app: App) {
@@ -23,7 +23,6 @@ export async function registerGlobComp(app: App) {
     .use(Antd)
     .use(VxeUI)
     .use(VXETable)
-    .use(printDesignerInstall)
     .component('JForm', JForm)
     .component('JFormItem', JFormItem)
     .component('JBorder', JBorder)
@@ -32,6 +31,7 @@ export async function registerGlobComp(app: App) {
     .component('Icon', Icon)
     .component('PageWrapper', PageWrapper)
     .component('TableAction', TableAction)
+    // 注册新的打印设计器业务组件。
     .component('PrintDesigner', PrintDesigner)
     .use(bpmApproveInstall);
 
@@ -53,5 +53,6 @@ export async function registerGlobComp(app: App) {
   app.config.globalProperties.$defHttp = defHttp;
   app.config.globalProperties.$vh =
     (document.documentElement.clientHeight || document.body.clientHeight) / 100;
+  // 挂载新的打印运行时工具，供业务侧统一调用预览与导出能力。
   app.config.globalProperties.$lodop = lodop;
 }
