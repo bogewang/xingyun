@@ -127,6 +127,7 @@
       </div>
     </template>
   </a-modal>
+  <order-print-dialog />
 </template>
 <script>
 import {defineComponent} from 'vue';
@@ -137,11 +138,13 @@ import {add, getNumber, isEmpty, isFloatGeZero, mul} from '@/utils/utils';
 import {RETAIL_OUT_SHEET_STATUS} from '@/enums/biz/retailOutSheetStatus';
 import {PRINT_TYPE} from '@/enums/biz/printType';
 import OrderTimeLine from '@/components/OrderTimeLine';
+import OrderPrintDialog from '@/components/OrderPrintDialog';
 
 export default defineComponent({
     components: {
       PayType,
       OrderTimeLine,
+      OrderPrintDialog,
     },
     mixins: [printMix],
     props: {
@@ -149,15 +152,6 @@ export default defineComponent({
         type: String,
         required: true,
       },
-    },
-    setup() {
-      return {
-        isEmpty,
-        isFloatGeZero,
-        getNumber,
-        mul,
-        RETAIL_OUT_SHEET_STATUS,
-      };
     },
     setup() {
       return {
@@ -317,16 +311,14 @@ export default defineComponent({
         this.formData.giftNum = giftNum;
         this.formData.totalAmount = totalAmount;
       },
-      print() {
+      async print() {
         this.loading = true;
-        api
-          .print(this.id)
-          .then((res) => {
-            this.lodopPreview(PRINT_TYPE.RETAIL_OUT.code, res);
-          })
-          .finally(() => {
-            this.loading = false;
-          });
+        try {
+          const res = await api.print(this.id);
+          await this.vgPrintPreview(PRINT_TYPE.RETAIL_OUT.code, res);
+        } finally {
+          this.loading = false;
+        }
       },
     },
   });
