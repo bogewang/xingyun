@@ -14,6 +14,7 @@ import { PageWrapper } from '/@/components/Page';
 import { TableAction } from '/@/components/Table';
 import componentSetting from '/@/settings/componentSetting';
 import { defHttp } from '@/utils/http/axios';
+import { createConfirm } from '@/hooks/web/msg';
 // 导入新的打印设计器组件与运行时打印工具。
 import PrintDesigner, { lodop } from '@/components/PrintDesigner';
 import bpmApproveInstall from '@/components/BpmApprove';
@@ -51,6 +52,11 @@ export async function registerGlobComp(app: App) {
   });
 
   app.config.globalProperties.$defHttp = defHttp;
+  app.config.globalProperties.$confirm = (message: string, title = '提示信息') => {
+    return createConfirm(message, title)
+      .then(() => true)
+      .catch(() => false);
+  };
   app.config.globalProperties.$vh =
     (document.documentElement.clientHeight || document.body.clientHeight) / 100;
   // 挂载新的打印运行时工具，供业务侧统一调用预览与导出能力。
