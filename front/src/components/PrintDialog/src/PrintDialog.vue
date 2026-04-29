@@ -31,13 +31,13 @@
 
 <script lang="ts" setup>
   import { nextTick, ref, watch } from 'vue';
-  import { closeOrderPrintDialog, useOrderPrintDialogState } from './orderPrintDialog';
+  import { closePrintDialog, usePrintDialogState } from './printDialog';
 
-  const state = useOrderPrintDialogState();
+  const state = usePrintDialogState();
   const iframeRef = ref<HTMLIFrameElement | null>(null);
 
   function handleClose() {
-    closeOrderPrintDialog();
+    closePrintDialog();
   }
 
   function handlePrint() {

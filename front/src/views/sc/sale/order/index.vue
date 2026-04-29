@@ -215,7 +215,7 @@
   import { SALE_ORDER_STATUS } from '@/enums/biz/saleOrderStatus';
   import { PRINT_TYPE } from '@/enums/biz/printType';
   import BatchHandler from '@/components/BatchHandler';
-  import OrderPrintDialog from '@/components/OrderPrintDialog';
+  import PrintDialog from '/@/components/PrintDialog';
 
   export default defineComponent({
     name: 'SaleOrder',
@@ -226,7 +226,7 @@
       StoreCenterSelector,
       UserSelector,
       BatchHandler,
-      OrderPrintDialog,
+      OrderPrintDialog: PrintDialog,
     },
     mixins: [multiplePageMix, printMix],
     setup() {

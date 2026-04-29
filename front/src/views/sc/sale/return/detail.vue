@@ -146,13 +146,13 @@
   import { SALE_RETURN_STATUS } from '@/enums/biz/saleReturnStatus';
   import { PRINT_TYPE } from '@/enums/biz/printType';
   import OrderTimeLine from '@/components/OrderTimeLine';
-  import OrderPrintDialog from '@/components/OrderPrintDialog';
+  import PrintDialog from '/@/components/PrintDialog';
 
   export default defineComponent({
     components: {
       OutSheetDetail,
       OrderTimeLine,
-      OrderPrintDialog,
+      OrderPrintDialog: PrintDialog,
     },
     mixins: [printMix],
     props: {

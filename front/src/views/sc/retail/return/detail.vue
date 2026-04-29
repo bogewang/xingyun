@@ -156,14 +156,14 @@ import {add, getNumber, isEmpty, isFloatGeZero, mul} from '@/utils/utils';
 import {RETAIL_RETURN_STATUS} from '@/enums/biz/retailReturnStatus';
 import {PRINT_TYPE} from '@/enums/biz/printType';
 import OrderTimeLine from '@/components/OrderTimeLine';
-import OrderPrintDialog from '@/components/OrderPrintDialog';
+import PrintDialog from '/@/components/PrintDialog';
 
 export default defineComponent({
     components: {
       OutSheetDetail,
       PayType,
       OrderTimeLine,
-      OrderPrintDialog,
+      OrderPrintDialog: PrintDialog,
     },
     mixins: [printMix],
     props: {

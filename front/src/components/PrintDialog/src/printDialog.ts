@@ -1,6 +1,6 @@
 import { reactive, readonly } from 'vue';
 
-interface OrderPrintDialogPayload {
+interface PrintDialogPayload {
   html: string;
   title?: string;
   bizType?: string;
@@ -14,7 +14,7 @@ const state = reactive({
   frameKey: 0,
 });
 
-export function openOrderPrintDialog(payload: OrderPrintDialogPayload) {
+export function openPrintDialog(payload: PrintDialogPayload) {
   state.title = payload.title || '订单打印预览';
   state.html = payload.html || '';
   state.bizType = payload.bizType || '';
@@ -22,10 +22,10 @@ export function openOrderPrintDialog(payload: OrderPrintDialogPayload) {
   state.open = true;
 }
 
-export function closeOrderPrintDialog() {
+export function closePrintDialog() {
   state.open = false;
 }
 
-export function useOrderPrintDialogState() {
+export function usePrintDialogState() {
   return readonly(state);
 }

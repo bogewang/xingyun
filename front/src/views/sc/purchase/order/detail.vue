@@ -38,13 +38,13 @@ import Viewer from './viewer.vue';
 import {isEmpty} from '@/utils/utils';
 import {PRINT_TYPE} from '@/enums/biz/printType';
 import OrderTimeLine from '@/components/OrderTimeLine';
-import OrderPrintDialog from '@/components/OrderPrintDialog';
+import PrintDialog from '/@/components/PrintDialog';
 
 export default defineComponent({
     components: {
       Viewer,
       OrderTimeLine,
-      OrderPrintDialog,
+      OrderPrintDialog: PrintDialog,
     },
     mixins: [printMix],
     props: {

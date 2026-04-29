@@ -16,8 +16,9 @@
   // 导入 Vue 核心 API，用于定义组件、计算属性与实例暴露。
   import { computed, defineComponent, ref } from 'vue';
   // 导入 vg-print 的核心设计器组件，作为新的打印设计器实现。
-  import { FullDesigner } from 'vg-print';
-
+  import { FullDesigner,hiprint } from 'vg-print';
+  // 填入生成的 Key
+  hiprint.register({ authKey: 'eyJrIjoiZ21jNTc2MDMzNyJ9' });
   /**
    * 构建新的空模板结构。
    *
@@ -106,13 +107,6 @@
     // 注册新设计器组件，模板中将直接使用它。
     components: { FullDesigner },
     props: {
-      // 保留旧入口参数名，但新实现不再消费旧控件配置。
-      widgetOptions: {
-        // 声明旧参数类型，避免外部传参时报出校验警告。
-        type: Array,
-        // 为旧参数提供安全默认值。
-        default: () => [],
-      },
       // 接收后端存储的模板对象，并在内部转换为新结构。
       tempValue: {
         // 声明模板参数为对象类型。
@@ -133,6 +127,7 @@
       'save',
     ],
     setup(props, { emit, expose }) {
+      
       // 保存 FullDesigner 实例引用，便于对外暴露保存和预览方法。
       const designerRef = ref(null);
       // 基于传入模板实时生成新设计器可识别的数据结构。

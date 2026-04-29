@@ -1,5 +1,5 @@
 import { createTemplate, exportImage, exportPdf, getHtml, printBrowser } from 'vg-print';
-import { openOrderPrintDialog } from '@/components/OrderPrintDialog';
+import { openPrintDialog } from '/@/components/PrintDialog';
 
 interface PreviewOptions {
   title?: string;
@@ -67,7 +67,7 @@ function preview(templateJson: unknown, data: unknown, options: PreviewOptions =
   const { template, printData } = preparePrintContext(templateJson, data);
   const html = getHtml(template, printData);
 
-  openOrderPrintDialog({
+  openPrintDialog({
     title: options.title,
     bizType: options.bizType,
     html: wrapPreviewHtml(typeof html === 'string' ? html : ''),

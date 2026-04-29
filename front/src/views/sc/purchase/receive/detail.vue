@@ -153,13 +153,13 @@ import {add, getNumber, isEmpty, isFloatGeZero, mul} from '@/utils/utils';
 import {RECEIVE_SHEET_STATUS} from '@/enums/biz/receiveSheetStatus';
 import {PRINT_TYPE} from '@/enums/biz/printType';
 import OrderTimeLine from '@/components/OrderTimeLine';
-import OrderPrintDialog from '@/components/OrderPrintDialog';
+import PrintDialog from '/@/components/PrintDialog';
 
 export default defineComponent({
     components: {
       PurchaseOrderDetail,
       OrderTimeLine,
-      OrderPrintDialog,
+      OrderPrintDialog: PrintDialog,
     },
     mixins: [printMix],
     props: {
