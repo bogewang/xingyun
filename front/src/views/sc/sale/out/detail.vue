@@ -141,7 +141,7 @@
 import {defineComponent} from 'vue';
 import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
 import * as api from '@/api/sc/sale/out';
-import {printMix} from '@/mixins/print';
+import {printMix} from '@/mixins/print.ts';
 import {add, getNumber, isEmpty, isFloatGeZero, mul} from '@/utils/utils';
 import {SALE_OUT_SHEET_STATUS} from '@/enums/biz/saleOutSheetStatus';
 import {PRINT_TYPE} from '@/enums/biz/printType';

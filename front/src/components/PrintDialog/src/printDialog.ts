@@ -1,22 +1,37 @@
 import { reactive, readonly } from 'vue';
+import type { PrintTemplateJson } from '@/components/PrintDesigner/src/printUtils';
 
 interface PrintDialogPayload {
-  html: string;
+  templateJson: PrintTemplateJson;
+  printData: unknown;
   title?: string;
   bizType?: string;
 }
 
-const state = reactive({
+interface PrintDialogState {
+  open: boolean;
+  title: string;
+  templateJson: PrintTemplateJson;
+  printData: unknown;
+  bizType: string;
+  frameKey: number;
+}
+
+const DEFAULT_TITLE = '打印预览';
+
+const state = reactive<PrintDialogState>({
   open: false,
-  title: '订单打印预览',
-  html: '',
+  title: DEFAULT_TITLE,
+  templateJson: {},
+  printData: [],
   bizType: '',
   frameKey: 0,
 });
 
 export function openPrintDialog(payload: PrintDialogPayload) {
-  state.title = payload.title || '订单打印预览';
-  state.html = payload.html || '';
+  state.title = payload.title || DEFAULT_TITLE;
+  state.templateJson = payload.templateJson || {};
+  state.printData = payload.printData ?? [];
   state.bizType = payload.bizType || '';
   state.frameKey += 1;
   state.open = true;

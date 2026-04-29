@@ -145,7 +145,7 @@
 import {defineComponent} from 'vue';
 import ReceiveSheetDetail from '@/views/sc/purchase/receive/detail.vue';
 import * as api from '@/api/sc/purchase/return';
-import {printMix} from '@/mixins/print';
+import {printMix} from '@/mixins/print.ts';
 import {add, getNumber, isEmpty, isFloatGeZero, mul} from '@/utils/utils';
 import {PURCHASE_RETURN_STATUS} from '@/enums/biz/purchaseReturnStatus';
 import {PRINT_TYPE} from '@/enums/biz/printType';

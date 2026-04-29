@@ -33,7 +33,7 @@
 <script>
 import {defineComponent} from 'vue';
 import * as api from '@/api/sc/purchase/order';
-import {printMix} from '@/mixins/print';
+import {printMix} from '@/mixins/print.ts';
 import Viewer from './viewer.vue';
 import {isEmpty} from '@/utils/utils';
 import {PRINT_TYPE} from '@/enums/biz/printType';

@@ -202,7 +202,7 @@
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/order';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import { printMix } from '@/mixins/print';
+  import { printMix } from '@/mixins/print.ts';
   import {
     formatDateTime,
     getDateTimeWithMinTime,

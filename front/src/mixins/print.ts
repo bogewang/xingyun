@@ -12,7 +12,7 @@ export const printMix = {
         return;
       }
 
-      const preview = (this as any).$printRuntimeApi?.preview;
+      const preview = this?.$printRuntimeApi?.preview;
       if (typeof preview !== 'function') {
         createError('打印预览组件未正确初始化！');
         return;

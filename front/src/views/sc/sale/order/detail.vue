@@ -115,7 +115,7 @@
 <script>
 import {defineComponent} from 'vue';
 import * as api from '@/api/sc/sale/order';
-import {printMix} from '@/mixins/print';
+import {printMix} from '@/mixins/print.ts';
 import {add, getNumber, isFloatGeZero, mul} from '@/utils/utils';
 import {SALE_ORDER_STATUS} from '@/enums/biz/saleOrderStatus';
 import {PRINT_TYPE} from '@/enums/biz/printType';
