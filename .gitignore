@@ -35,3 +35,5 @@ logs
 
 bin
 *rebel.xml
+front/src/components/PrintDesigner/demo
+text.json
