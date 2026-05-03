@@ -5,12 +5,11 @@ import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.common.utils.DateUtil;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.basedata.entity.Customer;
+import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
+import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleOrderBo;
 import com.lframework.xingyun.sc.dto.sale.SaleOrderFullDto;
-import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
-import com.lframework.xingyun.sc.entity.SaleOrder;
-import com.lframework.xingyun.sc.service.sale.SaleOrderService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
@@ -27,36 +26,27 @@ public class SaleOrderConverter {
         }
 
         List<String> productIds = details.stream().map(SaleOrderFullDto.OrderDetailDto::getProductId).collect(Collectors.toList());
-        SaleOrderService saleOrderService = ApplicationUtil.getBean(SaleOrderService.class);
-        List<SaleOrder> saleOrders = saleOrderService.lambdaQuery().in(SaleOrder::getId, productIds).list();
-        Map<String, SaleOrder> orderMap = saleOrders.stream().collect(Collectors.toMap(SaleOrder::getId, item -> item));
-
+        ProductService productService = ApplicationUtil.getBean(ProductService.class);
+        List<Product> products = productService.lambdaQuery().in(Product::getId, productIds).list();
+        Map<String, Product> productMap = products.stream().collect(Collectors.toMap(Product::getId, item -> item));
 
         return details.stream().map(item -> {
             PrintSaleOrderBo.OrderDetailBo orderDetailBo = new PrintSaleOrderBo.OrderDetailBo();
-            // orderDetailBo.setOrderNo();
-            orderDetailBo.setProductName();
-            orderDetailBo.setSpec();
-            orderDetailBo.setUnit();
-            orderDetailBo.setOrderNum();
-            orderDetailBo.setTaxPrice();
-            orderDetailBo.setOrderAmount();
+            // orderDetailBo.setOrderNo(item.getOrderNo());
+            Product product = productMap.get(item.getProductId());
+            if (product == null) {
+                return null;
+            }
+            orderDetailBo.setProductCode(product.getCode());
+            orderDetailBo.setProductName(product.getName());
+            orderDetailBo.setSpec(product.getSpec());
+            orderDetailBo.setUnit(product.getUnit());
+            orderDetailBo.setOrderNum(item.getOrderNum());
+            orderDetailBo.setTaxPrice(item.getTaxPrice());
+            orderDetailBo.setOrderAmount(item.getTaxAmount());
 
-
-
-
-        })
-        this.orderNum = dto.getOrderNum();
-        this.taxPrice = dto.getTaxPrice();
-        this.orderAmount = dto.getTaxAmount();
-
-
-        SaleProductDto product = saleOrderService.getSaleById(dto.getProductId());
-
-        this.productCode = product.getCode();
-        this.productName = product.getName();
-        this.skuCode = product.getSkuCode();
-        this.externalCode = product.getExternalCode();
+            return orderDetailBo;
+        }).collect(Collectors.toList());
     }
 
     public static PrintSaleOrderBo fullDTO2PrintBO(SaleOrderFullDto data) {

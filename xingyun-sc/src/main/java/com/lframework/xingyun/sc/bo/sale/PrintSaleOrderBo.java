@@ -97,8 +97,8 @@ public class PrintSaleOrderBo extends BaseBo<SaleOrderFullDto> {
         /**
          * 商品编号
          */
-        // @ApiModelProperty("商品编号")
-        // private String productCode;
+        @ApiModelProperty("商品编号")
+        private String productCode;
 
         /**
          * 商品名称
