@@ -11,7 +11,7 @@
 </template>
 
 <script lang="ts">
-  import { computed, defineComponent, ref } from 'vue';
+  import { computed, defineComponent, nextTick, onMounted, ref } from 'vue';
   import { FullDesigner, hiprint } from 'vg-print';
   import {
     createEmptyTemplate,
@@ -22,9 +22,66 @@
 
   hiprint.register({ authKey: 'eyJrIjoiZ21jNTc2MDMzNyJ9' });
 
+  const IMPORTED_TEMPLATE_STORAGE_KEY = 'xingyun-print-imported-templates';
+
   type SavePayload = {
     template?: PrintTemplateJson;
   };
+
+  type DesignerTemplateItem = {
+    tempId: string;
+    name: string;
+    desc: string;
+    template: PrintTemplateJson;
+    testData?: unknown[] | Record<string, unknown>;
+  };
+
+  function buildImportedTemplateName(fileName: string) {
+    return fileName.replace(/\.json$/i, '') || '导入模板';
+  }
+
+  function loadImportedTemplates(): DesignerTemplateItem[] {
+    try {
+      const raw = window.localStorage.getItem(IMPORTED_TEMPLATE_STORAGE_KEY);
+      if (!raw) {
+        return [];
+      }
+
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveImportedTemplates(templates: DesignerTemplateItem[]) {
+    try {
+      window.localStorage.setItem(IMPORTED_TEMPLATE_STORAGE_KEY, JSON.stringify(templates));
+    } catch {
+      // 忽略本地缓存异常，避免影响导入主流程。
+    }
+  }
+
+  function mergeTemplateList(
+    currentList: DesignerTemplateItem[] = [],
+    importedList: DesignerTemplateItem[] = [],
+  ) {
+    const merged = new Map<string, DesignerTemplateItem>();
+
+    currentList.forEach((item) => {
+      if (item?.tempId) {
+        merged.set(item.tempId, item);
+      }
+    });
+
+    importedList.forEach((item) => {
+      if (item?.tempId) {
+        merged.set(item.tempId, item);
+      }
+    });
+
+    return Array.from(merged.values());
+  }
 
   export default defineComponent({
     name: 'PrintDesigner',
@@ -42,6 +99,7 @@
     emits: ['save'],
     setup(props, { emit, expose }) {
       const designerRef = ref<any>(null);
+      let importPatched = false;
 
       const normalizedTemplate = computed(() => normalizeTemplate(props.tempValue));
       const normalizedPrintData = computed(() => normalizePrintData(props.demoData));
@@ -61,6 +119,93 @@
       function getDesigner() {
         return designerRef.value;
       }
+
+      function patchTemplateImport() {
+        const designer = designerRef.value;
+
+        if (!designer || importPatched) {
+          return;
+        }
+
+        const originalOnLocalTemplates =
+          typeof designer.onLocalTemplates === 'function'
+            ? designer.onLocalTemplates.bind(designer)
+            : null;
+        const originalOnTemplateFileSelected =
+          typeof designer.onTemplateFileSelected === 'function'
+            ? designer.onTemplateFileSelected.bind(designer)
+            : null;
+
+        designer.onLocalTemplates = (templates: DesignerTemplateItem[]) => {
+          if (originalOnLocalTemplates) {
+            originalOnLocalTemplates(templates);
+          }
+
+          designer.templateList = mergeTemplateList(designer.templateList, loadImportedTemplates());
+        };
+
+        designer.handleUploadTemplate = () => {
+          const input = designer.$refs?.uploadTplInput as HTMLInputElement | undefined;
+          if (input?.click) {
+            input.value = '';
+            input.click();
+          }
+        };
+
+        designer.onTemplateFileSelected = async (event: Event) => {
+          const input = event?.target as HTMLInputElement | null;
+          const file = input?.files?.[0];
+
+          if (!file) {
+            return;
+          }
+
+          try {
+            const content = await file.text();
+            const parsedTemplate = normalizeTemplate(JSON.parse(content));
+
+            if (!Array.isArray((parsedTemplate as { panels?: unknown[] }).panels)) {
+              designer.$message?.warning?.('选中的文件不是有效的模板文件');
+              return;
+            }
+
+            const templateItem: DesignerTemplateItem = {
+              tempId: `imported:${file.name}`,
+              name: buildImportedTemplateName(file.name),
+              desc: '导入模板',
+              template: parsedTemplate,
+              testData: designer.printDataVar,
+            };
+
+            const importedTemplates = mergeTemplateList(loadImportedTemplates(), [templateItem]);
+            saveImportedTemplates(importedTemplates);
+            designer.templateList = mergeTemplateList(designer.templateList, importedTemplates);
+
+            if (typeof designer.applyTemplateItem === 'function') {
+              await designer.applyTemplateItem(templateItem);
+            } else if (originalOnTemplateFileSelected) {
+              await originalOnTemplateFileSelected(event);
+            }
+
+            designer.$message?.success?.('模板导入成功');
+          } catch (error) {
+            designer.$message?.error?.(`模板导入失败: ${String(error)}`);
+          } finally {
+            if (input) {
+              input.value = '';
+            }
+          }
+        };
+
+        designer.templateList = mergeTemplateList(designer.templateList, loadImportedTemplates());
+        importPatched = true;
+      }
+
+      onMounted(() => {
+        nextTick(() => {
+          patchTemplateImport();
+        });
+      });
 
       expose({ getDesigner, previewTemp, saveTemp });
 
