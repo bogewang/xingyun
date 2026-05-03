@@ -453,7 +453,10 @@
         this.loading = true;
         try {
           const res = await api.print(row.id);
-          await this.vgPrintPreview(PRINT_TYPE.SALE_ORDER.code, res);
+          // 将res组装成模板定义和打印数据的格式，然后调用打印预览组件进行预览
+          const printData = this.buildPrintData(res);
+          console.log('打印数据', printData);
+          await this.vgPrintPreview(PRINT_TYPE.SALE_ORDER.code, printData);
         } finally {
           this.loading = false;
         }
@@ -517,6 +520,27 @@
       },
       onRefreshPage() {
         this.search();
+      },
+      buildPrintData(printData) {
+        // 基础属性保持不变， details字段需要重新赋值，比如 orderNum=>qty
+        const res = {
+          ...printData,
+        };
+
+        const newDetails = printData.details.map((item, index) => {
+          // 新生成一个对象，避免修改原对象
+          const newItem = {};
+          newItem.seq = index + 1;
+          newItem.qty = item.orderNum;
+          newItem.unit = item.unit;
+          newItem.amount = item.orderAmount;
+          newItem.price = item.taxPrice;
+          newItem.name = item.productName;
+          return newItem;
+        });
+        res.details = newDetails;
+
+        return res;
       },
     },
   });

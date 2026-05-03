@@ -140,4 +140,6 @@ public interface SaleOrderService extends BaseMpService<SaleOrder> {
     SaleProductDto getSaleById(String id);
 
     List<SaleProductVo> checkImport(List<SaleOrderImportModel> list);
+
+    List<SaleOrder> query
 }
