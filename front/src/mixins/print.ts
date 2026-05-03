@@ -23,9 +23,5 @@ export const printMix = {
 
       return preview(templateJson, printData, options);
     },
-
-    lodopPreview(type, printData, options = {}) {
-      return this.vgPrintPreview(type, printData, options);
-    },
   },
 };

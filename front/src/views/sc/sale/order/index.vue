@@ -531,11 +531,11 @@
           // 新生成一个对象，避免修改原对象
           const newItem = {};
           newItem.seq = index + 1;
-          newItem.qty = item.orderNum;
+          newItem.orderNum = item.orderNum;
           newItem.unit = item.unit;
-          newItem.amount = item.orderAmount;
-          newItem.price = item.taxPrice;
-          newItem.name = item.productName;
+          newItem.orderAmount = item.orderAmount;
+          newItem.taxPrice = item.taxPrice;
+          newItem.productName = item.productName;
           return newItem;
         });
         res.details = newDetails;

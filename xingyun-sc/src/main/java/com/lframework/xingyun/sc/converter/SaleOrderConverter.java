@@ -59,7 +59,8 @@ public class SaleOrderConverter {
 
         PrintSaleOrderBo res = BeanUtil.copyProperties(data, PrintSaleOrderBo.class);
         res.setCustomerName(customer.getName());
-        res.setCreateTime(DateUtil.formatDateTime(data.getCreateTime()));
+        // todo
+        res.setDeliveryDate(DateUtil.formatDateTime(data.getCreateTime(), "yyyy-MM-dd"));
         res.setDetails(orderDetailDTO2PrintDetailBOS(data.getDetails()));
 
         return res;

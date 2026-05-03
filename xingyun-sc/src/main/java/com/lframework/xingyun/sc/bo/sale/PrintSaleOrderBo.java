@@ -60,11 +60,11 @@ public class PrintSaleOrderBo extends BaseBo<SaleOrderFullDto> {
     private String createBy;
 
     /**
-     * 创建时间
+     * 送货日期
      * yyyy-MM-dd HH:mm:ss
      */
-    @ApiModelProperty("创建时间")
-    private String createTime;
+    @ApiModelProperty("送货日期")
+    private String deliveryDate;
 
     /**
      * 审核人
