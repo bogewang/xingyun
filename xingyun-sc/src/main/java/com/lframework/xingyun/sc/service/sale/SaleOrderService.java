@@ -141,5 +141,4 @@ public interface SaleOrderService extends BaseMpService<SaleOrder> {
 
     List<SaleProductVo> checkImport(List<SaleOrderImportModel> list);
 
-    List<SaleOrder> query
 }
