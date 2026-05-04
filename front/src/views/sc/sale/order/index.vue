@@ -455,7 +455,6 @@
           const res = await api.print(row.id);
           // 将res组装成模板定义和打印数据的格式，然后调用打印预览组件进行预览
           const printData = this.buildPrintData(res);
-          console.log('打印数据', printData);
           await this.vgPrintPreview(PRINT_TYPE.SALE_ORDER.code, printData);
         } finally {
           this.loading = false;

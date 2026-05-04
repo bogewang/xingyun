@@ -19,7 +19,15 @@
           <a-input v-model:value.trim="formData.name" allow-clear />
         </a-form-item>
         <a-form-item label="业务类型" name="bizType">
-          <a-input v-model:value.trim="formData.bizType" allow-clear />
+          <a-select v-model:value="formData.bizType" placeholder="请选择业务类型" allow-clear>
+            <a-select-option
+              v-for="item in printTypeOptions"
+              :key="item.code"
+              :value="String(item.code)"
+            >
+              {{ item.desc }}
+            </a-select-option>
+          </a-select>
         </a-form-item>
         <div class="form-modal-footer">
           <a-space>
@@ -37,6 +45,7 @@
   import { defineComponent } from 'vue';
   import * as api from '@/api/base-data/print-template';
   import { createSuccess } from '@/hooks/web/msg';
+  import { PRINT_TYPE } from '@/enums/biz/printType';
 
   export default defineComponent({
     components: {},
@@ -54,7 +63,11 @@
         },
       };
     },
-    computed: {},
+    computed: {
+      printTypeOptions() {
+        return PRINT_TYPE.values();
+      },
+    },
     created() {
       // 初始化表单数据
       this.initFormData();

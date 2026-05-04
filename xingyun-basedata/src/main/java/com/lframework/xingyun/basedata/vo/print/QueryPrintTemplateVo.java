@@ -16,4 +16,10 @@ public class QueryPrintTemplateVo extends SortPageVo implements BaseVo, Serializ
    */
   @ApiModelProperty("名称")
   private String name;
+
+  /**
+   * 业务类型
+   */
+  @ApiModelProperty("业务类型")
+  private String bizType;
 }
