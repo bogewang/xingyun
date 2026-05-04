@@ -10,18 +10,14 @@ interface PrintDialogPayload {
 
 interface PrintDialogState {
   open: boolean;
-  title: string;
   templateJson: PrintTemplateJson;
   printData: unknown;
   bizType: string;
   frameKey: number;
 }
 
-const DEFAULT_TITLE = '打印预览';
-
 const state = reactive<PrintDialogState>({
   open: false,
-  title: DEFAULT_TITLE,
   templateJson: {},
   printData: [],
   bizType: '',
@@ -29,7 +25,6 @@ const state = reactive<PrintDialogState>({
 });
 
 export function openPrintDialog(payload: PrintDialogPayload) {
-  state.title = payload.title || DEFAULT_TITLE;
   state.templateJson = payload.templateJson || {};
   state.printData = payload.printData ?? [];
   state.bizType = payload.bizType || '';

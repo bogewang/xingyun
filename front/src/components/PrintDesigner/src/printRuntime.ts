@@ -1,9 +1,6 @@
 import { createTemplate, exportImage, exportPdf, printBrowser } from 'vg-print';
 import { openPrintDialog } from '/@/components/PrintDialog';
-import {
-  normalizePrintData,
-  normalizeTemplate,
-} from './printUtils';
+import { normalizePrintData, normalizeTemplate } from './printUtils';
 
 interface PreviewOptions {
   title?: string;
@@ -23,7 +20,6 @@ function preparePrintContext(templateJson: unknown, data: unknown) {
 
 function preview(templateJson: unknown, data: unknown, options: PreviewOptions = {}) {
   openPrintDialog({
-    title: options.title,
     bizType: options.bizType,
     templateJson: normalizeTemplate(templateJson),
     printData: normalizePrintData(data),
