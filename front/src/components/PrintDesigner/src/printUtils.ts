@@ -6,8 +6,7 @@ export function createEmptyTemplate(): PrintTemplateJson {
 
 export function normalizeTemplate(templateJson: unknown): PrintTemplateJson {
   const isObjectValue = !!templateJson && typeof templateJson === 'object';
-  const hasPanels =
-    isObjectValue && Array.isArray((templateJson as { panels?: unknown[] }).panels);
+  const hasPanels = isObjectValue && Array.isArray((templateJson as { panels?: unknown[] }).panels);
 
   return hasPanels ? (templateJson as PrintTemplateJson) : createEmptyTemplate();
 }
@@ -33,8 +32,4 @@ export function buildPrintPayload(data: unknown, copies: number): unknown[] {
   }
 
   return Array.from({ length: safeCopies }).flatMap(() => normalizedData);
-}
-
-export function sanitizePrintFileName(name?: string): string {
-  return (name || 'print-document').replace(/[\\/:*?"<>|]/g, '-');
 }
