@@ -18,6 +18,9 @@
         <a-form-item label="名称" name="name">
           <a-input v-model:value.trim="formData.name" allow-clear />
         </a-form-item>
+        <a-form-item label="业务类型" name="bizType">
+          <a-input v-model:value.trim="formData.bizType" allow-clear />
+        </a-form-item>
         <div class="form-modal-footer">
           <a-space>
             <a-button type="primary" :loading="loading" html-type="submit" @click="submit"
@@ -79,6 +82,9 @@
         this.formData = {
           id: '',
           name: '',
+          lang: '',
+          bizType: '',
+          version: '',
         };
       },
       // 提交表单事件

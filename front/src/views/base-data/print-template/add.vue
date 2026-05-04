@@ -18,6 +18,9 @@
         <a-form-item label="名称" name="name">
           <a-input v-model:value.trim="formData.name" allow-clear />
         </a-form-item>
+        <a-form-item label="业务类型" name="bizType">
+          <a-input v-model:value.trim="formData.bizType" allow-clear />
+        </a-form-item>
         <div class="form-modal-footer">
           <a-space>
             <a-button type="primary" :loading="loading" html-type="submit" @click="submit"
@@ -31,11 +34,11 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/base-data/print-template';
-import {createSuccess} from '@/hooks/web/msg';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/base-data/print-template';
+  import { createSuccess } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     components: {},
     data() {
       return {
@@ -72,6 +75,9 @@ export default defineComponent({
       initFormData() {
         this.formData = {
           name: '',
+          lang: '',
+          bizType: '',
+          version: '',
         };
       },
       // 提交表单事件

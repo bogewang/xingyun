@@ -24,6 +24,24 @@ public class QueryPrintTemplateBo extends BaseBo<PrintTemplate> {
   private String name;
 
   /**
+   * 语言
+   */
+  @ApiModelProperty("语言")
+  private String lang;
+
+  /**
+   * 业务类型
+   */
+  @ApiModelProperty("业务类型")
+  private String bizType;
+
+  /**
+   * 版本
+   */
+  @ApiModelProperty("版本")
+  private String version;
+
+  /**
    * 创建人
    */
   @ApiModelProperty("创建人")

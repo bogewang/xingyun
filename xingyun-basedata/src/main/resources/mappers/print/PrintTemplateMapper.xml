@@ -4,7 +4,19 @@
 
     <sql id="PrintTemplate_sql">
         SELECT
-            tb.*
+            tb.id,
+            tb.name,
+            tb.template_json,
+            tb.demo_data,
+            tb.lang,
+            tb.bizType,
+            tb.version,
+            tb.create_by_id,
+            tb.create_by,
+            tb.create_time,
+            tb.update_by,
+            tb.update_by_id,
+            tb.update_time
         FROM tbl_print_template AS tb
     </sql>
     <select id="query" resultType="com.lframework.xingyun.basedata.entity.PrintTemplate">

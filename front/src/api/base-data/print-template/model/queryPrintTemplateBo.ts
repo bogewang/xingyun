@@ -10,6 +10,21 @@ export interface QueryPrintTemplateBo {
   name: string;
 
   /**
+   * 语言
+   */
+  lang: string;
+
+  /**
+   * 业务类型
+   */
+  bizType: string;
+
+  /**
+   * 版本
+   */
+  version: string;
+
+  /**
    * 创建人
    */
   createBy: string;
