@@ -29,7 +29,7 @@
             :options="printerList"
             :loading="printerLoading"
             :allow-clear="true"
-            placeholder="导出为 WPS PDF"
+            placeholder="选择打印机"
           />
           <a-space :size="8" wrap>
             <a-button type="primary" ghost @click="handlePreview">预览</a-button>
