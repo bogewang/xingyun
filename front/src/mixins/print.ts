@@ -4,9 +4,17 @@ import { createError } from '@/hooks/web/msg';
 export const printMix = {
   methods: {
     async vgPrintPreview(type, printData, options = {}) {
-      // 获取打印模板配置,这里假设 type 是一个字符串，代表不同的业务类型
-      // todo 一种类型可能对应多个模板，这里先简单处理成一对一的关系
-      const setting = await api.getSetting(String(type));
+      const bizType = String(type);
+      const result = await queryTemplateByBizType(bizType);
+
+      const templateList = result?.datas || [];
+      if (!templateList.length) {
+        createError('未找到当前业务类型的打印模板！');
+        return;
+      }
+
+      const templateId = templateList[0].id;
+      const setting = await api.getSetting(templateId);
       const templateJson = setting?.templateJson;
 
       if (!templateJson) {
@@ -21,7 +29,28 @@ export const printMix = {
         return;
       }
 
-      return preview(templateJson, printData, options);
+      return preview(templateJson, printData, {
+        ...options,
+        bizType,
+        templateId,
+        enableTemplateSwitch: true,
+        templateList: templateList.map((item) => ({
+          id: item.id,
+          name: item.name,
+          bizType: item.bizType,
+        })),
+      });
+
+      async function queryTemplateByBizType(bizType: string) {
+        return await api.query({
+          pageIndex: 1,
+          pageSize: 200,
+          sortField: '',
+          sortOrder: '',
+          name: '',
+          bizType: bizType,
+        });
+      }
     },
   },
 };
