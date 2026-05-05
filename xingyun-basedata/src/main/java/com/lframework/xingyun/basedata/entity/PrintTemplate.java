@@ -47,6 +47,21 @@ public class PrintTemplate extends BaseEntity implements BaseDto {
   private String demoData;
 
   /**
+   * 语言
+   */
+  private String lang;
+
+  /**
+   * 业务类型
+   */
+  private String bizType;
+
+  /**
+   * 版本
+   */
+  private String version;
+
+  /**
    * 创建人ID 新增时赋值
    */
   @TableField(fill = FieldFill.INSERT)

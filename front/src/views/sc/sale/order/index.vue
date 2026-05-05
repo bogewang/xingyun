@@ -180,6 +180,7 @@
         :handle-fn="doBatchDelete"
         @confirm="search"
       />
+      <order-print-dialog />
     </div>
   </div>
 </template>
@@ -201,6 +202,7 @@
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/order';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { printMix } from '@/mixins/print.ts';
   import {
     formatDateTime,
     getDateTimeWithMinTime,
@@ -211,7 +213,9 @@
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
   import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
   import { SALE_ORDER_STATUS } from '@/enums/biz/saleOrderStatus';
+  import { PRINT_TYPE } from '@/enums/biz/printType';
   import BatchHandler from '@/components/BatchHandler';
+  import PrintDialog from '/@/components/PrintDialog';
 
   export default defineComponent({
     name: 'SaleOrder',
@@ -222,8 +226,9 @@
       StoreCenterSelector,
       UserSelector,
       BatchHandler,
+      OrderPrintDialog: PrintDialog,
     },
-    mixins: [multiplePageMix],
+    mixins: [multiplePageMix, printMix],
     setup() {
       return {
         h,
@@ -286,8 +291,13 @@
           },
           { field: 'approveTime', title: '审核时间', width: 170 },
           { field: 'approveBy', title: '审核人', width: 100 },
-          { field: 'description', title: '备注', width: 200 },
-          { title: '操作', width: 200, fixed: 'right', slots: { default: 'action_default' } },
+          { field: 'description', title: '备注', minWidth: 200 },
+          {
+            title: '操作',
+            width: 220,
+            className: 'sale-order-action-column',
+            slots: { default: 'action_default' },
+          },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -439,6 +449,17 @@
             this.loading = false;
           });
       },
+      async printOrder(row) {
+        this.loading = true;
+        try {
+          const res = await api.print(row.id);
+          // 将res组装成模板定义和打印数据的格式，然后调用打印预览组件进行预览
+          const printData = this.buildPrintData(res);
+          await this.vgPrintPreview(PRINT_TYPE.SALE_ORDER.code, printData);
+        } finally {
+          this.loading = false;
+        }
+      },
       createActions(row) {
         return [
           {
@@ -446,6 +467,12 @@
             onClick: () => {
               this.id = row.id;
               this.$nextTick(() => this.$refs.viewDialog.openDialog());
+            },
+          },
+          {
+            label: '打印',
+            onClick: () => {
+              this.printOrder(row);
             },
           },
           {
@@ -493,7 +520,40 @@
       onRefreshPage() {
         this.search();
       },
+      buildPrintData(printData) {
+        // 基础属性保持不变， details字段需要重新赋值，比如 orderNum=>qty
+        const res = {
+          ...printData,
+        };
+
+        const newDetails = printData.details.map((item, index) => {
+          // 新生成一个对象，避免修改原对象
+          const newItem = {};
+          newItem.seq = index + 1;
+          newItem.orderNum = item.orderNum;
+          newItem.unit = item.unit;
+          newItem.orderAmount = item.orderAmount;
+          newItem.taxPrice = item.taxPrice;
+          newItem.productName = item.productName;
+          return newItem;
+        });
+        res.details = newDetails;
+
+        return res;
+      },
     },
   });
 </script>
-<style scoped></style>
+<style scoped>
+  :deep(.sale-order-action-column .vxe-cell) {
+    white-space: nowrap;
+  }
+
+  :deep(.sale-order-action-column .vben-basic-table-action) {
+    flex-wrap: nowrap;
+  }
+
+  :deep(.sale-order-action-column .ant-btn-link) {
+    padding-inline: 4px;
+  }
+</style>

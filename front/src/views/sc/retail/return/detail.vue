@@ -144,23 +144,26 @@
     <!-- 零售出库单查看窗口 -->
     <out-sheet-detail :id="formData.outSheetId" ref="viewOutSheetDetailDialog" />
   </a-modal>
+  <order-print-dialog />
 </template>
 <script>
 import {defineComponent} from 'vue';
 import OutSheetDetail from '@/views/sc/retail/out/detail.vue';
 import PayType from '@/views/sc/pay-type/index.vue';
 import * as api from '@/api/sc/retail/return';
-import {printMix} from '@/mixins/print';
+import {printMix} from '@/mixins/print.ts';
 import {add, getNumber, isEmpty, isFloatGeZero, mul} from '@/utils/utils';
 import {RETAIL_RETURN_STATUS} from '@/enums/biz/retailReturnStatus';
 import {PRINT_TYPE} from '@/enums/biz/printType';
 import OrderTimeLine from '@/components/OrderTimeLine';
+import PrintDialog from '/@/components/PrintDialog';
 
 export default defineComponent({
     components: {
       OutSheetDetail,
       PayType,
       OrderTimeLine,
+      OrderPrintDialog: PrintDialog,
     },
     mixins: [printMix],
     props: {
@@ -168,15 +171,6 @@ export default defineComponent({
         type: String,
         required: true,
       },
-    },
-    setup() {
-      return {
-        isEmpty,
-        isFloatGeZero,
-        getNumber,
-        mul,
-        RETAIL_RETURN_STATUS,
-      };
     },
     setup() {
       return {
@@ -341,16 +335,14 @@ export default defineComponent({
         this.formData.giftNum = giftNum;
         this.formData.totalAmount = totalAmount;
       },
-      print() {
+      async print() {
         this.loading = true;
-        api
-          .print(this.id)
-          .then((res) => {
-            this.lodopPreview(PRINT_TYPE.RETAIL_RETURN.code, res);
-          })
-          .finally(() => {
-            this.loading = false;
-          });
+        try {
+          const res = await api.print(this.id);
+          await this.vgPrintPreview(PRINT_TYPE.RETAIL_RETURN.code, res);
+        } finally {
+          this.loading = false;
+        }
       },
     },
   });

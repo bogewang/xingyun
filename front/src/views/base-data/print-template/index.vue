@@ -86,11 +86,17 @@
   import Modify from './modify.vue';
   import Setting from './setting.vue';
   import * as api from '@/api/base-data/print-template';
-  import { PlusOutlined, SearchOutlined, DeleteOutlined, DownOutlined } from '@ant-design/icons-vue';
+  import {
+    PlusOutlined,
+    SearchOutlined,
+    DeleteOutlined,
+    DownOutlined,
+  } from '@ant-design/icons-vue';
   import DemoData from './demo-data.vue';
   import { buildSortPageVo, isEmpty } from '@/utils/utils';
   import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
   import BatchHandler from '@/components/BatchHandler';
+  import { PRINT_TYPE } from '@/enums/biz/printType';
 
   export default defineComponent({
     name: 'PrintTemplate',
@@ -108,6 +114,7 @@
         PlusOutlined,
         DeleteOutlined,
         DownOutlined,
+        PRINT_TYPE,
       };
     },
     data() {
@@ -131,6 +138,14 @@
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50 },
           { field: 'name', title: '名称', minWidth: 160, sortable: true },
+          {
+            field: 'bizType',
+            title: '业务类型',
+            width: 140,
+            formatter: ({ cellValue }) => {
+              return PRINT_TYPE.getDesc(cellValue) || cellValue;
+            },
+          },
           { title: '操作', width: 180, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置

@@ -1,6 +1,6 @@
 import PrintDesigner from './src/PrintDesigner.vue';
-import lodop from './src/libs/lodop';
+import printRuntime from './src/printRuntime';
 
 export default PrintDesigner;
 
-export { lodop };
+export { printRuntime as printRuntimeApi };

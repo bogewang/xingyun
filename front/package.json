@@ -114,6 +114,7 @@
     "vue-router": "4.0.14",
     "vue-types": "^5.1.0",
     "vuedraggable": "^4.1.0",
+    "vg-print": "^1.1.214",
     "vxe-pc-ui": "^4.0.1",
     "vxe-table": "^4.7.30",
     "vxe-table-plugin-export-xlsx": "^4.0.1",

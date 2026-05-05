@@ -13,6 +13,7 @@ import com.lframework.starter.web.core.utils.EasyExcelUtils;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.sc.bo.sale.*;
+import com.lframework.xingyun.sc.converter.SaleOrderConverter;
 import com.lframework.xingyun.sc.dto.sale.SaleOrderFullDto;
 import com.lframework.xingyun.sc.dto.sale.SaleOrderWithOutDto;
 import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
@@ -60,17 +61,16 @@ public class SaleOrderController extends DefaultBaseController {
     @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
     @HasPermission({"sale:order:query"})
     @GetMapping("/print")
-    public InvokeResult<PrintSaleOrderBo> print(
-            @NotBlank(message = "订单ID不能为空！") String id) {
+    public InvokeResult<PrintSaleOrderBo> print(@NotBlank(message = "订单ID不能为空！") String id) {
 
         SaleOrderFullDto data = saleOrderService.getDetail(id);
         if (data == null) {
             throw new DefaultClientException("订单不存在！");
         }
 
-        PrintSaleOrderBo result = new PrintSaleOrderBo(data);
+        PrintSaleOrderBo res = SaleOrderConverter.fullDTO2PrintBO(data);
 
-        return InvokeResultBuilder.success(result);
+        return InvokeResultBuilder.success(res);
     }
 
     /**

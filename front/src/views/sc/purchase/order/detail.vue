@@ -28,20 +28,23 @@
       </div>
     </template>
   </a-modal>
+  <order-print-dialog />
 </template>
 <script>
 import {defineComponent} from 'vue';
 import * as api from '@/api/sc/purchase/order';
-import {printMix} from '@/mixins/print';
+import {printMix} from '@/mixins/print.ts';
 import Viewer from './viewer.vue';
 import {isEmpty} from '@/utils/utils';
 import {PRINT_TYPE} from '@/enums/biz/printType';
 import OrderTimeLine from '@/components/OrderTimeLine';
+import PrintDialog from '/@/components/PrintDialog';
 
 export default defineComponent({
     components: {
       Viewer,
       OrderTimeLine,
+      OrderPrintDialog: PrintDialog,
     },
     mixins: [printMix],
     props: {
@@ -49,11 +52,6 @@ export default defineComponent({
         type: String,
         required: true,
       },
-    },
-    setup() {
-      return {
-        isEmpty,
-      };
     },
     setup() {
       return {
@@ -98,16 +96,14 @@ export default defineComponent({
         // 初始化表单数据
         this.initFormData();
       },
-      print() {
+      async print() {
         this.loading = true;
-        api
-          .print(this.id)
-          .then((res) => {
-            this.lodopPreview(PRINT_TYPE.PURCHASE_ORDER.code, res);
-          })
-          .finally(() => {
-            this.loading = false;
-          });
+        try {
+          const res = await api.print(this.id);
+          await this.vgPrintPreview(PRINT_TYPE.PURCHASE_ORDER.code, res);
+        } finally {
+          this.loading = false;
+        }
       },
     },
   });

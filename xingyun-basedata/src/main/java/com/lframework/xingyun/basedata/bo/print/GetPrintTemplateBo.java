@@ -20,6 +20,24 @@ public class GetPrintTemplateBo extends BaseBo<PrintTemplate> {
   @ApiModelProperty("名称")
   private String name;
 
+  /**
+   * 语言
+   */
+  @ApiModelProperty("语言")
+  private String lang;
+
+  /**
+   * 业务类型
+   */
+  @ApiModelProperty("业务类型")
+  private String bizType;
+
+  /**
+   * 版本
+   */
+  @ApiModelProperty("版本")
+  private String version;
+
   public GetPrintTemplateBo() {
 
   }

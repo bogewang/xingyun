@@ -1,153 +1,263 @@
 <template>
-  <div class="kr-designer" data-theme="kr-designer">
-    <viewport class="kr-designer-view" />
-    <div class="kr-designer-tool">
-      <div class="kr-designer-tool_con">
-        <panel class="control-panel" />
-      </div>
-      <div class="kr-designer-tool_bar">
-        <a-space>
-          <a-button size="small" type="primary" @click="saveTemp">保存</a-button>
-          <a-button size="small" @click="previewTemp">预览</a-button>
-        </a-space>
-      </div>
-    </div>
+  <div class="print-designer-shell">
+    <FullDesigner
+      ref="designerRef"
+      :initial-template="normalizedTemplate"
+      :initial-print-data="normalizedPrintData"
+      default-lang="cn"
+      @save="handleSave"
+    />
   </div>
 </template>
 
-<script>
-  import { defineComponent } from 'vue';
-  import Viewport from './viewport/index.vue';
-  import Panel from './panel/index.vue';
-  import cloneDeep from 'lodash/cloneDeep';
-  import { usePrintDesignerStore } from './store/printDesigner';
+<script lang="ts">
+  import { computed, defineComponent, nextTick, onMounted, ref } from 'vue';
+  import { FullDesigner, hiprint } from 'vg-print';
+  import {
+    createEmptyTemplate,
+    normalizePrintData,
+    normalizeTemplate,
+    type PrintTemplateJson,
+  } from './printUtils';
+
+  hiprint.register({ authKey: 'eyJrIjoiZ21jNTc2MDMzNyJ9' });
+
+  const IMPORTED_TEMPLATE_STORAGE_KEY = 'xingyun-print-imported-templates';
+
+  type SavePayload = {
+    template?: PrintTemplateJson;
+  };
+
+  type DesignerTemplateItem = {
+    tempId: string;
+    name: string;
+    desc: string;
+    template: PrintTemplateJson;
+    testData?: unknown[] | Record<string, unknown>;
+  };
+
+  /**
+   * 根据导入文件名生成模板列表中的显示名称。
+   */
+  function buildImportedTemplateName(fileName: string) {
+    return fileName.replace(/\.json$/i, '') || '导入模板';
+  }
+
+  /**
+   * 从浏览器本地缓存读取用户导入过的模板。
+   */
+  function loadImportedTemplates(): DesignerTemplateItem[] {
+    try {
+      const raw = window.localStorage.getItem(IMPORTED_TEMPLATE_STORAGE_KEY);
+      if (!raw) {
+        return [];
+      }
+
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * 将导入模板保存到浏览器本地缓存。
+   */
+  function saveImportedTemplates(templates: DesignerTemplateItem[]) {
+    try {
+      window.localStorage.setItem(IMPORTED_TEMPLATE_STORAGE_KEY, JSON.stringify(templates));
+    } catch {
+      // 忽略本地缓存异常，避免影响导入主流程。
+    }
+  }
+
+  /**
+   * 合并设计器内置模板与本地导入模板。
+   *
+   * 以 `tempId` 去重，保证用户导入模板在刷新后仍能出现在模板列表中。
+   */
+  function mergeTemplateList(
+    currentList: DesignerTemplateItem[] = [],
+    importedList: DesignerTemplateItem[] = [],
+  ) {
+    const merged = new Map<string, DesignerTemplateItem>();
+
+    currentList.forEach((item) => {
+      if (item?.tempId) {
+        merged.set(item.tempId, item);
+      }
+    });
+
+    importedList.forEach((item) => {
+      if (item?.tempId) {
+        merged.set(item.tempId, item);
+      }
+    });
+
+    return Array.from(merged.values());
+  }
 
   export default defineComponent({
     name: 'PrintDesigner',
-    components: { Viewport, Panel },
+    components: { FullDesigner },
     props: {
-      widgetOptions: {
-        type: Array,
-        default: () => [],
-      },
       tempValue: {
         type: Object,
-        default: () => ({
-          title: 'demo',
-          width: 750,
-          height: 550,
-          pageWidth: 750,
-          pageHeight: 550,
-          tempItems: [],
-        }),
+        default: () => createEmptyTemplate(),
       },
       demoData: {
-        type: Object,
+        type: [Array, Object],
         default: () => ({}),
       },
     },
-    setup() {
-      const printDesignerStore = usePrintDesignerStore();
-      return {
-        printDesignerStore,
-      };
-    },
-    created() {
-      this.initTemp(this.tempValue, this.widgetOptions);
-    },
-    methods: {
-      // 保存模板
-      saveTemp() {
-        let page = this.printDesignerStore.page;
-        this.$emit('save', cloneDeep(page));
-      },
-      // 预览模板
-      previewTemp() {
-        let page = { ...this.printDesignerStore.page };
-        this.$lodop.preview(cloneDeep(page), [this.demoData]);
-      },
+    emits: ['save'],
+    setup(props, { emit, expose }) {
+      const designerRef = ref<any>(null);
+      let importPatched = false;
 
-      // 初始化设计器
-      initTemp(tempValue, widgetOptions) {
-        this.printDesignerStore.designerInit({
-          tempValue: cloneDeep(tempValue),
-          options: cloneDeep(widgetOptions),
+      const normalizedTemplate = computed(() => normalizeTemplate(props.tempValue));
+      const normalizedPrintData = computed(() => normalizePrintData(props.demoData));
+
+      /**
+       * 接收设计器保存事件，并向业务页面输出规范化模板。
+       */
+      function handleSave(payload?: SavePayload) {
+        emit('save', payload?.template || createEmptyTemplate());
+      }
+
+      /**
+       * 触发设计器保存动作，供父组件通过组件实例调用。
+       */
+      function saveTemp() {
+        designerRef.value?.save();
+      }
+
+      /**
+       * 触发设计器内置预览动作，使用当前示例数据查看模板效果。
+       */
+      function previewTemp() {
+        designerRef.value?.preView();
+      }
+
+      /**
+       * 返回底层设计器实例，便于业务侧按需扩展调用。
+       */
+      function getDesigner() {
+        return designerRef.value;
+      }
+
+      /**
+       * 增强设计器的本地模板导入能力。
+       *
+       * vg-print 默认导入流程不会持久化到项目业务列表，这里拦截上传选择、
+       * 解析 JSON 模板、写入本地缓存，并把导入模板合并回设计器模板列表。
+       */
+      function patchTemplateImport() {
+        const designer = designerRef.value;
+
+        if (!designer || importPatched) {
+          return;
+        }
+
+        const originalOnLocalTemplates =
+          typeof designer.onLocalTemplates === 'function'
+            ? designer.onLocalTemplates.bind(designer)
+            : null;
+        const originalOnTemplateFileSelected =
+          typeof designer.onTemplateFileSelected === 'function'
+            ? designer.onTemplateFileSelected.bind(designer)
+            : null;
+
+        designer.onLocalTemplates = (templates: DesignerTemplateItem[]) => {
+          if (originalOnLocalTemplates) {
+            originalOnLocalTemplates(templates);
+          }
+
+          designer.templateList = mergeTemplateList(designer.templateList, loadImportedTemplates());
+        };
+
+        designer.handleUploadTemplate = () => {
+          const input = designer.$refs?.uploadTplInput as HTMLInputElement | undefined;
+          if (input?.click) {
+            input.value = '';
+            input.click();
+          }
+        };
+
+        designer.onTemplateFileSelected = async (event: Event) => {
+          const input = event?.target as HTMLInputElement | null;
+          const file = input?.files?.[0];
+
+          if (!file) {
+            return;
+          }
+
+          try {
+            const content = await file.text();
+            const parsedTemplate = normalizeTemplate(JSON.parse(content));
+
+            if (!Array.isArray((parsedTemplate as { panels?: unknown[] }).panels)) {
+              designer.$message?.warning?.('选中的文件不是有效的模板文件');
+              return;
+            }
+
+            const templateItem: DesignerTemplateItem = {
+              tempId: `imported:${file.name}`,
+              name: buildImportedTemplateName(file.name),
+              desc: '导入模板',
+              template: parsedTemplate,
+              testData: designer.printDataVar,
+            };
+
+            const importedTemplates = mergeTemplateList(loadImportedTemplates(), [templateItem]);
+            saveImportedTemplates(importedTemplates);
+            designer.templateList = mergeTemplateList(designer.templateList, importedTemplates);
+
+            if (typeof designer.applyTemplateItem === 'function') {
+              await designer.applyTemplateItem(templateItem);
+            } else if (originalOnTemplateFileSelected) {
+              await originalOnTemplateFileSelected(event);
+            }
+
+            designer.$message?.success?.('模板导入成功');
+          } catch (error) {
+            designer.$message?.error?.(`模板导入失败: ${String(error)}`);
+          } finally {
+            if (input) {
+              input.value = '';
+            }
+          }
+        };
+
+        designer.templateList = mergeTemplateList(designer.templateList, loadImportedTemplates());
+        importPatched = true;
+      }
+
+      onMounted(() => {
+        nextTick(() => {
+          patchTemplateImport();
         });
-      },
+      });
+
+      expose({ getDesigner, previewTemp, saveTemp });
+
+      return {
+        designerRef,
+        handleSave,
+        normalizedPrintData,
+        normalizedTemplate,
+      };
     },
   });
 </script>
 
 <style lang="scss">
-  body,
-  html {
-    padding: 0;
-    margin: 0;
-    height: 100%;
-    box-sizing: border-box;
-  }
-  .kr-designer {
-    font-family: Avenir, Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    color: #2c3e50;
+  .print-designer-shell {
     width: 100%;
     height: 100%;
-    text-align: left;
-    display: flex;
-    flex-direction: row;
-    .kr-designer-view {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    .kr-designer-tool {
-      width: 400px;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      .a-scrollbar__wrap {
-        overflow: auto;
-      }
-      &_con {
-        flex: 1;
-        height: 100%;
-        width: 100%;
-        overflow: hidden;
-      }
-      &_bar {
-        padding: 10px;
-        text-align: center;
-      }
-    }
   }
 
-  .kr-form {
-    .a-form-item--mini.a-form-item {
-      margin-bottom: 10px;
-    }
-    .min-input {
-      width: 100px;
-    }
-    .unit-text {
-      font-size: 12px;
-      color: #999999;
-      margin-left: 5px;
-    }
-  }
-
-  .kr-collapse {
-    color: #555555;
-    width: 400px;
-
-    .a-collapse-item__header {
-      box-sizing: border-box;
-      padding-left: 10px;
-    }
-
-    .a-collapse-item__content {
-      box-sizing: border-box;
-      padding: 10px;
-    }
+  .print-designer-shell :deep(.designer-page) {
+    height: 100%;
   }
 </style>

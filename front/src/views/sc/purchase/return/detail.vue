@@ -138,22 +138,25 @@
     </a-modal>
     <!-- 采购收货单查看窗口 -->
     <receive-sheet-detail :id="formData.receiveSheetId" ref="viewReceiveSheetDetailDialog" />
+    <order-print-dialog />
   </div>
 </template>
 <script>
 import {defineComponent} from 'vue';
 import ReceiveSheetDetail from '@/views/sc/purchase/receive/detail.vue';
 import * as api from '@/api/sc/purchase/return';
-import {printMix} from '@/mixins/print';
+import {printMix} from '@/mixins/print.ts';
 import {add, getNumber, isEmpty, isFloatGeZero, mul} from '@/utils/utils';
 import {PURCHASE_RETURN_STATUS} from '@/enums/biz/purchaseReturnStatus';
 import {PRINT_TYPE} from '@/enums/biz/printType';
 import OrderTimeLine from '@/components/OrderTimeLine';
+import PrintDialog from '/@/components/PrintDialog';
 
 export default defineComponent({
     components: {
       ReceiveSheetDetail,
       OrderTimeLine,
+      OrderPrintDialog: PrintDialog,
     },
     mixins: [printMix],
     props: {
@@ -161,15 +164,6 @@ export default defineComponent({
         type: String,
         required: true,
       },
-    },
-    setup() {
-      return {
-        isEmpty,
-        isFloatGeZero,
-        getNumber,
-        mul,
-        PURCHASE_RETURN_STATUS,
-      };
     },
     setup() {
       return {
@@ -338,16 +332,14 @@ export default defineComponent({
         this.formData.giftNum = giftNum;
         this.formData.totalAmount = totalAmount;
       },
-      print() {
+      async print() {
         this.loading = true;
-        api
-          .print(this.id)
-          .then((res) => {
-            this.lodopPreview(PRINT_TYPE.PURCHASE_RETURN.code, res);
-          })
-          .finally(() => {
-            this.loading = false;
-          });
+        try {
+          const res = await api.print(this.id);
+          await this.vgPrintPreview(PRINT_TYPE.PURCHASE_RETURN.code, res);
+        } finally {
+          this.loading = false;
+        }
       },
     },
   });

@@ -83,6 +83,9 @@ public class PrintTemplateServiceImpl extends
 
     PrintTemplate data = new PrintTemplate();
     data.setName(vo.getName());
+    data.setLang(vo.getLang());
+    data.setBizType(vo.getBizType());
+    data.setVersion(vo.getVersion());
 
     getBaseMapper().insert(data);
 
@@ -106,7 +109,11 @@ public class PrintTemplateServiceImpl extends
     }
 
     Wrapper<PrintTemplate> updateWrapper = Wrappers.lambdaUpdate(PrintTemplate.class)
-        .eq(PrintTemplate::getId, vo.getId()).set(PrintTemplate::getName, vo.getName());
+        .eq(PrintTemplate::getId, vo.getId())
+        .set(PrintTemplate::getName, vo.getName())
+        .set(PrintTemplate::getLang, vo.getLang())
+        .set(PrintTemplate::getBizType, vo.getBizType())
+        .set(PrintTemplate::getVersion, vo.getVersion());
 
     getBaseMapper().update(updateWrapper);
   }

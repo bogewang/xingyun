@@ -135,21 +135,24 @@
     <!-- 销售订单查看窗口 -->
     <sale-order-detail :id="formData.saleOrderId" ref="viewSaleOrderDetailDialog" />
   </a-modal>
+  <order-print-dialog />
 </template>
 <script>
 import {defineComponent} from 'vue';
 import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
 import * as api from '@/api/sc/sale/out';
-import {printMix} from '@/mixins/print';
+import {printMix} from '@/mixins/print.ts';
 import {add, getNumber, isEmpty, isFloatGeZero, mul} from '@/utils/utils';
 import {SALE_OUT_SHEET_STATUS} from '@/enums/biz/saleOutSheetStatus';
 import {PRINT_TYPE} from '@/enums/biz/printType';
 import OrderTimeLine from '@/components/OrderTimeLine';
+import PrintDialog from '/@/components/PrintDialog';
 
 export default defineComponent({
     components: {
       SaleOrderDetail,
       OrderTimeLine,
+      OrderPrintDialog: PrintDialog,
     },
     mixins: [printMix],
     props: {
@@ -157,15 +160,6 @@ export default defineComponent({
         type: String,
         required: true,
       },
-    },
-    setup() {
-      return {
-        isEmpty,
-        isFloatGeZero,
-        getNumber,
-        mul,
-        SALE_OUT_SHEET_STATUS,
-      };
     },
     setup() {
       return {
@@ -337,16 +331,14 @@ export default defineComponent({
         this.formData.giftNum = giftNum;
         this.formData.totalAmount = totalAmount;
       },
-      print() {
+      async print() {
         this.loading = true;
-        api
-          .print(this.id)
-          .then((res) => {
-            this.lodopPreview(PRINT_TYPE.SALE_OUT.code, res);
-          })
-          .finally(() => {
-            this.loading = false;
-          });
+        try {
+          const res = await api.print(this.id);
+          await this.vgPrintPreview(PRINT_TYPE.SALE_OUT.code, res);
+        } finally {
+          this.loading = false;
+        }
       },
     },
   });

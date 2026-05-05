@@ -32,9 +32,9 @@ export interface PrintSaleOrderBo {
    */
   createBy: string;
   /**
-   * 创建时间
+   * 送货日期
    */
-  createTime: string;
+  deliveryDate: string;
   /**
    * 审核人
    */

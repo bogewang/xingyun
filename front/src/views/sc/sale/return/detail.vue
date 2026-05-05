@@ -135,21 +135,24 @@
     <!-- 销售出库单查看窗口 -->
     <out-sheet-detail :id="formData.outSheetId" ref="viewOutSheetDetailDialog" />
   </a-modal>
+  <order-print-dialog />
 </template>
 <script>
   import { defineComponent } from 'vue';
   import OutSheetDetail from '@/views/sc/sale/out/detail.vue';
   import * as api from '@/api/sc/sale/return';
-  import { printMix } from '@/mixins/print';
+  import { printMix } from '@/mixins/print.ts';
   import { isEmpty, isFloatGeZero, getNumber, mul, add } from '@/utils/utils';
   import { SALE_RETURN_STATUS } from '@/enums/biz/saleReturnStatus';
   import { PRINT_TYPE } from '@/enums/biz/printType';
   import OrderTimeLine from '@/components/OrderTimeLine';
+  import PrintDialog from '/@/components/PrintDialog';
 
   export default defineComponent({
     components: {
       OutSheetDetail,
       OrderTimeLine,
+      OrderPrintDialog: PrintDialog,
     },
     mixins: [printMix],
     props: {
@@ -327,16 +330,14 @@
         this.formData.giftNum = giftNum;
         this.formData.totalAmount = totalAmount;
       },
-      print() {
+      async print() {
         this.loading = true;
-        api
-          .print(this.id)
-          .then((res) => {
-            this.lodopPreview(PRINT_TYPE.SALE_RETURN.code, res);
-          })
-          .finally(() => {
-            this.loading = false;
-          });
+        try {
+          const res = await api.print(this.id);
+          await this.vgPrintPreview(PRINT_TYPE.SALE_RETURN.code, res);
+        } finally {
+          this.loading = false;
+        }
       },
     },
   });

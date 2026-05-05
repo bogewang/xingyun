@@ -14,8 +14,8 @@ import { PageWrapper } from '/@/components/Page';
 import { TableAction } from '/@/components/Table';
 import componentSetting from '/@/settings/componentSetting';
 import { defHttp } from '@/utils/http/axios';
-import PrintDesigner, { lodop } from '@/components/PrintDesigner';
-import printDesignerInstall from '@/components/PrintDesigner/install.js';
+import { createConfirm } from '@/hooks/web/msg';
+import PrintDesigner, { printRuntimeApi } from '@/components/PrintDesigner';
 import bpmApproveInstall from '@/components/BpmApprove';
 
 export async function registerGlobComp(app: App) {
@@ -23,7 +23,6 @@ export async function registerGlobComp(app: App) {
     .use(Antd)
     .use(VxeUI)
     .use(VXETable)
-    .use(printDesignerInstall)
     .component('JForm', JForm)
     .component('JFormItem', JFormItem)
     .component('JBorder', JBorder)
@@ -38,7 +37,6 @@ export async function registerGlobComp(app: App) {
   VxeUI.use(VxeUIPluginRenderAntd);
   VXETable.setup(componentSetting.vxeTable);
   VXETable.renderer.add('NotData', {
-    // 空内容模板
     renderEmpty(renderOpts) {
       const { attrs, props } = renderOpts;
       return [
@@ -51,7 +49,12 @@ export async function registerGlobComp(app: App) {
   });
 
   app.config.globalProperties.$defHttp = defHttp;
+  app.config.globalProperties.$confirm = (message: string, title = '提示信息') => {
+    return createConfirm(message, title)
+      .then(() => true)
+      .catch(() => false);
+  };
   app.config.globalProperties.$vh =
     (document.documentElement.clientHeight || document.body.clientHeight) / 100;
-  app.config.globalProperties.$lodop = lodop;
+  app.config.globalProperties.$printRuntimeApi = printRuntimeApi;
 }
