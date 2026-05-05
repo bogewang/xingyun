@@ -2,7 +2,7 @@
   <Preview
     ref="previewRef"
     :show-title="state.enableTemplateSwitch"
-    dialog-title="打印预览"
+    :dialog-title="dialogTitle"
     v-model:modalShow="modalShow"
     default-lang="cn"
     :printerList="printers"
@@ -41,16 +41,38 @@
   import 'vg-print/style.css';
   import * as api from '@/api/base-data/print-template';
   import { createError } from '@/hooks/web/msg';
-  import { buildPrintPayload, normalizeTemplate } from '@/components/PrintDesigner/src/printUtils';
+  import {
+    buildPrintPayload,
+    normalizeTemplate,
+    type PrintTemplateJson,
+  } from '@/components/PrintDesigner/src/printUtils';
   import { closePrintDialog, usePrintDialogState } from './printDialog';
+
+  const PREVIEW_WIDTH = '80%';
 
   type PrinterOption = {
     label: string;
     name: string;
   };
-  const previewRef = ref<any>(null);
+
+  type PreviewExpose = {
+    show: (
+      template: unknown,
+      data: unknown[],
+      options?: {
+        width?: string | number;
+        showTitle?: boolean;
+      },
+    ) => void;
+  };
+
+  type PrinterSource = Partial<PrinterOption>;
+
+  const previewRef = ref<PreviewExpose>();
   const state = usePrintDialogState();
   const templateOptions = computed(() => state.templateList || []);
+  const dialogTitle = computed(() => state.title || '打印预览');
+
   // 弹窗显示控制
   const modalShow = computed({
     get: () => state.open,
@@ -63,9 +85,9 @@
   const printers = ref<PrinterOption[]>([]);
   const printer = ref('');
   const selectedTemplateId = ref('');
-  const currentTemplateJson = ref(state.templateJson);
+  const currentTemplateJson = ref<PrintTemplateJson>(normalizeTemplate(state.templateJson));
   const templateLoading = ref(false);
-  const templateCache = new Map<string, unknown>();
+  const templateCache = new Map<string, PrintTemplateJson>();
   // 打印份数
   // const printCount = ref(1);
 
@@ -75,26 +97,54 @@
   // 2) data: 打印数据（对象或数组）
   // 3) width: 弹窗宽度；支持百分比字符串（如 '80%'）或数字（如 980，单位 px）
 
-  const templateInstance = computed<any>(() =>
+  const templateInstance = computed(() =>
     createTemplate(normalizeTemplate(currentTemplateJson.value)),
   );
   const currentPrintData = computed(() => buildPrintPayload(state.printData, 1));
 
   /**
-   * 加载打印机列表并设置默认打印机
+   * 缓存已加载的模板配置，预览弹窗内切换模板时避免重复请求。
+   */
+  function cacheTemplate(templateId: string, templateJson: unknown) {
+    if (!templateId) {
+      return;
+    }
+
+    templateCache.set(templateId, normalizeTemplate(templateJson));
+  }
+
+  /**
+   * 重置当前预览弹窗的模板状态。
+   *
+   * 每次打开或刷新预览时，以入口传入的模板作为初始模板，
+   * 并预先写入缓存，保证下拉选中的模板与预览内容一致。
+   */
+  function resetTemplateState() {
+    templateCache.clear();
+    currentTemplateJson.value = normalizeTemplate(state.templateJson);
+    cacheTemplate(state.templateId, state.templateJson);
+    selectedTemplateId.value = state.templateId || state.templateList?.[0]?.id || '';
+  }
+
+  /**
+   * 加载打印机列表并设置默认打印机。
    */
   async function loadPrinters() {
     try {
       await connect();
 
       const printerList = await refreshPrinterList();
-      printers.value = (printerList || []).map((item: { name?: string; label?: string }) => ({
+      const normalizedPrinterList = Array.isArray(printerList)
+        ? (printerList as PrinterSource[])
+        : [];
+
+      printers.value = normalizedPrinterList.map((item) => ({
         label: item.label || item.name || '',
         name: item.name || '',
       }));
 
-      if (!printer.value && printerList.length > 0) {
-        printer.value = printerList[0].name;
+      if (!printer.value && normalizedPrinterList.length > 0) {
+        printer.value = normalizedPrinterList[0].name || '';
       }
     } catch {
       printers.value = [];
@@ -102,7 +152,7 @@
   }
 
   /**
-   * 显示打印预览
+   * 根据当前模板与打印数据刷新预览内容。
    */
   async function showPreview() {
     if (!state.open) {
@@ -111,11 +161,17 @@
 
     await nextTick();
     previewRef.value?.show(templateInstance.value, currentPrintData.value, {
-      width: '80%',
+      width: PREVIEW_WIDTH,
       showTitle: state.enableTemplateSwitch,
     });
   }
 
+  /**
+   * 按模板 ID 加载模板配置。
+   *
+   * 优先使用弹窗内缓存；缓存未命中时请求后端设置接口，
+   * 成功后更新当前模板 JSON，供 `showPreview` 重新渲染。
+   */
   async function loadTemplateById(templateId: string) {
     if (!templateId) {
       createError('请选择打印模板！');
@@ -135,14 +191,23 @@
         return false;
       }
 
-      templateCache.set(templateId, setting.templateJson);
-      currentTemplateJson.value = setting.templateJson;
+      const templateJson = normalizeTemplate(setting.templateJson);
+      templateCache.set(templateId, templateJson);
+      currentTemplateJson.value = templateJson;
       return true;
+    } catch {
+      createError('加载打印模板失败！');
+      return false;
     } finally {
       templateLoading.value = false;
     }
   }
 
+  /**
+   * 处理预览弹窗内的模板切换。
+   *
+   * 模板加载成功后立即刷新预览，保持下拉选择和预览画面同步。
+   */
   async function handleTemplateChange(templateId: string) {
     const loaded = await loadTemplateById(templateId);
     if (loaded) {
@@ -152,21 +217,17 @@
 
   watch(
     () => [state.open, state.frameKey] as const,
-    async ([open, frameKey], [prevOpen, prevFrameKey]) => {
+    async ([open, frameKey], previousValue) => {
       if (!open) {
         return;
       }
 
+      const [prevOpen, prevFrameKey] = previousValue || [false, state.frameKey];
       const openedNow = !prevOpen;
       const refreshedWhileOpen = prevOpen && frameKey !== prevFrameKey;
 
       if (openedNow || refreshedWhileOpen) {
-        templateCache.clear();
-        currentTemplateJson.value = state.templateJson;
-        if (state.templateId) {
-          templateCache.set(state.templateId, state.templateJson);
-        }
-        selectedTemplateId.value = state.templateId || state.templateList?.[0]?.id || '';
+        resetTemplateState();
       }
 
       if (openedNow || refreshedWhileOpen) {

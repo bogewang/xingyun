@@ -36,10 +36,16 @@
     testData?: unknown[] | Record<string, unknown>;
   };
 
+  /**
+   * 根据导入文件名生成模板列表中的显示名称。
+   */
   function buildImportedTemplateName(fileName: string) {
     return fileName.replace(/\.json$/i, '') || '导入模板';
   }
 
+  /**
+   * 从浏览器本地缓存读取用户导入过的模板。
+   */
   function loadImportedTemplates(): DesignerTemplateItem[] {
     try {
       const raw = window.localStorage.getItem(IMPORTED_TEMPLATE_STORAGE_KEY);
@@ -54,6 +60,9 @@
     }
   }
 
+  /**
+   * 将导入模板保存到浏览器本地缓存。
+   */
   function saveImportedTemplates(templates: DesignerTemplateItem[]) {
     try {
       window.localStorage.setItem(IMPORTED_TEMPLATE_STORAGE_KEY, JSON.stringify(templates));
@@ -62,6 +71,11 @@
     }
   }
 
+  /**
+   * 合并设计器内置模板与本地导入模板。
+   *
+   * 以 `tempId` 去重，保证用户导入模板在刷新后仍能出现在模板列表中。
+   */
   function mergeTemplateList(
     currentList: DesignerTemplateItem[] = [],
     importedList: DesignerTemplateItem[] = [],
@@ -104,22 +118,40 @@
       const normalizedTemplate = computed(() => normalizeTemplate(props.tempValue));
       const normalizedPrintData = computed(() => normalizePrintData(props.demoData));
 
+      /**
+       * 接收设计器保存事件，并向业务页面输出规范化模板。
+       */
       function handleSave(payload?: SavePayload) {
         emit('save', payload?.template || createEmptyTemplate());
       }
 
+      /**
+       * 触发设计器保存动作，供父组件通过组件实例调用。
+       */
       function saveTemp() {
         designerRef.value?.save();
       }
 
+      /**
+       * 触发设计器内置预览动作，使用当前示例数据查看模板效果。
+       */
       function previewTemp() {
         designerRef.value?.preView();
       }
 
+      /**
+       * 返回底层设计器实例，便于业务侧按需扩展调用。
+       */
       function getDesigner() {
         return designerRef.value;
       }
 
+      /**
+       * 增强设计器的本地模板导入能力。
+       *
+       * vg-print 默认导入流程不会持久化到项目业务列表，这里拦截上传选择、
+       * 解析 JSON 模板、写入本地缓存，并把导入模板合并回设计器模板列表。
+       */
       function patchTemplateImport() {
         const designer = designerRef.value;
 
