@@ -3,6 +3,7 @@ package com.lframework.xingyun.basedata.service.print;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.service.BaseMpService;
 import com.lframework.xingyun.basedata.entity.PrintTemplate;
+import com.lframework.xingyun.basedata.vo.print.CopyPrintTemplateVo;
 import com.lframework.xingyun.basedata.vo.print.CreatePrintTemplateVo;
 import com.lframework.xingyun.basedata.vo.print.QueryPrintTemplateVo;
 import com.lframework.xingyun.basedata.vo.print.UpdatePrintTemplateDemoDataVo;
@@ -49,6 +50,14 @@ public interface PrintTemplateService extends BaseMpService<PrintTemplate> {
    * @return
    */
   Integer create(CreatePrintTemplateVo vo);
+
+  /**
+   * 复制
+   *
+   * @param vo
+   * @return
+   */
+  Integer copy(CopyPrintTemplateVo vo);
 
   /**
    * 修改

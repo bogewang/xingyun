@@ -3,6 +3,7 @@ import { PageResult } from '@/api/model/pageResult';
 import { ContentTypeEnum } from '@/enums/httpEnum';
 import { UpdatePrintTemplateVo } from '@/api/base-data/print-template/model/updatePrintTemplateVo';
 import { CreatePrintTemplateVo } from '@/api/base-data/print-template/model/createPrintTemplateVo';
+import { CopyPrintTemplateVo } from '@/api/base-data/print-template/model/copyPrintTemplateVo';
 import { GetPrintTemplateBo } from '@/api/base-data/print-template/model/getPrintTemplateBo';
 import { QueryPrintTemplateVo } from '@/api/base-data/print-template/model/queryPrintTemplateVo';
 import { QueryPrintTemplateBo } from '@/api/base-data/print-template/model/queryPrintTemplateBo';
@@ -55,6 +56,23 @@ export function create(data: CreatePrintTemplateVo): Promise<void> {
   return defHttp.post<void>(
     {
       url: baseUrl,
+      data,
+    },
+    {
+      contentType: ContentTypeEnum.FORM_URLENCODED,
+      region,
+    },
+  );
+}
+
+/**
+ * 复制
+ * @param data
+ */
+export function copy(data: CopyPrintTemplateVo): Promise<string> {
+  return defHttp.post<string>(
+    {
+      url: baseUrl + '/copy',
       data,
     },
     {

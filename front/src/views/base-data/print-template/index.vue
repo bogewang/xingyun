@@ -64,6 +64,9 @@
     <!-- 修改窗口 -->
     <modify :id="id" ref="updateDialog" @confirm="search" />
 
+    <!-- 复制窗口 -->
+    <copy-print-template :source="copySource" ref="copyDialog" @confirm="search" />
+
     <!-- 设置窗口 -->
     <setting :id="id" ref="settingDialog" />
 
@@ -84,6 +87,7 @@
   import { h, defineComponent } from 'vue';
   import Add from './add.vue';
   import Modify from './modify.vue';
+  import CopyPrintTemplate from './copy.vue';
   import Setting from './setting.vue';
   import * as api from '@/api/base-data/print-template';
   import {
@@ -103,6 +107,7 @@
     components: {
       Add,
       Modify,
+      CopyPrintTemplate,
       Setting,
       DemoData,
       BatchHandler,
@@ -123,6 +128,7 @@
         // 当前行数据
         id: '',
         ids: [],
+        copySource: {},
         // 查询列表的查询条件
         searchFormData: {},
         batchHandleDatas: [],
@@ -225,6 +231,14 @@
             onClick: () => {
               this.id = row.id;
               this.$nextTick(() => this.$refs.updateDialog.openDialog());
+            },
+          },
+          {
+            permission: ['base-data:print-template:add'],
+            label: '复制',
+            onClick: () => {
+              this.copySource = row;
+              this.$nextTick(() => this.$refs.copyDialog.openDialog());
             },
           },
           {

@@ -8,4 +8,12 @@ import java.util.List;
 public interface PrintTemplateCompService extends BaseMpService<PrintTemplateComp> {
 
     List<String> getCompJsonByTemplateId(Integer templateId);
+
+    /**
+     * 复制打印组件
+     * 
+     * @param sourceTemplateId
+     * @param targetTemplateId
+     */
+    void copy(Integer sourceTemplateId, Integer targetTemplateId);
 }

@@ -17,6 +17,7 @@ import com.lframework.xingyun.basedata.entity.PrintTemplate;
 import com.lframework.xingyun.basedata.entity.PrintTemplateComp;
 import com.lframework.xingyun.basedata.service.print.PrintTemplateCompService;
 import com.lframework.xingyun.basedata.service.print.PrintTemplateService;
+import com.lframework.xingyun.basedata.vo.print.CopyPrintTemplateVo;
 import com.lframework.xingyun.basedata.vo.print.CreatePrintTemplateVo;
 import com.lframework.xingyun.basedata.vo.print.QueryPrintTemplateVo;
 import com.lframework.xingyun.basedata.vo.print.UpdatePrintTemplateDemoDataVo;
@@ -122,6 +123,19 @@ public class PrintTemplateController extends DefaultBaseController {
     printTemplateService.create(vo);
 
     return InvokeResultBuilder.success();
+  }
+
+  /**
+   * 复制
+   */
+  @ApiOperation("复制")
+  @HasPermission({"base-data:print-template:add"})
+  @PostMapping("/copy")
+  public InvokeResult<Integer> copy(@Valid CopyPrintTemplateVo vo) {
+
+    Integer id = printTemplateService.copy(vo);
+
+    return InvokeResultBuilder.success(id);
   }
 
   /**

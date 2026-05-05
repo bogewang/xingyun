@@ -9,12 +9,14 @@ import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.utils.PageHelperUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.starter.web.core.utils.IdUtil;
 import com.lframework.xingyun.basedata.entity.PrintTemplate;
 import com.lframework.xingyun.basedata.entity.PrintTemplateComp;
 import com.lframework.xingyun.basedata.enums.BaseDataOpLogType;
 import com.lframework.xingyun.basedata.mappers.PrintTemplateMapper;
 import com.lframework.xingyun.basedata.service.print.PrintTemplateCompService;
 import com.lframework.xingyun.basedata.service.print.PrintTemplateService;
+import com.lframework.xingyun.basedata.vo.print.CopyPrintTemplateVo;
 import com.lframework.xingyun.basedata.vo.print.CreatePrintTemplateVo;
 import com.lframework.xingyun.basedata.vo.print.QueryPrintTemplateVo;
 import com.lframework.xingyun.basedata.vo.print.UpdatePrintTemplateDemoDataVo;
@@ -57,7 +59,7 @@ public class PrintTemplateServiceImpl extends
     return getById(id);
   }
 
-  @OpLog(type = BaseDataOpLogType.class, name = "删除打印模板，ID：{}", params = {"#id"})
+  @OpLog(type = BaseDataOpLogType.class, name = "删除打印模板，ID：{}", params = { "#id" })
   @Transactional(rollbackFor = Exception.class)
   @Override
   public void deleteById(Integer id) {
@@ -71,7 +73,7 @@ public class PrintTemplateServiceImpl extends
     getBaseMapper().deleteById(id);
   }
 
-  @OpLog(type = BaseDataOpLogType.class, name = "新增打印模板，名称：{}", params = {"#vo.name"})
+  @OpLog(type = BaseDataOpLogType.class, name = "新增打印模板，名称：{}", params = { "#vo.name" })
   @Transactional(rollbackFor = Exception.class)
   @Override
   public Integer create(CreatePrintTemplateVo vo) {
@@ -92,8 +94,39 @@ public class PrintTemplateServiceImpl extends
     return data.getId();
   }
 
+  @OpLog(type = BaseDataOpLogType.class, name = "复制打印模板，来源ID：{}，新名称：{}", params = {
+      "#vo.sourceId", "#vo.name" })
+  @Transactional(rollbackFor = Exception.class)
+  @Override
+  public Integer copy(CopyPrintTemplateVo vo) {
+    PrintTemplate source = getById(vo.getSourceId());
+    if (source == null) {
+      throw new DefaultClientException("来源打印模板不存在！");
+    }
+
+    Wrapper<PrintTemplate> checkNameWrapper = Wrappers.lambdaQuery(PrintTemplate.class)
+        .eq(PrintTemplate::getName, vo.getName());
+    if (getBaseMapper().selectCount(checkNameWrapper) > 0) {
+      throw new DefaultClientException("名称重复，请重新输入！");
+    }
+
+    PrintTemplate data = new PrintTemplate();
+    data.setName(vo.getName());
+    data.setLang(source.getLang());
+    data.setBizType(vo.getBizType());
+    data.setVersion(source.getVersion());
+    data.setTemplateJson(source.getTemplateJson());
+    data.setDemoData(source.getDemoData());
+
+    getBaseMapper().insert(data);
+
+    printTemplateCompService.copy(source.getId(), data.getId());
+
+    return data.getId();
+  }
+
   @OpLog(type = BaseDataOpLogType.class, name = "修改打印模板，ID：{}，名称：{}", params = {
-      "#vo.id", "#vo.name"})
+      "#vo.id", "#vo.name" })
   @Transactional(rollbackFor = Exception.class)
   @Override
   public void update(UpdatePrintTemplateVo vo) {
@@ -119,7 +152,7 @@ public class PrintTemplateServiceImpl extends
   }
 
   @OpLog(type = BaseDataOpLogType.class, name = "修改打印模板设置，ID：{}", params = {
-      "#vo.id"}, autoSaveParams = true)
+      "#vo.id" }, autoSaveParams = true)
   @Transactional(rollbackFor = Exception.class)
   @Override
   public void updateSetting(UpdatePrintTemplateSettingVo vo) {
@@ -136,7 +169,7 @@ public class PrintTemplateServiceImpl extends
   }
 
   @OpLog(type = BaseDataOpLogType.class, name = "修改打印模板示例数据，ID：{}", params = {
-      "#vo.id"}, autoSaveParams = true)
+      "#vo.id" }, autoSaveParams = true)
   @Transactional(rollbackFor = Exception.class)
   @Override
   public void updateDemoData(UpdatePrintTemplateDemoDataVo vo) {
