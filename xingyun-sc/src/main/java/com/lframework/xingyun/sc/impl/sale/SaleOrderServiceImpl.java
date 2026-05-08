@@ -707,19 +707,28 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
       List<String> productIds = details.stream()
               .map(SaleOrderDetail::getProductId)
               .collect(Collectors.toList());
+      // 过滤掉某些不需要汇总的商品，比如调料， todo可以配置在数据库中
       Map<String, Product> productMap = productService.getBaseMapper().selectBatchIds(productIds).stream()
               .filter(product -> !noNeedPrint.contains(product.getCategoryId()))
               .collect(Collectors.toMap(Product::getId, r -> r, (v1, v2) -> v2));
       // 组装成打印数据；
-      List<PrintSaleTagBo> collect = details.stream()
+      // 按商品汇总
+      Map<String, List<SaleOrderDetail>> map = details.stream()
               .filter(detail -> productMap.containsKey(detail.getProductId()))
-              .map(detail -> {
+              .collect(Collectors.groupingBy(SaleOrderDetail::getProductId));
+
+      List<PrintSaleTagBo> collect = map.keySet().stream()
+              .map(productId -> {
                 PrintSaleTagBo bo = new PrintSaleTagBo();
                 bo.setCustomerSimpleName(customer.getName());
-                bo.setProductName(productMap.get(detail.getProductId()).getName());
+
+                bo.setProductName(productMap.get(productId).getName());
+                List<SaleOrderDetail> orderDetails = map.get(productId);
+                BigDecimal orderNum = orderDetails.stream().map(SaleOrderDetail::getOrderNum).reduce(BigDecimal.ZERO, BigDecimal::add);
                 // 保留1位小数
-                String format = detail.getOrderNum().setScale(1, RoundingMode.HALF_UP).toString();
-                bo.setOrderNum(String.format("%s%s", format, productMap.get(detail.getProductId()).getUnit()));
+                String format = orderNum.setScale(1, RoundingMode.HALF_UP).toString();
+                bo.setOrderNum(String.format("%s%s", format, productMap.get(productId).getUnit()));
+                // todo 改为订单日期
                 bo.setOrderDate(DateUtil.formatDateTime(item.getCreateTime(), "yyyy-MM-dd"));
 
                 return bo;
