@@ -35,10 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -551,6 +548,17 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         }
         Wrapper<Product> checkWrapper = Wrappers.lambdaQuery(Product.class)
                 .in(Product::getName, productNames)
+                .eq(Product::getAvailable, Boolean.TRUE);
+        return getBaseMapper().selectList(checkWrapper);
+    }
+
+    @Override
+    public List<Product> selectByIds(List<String> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return CollectionUtil.emptyList();
+        }
+        Wrapper<Product> checkWrapper = Wrappers.lambdaQuery(Product.class)
+                .in(Product::getId, ids)
                 .eq(Product::getAvailable, Boolean.TRUE);
         return getBaseMapper().selectList(checkWrapper);
     }

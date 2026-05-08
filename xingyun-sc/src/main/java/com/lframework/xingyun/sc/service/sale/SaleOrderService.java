@@ -2,6 +2,7 @@ package com.lframework.xingyun.sc.service.sale;
 
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.service.BaseMpService;
+import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
 import com.lframework.xingyun.sc.dto.sale.SaleOrderFullDto;
 import com.lframework.xingyun.sc.dto.sale.SaleOrderWithOutDto;
 import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
@@ -9,6 +10,7 @@ import com.lframework.xingyun.sc.entity.SaleOrder;
 import com.lframework.xingyun.sc.excel.sale.SaleOrderImportModel;
 import com.lframework.xingyun.sc.vo.sale.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 public interface SaleOrderService extends BaseMpService<SaleOrder> {
@@ -141,4 +143,5 @@ public interface SaleOrderService extends BaseMpService<SaleOrder> {
 
     List<SaleProductVo> checkImport(List<SaleOrderImportModel> list);
 
+    List<PrintSaleTagBo> tagPrint(@Valid QuerySaleOrderVo vo);
 }

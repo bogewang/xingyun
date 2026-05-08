@@ -119,6 +119,12 @@
                 @click="exportList"
                 >导出</a-button
               >
+              <a-button
+                v-permission="['sale:order:query']"
+                :icon="h(DownloadOutlined)"
+                @click="tagPrint"
+              >标签打印</a-button
+              >
             </a-space>
           </template>
 
@@ -139,11 +145,8 @@
         ref="batchApprovePassHandlerDialog"
         :table-column="[
           { field: 'code', title: '单据号', width: 180 },
-          // { field: 'scCode', title: '仓库编号', width: 100 },
-          // { field: 'scName', title: '仓库名称', width: 120 },
           { field: 'customerCode', title: '客户编号', width: 100 },
           { field: 'customerName', title: '客户名称', width: 120 },
-          // { field: 'salerName', title: '销售员', width: 100 },
         ]"
         title="审核通过"
         :tableData="batchHandleDatas"
@@ -154,8 +157,6 @@
         ref="batchApproveRefuseHandlerDialog"
         :table-column="[
           { field: 'code', title: '单据号', width: 180 },
-          // { field: 'scCode', title: '仓库编号', width: 100 },
-          // { field: 'scName', title: '仓库名称', width: 120 },
           { field: 'customerCode', title: '客户编号', width: 100 },
           { field: 'customerName', title: '客户名称', width: 120 },
           // { field: 'salerName', title: '销售员', width: 100 },
@@ -169,11 +170,8 @@
         ref="batchDeleteHandlerDialog"
         :table-column="[
           { field: 'code', title: '单据号', width: 180 },
-          // { field: 'scCode', title: '仓库编号', width: 100 },
-          // { field: 'scName', title: '仓库名称', width: 120 },
           { field: 'customerCode', title: '客户编号', width: 100 },
           { field: 'customerName', title: '客户名称', width: 120 },
-          // { field: 'salerName', title: '销售员', width: 100 },
         ]"
         title="批量删除"
         :tableData="batchHandleDatas"
@@ -216,6 +214,7 @@
   import { PRINT_TYPE } from '@/enums/biz/printType';
   import BatchHandler from '@/components/BatchHandler';
   import PrintDialog from '/@/components/PrintDialog';
+  import {tagPrint} from "@/api/sc/sale/order";
 
   export default defineComponent({
     name: 'SaleOrder',
@@ -271,11 +270,7 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { field: 'code', title: '单据号', width: 180, sortable: true },
-          // { field: 'scCode', title: '仓库编号', width: 100 },
-          // { field: 'scName', title: '仓库名称', width: 120 },
-          // { field: 'customerCode', title: '客户编号', width: 100 },
           { field: 'customerName', title: '客户名称', width: 120 },
-          // { field: 'salerName', title: '销售员', width: 100 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
           // { field: 'totalGiftNum', title: '赠品数量', align: 'right', width: 120 },
@@ -456,6 +451,16 @@
           // 将res组装成模板定义和打印数据的格式，然后调用打印预览组件进行预览
           const printData = this.buildPrintData(res);
           await this.vgPrintPreview(PRINT_TYPE.SALE_ORDER.code, printData);
+        } finally {
+          this.loading = false;
+        }
+      },
+      async tagPrint() {
+        this.loading = true;
+        try {
+          const res = await api.tagPrint(this.buildQueryParams({}, {}));
+          // 将res组装成模板定义和打印数据的格式，然后调用打印预览组件进行预览
+          await this.vgPrintPreview(PRINT_TYPE.SALE_TAG.code, res);
         } finally {
           this.loading = false;
         }

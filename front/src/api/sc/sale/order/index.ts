@@ -14,6 +14,7 @@ import { QuerySaleOrderWithOutBo } from '@/api/sc/sale/order/model/querySaleOrde
 import { QuerySaleOrderWithOutVo } from '@/api/sc/sale/order/model/querySaleOrderWithOutVo';
 import { QuerySaleProductVo } from '@/api/sc/sale/order/model/querySaleProductVo';
 import { PrintSaleOrderBo } from '@/api/sc/sale/order/model/printSaleOrderBo';
+import {PrintSaleTagBo} from "@/api/sc/sale/order/model/PrintSaleTagBo";
 
 const baseUrl = '/sale/order';
 const region = 'cloud-api';
@@ -46,6 +47,22 @@ export function query(params: QuerySaleOrderVo): Promise<PageResult<QuerySaleOrd
     },
     {
       region,
+    },
+  );
+}
+
+/**
+ * 标签打印
+ */
+export function tagPrint(params: QuerySaleOrderVo): Promise<PrintSaleTagBo[]> {
+  return defHttp.get<PrintSaleTagBo[]>(
+    {
+      url: baseUrl + '/tagPrint',
+      params,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }

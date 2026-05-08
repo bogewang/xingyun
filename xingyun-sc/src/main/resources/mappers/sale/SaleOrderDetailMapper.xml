@@ -47,7 +47,7 @@
 
     <select id="getByOrderId" resultMap="SaleOrderDetail">
         <include refid="SaleOrderDetailDto_sql"/>
-        WHERE d.sheet_id = #{sheetId}
+        WHERE d.order_id = #{orderId}
         ORDER BY d.order_no
     </select>
 </mapper>

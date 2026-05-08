@@ -116,4 +116,11 @@ public interface ProductService extends BaseMpService<Product> {
      * @return
      */
     List<Product> selectByProductName(List<String> productNames);
+
+    /**
+     * 根据分类ID查询
+     * @param ids
+     * @return
+     */
+    List<Product> selectByIds(List<String> ids);
 }

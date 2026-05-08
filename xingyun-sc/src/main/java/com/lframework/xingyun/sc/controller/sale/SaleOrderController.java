@@ -59,7 +59,7 @@ public class SaleOrderController extends DefaultBaseController {
      */
     @ApiOperation("打印")
     @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-    @HasPermission({"sale:order:query"})
+    @HasPermission({ "sale:order:query" })
     @GetMapping("/print")
     public InvokeResult<PrintSaleOrderBo> print(@NotBlank(message = "订单ID不能为空！") String id) {
 
@@ -77,7 +77,7 @@ public class SaleOrderController extends DefaultBaseController {
      * 订单列表
      */
     @ApiOperation("订单列表")
-    @HasPermission({"sale:order:query"})
+    @HasPermission({ "sale:order:query" })
     @GetMapping("/query")
     public InvokeResult<PageResult<QuerySaleOrderBo>> query(@Valid QuerySaleOrderVo vo) {
 
@@ -95,10 +95,21 @@ public class SaleOrderController extends DefaultBaseController {
     }
 
     /**
+     * 标签打印
+     */
+    @ApiOperation("标签打印")
+    @HasPermission({ "sale:order:query" })
+    @GetMapping("/tagPrint")
+    public InvokeResult<List<PrintSaleTagBo>> tagPrint(@Valid QuerySaleOrderVo vo) {
+        List<PrintSaleTagBo> data = saleOrderService.tagPrint(vo);
+        return InvokeResultBuilder.success(data);
+    }
+
+    /**
      * 导出
      */
     @ApiOperation("导出")
-    @HasPermission({"sale:order:export"})
+    @HasPermission({ "sale:order:export" })
     @PostMapping("/export")
     public InvokeResult<Void> export(@Valid QuerySaleOrderVo vo) {
 
@@ -112,7 +123,7 @@ public class SaleOrderController extends DefaultBaseController {
      */
     @ApiOperation("根据ID查询")
     @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-    @HasPermission({"sale:order:query"})
+    @HasPermission({ "sale:order:query" })
     @GetMapping
     public InvokeResult<GetSaleOrderBo> findById(@NotBlank(message = "订单ID不能为空！") String id) {
 
@@ -128,7 +139,7 @@ public class SaleOrderController extends DefaultBaseController {
      */
     @ApiOperation("根据ID查询（出库业务）")
     @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-    @HasPermission({"sale:out:add", "sale:out:modify"})
+    @HasPermission({ "sale:out:add", "sale:out:modify" })
     @GetMapping("/out")
     public InvokeResult<SaleOrderWithOutBo> getWithOut(
             @NotBlank(message = "订单ID不能为空！") String id) {
@@ -143,7 +154,7 @@ public class SaleOrderController extends DefaultBaseController {
      * 查询列表（出库业务）
      */
     @ApiOperation("查询列表（出库业务）")
-    @HasPermission({"sale:out:add", "sale:out:modify"})
+    @HasPermission({ "sale:out:add", "sale:out:modify" })
     @GetMapping("/query/out")
     public InvokeResult<PageResult<QuerySaleOrderWithOutBo>> queryWithOut(
             @Valid QuerySaleOrderWithOutVo vo) {
@@ -165,7 +176,7 @@ public class SaleOrderController extends DefaultBaseController {
      * 加载列表（出库业务）
      */
     @ApiOperation("加载列表（出库业务）")
-    @HasPermission({"sale:out:add", "sale:out:modify"})
+    @HasPermission({ "sale:out:add", "sale:out:modify" })
     @PostMapping("/query/out/load")
     public InvokeResult<List<QuerySaleOrderWithOutBo>> getWithOut(
             @RequestBody(required = false) List<String> ids) {
@@ -183,7 +194,7 @@ public class SaleOrderController extends DefaultBaseController {
      * 创建订单
      */
     @ApiOperation("创建订单")
-    @HasPermission({"sale:order:add"})
+    @HasPermission({ "sale:order:add" })
     @PostMapping
     public InvokeResult<String> create(@RequestBody @Valid CreateSaleOrderVo vo) {
 
@@ -198,7 +209,7 @@ public class SaleOrderController extends DefaultBaseController {
      * 修改订单
      */
     @ApiOperation("修改订单")
-    @HasPermission({"sale:order:modify"})
+    @HasPermission({ "sale:order:modify" })
     @PutMapping
     public InvokeResult<Void> update(@RequestBody @Valid UpdateSaleOrderVo vo) {
 
@@ -213,7 +224,7 @@ public class SaleOrderController extends DefaultBaseController {
      * 审核通过订单
      */
     @ApiOperation("审核通过订单")
-    @HasPermission({"sale:order:approve"})
+    @HasPermission({ "sale:order:approve" })
     @PatchMapping("/approve/pass")
     public InvokeResult<Void> approvePass(@RequestBody @Valid ApprovePassSaleOrderVo vo) {
 
@@ -226,7 +237,7 @@ public class SaleOrderController extends DefaultBaseController {
      * 直接审核通过订单
      */
     @ApiOperation("直接审核通过订单")
-    @HasPermission({"sale:order:approve"})
+    @HasPermission({ "sale:order:approve" })
     @PostMapping("/approve/pass/direct")
     public InvokeResult<Void> directApprovePass(@RequestBody @Valid CreateSaleOrderVo vo) {
 
@@ -241,7 +252,7 @@ public class SaleOrderController extends DefaultBaseController {
      * 审核拒绝订单
      */
     @ApiOperation("审核拒绝订单")
-    @HasPermission({"sale:order:approve"})
+    @HasPermission({ "sale:order:approve" })
     @PatchMapping("/approve/refuse")
     public InvokeResult<Void> approveRefuse(@RequestBody @Valid ApproveRefuseSaleOrderVo vo) {
 
@@ -255,7 +266,7 @@ public class SaleOrderController extends DefaultBaseController {
      */
     @ApiOperation("删除订单")
     @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-    @HasPermission({"sale:order:delete"})
+    @HasPermission({ "sale:order:delete" })
     @DeleteMapping
     public InvokeResult<Void> deleteById(@NotBlank(message = "订单ID不能为空！") String id) {
 
@@ -270,9 +281,9 @@ public class SaleOrderController extends DefaultBaseController {
     @ApiOperation("根据关键字查询可销售商品")
     @ApiImplicitParams({
             @ApiImplicitParam(value = "仓库ID", name = "scId", paramType = "query", required = true),
-            @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true)})
-    @HasPermission({"sale:order:add", "sale:order:modify", "sale:out:add", "sale:out:modify",
-            "sale:return:add", "sale:return:modify"})
+            @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true) })
+    @HasPermission({ "sale:order:add", "sale:order:modify", "sale:out:add", "sale:out:modify",
+            "sale:return:add", "sale:return:modify" })
     @GetMapping("/product/search")
     public InvokeResult<List<SaleProductBo>> searchSaleProducts(
             @NotBlank(message = "仓库ID不能为空！") String scId, String condition, Boolean isReturn) {
@@ -299,8 +310,8 @@ public class SaleOrderController extends DefaultBaseController {
      * 查询商品列表
      */
     @ApiOperation("查询可销售商品列表")
-    @HasPermission({"sale:order:add", "sale:order:modify", "sale:out:add", "sale:out:modify",
-            "sale:return:add", "sale:return:modify"})
+    @HasPermission({ "sale:order:add", "sale:order:modify", "sale:out:add", "sale:out:modify",
+            "sale:return:add", "sale:return:modify" })
     @GetMapping("/product/list")
     public InvokeResult<PageResult<SaleProductBo>> querySaleProductList(
             @Valid QuerySaleProductVo vo) {
@@ -318,7 +329,7 @@ public class SaleOrderController extends DefaultBaseController {
     }
 
     @ApiOperation("下载导入模板")
-    @HasPermission({"sale:order:import"})
+    @HasPermission({ "sale:order:import" })
     @GetMapping("/import/template")
     public void downloadImportTemplate() {
         ExcelUtil.export("销售单导入模板", SaleOrderImportModel.class);
@@ -331,12 +342,13 @@ public class SaleOrderController extends DefaultBaseController {
      * @return
      */
     @ApiOperation("导入")
-    @HasPermission({"sale:order:import"})
+    @HasPermission({ "sale:order:import" })
     @PostMapping("/import")
     public InvokeResult<List<SaleProductVo>> importExcel(@NotNull(message = "请上传文件") MultipartFile file) {
         try {
 
-            List<SaleOrderImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(), SaleOrderImportModel.class);
+            List<SaleOrderImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(),
+                    SaleOrderImportModel.class);
             List<SaleProductVo> data = saleOrderService.checkImport(list);
 
             return InvokeResultBuilder.success(data);
