@@ -9,5 +9,6 @@ PRINT_TYPE.set('RETAIL_RETURN', new BaseEnumItem<number, string>(5, '零售退�
 PRINT_TYPE.set('SALE_ORDER', new BaseEnumItem<number, string>(6, '销售订单'));
 PRINT_TYPE.set('SALE_OUT', new BaseEnumItem<number, string>(7, '销售出库单'));
 PRINT_TYPE.set('SALE_RETURN', new BaseEnumItem<number, string>(8, '销售退货单'));
+PRINT_TYPE.set('SALE_TAG', new BaseEnumItem<number, string>(9, '销售标签'));
 
 export { PRINT_TYPE };
