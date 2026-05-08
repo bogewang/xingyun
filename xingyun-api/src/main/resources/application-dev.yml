@@ -22,8 +22,8 @@ spring:
         master:
           type: com.alibaba.druid.pool.DruidDataSource
           driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://47.103.125.229:8964/xingyun_platform?rewriteBatchedStatements=true&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false&autoReconnect=true&failOverReadOnly=false&serverTimezone=GMT%2B8
-          username: xingyun_platform
+          url: jdbc:mysql://localhost:3306/xingyun_platform?rewriteBatchedStatements=true&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false&autoReconnect=true&failOverReadOnly=false&serverTimezone=GMT%2B8
+          username: root
           password: h7ZHNYPPkP7pCC2R
           druid:
             initial-size: 10
@@ -62,26 +62,26 @@ spring:
         max-wait: -1ms
   #RabbitMQ配置
   rabbitmq:
-    addresses: 127.0.0.1:5672             # RabbitMQ集群地址列表，多个地址用逗号分隔
+    addresses: 127.0.0.1:5672 # RabbitMQ集群地址列表，多个地址用逗号分隔
     virtual-host: /
     username: guest
     password: guest
     connection-timeout: 60000 # 连接超时时间（毫秒），默认为60000毫秒（60秒）
     ssl:
-      enabled: false       # 是否启用SSL，默认为false
-      algorithm: TLSv1.2   # SSL算法，默认为TLSv1.2
+      enabled: false # 是否启用SSL，默认为false
+      algorithm: TLSv1.2 # SSL算法，默认为TLSv1.2
     publisher-confirm-type: SIMPLE # 发布确认机制
-    publisher-returns: true  # 是否开启发布返回机制，默认为false
+    publisher-returns: true # 是否开启发布返回机制，默认为false
     listener:
       type: direct
       simple:
         acknowledge-mode: AUTO # 消费者确认模式，默认为auto
         retry:
-          enabled: false       # 是否启用重试机制，默认为false
+          enabled: false # 是否启用重试机制，默认为false
       direct:
         acknowledge-mode: AUTO # 消费者确认模式，默认为auto
         retry:
-          enabled: false       # 是否启用重试机制，默认为false
+          enabled: false # 是否启用重试机制，默认为false
 
 sa-token:
   # 配置 Sa-Token 单独使用的 Redis 连接，将业务和鉴权独立
@@ -114,7 +114,7 @@ jugg:
     location: ${jugg.upload.location}
   # 若有接口放行，可补充（非必需）
   web:
-#    filter-url: /**
+    #    filter-url: /**
     filter-url: /selector/list/tenant
 mybatis:
   configuration:
