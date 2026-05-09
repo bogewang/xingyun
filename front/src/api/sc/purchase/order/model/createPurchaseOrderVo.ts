@@ -22,11 +22,6 @@ export interface CreatePurchaseOrderVo {
   orderDate: string;
 
   /**
-   * 预计到货日期
-   */
-  expectArriveDate: string;
-
-  /**
    * 商品信息
    */
   products: PurchaseProductVo[];

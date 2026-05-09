@@ -114,12 +114,6 @@
                 >批量删除</a-button
               >
               <a-button
-                v-permission="['purchase:order:import']"
-                :icon="h(CloudUploadOutlined)"
-                @click="$refs.importer.openDialog()"
-                >导入Excel</a-button
-              >
-              <a-button
                 v-permission="['purchase:order:export']"
                 :icon="h(DownloadOutlined)"
                 @click="exportList"
@@ -141,7 +135,6 @@
       <approve-refuse ref="approveRefuseDialog" @confirm="doApproveRefuse" />
     </div>
 
-    <purchase-order-importer ref="importer" @confirm="search" />
     <!-- 批量操作 -->
     <batch-handler
       ref="batchApprovePassHandlerDialog"
@@ -213,12 +206,9 @@
   import {
     isEmpty,
     formatDate,
-    getDateTimeWithMinTime,
-    getDateTimeWithMaxTime,
     buildSortPageVo,
   } from '@/utils/utils';
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
-  import PurchaseOrderImporter from '@/components/Importor/PurchaseOrderImporter.vue';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
   import BatchHandler from '@/components/BatchHandler';
 
@@ -227,7 +217,6 @@
     components: {
       Detail,
       ApproveRefuse,
-      PurchaseOrderImporter,
       StoreCenterSelector,
       SupplierSelector,
       UserSelector,
@@ -286,7 +275,6 @@
           { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
           { field: 'totalAmount', title: '采购总金额', align: 'right', width: 100 },
           { field: 'totalNum', title: '采购商品数量', align: 'right', width: 120 },
-          { field: 'expectArriveDate', title: '预计到货日期', width: 120 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
           {

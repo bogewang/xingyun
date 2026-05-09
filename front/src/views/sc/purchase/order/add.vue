@@ -8,6 +8,7 @@
       />
       <!-- 数据列表 -->
       <vxe-grid
+        id="PurchaseOrderAdd"
         ref="grid"
         resizable
         show-overflow
@@ -18,6 +19,7 @@
         :data="tableData"
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
+        :custom-config="{}"
       >
         <template #form>
           <j-border>
@@ -54,6 +56,12 @@
             >
             <a-button :icon="h(EditOutlined)" @click="batchInputPurchasePrice"
               >批量调整采购价</a-button
+            >
+            <a-button
+              v-permission="['purchase:order:import']"
+              :icon="h(CloudUploadOutlined)"
+              @click="$refs.importer.openDialog()"
+              >导入Excel</a-button
             >
           </a-space>
         </template>
@@ -103,7 +111,9 @@
 
         <!-- 采购价 列自定义内容 -->
         <template #purchasePrice_default="{ row }">
+          <span v-if="row.isGift">{{ row.purchasePrice }}</span>
           <a-input
+            v-else
             v-model:value="row.purchasePrice"
             class="number-input"
             @input="(e) => purchasePriceInput(row, e.target.value)"
@@ -140,21 +150,18 @@
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-        </j-form>
-      </j-border>
-
-      <j-border>
-        <j-form bordered label-width="140px">
-          <j-form-item label="备注" :span="24" :content-nest="false">
-            <a-textarea v-model:value.trim="formData.description" maxlength="200" />
+          <j-form-item label="备注" :span="12" :content-nest="false">
+            <a-input v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>
+
       <batch-add-product
         ref="batchAddProductDialog"
         :sc-id="formData.scId"
         @confirm="batchAddProduct"
       />
+      <purchase-order-importer ref="importer" @confirm="handleImportConfirm" />
 
       <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
         <a-space>
@@ -180,36 +187,44 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import BatchAddProduct from '@/views/sc/purchase/batch-add-product.vue';
-import Moment from 'moment';
-import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
-import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
-import UserSelector from '@/components/Selector/UserSelector.vue';
-import {DeleteOutlined, EditOutlined, NumberOutlined, PlusOutlined} from '@ant-design/icons-vue';
-import * as api from '@/api/sc/purchase/order';
-import * as configApi from '@/api/sc/purchase/config';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {
-  add,
-  formatDate,
-  getNumber,
-  isEmpty,
-  isFloat,
-  isFloatGeZero,
-  isFloatGtZero,
-  isNumberPrecision,
-  mul,
-  PATTERN_IS_FLOAT_GT_ZERO,
-  PATTERN_IS_PRICE,
-  uuid,
-} from '@/utils/utils';
-import {createConfirm, createError, createPrompt, createSuccess} from '@/hooks/web/msg';
+  import { defineComponent, h } from 'vue';
+  import BatchAddProduct from '@/views/sc/purchase/batch-add-product.vue';
+  import Moment from 'moment';
+  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
+  import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
+  import UserSelector from '@/components/Selector/UserSelector.vue';
+  import PurchaseOrderImporter from '@/components/Importor/PurchaseOrderImporter.vue';
+  import {
+    CloudUploadOutlined,
+    DeleteOutlined,
+    EditOutlined,
+    NumberOutlined,
+    PlusOutlined,
+  } from '@ant-design/icons-vue';
+  import * as api from '@/api/sc/purchase/order';
+  import * as configApi from '@/api/sc/purchase/config';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    add,
+    formatDate,
+    getNumber,
+    isEmpty,
+    isFloat,
+    isFloatGeZero,
+    isFloatGtZero,
+    isNumberPrecision,
+    mul,
+    PATTERN_IS_FLOAT_GT_ZERO,
+    PATTERN_IS_PRICE,
+    uuid,
+  } from '@/utils/utils';
+  import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddPurchaseOrder',
     components: {
       BatchAddProduct,
+      PurchaseOrderImporter,
       StoreCenterSelector,
       SupplierSelector,
       UserSelector,
@@ -222,6 +237,7 @@ export default defineComponent({
         DeleteOutlined,
         NumberOutlined,
         EditOutlined,
+        CloudUploadOutlined,
         isEmpty,
         isFloatGeZero,
         getNumber,
@@ -239,7 +255,7 @@ export default defineComponent({
           // 缩放
           zoom: false,
           // 自定义表头
-          custom: false,
+          custom: true,
           // 右侧是否显示刷新按钮
           refresh: false,
           // 自定义左侧工具栏
@@ -334,7 +350,6 @@ export default defineComponent({
           supplierId: '',
           purchaserId: '',
           orderDate: formatDate(Moment()),
-          expectArriveDate: formatDate(Moment().add(1, 'M')),
           totalNum: 0,
           totalAmount: 0,
           description: '',
@@ -362,6 +377,7 @@ export default defineComponent({
           taxCostPrice: '',
           stockNum: '',
           taxRate: '',
+          isGift: false,
           purchaseNum: '',
           purchaseAmount: '',
           description: '',
@@ -490,6 +506,13 @@ export default defineComponent({
           return;
         }
 
+        for (let i = 0; i < records.length; i++) {
+          if (records[i].isGift) {
+            createError('第' + (i + 1) + '行商品为赠品，不允许录入采购价！');
+            return;
+          }
+        }
+
         createPrompt('请输入采购价（元）', {
           inputPattern: PATTERN_IS_PRICE,
           inputErrorMessage: '采购价（元）必须是数字并且不小于0，最多允许6位小数',
@@ -510,6 +533,42 @@ export default defineComponent({
           const index = this.tableData.length - 1;
           this.handleSelectProduct(index, item);
         });
+      },
+      handleImportConfirm(res) {
+        const importData = res?.data || res?.datas || res || {};
+        if (!Array.isArray(importData) || importData.length === 0) {
+          this.tableData = [];
+          this.calcSum();
+          return;
+        }
+
+        const groupKeys = new Set(
+          importData.map((item) => {
+            return [item.scId || '', item.supplierId || '', item.purchaserId || ''].join('_');
+          }),
+        );
+
+        if (groupKeys.size > 1) {
+          createError('导入文件存在多组仓库/供应商/采购员，新增页面一次只能导入一张采购订单！');
+          return;
+        }
+
+        const first = importData[0];
+        this.formData.scId = first.scId || '';
+        this.formData.supplierId = first.supplierId || '';
+        this.formData.purchaserId = first.purchaserId || '';
+        this.formData.description = first.description || '';
+
+        this.tableData = importData.map((item) => {
+          return Object.assign(this.emptyProduct(), item, {
+            id: uuid(),
+            isFixed: false,
+            isGift: item.gift === '是',
+            description: item.detailDescription || '',
+          });
+        });
+
+        this.calcSum();
       },
       // 校验数据
       validData() {
@@ -551,9 +610,16 @@ export default defineComponent({
             return false;
           }
 
-          if (!isFloatGtZero(product.purchasePrice)) {
-            createError('第' + (i + 1) + '行商品采购价必须大于0！');
-            return false;
+          if (product.isGift) {
+            if (parseFloat(product.purchasePrice) !== 0) {
+              createError('第' + (i + 1) + '行商品采购价必须等于0！');
+              return false;
+            }
+          } else {
+            if (!isFloatGtZero(product.purchasePrice)) {
+              createError('第' + (i + 1) + '行商品采购价必须大于0！');
+              return false;
+            }
           }
 
           if (!isNumberPrecision(product.purchasePrice, 6)) {
@@ -591,7 +657,6 @@ export default defineComponent({
           supplierId: this.formData.supplierId,
           purchaserId: this.formData.purchaserId,
           orderDate: this.formData.orderDate,
-          expectArriveDate: this.formData.expectArriveDate,
           description: this.formData.description,
           products: this.tableData.map((t) => {
             return {

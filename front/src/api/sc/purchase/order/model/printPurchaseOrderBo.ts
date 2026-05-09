@@ -24,10 +24,6 @@ export interface PrintPurchaseOrderBo {
    */
   purchaserName: string;
   /**
-   * 预计到货日期
-   */
-  expectArriveDate: string;
-  /**
    * 备注
    */
   description: string;

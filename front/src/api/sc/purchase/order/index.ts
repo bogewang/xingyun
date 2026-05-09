@@ -357,8 +357,8 @@ export function downloadImportTemplate(): Promise<void> {
 /**
  * 导入
  */
-export function importExcel(data: { id: string; file: Blob }): Promise<void> {
-  return defHttp.post<void>(
+export function importExcel(data: { id?: string; file: Blob }): Promise<any[]> {
+  return defHttp.post<any[]>(
     {
       url: baseUrl + '/import',
       data,

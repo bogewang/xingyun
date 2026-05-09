@@ -12,7 +12,7 @@
 
 <script>
   import { defineComponent } from 'vue';
-  import ExcelImporter from '@/components/ExcelImporter';
+  import ExcelImporter from '@/components/ExcelImporterNew';
   import * as api from '@/api/sc/purchase/order';
 
   export default defineComponent({

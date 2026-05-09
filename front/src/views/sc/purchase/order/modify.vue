@@ -24,13 +24,6 @@
               value-format="YYYY-MM-DD"
             />
           </j-form-item>
-          <j-form-item label="预计到货日期" required>
-            <a-date-picker
-              v-model:value="formData.expectArriveDate"
-              placeholder=""
-              value-format="YYYY-MM-DD"
-            />
-          </j-form-item>
           <j-form-item label="状态">
             <span
               v-if="PURCHASE_ORDER_STATUS.APPROVE_PASS.equalsCode(formData.status)"
@@ -82,6 +75,7 @@
       </j-border>
       <!-- 数据列表 -->
       <vxe-grid
+        id="PurchaseOrderModify"
         ref="grid"
         resizable
         show-overflow
@@ -92,6 +86,7 @@
         :data="tableData"
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
+        :custom-config="{}"
       >
         <!-- 工具栏 -->
         <template #toolbar_buttons>
@@ -192,16 +187,12 @@
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-        </j-form>
-      </j-border>
-
-      <j-border>
-        <j-form bordered label-width="140px">
           <j-form-item label="备注" :span="24" :content-nest="false">
-            <a-textarea v-model:value.trim="formData.description" maxlength="200" />
+            <a-input v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>
+
       <batch-add-product
         ref="batchAddProductDialog"
         :sc-id="formData.scId"
@@ -253,10 +244,12 @@
   } from '@/utils/utils';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
+  import JFormItem from '@/components/JFormItem';
 
   export default defineComponent({
     name: 'ModifyPurchaseOrder',
     components: {
+      JFormItem,
       BatchAddProduct,
       StoreCenterSelector,
       SupplierSelector,
@@ -290,7 +283,7 @@
           // 缩放
           zoom: false,
           // 自定义表头
-          custom: false,
+          custom: true,
           // 右侧是否显示刷新按钮
           refresh: false,
           // 自定义左侧工具栏
@@ -386,7 +379,6 @@
           supplierId: '',
           purchaserId: '',
           orderDate: '',
-          expectArriveDate: '',
           totalNum: 0,
           totalAmount: 0,
           description: '',
@@ -413,7 +405,6 @@
               supplierId: res.supplierId,
               purchaserId: res.purchaserId,
               orderDate: res.orderDate,
-              expectArriveDate: res.expectArriveDate,
               description: res.description,
               status: res.status,
               createBy: res.createBy,
@@ -611,11 +602,6 @@
           return false;
         }
 
-        if (isEmpty(this.formData.expectArriveDate)) {
-          createError('预计到货日期不允许为空！');
-          return false;
-        }
-
         if (isEmpty(this.formData.orderDate)) {
           createError('订单日期不允许为空！');
           return false;
@@ -689,7 +675,6 @@
           supplierId: this.formData.supplierId,
           purchaserId: this.formData.purchaserId,
           orderDate: this.formData.orderDate,
-          expectArriveDate: this.formData.expectArriveDate,
           description: this.formData.description,
           products: this.tableData.map((t) => {
             return {

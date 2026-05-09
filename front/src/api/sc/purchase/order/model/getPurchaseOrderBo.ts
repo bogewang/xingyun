@@ -45,11 +45,6 @@ export interface GetPurchaseOrderBo {
   orderDate: string;
 
   /**
-   * 预计到货日期
-   */
-  expectArriveDate: string;
-
-  /**
    * 关联的审批流程ID
    */
   flowInstanceId: string;

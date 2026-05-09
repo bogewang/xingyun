@@ -12,27 +12,14 @@ import com.lframework.starter.bpm.transfers.FlowCuInstanceTransfer;
 import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.exceptions.impl.InputErrorException;
-import com.lframework.starter.common.utils.Assert;
-import com.lframework.starter.common.utils.BeanUtil;
-import com.lframework.starter.common.utils.CollectionUtil;
-import com.lframework.starter.common.utils.NumberUtil;
-import com.lframework.starter.common.utils.StringUtil;
+import com.lframework.starter.common.utils.*;
 import com.lframework.starter.web.core.annotations.oplog.OpLog;
 import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.components.security.SecurityUtil;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
-import com.lframework.starter.web.core.utils.ApplicationUtil;
-import com.lframework.starter.web.core.utils.IdUtil;
-import com.lframework.starter.web.core.utils.JsonUtil;
-import com.lframework.starter.web.core.utils.OpLogUtil;
-import com.lframework.starter.web.core.utils.PageHelperUtil;
-import com.lframework.starter.web.core.utils.PageResultUtil;
-import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTimeLineBizType;
-import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTimeLineBizType;
-import com.lframework.starter.web.inner.components.timeline.CancelApproveOrderTimeLineBizType;
-import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
-import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineBizType;
+import com.lframework.starter.web.core.utils.*;
+import com.lframework.starter.web.inner.components.timeline.*;
 import com.lframework.starter.web.inner.dto.order.ApprovePassOrderDto;
 import com.lframework.starter.web.inner.entity.SysUser;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
@@ -52,42 +39,17 @@ import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseOrderFullDto;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseOrderWithReceiveDto;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseProductDto;
-import com.lframework.xingyun.sc.entity.PurchaseConfig;
-import com.lframework.xingyun.sc.entity.PurchaseOrder;
-import com.lframework.xingyun.sc.entity.PurchaseOrderDetail;
-import com.lframework.xingyun.sc.entity.PurchaseOrderDetailBundle;
-import com.lframework.xingyun.sc.entity.PurchaseOrderDetailBundleForm;
-import com.lframework.xingyun.sc.entity.PurchaseOrderDetailForm;
-import com.lframework.xingyun.sc.entity.PurchaseOrderForm;
+import com.lframework.xingyun.sc.entity.*;
 import com.lframework.xingyun.sc.enums.PurchaseOpLogType;
 import com.lframework.xingyun.sc.enums.PurchaseOrderStatus;
 import com.lframework.xingyun.sc.events.order.impl.ApprovePassPurchaseOrderEvent;
+import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderImportModel;
 import com.lframework.xingyun.sc.mappers.PurchaseOrderMapper;
 import com.lframework.xingyun.sc.service.paytype.OrderPayTypeService;
-import com.lframework.xingyun.sc.service.purchase.PurchaseConfigService;
-import com.lframework.xingyun.sc.service.purchase.PurchaseOrderDetailBundleFormService;
-import com.lframework.xingyun.sc.service.purchase.PurchaseOrderDetailBundleService;
-import com.lframework.xingyun.sc.service.purchase.PurchaseOrderDetailFormService;
-import com.lframework.xingyun.sc.service.purchase.PurchaseOrderDetailService;
-import com.lframework.xingyun.sc.service.purchase.PurchaseOrderFormService;
-import com.lframework.xingyun.sc.service.purchase.PurchaseOrderService;
-import com.lframework.xingyun.sc.vo.purchase.ApprovePassPurchaseOrderVo;
-import com.lframework.xingyun.sc.vo.purchase.ApproveRefusePurchaseOrderVo;
-import com.lframework.xingyun.sc.vo.purchase.CreatePurchaseOrderVo;
-import com.lframework.xingyun.sc.vo.purchase.PurchaseOrderSelectorVo;
-import com.lframework.xingyun.sc.vo.purchase.PurchaseProductVo;
-import com.lframework.xingyun.sc.vo.purchase.QueryPurchaseOrderVo;
-import com.lframework.xingyun.sc.vo.purchase.QueryPurchaseOrderWithReceiveVo;
-import com.lframework.xingyun.sc.vo.purchase.QueryPurchaseProductVo;
-import com.lframework.xingyun.sc.vo.purchase.UpdatePurchaseOrderVo;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.lframework.xingyun.sc.service.purchase.*;
+import com.lframework.xingyun.sc.vo.purchase.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.dromara.warm.flow.core.dto.FlowParams;
 import org.dromara.warm.flow.core.entity.Instance;
 import org.dromara.warm.flow.core.listener.ListenerVariable;
@@ -96,6 +58,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class PurchaseOrderServiceImpl extends
@@ -588,7 +558,6 @@ public class PurchaseOrderServiceImpl extends
       order.setPurchaserId(vo.getPurchaserId());
     }
 
-    order.setExpectArriveDate(vo.getExpectArriveDate());
     order.setOrderDate(vo.getOrderDate());
 
     BigDecimal purchaseNum = BigDecimal.ZERO;
@@ -720,6 +689,61 @@ public class PurchaseOrderServiceImpl extends
     PurchaseProductDto data = getBaseMapper().getPurchaseById(id);
 
     return data;
+  }
+
+  @Override
+  public List<PurchaseOrderImportModel> checkImport(List<PurchaseOrderImportModel> list) {
+    if (CollectionUtil.isEmpty(list)) {
+      return new ArrayList<>();
+    }
+
+    List<String> productNames = list.stream().map(PurchaseOrderImportModel::getProductName)
+            .collect(Collectors.toList());
+    List<Product> products = productService.selectByProductName(productNames);
+    Map<String, Product> nameSpecUnitMap = products.stream()
+            .collect(Collectors.toMap(item -> item.getName() + item.getSpec() + item.getUnit(), item -> item));
+    Map<String, Product> nameUnitMap = products.stream()
+            .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item));
+
+    for (int i = 0; i < list.size(); i++) {
+      PurchaseOrderImportModel data = list.get(i);
+      int rowIndex = i + 2;
+
+      if (StringUtil.isBlank(data.getProductName())) {
+        throw new DefaultClientException("第" + rowIndex + "行“商品名称”不能为空");
+      }
+
+      if (StringUtils.isEmpty(data.getUnit())) {
+        throw new DefaultClientException("第" + rowIndex + "行“单位”不能为空");
+      }
+      if (data.getPurchasePrice() == null) {
+        throw new DefaultClientException("第" + rowIndex + "行“采购价”不能为空");
+      }
+      if (data.getPurchaseNum() == null) {
+        throw new DefaultClientException("第" + rowIndex + "行“采购数量”不能为空");
+      }
+      if (NumberUtil.le(data.getPurchaseNum(), BigDecimal.ZERO)) {
+        throw new DefaultClientException("第" + rowIndex + "行“采购数量”必须大于0");
+      }
+      if (!NumberUtil.isNumberPrecision(data.getPurchaseNum(), 8)) {
+        throw new DefaultClientException("第" + rowIndex + "行“采购数量”最多允许8位小数");
+      }
+
+      // 匹配商品,设置商品编号
+      String spec = data.getSpec() == null ? StringPool.EMPTY_STR : data.getSpec();
+      String nameSpecUnit = data.getProductName() + spec + data.getUnit();
+      Product product = nameSpecUnitMap.get(nameSpecUnit);
+      if (product == null) {
+        product = nameUnitMap.get(nameSpecUnit);
+        if (product == null) {
+          throw new DefaultClientException("第" + rowIndex + "行“商品名称”、“规格”、“单位”组合不存在");
+        }
+      }
+      data.setProductCode(product.getCode());
+      data.setProductId(product.getId());
+    }
+
+    return list;
   }
 
   private void sendApprovePassEvent(PurchaseOrder order) {

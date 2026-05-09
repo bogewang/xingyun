@@ -9,6 +9,7 @@ import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.controller.DefaultBaseController;
+import com.lframework.starter.web.core.utils.EasyExcelUtils;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.sc.bo.purchase.*;
@@ -23,6 +24,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
  *
  * @author zmj
  */
+@Slf4j
 @Api(tags = "采购订单管理")
 @Validated
 @RestController
@@ -290,14 +293,17 @@ public class PurchaseOrderController extends DefaultBaseController {
   @ApiOperation("导入")
   @HasPermission({"purchase:order:import"})
   @PostMapping("/import")
-  public InvokeResult<Void> importExcel(@NotBlank(message = "ID不能为空") String id,
-      @NotNull(message = "请上传文件") MultipartFile file) {
+  public InvokeResult<List<PurchaseOrderImportModel>> importExcel(@NotNull(message = "请上传文件") MultipartFile file) {
+    try {
+      List<PurchaseOrderImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(),
+          PurchaseOrderImportModel.class);
+      List<PurchaseOrderImportModel> data = purchaseOrderService.checkImport(list);
 
-    PurchaseOrderImportListener listener = new PurchaseOrderImportListener();
-    listener.setTaskId(id);
-    ExcelUtil.read(file, PurchaseOrderImportModel.class, listener).sheet().doRead();
-
-    return InvokeResultBuilder.success();
+      return InvokeResultBuilder.success(data);
+    } catch (Exception e) {
+      log.error("请求出错", e);
+      return InvokeResultBuilder.fail(e.getMessage(), null);
+    }
   }
 
   /**

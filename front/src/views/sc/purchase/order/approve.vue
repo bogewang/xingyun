@@ -2,15 +2,15 @@
   <div class="app-card-container">
     <div v-permission="['purchase:order:approve']" v-loading="loading">
       <a-tabs v-model:activeKey="activeKey">
-        <a-tab-pane key="detail" tab="详情"
-          ><viewer ref="viewer" :id="id" @load-data-complete="(e) => (formData = e)"
-        /></a-tab-pane>
-        <a-tab-pane v-if="isEmpty(formData.flowInstanceId)" key="orderTimeLine" tab="变动记录"
-          ><order-time-line :id="id"
-        /></a-tab-pane>
-        <a-tab-pane key="approveHis" v-if="!isEmpty(formData.flowInstanceId)" tab="审批历史"
-          ><bpm-approve-his :business-id="formData.id"
-        /></a-tab-pane>
+        <a-tab-pane key="detail" tab="详情">
+          <viewer ref="viewer" :id="id" @load-data-complete="(e) => (formData = e)" />
+        </a-tab-pane>
+        <a-tab-pane v-if="isEmpty(formData.flowInstanceId)" key="orderTimeLine" tab="变动记录">
+          <order-time-line :id="id" />
+        </a-tab-pane>
+        <a-tab-pane key="approveHis" v-if="!isEmpty(formData.flowInstanceId)" tab="审批历史">
+          <bpm-approve-his :business-id="formData.id" />
+        </a-tab-pane>
       </a-tabs>
       <div
         v-if="
@@ -25,16 +25,16 @@
             type="primary"
             :loading="loading"
             @click="approvePassOrder"
-            >审核通过</a-button
-          >
+            >审核通过
+          </a-button>
           <a-button
             v-if="PURCHASE_ORDER_STATUS.CREATED.equalsCode(formData.status)"
             v-permission="['purchase:order:approve']"
             danger
             :loading="loading"
             @click="approveRefuseOrder"
-            >审核拒绝</a-button
-          >
+            >审核拒绝
+          </a-button>
           <a-button :loading="loading" @click="closeDialog">关闭</a-button>
         </a-space>
       </div>
@@ -43,17 +43,17 @@
   </div>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import ApproveRefuse from '@/components/ApproveRefuse';
-import * as api from '@/api/sc/purchase/order';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import Viewer from './viewer.vue';
-import {isEmpty} from '@/utils/utils';
-import {createConfirm, createSuccess} from '@/hooks/web/msg';
-import {PURCHASE_ORDER_STATUS} from '@/enums/biz/purchaseOrderStatus';
-import OrderTimeLine from '@/components/OrderTimeLine';
+  import { defineComponent } from 'vue';
+  import ApproveRefuse from '@/components/ApproveRefuse';
+  import * as api from '@/api/sc/purchase/order';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import Viewer from './viewer.vue';
+  import { isEmpty } from '@/utils/utils';
+  import { createConfirm, createSuccess } from '@/hooks/web/msg';
+  import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
+  import OrderTimeLine from '@/components/OrderTimeLine';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'ApprovePurchaseOrder',
     components: {
       Viewer,

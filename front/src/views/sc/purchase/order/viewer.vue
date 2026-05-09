@@ -11,9 +11,6 @@
         <j-form-item label="采购员">
           {{ formData.purchaserName }}
         </j-form-item>
-        <j-form-item label="预计到货日期">
-          {{ formData.expectArriveDate }}
-        </j-form-item>
         <j-form-item label="状态">
           <span
             v-if="PURCHASE_ORDER_STATUS.APPROVE_PASS.equalsCode(formData.status)"
@@ -65,6 +62,7 @@
     </j-border>
     <!-- 数据列表 -->
     <vxe-grid
+      id="PurchaseOrderViewer"
       ref="grid"
       resizable
       show-overflow
@@ -74,6 +72,8 @@
       height="380"
       :data="tableData"
       :columns="tableColumn"
+      :toolbar-config="toolbarConfig"
+      :custom-config="{}"
     >
       <!-- 采购含税金额 列自定义内容 -->
       <template #purchaseAmount_default="{ row }">
@@ -91,13 +91,8 @@
         <j-form-item label="含税总金额" :span="6">
           <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
         </j-form-item>
-      </j-form>
-    </j-border>
-
-    <j-border>
-      <j-form bordered label-width="140px">
-        <j-form-item label="备注" :span="24" :content-nest="false">
-          <a-textarea v-model:value.trim="formData.description" maxlength="200" readonly />
+        <j-form-item label="备注" :span="12" :content-nest="false">
+          <a-input v-model:value.trim="formData.description" maxlength="200" readonly />
         </j-form-item>
       </j-form>
     </j-border>
@@ -108,9 +103,10 @@
   import * as api from '@/api/sc/purchase/order';
   import { isFloatGeZero, getNumber, mul, add } from '@/utils/utils';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
+  import JFormItem from '@/components/JFormItem';
 
   export default defineComponent({
-    components: {},
+    components: { JFormItem },
     props: {
       id: {
         type: String,
@@ -135,6 +131,12 @@
         loading: false,
         // 表单数据
         formData: {},
+        // 工具栏配置
+        toolbarConfig: {
+          zoom: false,
+          custom: true,
+          refresh: false,
+        },
         // 列表数据配置
         tableColumn: [
           { type: 'seq', width: 50 },
@@ -174,7 +176,6 @@
           scName: '',
           supplierName: '',
           purchaserName: '',
-          expectArriveDate: '',
           totalNum: 0,
           totalAmount: 0,
           description: '',
@@ -194,7 +195,6 @@
               scName: res.scName,
               supplierName: res.supplierName,
               purchaserName: res.purchaserName,
-              expectArriveDate: res.expectArriveDate,
               description: res.description,
               status: res.status,
               createBy: res.createBy,

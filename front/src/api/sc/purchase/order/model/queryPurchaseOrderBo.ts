@@ -40,11 +40,6 @@ export interface QueryPurchaseOrderBo {
   orderDate: string;
 
   /**
-   * 预计到货日期
-   */
-  expectArriveDate: string;
-
-  /**
    * 采购数量
    */
   totalNum: number;
