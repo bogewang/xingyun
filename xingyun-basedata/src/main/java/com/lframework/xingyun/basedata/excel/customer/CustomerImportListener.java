@@ -129,6 +129,7 @@ public class CustomerImportListener extends ExcelImportListener<CustomerImportMo
 
       record.setCode(data.getCode());
       record.setName(data.getName());
+      record.setNickName(data.getNickName());
       record.setMnemonicCode(data.getMnemonicCode());
       record.setContact(data.getContact());
       record.setTelephone(data.getTelephone());

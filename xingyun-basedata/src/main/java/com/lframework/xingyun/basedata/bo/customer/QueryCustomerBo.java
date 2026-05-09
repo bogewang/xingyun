@@ -30,6 +30,12 @@ public class QueryCustomerBo extends BaseBo<Customer> {
     private String name;
 
     /**
+     * 昵称
+     */
+    @ApiModelProperty("昵称")
+    private String nickName;
+
+    /**
      * 备注
      */
     @ApiModelProperty("备注")

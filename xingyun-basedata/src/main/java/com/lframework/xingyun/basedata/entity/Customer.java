@@ -39,6 +39,11 @@ public class Customer extends BaseEntity implements BaseDto {
   private String name;
 
   /**
+   * 昵称
+   */
+  private String nickName;
+
+  /**
    * 简码
    */
   private String mnemonicCode;

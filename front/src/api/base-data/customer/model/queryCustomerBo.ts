@@ -15,6 +15,11 @@ export interface QueryCustomerBo {
   name: string;
 
   /**
+   * 昵称
+   */
+  nickName: string;
+
+  /**
    * 备注
    */
   description: string;

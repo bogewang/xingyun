@@ -15,6 +15,11 @@ export interface GetCustomerBo {
   name: string;
 
   /**
+   * 昵称
+   */
+  nickName: string;
+
+  /**
    * 简码
    */
   mnemonicCode: string;

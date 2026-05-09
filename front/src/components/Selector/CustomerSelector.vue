@@ -17,6 +17,9 @@
             <j-form-item v-if="isEmpty(requestParams.name)" label="名称">
               <a-input v-model:value="searchParams.name" />
             </j-form-item>
+            <j-form-item v-if="isEmpty(requestParams.nickName)" label="昵称">
+              <a-input v-model:value="searchParams.nickName" />
+            </j-form-item>
           </j-form>
         </j-border>
       </template>
@@ -62,6 +65,7 @@
         searchParams: {
           code: '',
           name: '',
+          nickName: '',
         },
       };
     },

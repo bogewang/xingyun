@@ -31,6 +31,12 @@ public class CustomerImportModel implements ExcelModel {
   private String name;
 
   /**
+   * 昵称
+   */
+  @ExcelProperty("昵称")
+  private String nickName;
+
+  /**
    * 简码
    */
   @ExcelRequired

@@ -13,4 +13,9 @@ export interface CustomerSelectorBo {
    * 名称
    */
   name: string;
+
+  /**
+   * 昵称
+   */
+  nickName: string;
 }

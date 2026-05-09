@@ -10,4 +10,9 @@ export interface QueryCustomerSelectorVo extends PageVo {
    * 名称
    */
   name: string;
+
+  /**
+   * 昵称
+   */
+  nickName: string;
 }

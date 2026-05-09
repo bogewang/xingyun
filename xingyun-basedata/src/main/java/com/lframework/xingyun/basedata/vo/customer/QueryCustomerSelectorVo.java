@@ -22,4 +22,10 @@ public class QueryCustomerSelectorVo extends PageVo implements BaseVo, Serializa
    */
   @ApiModelProperty("名称")
   private String name;
+
+  /**
+   * 昵称
+   */
+  @ApiModelProperty("昵称")
+  private String nickName;
 }

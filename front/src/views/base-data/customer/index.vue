@@ -27,6 +27,9 @@
               <j-form-item label="名称">
                 <a-input v-model:value="searchFormData.name" allow-clear />
               </j-form-item>
+              <j-form-item label="昵称">
+                <a-input v-model:value="searchFormData.nickName" allow-clear />
+              </j-form-item>
             </j-form>
           </j-border>
         </template>
@@ -154,6 +157,7 @@
           { type: 'checkbox', width: 45 },
           { field: 'code', title: '编号', width: 100, sortable: true },
           { field: 'name', title: '名称', minWidth: 180, sortable: true },
+          { field: 'nickName', title: '昵称', minWidth: 140, sortable: true },
           { field: 'description', title: '备注', minWidth: 200 },
           { field: 'createBy', title: '创建人', width: 100 },
           { field: 'createTime', title: '创建时间', width: 170, sortable: true },

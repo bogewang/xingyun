@@ -36,6 +36,12 @@ public class UpdateCustomerVo implements BaseVo, Serializable {
   private String name;
 
   /**
+   * 昵称
+   */
+  @ApiModelProperty("昵称")
+  private String nickName;
+
+  /**
    * 简码
    */
   @ApiModelProperty(value = "简码", required = true)

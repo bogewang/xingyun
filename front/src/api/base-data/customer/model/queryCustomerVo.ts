@@ -10,4 +10,9 @@ export interface QueryCustomerVo extends SortPageVo {
    * 名称
    */
   name: string;
+
+  /**
+   * 昵称
+   */
+  nickName: string;
 }

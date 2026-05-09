@@ -34,6 +34,12 @@ public class GetCustomerBo extends BaseBo<Customer> {
     private String name;
 
     /**
+     * 昵称
+     */
+    @ApiModelProperty("昵称")
+    private String nickName;
+
+    /**
      * 简码
      */
     @ApiModelProperty("简码")

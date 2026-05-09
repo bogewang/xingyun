@@ -116,6 +116,9 @@ public class CustomerServiceImpl extends BaseMpServiceImpl<CustomerMapper, Custo
     data.setId(IdUtil.getId());
     data.setCode(vo.getCode());
     data.setName(vo.getName());
+    if (!StringUtil.isBlank(vo.getNickName())) {
+      data.setNickName(vo.getNickName());
+    }
     if (!StringUtil.isBlank(vo.getMnemonicCode())) {
       data.setMnemonicCode(vo.getMnemonicCode());
     }
@@ -193,6 +196,7 @@ public class CustomerServiceImpl extends BaseMpServiceImpl<CustomerMapper, Custo
 
     LambdaUpdateWrapper<Customer> updateWrapper = Wrappers.lambdaUpdate(Customer.class)
         .set(Customer::getCode, vo.getCode()).set(Customer::getName, vo.getName())
+        .set(Customer::getNickName, !StringUtil.isBlank(vo.getNickName()) ? vo.getNickName() : null)
         .set(Customer::getMnemonicCode,
             !StringUtil.isBlank(vo.getMnemonicCode()) ? vo.getMnemonicCode() : null)
         .set(Customer::getContact, !StringUtil.isBlank(vo.getContact()) ? vo.getContact() : null)

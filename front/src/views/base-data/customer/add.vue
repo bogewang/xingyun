@@ -32,12 +32,17 @@
             </a-form-item>
           </a-col>
           <a-col :span="8">
-            <a-form-item label="简码" name="mnemonicCode">
-              <a-input v-model:value.trim="formData.mnemonicCode" allow-clear />
+            <a-form-item label="昵称" name="nickName">
+              <a-input v-model:value.trim="formData.nickName" allow-clear />
             </a-form-item>
           </a-col>
         </a-row>
         <a-row :gutter="16">
+          <a-col :span="8">
+            <a-form-item label="简码" name="mnemonicCode">
+              <a-input v-model:value.trim="formData.mnemonicCode" allow-clear />
+            </a-form-item>
+          </a-col>
           <a-col :span="8">
             <a-form-item label="联系人" name="contact">
               <a-input v-model:value.trim="formData.contact" allow-clear />
@@ -48,6 +53,8 @@
               <a-input v-model:value.trim="formData.telephone" allow-clear />
             </a-form-item>
           </a-col>
+        </a-row>
+        <a-row :gutter="16">
           <a-col :span="8">
             <a-form-item label="电子邮箱" name="email">
               <a-input v-model:value.trim="formData.email" allow-clear />
@@ -208,6 +215,7 @@ export default defineComponent({
         this.formData = {
           code: '',
           name: '',
+          nickName: '',
           mnemonicCode: '',
           contact: '',
           telephone: '',

@@ -6,6 +6,7 @@
         <id column="id" property="id"/>
         <result column="code" property="code"/>
         <result column="name" property="name"/>
+        <result column="nick_name" property="nickName"/>
         <result column="mnemonic_code" property="mnemonicCode"/>
         <result column="contact" property="contact"/>
         <result column="telephone" property="telephone"/>
@@ -33,6 +34,7 @@
             id,
             code,
             name,
+            nick_name,
             mnemonic_code,
             contact,
             telephone,
@@ -66,6 +68,9 @@
                 <if test="vo.name != null and vo.name != ''">
                     AND name LIKE CONCAT('%', #{vo.name}, '%')
                 </if>
+                <if test="vo.nickName != null and vo.nickName != ''">
+                    AND nick_name LIKE CONCAT('%', #{vo.nickName}, '%')
+                </if>
             </if>
             AND available = TRUE
         </where>
@@ -81,6 +86,9 @@
                 </if>
                 <if test="vo.name != null and vo.name != ''">
                     AND name LIKE CONCAT('%', #{vo.name}, '%')
+                </if>
+                <if test="vo.nickName != null and vo.nickName != ''">
+                    AND nick_name LIKE CONCAT('%', #{vo.nickName}, '%')
                 </if>
             </if>
             AND available = TRUE

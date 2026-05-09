@@ -722,7 +722,7 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
       List<PrintSaleTagBo> collect = map.keySet().stream()
               .map(productId -> {
                 PrintSaleTagBo bo = new PrintSaleTagBo();
-                bo.setCustomerSimpleName(customer.getName());
+                bo.setCustomerSimpleName(customer.getNickName());
 
                 bo.setProductName(productMap.get(productId).getName());
                 List<SaleOrderDetail> orderDetails = map.get(productId);
