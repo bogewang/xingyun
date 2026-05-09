@@ -25,29 +25,11 @@
                 <j-form-item label="单据号">
                   <a-input v-model:value="searchFormData.code" allow-clear />
                 </j-form-item>
-<!--                <j-form-item label="仓库">
-                  <store-center-selector v-model:value="searchFormData.scId" />
-                </j-form-item>-->
                 <j-form-item label="客户">
                   <customer-selector v-model:value="searchFormData.customerId" />
                 </j-form-item>
                 <j-form-item label="操作人">
                   <user-selector v-model:value="searchFormData.createBy" />
-                </j-form-item>
-                <j-form-item label="操作日期" :content-nest="false">
-                  <div class="date-range-container">
-                    <a-date-picker
-                      v-model:value="searchFormData.createStartTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 00:00:00"
-                    />
-                    <span class="date-split">至</span>
-                    <a-date-picker
-                      v-model:value="searchFormData.createEndTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 23:59:59"
-                    />
-                  </div>
                 </j-form-item>
                 <j-form-item label="订单日期" :content-nest="false">
                   <div class="date-range-container">
@@ -218,9 +200,7 @@
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { printMix } from '@/mixins/print.ts';
   import {
-    formatDateTime,
-    getDateTimeWithMinTime,
-    getDateTimeWithMaxTime,
+    formatDate,
     buildSortPageVo,
     isEmpty,
   } from '@/utils/utils';
@@ -268,10 +248,9 @@
           scId: '',
           customerId: '',
           createBy: '',
-          createStartTime: formatDateTime(getDateTimeWithMinTime(moment().subtract(1, 'M'))),
-          createEndTime: formatDateTime(getDateTimeWithMaxTime(moment())),
-          orderDateStart: '',
-          orderDateEnd: '',
+          // 默认当前月日期范围，2026-06-05
+          orderDateStart: formatDate(moment().subtract(1, 'M')),
+          orderDateEnd: formatDate(moment()),
           approveBy: '',
           approveStartTime: '',
           approveEndTime: '',

@@ -14,9 +14,6 @@
           <j-form-item label="客户" required>
             <customer-selector v-model:value="formData.customerId" />
           </j-form-item>
-          <j-form-item label="销售员">
-            <user-selector v-model:value="formData.salerId" />
-          </j-form-item>
           <j-form-item label="订单日期" required>
             <a-date-picker
               v-model:value="formData.orderDate"
@@ -96,7 +93,6 @@
             >
             <a-button :icon="h(NumberOutlined)" @click="batchInputOrderNum">批量录入数量</a-button>
             <a-button :icon="h(EditOutlined)" @click="batchInputTaxPrice">批量调整价格</a-button>
-            <a-button :icon="h(AlertOutlined)" @click="setGift">设置赠品</a-button>
           </a-space>
         </template>
 
@@ -143,17 +139,6 @@
           <span v-else>{{ row.productName }}</span>
         </template>
 
-        <!-- 折扣 列自定义内容 -->
-        <template #discountRate_default="{ row }">
-          <span v-if="row.oriPrice === 0 || row.isGift">{{ row.discountRate }}</span>
-          <a-input
-            v-else
-            v-model:value="row.discountRate"
-            class="number-input"
-            @change="(e) => changeDiscountRate(row, e.target.value)"
-          />
-        </template>
-
         <!-- 价格 列自定义内容 -->
         <template #taxPrice_default="{ row }">
           <span v-if="row.isGift">{{ row.taxPrice }}</span>
@@ -194,22 +179,15 @@
           <j-form-item label="销售数量" :span="6">
             <a-input v-model:value="formData.totalNum" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="赠品数量" :span="6">
-            <a-input v-model:value="formData.giftNum" class="number-input" readonly />
-          </j-form-item>
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-        </j-form>
-      </j-border>
-
-      <j-border>
-        <j-form bordered label-width="140px">
-          <j-form-item label="备注" :span="24" :content-nest="false">
+          <j-form-item label="备注" :span="12" :content-nest="false">
             <a-textarea v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>
+
       <batch-add-product
         ref="batchAddProductDialog"
         :sc-id="formData.scId"
@@ -410,7 +388,6 @@
         this.formData = {
           scId: '',
           customerId: '',
-          salerId: '',
           orderDate: '',
           totalNum: 0,
           giftNum: 0,
@@ -437,7 +414,6 @@
             this.formData = Object.assign(this.formData, {
               scId: res.scId,
               customerId: res.customerId,
-              salerId: res.salerId,
               orderDate: res.orderDate,
               description: res.description,
               status: res.status,
@@ -759,7 +735,6 @@
           id: this.id,
           scId: this.formData.scId,
           customerId: this.formData.customerId,
-          salerId: this.formData.salerId || '',
           orderDate: this.formData.orderDate,
           description: this.formData.description,
           products: this.tableData.map((t) => {
