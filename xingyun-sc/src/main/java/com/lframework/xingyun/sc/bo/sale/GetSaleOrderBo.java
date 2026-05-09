@@ -249,6 +249,12 @@ public class GetSaleOrderBo extends BaseBo<SaleOrderFullDto> {
     private String productName;
 
     /**
+     * 简称
+     */
+    @ApiModelProperty("简称")
+    private String shortName;
+
+    /**
      * SKU编号
      */
     @ApiModelProperty("SKU编号")
@@ -364,6 +370,7 @@ public class GetSaleOrderBo extends BaseBo<SaleOrderFullDto> {
 
       this.productCode = product.getCode();
       this.productName = product.getName();
+      this.shortName = product.getShortName();
       this.skuCode = product.getSkuCode();
       this.externalCode = product.getExternalCode();
       this.unit = product.getUnit();

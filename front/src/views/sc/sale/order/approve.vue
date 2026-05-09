@@ -60,6 +60,7 @@
       </j-border>
       <!-- 数据列表 -->
       <vxe-grid
+        id="SaleOrderApprove"
         ref="grid"
         resizable
         show-overflow
@@ -69,6 +70,8 @@
         height="500"
         :data="tableData"
         :columns="tableColumn"
+        :toolbar-config="toolbarConfig"
+        :custom-config="{}"
       >
         <!-- 含税金额 列自定义内容 -->
         <template #orderAmount_default="{ row }">
@@ -159,11 +162,17 @@
         loading: false,
         // 表单数据
         formData: {},
+        // 工具栏配置
+        toolbarConfig: {
+          zoom: false,
+          refresh: false,
+        },
         // 列表数据配置
         tableColumn: [
           { type: 'seq', width: 50 },
           { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 260 },
+          { field: 'shortName', title: '简称', width: 120 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },

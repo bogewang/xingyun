@@ -66,6 +66,7 @@
       </j-border>
       <!-- 数据列表 -->
       <vxe-grid
+        id="SaleOrderDetail"
         ref="grid"
         resizable
         show-overflow
@@ -75,6 +76,8 @@
         height="500"
         :data="tableData"
         :columns="tableColumn"
+        :toolbar-config="toolbarConfig"
+        :custom-config="{}"
       >
         <!-- 含税金额 列自定义内容 -->
         <template #orderAmount_default="{ row }">
@@ -150,28 +153,20 @@ export default defineComponent({
         loading: false,
         // 表单数据
         formData: {},
+        // 工具栏配置
+        toolbarConfig: {
+          zoom: false,
+          refresh: false,
+        },
         // 列表数据配置
         tableColumn: [
           { type: 'seq', width: 50 },
           { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 260 },
-          // { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          // { field: 'externalCode', title: '商品简码', width: 120 },
+          { field: 'shortName', title: '简称', width: 120 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          // { field: 'brandName', title: '商品品牌', width: 120 },
-          // { field: 'mainProductName', title: '所属组合商品', width: 120 },
-          // { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 150 },
-          // {
-          //   field: 'isGift',
-          //   title: '是否赠品',
-          //   width: 80,
-          //   formatter: ({ cellValue }) => {
-          //     return cellValue ? '是' : '否';
-          //   },
-          // },
-          // { field: 'discountRate', title: '折扣（%）', align: 'right', width: 120 },
           { field: 'taxPrice', title: '价格（元）', align: 'right', width: 120 },
           { field: 'orderNum', title: '销售数量', align: 'right', width: 100 },
           {

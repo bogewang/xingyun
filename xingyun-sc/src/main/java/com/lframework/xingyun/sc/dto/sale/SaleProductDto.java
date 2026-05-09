@@ -26,6 +26,11 @@ public class SaleProductDto implements BaseDto, Serializable {
   private String name;
 
   /**
+   * 简称
+   */
+  private String shortName;
+
+  /**
    * 分类ID
    */
   private String categoryId;

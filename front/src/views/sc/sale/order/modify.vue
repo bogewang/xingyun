@@ -72,6 +72,7 @@
       </j-border>
       <!-- 数据列表 -->
       <vxe-grid
+        id="SaleOrderModify"
         ref="grid"
         resizable
         show-overflow
@@ -82,6 +83,7 @@
         :data="tableData"
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
+        :custom-config="{}"
       >
         <!-- 工具栏 -->
         <template #toolbar_buttons>
@@ -122,15 +124,9 @@
                 >
                   <vxe-column field="productCode" title="商品编号" width="120" />
                   <vxe-column field="productName" title="商品名称" min-width="200" />
-                  <vxe-column field="skuCode" title="商品SKU编号" width="120" />
+                  <vxe-column field="shortName" title="简称" width="120" />
                   <vxe-column field="spec" title="规格" width="80" />
                   <vxe-column field="unit" title="单位" width="80" />
-                  <vxe-column
-                    field="salePrice"
-                    title="参考销售价（元）"
-                    width="140"
-                    align="right"
-                  />
                   <vxe-column field="stockNum" title="库存数量" width="140" align="right" />
                 </vxe-table>
               </div>
@@ -278,8 +274,6 @@
         toolbarConfig: {
           // 缩放
           zoom: false,
-          // 自定义表头
-          custom: false,
           // 右侧是否显示刷新按钮
           refresh: false,
           // 自定义左侧工具栏
@@ -298,29 +292,11 @@
             width: 260,
             slots: { default: 'productName_default' },
           },
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          { field: 'externalCode', title: '商品简码', width: 120 },
+          { field: 'shortName', title: '简称', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
-          { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 140 },
-          {
-            field: 'isGift',
-            title: '是否赠品',
-            width: 80,
-            formatter: ({ cellValue }) => {
-              return cellValue ? '是' : '否';
-            },
-          },
           { field: 'stockNum', title: '库存数量', align: 'right', width: 140 },
-          {
-            field: 'discountRate',
-            title: '折扣（%）',
-            align: 'right',
-            width: 120,
-            slots: { default: 'discountRate_default' },
-          },
           {
             field: 'taxPrice',
             title: '价格（元）',
@@ -442,6 +418,7 @@
           productId: '',
           productCode: '',
           productName: '',
+          shortName: '',
           skuCode: '',
           externalCode: '',
           unit: '',
