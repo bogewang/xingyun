@@ -195,6 +195,21 @@ export function update(data: UpdatePurchaseOrderVo): Promise<void> {
     },
   );
 }
+/**
+ * 导出订单详情
+ */
+export function exportDetail(data: QueryPurchaseOrderVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/exportDetail',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
 
 /**
  * 审核通过

@@ -265,6 +265,7 @@
         },
         // 列表数据配置
         tableColumn: [
+          { type: 'seq', width: 50, title: '序号' },
           { type: 'checkbox', width: 45 },
           { field: 'productCode', title: '商品编号', width: 120 },
           {

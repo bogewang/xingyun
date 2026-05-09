@@ -4,9 +4,11 @@ import com.lframework.starter.web.core.components.validation.IsEnum;
 import com.lframework.starter.web.core.vo.SortPageVo;
 import com.lframework.xingyun.sc.enums.PurchaseOrderStatus;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import lombok.Data;
+import java.util.List;
 
 @Data
 public class QueryPurchaseOrderVo extends SortPageVo {
@@ -18,6 +20,8 @@ public class QueryPurchaseOrderVo extends SortPageVo {
    */
   @ApiModelProperty("单号")
   private String code;
+
+  private List<String> idList;
 
   /**
    * 供应商ID

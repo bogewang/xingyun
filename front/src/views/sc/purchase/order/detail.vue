@@ -40,6 +40,7 @@ import {isEmpty} from '@/utils/utils';
 import {PRINT_TYPE} from '@/enums/biz/printType';
 import OrderTimeLine from '@/components/OrderTimeLine';
 import PrintDialog from '/@/components/PrintDialog';
+import {createSuccess} from "@/hooks/web/msg";
 
 export default defineComponent({
     components: {
@@ -107,7 +108,24 @@ export default defineComponent({
         }
       },
       exportDetails() {
-        this.$refs.viewerRef?.exportDetails();
+        this.loading = true;
+        api
+          .exportDetail(this.buildQueryParams({}))
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
+      // 查询前构建查询参数结构
+      buildQueryParams() {
+        return {
+          pageIndex: 1,
+          pageSize: 2147483647,
+          // 订单编号列表
+          idList: [this.id],
+        };
       },
     },
   });

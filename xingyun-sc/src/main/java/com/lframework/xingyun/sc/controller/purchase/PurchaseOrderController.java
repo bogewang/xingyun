@@ -18,8 +18,11 @@ import com.lframework.xingyun.sc.dto.purchase.PurchaseOrderWithReceiveDto;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseProductDto;
 import com.lframework.xingyun.sc.entity.PurchaseOrder;
 import com.lframework.xingyun.sc.excel.purchase.*;
+import com.lframework.xingyun.sc.excel.sale.SaleOrderDetailExportTaskWorker;
 import com.lframework.xingyun.sc.service.purchase.PurchaseOrderService;
 import com.lframework.xingyun.sc.vo.purchase.*;
+import com.lframework.xingyun.sc.vo.sale.QuerySaleOrderVo;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -56,7 +59,7 @@ public class PurchaseOrderController extends DefaultBaseController {
    */
   @ApiOperation("打印")
   @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-  @HasPermission({"purchase:order:query"})
+  @HasPermission({ "purchase:order:query" })
   @GetMapping("/print")
   public InvokeResult<PrintPurchaseOrderBo> print(
       @NotBlank(message = "订单ID不能为空！") String id) {
@@ -75,7 +78,7 @@ public class PurchaseOrderController extends DefaultBaseController {
    * 订单列表
    */
   @ApiOperation("订单列表")
-  @HasPermission({"purchase:order:query"})
+  @HasPermission({ "purchase:order:query" })
   @GetMapping("/query")
   public InvokeResult<PageResult<QueryPurchaseOrderBo>> query(@Valid QueryPurchaseOrderVo vo) {
 
@@ -97,11 +100,24 @@ public class PurchaseOrderController extends DefaultBaseController {
    * 导出
    */
   @ApiOperation("导出")
-  @HasPermission({"purchase:order:export"})
+  @HasPermission({ "purchase:order:export" })
   @PostMapping("/export")
   public InvokeResult<Void> export(@Valid QueryPurchaseOrderVo vo) {
 
     ExportTaskUtil.exportTask("采购单信息", PurchaseOrderExportTaskWorker.class, vo);
+
+    return InvokeResultBuilder.success();
+  }
+
+  /**
+   * 明细导出
+   */
+  @ApiOperation("明细导出")
+  @HasPermission({ "purchase:order:export" })
+  @PostMapping("/exportDetail")
+  public InvokeResult<Void> exportDetail(@RequestBody @Valid QueryPurchaseOrderVo vo) {
+
+    ExportTaskUtil.exportTask("采购单明细", PurchaseOrderDetailExportTaskWorker.class, vo);
 
     return InvokeResultBuilder.success();
   }
@@ -114,7 +130,7 @@ public class PurchaseOrderController extends DefaultBaseController {
       @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true),
       @ApiImplicitParam(value = "isForm", name = "是否为表单数据", paramType = "query", defaultValue = "false")
   })
-  @HasPermission({"purchase:order:query"})
+  @HasPermission({ "purchase:order:query" })
   @GetMapping
   public InvokeResult<GetPurchaseOrderBo> findById(
       @NotBlank(message = "订单ID不能为空！") String id, Boolean isForm) {
@@ -131,7 +147,7 @@ public class PurchaseOrderController extends DefaultBaseController {
    */
   @ApiOperation("根据ID查询（收货业务）")
   @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-  @HasPermission({"purchase:receive:add", "purchase:receive:modify"})
+  @HasPermission({ "purchase:receive:add", "purchase:receive:modify" })
   @GetMapping("/receive")
   public InvokeResult<PurchaseOrderWithReceiveBo> getWithReceive(
       @NotBlank(message = "订单ID不能为空！") String id) {
@@ -146,7 +162,7 @@ public class PurchaseOrderController extends DefaultBaseController {
    * 查询列表（收货业务）
    */
   @ApiOperation("查询列表（收货业务）")
-  @HasPermission({"purchase:receive:add", "purchase:receive:modify"})
+  @HasPermission({ "purchase:receive:add", "purchase:receive:modify" })
   @GetMapping("/query/receive")
   public InvokeResult<PageResult<QueryPurchaseOrderWithReceiveBo>> queryWithReceive(
       @Valid QueryPurchaseOrderWithReceiveVo vo) {
@@ -170,7 +186,7 @@ public class PurchaseOrderController extends DefaultBaseController {
    * 加载列表（收货业务）
    */
   @ApiOperation("加载列表（收货业务）")
-  @HasPermission({"purchase:receive:add", "purchase:receive:modify"})
+  @HasPermission({ "purchase:receive:add", "purchase:receive:modify" })
   @PostMapping("/query/receive/load")
   public InvokeResult<List<QueryPurchaseOrderWithReceiveBo>> loadWithReceive(
       @RequestBody(required = false) List<String> ids) {
@@ -188,7 +204,7 @@ public class PurchaseOrderController extends DefaultBaseController {
    * 创建订单
    */
   @ApiOperation("创建订单")
-  @HasPermission({"purchase:order:add"})
+  @HasPermission({ "purchase:order:add" })
   @PostMapping
   public InvokeResult<String> create(@RequestBody @Valid CreatePurchaseOrderVo vo) {
 
@@ -203,7 +219,7 @@ public class PurchaseOrderController extends DefaultBaseController {
    * 修改订单
    */
   @ApiOperation("修改订单")
-  @HasPermission({"purchase:order:modify"})
+  @HasPermission({ "purchase:order:modify" })
   @PutMapping
   public InvokeResult<Void> update(@RequestBody @Valid UpdatePurchaseOrderVo vo) {
 
@@ -218,7 +234,7 @@ public class PurchaseOrderController extends DefaultBaseController {
    * 审核通过订单
    */
   @ApiOperation("审核通过订单")
-  @HasPermission({"purchase:order:approve"})
+  @HasPermission({ "purchase:order:approve" })
   @PatchMapping("/approve/pass")
   public InvokeResult<Void> approvePass(@RequestBody @Valid ApprovePassPurchaseOrderVo vo) {
 
@@ -231,7 +247,7 @@ public class PurchaseOrderController extends DefaultBaseController {
    * 直接审核通过订单
    */
   @ApiOperation("直接审核通过订单")
-  @HasPermission({"purchase:order:approve"})
+  @HasPermission({ "purchase:order:approve" })
   @PostMapping("/approve/pass/direct")
   public InvokeResult<Void> directApprovePass(@RequestBody @Valid CreatePurchaseOrderVo vo) {
 
@@ -246,7 +262,7 @@ public class PurchaseOrderController extends DefaultBaseController {
    * 审核拒绝订单
    */
   @ApiOperation("审核拒绝订单")
-  @HasPermission({"purchase:order:approve"})
+  @HasPermission({ "purchase:order:approve" })
   @PatchMapping("/approve/refuse")
   public InvokeResult<Void> approveRefuse(@RequestBody @Valid ApproveRefusePurchaseOrderVo vo) {
 
@@ -260,7 +276,7 @@ public class PurchaseOrderController extends DefaultBaseController {
    */
   @ApiOperation("删除订单")
   @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-  @HasPermission({"purchase:order:delete"})
+  @HasPermission({ "purchase:order:delete" })
   @DeleteMapping
   public InvokeResult<Void> deleteById(@NotBlank(message = "订单ID不能为空！") String id) {
 
@@ -274,7 +290,7 @@ public class PurchaseOrderController extends DefaultBaseController {
    */
   @ApiOperation("取消审核订单")
   @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-  @HasPermission({"purchase:order:approve"})
+  @HasPermission({ "purchase:order:approve" })
   @PatchMapping("/approve/cancel")
   public InvokeResult<Void> cancelApprovePass(@NotBlank(message = "订单ID不能为空！") String id) {
 
@@ -284,14 +300,14 @@ public class PurchaseOrderController extends DefaultBaseController {
   }
 
   @ApiOperation("下载导入模板")
-  @HasPermission({"purchase:order:import"})
+  @HasPermission({ "purchase:order:import" })
   @GetMapping("/import/template")
   public void downloadImportTemplate() {
     ExcelUtil.export("采购订单导入模板", PurchaseOrderImportModel.class);
   }
 
   @ApiOperation("导入")
-  @HasPermission({"purchase:order:import"})
+  @HasPermission({ "purchase:order:import" })
   @PostMapping("/import")
   public InvokeResult<List<PurchaseOrderImportModel>> importExcel(@NotNull(message = "请上传文件") MultipartFile file) {
     try {
@@ -312,9 +328,9 @@ public class PurchaseOrderController extends DefaultBaseController {
   @ApiOperation("根据关键字查询可采购商品")
   @ApiImplicitParams({
       @ApiImplicitParam(value = "仓库ID", name = "scId", paramType = "query", required = true),
-      @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true)})
-  @HasPermission({"purchase:order:add", "purchase:order:modify", "purchase:receive:add",
-      "purchase:receive:modify", "purchase:return:add", "purchase:return:modify"})
+      @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true) })
+  @HasPermission({ "purchase:order:add", "purchase:order:modify", "purchase:receive:add",
+      "purchase:receive:modify", "purchase:return:add", "purchase:return:modify" })
   @GetMapping("/product/search")
   public InvokeResult<List<PurchaseProductBo>> searchPurchaseProducts(
       @NotBlank(message = "仓库ID不能为空！") String scId, String condition, Boolean isReturn) {
@@ -343,8 +359,8 @@ public class PurchaseOrderController extends DefaultBaseController {
    * 查询商品列表
    */
   @ApiOperation("查询可采购商品列表")
-  @HasPermission({"purchase:order:add", "purchase:order:modify", "purchase:receive:add",
-      "purchase:receive:modify", "purchase:return:add", "purchase:return:modify"})
+  @HasPermission({ "purchase:order:add", "purchase:order:modify", "purchase:receive:add",
+      "purchase:receive:modify", "purchase:return:add", "purchase:return:modify" })
   @GetMapping("/product/list")
   public InvokeResult<PageResult<PurchaseProductBo>> queryPurchaseProductList(
       @Valid QueryPurchaseProductVo vo) {

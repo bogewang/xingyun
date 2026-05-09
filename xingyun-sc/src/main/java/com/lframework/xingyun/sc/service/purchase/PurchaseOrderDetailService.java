@@ -10,10 +10,10 @@ public interface PurchaseOrderDetailService extends BaseMpService<PurchaseOrderD
   /**
    * 根据订单ID查询
    *
-   * @param orderId
+   * @param orderIds
    * @return
    */
-  List<PurchaseOrderDetail> getByOrderId(String orderId);
+  List<PurchaseOrderDetail> getByOrderIds(List<String> orderIds);
 
   /**
    * 增加收货数量

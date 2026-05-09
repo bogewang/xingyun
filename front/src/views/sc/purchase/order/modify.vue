@@ -187,7 +187,7 @@
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="备注" :span="24" :content-nest="false">
+          <j-form-item label="备注" :span="12" :content-nest="false">
             <a-input v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
@@ -293,6 +293,7 @@
         },
         // 列表数据配置
         tableColumn: [
+          { type: 'seq', width: 50, title: '序号' },
           { type: 'checkbox', width: 45 },
           { field: 'productCode', title: '商品编号', width: 120 },
           {
@@ -702,7 +703,24 @@
           });
       },
       exportDetails() {
-        // exportPurchaseOrderDetails(this.tableData);
+        this.loading = true;
+        api
+          .exportDetail(this.buildQueryParams({}))
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
+      // 查询前构建查询参数结构
+      buildQueryParams() {
+        return {
+          pageIndex: 1,
+          pageSize: 2147483647,
+          // 订单编号列表
+          idList: [this.id],
+        };
       },
     },
   });

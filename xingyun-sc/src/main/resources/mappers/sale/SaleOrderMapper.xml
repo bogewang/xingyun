@@ -229,6 +229,9 @@
                     AND o.approve_time <= #{vo.approveEndTime}
                     ]]>
                 </if>
+                <if test="vo.idList != null and vo.idList.size() > 0">
+                    AND o.id IN <foreach collection="vo.idList" open="(" separator="," close=")" item="item">#{item}</foreach>
+                </if>
             </if>
         </where>
         ORDER BY o.create_time DESC
