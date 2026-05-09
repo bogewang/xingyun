@@ -375,21 +375,15 @@ public class PurchaseOrderServiceImpl extends
     List<PurchaseOrderDetail> details = purchaseOrderDetailService.list(queryDetailWrapper);
 
     BigDecimal totalNum = BigDecimal.ZERO;
-    BigDecimal giftNum = BigDecimal.ZERO;
     BigDecimal totalAmount = BigDecimal.ZERO;
 
     for (PurchaseOrderDetail detail : details) {
-      boolean isGift = detail.getIsGift();
       totalAmount = NumberUtil.add(totalAmount,
           NumberUtil.getNumber(NumberUtil.mul(detail.getTaxPrice(), detail.getOrderNum()), 2));
 
       Product product = productService.findById(detail.getProductId());
       if (product.getProductType() == ProductType.NORMAL) {
-        if (isGift) {
-          giftNum = NumberUtil.add(giftNum, detail.getOrderNum());
-        } else {
-          totalNum = NumberUtil.add(totalNum, detail.getOrderNum());
-        }
+        totalNum = NumberUtil.add(totalNum, detail.getOrderNum());
       } else {
         Wrapper<PurchaseOrderDetailBundle> queryBundleWrapper = Wrappers.lambdaQuery(
                 PurchaseOrderDetailBundle.class)
@@ -406,7 +400,7 @@ public class PurchaseOrderServiceImpl extends
           newDetail.setProductId(purchaseOrderDetailBundle.getProductId());
           newDetail.setOrderNum(purchaseOrderDetailBundle.getProductOrderNum());
           newDetail.setTaxPrice(purchaseOrderDetailBundle.getProductTaxPrice());
-          newDetail.setIsGift(detail.getIsGift());
+          newDetail.setIsGift(Boolean.FALSE);
           newDetail.setTaxRate(purchaseOrderDetailBundle.getProductTaxRate());
           newDetail.setDescription(detail.getDescription());
           newDetail.setOrderNo(detail.getOrderNo());
@@ -418,18 +412,14 @@ public class PurchaseOrderServiceImpl extends
           purchaseOrderDetailBundle.setProductDetailId(newDetail.getId());
           purchaseOrderDetailBundleService.updateById(purchaseOrderDetailBundle);
 
-          if (isGift) {
-            giftNum = NumberUtil.add(giftNum, newDetail.getOrderNum());
-          } else {
-            totalNum = NumberUtil.add(totalNum, newDetail.getOrderNum());
-          }
+          totalNum = NumberUtil.add(totalNum, newDetail.getOrderNum());
         }
       }
     }
 
     // 这里需要重新统计明细信息，因为明细发生变动了
     Wrapper<PurchaseOrder> updateWrapper = Wrappers.lambdaUpdate(PurchaseOrder.class)
-        .set(PurchaseOrder::getTotalNum, totalNum).set(PurchaseOrder::getTotalGiftNum, giftNum)
+        .set(PurchaseOrder::getTotalNum, totalNum).set(PurchaseOrder::getTotalGiftNum, BigDecimal.ZERO)
         .set(PurchaseOrder::getTotalAmount, totalAmount).eq(PurchaseOrder::getId, order.getId());
     this.update(updateWrapper);
 
@@ -602,18 +592,10 @@ public class PurchaseOrderServiceImpl extends
     order.setOrderDate(vo.getOrderDate());
 
     BigDecimal purchaseNum = BigDecimal.ZERO;
-    BigDecimal giftNum = BigDecimal.ZERO;
     BigDecimal totalAmount = BigDecimal.ZERO;
     int orderNo = 1;
     for (PurchaseProductVo productVo : vo.getProducts()) {
-
-      boolean isGift = productVo.getPurchasePrice().doubleValue() == 0D;
-
-      if (isGift) {
-        giftNum = NumberUtil.add(giftNum, productVo.getPurchaseNum());
-      } else {
-        purchaseNum = NumberUtil.add(purchaseNum, productVo.getPurchaseNum());
-      }
+      purchaseNum = NumberUtil.add(purchaseNum, productVo.getPurchaseNum());
 
       // 计算含税总金额：采购数量 × 采购价（采购价本身就是含税价）
       BigDecimal taxAmount = NumberUtil.getNumber(
@@ -632,7 +614,7 @@ public class PurchaseOrderServiceImpl extends
       orderDetail.setProductId(productVo.getProductId());
       orderDetail.setOrderNum(productVo.getPurchaseNum());
       orderDetail.setTaxPrice(productVo.getPurchasePrice());
-      orderDetail.setIsGift(isGift);
+      orderDetail.setIsGift(Boolean.FALSE);
       orderDetail.setTaxRate(product.getTaxRate());
       orderDetail.setDescription(
           StringUtil.isBlank(productVo.getDescription()) ? StringPool.EMPTY_STR
@@ -694,7 +676,7 @@ public class PurchaseOrderServiceImpl extends
       orderNo++;
     }
     order.setTotalNum(purchaseNum);
-    order.setTotalGiftNum(giftNum);
+    order.setTotalGiftNum(BigDecimal.ZERO);
     order.setTotalAmount(totalAmount);
     order.setDescription(
         StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());

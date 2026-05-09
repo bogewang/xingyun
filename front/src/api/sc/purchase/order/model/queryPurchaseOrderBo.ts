@@ -50,11 +50,6 @@ export interface QueryPurchaseOrderBo {
   totalNum: number;
 
   /**
-   * 赠品数量
-   */
-  totalGiftNum: number;
-
-  /**
    * 采购金额
    */
   totalAmount: number;

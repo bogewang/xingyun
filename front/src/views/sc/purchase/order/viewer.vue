@@ -88,9 +88,6 @@
         <j-form-item label="采购数量" :span="6">
           <a-input v-model:value="formData.totalNum" class="number-input" readonly />
         </j-form-item>
-        <j-form-item label="赠品数量" :span="6">
-          <a-input v-model:value="formData.giftNum" class="number-input" readonly />
-        </j-form-item>
         <j-form-item label="含税总金额" :span="6">
           <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
         </j-form-item>
@@ -152,14 +149,6 @@
           { field: 'brandName', title: '商品品牌', width: 120 },
           { field: 'purchasePrice', title: '采购价（元）', align: 'right', width: 120 },
           { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
-          {
-            field: 'isGift',
-            title: '是否赠品',
-            width: 80,
-            formatter: ({ cellValue }) => {
-              return cellValue ? '是' : '否';
-            },
-          },
           { field: 'purchaseNum', title: '采购数量', align: 'right', width: 100 },
           {
             field: 'purchaseAmount',
@@ -187,7 +176,6 @@
           purchaserName: '',
           expectArriveDate: '',
           totalNum: 0,
-          giftNum: 0,
           totalAmount: 0,
           description: '',
           flowInstanceId: '',
@@ -215,7 +203,6 @@
               approveTime: res.approveTime,
               refuseReason: res.refuseReason,
               totalNum: 0,
-              giftNum: 0,
               totalAmount: 0,
               flowInstanceId: res.flowInstanceId,
             };
@@ -239,7 +226,6 @@
       // 计算汇总数据
       calcSum() {
         let totalNum = 0;
-        let giftNum = 0;
         let totalAmount = 0;
 
         this.tableData
@@ -248,11 +234,7 @@
           })
           .forEach((t) => {
             const num = parseFloat(t.purchaseNum);
-            if (t.isGift) {
-              giftNum = add(giftNum, num);
-            } else {
-              totalNum = add(totalNum, num);
-            }
+            totalNum = add(totalNum, num);
 
             // 先将每行的金额格式化成2位小数，然后再累加
             const rowAmount = getNumber(mul(num, t.purchasePrice), 2);
@@ -260,7 +242,6 @@
           });
 
         this.formData.totalNum = totalNum;
-        this.formData.giftNum = giftNum;
         this.formData.totalAmount = totalAmount;
       },
       getFormData() {

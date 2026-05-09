@@ -303,7 +303,6 @@
           { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
           { field: 'totalAmount', title: '采购总金额', align: 'right', width: 100 },
           { field: 'totalNum', title: '采购商品数量', align: 'right', width: 120 },
-          { field: 'totalGiftNum', title: '采购赠品数量', align: 'right', width: 120 },
           { field: 'expectArriveDate', title: '预计到货日期', width: 120 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },

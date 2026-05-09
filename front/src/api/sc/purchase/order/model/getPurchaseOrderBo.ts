@@ -60,11 +60,6 @@ export interface GetPurchaseOrderBo {
   totalNum: number;
 
   /**
-   * 赠品数量
-   */
-  giftNum: number;
-
-  /**
    * 采购金额
    */
   totalAmount: number;
@@ -185,11 +180,6 @@ export interface OrderDetailBo {
    * 库存数量
    */
   stockNum: number;
-
-  /**
-   * 是否赠品
-   */
-  isGift: boolean;
 
   /**
    * 税率

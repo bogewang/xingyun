@@ -96,12 +96,6 @@ public class GetPurchaseOrderBo extends BaseBo<PurchaseOrderFullDto> {
   private BigDecimal totalNum;
 
   /**
-   * 赠品数量
-   */
-  @ApiModelProperty("赠品数量")
-  private BigDecimal giftNum;
-
-  /**
    * 采购金额
    */
   @ApiModelProperty("采购金额")
@@ -199,7 +193,6 @@ public class GetPurchaseOrderBo extends BaseBo<PurchaseOrderFullDto> {
     this.status = dto.getStatus().getCode();
 
     this.totalNum = dto.getTotalNum();
-    this.giftNum = dto.getTotalGiftNum();
     this.totalAmount = dto.getTotalAmount();
 
     if (!CollectionUtil.isEmpty(dto.getDetails())) {
@@ -300,12 +293,6 @@ public class GetPurchaseOrderBo extends BaseBo<PurchaseOrderFullDto> {
      */
     @ApiModelProperty("库存数量")
     private BigDecimal stockNum;
-
-    /**
-     * 是否赠品
-     */
-    @ApiModelProperty("是否赠品")
-    private Boolean isGift;
 
     /**
      * 税率

@@ -107,7 +107,6 @@
             <a-button :icon="h(EditOutlined)" @click="batchInputPurchasePrice"
               >批量调整采购价</a-button
             >
-            <a-button :icon="h(AlertOutlined)" @click="setGift">设置赠品</a-button>
           </a-space>
         </template>
 
@@ -156,9 +155,7 @@
 
         <!-- 采购价 列自定义内容 -->
         <template #purchasePrice_default="{ row }">
-          <span v-if="row.isGift">{{ row.purchasePrice }}</span>
           <a-input
-            v-else
             v-model:value="row.purchasePrice"
             class="number-input"
             @input="(e) => purchasePriceInput(row, e.target.value)"
@@ -191,9 +188,6 @@
         <j-form bordered label-width="140px">
           <j-form-item label="采购数量" :span="6">
             <a-input v-model:value="formData.totalNum" class="number-input" readonly />
-          </j-form-item>
-          <j-form-item label="赠品数量" :span="6">
-            <a-input v-model:value="formData.giftNum" class="number-input" readonly />
           </j-form-item>
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
@@ -241,7 +235,6 @@
     DeleteOutlined,
     NumberOutlined,
     EditOutlined,
-    AlertOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/purchase/order';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
@@ -277,7 +270,6 @@
         DeleteOutlined,
         NumberOutlined,
         EditOutlined,
-        AlertOutlined,
         isEmpty,
         isFloatGeZero,
         getNumber,
@@ -331,14 +323,6 @@
             slots: { default: 'purchasePrice_default' },
           },
           { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
-          {
-            field: 'isGift',
-            title: '是否赠品',
-            width: 80,
-            formatter: ({ cellValue }) => {
-              return cellValue ? '是' : '否';
-            },
-          },
           { field: 'taxCostPrice', title: '含税成本价（元）', align: 'right', width: 140 },
           { field: 'stockNum', title: '库存数量', align: 'right', width: 140 },
           {
@@ -404,7 +388,6 @@
           orderDate: '',
           expectArriveDate: '',
           totalNum: 0,
-          giftNum: 0,
           totalAmount: 0,
           description: '',
         };
@@ -439,7 +422,6 @@
               approveTime: res.approveTime,
               refuseReason: res.refuseReason,
               totalNum: 0,
-              giftNum: 0,
               totalAmount: 0,
             });
             const tableData = res.details || [];
@@ -468,7 +450,6 @@
           taxCostPrice: '',
           stockNum: '',
           taxRate: '',
-          isGift: false,
           purchaseNum: '',
           purchaseAmount: '',
           description: '',
@@ -550,7 +531,6 @@
       // 计算汇总数据
       calcSum() {
         let totalNum = 0;
-        let giftNum = 0;
         let totalAmount = 0;
 
         this.tableData
@@ -559,11 +539,7 @@
           })
           .forEach((t) => {
             const num = parseFloat(t.purchaseNum);
-            if (t.isGift) {
-              giftNum = add(giftNum, num);
-            } else {
-              totalNum = add(totalNum, num);
-            }
+            totalNum = add(totalNum, num);
 
             // 先将每行的金额格式化成2位小数，然后再累加
             const rowAmount = getNumber(mul(num, t.purchasePrice), 2);
@@ -571,7 +547,6 @@
           });
 
         this.formData.totalNum = totalNum;
-        this.formData.giftNum = giftNum;
         this.formData.totalAmount = totalAmount;
       },
       // 批量录入数量
@@ -603,13 +578,6 @@
           return;
         }
 
-        for (let i = 0; i < records.length; i++) {
-          if (records[i].isGift) {
-            createError('第' + (i + 1) + '行商品为赠品，不允许录入采购价！');
-            return;
-          }
-        }
-
         createPrompt('请输入采购价（元）', {
           inputPattern: PATTERN_IS_PRICE,
           inputErrorMessage: '采购价（元）必须是数字并且不小于0，最多允许6位小数',
@@ -622,21 +590,6 @@
             this.purchasePriceInput(t, value);
           });
         });
-      },
-      // 设置赠品
-      setGift() {
-        const records = this.$refs.grid.getCheckboxRecords();
-        if (isEmpty(records)) {
-          createError('请选择要设置为赠品的商品数据！');
-          return;
-        }
-
-        records.forEach((item) => {
-          item.purchasePrice = 0;
-          item.isGift = true;
-        });
-
-        this.calcSum();
       },
       // 批量新增商品
       batchAddProduct(productList) {
@@ -691,16 +644,9 @@
             return false;
           }
 
-          if (product.isGift) {
-            if (parseFloat(product.purchasePrice) !== 0) {
-              createError('第' + (i + 1) + '行商品采购价必须等于0！');
-              return false;
-            }
-          } else {
-            if (!isFloatGtZero(product.purchasePrice)) {
-              createError('第' + (i + 1) + '行商品采购价必须大于0！');
-              return false;
-            }
+          if (!isFloatGtZero(product.purchasePrice)) {
+            createError('第' + (i + 1) + '行商品采购价必须大于0！');
+            return false;
           }
 
           if (!isNumberPrecision(product.purchasePrice, 6)) {
