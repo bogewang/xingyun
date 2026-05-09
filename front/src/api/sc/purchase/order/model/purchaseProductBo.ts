@@ -15,6 +15,11 @@ export interface PurchaseProductBo {
   productName: string;
 
   /**
+   * 简称
+   */
+  shortName: string;
+
+  /**
    * 分类名称
    */
   categoryName: string;

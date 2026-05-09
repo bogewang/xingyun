@@ -111,6 +111,7 @@
       Setting,
       DemoData,
       BatchHandler,
+      DownOutlined,
     },
     setup() {
       return {
@@ -118,7 +119,6 @@
         SearchOutlined,
         PlusOutlined,
         DeleteOutlined,
-        DownOutlined,
         PRINT_TYPE,
       };
     },

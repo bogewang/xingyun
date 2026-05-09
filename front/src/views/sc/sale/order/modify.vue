@@ -191,6 +191,7 @@
       />
       <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
         <a-space>
+          <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
           <a-button
             v-permission="['sale:order:modify']"
             type="primary"
@@ -227,7 +228,6 @@
     isFloat,
     isFloatGtZero,
     isNumberPrecision,
-    eq,
     uuid,
     PATTERN_IS_FLOAT_GT_ZERO,
     PATTERN_IS_PRICE,
@@ -738,6 +738,25 @@
           .finally(() => {
             this.loading = false;
           });
+      },
+      exportDetails() {
+        this.loading = true;
+        api.exportDetail(this.buildQueryParams({}))
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
+      // 查询前构建查询参数结构
+      buildQueryParams() {
+        return {
+          pageIndex: 1,
+          pageSize: 2147483647,
+          // 订单编号列表
+          idList: [this.id],
+        };
       },
     },
   });

@@ -1,5 +1,7 @@
 package com.lframework.xingyun.sc.impl.sale;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.Assert;
 import com.lframework.starter.common.utils.NumberUtil;
@@ -9,11 +11,14 @@ import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.sc.entity.SaleOrderDetail;
 import com.lframework.xingyun.sc.mappers.SaleOrderDetailMapper;
 import com.lframework.xingyun.sc.service.sale.SaleOrderDetailService;
-import java.math.BigDecimal;
-import java.util.List;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 public class SaleOrderDetailServiceImpl extends
@@ -24,9 +29,14 @@ public class SaleOrderDetailServiceImpl extends
   private ProductService productService;
 
   @Override
-  public List<SaleOrderDetail> getByOrderId(String orderId) {
+  public List<SaleOrderDetail> getByOrderIds(List<String> orderIds) {
+    if (CollectionUtils.isEmpty(orderIds)) {
+      return Collections.emptyList();
+    }
 
-    return getBaseMapper().getByOrderId(orderId);
+    Wrapper<SaleOrderDetail> deleteDetailWrapper = Wrappers.lambdaQuery(SaleOrderDetail.class)
+            .in(SaleOrderDetail::getOrderId, orderIds);
+    return getBaseMapper().selectList(deleteDetailWrapper);
   }
 
   @Transactional(rollbackFor = Exception.class)

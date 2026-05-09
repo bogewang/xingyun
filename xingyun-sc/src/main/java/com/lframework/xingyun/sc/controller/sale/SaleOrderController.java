@@ -18,6 +18,7 @@ import com.lframework.xingyun.sc.dto.sale.SaleOrderFullDto;
 import com.lframework.xingyun.sc.dto.sale.SaleOrderWithOutDto;
 import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
 import com.lframework.xingyun.sc.entity.SaleOrder;
+import com.lframework.xingyun.sc.excel.sale.SaleOrderDetailExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.SaleOrderExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.SaleOrderImportModel;
 import com.lframework.xingyun.sc.service.sale.SaleOrderService;
@@ -113,6 +114,19 @@ public class SaleOrderController extends DefaultBaseController {
     public InvokeResult<Void> export(@Valid QuerySaleOrderVo vo) {
 
         ExportTaskUtil.exportTask("销售单信息", SaleOrderExportTaskWorker.class, vo);
+
+        return InvokeResultBuilder.success();
+    }
+
+    /**
+     * 明细导出
+     */
+    @ApiOperation("明细导出")
+    @HasPermission({ "sale:order:export" })
+    @PostMapping("/exportDetail")
+    public InvokeResult<Void> exportDetail(@RequestBody @Valid QuerySaleOrderVo vo) {
+
+        ExportTaskUtil.exportTask("销售单明细", SaleOrderDetailExportTaskWorker.class, vo);
 
         return InvokeResultBuilder.success();
     }

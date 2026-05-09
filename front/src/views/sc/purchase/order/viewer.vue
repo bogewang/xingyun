@@ -71,7 +71,7 @@
       highlight-hover-row
       keep-source
       row-id="id"
-      height="500"
+      height="380"
       :data="tableData"
       :columns="tableColumn"
     >
@@ -116,6 +116,7 @@
   import * as api from '@/api/sc/purchase/order';
   import { isFloatGeZero, getNumber, mul, add } from '@/utils/utils';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
+  import { exportPurchaseOrderDetails } from '@/utils/orderDetailExport';
 
   export default defineComponent({
     components: {
@@ -150,6 +151,7 @@
           { type: 'seq', width: 50 },
           { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 260 },
+          { field: 'shortName', title: '简称', width: 120 },
           { field: 'skuCode', title: '商品SKU编号', width: 120 },
           { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'unit', title: '单位', width: 80 },
@@ -272,6 +274,9 @@
       },
       getFormData() {
         return this.formData;
+      },
+      exportDetails() {
+        exportPurchaseOrderDetails(this.tableData);
       },
     },
   });

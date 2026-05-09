@@ -220,6 +220,7 @@
 
       <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
         <a-space>
+          <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
           <a-button
             v-permission="['purchase:order:modify']"
             type="primary"
@@ -265,6 +266,7 @@
   } from '@/utils/utils';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
+  import { exportPurchaseOrderDetails } from '@/utils/orderDetailExport';
 
   export default defineComponent({
     name: 'ModifyPurchaseOrder',
@@ -322,6 +324,7 @@
             width: 260,
             slots: { default: 'productName_default' },
           },
+          { field: 'shortName', title: '简称', width: 120 },
           { field: 'skuCode', title: '商品SKU编号', width: 120 },
           { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
@@ -463,6 +466,7 @@
           productId: '',
           productCode: '',
           productName: '',
+          shortName: '',
           skuCode: '',
           externalCode: '',
           unit: '',
@@ -791,6 +795,9 @@
           .finally(() => {
             this.loading = false;
           });
+      },
+      exportDetails() {
+        exportPurchaseOrderDetails(this.tableData);
       },
     },
   });

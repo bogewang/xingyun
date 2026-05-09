@@ -9,7 +9,7 @@
     <div>
       <a-tabs v-model:activeKey="activeKey" v-if="visible">
         <a-tab-pane key="detail" tab="详情"
-          ><viewer :id="id" @load-data-complete="(e) => (formData = e)"
+          ><viewer ref="viewerRef" :id="id" @load-data-complete="(e) => (formData = e)"
         /></a-tab-pane>
         <a-tab-pane key="orderTimeLine" v-if="isEmpty(formData.flowInstanceId)" tab="变动记录"
           ><order-time-line :id="id"
@@ -23,6 +23,7 @@
       <div class="form-modal-footer">
         <a-space>
           <a-button type="primary" :loading="loading" @click="print">打印</a-button>
+          <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
           <a-button :loading="loading" @click="closeDialog">关闭</a-button>
         </a-space>
       </div>
@@ -104,6 +105,9 @@ export default defineComponent({
         } finally {
           this.loading = false;
         }
+      },
+      exportDetails() {
+        this.$refs.viewerRef?.exportDetails();
       },
     },
   });

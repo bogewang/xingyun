@@ -705,7 +705,7 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
     List<PrintSaleTagBo> res = Lists.newArrayList();
     result.getDatas().forEach(item -> {
       Customer customer = customerService.findById(item.getCustomerId());
-      List<SaleOrderDetail> details = saleOrderDetailService.getByOrderId(item.getId());
+      List<SaleOrderDetail> details = saleOrderDetailService.getByOrderIds(Lists.newArrayList(item.getId()));
 
       List<String> productIds = details.stream()
               .map(SaleOrderDetail::getProductId)

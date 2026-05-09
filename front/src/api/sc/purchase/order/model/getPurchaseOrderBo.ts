@@ -139,6 +139,11 @@ export interface OrderDetailBo {
   productName: string;
 
   /**
+   * 简称
+   */
+  shortName: string;
+
+  /**
    * SKU编号
    */
   skuCode: string;

@@ -33,6 +33,12 @@ public class PurchaseProductBo extends BaseBo<PurchaseProductDto> {
   private String productName;
 
   /**
+   * 简称
+   */
+  @ApiModelProperty("简称")
+  private String shortName;
+
+  /**
    * 分类名称
    */
   @ApiModelProperty("分类名称")

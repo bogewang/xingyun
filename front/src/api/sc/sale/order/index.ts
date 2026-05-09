@@ -83,6 +83,23 @@ export function exportList(data: QuerySaleOrderVo): Promise<void> {
   );
 }
 
+
+/**
+ * 导出订单详情
+ */
+export function exportDetail(data: QuerySaleOrderVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/exportDetail',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
 export function downloadImportTemplate(): Promise<void> {
   return defHttp.get<void>(
     {

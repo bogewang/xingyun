@@ -80,6 +80,7 @@
         <id column="id" property="id"/>
         <result column="code" property="code"/>
         <result column="name" property="name"/>
+        <result column="short_name" property="shortName"/>
         <result column="category_id" property="categoryId"/>
         <result column="category_name" property="categoryName"/>
         <result column="brand_id" property="brandId"/>
@@ -158,6 +159,7 @@
             g.id,
             g.code,
             g.name,
+            g.short_name,
             c.id AS category_id,
             c.name AS category_name,
             b.id AS brand_id,

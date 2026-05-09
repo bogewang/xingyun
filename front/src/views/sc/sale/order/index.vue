@@ -156,7 +156,6 @@
           { field: 'code', title: '单据号', width: 180 },
           { field: 'customerCode', title: '客户编号', width: 100 },
           { field: 'customerName', title: '客户名称', width: 120 },
-          // { field: 'salerName', title: '销售员', width: 100 },
         ]"
         title="审核拒绝"
         :tableData="batchHandleDatas"

@@ -10,10 +10,10 @@ public interface SaleOrderDetailService extends BaseMpService<SaleOrderDetail> {
   /**
    * 根据订单ID查询
    *
-   * @param orderId
+   * @param orderIds
    * @return
    */
-  List<SaleOrderDetail> getByOrderId(String orderId);
+  List<SaleOrderDetail> getByOrderIds(List<String> orderIds);
 
   /**
    * 增加出库数量
