@@ -135,12 +135,6 @@
                 >导入Excel</a-button
               >
               <a-button
-                v-permission="['purchase:order:import']"
-                :icon="h(CloudUploadOutlined)"
-                @click="$refs.importer2.openDialog()"
-                >批量设置约定支付</a-button
-              >
-              <a-button
                 v-permission="['purchase:order:export']"
                 :icon="h(DownloadOutlined)"
                 @click="exportList"
@@ -163,8 +157,6 @@
     </div>
 
     <purchase-order-importer ref="importer" @confirm="search" />
-    <purchase-order-pay-type-importer ref="importer2" />
-
     <!-- 批量操作 -->
     <batch-handler
       ref="batchApprovePassHandlerDialog"
@@ -242,7 +234,6 @@
   } from '@/utils/utils';
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
   import PurchaseOrderImporter from '@/components/Importor/PurchaseOrderImporter.vue';
-  import PurchaseOrderPayTypeImporter from '@/components/Importor/PurchaseOrderPayTypeImporter.vue';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
   import BatchHandler from '@/components/BatchHandler';
 
@@ -252,7 +243,6 @@
       Detail,
       ApproveRefuse,
       PurchaseOrderImporter,
-      PurchaseOrderPayTypeImporter,
       StoreCenterSelector,
       SupplierSelector,
       UserSelector,

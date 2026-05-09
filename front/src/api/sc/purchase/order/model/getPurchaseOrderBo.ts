@@ -1,5 +1,3 @@
-import { OrderPayTypeBo } from '@/api/sc/pay-type/model/orderPayTypeBo';
-
 export interface GetPurchaseOrderBo {
   /**
    * ID
@@ -70,11 +68,6 @@ export interface GetPurchaseOrderBo {
    * 采购金额
    */
   totalAmount: number;
-
-  /**
-   * 支付方式
-   */
-  payTypes: OrderPayTypeBo[];
 
   /**
    * 备注

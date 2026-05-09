@@ -371,37 +371,6 @@ export function importExcel(data: { id: string; file: Blob }): Promise<void> {
 }
 
 /**
- * 下载约定支付导入模板
- */
-export function downloadImportPayTypeTemplate(): Promise<void> {
-  return defHttp.get<void>(
-    {
-      url: baseUrl + '/import/template/paytype',
-    },
-    {
-      responseType: ResponseEnum.BLOB,
-      region,
-    },
-  );
-}
-
-/**
- * 导入约定支付
- */
-export function importPayTypeExcel(data: { id: string; file: Blob }): Promise<void> {
-  return defHttp.post<void>(
-    {
-      url: baseUrl + '/import/paytype',
-      data,
-    },
-    {
-      contentType: ContentTypeEnum.BLOB,
-      region,
-    },
-  );
-}
-
-/**
  * 根据关键字查询商品
  */
 export function searchPurchaseProducts(

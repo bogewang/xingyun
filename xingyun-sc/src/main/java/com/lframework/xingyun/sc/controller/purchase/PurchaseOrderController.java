@@ -287,13 +287,6 @@ public class PurchaseOrderController extends DefaultBaseController {
     ExcelUtil.export("采购订单导入模板", PurchaseOrderImportModel.class);
   }
 
-  @ApiOperation("下载导入约定支付模板")
-  @HasPermission({"purchase:order:import"})
-  @GetMapping("/import/template/paytype")
-  public void downloadImportPayTypeTemplate() {
-    ExcelUtil.export("采购订单导入约定支付模板", PurchaseOrderPayTypeImportModel.class);
-  }
-
   @ApiOperation("导入")
   @HasPermission({"purchase:order:import"})
   @PostMapping("/import")
@@ -303,19 +296,6 @@ public class PurchaseOrderController extends DefaultBaseController {
     PurchaseOrderImportListener listener = new PurchaseOrderImportListener();
     listener.setTaskId(id);
     ExcelUtil.read(file, PurchaseOrderImportModel.class, listener).sheet().doRead();
-
-    return InvokeResultBuilder.success();
-  }
-
-  @ApiOperation("导入约定支付")
-  @HasPermission({"purchase:order:import"})
-  @PostMapping("/import/paytype")
-  public InvokeResult<Void> importPayTypeExcel(@NotBlank(message = "ID不能为空") String id,
-      @NotNull(message = "请上传文件") MultipartFile file) {
-
-    PurchaseOrderPayTypeImportListener listener = new PurchaseOrderPayTypeImportListener();
-    listener.setTaskId(id);
-    ExcelUtil.read(file, PurchaseOrderPayTypeImportModel.class, listener).sheet().doRead();
 
     return InvokeResultBuilder.success();
   }

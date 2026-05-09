@@ -97,10 +97,6 @@
       </j-form>
     </j-border>
 
-    <j-border title="约定支付">
-      <pay-type ref="payType" :disabled="true" />
-    </j-border>
-
     <j-border>
       <j-form bordered label-width="140px">
         <j-form-item label="备注" :span="24" :content-nest="false">
@@ -112,15 +108,12 @@
 </template>
 <script>
   import { defineComponent } from 'vue';
-  import PayType from '@/views/sc/pay-type/index.vue';
   import * as api from '@/api/sc/purchase/order';
   import { isFloatGeZero, getNumber, mul, add } from '@/utils/utils';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
 
   export default defineComponent({
-    components: {
-      PayType,
-    },
+    components: {},
     props: {
       id: {
         type: String,
@@ -228,7 +221,6 @@
             };
             this.tableData = res.details || [];
 
-            this.$refs.payType.setTableData(res.payTypes || []);
             this.calcSum();
 
             this.$emit('load-data-complete', this.formData);

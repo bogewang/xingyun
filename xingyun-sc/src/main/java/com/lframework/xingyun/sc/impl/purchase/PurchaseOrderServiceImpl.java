@@ -52,7 +52,6 @@ import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseOrderFullDto;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseOrderWithReceiveDto;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseProductDto;
-import com.lframework.xingyun.sc.entity.OrderPayType;
 import com.lframework.xingyun.sc.entity.PurchaseConfig;
 import com.lframework.xingyun.sc.entity.PurchaseOrder;
 import com.lframework.xingyun.sc.entity.PurchaseOrderDetail;
@@ -368,13 +367,6 @@ public class PurchaseOrderServiceImpl extends
 
     if (getBaseMapper().updateAllColumn(order, updateOrderWrapper) != 1) {
       throw new DefaultClientException("订单信息已过期，请刷新重试！");
-    }
-
-    if (NumberUtil.gt(order.getTotalAmount(), BigDecimal.ZERO)) {
-      List<OrderPayType> orderPayTypes = orderPayTypeService.findByOrderId(order.getId());
-      if (CollectionUtil.isEmpty(orderPayTypes)) {
-        throw new DefaultClientException("单据没有约定支付，请检查！");
-      }
     }
 
     Wrapper<PurchaseOrderDetail> queryDetailWrapper = Wrappers.lambdaQuery(
@@ -707,7 +699,7 @@ public class PurchaseOrderServiceImpl extends
     order.setDescription(
         StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
 
-    orderPayTypeService.create(order.getId(), vo.getPayTypes());
+    orderPayTypeService.deleteByOrderId(order.getId());
   }
 
   @Override

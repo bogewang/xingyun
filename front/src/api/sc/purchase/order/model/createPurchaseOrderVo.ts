@@ -1,4 +1,3 @@
-import { OrderPayTypeVo } from '@/api/sc/pay-type/model/orderPayTypeVo';
 import { PurchaseProductVo } from '@/api/sc/purchase/order/model/purchaseProductVo';
 
 export interface CreatePurchaseOrderVo {
@@ -31,11 +30,6 @@ export interface CreatePurchaseOrderVo {
    * 商品信息
    */
   products: PurchaseProductVo[];
-
-  /**
-   * 约定支付
-   */
-  payTypes: OrderPayTypeVo[];
 
   /**
    * 备注
