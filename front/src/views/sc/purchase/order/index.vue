@@ -34,21 +34,6 @@
                 <j-form-item label="操作人">
                   <user-selector v-model:value="searchFormData.createBy" />
                 </j-form-item>
-                <j-form-item label="操作日期" :content-nest="false">
-                  <div class="date-range-container">
-                    <a-date-picker
-                      v-model:value="searchFormData.createStartTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 00:00:00"
-                    />
-                    <span class="date-split">至</span>
-                    <a-date-picker
-                      v-model:value="searchFormData.createEndTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 23:59:59"
-                    />
-                  </div>
-                </j-form-item>
                 <j-form-item label="订单日期" :content-nest="false">
                   <div class="date-range-container">
                     <a-date-picker
@@ -227,7 +212,7 @@
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
     isEmpty,
-    formatDateTime,
+    formatDate,
     getDateTimeWithMinTime,
     getDateTimeWithMaxTime,
     buildSortPageVo,
@@ -274,10 +259,8 @@
           scId: '',
           supplierId: '',
           createBy: '',
-          createStartTime: formatDateTime(getDateTimeWithMinTime(moment().subtract(1, 'M'))),
-          createEndTime: formatDateTime(getDateTimeWithMaxTime(moment())),
-          orderDateStart: '',
-          orderDateEnd: '',
+          orderDateStart: formatDate(moment().subtract(1, 'M')),
+          orderDateEnd: formatDate(moment()),
           approveBy: '',
           approveStartTime: '',
           approveEndTime: '',
