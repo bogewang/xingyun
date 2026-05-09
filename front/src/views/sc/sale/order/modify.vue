@@ -643,7 +643,8 @@
           createError('请录入商品！');
           return false;
         }
-
+        // tableData过滤productId为空的数据
+        this.tableData = this.tableData.filter((item) => !isEmpty(item.productId));
         for (let i = 0; i < this.tableData.length; i++) {
           const product = this.tableData[i];
 
@@ -741,7 +742,8 @@
       },
       exportDetails() {
         this.loading = true;
-        api.exportDetail(this.buildQueryParams({}))
+        api
+          .exportDetail(this.buildQueryParams({}))
           .then(() => {
             createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
           })

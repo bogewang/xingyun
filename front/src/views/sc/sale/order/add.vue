@@ -63,7 +63,7 @@
             <a-button :icon="h(NumberOutlined)" @click="batchInputOrderNum">批量录入数量</a-button>
             <a-button :icon="h(EditOutlined)" @click="batchInputTaxPrice">批量调整价格</a-button>
             <a-button :icon="h(CloudUploadOutlined)" @click="$refs.importer.openDialog()"
-            >导入Excel
+              >导入Excel
             </a-button>
           </a-space>
         </template>
@@ -192,45 +192,45 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import BatchAddProduct from '@/views/sc/sale/batch-add-product.vue';
-import Moment from 'moment';
-import {
-  AlertOutlined,
-  CloudUploadOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  NumberOutlined,
-  PlusOutlined,
-} from '@ant-design/icons-vue';
-import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
-import * as api from '@/api/sc/sale/order';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {
-  add,
-  div,
-  formatDate,
-  getNumber,
-  isEmpty,
-  isFloat,
-  isFloatGeZero,
-  isFloatGtZero,
-  isNumberPrecision,
-  mul,
-  PATTERN_IS_FLOAT_GT_ZERO,
-  PATTERN_IS_PRICE,
-  uuid,
-} from '@/utils/utils';
-import {createConfirm, createError, createPrompt, createSuccess} from '@/hooks/web/msg';
-import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
-import UserSelector from '@/components/Selector/UserSelector.vue';
-import * as storeCenterApi from "@/api/base-data/store-center";
-import SaleOrderImporter from "@/components/Importor/SaleOrderImporter.vue";
-import JFormItem from "@/components/JFormItem";
-import JBorder from "@/components/JBorder";
-import JForm from "@/components/JForm";
+  import { defineComponent, h } from 'vue';
+  import BatchAddProduct from '@/views/sc/sale/batch-add-product.vue';
+  import Moment from 'moment';
+  import {
+    AlertOutlined,
+    CloudUploadOutlined,
+    DeleteOutlined,
+    EditOutlined,
+    NumberOutlined,
+    PlusOutlined,
+  } from '@ant-design/icons-vue';
+  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
+  import * as api from '@/api/sc/sale/order';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    add,
+    div,
+    formatDate,
+    getNumber,
+    isEmpty,
+    isFloat,
+    isFloatGeZero,
+    isFloatGtZero,
+    isNumberPrecision,
+    mul,
+    PATTERN_IS_FLOAT_GT_ZERO,
+    PATTERN_IS_PRICE,
+    uuid,
+  } from '@/utils/utils';
+  import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
+  import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
+  import UserSelector from '@/components/Selector/UserSelector.vue';
+  import * as storeCenterApi from '@/api/base-data/store-center';
+  import SaleOrderImporter from '@/components/Importor/SaleOrderImporter.vue';
+  import JFormItem from '@/components/JFormItem';
+  import JBorder from '@/components/JBorder';
+  import JForm from '@/components/JForm';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddSaleOrder',
     components: {
       JForm,
@@ -649,7 +649,8 @@ export default defineComponent({
           createError('请录入商品！');
           return false;
         }
-
+        // tableData过滤productId为空的数据
+        this.tableData = this.tableData.filter((item) => !isEmpty(item.productId));
         for (let i = 0; i < this.tableData.length; i++) {
           const product = this.tableData[i];
 
