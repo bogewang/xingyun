@@ -283,11 +283,11 @@
           },
           { field: 'approveTime', title: '审核时间', width: 170 },
           { field: 'approveBy', title: '审核人', width: 100 },
-          { field: 'description', title: '备注', minWidth: 200 },
+          { field: 'description', title: '备注', width: 200 },
           {
             title: '操作',
-            width: 220,
-            className: 'sale-order-action-column',
+            width: 200,
+            fixed: 'right',
             slots: { default: 'action_default' },
           },
         ],
@@ -546,16 +546,3 @@
     },
   });
 </script>
-<style scoped>
-  :deep(.sale-order-action-column .vxe-cell) {
-    white-space: nowrap;
-  }
-
-  :deep(.sale-order-action-column .vben-basic-table-action) {
-    flex-wrap: nowrap;
-  }
-
-  :deep(.sale-order-action-column .ant-btn-link) {
-    padding-inline: 4px;
-  }
-</style>

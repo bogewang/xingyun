@@ -116,7 +116,6 @@
   import * as api from '@/api/sc/purchase/order';
   import { isFloatGeZero, getNumber, mul, add } from '@/utils/utils';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
-  import { exportPurchaseOrderDetails } from '@/utils/orderDetailExport';
 
   export default defineComponent({
     components: {
@@ -276,7 +275,7 @@
         return this.formData;
       },
       exportDetails() {
-        exportPurchaseOrderDetails(this.tableData);
+        // exportPurchaseOrderDetails(this.tableData);
       },
     },
   });

@@ -266,7 +266,6 @@
   } from '@/utils/utils';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
-  import { exportPurchaseOrderDetails } from '@/utils/orderDetailExport';
 
   export default defineComponent({
     name: 'ModifyPurchaseOrder',
@@ -797,7 +796,7 @@
           });
       },
       exportDetails() {
-        exportPurchaseOrderDetails(this.tableData);
+        // exportPurchaseOrderDetails(this.tableData);
       },
     },
   });
