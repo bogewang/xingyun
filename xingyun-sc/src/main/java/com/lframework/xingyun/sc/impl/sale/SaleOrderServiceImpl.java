@@ -676,7 +676,8 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
       }
 
       // 匹配商品,设置商品编号
-      String nameSpecUnit = data.getProductName() + data.getSpec() + data.getUnit();
+      String spec = data.getSpec() == null ? StringPool.EMPTY_STR : data.getSpec();
+      String nameSpecUnit = data.getProductName() + spec + data.getUnit();
       Product product = nameSpecUnitMap.get(nameSpecUnit);
       if (product == null) {
         product = nameUnitMap.get(nameSpecUnit);
