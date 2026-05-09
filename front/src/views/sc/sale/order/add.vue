@@ -161,7 +161,7 @@
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
           <j-form-item label="备注" :span="12" :content-nest="false">
-            <a-textarea v-model:value.trim="formData.description" maxlength="200" />
+            <a-input v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>
