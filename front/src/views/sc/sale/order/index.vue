@@ -49,6 +49,21 @@
                     />
                   </div>
                 </j-form-item>
+                <j-form-item label="订单日期" :content-nest="false">
+                  <div class="date-range-container">
+                    <a-date-picker
+                      v-model:value="searchFormData.orderDateStart"
+                      placeholder=""
+                      value-format="YYYY-MM-DD"
+                    />
+                    <span class="date-split">至</span>
+                    <a-date-picker
+                      v-model:value="searchFormData.orderDateEnd"
+                      placeholder=""
+                      value-format="YYYY-MM-DD"
+                    />
+                  </div>
+                </j-form-item>
                 <j-form-item label="审核人">
                   <user-selector v-model:value="searchFormData.approveBy" />
                 </j-form-item>
@@ -121,7 +136,7 @@
               >
               <a-button
                 v-permission="['sale:order:query']"
-                :icon="h(DownloadOutlined)"
+                :icon="h(PrinterOutlined)"
                 @click="tagPrint"
               >标签打印</a-button
               >
@@ -197,6 +212,7 @@
     CloseOutlined,
     DeleteOutlined,
     DownloadOutlined,
+    PrinterOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/order';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
@@ -237,6 +253,7 @@
         CloseOutlined,
         DeleteOutlined,
         DownloadOutlined,
+        PrinterOutlined,
         SALE_ORDER_STATUS,
       };
     },
@@ -253,6 +270,8 @@
           createBy: '',
           createStartTime: formatDateTime(getDateTimeWithMinTime(moment().subtract(1, 'M'))),
           createEndTime: formatDateTime(getDateTimeWithMaxTime(moment())),
+          orderDateStart: '',
+          orderDateEnd: '',
           approveBy: '',
           approveStartTime: '',
           approveEndTime: '',
@@ -271,9 +290,9 @@
           { type: 'checkbox', width: 45 },
           { field: 'code', title: '单据号', width: 180, sortable: true },
           { field: 'customerName', title: '客户名称', width: 120 },
+          { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
-          // { field: 'totalGiftNum', title: '赠品数量', align: 'right', width: 120 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
           {

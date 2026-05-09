@@ -40,6 +40,11 @@ public class PurchaseOrderFullDto implements BaseDto, Serializable {
   private String purchaserId;
 
   /**
+   * 订单日期
+   */
+  private LocalDate orderDate;
+
+  /**
    * 预计到货日期
    */
   private LocalDate expectArriveDate;

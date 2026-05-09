@@ -519,6 +519,8 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
       order.setSalerId(vo.getSalerId());
     }
 
+    order.setOrderDate(vo.getOrderDate());
+
     BigDecimal totalNum = BigDecimal.ZERO;
     BigDecimal giftNum = BigDecimal.ZERO;
     BigDecimal totalAmount = BigDecimal.ZERO;
@@ -728,8 +730,7 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
                 // 保留1位小数
                 String format = orderNum.setScale(1, RoundingMode.HALF_UP).toString();
                 bo.setOrderNum(String.format("%s%s", format, productMap.get(productId).getUnit()));
-                // todo 改为订单日期
-                bo.setOrderDate(DateUtil.formatDateTime(item.getCreateTime(), "yyyy-MM-dd"));
+                bo.setOrderDate(item.getOrderDate().toString());
 
                 return bo;
               }).collect(Collectors.toList());

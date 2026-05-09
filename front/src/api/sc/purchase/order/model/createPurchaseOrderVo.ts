@@ -18,6 +18,11 @@ export interface CreatePurchaseOrderVo {
   purchaserId: string;
 
   /**
+   * 订单日期
+   */
+  orderDate: string;
+
+  /**
    * 预计到货日期
    */
   expectArriveDate: string;

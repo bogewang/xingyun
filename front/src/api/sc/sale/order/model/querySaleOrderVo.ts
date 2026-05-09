@@ -32,6 +32,16 @@ export interface QuerySaleOrderVo extends SortPageVo {
   createEndTime: string;
 
   /**
+   * 订单起始日期
+   */
+  orderDateStart: string;
+
+  /**
+   * 订单截止日期
+   */
+  orderDateEnd: string;
+
+  /**
    * 审核人ID
    */
   approveBy: string;

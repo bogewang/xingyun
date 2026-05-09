@@ -28,6 +28,13 @@
           <j-form-item label="客户" required>
             <customer-selector v-model:value="formData.customerId" />
           </j-form-item>
+          <j-form-item label="订单日期" required>
+            <a-date-picker
+              v-model:value="formData.orderDate"
+              placeholder=""
+              value-format="YYYY-MM-DD"
+            />
+          </j-form-item>
         </j-form>
       </j-border>
       <!-- 数据列表 -->
@@ -190,6 +197,7 @@
 <script>
 import {defineComponent, h} from 'vue';
 import BatchAddProduct from '@/views/sc/sale/batch-add-product.vue';
+import Moment from 'moment';
 import {
   AlertOutlined,
   CloudUploadOutlined,
@@ -204,6 +212,7 @@ import {multiplePageMix} from '@/mixins/multiplePageMix';
 import {
   add,
   div,
+  formatDate,
   getNumber,
   isEmpty,
   isFloat,
@@ -351,6 +360,7 @@ export default defineComponent({
           scId: '',
           customerId: '',
           salerId: '',
+          orderDate: formatDate(Moment()),
           totalNum: 0,
           giftNum: 0,
           totalAmount: 0,
@@ -633,6 +643,11 @@ export default defineComponent({
           return false;
         }
 
+        if (isEmpty(this.formData.orderDate)) {
+          createError('订单日期不允许为空！');
+          return false;
+        }
+
         if (isEmpty(this.tableData)) {
           createError('请录入商品！');
           return false;
@@ -701,6 +716,7 @@ export default defineComponent({
           scId: this.formData.scId,
           customerId: this.formData.customerId,
           salerId: this.formData.salerId || '',
+          orderDate: this.formData.orderDate,
           description: this.formData.description,
           products: this.tableData.map((t) => {
             return {

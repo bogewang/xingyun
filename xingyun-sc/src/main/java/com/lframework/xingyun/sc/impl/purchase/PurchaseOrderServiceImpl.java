@@ -607,6 +607,7 @@ public class PurchaseOrderServiceImpl extends
     }
 
     order.setExpectArriveDate(vo.getExpectArriveDate());
+    order.setOrderDate(vo.getOrderDate());
 
     BigDecimal purchaseNum = BigDecimal.ZERO;
     BigDecimal giftNum = BigDecimal.ZERO;

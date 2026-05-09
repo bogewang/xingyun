@@ -36,6 +36,7 @@ public interface SaleOrderMapper extends BaseMapper<SaleOrder> {
    */
   @Sorts({
       @Sort(value = "code", alias = "o", autoParse = true),
+      @Sort(value = "orderDate", alias = "o", autoParse = true),
       @Sort(value = "createTime", alias = "o", autoParse = true),
   })
   @DataPermissions(type = OrderDataPermissionDataPermissionType.class, value = {

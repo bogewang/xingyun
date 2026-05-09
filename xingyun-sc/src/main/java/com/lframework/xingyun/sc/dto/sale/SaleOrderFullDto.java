@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -38,6 +39,11 @@ public class SaleOrderFullDto implements BaseDto, Serializable {
      * 销售员ID
      */
     private String salerId;
+
+    /**
+     * 订单日期
+     */
+    private LocalDate orderDate;
 
     /**
      * 商品数量

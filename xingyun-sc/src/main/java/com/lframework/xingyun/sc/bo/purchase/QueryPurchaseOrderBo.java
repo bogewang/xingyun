@@ -63,6 +63,13 @@ public class QueryPurchaseOrderBo extends BaseBo<PurchaseOrder> {
   private String purchaserName;
 
   /**
+   * 订单日期
+   */
+  @ApiModelProperty("订单日期")
+  @JsonFormat(pattern = StringPool.DATE_PATTERN)
+  private LocalDate orderDate;
+
+  /**
    * 预计到货日期
    */
   @ApiModelProperty("预计到货日期")

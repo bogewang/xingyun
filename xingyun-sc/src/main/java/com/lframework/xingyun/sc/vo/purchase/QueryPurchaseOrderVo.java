@@ -4,6 +4,7 @@ import com.lframework.starter.web.core.components.validation.IsEnum;
 import com.lframework.starter.web.core.vo.SortPageVo;
 import com.lframework.xingyun.sc.enums.PurchaseOrderStatus;
 import io.swagger.annotations.ApiModelProperty;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Data;
 
@@ -47,6 +48,18 @@ public class QueryPurchaseOrderVo extends SortPageVo {
    */
   @ApiModelProperty("操作截止时间")
   private LocalDateTime createEndTime;
+
+  /**
+   * 订单起始日期
+   */
+  @ApiModelProperty("订单起始日期")
+  private LocalDate orderDateStart;
+
+  /**
+   * 订单截止日期
+   */
+  @ApiModelProperty("订单截止日期")
+  private LocalDate orderDateEnd;
 
   /**
    * 审核人ID

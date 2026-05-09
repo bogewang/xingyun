@@ -11,8 +11,10 @@ import lombok.Data;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -39,6 +41,13 @@ public class CreateSaleOrderVo implements BaseVo, Serializable {
      */
     @ApiModelProperty("销售员ID")
     private String salerId;
+
+    /**
+     * 订单日期
+     */
+    @ApiModelProperty(value = "订单日期", required = true)
+    @NotNull(message = "订单日期不能为空！")
+    private LocalDate orderDate;
 
     /**
      * 商品信息

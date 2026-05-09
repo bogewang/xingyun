@@ -6,9 +6,11 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.lframework.starter.web.core.dto.BaseDto;
 import com.lframework.starter.web.core.entity.BaseEntity;
 import com.lframework.xingyun.sc.enums.SaleOrderStatus;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -124,6 +126,11 @@ public class SaleOrder extends BaseEntity implements BaseDto {
    * 拒绝原因
    */
   private String refuseReason;
+
+  /**
+   * 订单日期
+   */
+  private LocalDate orderDate;
 
 
 }

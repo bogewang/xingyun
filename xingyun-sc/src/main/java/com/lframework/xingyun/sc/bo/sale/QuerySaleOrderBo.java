@@ -13,6 +13,7 @@ import com.lframework.xingyun.sc.entity.SaleOrder;
 import com.lframework.starter.web.inner.service.system.SysUserService;
 import io.swagger.annotations.ApiModelProperty;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Data;
 
@@ -60,6 +61,13 @@ public class QuerySaleOrderBo extends BaseBo<SaleOrder> {
      */
     @ApiModelProperty("销售员姓名")
     private String salerName;
+
+    /**
+     * 订单日期
+     */
+    @ApiModelProperty("订单日期")
+    @JsonFormat(pattern = StringPool.DATE_PATTERN)
+    private LocalDate orderDate;
 
     /**
      * 销售数量

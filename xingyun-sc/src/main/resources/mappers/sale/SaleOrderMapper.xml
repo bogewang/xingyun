@@ -8,6 +8,7 @@
         <result column="sc_id" property="scId"/>
         <result column="customer_id" property="customerId"/>
         <result column="saler_id" property="salerId"/>
+        <result column="order_date" property="orderDate"/>
         <result column="total_num" property="totalNum"/>
         <result column="total_gift_num" property="totalGiftNum"/>
         <result column="total_amount" property="totalAmount"/>
@@ -28,6 +29,7 @@
         <result column="sc_id" property="scId"/>
         <result column="customer_id" property="customerId"/>
         <result column="saler_id" property="salerId"/>
+        <result column="order_date" property="orderDate"/>
         <result column="total_num" property="totalNum"/>
         <result column="total_gift_num" property="totalGiftNum"/>
         <result column="total_amount" property="totalAmount"/>
@@ -101,6 +103,7 @@
             o.sc_id,
             o.customer_id,
             o.saler_id,
+            o.order_date,
             o.total_num,
             o.total_gift_num,
             o.total_amount,
@@ -123,6 +126,7 @@
             o.sc_id,
             o.customer_id,
             o.saler_id,
+            o.order_date,
             o.total_num,
             o.total_gift_num,
             o.total_amount,
@@ -205,6 +209,14 @@
                 <if test="vo.createEndTime != null">
                     <![CDATA[
                     AND o.create_time <= #{vo.createEndTime}
+                    ]]>
+                </if>
+                <if test="vo.orderDateStart != null">
+                    AND o.order_date >= #{vo.orderDateStart}
+                </if>
+                <if test="vo.orderDateEnd != null">
+                    <![CDATA[
+                    AND o.order_date <= #{vo.orderDateEnd}
                     ]]>
                 </if>
                 <if test="vo.approveStartTime != null">

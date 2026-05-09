@@ -18,6 +18,11 @@ export interface CreateSaleOrderVo {
   salerId: string;
 
   /**
+   * 订单日期
+   */
+  orderDate: string;
+
+  /**
    * 商品信息
    */
   products: SaleProductVo[];

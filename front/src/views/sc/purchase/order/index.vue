@@ -49,6 +49,21 @@
                     />
                   </div>
                 </j-form-item>
+                <j-form-item label="订单日期" :content-nest="false">
+                  <div class="date-range-container">
+                    <a-date-picker
+                      v-model:value="searchFormData.orderDateStart"
+                      placeholder=""
+                      value-format="YYYY-MM-DD"
+                    />
+                    <span class="date-split">至</span>
+                    <a-date-picker
+                      v-model:value="searchFormData.orderDateEnd"
+                      placeholder=""
+                      value-format="YYYY-MM-DD"
+                    />
+                  </div>
+                </j-form-item>
                 <j-form-item label="审核人">
                   <user-selector v-model:value="searchFormData.approveBy" />
                 </j-form-item>
@@ -271,6 +286,8 @@
           createBy: '',
           createStartTime: formatDateTime(getDateTimeWithMinTime(moment().subtract(1, 'M'))),
           createEndTime: formatDateTime(getDateTimeWithMaxTime(moment())),
+          orderDateStart: '',
+          orderDateEnd: '',
           approveBy: '',
           approveStartTime: '',
           approveEndTime: '',
@@ -293,6 +310,7 @@
           { field: 'supplierCode', title: '供应商编号', width: 100 },
           { field: 'supplierName', title: '供应商名称', width: 120 },
           { field: 'purchaserName', title: '采购员', width: 100 },
+          { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
           { field: 'totalAmount', title: '采购总金额', align: 'right', width: 100 },
           { field: 'totalNum', title: '采购商品数量', align: 'right', width: 120 },
           { field: 'totalGiftNum', title: '采购赠品数量', align: 'right', width: 120 },

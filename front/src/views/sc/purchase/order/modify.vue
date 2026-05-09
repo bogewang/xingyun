@@ -17,6 +17,13 @@
           <j-form-item label="采购员">
             <user-selector v-model:value="formData.purchaserId" />
           </j-form-item>
+          <j-form-item label="订单日期" required>
+            <a-date-picker
+              v-model:value="formData.orderDate"
+              placeholder=""
+              value-format="YYYY-MM-DD"
+            />
+          </j-form-item>
           <j-form-item label="预计到货日期" required>
             <a-date-picker
               v-model:value="formData.expectArriveDate"
@@ -399,6 +406,7 @@
           scId: '',
           supplierId: '',
           purchaserId: '',
+          orderDate: '',
           expectArriveDate: '',
           totalNum: 0,
           giftNum: 0,
@@ -426,6 +434,7 @@
               scId: res.scId,
               supplierId: res.supplierId,
               purchaserId: res.purchaserId,
+              orderDate: res.orderDate,
               expectArriveDate: res.expectArriveDate,
               description: res.description,
               status: res.status,
@@ -659,6 +668,11 @@
           return false;
         }
 
+        if (isEmpty(this.formData.orderDate)) {
+          createError('订单日期不允许为空！');
+          return false;
+        }
+
         if (isEmpty(this.tableData)) {
           createError('请录入商品！');
           return false;
@@ -744,6 +758,7 @@
           scId: this.formData.scId,
           supplierId: this.formData.supplierId,
           purchaserId: this.formData.purchaserId,
+          orderDate: this.formData.orderDate,
           expectArriveDate: this.formData.expectArriveDate,
           description: this.formData.description,
           payTypes: this.$refs.payType.getTableData().map((t) => {

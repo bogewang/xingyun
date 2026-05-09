@@ -36,6 +36,7 @@ public interface PurchaseOrderMapper extends BaseMapper<PurchaseOrder> {
    */
   @Sorts({
       @Sort(value = "code", alias = "o", autoParse = true),
+      @Sort(value = "orderDate", alias = "o", autoParse = true),
       @Sort(value = "createTime", alias = "o", autoParse = true),
       @Sort(value = "approveTime", alias = "o", autoParse = true),
   })

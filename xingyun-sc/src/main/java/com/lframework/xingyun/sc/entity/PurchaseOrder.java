@@ -6,10 +6,11 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.lframework.starter.web.core.dto.BaseDto;
 import com.lframework.starter.web.core.entity.BaseEntity;
 import com.lframework.xingyun.sc.enums.PurchaseOrderStatus;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 /**
  * <p>
@@ -135,4 +136,9 @@ public class PurchaseOrder extends BaseEntity implements BaseDto {
    * 关联的审批流程ID
    */
   private Long flowInstanceId;
+
+  /**
+   * 订单日期
+   */
+  private LocalDate orderDate;
 }

@@ -35,6 +35,11 @@ export interface QuerySaleOrderBo {
   salerName: string;
 
   /**
+   * 订单日期
+   */
+  orderDate: string;
+
+  /**
    * 销售数量
    */
   totalNum: number;

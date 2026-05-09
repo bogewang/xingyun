@@ -22,6 +22,7 @@ import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
 import io.swagger.annotations.ApiModelProperty;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -77,6 +78,13 @@ public class GetSaleOrderBo extends BaseBo<SaleOrderFullDto> {
    */
   @ApiModelProperty("销售员姓名")
   private String salerName;
+
+  /**
+   * 订单日期
+   */
+  @ApiModelProperty("订单日期")
+  @JsonFormat(pattern = StringPool.DATE_PATTERN)
+  private LocalDate orderDate;
 
   /**
    * 销售数量

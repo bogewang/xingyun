@@ -43,6 +43,13 @@ public class CreatePurchaseOrderVo implements BaseVo, Serializable {
   private String purchaserId;
 
   /**
+   * 订单日期
+   */
+  @ApiModelProperty(value = "订单日期", required = true)
+  @NotNull(message = "订单日期不能为空！")
+  private LocalDate orderDate;
+
+  /**
    * 预计到货日期
    */
   @ApiModelProperty(value = "预计到货日期", required = true)
