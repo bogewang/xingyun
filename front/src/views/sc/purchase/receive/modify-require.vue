@@ -8,9 +8,6 @@
       />
       <j-border>
         <j-form bordered>
-          <j-form-item label="仓库" required>
-            {{ formData.sc.name }}
-          </j-form-item>
           <j-form-item label="供应商" required>
             {{ formData.supplier.name }}
           </j-form-item>
@@ -143,6 +140,7 @@
                   :row-config="{ isHover: true }"
                   @cell-click="({ row: product }) => handleSelectProduct(rowIndex, product)"
                 >
+                  <vxe-column type="seq" title="序号" width="60" />
                   <vxe-column field="productCode" title="商品编号" width="120" />
                   <vxe-column field="productName" title="商品名称" min-width="200" />
                   <vxe-column field="skuCode" title="商品SKU编号" width="120" />
@@ -321,6 +319,7 @@
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
+          { type: 'seq', width: 50, title: '序号' },
           { field: 'productCode', title: '商品编号', width: 120 },
           {
             field: 'productName',
@@ -669,11 +668,6 @@
       },
       // 校验数据
       validData() {
-        if (isEmpty(this.formData.sc.id)) {
-          createError('仓库不允许为空！');
-          return false;
-        }
-
         if (isEmpty(this.formData.supplier.id)) {
           createError('供应商不允许为空！');
           return false;

@@ -13,14 +13,8 @@
           <a-tab-pane key="detail" tab="详情">
             <j-border>
               <j-form bordered>
-                <j-form-item label="仓库">
-                  {{ formData.scName }}
-                </j-form-item>
                 <j-form-item label="供应商">
                   {{ formData.supplierName }}
-                </j-form-item>
-                <j-form-item label="采购员">
-                  {{ formData.purchaserName }}
                 </j-form-item>
                 <j-form-item label="订单日期">
                   {{ formData.orderDate }}
@@ -52,17 +46,11 @@
                     RECEIVE_SHEET_STATUS.getDesc(formData.status)
                   }}</span>
                 </j-form-item>
-                <j-form-item label="拒绝理由" :span="16" :content-nest="false">
-                  <a-input
-                    v-if="RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-                    v-model:value="formData.refuseReason"
-                    readonly
-                  />
-                </j-form-item>
+
                 <j-form-item label="操作人">
                   <span>{{ formData.createBy }}</span>
                 </j-form-item>
-                <j-form-item label="操作时间" :span="16">
+                <j-form-item label="操作时间">
                   <span>{{ formData.createTime }}</span>
                 </j-form-item>
                 <j-form-item
@@ -83,6 +71,13 @@
                   :span="16"
                 >
                   <span>{{ formData.approveTime }}</span>
+                </j-form-item>
+                <j-form-item label="拒绝理由" :span="16" :content-nest="false">
+                  <a-input
+                    v-if="RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
+                    v-model:value="formData.refuseReason"
+                    readonly
+                  />
                 </j-form-item>
               </j-form>
             </j-border>
@@ -115,14 +110,15 @@
                 <j-form-item label="含税总金额" :span="6">
                   <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
                 </j-form-item>
+                <j-form-item label="备注" :span="12" :content-nest="false">
+                  <a-input v-model:value.trim="formData.description" maxlength="200" readonly />
+                </j-form-item>
               </j-form>
             </j-border>
 
             <j-border>
               <j-form bordered label-width="140px">
-                <j-form-item label="备注" :span="24" :content-nest="false">
-                  <a-textarea v-model:value.trim="formData.description" maxlength="200" readonly />
-                </j-form-item>
+
               </j-form>
             </j-border>
           </a-tab-pane>

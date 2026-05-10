@@ -8,23 +8,6 @@
       />
       <j-border>
         <j-form bordered>
-          <j-form-item label="仓库" required>
-            <a-select
-              v-model:value="formData.scId"
-              placeholder="请选择仓库"
-              show-search
-              :filter-option="filterWarehouseOption"
-              @change="handleWarehouseChange"
-            >
-              <a-select-option
-                v-for="warehouse in warehouseOptions"
-                :key="warehouse.id"
-                :value="warehouse.id"
-              >
-                {{ warehouse.code }} - {{ warehouse.name }}
-              </a-select-option>
-            </a-select>
-          </j-form-item>
           <j-form-item label="供应商" required>
             <supplier-selector v-model:value="formData.supplierId" @update:value="supplierChange" />
           </j-form-item>
@@ -99,6 +82,7 @@
                   :row-config="{ isHover: true }"
                   @cell-click="({ row: product }) => handleSelectProduct(rowIndex, product)"
                 >
+                  <vxe-column type="seq" title="序号" width="60" />
                   <vxe-column field="productCode" title="商品编号" width="120" />
                   <vxe-column field="productName" title="商品名称" min-width="200" />
                   <vxe-column field="skuCode" title="商品SKU编号" width="120" />
@@ -277,6 +261,7 @@ export default defineComponent({
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
+          { type: 'seq', width: 50, title: '序号' },
           { field: 'productCode', title: '商品编号', width: 120 },
           {
             field: 'productName',
@@ -398,23 +383,6 @@ export default defineComponent({
         }
       },
 
-      // 仓库选择器过滤选项
-      filterWarehouseOption(input, option) {
-        const warehouse = this.warehouseOptions.find((w) => w.id === option.key);
-        if (warehouse) {
-          return (
-            warehouse.code.toLowerCase().includes(input.toLowerCase()) ||
-            warehouse.name.toLowerCase().includes(input.toLowerCase())
-          );
-        }
-        return false;
-      },
-
-      // 仓库选择变化处理
-      handleWarehouseChange(value) {
-        // 清空表格数据，因为仓库变化后商品数据需要重新加载
-        this.tableData = [];
-      },
       emptyProduct() {
         return {
           id: uuid(),
@@ -441,10 +409,6 @@ export default defineComponent({
       },
       // 新增商品
       addProduct() {
-        if (isEmpty(this.formData.scId)) {
-          createError('请先选择仓库！');
-          return;
-        }
         this.tableData.push(this.emptyProduct());
         this.$nextTick(() => {
           const productInputRef = this.$refs['productInputRef' + (this.tableData.length - 1)];
@@ -498,10 +462,6 @@ export default defineComponent({
         });
       },
       openBatchAddProductDialog() {
-        if (isEmpty(this.formData.scId)) {
-          createError('请先选择仓库！');
-          return;
-        }
         this.$refs.batchAddProductDialog.openDialog();
       },
       purchasePriceInput(row, value) {
@@ -595,11 +555,6 @@ export default defineComponent({
       },
       // 校验数据
       validData() {
-        if (isEmpty(this.formData.scId)) {
-          createError('仓库不允许为空！');
-          return false;
-        }
-
         if (isEmpty(this.formData.supplierId)) {
           createError('供应商不允许为空！');
           return false;

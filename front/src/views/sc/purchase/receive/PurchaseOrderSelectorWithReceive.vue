@@ -9,9 +9,8 @@
       :option="{ label: 'code', value: 'id' }"
       :column-option="{ label: 'code', value: 'id' }"
       :table-column="[
+        { type: 'seq', title: '序号', width: 60 },
         { field: 'code', title: '采购单号', width: 180 },
-        { field: 'scCode', title: '仓库编号', minWidth: 100 },
-        { field: 'scName', title: '仓库名称', minWidth: 120 },
         { field: 'supplierCode', title: '供应商编号', minWidth: 100 },
         { field: 'supplierName', title: '供应商名称', minWidth: 120 },
         { field: 'createTime', title: '操作时间', minWidth: 150 },
@@ -25,12 +24,6 @@
           <j-form bordered>
             <j-form-item v-if="isEmpty(requestParams.code)" label="采购单号">
               <a-input v-model:value="searchParams.code" allow-clear />
-            </j-form-item>
-            <j-form-item label="仓库">
-              <store-center-selector
-                v-if="isEmpty(requestParams.scId)"
-                v-model:value="searchParams.scId"
-              />
             </j-form-item>
             <j-form-item label="供应商">
               <supplier-selector
@@ -82,7 +75,6 @@
   import { SearchOutlined } from '@ant-design/icons-vue';
   import Moment from 'moment';
   import * as api from '@/api/sc/purchase/order';
-  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
   import UserSelector from '@/components/Selector/UserSelector.vue';
   import {
@@ -96,7 +88,6 @@
     name: 'PurchaseOrderSelectorWithReceive',
     components: {
       SearchOutlined,
-      StoreCenterSelector,
       SupplierSelector,
       UserSelector,
     },
@@ -119,7 +110,6 @@
       return {
         searchParams: {
           code: '',
-          scId: '',
           supplierId: '',
           createBy: '',
           createStartTime: formatDateTime(getDateTimeWithMinTime(this.moment().subtract(1, 'M'))),
@@ -137,7 +127,6 @@
         const reqParams = {
           ...params,
           code: params.code,
-          scId: params.scId || '',
           supplierId: params.supplierId || '',
           createBy: params.createBy || '',
           createStartTime: params.createStartTime,

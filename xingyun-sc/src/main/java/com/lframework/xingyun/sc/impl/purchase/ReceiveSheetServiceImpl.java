@@ -581,12 +581,14 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     private void create(ReceiveSheet sheet, CreateReceiveSheetVo vo, boolean receiveRequirePurchase) {
 
-        StoreCenter sc = storeCenterService.findById(vo.getScId());
-        if (sc == null) {
-            throw new InputErrorException("仓库不存在！");
-        }
+        if (!StringUtil.isBlank(vo.getScId())) {
+            StoreCenter sc = storeCenterService.findById(vo.getScId());
+            if (sc == null) {
+                throw new InputErrorException("仓库不存在！");
+            }
 
-        sheet.setScId(vo.getScId());
+            sheet.setScId(vo.getScId());
+        }
 
         Supplier supplier = supplierService.findById(vo.getSupplierId());
         if (supplier == null) {

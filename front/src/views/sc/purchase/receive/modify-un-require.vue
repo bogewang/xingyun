@@ -8,9 +8,6 @@
       />
       <j-border>
         <j-form bordered>
-          <j-form-item label="仓库" required>
-            <store-center-selector v-model:value="formData.scId" />
-          </j-form-item>
           <j-form-item label="供应商" required>
             <supplier-selector v-model:value="formData.supplierId" @update:value="supplierChange" />
           </j-form-item>
@@ -127,6 +124,7 @@
                   :row-config="{ isHover: true }"
                   @cell-click="({ row: product }) => handleSelectProduct(rowIndex, product)"
                 >
+                  <vxe-column type="seq" title="序号" width="60" />
                   <vxe-column field="productCode" title="商品编号" width="120" />
                   <vxe-column field="productName" title="商品名称" min-width="200" />
                   <vxe-column field="skuCode" title="商品SKU编号" width="120" />
@@ -225,7 +223,6 @@
     NumberOutlined,
     EditOutlined,
   } from '@ant-design/icons-vue';
-  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
   import UserSelector from '@/components/Selector/UserSelector.vue';
   import * as api from '@/api/sc/purchase/receive';
@@ -254,7 +251,6 @@
     components: {
       JFormItem,
       BatchAddProduct,
-      StoreCenterSelector,
       SupplierSelector,
       UserSelector,
       OrderTimeLine,
@@ -297,6 +293,7 @@
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
+          { type: 'seq', width: 50, title: '序号' },
           { field: 'productCode', title: '商品编号', width: 120 },
           {
             field: 'productName',
@@ -471,10 +468,6 @@
       },
       // 新增商品
       addProduct() {
-        if (isEmpty(this.formData.scId)) {
-          createError('请先选择仓库！');
-          return;
-        }
         this.tableData.push(this.emptyProduct());
         this.$nextTick(() => {
           const productInputRef = this.$refs['productInputRef' + (this.tableData.length - 1)];
@@ -529,10 +522,6 @@
         });
       },
       openBatchAddProductDialog() {
-        if (isEmpty(this.formData.scId)) {
-          createError('请先选择仓库！');
-          return;
-        }
         this.$refs.batchAddProductDialog.openDialog();
       },
       purchasePriceInput(row, value) {
@@ -610,11 +599,6 @@
       },
       // 校验数据
       validData() {
-        if (isEmpty(this.formData.scId)) {
-          createError('仓库不允许为空！');
-          return false;
-        }
-
         if (isEmpty(this.formData.supplierId)) {
           createError('供应商不允许为空！');
           return false;

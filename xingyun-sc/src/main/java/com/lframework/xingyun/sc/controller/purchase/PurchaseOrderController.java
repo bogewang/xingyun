@@ -327,13 +327,13 @@ public class PurchaseOrderController extends DefaultBaseController {
    */
   @ApiOperation("根据关键字查询可采购商品")
   @ApiImplicitParams({
-      @ApiImplicitParam(value = "仓库ID", name = "scId", paramType = "query", required = true),
+      @ApiImplicitParam(value = "仓库ID", name = "scId", paramType = "query"),
       @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true) })
   @HasPermission({ "purchase:order:add", "purchase:order:modify", "purchase:receive:add",
       "purchase:receive:modify", "purchase:return:add", "purchase:return:modify" })
   @GetMapping("/product/search")
   public InvokeResult<List<PurchaseProductBo>> searchPurchaseProducts(
-      @NotBlank(message = "仓库ID不能为空！") String scId, String condition, Boolean isReturn) {
+      String scId, String condition, Boolean isReturn) {
 
     if (isReturn == null) {
       isReturn = false;

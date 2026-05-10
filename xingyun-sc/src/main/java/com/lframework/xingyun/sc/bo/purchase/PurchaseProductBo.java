@@ -2,6 +2,7 @@ package com.lframework.xingyun.sc.bo.purchase;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lframework.starter.common.utils.NumberUtil;
+import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseProductDto;
@@ -121,8 +122,11 @@ public class PurchaseProductBo extends BaseBo<PurchaseProductDto> {
 
     ProductStockService productStockService = ApplicationUtil.getBean(
         ProductStockService.class);
-    ProductStock productStock = productStockService.getByProductIdAndScId(this.getProductId(),
-        this.getScId());
+    ProductStock productStock = null;
+    if (!StringUtil.isBlank(this.getScId())) {
+      productStock = productStockService.getByProductIdAndScId(this.getProductId(),
+          this.getScId());
+    }
     this.taxCostPrice =
         productStock == null ? BigDecimal.ZERO
             : NumberUtil.getNumber(productStock.getTaxPrice(), 6);

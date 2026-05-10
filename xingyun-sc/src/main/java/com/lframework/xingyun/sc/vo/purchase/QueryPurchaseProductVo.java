@@ -2,7 +2,6 @@ package com.lframework.xingyun.sc.vo.purchase;
 
 import com.lframework.starter.web.core.vo.PageVo;
 import io.swagger.annotations.ApiModelProperty;
-import javax.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
@@ -13,8 +12,7 @@ public class QueryPurchaseProductVo extends PageVo {
   /**
    * 仓库ID
    */
-  @ApiModelProperty(value = "仓库ID", required = true)
-  @NotBlank(message = "仓库ID不能为空！")
+  @ApiModelProperty("仓库ID")
   private String scId;
 
   /**

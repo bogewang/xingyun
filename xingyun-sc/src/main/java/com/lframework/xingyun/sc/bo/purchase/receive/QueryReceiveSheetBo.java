@@ -173,9 +173,13 @@ public class QueryReceiveSheetBo extends BaseBo<ReceiveSheet> {
     protected void afterInit(ReceiveSheet dto) {
 
         StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
-        StoreCenter sc = storeCenterService.findById(dto.getScId());
-        this.scCode = sc.getCode();
-        this.scName = sc.getName();
+        if (!StringUtil.isBlank(dto.getScId())) {
+            StoreCenter sc = storeCenterService.findById(dto.getScId());
+            if (sc != null) {
+                this.scCode = sc.getCode();
+                this.scName = sc.getName();
+            }
+        }
 
         SupplierService supplierService = ApplicationUtil.getBean(SupplierService.class);
         Supplier supplier = supplierService.findById(dto.getSupplierId());

@@ -8,6 +8,7 @@ import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
+import com.lframework.xingyun.basedata.entity.StoreCenter;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.sc.bo.paytype.OrderPayTypeBo;
@@ -214,7 +215,12 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
   protected void afterInit(ReceiveSheetFullDto dto) {
 
     StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
-    this.scName = storeCenterService.findById(dto.getScId()).getName();
+    if (!StringUtil.isBlank(dto.getScId())) {
+      StoreCenter sc = storeCenterService.findById(dto.getScId());
+      if (sc != null) {
+        this.scName = sc.getName();
+      }
+    }
 
     SupplierService supplierService = ApplicationUtil.getBean(SupplierService.class);
     this.supplierName = supplierService.findById(dto.getSupplierId()).getName();
@@ -430,8 +436,11 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
       }
 
       ProductStockService productStockService = ApplicationUtil.getBean(ProductStockService.class);
-      ProductStock productStock = productStockService.getByProductIdAndScId(this.getProductId(),
-          this.getScId());
+      ProductStock productStock = null;
+      if (!StringUtil.isBlank(this.getScId())) {
+        productStock = productStockService.getByProductIdAndScId(this.getProductId(),
+            this.getScId());
+      }
       this.taxCostPrice =
           productStock == null ? BigDecimal.ZERO
               : NumberUtil.getNumber(productStock.getTaxPrice(), 6);

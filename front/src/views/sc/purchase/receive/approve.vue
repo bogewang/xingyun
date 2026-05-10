@@ -3,9 +3,6 @@
     <div v-permission="['purchase:receive:approve']" v-loading="loading">
       <j-border>
         <j-form bordered>
-          <j-form-item label="仓库">
-            {{ formData.scName }}
-          </j-form-item>
           <j-form-item label="供应商">
             {{ formData.supplierName }}
           </j-form-item>

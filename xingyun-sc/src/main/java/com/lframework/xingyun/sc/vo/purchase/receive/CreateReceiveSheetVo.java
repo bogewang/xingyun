@@ -31,8 +31,7 @@ public class CreateReceiveSheetVo implements BaseVo, Serializable {
   /**
    * 仓库ID
    */
-  @ApiModelProperty(value = "仓库ID", required = true)
-  @NotBlank(message = "仓库ID不能为空！")
+  @ApiModelProperty("仓库ID")
   private String scId;
 
   /**

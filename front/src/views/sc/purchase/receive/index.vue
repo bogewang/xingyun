@@ -30,10 +30,6 @@
                   <supplier-selector v-model:value="searchFormData.supplierId" />
                 </j-form-item>
 
-                <j-form-item label="仓库">
-                  <store-center-selector v-model:value="searchFormData.scId" />
-                </j-form-item>
-
                 <j-form-item label="操作人">
                   <user-selector v-model:value="searchFormData.createBy" />
                 </j-form-item>
@@ -83,10 +79,6 @@
                       >{{ item.desc }}</a-select-option
                     >
                   </a-select>
-                </j-form-item>
-
-                <j-form-item label="采购员">
-                  <user-selector v-model:value="searchFormData.purchaser" />
                 </j-form-item>
 
                 <template #more>
@@ -191,8 +183,6 @@
       ref="batchApprovePassHandlerDialog"
       :table-column="[
         { field: 'code', title: '单据号', width: 180 },
-        { field: 'scCode', title: '仓库编号', width: 100 },
-        { field: 'scName', title: '仓库名称', width: 120 },
         { field: 'supplierCode', title: '供应商编号', width: 100 },
         { field: 'supplierName', title: '供应商名称', width: 120 },
         { field: 'purchaserName', title: '采购员', width: 100 },
@@ -206,8 +196,6 @@
       ref="batchApproveRefuseHandlerDialog"
       :table-column="[
         { field: 'code', title: '单据号', width: 180 },
-        { field: 'scCode', title: '仓库编号', width: 100 },
-        { field: 'scName', title: '仓库名称', width: 120 },
         { field: 'supplierCode', title: '供应商编号', width: 100 },
         { field: 'supplierName', title: '供应商名称', width: 120 },
         { field: 'purchaserName', title: '采购员', width: 100 },
@@ -221,8 +209,6 @@
       ref="batchDeleteHandlerDialog"
       :table-column="[
         { field: 'code', title: '单据号', width: 180 },
-        { field: 'scCode', title: '仓库编号', width: 100 },
-        { field: 'scName', title: '仓库名称', width: 120 },
         { field: 'supplierCode', title: '供应商编号', width: 100 },
         { field: 'supplierName', title: '供应商名称', width: 120 },
         { field: 'purchaserName', title: '采购员', width: 100 },
@@ -241,7 +227,6 @@
   import ApproveRefuse from '@/components/ApproveRefuse';
   import PurchaseOrderDetail from '@/views/sc/purchase/order/detail.vue';
   import moment from 'moment';
-  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
   import UserSelector from '@/components/Selector/UserSelector.vue';
   import {
@@ -276,7 +261,6 @@
       ApproveRefuse,
       PurchaseOrderDetail,
       ReceiveSheetPayTypeImporter,
-      StoreCenterSelector,
       SupplierSelector,
       UserSelector,
       BatchHandler,
@@ -305,7 +289,6 @@
         // 查询列表的查询条件
         searchFormData: {
           code: '',
-          scId: '',
           supplierId: '',
           createBy: '',
           orderDateStart: moment().subtract(1, 'M').format('YYYY-MM-DD'),
@@ -330,8 +313,6 @@
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
           { field: 'code', title: '单据号', width: 180, sortable: true },
-          { field: 'scCode', title: '仓库编号', width: 100 },
-          { field: 'scName', title: '仓库名称', width: 120 },
           { field: 'supplierCode', title: '供应商编号', width: 100 },
           { field: 'supplierName', title: '供应商名称', width: 120 },
           { field: 'purchaserName', title: '采购员', width: 100 },
@@ -403,7 +384,6 @@
       buildSearchFormData() {
         const params = Object.assign({}, this.searchFormData, {
           supplierId: this.searchFormData.supplierId,
-          scId: this.searchFormData.scId,
           createBy: this.searchFormData.createBy,
           approveBy: this.searchFormData.approveBy,
           purchaserId: this.searchFormData.purchaser,
