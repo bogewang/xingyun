@@ -14,9 +14,6 @@
           <j-form-item label="供应商" required>
             <supplier-selector v-model:value="formData.supplierId" @update:value="supplierChange" />
           </j-form-item>
-          <j-form-item label="采购员">
-            <user-selector v-model:value="formData.purchaserId" />
-          </j-form-item>
           <j-form-item label="订单日期">
             <a-date-picker
               v-model:value="formData.orderDate"
@@ -37,14 +34,6 @@
               "
             />
           </j-form-item>
-          <j-form-item label="实际到货日期" required>
-            <a-date-picker
-              v-model:value="formData.receiveDate"
-              placeholder=""
-              value-format="YYYY-MM-DD"
-            />
-          </j-form-item>
-          <j-form-item />
           <j-form-item label="状态">
             <span
               v-if="RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status)"
@@ -60,17 +49,11 @@
               RECEIVE_SHEET_STATUS.getDesc(formData.status)
             }}</span>
           </j-form-item>
-          <j-form-item :span="16" :content-nest="false" label="拒绝理由">
-            <a-input
-              v-if="RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-              v-model:value="formData.refuseReason"
-              readonly
-            />
-          </j-form-item>
+
           <j-form-item label="操作人">
             <span>{{ formData.createBy }}</span>
           </j-form-item>
-          <j-form-item label="操作时间" :span="16">
+          <j-form-item label="操作时间">
             <span>{{ formData.createTime }}</span>
           </j-form-item>
           <j-form-item
@@ -91,6 +74,13 @@
             :span="16"
           >
             <span>{{ formData.approveTime }}</span>
+          </j-form-item>
+          <j-form-item :content-nest="false" label="拒绝理由">
+            <a-input
+              v-if="RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
+              v-model:value="formData.refuseReason"
+              readonly
+            />
           </j-form-item>
         </j-form>
       </j-border>
@@ -210,16 +200,12 @@
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-        </j-form>
-      </j-border>
-
-      <j-border>
-        <j-form bordered label-width="140px">
-          <j-form-item label="备注" :span="24" :content-nest="false">
-            <a-textarea v-model:value.trim="formData.description" maxlength="200" />
+          <j-form-item label="备注" :span="12" :content-nest="false">
+            <a-input v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>
+
       <batch-add-product
         ref="batchAddProductDialog"
         :sc-id="formData.scId"
@@ -274,10 +260,12 @@
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
+  import JFormItem from "@/components/JFormItem";
 
   export default defineComponent({
     name: 'ModifyPurchaseReceiveSheetUnRequire',
     components: {
+      JFormItem,
       BatchAddProduct,
       StoreCenterSelector,
       SupplierSelector,
@@ -650,11 +638,6 @@
             createError('付款日期不允许为空！');
             return false;
           }
-        }
-
-        if (isEmpty(this.formData.receiveDate)) {
-          createError('实际到货日期不允许为空！');
-          return false;
         }
 
         if (isEmpty(this.tableData)) {

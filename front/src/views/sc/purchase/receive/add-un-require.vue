@@ -35,35 +35,6 @@
               value-format="YYYY-MM-DD"
             />
           </j-form-item>
-          <!-- <j-form-item label="采购员">
-            <user-selector v-model:value="formData.purchaserId" />
-          </j-form-item> -->
-          <!-- <j-form-item label="付款日期" required>
-            <a-date-picker
-              v-model:value="formData.paymentDate"
-              placeholder=""
-              value-format="YYYY-MM-DD"
-              :disabled="!formData.allowModifyPaymentDate"
-              :disabled-date="
-                (current) => {
-                  return current && current < moment().endOf('day');
-                }
-              "
-            />
-          </j-form-item> -->
-          <j-form-item label="实际到货日期" required>
-            <a-date-picker
-              v-model:value="formData.receiveDate"
-              placeholder=""
-              value-format="YYYY-MM-DD"
-            />
-          </j-form-item>
-          <!-- <j-form-item label="采购订单">
-            <purchase-order-selector-with-receive
-              v-model:value="formData.purchaseOrderId"
-              @update:value="purchaseOrderChange"
-            />
-          </j-form-item> -->
         </j-form>
       </j-border>
       <!-- 数据列表 -->
@@ -186,13 +157,8 @@
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-        </j-form>
-      </j-border>
-
-      <j-border>
-        <j-form bordered label-width="140px">
-          <j-form-item label="备注" :span="24" :content-nest="false">
-            <a-textarea v-model:value.trim="formData.description" maxlength="200" />
+          <j-form-item label="备注" :span="12" :content-nest="false">
+            <a-input v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>
@@ -260,10 +226,12 @@ import {
   uuid,
 } from '@/utils/utils';
 import {createConfirm, createError, createPrompt, createSuccess} from '@/hooks/web/msg';
+import JFormItem from "@/components/JFormItem";
 
 export default defineComponent({
     name: 'AddPurchaseReceiveSheetUnRequire',
     components: {
+      JFormItem,
       BatchAddProduct,
       PurchaseOrderSelectorWithReceive,
       ReceiveSheetImporter,
@@ -642,11 +610,6 @@ export default defineComponent({
             createError('付款日期不允许为空！');
             return false;
           }
-        }
-
-        if (isEmpty(this.formData.receiveDate)) {
-          createError('实际到货日期不允许为空！');
-          return false;
         }
 
         if (isEmpty(this.tableData)) {

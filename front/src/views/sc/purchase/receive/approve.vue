@@ -15,9 +15,6 @@
           <j-form-item label="订单日期">
             {{ formData.orderDate }}
           </j-form-item>
-          <j-form-item label="实际到货日期">
-            {{ formData.receiveDate }}
-          </j-form-item>
           <j-form-item label="状态">
             <span
               v-if="RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status)"

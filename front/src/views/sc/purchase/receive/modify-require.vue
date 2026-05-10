@@ -37,13 +37,6 @@
               "
             />
           </j-form-item>
-          <j-form-item label="实际到货日期" required>
-            <a-date-picker
-              v-model:value="formData.receiveDate"
-              placeholder=""
-              value-format="YYYY-MM-DD"
-            />
-          </j-form-item>
           <j-form-item label="采购订单" required>
             <div v-if="!isEmpty(formData.purchaseOrder.code)">
               <a
@@ -704,11 +697,6 @@
             createError('付款日期不允许为空！');
             return false;
           }
-        }
-
-        if (isEmpty(this.formData.receiveDate)) {
-          createError('实际到货日期不允许为空！');
-          return false;
         }
 
         if (isEmpty(this.formData.purchaseOrder.id)) {

@@ -28,9 +28,6 @@
                 <j-form-item label="付款日期">
                   {{ formData.paymentDate }}
                 </j-form-item>
-                <j-form-item label="实际到货日期">
-                  {{ formData.receiveDate }}
-                </j-form-item>
                 <j-form-item label="采购订单">
                   <div v-if="!isEmpty(formData.purchaseOrderCode)">
                     <a
