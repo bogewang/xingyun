@@ -148,6 +148,12 @@
                 @click="exportList"
                 >导出</a-button
               >
+              <a-button
+                v-permission="['sale:out:query']"
+                :icon="h(PrinterOutlined)"
+                @click="tagPrint"
+                >标签打印</a-button
+              >
             </a-space>
           </template>
 
@@ -225,6 +231,7 @@
         :handle-fn="doBatchDelete"
         @confirm="search"
       />
+      <order-print-dialog />
     </div>
   </div>
 </template>
@@ -244,10 +251,12 @@
     CloseOutlined,
     DeleteOutlined,
     DownloadOutlined,
+    PrinterOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
   import * as configApi from '@/api/sc/sale/config';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { printMix } from '@/mixins/print.ts';
   import {
     isEmpty,
     formatDateTime,
@@ -260,7 +269,9 @@
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
+  import { PRINT_TYPE } from '@/enums/biz/printType';
   import BatchHandler from '@/components/BatchHandler';
+  import PrintDialog from '/@/components/PrintDialog';
 
   export default defineComponent({
     name: 'SaleOutSheet',
@@ -272,8 +283,9 @@
       StoreCenterSelector,
       UserSelector,
       BatchHandler,
+      OrderPrintDialog: PrintDialog,
     },
-    mixins: [multiplePageMix],
+    mixins: [multiplePageMix, printMix],
     setup() {
       return {
         h,
@@ -283,6 +295,7 @@
         CloseOutlined,
         DeleteOutlined,
         DownloadOutlined,
+        PrinterOutlined,
         isEmpty,
         RECEIVE_SHEET_STATUS,
         SETTLE_STATUS,
@@ -525,6 +538,15 @@
           .finally(() => {
             this.loading = false;
           });
+      },
+      async tagPrint() {
+        this.loading = true;
+        try {
+          const res = await api.tagPrint(this.buildQueryParams({}, {}));
+          await this.vgPrintPreview(PRINT_TYPE.SALE_TAG.code, res);
+        } finally {
+          this.loading = false;
+        }
       },
       viewSaleOrderDetail(id) {
         this.saleOrderId = id;

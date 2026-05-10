@@ -12,6 +12,7 @@ import com.lframework.starter.web.core.utils.EasyExcelUtils;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.sc.bo.purchase.receive.GetPaymentDateBo;
+import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
 import com.lframework.xingyun.sc.bo.sale.out.*;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
@@ -90,6 +91,19 @@ public class SaleOutSheetController extends DefaultBaseController {
         }
 
         return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
+    }
+
+    /**
+     * 标签打印
+     */
+    @ApiOperation("标签打印")
+    @HasPermission({"sale:out:query"})
+    @GetMapping("/tagPrint")
+    public InvokeResult<List<PrintSaleTagBo>> tagPrint(@Valid QuerySaleOutSheetVo vo) {
+
+        List<PrintSaleTagBo> data = saleOutSheetService.tagPrint(vo);
+
+        return InvokeResultBuilder.success(data);
     }
 
     /**

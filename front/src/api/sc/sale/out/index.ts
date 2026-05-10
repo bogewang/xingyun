@@ -13,6 +13,7 @@ import { UpdateSaleOutSheetVo } from '@/api/sc/sale/out/model/updateSaleOutSheet
 import { ApprovePassSaleOutSheetVo } from '@/api/sc/sale/out/model/approvePassSaleOutSheetVo';
 import { ApproveRefuseSaleOutSheetVo } from '@/api/sc/sale/out/model/approveRefuseSaleOutSheetVo';
 import { PrintSaleOutSheetBo } from '@/api/sc/sale/out/model/printSaleOutSheetBo';
+import { PrintSaleTagBo } from '@/api/sc/sale/order/model/PrintSaleTagBo';
 
 const baseUrl = '/sale/out/sheet';
 const region = 'cloud-api';
@@ -45,6 +46,22 @@ export function query(params: QuerySaleOutSheetVo): Promise<PageResult<QuerySale
     },
     {
       region,
+    },
+  );
+}
+
+/**
+ * 标签打印
+ */
+export function tagPrint(params: QuerySaleOutSheetVo): Promise<PrintSaleTagBo[]> {
+  return defHttp.get<PrintSaleTagBo[]>(
+    {
+      url: baseUrl + '/tagPrint',
+      params,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }
