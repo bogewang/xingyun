@@ -49,6 +49,12 @@ public class CreateReceiveSheetVo implements BaseVo, Serializable {
   private String purchaserId;
 
   /**
+   * 订单日期
+   */
+  @ApiModelProperty("订单日期")
+  private LocalDate orderDate;
+
+  /**
    * 付款日期
    */
   @ApiModelProperty("付款日期")

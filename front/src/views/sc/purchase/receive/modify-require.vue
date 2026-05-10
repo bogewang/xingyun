@@ -17,6 +17,13 @@
           <j-form-item label="采购员">
             <user-selector v-model:value="formData.purchaserId" />
           </j-form-item>
+          <j-form-item label="订单日期">
+            <a-date-picker
+              v-model:value="formData.orderDate"
+              placeholder=""
+              value-format="YYYY-MM-DD"
+            />
+          </j-form-item>
           <j-form-item label="付款日期" required>
             <a-date-picker
               v-model:value="formData.paymentDate"
@@ -449,6 +456,7 @@
           supplier: {},
           purchaseOrder: {},
           purchaserId: '',
+          orderDate: '',
           paymentDate: '',
           receiveDate: '',
           totalNum: 0,
@@ -485,6 +493,7 @@
                 name: res.supplierName,
               },
               purchaserId: res.purchaserId || '',
+              orderDate: res.orderDate || '',
               paymentDate: res.paymentDate || '',
               receiveDate: res.receiveDate,
               purchaseOrder: {
@@ -835,6 +844,7 @@
           scId: this.formData.sc.id,
           supplierId: this.formData.supplier.id,
           purchaserId: this.formData.purchaserId || '',
+          orderDate: this.formData.orderDate || '',
           paymentDate: this.formData.paymentDate || '',
           receiveDate: this.formData.receiveDate,
           purchaseOrderId: this.formData.purchaseOrder.id,

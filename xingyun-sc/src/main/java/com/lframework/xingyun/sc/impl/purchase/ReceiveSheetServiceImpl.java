@@ -609,6 +609,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         sheet.setPaymentDate(
                 vo.getAllowModifyPaymentDate() || paymentDate.getAllowModify() ? vo.getPaymentDate()
                         : paymentDate.getPaymentDate());
+        sheet.setOrderDate(vo.getOrderDate());
         sheet.setReceiveDate(vo.getReceiveDate());
 
         if (receiveRequirePurchase) {

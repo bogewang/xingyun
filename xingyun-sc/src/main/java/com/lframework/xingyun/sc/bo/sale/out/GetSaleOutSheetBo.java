@@ -84,6 +84,13 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
   private String salerName;
 
   /**
+   * 订单日期
+   */
+  @ApiModelProperty("订单日期")
+  @JsonFormat(pattern = StringPool.DATE_PATTERN)
+  private LocalDate orderDate;
+
+  /**
    * 付款日期
    */
   @ApiModelProperty("付款日期")
@@ -119,6 +126,12 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
    */
   @ApiModelProperty("销售金额")
   private BigDecimal totalAmount;
+
+  /**
+   * 总利润
+   */
+  @ApiModelProperty("总利润")
+  private BigDecimal totalProfit;
 
   /**
    * 支付方式
@@ -228,6 +241,7 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
     this.totalNum = dto.getTotalNum();
     this.giftNum = dto.getTotalGiftNum();
     this.totalAmount = dto.getTotalAmount();
+    this.totalProfit = dto.getTotalProfit();
 
     if (!CollectionUtil.isEmpty(dto.getDetails())) {
       this.details = dto.getDetails().stream().map(t -> new OrderDetailBo(this.getScId(), t))

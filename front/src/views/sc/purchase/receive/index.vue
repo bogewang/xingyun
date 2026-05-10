@@ -38,18 +38,18 @@
                   <user-selector v-model:value="searchFormData.createBy" />
                 </j-form-item>
 
-                <j-form-item label="操作日期" :content-nest="false">
+                <j-form-item label="订单日期" :content-nest="false">
                   <div class="date-range-container">
                     <a-date-picker
-                      v-model:value="searchFormData.createStartTime"
+                      v-model:value="searchFormData.orderDateStart"
                       placeholder=""
-                      value-format="YYYY-MM-DD 00:00:00"
+                      value-format="YYYY-MM-DD"
                     />
                     <span class="date-split">至</span>
                     <a-date-picker
-                      v-model:value="searchFormData.createEndTime"
+                      v-model:value="searchFormData.orderDateEnd"
                       placeholder=""
-                      value-format="YYYY-MM-DD 23:59:59"
+                      value-format="YYYY-MM-DD"
                     />
                   </div>
                 </j-form-item>
@@ -308,8 +308,8 @@
           scId: '',
           supplierId: '',
           createBy: '',
-          createStartTime: formatDateTime(getDateTimeWithMinTime(moment().subtract(1, 'M'))),
-          createEndTime: formatDateTime(getDateTimeWithMaxTime(moment())),
+          orderDateStart: moment().subtract(1, 'M').format('YYYY-MM-DD'),
+          orderDateEnd: moment().format('YYYY-MM-DD'),
           approveBy: '',
           approveStartTime: '',
           approveEndTime: '',
@@ -328,12 +328,14 @@
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
+          { type: 'seq', width: 50, title: '序号' },
           { field: 'code', title: '单据号', width: 180, sortable: true },
           { field: 'scCode', title: '仓库编号', width: 100 },
           { field: 'scName', title: '仓库名称', width: 120 },
           { field: 'supplierCode', title: '供应商编号', width: 100 },
           { field: 'supplierName', title: '供应商名称', width: 120 },
           { field: 'purchaserName', title: '采购员', width: 100 },
+          { field: 'orderDate', title: '订单日期', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
           { field: 'totalGiftNum', title: '赠品数量', align: 'right', width: 120 },

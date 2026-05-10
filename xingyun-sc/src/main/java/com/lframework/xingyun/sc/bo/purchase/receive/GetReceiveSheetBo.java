@@ -82,6 +82,13 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
   private String purchaserName;
 
   /**
+   * 订单日期
+   */
+  @ApiModelProperty("订单日期")
+  @JsonFormat(pattern = StringPool.DATE_PATTERN)
+  private LocalDate orderDate;
+
+  /**
    * 付款日期
    */
   @ApiModelProperty("付款日期")

@@ -22,14 +22,14 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
   createBy: string;
 
   /**
-   * 操作起始时间
+   * 订单起始日期
    */
-  createStartTime: string;
+  orderDateStart: string;
 
   /**
-   * 操作截止时间
+   * 订单截止日期
    */
-  createEndTime: string;
+  orderDateEnd: string;
 
   /**
    * 审核人ID

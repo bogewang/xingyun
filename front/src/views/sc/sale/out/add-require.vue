@@ -20,6 +20,13 @@
           <j-form-item label="销售员">
             <user-selector v-model:value="formData.salerId" :before-open="beforeSelectSaler" />
           </j-form-item>
+          <j-form-item label="订单日期">
+            <a-date-picker
+              v-model:value="formData.orderDate"
+              placeholder=""
+              value-format="YYYY-MM-DD"
+            />
+          </j-form-item>
           <j-form-item label="付款日期" required>
             <a-date-picker
               v-model:value="formData.paymentDate"
@@ -383,6 +390,7 @@ export default defineComponent({
           customerId: '',
           saleOrderId: '',
           salerId: '',
+          orderDate: formatDate(Moment()),
           paymentDate: formatDate(Moment().add(1, 'M')),
           totalNum: 0,
           giftNum: 0,
@@ -695,6 +703,7 @@ export default defineComponent({
           scId: this.formData.scId,
           customerId: this.formData.customerId,
           salerId: this.formData.salerId || '',
+          orderDate: this.formData.orderDate || '',
           paymentDate: this.formData.paymentDate || '',
           saleOrderId: this.formData.saleOrderId,
           description: this.formData.description,

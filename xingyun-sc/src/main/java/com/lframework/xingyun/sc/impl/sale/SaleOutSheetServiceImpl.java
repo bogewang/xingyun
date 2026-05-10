@@ -364,6 +364,7 @@ public class SaleOutSheetServiceImpl extends
         BigDecimal totalNum = BigDecimal.ZERO;
         BigDecimal giftNum = BigDecimal.ZERO;
         BigDecimal totalAmount = BigDecimal.ZERO;
+        BigDecimal totalCostAmount = BigDecimal.ZERO;
 
         int orderNo = 1;
         for (SaleOutSheetDetail detail : details) {
@@ -393,6 +394,7 @@ public class SaleOutSheetServiceImpl extends
                 detailLot.setSettleStatus(detail.getSettleStatus());
                 detailLot.setOrderNo(orderNo);
                 saleOutSheetDetailLotService.save(detailLot);
+                totalCostAmount = NumberUtil.add(totalCostAmount, stockChange.getTaxAmount());
 
                 if (isGift) {
                     giftNum = NumberUtil.add(giftNum, detail.getOrderNum());
@@ -445,6 +447,7 @@ public class SaleOutSheetServiceImpl extends
                     detailLot.setSettleStatus(newDetail.getSettleStatus());
                     detailLot.setOrderNo(orderNo);
                     saleOutSheetDetailLotService.save(detailLot);
+                    totalCostAmount = NumberUtil.add(totalCostAmount, stockChange.getTaxAmount());
 
                     saleOutSheetDetailService.save(newDetail);
                     saleOutSheetDetailService.removeById(detail.getId());
@@ -463,9 +466,15 @@ public class SaleOutSheetServiceImpl extends
         }
 
         // 这里需要重新统计明细信息，因为明细发生变动了
+        BigDecimal costPrice = BigDecimal.ZERO;
+        if (NumberUtil.gt(totalNum, BigDecimal.ZERO)) {
+            costPrice = NumberUtil.getNumber(NumberUtil.div(totalCostAmount, totalNum), 6);
+        }
+        BigDecimal totalProfit = NumberUtil.getNumber(NumberUtil.sub(totalAmount, totalCostAmount), 6);
         Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
                 .set(SaleOutSheet::getTotalNum, totalNum).set(SaleOutSheet::getTotalGiftNum, giftNum)
-                .set(SaleOutSheet::getTotalAmount, totalAmount).eq(SaleOutSheet::getId, sheet.getId());
+                .set(SaleOutSheet::getTotalAmount, totalAmount).set(SaleOutSheet::getCostPrice, costPrice)
+                .set(SaleOutSheet::getTotalProfit, totalProfit).eq(SaleOutSheet::getId, sheet.getId());
         this.update(updateWrapper);
 
         OpLogUtil.setVariable("code", sheet.getCode());
@@ -671,6 +680,7 @@ public class SaleOutSheetServiceImpl extends
         sheet.setPaymentDate(
                 vo.getAllowModifyPaymentDate() || paymentDate.getAllowModify() ? vo.getPaymentDate()
                         : paymentDate.getPaymentDate());
+        sheet.setOrderDate(vo.getOrderDate());
 
         if (requireSale) {
 
@@ -807,6 +817,8 @@ public class SaleOutSheetServiceImpl extends
         sheet.setTotalNum(purchaseNum);
         sheet.setTotalGiftNum(giftNum);
         sheet.setTotalAmount(totalAmount);
+        sheet.setCostPrice(BigDecimal.ZERO);
+        sheet.setTotalProfit(BigDecimal.ZERO);
         sheet.setDescription(
                 StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(customer));
@@ -868,7 +880,8 @@ public class SaleOutSheetServiceImpl extends
             }
 
             // 匹配商品,设置商品编号
-            String nameSpecUnit = data.getProductName() + data.getSpec() + data.getUnit();
+            String spec = data.getSpec() == null ? StringPool.EMPTY_STR : data.getSpec();
+            String nameSpecUnit = data.getProductName() + spec + data.getUnit();
             Product product = nameSpecUnitMap.get(nameSpecUnit);
             if (product == null) {
                 product = nameUnitMap.get(nameSpecUnit);

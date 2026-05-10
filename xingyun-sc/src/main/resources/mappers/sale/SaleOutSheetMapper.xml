@@ -8,11 +8,14 @@
         <result column="sc_id" property="scId"/>
         <result column="customer_id" property="customerId"/>
         <result column="saler_id" property="salerId"/>
+        <result column="order_date" property="orderDate"/>
         <result column="payment_date" property="paymentDate"/>
         <result column="sale_order_id" property="saleOrderId"/>
         <result column="total_num" property="totalNum"/>
         <result column="total_gift_num" property="totalGiftNum"/>
         <result column="total_amount" property="totalAmount"/>
+        <result column="cost_price" property="costPrice"/>
+        <result column="total_profit" property="totalProfit"/>
         <result column="description" property="description"/>
         <result column="create_by" property="createBy"/>
         <result column="create_time" property="createTime"/>
@@ -28,11 +31,14 @@
         <result column="sc_id" property="scId"/>
         <result column="customer_id" property="customerId"/>
         <result column="saler_id" property="salerId"/>
+        <result column="order_date" property="orderDate"/>
         <result column="payment_date" property="paymentDate"/>
         <result column="sale_order_id" property="saleOrderId"/>
         <result column="total_num" property="totalNum"/>
         <result column="total_gift_num" property="totalGiftNum"/>
         <result column="total_amount" property="totalAmount"/>
+        <result column="cost_price" property="costPrice"/>
+        <result column="total_profit" property="totalProfit"/>
         <result column="description" property="description"/>
         <result column="create_by" property="createBy"/>
         <result column="create_time" property="createTime"/>
@@ -88,11 +94,14 @@
             s.sc_id,
             s.customer_id,
             s.saler_id,
+            s.order_date,
             s.payment_date,
             s.sale_order_id,
             s.total_num,
             s.total_gift_num,
             s.total_amount,
+            s.cost_price,
+            s.total_profit,
             s.description,
             s.create_by,
             s.create_time,
@@ -111,11 +120,14 @@
             s.sc_id,
             s.customer_id,
             s.saler_id,
+            s.order_date,
             s.payment_date,
             s.sale_order_id,
             s.total_num,
             s.total_gift_num,
             s.total_amount,
+            s.cost_price,
+            s.total_profit,
             s.description,
             s.create_by,
             s.create_time,
@@ -170,12 +182,12 @@
                 <if test="vo.approveBy != null and vo.approveBy != ''">
                     AND s.approve_by = #{vo.approveBy}
                 </if>
-                <if test="vo.createStartTime != null">
-                    AND s.create_time >= #{vo.createStartTime}
+                <if test="vo.orderDateStart != null">
+                    AND s.order_date >= #{vo.orderDateStart}
                 </if>
-                <if test="vo.createEndTime != null">
+                <if test="vo.orderDateEnd != null">
                     <![CDATA[
-                    AND s.create_time <= #{vo.createEndTime}
+                    AND s.order_date <= #{vo.orderDateEnd}
                     ]]>
                 </if>
                 <if test="vo.approveStartTime != null">

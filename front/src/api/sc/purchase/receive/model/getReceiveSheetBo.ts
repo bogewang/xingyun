@@ -42,6 +42,11 @@ export interface GetReceiveSheetBo {
   purchaserName: string;
 
   /**
+   * 订单日期
+   */
+  orderDate: string;
+
+  /**
    * 付款日期
    */
   paymentDate: string;

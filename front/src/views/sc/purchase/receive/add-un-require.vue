@@ -28,6 +28,13 @@
           <j-form-item label="供应商" required>
             <supplier-selector v-model:value="formData.supplierId" @update:value="supplierChange" />
           </j-form-item>
+          <j-form-item label="订单日期">
+            <a-date-picker
+              v-model:value="formData.orderDate"
+              placeholder=""
+              value-format="YYYY-MM-DD"
+            />
+          </j-form-item>
           <!-- <j-form-item label="采购员">
             <user-selector v-model:value="formData.purchaserId" />
           </j-form-item> -->
@@ -403,6 +410,7 @@ export default defineComponent({
           supplierId: '',
           purchaseOrderId: '',
           purchaserId: '',
+          orderDate: formatDate(Moment()),
           paymentDate: formatDate(Moment().add(1, 'M')),
           receiveDate: formatDate(Moment()),
           totalNum: 0,
@@ -756,6 +764,7 @@ export default defineComponent({
           scId: this.formData.scId,
           supplierId: this.formData.supplierId,
           purchaserId: this.formData.purchaserId || '',
+          orderDate: this.formData.orderDate || '',
           paymentDate: this.formData.paymentDate || '',
           receiveDate: this.formData.receiveDate,
           description: this.formData.description,

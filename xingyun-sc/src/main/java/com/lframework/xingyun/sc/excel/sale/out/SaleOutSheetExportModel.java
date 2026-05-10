@@ -61,10 +61,23 @@ public class SaleOutSheetExportModel extends BaseBo<SaleOutSheet> implements Exc
   private String salerName;
 
   /**
+   * 订单日期
+   */
+  @ExcelProperty("订单日期")
+  @DateTimeFormat(StringPool.DATE_PATTERN)
+  private Date orderDate;
+
+  /**
    * 单据总金额
    */
   @ExcelProperty("单据总金额")
   private BigDecimal totalAmount;
+
+  /**
+   * 总利润
+   */
+  @ExcelProperty("总利润")
+  private BigDecimal totalProfit;
 
   /**
    * 商品数量
@@ -168,7 +181,11 @@ public class SaleOutSheetExportModel extends BaseBo<SaleOutSheet> implements Exc
     this.setCustomerCode(customer.getCode());
     this.setCustomerName(customer.getName());
     this.setSalerName(saler == null ? null : saler.getName());
+    if (dto.getOrderDate() != null) {
+      this.setOrderDate(DateUtil.toDate(dto.getOrderDate()));
+    }
     this.setTotalAmount(dto.getTotalAmount());
+    this.setTotalProfit(dto.getTotalProfit());
     this.setReceiveNum(dto.getTotalNum());
     this.setGiftNum(dto.getTotalGiftNum());
     this.setCreateTime(DateUtil.toDate(dto.getCreateTime()));

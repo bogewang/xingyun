@@ -41,6 +41,11 @@ public class SaleOutSheetFullDto implements BaseDto, Serializable {
   private String salerId;
 
   /**
+   * 订单日期
+   */
+  private LocalDate orderDate;
+
+  /**
    * 付款日期
    */
   private LocalDate paymentDate;
@@ -59,6 +64,16 @@ public class SaleOutSheetFullDto implements BaseDto, Serializable {
    * 出库总金额
    */
   private BigDecimal totalAmount;
+
+  /**
+   * 成本单价
+   */
+  private BigDecimal costPrice;
+
+  /**
+   * 总利润
+   */
+  private BigDecimal totalProfit;
 
   /**
    * 备注

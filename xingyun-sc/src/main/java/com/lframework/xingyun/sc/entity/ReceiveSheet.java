@@ -52,6 +52,11 @@ public class ReceiveSheet extends BaseEntity implements BaseDto {
   private String purchaserId;
 
   /**
+   * 订单日期
+   */
+  private LocalDate orderDate;
+
+  /**
    * 付款日期
    */
   private LocalDate paymentDate;

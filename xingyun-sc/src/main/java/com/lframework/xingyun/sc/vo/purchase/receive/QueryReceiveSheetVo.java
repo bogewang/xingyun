@@ -5,6 +5,7 @@ import com.lframework.starter.web.core.vo.SortPageVo;
 import com.lframework.xingyun.sc.enums.ReceiveSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import io.swagger.annotations.ApiModelProperty;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Data;
 
@@ -38,16 +39,16 @@ public class QueryReceiveSheetVo extends SortPageVo {
   private String createBy;
 
   /**
-   * 操作起始时间
+   * 订单起始日期
    */
-  @ApiModelProperty("操作起始时间")
-  private LocalDateTime createStartTime;
+  @ApiModelProperty("订单起始日期")
+  private LocalDate orderDateStart;
 
   /**
-   * 操作截止时间
+   * 订单截止日期
    */
-  @ApiModelProperty("操作截止时间")
-  private LocalDateTime createEndTime;
+  @ApiModelProperty("订单截止日期")
+  private LocalDate orderDateEnd;
 
   /**
    * 审核人ID

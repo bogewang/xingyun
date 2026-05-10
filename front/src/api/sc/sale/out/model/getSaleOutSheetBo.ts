@@ -43,6 +43,11 @@ export interface GetSaleOutSheetBo {
   salerName: string;
 
   /**
+   * 订单日期
+   */
+  orderDate: string;
+
+  /**
    * 付款日期
    */
   paymentDate: string;
@@ -71,6 +76,11 @@ export interface GetSaleOutSheetBo {
    * 销售金额
    */
   totalAmount: number;
+
+  /**
+   * 总利润
+   */
+  totalProfit: number;
 
   /**
    * 支付方式

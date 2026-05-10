@@ -12,6 +12,9 @@
           <j-form-item label="付款日期">
             {{ formData.paymentDate }}
           </j-form-item>
+          <j-form-item label="订单日期">
+            {{ formData.orderDate }}
+          </j-form-item>
           <j-form-item label="实际到货日期">
             {{ formData.receiveDate }}
           </j-form-item>
@@ -227,6 +230,7 @@
           supplierName: '',
           purchaserName: '',
           paymentDate: '',
+          orderDate: '',
           receiveDate: '',
           purchaseOrderId: '',
           purchaseOrderCode: '',
@@ -257,6 +261,7 @@
               supplierName: res.supplierName,
               purchaserName: res.purchaserName || '',
               paymentDate: res.paymentDate || '',
+              orderDate: res.orderDate || '',
               receiveDate: res.receiveDate,
               purchaseOrderId: res.purchaseOrderId || '',
               purchaseOrderCode: res.purchaseOrderCode || '',

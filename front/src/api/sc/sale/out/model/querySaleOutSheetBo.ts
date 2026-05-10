@@ -35,6 +35,11 @@ export interface QuerySaleOutSheetBo {
   salerName: string;
 
   /**
+   * 订单日期
+   */
+  orderDate: string;
+
+  /**
    * 销售订单ID
    */
   saleOrderId: string;
@@ -58,6 +63,11 @@ export interface QuerySaleOutSheetBo {
    * 销售金额
    */
   totalAmount: number;
+
+  /**
+   * 总利润
+   */
+  totalProfit: number;
 
   /**
    * 备注

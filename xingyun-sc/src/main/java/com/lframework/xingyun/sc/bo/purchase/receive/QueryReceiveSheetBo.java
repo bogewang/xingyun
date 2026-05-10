@@ -65,6 +65,13 @@ public class QueryReceiveSheetBo extends BaseBo<ReceiveSheet> {
     private String purchaserName;
 
     /**
+     * 订单日期
+     */
+    @ApiModelProperty("订单日期")
+    @JsonFormat(pattern = StringPool.DATE_PATTERN)
+    private LocalDate orderDate;
+
+    /**
      * 到货日期
      */
     @ApiModelProperty("到货日期")

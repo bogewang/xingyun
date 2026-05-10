@@ -61,6 +61,13 @@ public class ReceiveSheetExportModel extends BaseBo<ReceiveSheet> implements Exc
   private String purchaserName;
 
   /**
+   * 订单日期
+   */
+  @ExcelProperty("订单日期")
+  @DateTimeFormat(StringPool.DATE_PATTERN)
+  private Date orderDate;
+
+  /**
    * 单据总金额
    */
   @ExcelProperty("单据总金额")
@@ -175,6 +182,9 @@ public class ReceiveSheetExportModel extends BaseBo<ReceiveSheet> implements Exc
     this.setSupplierCode(supplier.getCode());
     this.setSupplierName(supplier.getName());
     this.setPurchaserName(purchaser == null ? null : purchaser.getName());
+    if (dto.getOrderDate() != null) {
+      this.setOrderDate(DateUtil.toDate(dto.getOrderDate()));
+    }
     this.setTotalAmount(dto.getTotalAmount());
     this.setReceiveNum(dto.getTotalNum());
     this.setGiftNum(dto.getTotalGiftNum());

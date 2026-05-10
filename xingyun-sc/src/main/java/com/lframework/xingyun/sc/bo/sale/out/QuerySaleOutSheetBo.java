@@ -15,6 +15,7 @@ import com.lframework.xingyun.sc.service.sale.SaleOrderService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
 import io.swagger.annotations.ApiModelProperty;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Data;
 
@@ -64,6 +65,13 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
     private String salerName;
 
     /**
+     * 订单日期
+     */
+    @ApiModelProperty("订单日期")
+    @JsonFormat(pattern = StringPool.DATE_PATTERN)
+    private LocalDate orderDate;
+
+    /**
      * 销售订单ID
      */
     @ApiModelProperty("销售订单ID")
@@ -92,6 +100,12 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
      */
     @ApiModelProperty("销售金额")
     private BigDecimal totalAmount;
+
+    /**
+     * 总利润
+     */
+    @ApiModelProperty("总利润")
+    private BigDecimal totalProfit;
 
     /**
      * 备注

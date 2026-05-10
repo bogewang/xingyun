@@ -63,6 +63,12 @@ public class PrintSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
   private String salerName;
 
   /**
+   * 订单日期
+   */
+  @ApiModelProperty("订单日期")
+  private String orderDate;
+
+  /**
    * 付款日期
    */
   @ApiModelProperty("付款日期")
@@ -129,6 +135,7 @@ public class PrintSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
   protected void afterInit(SaleOutSheetFullDto dto) {
 
     this.salerName = StringPool.EMPTY_STR;
+    this.orderDate = StringPool.EMPTY_STR;
     this.paymentDate = StringPool.EMPTY_STR;
     this.saleOrderCode = StringPool.EMPTY_STR;
     this.approveBy = StringPool.EMPTY_STR;
@@ -153,6 +160,10 @@ public class PrintSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
     if (!StringUtil.isBlank(dto.getSaleOrderId())) {
       SaleOrder saleOrder = saleOrderService.getById(dto.getSaleOrderId());
       this.saleOrderCode = saleOrder.getCode();
+    }
+
+    if (dto.getOrderDate() != null) {
+      this.orderDate = DateUtil.formatDate(dto.getOrderDate());
     }
 
     if (dto.getPaymentDate() != null) {

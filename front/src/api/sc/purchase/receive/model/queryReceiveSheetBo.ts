@@ -35,6 +35,11 @@ export interface QueryReceiveSheetBo {
   purchaserName: string;
 
   /**
+   * 订单日期
+   */
+  orderDate: string;
+
+  /**
    * 到货日期
    */
   receiveDate: string;

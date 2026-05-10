@@ -12,6 +12,9 @@
           <j-form-item label="销售员">
             {{ formData.salerName }}
           </j-form-item>
+          <j-form-item label="订单日期">
+            {{ formData.orderDate }}
+          </j-form-item>
           <j-form-item label="付款日期">
             {{ formData.paymentDate }}
           </j-form-item>
@@ -112,6 +115,9 @@
           </j-form-item>
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
+          </j-form-item>
+          <j-form-item label="总利润" :span="6">
+            <a-input v-model:value="formData.totalProfit" class="number-input" readonly />
           </j-form-item>
         </j-form>
       </j-border>
@@ -275,12 +281,14 @@
           scName: '',
           customerName: '',
           salerName: '',
+          orderDate: '',
           paymentDate: '',
           saleOrderId: '',
           saleOrderCode: '',
           totalNum: 0,
           giftNum: 0,
           totalAmount: 0,
+          totalProfit: 0,
           description: '',
         };
 
@@ -304,6 +312,7 @@
               scName: res.scName,
               customerName: res.customerName,
               salerName: res.salerName || '',
+              orderDate: res.orderDate || '',
               paymentDate: res.paymentDate || '',
               saleOrderId: res.saleOrderId || '',
               saleOrderCode: res.saleOrderCode || '',
@@ -317,6 +326,7 @@
               totalNum: 0,
               giftNum: 0,
               totalAmount: 0,
+              totalProfit: res.totalProfit || 0,
             };
             this.tableData = res.details || [];
 

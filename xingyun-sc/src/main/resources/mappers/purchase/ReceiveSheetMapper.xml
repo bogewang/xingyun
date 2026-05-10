@@ -8,6 +8,7 @@
         <result column="sc_id" property="scId"/>
         <result column="supplier_id" property="supplierId"/>
         <result column="purchaser_id" property="purchaserId"/>
+        <result column="order_date" property="orderDate"/>
         <result column="payment_date" property="paymentDate"/>
         <result column="receive_date" property="receiveDate"/>
         <result column="purchase_order_id" property="purchaseOrderId"/>
@@ -29,6 +30,7 @@
         <result column="sc_id" property="scId"/>
         <result column="supplier_id" property="supplierId"/>
         <result column="purchaser_id" property="purchaserId"/>
+        <result column="order_date" property="orderDate"/>
         <result column="payment_date" property="paymentDate"/>
         <result column="receive_date" property="receiveDate"/>
         <result column="purchase_order_id" property="purchaseOrderId"/>
@@ -88,6 +90,7 @@
             r.sc_id,
             r.supplier_id,
             r.purchaser_id,
+            r.order_date,
             r.payment_date,
             r.receive_date,
             r.purchase_order_id,
@@ -112,6 +115,7 @@
             r.sc_id,
             r.supplier_id,
             r.purchaser_id,
+            r.order_date,
             r.payment_date,
             r.receive_date,
             r.purchase_order_id,
@@ -187,12 +191,12 @@
                 <if test="vo.approveBy != null and vo.approveBy != ''">
                     AND r.approve_by = #{vo.approveBy}
                 </if>
-                <if test="vo.createStartTime != null">
-                    AND r.create_time >= #{vo.createStartTime}
+                <if test="vo.orderDateStart != null">
+                    AND r.order_date >= #{vo.orderDateStart}
                 </if>
-                <if test="vo.createEndTime != null">
+                <if test="vo.orderDateEnd != null">
                     <![CDATA[
-                    AND r.create_time <= #{vo.createEndTime}
+                    AND r.order_date <= #{vo.orderDateEnd}
                     ]]>
                 </if>
                 <if test="vo.approveStartTime != null">

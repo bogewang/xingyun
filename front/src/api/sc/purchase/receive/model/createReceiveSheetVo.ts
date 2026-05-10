@@ -17,6 +17,11 @@ export interface CreateReceiveSheetVo {
   purchaserId: string;
 
   /**
+   * 订单日期
+   */
+  orderDate: string;
+
+  /**
    * 付款日期
    */
   paymentDate: string;

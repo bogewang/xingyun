@@ -28,6 +28,13 @@
           <j-form-item label="客户" required>
             <customer-selector v-model:value="formData.customerId" @update:value="customerChange" />
           </j-form-item>
+          <j-form-item label="订单日期">
+            <a-date-picker
+              v-model:value="formData.orderDate"
+              placeholder=""
+              value-format="YYYY-MM-DD"
+            />
+          </j-form-item>
         </j-form>
       </j-border>
       <!-- 数据列表 -->
@@ -359,6 +366,7 @@
           customerId: '',
           saleOrderId: '',
           salerId: '',
+          orderDate: formatDate(Moment()),
           paymentDate: formatDate(Moment().add(1, 'M')),
           totalNum: 0,
           giftNum: 0,
@@ -721,6 +729,7 @@
           scId: this.formData.scId,
           customerId: this.formData.customerId,
           salerId: this.formData.salerId || '',
+          orderDate: this.formData.orderDate || '',
           paymentDate: this.formData.paymentDate || '',
           description: this.formData.description,
           required: false,

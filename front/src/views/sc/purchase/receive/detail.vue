@@ -6,6 +6,7 @@
       width="75%"
       title="查看"
       :style="{ top: '20px' }"
+      :body-style="{ maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' }"
     >
       <div v-if="visible" v-permission="['purchase:receive:query']" v-loading="loading">
         <j-border>
@@ -18,6 +19,9 @@
             </j-form-item>
             <j-form-item label="采购员">
               {{ formData.purchaserName }}
+            </j-form-item>
+            <j-form-item label="订单日期">
+              {{ formData.orderDate }}
             </j-form-item>
             <j-form-item label="付款日期">
               {{ formData.paymentDate }}
@@ -94,7 +98,7 @@
           highlight-hover-row
           keep-source
           row-id="id"
-          height="500"
+          height="320"
           :data="tableData"
           :columns="tableColumn"
         >
@@ -260,6 +264,7 @@ export default defineComponent({
           scName: '',
           supplierName: '',
           purchaserName: '',
+          orderDate: '',
           paymentDate: '',
           receiveDate: '',
           purchaseOrderId: '',
@@ -282,6 +287,7 @@ export default defineComponent({
               scName: res.scName,
               supplierName: res.supplierName,
               purchaserName: res.purchaserName || '',
+              orderDate: res.orderDate || '',
               paymentDate: res.paymentDate || '',
               receiveDate: res.receiveDate,
               purchaseOrderId: res.purchaseOrderId || '',

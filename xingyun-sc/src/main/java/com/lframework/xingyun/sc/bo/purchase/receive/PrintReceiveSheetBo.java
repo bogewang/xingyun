@@ -63,6 +63,12 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
   private String purchaserName;
 
   /**
+   * 订单日期
+   */
+  @ApiModelProperty("订单日期")
+  private String orderDate;
+
+  /**
    * 付款日期
    */
   @ApiModelProperty("付款日期")
@@ -135,6 +141,7 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
   protected void afterInit(ReceiveSheetFullDto dto) {
 
     this.purchaserName = StringPool.EMPTY_STR;
+    this.orderDate = StringPool.EMPTY_STR;
     this.paymentDate = StringPool.EMPTY_STR;
     this.receiveDate = StringPool.EMPTY_STR;
     this.purchaseOrderCode = StringPool.EMPTY_STR;
@@ -160,6 +167,10 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
     if (!StringUtil.isBlank(dto.getPurchaseOrderId())) {
       PurchaseOrder purchaseOrder = purchaseOrderService.getById(dto.getPurchaseOrderId());
       this.purchaseOrderCode = purchaseOrder.getCode();
+    }
+
+    if (dto.getOrderDate() != null) {
+      this.orderDate = DateUtil.formatDate(dto.getOrderDate());
     }
 
     if (dto.getPaymentDate() != null) {
