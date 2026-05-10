@@ -605,13 +605,6 @@ export default defineComponent({
           return false;
         }
 
-        if (this.formData.allowModifyPaymentDate) {
-          if (isEmpty(this.formData.paymentDate)) {
-            createError('付款日期不允许为空！');
-            return false;
-          }
-        }
-
         if (isEmpty(this.tableData)) {
           createError('请录入商品！');
           return false;

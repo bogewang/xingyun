@@ -21,19 +21,6 @@
               value-format="YYYY-MM-DD"
             />
           </j-form-item>
-          <j-form-item label="付款日期" required>
-            <a-date-picker
-              v-model:value="formData.paymentDate"
-              placeholder=""
-              value-format="YYYY-MM-DD"
-              :disabled="!formData.allowModifyPaymentDate"
-              :disabled-date="
-                (current) => {
-                  return current && current < moment().endOf('day');
-                }
-              "
-            />
-          </j-form-item>
           <j-form-item label="状态">
             <span
               v-if="RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status)"
@@ -631,13 +618,6 @@
         if (isEmpty(this.formData.supplierId)) {
           createError('供应商不允许为空！');
           return false;
-        }
-
-        if (this.formData.allowModifyPaymentDate) {
-          if (isEmpty(this.formData.paymentDate)) {
-            createError('付款日期不允许为空！');
-            return false;
-          }
         }
 
         if (isEmpty(this.tableData)) {
