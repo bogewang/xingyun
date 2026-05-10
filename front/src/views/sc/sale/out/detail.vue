@@ -86,6 +86,7 @@
       </j-border>
       <!-- 数据列表 -->
       <vxe-grid
+        id="SaleOutSheetDetail"
         ref="grid"
         resizable
         show-overflow
@@ -95,6 +96,8 @@
         height="320"
         :data="tableData"
         :columns="tableColumn"
+        :toolbar-config="toolbarConfig"
+        :custom-config="{}"
       >
         <!-- 含税金额 列自定义内容 -->
         <template #taxAmount_default="{ row }">
@@ -177,6 +180,12 @@ export default defineComponent({
         loading: false,
         // 表单数据
         formData: {},
+        // 工具栏配置
+        toolbarConfig: {
+          zoom: false,
+          custom: true,
+          refresh: false,
+        },
         // 列表数据配置
         tableColumn: [
           { type: 'seq', width: 50 },

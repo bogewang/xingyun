@@ -39,6 +39,7 @@
       </j-border>
       <!-- 数据列表 -->
       <vxe-grid
+        id="SaleOutSheetAddUnRequire"
         ref="grid"
         resizable
         show-overflow
@@ -49,6 +50,7 @@
         :data="tableData"
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
+        :custom-config="{}"
       >
         <!-- 工具栏 -->
         <template #toolbar_buttons>
@@ -273,7 +275,7 @@
           // 缩放
           zoom: false,
           // 自定义表头
-          custom: false,
+          custom: true,
           // 右侧是否显示刷新按钮
           refresh: false,
           // 自定义左侧工具栏
