@@ -117,9 +117,6 @@
             <j-form-item label="收货数量" :span="6">
               <a-input v-model:value="formData.totalNum" class="number-input" readonly />
             </j-form-item>
-            <j-form-item label="赠品数量" :span="6">
-              <a-input v-model:value="formData.giftNum" class="number-input" readonly />
-            </j-form-item>
             <j-form-item label="含税总金额" :span="6">
               <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
             </j-form-item>
@@ -200,14 +197,6 @@ export default defineComponent({
           { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
           { field: 'brandName', title: '商品品牌', width: 120 },
-          {
-            field: 'isGift',
-            title: '是否赠品',
-            width: 80,
-            formatter: ({ cellValue }) => {
-              return cellValue ? '是' : '否';
-            },
-          },
           { field: 'purchasePrice', title: '采购价（元）', align: 'right', width: 120 },
           {
             field: 'orderNum',
@@ -270,7 +259,6 @@ export default defineComponent({
           purchaseOrderId: '',
           purchaseOrderCode: '',
           totalNum: 0,
-          giftNum: 0,
           totalAmount: 0,
           description: '',
         };
@@ -300,7 +288,6 @@ export default defineComponent({
               approveTime: res.approveTime,
               refuseReason: res.refuseReason,
               totalNum: 0,
-              giftNum: 0,
               totalAmount: 0,
             };
             this.tableData = res.details || [];
@@ -321,7 +308,6 @@ export default defineComponent({
       // 计算汇总数据
       calcSum() {
         let totalNum = 0;
-        let giftNum = 0;
         let totalAmount = 0;
 
         this.tableData
@@ -330,17 +316,11 @@ export default defineComponent({
           })
           .forEach((t) => {
             const num = parseFloat(t.receiveNum);
-            if (t.isGift) {
-              giftNum = add(giftNum, num);
-            } else {
-              totalNum = add(totalNum, num);
-            }
-
+            totalNum = add(totalNum, num);
             totalAmount = add(totalAmount, getNumber(mul(num, t.purchasePrice), 2));
           });
 
         this.formData.totalNum = totalNum;
-        this.formData.giftNum = giftNum;
         this.formData.totalAmount = totalAmount;
       },
       async print() {

@@ -21,6 +21,13 @@ ALTER TABLE `base_data_customer` ADD COLUMN `nick_name` VARCHAR(50) NULL DEFAULT
 ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `order_date` date NULL DEFAULT NULL COMMENT '订单日期';
 ALTER TABLE `tbl_receive_sheet` ADD COLUMN `order_date` date NULL DEFAULT NULL COMMENT '订单日期';
 
+-- 成本单价
 ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `cost_price` decimal(24,6) NOT NULL DEFAULT '0.000000' COMMENT '成本单价';
 ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `total_profit` decimal(24,6) NOT NULL DEFAULT '0.000000' COMMENT '总利润';
+
+-- 仓库非必填
+ALTER TABLE tbl_sale_out_sheet modify `sc_id` varchar(32) NULL COMMENT '仓库ID';
+ALTER TABLE tbl_sale_order modify `sc_id` varchar(32) NULL COMMENT '仓库ID';
+ALTER TABLE tbl_purchase_order modify `sc_id` varchar(32) NULL COMMENT '仓库ID';
+ALTER TABLE tbl_receive_sheet modify `sc_id` varchar(32) NULL COMMENT '仓库ID';
 

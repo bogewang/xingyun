@@ -331,7 +331,6 @@
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
           { field: 'totalProfit', title: '总利润', align: 'right', width: 100 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
-          // { field: 'totalGiftNum', title: '赠品数量', align: 'right', width: 120 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
           {

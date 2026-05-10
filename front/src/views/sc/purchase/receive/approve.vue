@@ -235,7 +235,6 @@
           purchaseOrderId: '',
           purchaseOrderCode: '',
           totalNum: 0,
-          giftNum: 0,
           totalAmount: 0,
           description: '',
         };
@@ -273,7 +272,6 @@
               approveTime: res.approveTime,
               refuseReason: res.refuseReason,
               totalNum: 0,
-              giftNum: 0,
               totalAmount: 0,
             };
             this.tableData = res.details || [];
@@ -287,7 +285,6 @@
       // 计算汇总数据
       calcSum() {
         let totalNum = 0;
-        let giftNum = 0;
         let totalAmount = 0;
 
         this.tableData
@@ -296,17 +293,11 @@
           })
           .forEach((t) => {
             const num = parseFloat(t.receiveNum);
-            if (t.isGift) {
-              giftNum = add(giftNum, num);
-            } else {
-              totalNum = add(totalNum, num);
-            }
-
+            totalNum = add(totalNum, num);
             totalAmount = add(totalAmount, getNumber(mul(num, t.purchasePrice), 2));
           });
 
         this.formData.totalNum = totalNum;
-        this.formData.giftNum = giftNum;
         this.formData.totalAmount = totalAmount;
       },
       // 审核通过

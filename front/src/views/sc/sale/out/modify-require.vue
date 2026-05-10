@@ -205,9 +205,6 @@
           <j-form-item label="出库数量" :span="6">
             <a-input v-model:value="formData.totalNum" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="赠品数量" :span="6">
-            <a-input v-model:value="formData.giftNum" class="number-input" readonly />
-          </j-form-item>
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
@@ -335,14 +332,6 @@
           { field: 'mainProductName', title: '所属组合商品', width: 120 },
           { field: 'salePrice', title: '参考销售价（元）', align: 'right', width: 140 },
           {
-            field: 'isGift',
-            title: '是否赠品',
-            width: 80,
-            formatter: ({ cellValue }) => {
-              return cellValue ? '是' : '否';
-            },
-          },
-          {
             field: 'stockNum',
             title: '库存数量',
             align: 'right',
@@ -432,7 +421,6 @@
           orderDate: '',
           paymentDate: '',
           totalNum: 0,
-          giftNum: 0,
           totalAmount: 0,
           description: '',
           // 是否允许修改付款日期
@@ -479,7 +467,6 @@
               approveTime: res.approveTime,
               refuseReason: res.refuseReason,
               totalNum: 0,
-              giftNum: 0,
               totalAmount: 0,
             });
 
@@ -524,7 +511,6 @@
           remainNum: '',
           outNum: '',
           taxRate: '',
-          isGift: true,
           taxAmount: '',
           description: '',
           isFixed: false,
@@ -567,10 +553,7 @@
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
         // 将选中的商品数据赋值给当前行
-        this.tableData[index] = Object.assign(this.tableData[index], product, {
-          isGift: true,
-          taxPrice: 0,
-        });
+        this.tableData[index] = Object.assign(this.tableData[index], product);
 
         this.taxPriceInput(this.tableData[index], this.tableData[index].taxPrice);
       },
@@ -615,7 +598,6 @@
       // 计算汇总数据
       calcSum() {
         let totalNum = 0;
-        let giftNum = 0;
         let totalAmount = 0;
 
         this.tableData
@@ -624,17 +606,11 @@
           })
           .forEach((t) => {
             const num = parseFloat(t.outNum);
-            if (t.isGift) {
-              giftNum = add(giftNum, num);
-            } else {
-              totalNum = add(totalNum, num);
-            }
-
+            totalNum = add(totalNum, num);
             totalAmount = add(totalAmount, getNumber(mul(num, t.taxPrice), 2));
           });
 
         this.formData.totalNum = totalNum;
-        this.formData.giftNum = giftNum;
         this.formData.totalAmount = totalAmount;
       },
       // 批量录入数量
@@ -729,16 +705,9 @@
             return false;
           }
 
-          if (product.isGift) {
-            if (parseFloat(product.taxPrice) !== 0) {
-              createError('第' + (i + 1) + '行商品价格必须等于0！');
-              return false;
-            }
-          } else {
-            if (!isFloatGtZero(product.taxPrice)) {
-              createError('第' + (i + 1) + '行商品价格必须大于0！');
-              return false;
-            }
+          if (!isFloatGtZero(product.taxPrice)) {
+            createError('第' + (i + 1) + '行商品价格必须大于0！');
+            return false;
           }
 
           if (!isNumberPrecision(product.taxPrice, 6)) {

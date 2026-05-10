@@ -99,7 +99,6 @@
               @click="$refs.importer.openDialog()"
               >导入Excel</a-button
             >
-            <!-- <a-button :icon="h(AlertOutlined)" @click="setGift">设置赠品</a-button> -->
           </a-space>
         </template>
 
@@ -148,9 +147,7 @@
 
         <!-- 采购价 列自定义内容 -->
         <template #purchasePrice_default="{ row }">
-          <span v-if="row.isGift">{{ row.purchasePrice }}</span>
           <a-input
-            v-else
             v-model:value="row.purchasePrice"
             class="number-input"
             @input="(e) => purchasePriceInput(e.target.value)"
@@ -184,9 +181,6 @@
           <j-form-item label="收货数量" :span="6">
             <a-input v-model:value="formData.totalNum" class="number-input" readonly />
           </j-form-item>
-          <!-- <j-form-item label="赠品数量" :span="6">
-            <a-input v-model:value="formData.giftNum" class="number-input" readonly />
-          </j-form-item> -->
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
@@ -236,7 +230,6 @@ import PurchaseOrderSelectorWithReceive
   from '@/views/sc/purchase/receive/PurchaseOrderSelectorWithReceive.vue';
 import Moment from 'moment';
 import {
-  AlertOutlined,
   CloudUploadOutlined,
   DeleteOutlined,
   EditOutlined,
@@ -283,7 +276,6 @@ export default defineComponent({
         DeleteOutlined,
         NumberOutlined,
         EditOutlined,
-        AlertOutlined,
         CloudUploadOutlined,
         isEmpty,
         isFloatGeZero,
@@ -328,14 +320,6 @@ export default defineComponent({
           { field: 'unit', title: '单位', width: 80 },
           // { field: 'categoryName', title: '商品分类', width: 120 },
           // { field: 'brandName', title: '商品品牌', width: 120 },
-          // {
-          //   field: 'isGift',
-          //   title: '是否赠品',
-          //   width: 80,
-          //   formatter: ({ cellValue }) => {
-          //     return cellValue ? '是' : '否';
-          //   },
-          // },
           // { field: 'taxCostPrice', title: '含税成本价（元）', align: 'right', width: 140 },
           // { field: 'stockNum', title: '库存数量', align: 'right', width: 140 },
           {
@@ -414,7 +398,6 @@ export default defineComponent({
           paymentDate: formatDate(Moment().add(1, 'M')),
           receiveDate: formatDate(Moment()),
           totalNum: 0,
-          giftNum: 0,
           totalAmount: 0,
           description: '',
           // 是否允许修改付款日期
@@ -479,7 +462,6 @@ export default defineComponent({
           stockNum: '',
           receiveNum: '',
           taxRate: '',
-          isGift: false,
           taxAmount: '',
           description: '',
           isFixed: false,
@@ -522,9 +504,7 @@ export default defineComponent({
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
         // 将选中的商品数据赋值给当前行
-        this.tableData[index] = Object.assign(this.tableData[index], product, {
-          isGift: false,
-        });
+        this.tableData[index] = Object.assign(this.tableData[index], product);
 
         this.purchasePriceInput(this.tableData[index], this.tableData[index].purchasePrice);
       },
@@ -563,7 +543,6 @@ export default defineComponent({
       // 计算汇总数据
       calcSum() {
         let totalNum = 0;
-        let giftNum = 0;
         let totalAmount = 0;
 
         this.tableData
@@ -572,17 +551,11 @@ export default defineComponent({
           })
           .forEach((t) => {
             const num = parseFloat(t.receiveNum);
-            if (t.isGift) {
-              giftNum = add(giftNum, num);
-            } else {
-              totalNum = add(totalNum, num);
-            }
-
+            totalNum = add(totalNum, num);
             totalAmount = add(totalAmount, getNumber(mul(num, t.purchasePrice), 2));
           });
 
         this.formData.totalNum = totalNum;
-        this.formData.giftNum = giftNum;
         this.formData.totalAmount = totalAmount;
       },
       // 批量录入数量
@@ -614,13 +587,6 @@ export default defineComponent({
           return;
         }
 
-        for (let i = 0; i < records.length; i++) {
-          if (records[i].isGift) {
-            createError('第' + (i + 1) + '行商品为赠品，不允许录入采购价！');
-            return;
-          }
-        }
-
         createPrompt('请输入采购价（元）', {
           inputPattern: PATTERN_IS_PRICE,
           inputErrorMessage: '采购价（元）必须是数字并且不小于0，最多允许6位小数',
@@ -633,21 +599,6 @@ export default defineComponent({
             this.purchasePriceInput(t, value);
           });
         });
-      },
-      // 设置赠品
-      setGift() {
-        const records = this.$refs.grid.getCheckboxRecords();
-        if (isEmpty(records)) {
-          createError('请选择要设置为赠品的商品数据！');
-          return;
-        }
-
-        records.forEach((item) => {
-          item.purchasePrice = 0;
-          item.isGift = true;
-        });
-
-        this.calcSum();
       },
       // 批量新增商品
       batchAddProduct(productList) {
@@ -719,16 +670,9 @@ export default defineComponent({
             return false;
           }
 
-          if (product.isGift) {
-            if (parseFloat(product.purchasePrice) !== 0) {
-              createError('第' + (i + 1) + '行商品采购价必须等于0！');
-              return false;
-            }
-          } else {
-            if (!isFloatGtZero(product.purchasePrice)) {
-              createError('第' + (i + 1) + '行商品采购价必须大于0！');
-              return false;
-            }
+          if (!isFloatGtZero(product.purchasePrice)) {
+            createError('第' + (i + 1) + '行商品采购价必须大于0！');
+            return false;
           }
 
           if (!isNumberPrecision(product.purchasePrice, 6)) {

@@ -110,9 +110,6 @@
           <j-form-item label="出库数量" :span="6">
             <a-input v-model:value="formData.totalNum" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="赠品数量" :span="6">
-            <a-input v-model:value="formData.giftNum" class="number-input" readonly />
-          </j-form-item>
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
@@ -212,14 +209,6 @@
           { field: 'mainProductName', title: '所属组合商品', width: 120 },
           { field: 'salePrice', title: '参考销售价（元）', align: 'right', width: 150 },
           {
-            field: 'isGift',
-            title: '是否赠品',
-            width: 80,
-            formatter: ({ cellValue }) => {
-              return cellValue ? '是' : '否';
-            },
-          },
-          {
             field: 'stockNum',
             title: '库存数量',
             align: 'right',
@@ -286,7 +275,6 @@
           saleOrderId: '',
           saleOrderCode: '',
           totalNum: 0,
-          giftNum: 0,
           totalAmount: 0,
           totalProfit: 0,
           description: '',
@@ -324,7 +312,6 @@
               approveTime: res.approveTime,
               refuseReason: res.refuseReason,
               totalNum: 0,
-              giftNum: 0,
               totalAmount: 0,
               totalProfit: res.totalProfit || 0,
             };
@@ -339,7 +326,6 @@
       // 计算汇总数据
       calcSum() {
         let totalNum = 0;
-        let giftNum = 0;
         let totalAmount = 0;
 
         this.tableData
@@ -348,17 +334,11 @@
           })
           .forEach((t) => {
             const num = parseFloat(t.outNum);
-            if (t.isGift) {
-              giftNum = add(giftNum, num);
-            } else {
-              totalNum = add(totalNum, num);
-            }
-
+            totalNum = add(totalNum, num);
             totalAmount = add(totalAmount, getNumber(mul(num, t.taxPrice), 2));
           });
 
         this.formData.totalNum = totalNum;
-        this.formData.giftNum = giftNum;
         this.formData.totalAmount = totalAmount;
       },
       // 审核通过
