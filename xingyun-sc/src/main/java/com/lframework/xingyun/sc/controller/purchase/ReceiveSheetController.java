@@ -17,6 +17,7 @@ import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.PurchaseConfig;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetDetailExportTaskWorker;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetExportTaskWorker;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetPayTypeImportListener;
@@ -105,6 +106,19 @@ public class ReceiveSheetController extends DefaultBaseController {
     public InvokeResult<Void> export(@Valid QueryReceiveSheetVo vo) {
 
         ExportTaskUtil.exportTask("采购收货单信息", ReceiveSheetExportTaskWorker.class, vo);
+
+        return InvokeResultBuilder.success();
+    }
+
+    /**
+     * 明细导出
+     */
+    @ApiOperation("明细导出")
+    @HasPermission({"purchase:receive:export"})
+    @PostMapping("/exportDetail")
+    public InvokeResult<Void> exportDetail(@RequestBody @Valid QueryReceiveSheetVo vo) {
+
+        ExportTaskUtil.exportTask("采购收货单明细", ReceiveSheetDetailExportTaskWorker.class, vo);
 
         return InvokeResultBuilder.success();
     }

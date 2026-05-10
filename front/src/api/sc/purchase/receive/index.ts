@@ -96,6 +96,22 @@ export function exportList(data: QueryReceiveSheetVo): Promise<void> {
 }
 
 /**
+ * 导出订单详情
+ */
+export function exportDetail(data: QueryReceiveSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/exportDetail',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/**
  * 查询详情
  */
 export function get(id: string): Promise<GetReceiveSheetBo> {

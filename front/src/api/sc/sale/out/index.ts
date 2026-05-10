@@ -82,6 +82,22 @@ export function exportList(data: QuerySaleOutSheetVo): Promise<void> {
   );
 }
 
+/**
+ * 导出订单详情
+ */
+export function exportDetail(data: QuerySaleOutSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/exportDetail',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
 export function downloadImportTemplate(): Promise<void> {
   return defHttp.get<void>(
     {

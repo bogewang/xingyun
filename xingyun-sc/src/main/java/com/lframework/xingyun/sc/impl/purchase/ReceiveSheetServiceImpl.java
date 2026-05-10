@@ -71,7 +71,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMapper, ReceiveSheet> implements ReceiveSheetService {
+public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMapper, ReceiveSheet>
+        implements ReceiveSheetService {
 
     @Autowired
     private ReceiveSheetDetailService receiveSheetDetailService;
@@ -111,7 +112,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     @Override
     public PageResult<ReceiveSheet> query(Integer pageIndex, Integer pageSize,
-                                          QueryReceiveSheetVo vo) {
+            QueryReceiveSheetVo vo) {
 
         Assert.greaterThanZero(pageIndex);
         Assert.greaterThanZero(pageSize);
@@ -130,7 +131,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     @Override
     public PageResult<ReceiveSheet> selector(Integer pageIndex, Integer pageSize,
-                                             ReceiveSheetSelectorVo vo) {
+            ReceiveSheetSelectorVo vo) {
 
         Assert.greaterThanZero(pageIndex);
         Assert.greaterThanZero(pageSize);
@@ -145,9 +146,9 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     public GetPaymentDateDto getPaymentDate(String supplierId) {
 
         // 付款日期默认为当前日期的30天后，如当天为2021-10-01，则付款日期默认为2021-11-01
-        //（1）供应商的经营方式为“经销”，且结算方式为“任意指定”，则付款日期按照以上规则展示默认值，允许用户更改，但仅能选择当天及当天之后的日期。
-        //（2）供应商的经营方式为“经销”，且结算方式为“货到付款”，则付款日期默认为此刻，即收货单的创建时间，可能会遇到跨日的问题，但付款日期，均赋值为收货单的创建日期。
-        //（3）供应商的经营方式为非经销模式时，收货单、退货单不涉及付款，则付款日期字段置灰，为空，且不可点击。
+        // （1）供应商的经营方式为“经销”，且结算方式为“任意指定”，则付款日期按照以上规则展示默认值，允许用户更改，但仅能选择当天及当天之后的日期。
+        // （2）供应商的经营方式为“经销”，且结算方式为“货到付款”，则付款日期默认为此刻，即收货单的创建时间，可能会遇到跨日的问题，但付款日期，均赋值为收货单的创建日期。
+        // （3）供应商的经营方式为非经销模式时，收货单、退货单不涉及付款，则付款日期字段置灰，为空，且不可点击。
 
         Supplier supplier = supplierService.findById(supplierId);
 
@@ -187,7 +188,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     @Override
     public PageResult<ReceiveSheet> queryWithReturn(Integer pageIndex, Integer pageSize,
-                                                    QueryReceiveSheetWithReturnVo vo) {
+            QueryReceiveSheetWithReturnVo vo) {
 
         Assert.greaterThanZero(pageIndex);
         Assert.greaterThanZero(pageSize);
@@ -361,7 +362,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
                 }
             } else {
                 Wrapper<ReceiveSheetDetailBundle> queryBundleWrapper = Wrappers.lambdaQuery(
-                                ReceiveSheetDetailBundle.class).eq(ReceiveSheetDetailBundle::getSheetId, sheet.getId())
+                        ReceiveSheetDetailBundle.class).eq(ReceiveSheetDetailBundle::getSheetId, sheet.getId())
                         .eq(ReceiveSheetDetailBundle::getDetailId, detail.getId());
                 List<ReceiveSheetDetailBundle> receiveSheetDetailBundles = receiveSheetDetailBundleService.list(
                         queryBundleWrapper);
@@ -573,7 +574,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     @Override
     public List<ReceiveSheet> getApprovedList(String supplierId, LocalDateTime startTime,
-                                              LocalDateTime endTime, SettleStatus settleStatus) {
+            LocalDateTime endTime, SettleStatus settleStatus) {
 
         return getBaseMapper().getApprovedList(supplierId, startTime, endTime, settleStatus);
     }
@@ -736,7 +737,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
                             // 这里会有尾差
                             receiveSheetDetailBundle.setProductTaxPrice(NumberUtil.getNumber(
                                     NumberUtil.div(receiveSheetDetailBundle.getProductTaxAmount(),
-                                            receiveSheetDetailBundle.getProductOrderNum()), 6));
+                                            receiveSheetDetailBundle.getProductOrderNum()),
+                                    6));
                             receiveSheetDetailBundle.setProductTaxRate(bundle.getTaxRate());
 
                             return receiveSheetDetailBundle;
@@ -784,7 +786,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     }
 
     private void checkImportData(List<ReceiveSheetImportModel> list) {
-        List<String> productNames = list.stream().map(ReceiveSheetImportModel::getProductName).collect(Collectors.toList());
+        List<String> productNames = list.stream().map(ReceiveSheetImportModel::getProductName)
+                .collect(Collectors.toList());
         Map<String, Product> nameSpecUnitMap = productService.selectByProductName(productNames).stream()
                 .collect(Collectors.toMap(item -> item.getName() + item.getSpec() + item.getUnit(), item -> item));
         Map<String, Product> nameUnitMap = productService.selectByProductName(productNames).stream()
@@ -814,7 +817,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             }
 
             // 匹配商品,设置商品编号
-            String nameSpecUnit = data.getProductName() + data.getSpec() + data.getUnit();
+            String spec = data.getSpec() == null ? StringPool.EMPTY_STR : data.getSpec();
+            String nameSpecUnit = data.getProductName() + spec + data.getUnit();
             Product product = nameSpecUnitMap.get(nameSpecUnit);
             if (product == null) {
                 product = nameUnitMap.get(nameSpecUnit);

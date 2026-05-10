@@ -18,6 +18,7 @@ import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetDetailExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
@@ -115,6 +116,19 @@ public class SaleOutSheetController extends DefaultBaseController {
     public InvokeResult<Void> export(@Valid QuerySaleOutSheetVo vo) {
 
         ExportTaskUtil.exportTask("销售出库单信息", SaleOutSheetExportTaskWorker.class, vo);
+
+        return InvokeResultBuilder.success();
+    }
+
+    /**
+     * 明细导出
+     */
+    @ApiOperation("明细导出")
+    @HasPermission({"sale:out:export"})
+    @PostMapping("/exportDetail")
+    public InvokeResult<Void> exportDetail(@RequestBody @Valid QuerySaleOutSheetVo vo) {
+
+        ExportTaskUtil.exportTask("销售出库单明细", SaleOutSheetDetailExportTaskWorker.class, vo);
 
         return InvokeResultBuilder.success();
     }

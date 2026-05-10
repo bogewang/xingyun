@@ -131,6 +131,7 @@
       <div class="form-modal-footer">
         <a-space>
           <a-button type="primary" :loading="loading" @click="print">打印</a-button>
+          <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
           <a-button :loading="loading" @click="closeDialog">关闭</a-button>
         </a-space>
       </div>
@@ -151,6 +152,7 @@ import {PRINT_TYPE} from '@/enums/biz/printType';
 import OrderTimeLine from '@/components/OrderTimeLine';
 import PrintDialog from '/@/components/PrintDialog';
 import JFormItem from "@/components/JFormItem";
+import { createSuccess } from '@/hooks/web/msg';
 
 export default defineComponent({
     components: {
@@ -338,6 +340,23 @@ export default defineComponent({
         } finally {
           this.loading = false;
         }
+      },
+      exportDetails() {
+        this.loading = true;
+        api.exportDetail(this.buildQueryParams())
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
+      buildQueryParams() {
+        return {
+          pageIndex: 1,
+          pageSize: 2147483647,
+          idList: [this.id],
+        };
       },
     },
   });

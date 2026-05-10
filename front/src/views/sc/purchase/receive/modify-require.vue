@@ -244,11 +244,12 @@
         @confirm="batchAddProduct"
       />
 
-      <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
-        <a-space>
-          <a-button
-            v-permission="['purchase:receive:modify']"
-            type="primary"
+        <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
+          <a-space>
+            <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
+            <a-button
+              v-permission="['purchase:receive:modify']"
+              type="primary"
             :loading="loading"
             @click="updateOrder"
             >保存</a-button
@@ -803,6 +804,24 @@
         return true;
       },
       // 修改订单
+      exportDetails() {
+        this.loading = true;
+        api
+          .exportDetail(this.buildQueryParams())
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
+      buildQueryParams() {
+        return {
+          pageIndex: 1,
+          pageSize: 2147483647,
+          idList: [this.id],
+        };
+      },
       updateOrder() {
         if (!this.validData()) {
           return;
