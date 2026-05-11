@@ -58,7 +58,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      */
     @ApiOperation("打印")
     @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-    @HasPermission({"sale:out:query"})
+    @HasPermission({ "sale:out:query" })
     @GetMapping("/print")
     public InvokeResult<PrintSaleOutSheetBo> print(
             @NotBlank(message = "订单ID不能为空！") String id) {
@@ -77,7 +77,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      * 订单列表
      */
     @ApiOperation("订单列表")
-    @HasPermission({"sale:out:query"})
+    @HasPermission({ "sale:out:query" })
     @GetMapping("/query")
     public InvokeResult<PageResult<QuerySaleOutSheetBo>> query(@Valid QuerySaleOutSheetVo vo) {
 
@@ -98,7 +98,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      * 标签打印
      */
     @ApiOperation("标签打印")
-    @HasPermission({"sale:out:query"})
+    @HasPermission({ "sale:out:query" })
     @GetMapping("/tagPrint")
     public InvokeResult<List<PrintSaleTagBo>> tagPrint(@Valid QuerySaleOutSheetVo vo) {
 
@@ -111,7 +111,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      * 导出
      */
     @ApiOperation("导出")
-    @HasPermission({"sale:out:export"})
+    @HasPermission({ "sale:out:export" })
     @PostMapping("/export")
     public InvokeResult<Void> export(@Valid QuerySaleOutSheetVo vo) {
 
@@ -124,7 +124,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      * 明细导出
      */
     @ApiOperation("明细导出")
-    @HasPermission({"sale:out:export"})
+    @HasPermission({ "sale:out:export" })
     @PostMapping("/exportDetail")
     public InvokeResult<Void> exportDetail(@RequestBody @Valid QuerySaleOutSheetVo vo) {
 
@@ -138,7 +138,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      */
     @ApiOperation("根据ID查询")
     @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-    @HasPermission({"sale:out:query"})
+    @HasPermission({ "sale:out:query" })
     @GetMapping
     public InvokeResult<GetSaleOutSheetBo> findById(
             @NotBlank(message = "订单ID不能为空！") String id) {
@@ -155,7 +155,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      */
     @ApiOperation("根据客户ID查询默认付款日期")
     @ApiImplicitParam(value = "客户ID", name = "customerId", paramType = "query", required = true)
-    @HasPermission({"sale:out:add", "sale:out:modify"})
+    @HasPermission({ "sale:out:add", "sale:out:modify" })
     @GetMapping("/paymentdate")
     public InvokeResult<GetPaymentDateBo> getPaymentDate(
             @NotBlank(message = "客户ID不能为空！") String customerId) {
@@ -172,7 +172,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      */
     @ApiOperation("根据ID查询（销售退货业务）")
     @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-    @HasPermission({"sale:return:add", "sale:return:modify"})
+    @HasPermission({ "sale:return:add", "sale:return:modify" })
     @GetMapping("/return")
     public InvokeResult<SaleOutSheetWithReturnBo> getWithReturn(
             @NotBlank(message = "出库单ID不能为空！") String id) {
@@ -187,7 +187,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      * 查询列表（销售退货业务）
      */
     @ApiOperation("查询列表（销售退货业务）")
-    @HasPermission({"sale:return:add", "sale:return:modify"})
+    @HasPermission({ "sale:return:add", "sale:return:modify" })
     @GetMapping("/query/return")
     public InvokeResult<PageResult<QuerySaleOutSheetWithReturnBo>> queryWithReturn(
             @Valid QuerySaleOutSheetWithReturnVo vo) {
@@ -210,7 +210,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      * 加载列表（销售退货业务）
      */
     @ApiOperation("加载列表（销售退货业务）")
-    @HasPermission({"sale:return:add", "sale:return:modify"})
+    @HasPermission({ "sale:return:add", "sale:return:modify" })
     @PostMapping("/query/return/load")
     public InvokeResult<List<QuerySaleOutSheetWithReturnBo>> loadWithReturn(
             @RequestBody(required = false) List<String> ids) {
@@ -228,7 +228,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      * 创建
      */
     @ApiOperation("创建")
-    @HasPermission({"sale:out:add"})
+    @HasPermission({ "sale:out:add" })
     @PostMapping
     public InvokeResult<String> create(@RequestBody @Valid CreateSaleOutSheetVo vo) {
 
@@ -243,7 +243,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      * 修改
      */
     @ApiOperation("修改")
-    @HasPermission({"sale:out:modify"})
+    @HasPermission({ "sale:out:modify" })
     @PutMapping
     public InvokeResult<Void> update(@RequestBody @Valid UpdateSaleOutSheetVo vo) {
 
@@ -258,7 +258,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      * 审核通过
      */
     @ApiOperation("审核通过")
-    @HasPermission({"sale:out:approve"})
+    @HasPermission({ "sale:out:approve" })
     @PatchMapping("/approve/pass")
     public InvokeResult<Void> approvePass(@RequestBody @Valid ApprovePassSaleOutSheetVo vo) {
 
@@ -271,7 +271,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      * 直接审核通过
      */
     @ApiOperation("直接审核通过")
-    @HasPermission({"sale:out:approve"})
+    @HasPermission({ "sale:out:approve" })
     @PostMapping("/approve/pass/direct")
     public InvokeResult<Void> directApprovePass(@RequestBody @Valid CreateSaleOutSheetVo vo) {
 
@@ -286,7 +286,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      * 审核拒绝
      */
     @ApiOperation("审核拒绝")
-    @HasPermission({"sale:out:approve"})
+    @HasPermission({ "sale:out:approve" })
     @PatchMapping("/approve/refuse")
     public InvokeResult<Void> approveRefuse(@RequestBody @Valid ApproveRefuseSaleOutSheetVo vo) {
 
@@ -300,7 +300,7 @@ public class SaleOutSheetController extends DefaultBaseController {
      */
     @ApiOperation("删除")
     @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-    @HasPermission({"sale:out:delete"})
+    @HasPermission({ "sale:out:delete" })
     @DeleteMapping
     public InvokeResult<Void> deleteById(@NotBlank(message = "销售出库单ID不能为空！") String id) {
 
@@ -310,7 +310,7 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     @ApiOperation("下载导入模板")
-    @HasPermission({"sale:out:import"})
+    @HasPermission({ "sale:out:add" })
     @GetMapping("/import/template")
     public void downloadImportTemplate() {
         ExcelUtil.export("销售出库单导入模板", SaleOutSheetImportModel.class);
@@ -318,21 +318,23 @@ public class SaleOutSheetController extends DefaultBaseController {
 
     /**
      * 返回前端, 前端处理后再保存
+     * 
      * @param file
      * @return
      */
     @ApiOperation("导入")
-    @HasPermission({"sale:out:import"})
+    @HasPermission({ "sale:out:add" })
     @PostMapping("/import")
     public InvokeResult<List<SaleOutProductVo>> importExcel(@NotNull(message = "请上传文件") MultipartFile file) {
         try {
 
-            List<SaleOutSheetImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(), SaleOutSheetImportModel.class);
+            List<SaleOutSheetImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(),
+                    SaleOutSheetImportModel.class);
             List<SaleOutProductVo> data = saleOutSheetService.checkImport(list);
 
             return InvokeResultBuilder.success(data);
         } catch (Exception e) {
-            log.error("请求出错",  e);
+            log.error("请求出错", e);
             return InvokeResultBuilder.fail(e.getMessage(), null);
         }
     }

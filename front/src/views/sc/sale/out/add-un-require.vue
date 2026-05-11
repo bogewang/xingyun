@@ -96,13 +96,8 @@
                   <vxe-column field="productName" title="商品名称" min-width="200" />
                   <vxe-column field="spec" title="规格" width="80" />
                   <vxe-column field="unit" title="单位" width="80" />
-                  <vxe-column
-                    field="salePrice"
-                    title="销售价（元）"
-                    width="140"
-                    align="right"
-                  />
-                  <vxe-column field="stockNum" title="库存数量" width="140" align="right"/>
+                  <vxe-column field="salePrice" title="销售价（元）" width="140" align="right" />
+                  <vxe-column field="stockNum" title="库存数量" width="140" align="right" />
                 </vxe-table>
               </div>
             </template>
@@ -167,7 +162,7 @@
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
           <j-form-item label="备注" :span="12" :content-nest="false">
-            <a-textarea v-model:value.trim="formData.description" maxlength="200" />
+            <a-input v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>
