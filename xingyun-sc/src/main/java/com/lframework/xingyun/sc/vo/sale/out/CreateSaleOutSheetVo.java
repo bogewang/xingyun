@@ -16,7 +16,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -31,15 +30,13 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
   /**
    * 仓库ID
    */
-  @ApiModelProperty(value = "仓库ID", required = true)
-  @NotBlank(message = "仓库ID不能为空！")
+  @ApiModelProperty("仓库ID")
   private String scId;
 
   /**
    * 客户ID
    */
   @ApiModelProperty(value = "客户ID", required = true)
-  @NotBlank(message = "客户ID不能为空！")
   private String customerId;
 
   /**

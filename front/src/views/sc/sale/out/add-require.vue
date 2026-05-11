@@ -8,9 +8,6 @@
       />
       <j-border>
         <j-form bordered>
-          <j-form-item label="仓库" required>
-            <store-center-selector v-model:value="formData.scId" :before-open="beforeSelectSc" />
-          </j-form-item>
           <j-form-item label="客户" required>
             <customer-selector
               v-model:value="formData.customerId"
@@ -92,7 +89,7 @@
           >
             <!-- 自定义下拉框内容 -->
             <template #dropdownRender>
-              <div v-if="!isEmpty(row.products)">
+              <div v-if="!isEmpty(row.products)" @mousedown.prevent @click.stop>
                 <vxe-table
                   :data="row.products"
                   max-height="500"
@@ -210,7 +207,6 @@ import SaleOrderSelectorWithOut from './SaleOrderSelectorWithOut.vue';
 import BatchAddProduct from '@/views/sc/sale/batch-add-product.vue';
 import Moment from 'moment';
 import {DeleteOutlined, EditOutlined, NumberOutlined, PlusOutlined,} from '@ant-design/icons-vue';
-import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
 import * as api from '@/api/sc/sale/out';
 import * as saleApi from '@/api/sc/sale/order';
 import {multiplePageMix} from '@/mixins/multiplePageMix';
@@ -239,7 +235,6 @@ export default defineComponent({
       SaleOrderSelectorWithOut,
       BatchAddProduct,
       CustomerSelector,
-      StoreCenterSelector,
       UserSelector,
     },
     mixins: [multiplePageMix],
@@ -373,6 +368,11 @@ export default defineComponent({
       // 关闭对话框
       closeDialog() {
         this.closeCurrentPage();
+      },
+      // 返回销售出库查询页，避免在未缓存父页时回到默认首页
+      goQueryPage() {
+        this.closeCurrentPage(false);
+        this.$router.push('/sc/sale/out/index');
       },
       // 初始化表单数据
       async initFormData() {
@@ -561,11 +561,6 @@ export default defineComponent({
       },
       // 校验数据
       validData() {
-        if (isEmpty(this.formData.scId)) {
-          createError('仓库不允许为空！');
-          return false;
-        }
-
         if (isEmpty(this.formData.customerId)) {
           createError('客户不允许为空！');
           return false;
@@ -713,7 +708,7 @@ export default defineComponent({
             createSuccess('保存成功！');
 
             this.$emit('confirm');
-            this.closeDialog();
+            this.goQueryPage();
           })
           .finally(() => {
             this.loading = false;
@@ -772,7 +767,7 @@ export default defineComponent({
               createSuccess('审核通过！');
 
               this.$emit('confirm');
-              this.closeDialog();
+              this.goQueryPage();
             })
             .finally(() => {
               this.loading = false;
@@ -811,14 +806,6 @@ export default defineComponent({
               this.loading = false;
             });
         }
-      },
-      beforeSelectSc() {
-        if (!this.beforeSelectComponents()) {
-          return false;
-        }
-
-        createError('由于“销售出库单关联销售订单”，不允许修改仓库！');
-        return false;
       },
       beforeSelectCustomer() {
         if (!this.beforeSelectComponents()) {

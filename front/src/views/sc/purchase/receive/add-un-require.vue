@@ -193,7 +193,6 @@ import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
 import UserSelector from '@/components/Selector/UserSelector.vue';
 import * as api from '@/api/sc/purchase/receive';
 import * as purchaseApi from '@/api/sc/purchase/order';
-import * as storeCenterApi from '@/api/base-data/store-center';
 import {multiplePageMix} from '@/mixins/multiplePageMix';
 import {
   add,
@@ -243,8 +242,6 @@ export default defineComponent({
         loading: false,
         // 表单数据
         formData: {},
-        // 仓库选项
-        warehouseOptions: [],
         // 工具栏配置
         toolbarConfig: {
           // 缩放
@@ -360,27 +357,6 @@ export default defineComponent({
         };
 
         this.tableData = [];
-
-        // 加载仓库数据
-        await this.loadWarehouseOptions();
-      },
-
-      // 加载仓库选项
-      async loadWarehouseOptions() {
-        try {
-          const response = await storeCenterApi.selector({});
-          // debugger;
-          if (response && response.datas && response.datas.length > 0) {
-            this.warehouseOptions = response.datas;
-            // 如果有数据，默认选中第一个
-            if (this.warehouseOptions.length > 0 && !this.formData.scId) {
-              this.formData.scId = this.warehouseOptions[0].id;
-            }
-          }
-        } catch (error) {
-          console.error('加载仓库数据失败:', error);
-          createError('加载仓库数据失败');
-        }
       },
 
       emptyProduct() {
@@ -689,11 +665,6 @@ export default defineComponent({
         // 只要选择了采购订单，清空所有商品，然后将采购订单中所有的明细列出来
         if (!isEmpty(e)) {
           this.loading = true;
-
-          // 确保仓库选项已加载
-          if (this.warehouseOptions.length === 0) {
-            await this.loadWarehouseOptions();
-          }
 
           purchaseApi
             .getWithReceive(e)

@@ -12,9 +12,6 @@
         <a-tab-pane key="detail" tab="详情">
           <j-border>
             <j-form bordered>
-              <j-form-item label="仓库">
-                {{ formData.scName }}
-              </j-form-item>
               <j-form-item label="客户">
                 {{ formData.customerName }}
               </j-form-item>

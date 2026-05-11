@@ -293,13 +293,13 @@ public class SaleOrderController extends DefaultBaseController {
      */
     @ApiOperation("根据关键字查询可销售商品")
     @ApiImplicitParams({
-            @ApiImplicitParam(value = "仓库ID", name = "scId", paramType = "query", required = true),
+            @ApiImplicitParam(value = "仓库ID", name = "scId", paramType = "query"),
             @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true) })
     @HasPermission({ "sale:order:add", "sale:order:modify", "sale:out:add", "sale:out:modify",
             "sale:return:add", "sale:return:modify" })
     @GetMapping("/product/search")
     public InvokeResult<List<SaleProductBo>> searchSaleProducts(
-            @NotBlank(message = "仓库ID不能为空！") String scId, String condition, Boolean isReturn) {
+            String scId, String condition, Boolean isReturn) {
 
         if (isReturn == null) {
             isReturn = false;

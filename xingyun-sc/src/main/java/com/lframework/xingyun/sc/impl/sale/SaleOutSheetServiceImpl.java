@@ -715,12 +715,14 @@ public class SaleOutSheetServiceImpl extends
 
   private void create(SaleOutSheet sheet, CreateSaleOutSheetVo vo, boolean requireSale) {
 
-    StoreCenter sc = storeCenterService.findById(vo.getScId());
-    if (sc == null) {
-      throw new InputErrorException("仓库不存在！");
-    }
+    if (!StringUtil.isBlank(vo.getScId())) {
+      StoreCenter sc = storeCenterService.findById(vo.getScId());
+      if (sc == null) {
+        throw new InputErrorException("仓库不存在！");
+      }
 
-    sheet.setScId(vo.getScId());
+      sheet.setScId(vo.getScId());
+    }
 
     Customer customer = customerService.findById(vo.getCustomerId());
     if (customer == null) {

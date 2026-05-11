@@ -1,6 +1,7 @@
 package com.lframework.xingyun.sc.bo.sale;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
@@ -116,6 +117,11 @@ public class SaleProductBo extends BaseBo<SaleProductDto> {
         this.productId = dto.getId();
         this.productCode = dto.getCode();
         this.productName = dto.getName();
+
+        if (StringUtil.isBlank(this.getScId())) {
+            this.stockNum = BigDecimal.ZERO;
+            return;
+        }
 
         ProductStockService productStockService = ApplicationUtil.getBean(
             ProductStockService.class);

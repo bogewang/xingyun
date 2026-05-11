@@ -8,23 +8,6 @@
       />
       <j-border>
         <j-form bordered>
-          <j-form-item label="仓库" required>
-            <a-select
-              v-model:value="formData.scId"
-              placeholder="请选择仓库"
-              show-search
-              :filter-option="filterWarehouseOption"
-              @change="handleWarehouseChange"
-            >
-              <a-select-option
-                v-for="warehouse in warehouseOptions"
-                :key="warehouse.id"
-                :value="warehouse.id"
-              >
-                {{ warehouse.code }} - {{ warehouse.name }}
-              </a-select-option>
-            </a-select>
-          </j-form-item>
           <j-form-item label="客户" required>
             <customer-selector v-model:value="formData.customerId" @update:value="customerChange" />
           </j-form-item>
@@ -82,7 +65,7 @@
           >
             <!-- 自定义下拉框内容 -->
             <template #dropdownRender>
-              <div v-if="!isEmpty(row.products)">
+              <div v-if="!isEmpty(row.products)" @mousedown.prevent @click.stop>
                 <vxe-table
                   :data="row.products"
                   max-height="500"
@@ -208,10 +191,8 @@
     PlusOutlined,
   } from '@ant-design/icons-vue';
   import SaleOutSheetImporter from '@/components/Importor/SaleOutSheetImporter.vue';
-  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
   import * as api from '@/api/sc/sale/out';
   import * as saleApi from '@/api/sc/sale/order';
-  import * as storeCenterApi from '@/api/base-data/store-center';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
     add,
@@ -240,7 +221,6 @@
       BatchAddProduct,
       SaleOutSheetImporter,
       CustomerSelector,
-      StoreCenterSelector,
       UserSelector,
     },
     mixins: [multiplePageMix],
@@ -281,6 +261,7 @@
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
+          { type: 'seq', width: 50, title: '序号' },
           { field: 'productCode', title: '商品编号', width: 120 },
           {
             field: 'productName',
@@ -301,14 +282,14 @@
             field: 'outNum',
             title: '出库数量',
             align: 'right',
-            width: 140,
+            width: 100,
             slots: { default: 'outNum_default' },
           },
           {
             field: 'taxAmount',
             title: '含税金额',
             align: 'right',
-            width: 140,
+            width: 100,
             slots: { default: 'taxAmount_default' },
           },
           {
@@ -319,7 +300,6 @@
           },
         ],
         tableData: [],
-        warehouseOptions: [],
       };
     },
     computed: {},
@@ -352,6 +332,11 @@
       closeDialog() {
         this.closeCurrentPage();
       },
+      // 返回销售出库查询页，避免在未缓存父页时回到默认首页
+      goQueryPage() {
+        this.closeCurrentPage(false);
+        this.$router.push('/sc/sale/out/index');
+      },
       // 初始化表单数据
       async initFormData() {
         this.formData = {
@@ -368,43 +353,6 @@
           allowModifyPaymentDate: true,
         };
 
-        this.tableData = [];
-        // 加载仓库数据
-        await this.loadWarehouseOptions();
-      },
-      // 加载仓库选项
-      async loadWarehouseOptions() {
-        try {
-          const response = await storeCenterApi.selector({});
-          // debugger;
-          if (response && response.datas && response.datas.length > 0) {
-            this.warehouseOptions = response.datas;
-            // 如果有数据，默认选中第一个
-            if (this.warehouseOptions.length > 0 && !this.formData.scId) {
-              this.formData.scId = this.warehouseOptions[0].id;
-            }
-          }
-        } catch (error) {
-          console.error('加载仓库数据失败:', error);
-          createError('加载仓库数据失败');
-        }
-      },
-
-      // 仓库选择器过滤选项
-      filterWarehouseOption(input, option) {
-        const warehouse = this.warehouseOptions.find((w) => w.id === option.key);
-        if (warehouse) {
-          return (
-            warehouse.code.toLowerCase().includes(input.toLowerCase()) ||
-            warehouse.name.toLowerCase().includes(input.toLowerCase())
-          );
-        }
-        return false;
-      },
-
-      // 仓库选择变化处理
-      handleWarehouseChange(value) {
-        // 清空表格数据，因为仓库变化后商品数据需要重新加载
         this.tableData = [];
       },
       emptyProduct() {
@@ -436,10 +384,6 @@
       },
       // 新增商品
       addProduct() {
-        if (isEmpty(this.formData.scId)) {
-          createError('请先选择仓库！');
-          return;
-        }
         this.tableData.push(this.emptyProduct());
         this.$nextTick(() => {
           const productInputRef = this.$refs['productInputRef' + (this.tableData.length - 1)];
@@ -495,10 +439,6 @@
         });
       },
       openBatchAddProductDialog() {
-        if (isEmpty(this.formData.scId)) {
-          createError('请先选择仓库！');
-          return;
-        }
         this.$refs.batchAddProductDialog.openDialog();
       },
       changeDiscountRate(row, value) {
@@ -605,11 +545,6 @@
       },
       // 校验数据
       validData() {
-        if (isEmpty(this.formData.scId)) {
-          createError('仓库不允许为空！');
-          return false;
-        }
-
         if (isEmpty(this.formData.customerId)) {
           createError('客户不允许为空！');
           return false;
@@ -718,7 +653,7 @@
             createSuccess('保存成功！');
 
             this.$emit('confirm');
-            this.closeDialog();
+            this.goQueryPage();
           })
           .finally(() => {
             this.loading = false;
@@ -777,7 +712,7 @@
               createSuccess('审核通过！');
 
               this.$emit('confirm');
-              this.closeDialog();
+              this.goQueryPage();
             })
             .finally(() => {
               this.loading = false;

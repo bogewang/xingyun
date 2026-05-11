@@ -8,9 +8,6 @@
       />
       <j-border>
         <j-form bordered>
-          <j-form-item label="仓库" required>
-            {{ formData.sc.name }}
-          </j-form-item>
           <j-form-item label="客户" required>
             {{ formData.customer.name }}
           </j-form-item>
@@ -134,7 +131,7 @@
           >
             <!-- 自定义下拉框内容 -->
             <template #dropdownRender>
-              <div v-if="!isEmpty(row.products)">
+              <div v-if="!isEmpty(row.products)" @mousedown.prevent @click.stop>
                 <vxe-table
                   :data="row.products"
                   max-height="500"
@@ -663,11 +660,6 @@
       },
       // 校验数据
       validData() {
-        if (isEmpty(this.formData.sc.id)) {
-          createError('仓库不允许为空！');
-          return false;
-        }
-
         if (isEmpty(this.formData.customer.id)) {
           createError('客户不允许为空！');
           return false;

@@ -8,10 +8,10 @@ import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
+import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
-import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.sc.bo.paytype.OrderPayTypeBo;
 import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
@@ -23,14 +23,14 @@ import com.lframework.xingyun.sc.service.paytype.OrderPayTypeService;
 import com.lframework.xingyun.sc.service.sale.SaleOrderDetailService;
 import com.lframework.xingyun.sc.service.sale.SaleOrderService;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
-import com.lframework.starter.web.inner.service.system.SysUserService;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.Data;
 
 @Data
 public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
@@ -213,9 +213,6 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
 
   @Override
   protected void afterInit(SaleOutSheetFullDto dto) {
-
-    StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
-    this.scName = storeCenterService.findById(dto.getScId()).getName();
 
     CustomerService customerService = ApplicationUtil.getBean(CustomerService.class);
     this.customerName = customerService.findById(dto.getCustomerId()).getName();

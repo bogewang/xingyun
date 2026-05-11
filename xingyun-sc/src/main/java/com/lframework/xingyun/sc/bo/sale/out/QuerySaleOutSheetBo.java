@@ -5,19 +5,18 @@ import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
+import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.xingyun.basedata.entity.Customer;
-import com.lframework.xingyun.basedata.entity.StoreCenter;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
-import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.sc.entity.SaleOrder;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.service.sale.SaleOrderService;
-import com.lframework.starter.web.inner.service.system.SysUserService;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 @Data
 public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
@@ -170,12 +169,6 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
 
     @Override
     protected void afterInit(SaleOutSheet dto) {
-
-        StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
-        StoreCenter sc = storeCenterService.findById(dto.getScId());
-        this.scCode = sc.getCode();
-        this.scName = sc.getName();
-
         CustomerService customerService = ApplicationUtil.getBean(CustomerService.class);
         Customer customer = customerService.findById(dto.getCustomerId());
         this.customerCode = customer.getCode();

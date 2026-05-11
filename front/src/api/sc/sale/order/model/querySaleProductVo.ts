@@ -4,7 +4,7 @@ export interface QuerySaleProductVo extends PageVo {
   /**
    * 仓库ID
    */
-  scId: string;
+  scId?: string;
 
   /**
    * 检索关键字

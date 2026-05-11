@@ -8,9 +8,6 @@
       />
       <j-border>
         <j-form bordered>
-          <j-form-item label="仓库" required>
-            <store-center-selector v-model:value="formData.scId" />
-          </j-form-item>
           <j-form-item label="客户" required>
             <customer-selector v-model:value="formData.customerId" @update:value="customerChange" />
           </j-form-item>
@@ -126,7 +123,7 @@
           >
             <!-- 自定义下拉框内容 -->
             <template #dropdownRender>
-              <div v-if="!isEmpty(row.products)">
+              <div v-if="!isEmpty(row.products)" @mousedown.prevent @click.stop>
                 <vxe-table
                   :data="row.products"
                   max-height="500"
@@ -249,7 +246,6 @@
     NumberOutlined,
     EditOutlined,
   } from '@ant-design/icons-vue';
-  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
   import * as api from '@/api/sc/sale/out';
   import * as saleApi from '@/api/sc/sale/order';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
@@ -279,7 +275,6 @@
     components: {
       BatchAddProduct,
       CustomerSelector,
-      StoreCenterSelector,
       UserSelector,
       OrderTimeLine,
     },
@@ -505,10 +500,6 @@
       },
       // 新增商品
       addProduct() {
-        if (isEmpty(this.formData.scId)) {
-          createError('请先选择仓库！');
-          return;
-        }
         this.tableData.push(this.emptyProduct());
         this.$nextTick(() => {
           const productInputRef = this.$refs['productInputRef' + (this.tableData.length - 1)];
@@ -564,10 +555,6 @@
         });
       },
       openBatchAddProductDialog() {
-        if (isEmpty(this.formData.scId)) {
-          createError('请先选择仓库！');
-          return;
-        }
         this.$refs.batchAddProductDialog.openDialog();
       },
       changeDiscountRate(row, value) {
@@ -656,11 +643,6 @@
       },
       // 校验数据
       validData() {
-        if (isEmpty(this.formData.scId)) {
-          createError('仓库不允许为空！');
-          return false;
-        }
-
         if (isEmpty(this.formData.customerId)) {
           createError('客户不允许为空！');
           return false;
