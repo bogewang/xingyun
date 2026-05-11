@@ -378,13 +378,10 @@ export default defineComponent({
           purchaseOrderId: '',
           purchaserId: '',
           orderDate: formatDate(Moment()),
-          paymentDate: formatDate(Moment().add(1, 'M')),
           receiveDate: formatDate(Moment()),
           totalNum: 0,
           totalAmount: 0,
           description: '',
-          // 是否允许修改付款日期
-          allowModifyPaymentDate: true,
         };
 
         this.tableData = [];
@@ -660,7 +657,6 @@ export default defineComponent({
           supplierId: this.formData.supplierId,
           purchaserId: this.formData.purchaserId || '',
           orderDate: this.formData.orderDate || '',
-          paymentDate: this.formData.paymentDate || '',
           receiveDate: this.formData.receiveDate,
           purchaseOrderId: this.formData.purchaseOrderId,
           description: this.formData.description,
@@ -751,8 +747,6 @@ export default defineComponent({
               if (!isEmpty(res.purchaserId)) {
                 this.formData.purchaserId = res.purchaserId;
               }
-
-              this.supplierChange(this.formData.supplierId);
             })
             .finally(() => {
               this.loading = false;
@@ -777,13 +771,6 @@ export default defineComponent({
         }
 
         return true;
-      },
-      // 供应商改变时触发
-      supplierChange(supplierId) {
-        api.getPaymentDate(supplierId).then((res) => {
-          this.formData.paymentDate = res.paymentDate || '';
-          this.formData.allowModifyPaymentDate = res.allowModify;
-        });
       },
     },
   });

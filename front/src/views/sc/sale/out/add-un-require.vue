@@ -198,7 +198,6 @@
     add,
     div,
     formatDate,
-    getCurrentDateTime,
     getNumber,
     isEmpty,
     isFloat,
@@ -236,7 +235,6 @@
         isFloatGeZero,
         getNumber,
         mul,
-        getCurrentDateTime,
       };
     },
     data() {
@@ -345,12 +343,9 @@
           saleOrderId: '',
           salerId: '',
           orderDate: formatDate(Moment()),
-          paymentDate: formatDate(Moment().add(1, 'M')),
           totalNum: 0,
           totalAmount: 0,
           description: '',
-          // 是否允许修改付款日期
-          allowModifyPaymentDate: true,
         };
 
         this.tableData = [];
@@ -550,13 +545,6 @@
           return false;
         }
 
-        if (this.formData.allowModifyPaymentDate) {
-          if (isEmpty(this.formData.paymentDate)) {
-            createError('付款日期不允许为空！');
-            return false;
-          }
-        }
-
         if (isEmpty(this.tableData)) {
           createError('请录入商品！');
           return false;
@@ -619,7 +607,6 @@
           customerId: this.formData.customerId,
           salerId: this.formData.salerId || '',
           orderDate: this.formData.orderDate || '',
-          paymentDate: this.formData.paymentDate || '',
           description: this.formData.description,
           required: false,
           products: this.tableData
@@ -744,28 +731,10 @@
                 this.formData.salerId = res.salerId;
               }
 
-              this.customerChange(this.formData.customerId);
             })
             .finally(() => {
               this.loading = false;
             });
-        }
-      },
-      // 客户改变时触发
-      customerChange(customerId) {
-        if (!isEmpty(customerId)) {
-          api.getPaymentDate(customerId).then((res) => {
-            if (res.allowModify) {
-              // 如果允许修改付款日期
-              if (isEmpty(this.formData.paymentDate)) {
-                this.formData.paymentDate = res.paymentDate || '';
-              }
-            } else {
-              // 不允许修改则按默认日期
-              this.formData.paymentDate = res.paymentDate || '';
-            }
-            this.formData.allowModifyPaymentDate = res.allowModify;
-          });
         }
       },
       // 检查库存数量

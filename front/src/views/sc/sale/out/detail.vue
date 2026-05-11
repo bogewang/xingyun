@@ -24,9 +24,6 @@
                 <j-form-item label="订单日期">
                   {{ formData.orderDate }}
                 </j-form-item>
-                <j-form-item label="付款日期">
-                  {{ formData.paymentDate }}
-                </j-form-item>
                 <j-form-item label="销售订单" >
                   <div v-if="!isEmpty(formData.saleOrderCode)">
                     <a
@@ -59,6 +56,13 @@
                 <j-form-item label="操作时间">
                   <span>{{ formData.createTime }}</span>
                 </j-form-item>
+                <j-form-item label="拒绝理由" :content-nest="false">
+                  <a-input
+                    v-if="SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
+                    v-model:value="formData.refuseReason"
+                    readonly
+                  />
+                </j-form-item>
                 <j-form-item
                   v-if="
                     SALE_OUT_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
@@ -78,13 +82,7 @@
                 >
                   <span>{{ formData.approveTime }}</span>
                 </j-form-item>
-                <j-form-item label="拒绝理由" :content-nest="false">
-                  <a-input
-                    v-if="SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-                    v-model:value="formData.refuseReason"
-                    readonly
-                  />
-                </j-form-item>
+
               </j-form>
             </j-border>
             <div class="order-detail-grid-wrap">
@@ -207,17 +205,17 @@ export default defineComponent({
           { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
-          { field: 'categoryName', title: '商品分类', width: 120 },
+          { field: 'categoryName', title: '商品分类', width: 80 },
           { field: 'brandName', title: '商品品牌', width: 120 },
           { field: 'mainProductName', title: '所属组合商品', width: 120 },
           { field: 'salePrice', title: '参考销售价（元）', align: 'right', width: 150 },
           { field: 'discountRate', title: '折扣（%）', align: 'right', width: 120 },
-          { field: 'taxPrice', title: '价格（元）', align: 'right', width: 120 },
+          { field: 'taxPrice', title: '价格（元）', align: 'right', width: 80 },
           {
             field: 'orderNum',
             title: '销售数量',
             align: 'right',
-            width: 100,
+            width: 80,
             formatter: ({ cellValue }) => {
               return isEmpty(cellValue) ? '-' : cellValue;
             },
@@ -236,7 +234,7 @@ export default defineComponent({
             field: 'taxAmount',
             title: '含税金额',
             align: 'right',
-            width: 120,
+            width: 80,
             slots: { default: 'taxAmount_default' },
           },
           { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
@@ -270,7 +268,6 @@ export default defineComponent({
           customerName: '',
           salerName: '',
           orderDate: '',
-          paymentDate: '',
           saleOrderId: '',
           saleOrderCode: '',
           totalNum: 0,
@@ -292,7 +289,6 @@ export default defineComponent({
               customerName: res.customerName,
               salerName: res.salerName || '',
               orderDate: res.orderDate || '',
-              paymentDate: res.paymentDate || '',
               saleOrderId: res.saleOrderId || '',
               saleOrderCode: res.saleOrderCode || '',
               description: res.description,

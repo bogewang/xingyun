@@ -12,9 +12,6 @@
           <j-form-item label="订单日期">
             {{ formData.orderDate }}
           </j-form-item>
-          <j-form-item label="付款日期">
-            {{ formData.paymentDate }}
-          </j-form-item>
           <j-form-item label="销售订单" :span="16">
             <div v-if="!isEmpty(formData.saleOrderCode)">
               <a
@@ -268,7 +265,6 @@
           customerName: '',
           salerName: '',
           orderDate: '',
-          paymentDate: '',
           saleOrderId: '',
           saleOrderCode: '',
           totalNum: 0,
@@ -298,7 +294,6 @@
               customerName: res.customerName,
               salerName: res.salerName || '',
               orderDate: res.orderDate || '',
-              paymentDate: res.paymentDate || '',
               saleOrderId: res.saleOrderId || '',
               saleOrderCode: res.saleOrderCode || '',
               description: res.description,

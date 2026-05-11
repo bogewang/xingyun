@@ -6,12 +6,10 @@ import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.starter.web.core.vo.BaseVo;
-import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.entity.SaleConfig;
 import com.lframework.xingyun.sc.entity.SaleOrderDetail;
 import com.lframework.xingyun.sc.service.sale.SaleConfigService;
 import com.lframework.xingyun.sc.service.sale.SaleOrderDetailService;
-import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -102,14 +100,6 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
   }
 
   protected void validate(boolean requireSale) {
-
-    SaleOutSheetService saleOutSheetService = ApplicationUtil.getBean(SaleOutSheetService.class);
-    GetPaymentDateDto paymentDate = saleOutSheetService.getPaymentDate(this.getCustomerId());
-    if (paymentDate.getAllowModify()) {
-      if (this.getPaymentDate() == null) {
-        throw new InputErrorException("付款日期不能为空！");
-      }
-    }
 
     if (requireSale) {
       if (StringUtil.isBlank(this.getSaleOrderId())) {

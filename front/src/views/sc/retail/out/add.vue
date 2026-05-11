@@ -287,6 +287,7 @@ export default defineComponent({
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
+          { type: 'seq', width: 50, title: '序号' },
           { field: 'productCode', title: '商品编号', width: 120 },
           {
             field: 'productName',

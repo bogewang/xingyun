@@ -9,26 +9,13 @@
       <j-border>
         <j-form bordered>
           <j-form-item label="客户" required>
-            <customer-selector v-model:value="formData.customerId" @update:value="customerChange" />
+            <customer-selector v-model:value="formData.customerId" />
           </j-form-item>
           <j-form-item label="订单日期">
             <a-date-picker
               v-model:value="formData.orderDate"
               placeholder=""
               value-format="YYYY-MM-DD"
-            />
-          </j-form-item>
-          <j-form-item label="付款日期" required>
-            <a-date-picker
-              v-model:value="formData.paymentDate"
-              placeholder=""
-              value-format="YYYY-MM-DD"
-              :disabled="!formData.allowModifyPaymentDate"
-              :disabled-date="
-                (current) => {
-                  return current && current < getCurrentDateTime().endOf('day');
-                }
-              "
             />
           </j-form-item>
           <j-form-item label="状态">
@@ -53,6 +40,13 @@
           <j-form-item label="操作时间" >
             <span>{{ formData.createTime }}</span>
           </j-form-item>
+          <j-form-item :content-nest="false" label="拒绝理由">
+            <a-input
+              v-if="SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
+              v-model:value="formData.refuseReason"
+              readonly
+            />
+          </j-form-item>
           <j-form-item
             v-if="
               SALE_OUT_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
@@ -72,13 +66,7 @@
           >
             <span>{{ formData.approveTime }}</span>
           </j-form-item>
-          <j-form-item :span="16" :content-nest="false" label="拒绝理由">
-            <a-input
-              v-if="SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-              v-model:value="formData.refuseReason"
-              readonly
-            />
-          </j-form-item>
+
         </j-form>
       </j-border>
       <!-- 数据列表 -->
@@ -260,7 +248,6 @@
     isFloatGtZero,
     isNumberPrecision,
     uuid,
-    getCurrentDateTime,
     PATTERN_IS_FLOAT_GT_ZERO,
     PATTERN_IS_PRICE,
   } from '@/utils/utils';
@@ -290,7 +277,6 @@
         isFloatGeZero,
         getNumber,
         mul,
-        getCurrentDateTime,
         SALE_OUT_SHEET_STATUS,
       };
     },
@@ -317,6 +303,7 @@
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
+          { type: 'seq', width: 50, title: '序号' },
           { field: 'productCode', title: '商品编号', width: 120 },
           {
             field: 'productName',
@@ -328,14 +315,14 @@
           { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
-          { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
+          { field: 'categoryName', title: '商品分类', width: 80 },
+          { field: 'brandName', title: '商品品牌', width: 80 },
           { field: 'salePrice', title: '参考销售价（元）', align: 'right', width: 140 },
           {
             field: 'stockNum',
             title: '库存数量',
             align: 'right',
-            width: 140,
+            width: 80,
             slots: { default: 'stockNum_default' },
           },
           {
@@ -349,21 +336,21 @@
             field: 'taxPrice',
             title: '价格（元）',
             align: 'right',
-            width: 140,
+            width: 80,
             slots: { default: 'taxPrice_default' },
           },
           {
             field: 'outNum',
             title: '出库数量',
             align: 'right',
-            width: 140,
+            width: 80,
             slots: { default: 'outNum_default' },
           },
           {
             field: 'taxAmount',
             title: '含税金额',
             align: 'right',
-            width: 140,
+            width: 80,
             slots: { default: 'taxAmount_default' },
           },
           { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
@@ -414,12 +401,9 @@
           customerId: '',
           salerId: '',
           orderDate: '',
-          paymentDate: '',
           totalNum: 0,
           totalAmount: 0,
           description: '',
-          // 是否允许修改付款日期
-          allowModifyPaymentDate: false,
         };
 
         this.tableData = [];
@@ -443,7 +427,6 @@
               customerId: res.customerId,
               salerId: res.salerId || '',
               orderDate: res.orderDate || '',
-              paymentDate: res.paymentDate || '',
               description: res.description,
               status: res.status,
               createBy: res.createBy,
@@ -462,8 +445,6 @@
               return item;
             });
             this.tableData = tableData.map((item) => Object.assign(this.emptyProduct(), item));
-
-            this.customerChange(this.formData.customerId, true);
 
             this.calcSum();
           })
@@ -648,13 +629,6 @@
           return false;
         }
 
-        if (this.formData.allowModifyPaymentDate) {
-          if (isEmpty(this.formData.paymentDate)) {
-            createError('付款日期不允许为空！');
-            return false;
-          }
-        }
-
         if (isEmpty(this.tableData)) {
           createError('请录入商品！');
           return false;
@@ -750,8 +724,6 @@
           customerId: this.formData.customerId,
           salerId: this.formData.salerId || '',
           orderDate: this.formData.orderDate || '',
-          paymentDate: this.formData.paymentDate || '',
-          allowModifyPaymentDate: true,
           description: this.formData.description,
           products: this.tableData
             .filter((t) => isFloatGtZero(t.outNum))
@@ -781,25 +753,6 @@
           .finally(() => {
             this.loading = false;
           });
-      },
-      // 客户改变时触发
-      customerChange(customerId, unModify) {
-        if (!isEmpty(customerId)) {
-          api.getPaymentDate(customerId).then((res) => {
-            if (!unModify) {
-              if (res.allowModify) {
-                // 如果允许修改付款日期
-                if (isEmpty(this.formData.paymentDate)) {
-                  this.formData.paymentDate = res.paymentDate || '';
-                }
-              } else {
-                // 不允许修改则按默认日期
-                this.formData.paymentDate = res.paymentDate || '';
-              }
-            }
-            this.formData.allowModifyPaymentDate = res.allowModify;
-          });
-        }
       },
       // 检查库存数量
       checkStockNum(row) {

@@ -9,7 +9,7 @@
       <j-border>
         <j-form bordered>
           <j-form-item label="供应商" required>
-            <supplier-selector v-model:value="formData.supplierId" @update:value="supplierChange" />
+            <supplier-selector v-model:value="formData.supplierId" />
           </j-form-item>
           <j-form-item label="订单日期">
             <a-date-picker
@@ -347,13 +347,10 @@ export default defineComponent({
           purchaseOrderId: '',
           purchaserId: '',
           orderDate: formatDate(Moment()),
-          paymentDate: formatDate(Moment().add(1, 'M')),
           receiveDate: formatDate(Moment()),
           totalNum: 0,
           totalAmount: 0,
           description: '',
-          // 是否允许修改付款日期
-          allowModifyPaymentDate: true,
         };
 
         this.tableData = [];
@@ -598,7 +595,6 @@ export default defineComponent({
           supplierId: this.formData.supplierId,
           purchaserId: this.formData.purchaserId || '',
           orderDate: this.formData.orderDate || '',
-          paymentDate: this.formData.paymentDate || '',
           receiveDate: this.formData.receiveDate,
           description: this.formData.description,
           required: false,
@@ -685,29 +681,10 @@ export default defineComponent({
               if (!isEmpty(res.purchaserId)) {
                 this.formData.purchaserId = res.purchaserId;
               }
-
-              this.supplierChange(this.formData.supplierId);
             })
             .finally(() => {
               this.loading = false;
             });
-        }
-      },
-      // 供应商改变时触发
-      supplierChange(supplierId) {
-        if (!isEmpty(supplierId)) {
-          api.getPaymentDate(supplierId).then((res) => {
-            if (res.allowModify) {
-              // 如果允许修改付款日期
-              if (isEmpty(this.formData.paymentDate)) {
-                this.formData.paymentDate = res.paymentDate || '';
-              }
-            } else {
-              // 不允许修改则按默认日期
-              this.formData.paymentDate = res.paymentDate || '';
-            }
-            this.formData.allowModifyPaymentDate = res.allowModify;
-          });
         }
       },
     },

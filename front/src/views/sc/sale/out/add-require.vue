@@ -24,19 +24,6 @@
               value-format="YYYY-MM-DD"
             />
           </j-form-item>
-          <j-form-item label="付款日期" required>
-            <a-date-picker
-              v-model:value="formData.paymentDate"
-              placeholder=""
-              value-format="YYYY-MM-DD"
-              :disabled="!formData.allowModifyPaymentDate"
-              :disabled-date="
-                (current) => {
-                  return current && current < getCurrentDateTime().endOf('day');
-                }
-              "
-            />
-          </j-form-item>
           <j-form-item label="销售订单" required>
             <sale-order-selector-with-out
               v-model:value="formData.saleOrderId"
@@ -213,7 +200,6 @@ import {multiplePageMix} from '@/mixins/multiplePageMix';
 import {
   add,
   formatDate,
-  getCurrentDateTime,
   getNumber,
   isEmpty,
   isFloat,
@@ -245,7 +231,6 @@ export default defineComponent({
         DeleteOutlined,
         NumberOutlined,
         EditOutlined,
-        getCurrentDateTime,
         isEmpty,
         isFloatGeZero,
         sub,
@@ -275,6 +260,7 @@ export default defineComponent({
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
+          { type: 'seq', width: 50, title: '序号' },
           { field: 'productCode', title: '商品编号', width: 120 },
           {
             field: 'productName',
@@ -382,12 +368,9 @@ export default defineComponent({
           saleOrderId: '',
           salerId: '',
           orderDate: formatDate(Moment()),
-          paymentDate: formatDate(Moment().add(1, 'M')),
           totalNum: 0,
           totalAmount: 0,
           description: '',
-          // 是否允许修改付款日期
-          allowModifyPaymentDate: true,
         };
 
         this.tableData = [];
@@ -566,13 +549,6 @@ export default defineComponent({
           return false;
         }
 
-        if (this.formData.allowModifyPaymentDate) {
-          if (isEmpty(this.formData.paymentDate)) {
-            createError('付款日期不允许为空！');
-            return false;
-          }
-        }
-
         if (isEmpty(this.formData.saleOrderId)) {
           createError('销售订单不允许为空！');
           return false;
@@ -671,7 +647,6 @@ export default defineComponent({
           customerId: this.formData.customerId,
           salerId: this.formData.salerId || '',
           orderDate: this.formData.orderDate || '',
-          paymentDate: this.formData.paymentDate || '',
           saleOrderId: this.formData.saleOrderId,
           description: this.formData.description,
           required: true,
@@ -800,7 +775,6 @@ export default defineComponent({
                 this.formData.salerId = res.salerId;
               }
 
-              this.customerChange(this.formData.customerId);
             })
             .finally(() => {
               this.loading = false;
@@ -825,13 +799,6 @@ export default defineComponent({
         }
 
         return true;
-      },
-      // 客户改变时触发
-      customerChange(customerId) {
-        api.getPaymentDate(customerId).then((res) => {
-          this.formData.paymentDate = res.paymentDate || '';
-          this.formData.allowModifyPaymentDate = res.allowModify;
-        });
       },
       // 检查库存数量
       checkStockNum(row) {

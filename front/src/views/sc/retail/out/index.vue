@@ -294,6 +294,7 @@
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
+          { type: 'seq', width: 50, title: '序号' },
           { field: 'code', title: '单据号', width: 180, sortable: true },
           { field: 'scCode', title: '仓库编号', width: 100 },
           { field: 'scName', title: '仓库名称', width: 120 },

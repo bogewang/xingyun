@@ -426,13 +426,10 @@
           purchaseOrder: {},
           purchaserId: '',
           orderDate: '',
-          paymentDate: '',
           receiveDate: '',
           totalNum: 0,
           totalAmount: 0,
           description: '',
-          // 是否允许修改付款日期
-          allowModifyPaymentDate: false,
         };
 
         this.tableData = [];
@@ -462,7 +459,6 @@
               },
               purchaserId: res.purchaserId || '',
               orderDate: res.orderDate || '',
-              paymentDate: res.paymentDate || '',
               receiveDate: res.receiveDate,
               purchaseOrder: {
                 id: res.purchaseOrderId,
@@ -491,8 +487,6 @@
               return item;
             });
             this.tableData = tableData.map((item) => Object.assign(this.emptyProduct(), item));
-
-            this.supplierChange(this.formData.supplier.id, true);
 
             this.calcSum();
           })
@@ -795,11 +789,9 @@
           supplierId: this.formData.supplier.id,
           purchaserId: this.formData.purchaserId || '',
           orderDate: this.formData.orderDate || '',
-          paymentDate: this.formData.paymentDate || '',
           receiveDate: this.formData.receiveDate,
           purchaseOrderId: this.formData.purchaseOrder.id,
           description: this.formData.description,
-          allowModifyPaymentDate: true,
           products: this.tableData
             .filter((t) => isFloatGtZero(t.receiveNum))
             .map((t) => {
@@ -829,24 +821,6 @@
           .finally(() => {
             this.loading = false;
           });
-      },
-      // 供应商改变时触发
-      supplierChange(supplierId, unModify) {
-        api.getPaymentDate(supplierId).then((res) => {
-          if (!unModify) {
-            if (res.allowModify) {
-              // 如果允许修改付款日期
-              if (isEmpty(this.formData.paymentDate)) {
-                this.formData.paymentDate = res.paymentDate || '';
-              }
-            } else {
-              // 不允许修改则按默认日期
-              this.formData.paymentDate = res.paymentDate || '';
-            }
-          }
-
-          this.formData.allowModifyPaymentDate = res.allowModify;
-        });
       },
     },
   });

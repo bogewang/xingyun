@@ -21,19 +21,6 @@
               value-format="YYYY-MM-DD"
             />
           </j-form-item>
-          <j-form-item label="付款日期" required>
-            <a-date-picker
-              v-model:value="formData.paymentDate"
-              placeholder=""
-              value-format="YYYY-MM-DD"
-              :disabled="!formData.allowModifyPaymentDate"
-              :disabled-date="
-                (current) => {
-                  return current && current < getCurrentDateTime().endOf('day');
-                }
-              "
-            />
-          </j-form-item>
           <j-form-item label="销售订单" required>
             {{ formData.saleOrder.code }}
           </j-form-item>
@@ -53,7 +40,7 @@
               SALE_OUT_SHEET_STATUS.getDesc(formData.status)
             }}</span>
           </j-form-item>
-          <j-form-item :span="16" :content-nest="false" label="拒绝理由">
+          <j-form-item :content-nest="false" label="拒绝理由">
             <a-input
               v-if="SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
               v-model:value="formData.refuseReason"
@@ -251,7 +238,6 @@
   import * as saleApi from '@/api/sc/sale/order';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
-    getCurrentDateTime,
     isEmpty,
     isFloatGeZero,
     sub,
@@ -284,7 +270,6 @@
         DeleteOutlined,
         NumberOutlined,
         EditOutlined,
-        getCurrentDateTime,
         isEmpty,
         isFloatGeZero,
         sub,
@@ -316,6 +301,7 @@
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
+          { type: 'seq', width: 50, title: '序号' },
           { field: 'productCode', title: '商品编号', width: 120 },
           {
             field: 'productName',
@@ -419,12 +405,9 @@
           saleOrder: {},
           salerId: '',
           orderDate: '',
-          paymentDate: '',
           totalNum: 0,
           totalAmount: 0,
           description: '',
-          // 是否允许修改付款日期
-          allowModifyPaymentDate: false,
         };
 
         this.tableData = [];
@@ -454,7 +437,6 @@
               },
               salerId: res.salerId || '',
               orderDate: res.orderDate || '',
-              paymentDate: res.paymentDate || '',
               saleOrder: {
                 id: res.saleOrderId,
                 code: res.saleOrderCode,
@@ -482,8 +464,6 @@
               return item;
             });
             this.tableData = tableData.map((item) => Object.assign(this.emptyProduct(), item));
-
-            this.customerChange(this.formData.customer.id, true);
 
             this.calcSum();
           })
@@ -665,13 +645,6 @@
           return false;
         }
 
-        if (this.formData.allowModifyPaymentDate) {
-          if (isEmpty(this.formData.paymentDate)) {
-            createError('付款日期不允许为空！');
-            return false;
-          }
-        }
-
         if (isEmpty(this.formData.saleOrder.id)) {
           createError('销售订单不允许为空！');
           return false;
@@ -794,8 +767,6 @@
           customerId: this.formData.customer.id,
           salerId: this.formData.salerId || '',
           orderDate: this.formData.orderDate || '',
-          paymentDate: this.formData.paymentDate || '',
-          allowModifyPaymentDate: true,
           saleOrderId: this.formData.saleOrder.id,
           description: this.formData.description,
           products: this.tableData
@@ -828,24 +799,6 @@
           .finally(() => {
             this.loading = false;
           });
-      },
-      // 客户改变时触发
-      customerChange(customerId, unModify) {
-        api.getPaymentDate(customerId).then((res) => {
-          if (!unModify) {
-            if (res.allowModify) {
-              // 如果允许修改付款日期
-              if (isEmpty(this.formData.paymentDate)) {
-                this.formData.paymentDate = res.paymentDate || '';
-              }
-            } else {
-              // 不允许修改则按默认日期
-              this.formData.paymentDate = res.paymentDate || '';
-            }
-          }
-
-          this.formData.allowModifyPaymentDate = res.allowModify;
-        });
       },
       // 检查库存数量
       checkStockNum(row) {

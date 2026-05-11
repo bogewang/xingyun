@@ -9,7 +9,7 @@
       <j-border>
         <j-form bordered>
           <j-form-item label="供应商" required>
-            <supplier-selector v-model:value="formData.supplierId" @update:value="supplierChange" />
+            <supplier-selector v-model:value="formData.supplierId" />
           </j-form-item>
           <j-form-item label="订单日期">
             <a-date-picker
@@ -40,6 +40,13 @@
           <j-form-item label="操作时间">
             <span>{{ formData.createTime }}</span>
           </j-form-item>
+          <j-form-item :content-nest="false" label="拒绝理由">
+            <a-input
+              v-if="RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
+              v-model:value="formData.refuseReason"
+              readonly
+            />
+          </j-form-item>
           <j-form-item
             v-if="
               RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
@@ -59,13 +66,7 @@
           >
             <span>{{ formData.approveTime }}</span>
           </j-form-item>
-          <j-form-item :content-nest="false" label="拒绝理由">
-            <a-input
-              v-if="RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-              v-model:value="formData.refuseReason"
-              readonly
-            />
-          </j-form-item>
+
         </j-form>
       </j-border>
       <!-- 数据列表 -->
@@ -383,13 +384,10 @@
           purchaseOrder: {},
           purchaserId: '',
           orderDate: '',
-          paymentDate: '',
           receiveDate: '',
           totalNum: 0,
           totalAmount: 0,
           description: '',
-          // 是否允许修改付款日期
-          allowModifyPaymentDate: false,
         };
 
         this.tableData = [];
@@ -413,7 +411,6 @@
               supplierId: res.supplierId,
               purchaserId: res.purchaserId || '',
               orderDate: res.orderDate || '',
-              paymentDate: res.paymentDate || '',
               receiveDate: res.receiveDate,
               purchaseOrder: {},
               description: res.description,
@@ -516,8 +513,6 @@
           });
 
           this.tableData = tableData;
-
-          this.supplierChange(this.formData.supplierId, true);
           this.calcSum();
         });
       },
@@ -690,9 +685,7 @@
           supplierId: this.formData.supplierId,
           purchaserId: this.formData.purchaserId || '',
           orderDate: this.formData.orderDate || '',
-          paymentDate: this.formData.paymentDate || '',
           receiveDate: this.formData.receiveDate,
-          allowModifyPaymentDate: true,
           description: this.formData.description,
           products: this.tableData
             .filter((t) => isFloatGtZero(t.receiveNum))
@@ -720,26 +713,6 @@
           .finally(() => {
             this.loading = false;
           });
-      },
-      // 供应商改变时触发
-      supplierChange(supplierId, unModify) {
-        if (!isEmpty(supplierId)) {
-          api.getPaymentDate(supplierId).then((res) => {
-            if (!unModify) {
-              if (res.allowModify) {
-                // 如果允许修改付款日期
-                if (isEmpty(this.formData.paymentDate)) {
-                  this.formData.paymentDate = res.paymentDate || '';
-                }
-              } else {
-                // 不允许修改则按默认日期
-                this.formData.paymentDate = res.paymentDate || '';
-              }
-            }
-
-            this.formData.allowModifyPaymentDate = res.allowModify;
-          });
-        }
       },
     },
   });
