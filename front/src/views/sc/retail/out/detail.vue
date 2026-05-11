@@ -205,7 +205,6 @@ export default defineComponent({
               return cellValue ? '是' : '否';
             },
           },
-          { field: 'discountRate', title: '折扣（%）', align: 'right', width: 120 },
           { field: 'taxPrice', title: '价格（元）', align: 'right', width: 120 },
           {
             field: 'orderNum',

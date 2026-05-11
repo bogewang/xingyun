@@ -150,17 +150,6 @@
           <span v-else>{{ row.productName }}</span>
         </template>
 
-        <!-- 折扣 列自定义内容 -->
-        <template #discountRate_default="{ row }">
-          <span v-if="row.retailPrice === 0 || row.isGift">{{ row.discountRate }}</span>
-          <a-input
-            v-else
-            v-model:value="row.discountRate"
-            class="number-input"
-            @change="(e) => changeDiscountRate(row, e.target.value)"
-          />
-        </template>
-
         <!-- 价格 列自定义内容 -->
         <template #taxPrice_default="{ row }">
           <span v-if="row.isGift">{{ row.taxPrice }}</span>
@@ -269,7 +258,6 @@
     isFloatGeZero,
     getNumber,
     mul,
-    div,
     add,
     isFloat,
     isFloatGtZero,
@@ -362,13 +350,6 @@
             align: 'right',
             width: 140,
             slots: { default: 'stockNum_default' },
-          },
-          {
-            field: 'discountRate',
-            title: '折扣（%）',
-            align: 'right',
-            width: 120,
-            slots: { default: 'discountRate_default' },
           },
           {
             field: 'taxPrice',
@@ -520,7 +501,6 @@
           brandName: '',
           retailPrice: '',
           taxPrice: '',
-          discountRate: 100,
           stockNum: '',
           orderNum: '',
           outNum: '',
@@ -601,19 +581,7 @@
         }
         this.$refs.batchAddProductDialog.openDialog();
       },
-      changeDiscountRate(row, value) {
-        if (isFloatGeZero(row.discountRate) && isFloatGtZero(row.retailPrice)) {
-          row.taxPrice = getNumber(div(mul(row.retailPrice, row.discountRate), 100), 6);
-        }
-
-        this.calcSum();
-      },
       taxPriceInput(row, value) {
-        if (row.retailPrice !== 0) {
-          if (isFloatGeZero(row.taxPrice)) {
-            row.discountRate = getNumber(mul(div(row.taxPrice, row.retailPrice), 100), 2);
-          }
-        }
         this.calcSum();
       },
       outNumInput(value) {
@@ -703,7 +671,6 @@
 
         records.forEach((item) => {
           item.taxPrice = 0;
-          item.discountRate = 0;
           item.isGift = true;
         });
 
@@ -846,7 +813,6 @@
                 productId: t.productId,
                 oriPrice: t.retailPrice,
                 taxPrice: t.taxPrice,
-                discountRate: t.discountRate,
                 orderNum: t.outNum,
                 description: t.description,
               };

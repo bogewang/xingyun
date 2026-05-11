@@ -209,7 +209,6 @@
             width: 100,
             slots: { default: 'stockNum_default' },
           },
-          { field: 'discountRate', title: '折扣（%）', align: 'right', width: 120 },
           { field: 'taxPrice', title: '价格（元）', align: 'right', width: 120 },
           {
             field: 'orderNum',

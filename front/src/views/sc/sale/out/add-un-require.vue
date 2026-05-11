@@ -88,17 +88,6 @@
           <span v-else>{{ row.productName }}</span>
         </template>
 
-        <!-- 折扣 列自定义内容 -->
-        <template #discountRate_default="{ row }">
-          <span v-if="row.salePrice === 0">{{ row.discountRate }}</span>
-          <a-input
-            v-else
-            v-model:value="row.discountRate"
-            class="number-input"
-            @change="(e) => changeDiscountRate(row, e.target.value)"
-          />
-        </template>
-
         <!-- 价格 列自定义内容 -->
         <template #taxPrice_default="{ row }">
           <a-input
@@ -196,7 +185,6 @@
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
     add,
-    div,
     formatDate,
     getNumber,
     isEmpty,
@@ -364,7 +352,6 @@
           brandName: '',
           salePrice: '',
           taxPrice: '',
-          discountRate: 100,
           stockNum: '',
           orderNum: '',
           remainNum: '',
@@ -436,19 +423,7 @@
       openBatchAddProductDialog() {
         this.$refs.batchAddProductDialog.openDialog();
       },
-      changeDiscountRate(row, value) {
-        if (isFloatGeZero(row.discountRate) && isFloatGtZero(row.salePrice)) {
-          row.taxPrice = getNumber(div(mul(row.salePrice, row.discountRate), 100), 6);
-        }
-
-        this.calcSum();
-      },
       taxPriceInput(row, value) {
-        if (row.salePrice !== 0) {
-          if (isFloatGeZero(row.taxPrice)) {
-            row.discountRate = getNumber(mul(div(row.taxPrice, row.salePrice), 100), 2);
-          }
-        }
         this.calcSum();
       },
       outNumInput(value) {
@@ -616,7 +591,6 @@
                 productId: t.productId,
                 oriPrice: t.salePrice,
                 taxPrice: t.taxPrice,
-                discountRate: t.discountRate,
                 orderNum: t.outNum,
                 description: t.description,
               };

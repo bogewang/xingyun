@@ -283,7 +283,6 @@ export default defineComponent({
             width: 140,
             slots: { default: 'stockNum_default' },
           },
-          { field: 'discountRate', title: '折扣（%）', align: 'right', width: 140 },
           { field: 'taxPrice', title: '价格（元）', align: 'right', width: 140 },
           {
             field: 'orderNum',
@@ -389,7 +388,6 @@ export default defineComponent({
           brandName: '',
           salePrice: '',
           taxPrice: 0,
-          discountRate: 100,
           stockNum: '',
           orderNum: '',
           remainNum: '',
