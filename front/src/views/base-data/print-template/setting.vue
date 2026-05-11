@@ -10,7 +10,7 @@
   >
     <div
       v-if="visible && inited"
-      v-permission="['base-data:print-template:modify']"
+      v-permission="['base-data:print-template:query']"
       v-loading="loading"
     >
       <!-- 继续复用业务层组件名，但内部实现已经替换为 vg-print。 -->

@@ -11,7 +11,7 @@
         keep-source
         row-id="id"
         :proxy-config="proxyConfig"
-        :columns="tableColumn"
+        :columns="visibleTableColumn"
         :toolbar-config="toolbarConfig"
         :custom-config="{}"
         :pager-config="{}"
@@ -101,6 +101,7 @@
   import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
   import BatchHandler from '@/components/BatchHandler';
   import { PRINT_TYPE } from '@/enums/biz/printType';
+  import { usePermission } from '/@/hooks/web/usePermission';
 
   export default defineComponent({
     name: 'PrintTemplate',
@@ -114,12 +115,14 @@
       DownOutlined,
     },
     setup() {
+      const { hasPermission } = usePermission();
       return {
         h,
         SearchOutlined,
         PlusOutlined,
         DeleteOutlined,
         PRINT_TYPE,
+        hasPermission,
       };
     },
     data() {
@@ -152,7 +155,7 @@
               return PRINT_TYPE.getDesc(cellValue) || cellValue;
             },
           },
-          { title: '操作', width: 180, fixed: 'right', slots: { default: 'action_default' } },
+          { title: '操作', width: 360, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -170,6 +173,22 @@
           },
         },
       };
+    },
+    computed: {
+      visibleTableColumn() {
+        const canShowAction = [
+          'base-data:print-template:query',
+          'base-data:print-template:add',
+          'base-data:print-template:modify',
+          'base-data:print-template:delete',
+        ].some((permission) => this.hasPermission(permission, false));
+
+        if (canShowAction) {
+          return this.tableColumn;
+        }
+
+        return this.tableColumn.filter((item) => item.title !== '操作');
+      },
     },
     created() {},
     methods: {
@@ -242,7 +261,7 @@
             },
           },
           {
-            permission: ['base-data:print-template:modify'],
+            permission: ['base-data:print-template:query'],
             label: '设置',
             onClick: () => {
               this.id = row.id;

@@ -174,7 +174,7 @@ public class PrintTemplateController extends DefaultBaseController {
    * 保存设置
    */
   @ApiOperation("保存设置")
-  @HasPermission({"base-data:print-template:modify"})
+  @HasPermission({"base-data:print-template:query"})
   @PutMapping("/setting")
   public InvokeResult<Void> updateSetting(@Valid UpdatePrintTemplateSettingVo vo) {
 
@@ -198,7 +198,7 @@ public class PrintTemplateController extends DefaultBaseController {
    */
   @ApiOperation("查询组件设置")
   @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-  @HasPermission({"base-data:print-template:modify"})
+  @HasPermission({"base-data:print-template:query"})
   @GetMapping("/setting/comp")
   public InvokeResult<List<GetPrintTemplateCompSettingBo>> getCompSetting(
       @NotNull(message = "ID不能为空！") Integer id) {

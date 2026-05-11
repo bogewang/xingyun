@@ -6,126 +6,139 @@
       width="75%"
       title="查看"
       :style="{ top: '20px' }"
+      :body-style="{ height: 'calc(100vh - 160px)', overflow: 'hidden' }"
     >
-      <div v-if="visible" v-permission="['purchase:return:query']" v-loading="loading">
-        <j-border>
-          <j-form bordered>
-            <j-form-item label="仓库">
-              {{ formData.scName }}
-            </j-form-item>
-            <j-form-item label="供应商">
-              {{ formData.supplierName }}
-            </j-form-item>
-            <j-form-item label="采购员">
-              {{ formData.purchaserName }}
-            </j-form-item>
-            <j-form-item label="付款日期">
-              {{ formData.paymentDate }}
-            </j-form-item>
-            <j-form-item label="采购收货单" :span="16">
-              <div v-if="!isEmpty(formData.receiveSheetCode)">
-                <a
-                  v-permission="['purchase:receive:query']"
-                  @click="(e) => $refs.viewReceiveSheetDetailDialog.openDialog()"
-                  >{{ formData.receiveSheetCode }}</a
+      <div
+        v-if="visible"
+        v-permission="['purchase:return:query']"
+        v-loading="loading"
+        class="order-detail-modal-content"
+      >
+        <a-tabs v-model:activeKey="activeKey" class="order-detail-tabs">
+          <a-tab-pane key="detail" tab="详情">
+            <div class="order-detail-pane">
+              <j-border>
+                <j-form bordered>
+                  <j-form-item label="仓库">
+                    {{ formData.scName }}
+                  </j-form-item>
+                  <j-form-item label="供应商">
+                    {{ formData.supplierName }}
+                  </j-form-item>
+                  <j-form-item label="采购员">
+                    {{ formData.purchaserName }}
+                  </j-form-item>
+                  <j-form-item label="付款日期">
+                    {{ formData.paymentDate }}
+                  </j-form-item>
+                  <j-form-item label="采购收货单" :span="16">
+                    <div v-if="!isEmpty(formData.receiveSheetCode)">
+                      <a
+                        v-permission="['purchase:receive:query']"
+                        @click="(e) => $refs.viewReceiveSheetDetailDialog.openDialog()"
+                        >{{ formData.receiveSheetCode }}</a
+                      >
+                      <span v-no-permission="['purchase:receive:query']">{{
+                        formData.receiveSheetCode
+                      }}</span>
+                    </div>
+                  </j-form-item>
+                  <j-form-item label="状态">
+                    <span
+                      v-if="PURCHASE_RETURN_STATUS.APPROVE_PASS.equalsCode(formData.status)"
+                      style="color: #52c41a"
+                      >{{ PURCHASE_RETURN_STATUS.getDesc(formData.status) }}</span
+                    >
+                    <span
+                      v-else-if="PURCHASE_RETURN_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
+                      style="color: #f5222d"
+                      >{{ PURCHASE_RETURN_STATUS.getDesc(formData.status) }}</span
+                    >
+                    <span v-else style="color: #303133">{{
+                      PURCHASE_RETURN_STATUS.getDesc(formData.status)
+                    }}</span>
+                  </j-form-item>
+                  <j-form-item label="拒绝理由" :span="16" :content-nest="false">
+                    <a-input
+                      v-if="PURCHASE_RETURN_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
+                      v-model:value="formData.refuseReason"
+                      readonly
+                    />
+                  </j-form-item>
+                  <j-form-item label="操作人">
+                    <span>{{ formData.createBy }}</span>
+                  </j-form-item>
+                  <j-form-item label="操作时间" :span="16">
+                    <span>{{ formData.createTime }}</span>
+                  </j-form-item>
+                  <j-form-item
+                    v-if="
+                      PURCHASE_RETURN_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
+                      PURCHASE_RETURN_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
+                    "
+                    label="审核人"
+                  >
+                    <span>{{ formData.approveBy }}</span>
+                  </j-form-item>
+                  <j-form-item
+                    v-if="
+                      PURCHASE_RETURN_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
+                      PURCHASE_RETURN_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
+                    "
+                    label="审核时间"
+                    :span="16"
+                  >
+                    <span>{{ formData.approveTime }}</span>
+                  </j-form-item>
+                </j-form>
+              </j-border>
+              <div class="order-detail-grid-wrap">
+                <vxe-grid
+                  ref="grid"
+                  resizable
+                  show-overflow
+                  highlight-hover-row
+                  keep-source
+                  row-id="id"
+                  height="100%"
+                  :data="tableData"
+                  :columns="tableColumn"
                 >
-                <span v-no-permission="['purchase:receive:query']">{{
-                  formData.receiveSheetCode
-                }}</span>
+                  <template #taxAmount_default="{ row }">
+                    <span v-if="isFloatGeZero(row.purchasePrice) && isFloatGeZero(row.returnNum)">{{
+                      getNumber(mul(row.purchasePrice, row.returnNum), 2)
+                    }}</span>
+                  </template>
+                </vxe-grid>
               </div>
-            </j-form-item>
-            <j-form-item label="状态">
-              <span
-                v-if="PURCHASE_RETURN_STATUS.APPROVE_PASS.equalsCode(formData.status)"
-                style="color: #52c41a"
-                >{{ PURCHASE_RETURN_STATUS.getDesc(formData.status) }}</span
-              >
-              <span
-                v-else-if="PURCHASE_RETURN_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-                style="color: #f5222d"
-                >{{ PURCHASE_RETURN_STATUS.getDesc(formData.status) }}</span
-              >
-              <span v-else style="color: #303133">{{
-                PURCHASE_RETURN_STATUS.getDesc(formData.status)
-              }}</span>
-            </j-form-item>
-            <j-form-item label="拒绝理由" :span="16" :content-nest="false">
-              <a-input
-                v-if="PURCHASE_RETURN_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-                v-model:value="formData.refuseReason"
-                readonly
-              />
-            </j-form-item>
-            <j-form-item label="操作人">
-              <span>{{ formData.createBy }}</span>
-            </j-form-item>
-            <j-form-item label="操作时间" :span="16">
-              <span>{{ formData.createTime }}</span>
-            </j-form-item>
-            <j-form-item
-              v-if="
-                PURCHASE_RETURN_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
-                PURCHASE_RETURN_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
-              "
-              label="审核人"
-            >
-              <span>{{ formData.approveBy }}</span>
-            </j-form-item>
-            <j-form-item
-              v-if="
-                PURCHASE_RETURN_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
-                PURCHASE_RETURN_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
-              "
-              label="审核时间"
-              :span="16"
-            >
-              <span>{{ formData.approveTime }}</span>
-            </j-form-item>
-          </j-form>
-        </j-border>
-        <!-- 数据列表 -->
-        <vxe-grid
-          ref="grid"
-          resizable
-          show-overflow
-          highlight-hover-row
-          keep-source
-          row-id="id"
-          height="500"
-          :data="tableData"
-          :columns="tableColumn"
-        >
-          <!-- 含税金额 列自定义内容 -->
-          <template #taxAmount_default="{ row }">
-            <span v-if="isFloatGeZero(row.purchasePrice) && isFloatGeZero(row.returnNum)">{{
-              getNumber(mul(row.purchasePrice, row.returnNum), 2)
-            }}</span>
-          </template>
-        </vxe-grid>
 
-        <order-time-line :id="id" />
+              <j-border title="合计">
+                <j-form bordered label-width="140px">
+                  <j-form-item label="退货数量" :span="6">
+                    <a-input v-model:value="formData.totalNum" class="number-input" readonly />
+                  </j-form-item>
+                  <j-form-item label="赠品数量" :span="6">
+                    <a-input v-model:value="formData.giftNum" class="number-input" readonly />
+                  </j-form-item>
+                  <j-form-item label="含税总金额" :span="6">
+                    <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
+                  </j-form-item>
+                </j-form>
+              </j-border>
 
-        <j-border title="合计">
-          <j-form bordered label-width="140px">
-            <j-form-item label="退货数量" :span="6">
-              <a-input v-model:value="formData.totalNum" class="number-input" readonly />
-            </j-form-item>
-            <j-form-item label="赠品数量" :span="6">
-              <a-input v-model:value="formData.giftNum" class="number-input" readonly />
-            </j-form-item>
-            <j-form-item label="含税总金额" :span="6">
-              <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
-            </j-form-item>
-          </j-form>
-        </j-border>
-
-        <j-border>
-          <j-form bordered label-width="140px">
-            <j-form-item label="备注" :span="24" :content-nest="false">
-              <a-textarea v-model:value.trim="formData.description" maxlength="200" readonly />
-            </j-form-item>
-          </j-form>
-        </j-border>
+              <j-border>
+                <j-form bordered label-width="140px">
+                  <j-form-item label="备注" :span="24" :content-nest="false">
+                    <a-textarea v-model:value.trim="formData.description" maxlength="200" readonly />
+                  </j-form-item>
+                </j-form>
+              </j-border>
+            </div>
+          </a-tab-pane>
+          <a-tab-pane key="orderTimeLine" tab="变动记录">
+            <order-time-line :id="id" />
+          </a-tab-pane>
+        </a-tabs>
       </div>
       <template #footer>
         <div class="form-modal-footer">
@@ -180,6 +193,7 @@ export default defineComponent({
         visible: false,
         // 是否显示加载框
         loading: false,
+        activeKey: 'detail',
         // 表单数据
         formData: {},
         // 列表数据配置
@@ -253,6 +267,7 @@ export default defineComponent({
       },
       // 初始化表单数据
       initFormData() {
+        this.activeKey = 'detail';
         this.formData = {
           scName: '',
           supplierName: '',
@@ -344,4 +359,37 @@ export default defineComponent({
     },
   });
 </script>
-<style></style>
+<style scoped>
+.order-detail-modal-content {
+  height: 100%;
+  overflow: hidden;
+}
+
+.order-detail-tabs {
+  height: 100%;
+}
+
+.order-detail-pane {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.order-detail-grid-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.order-detail-tabs :deep(.ant-tabs-content-holder),
+.order-detail-tabs :deep(.ant-tabs-content),
+.order-detail-tabs :deep(.ant-tabs-tabpane) {
+  height: 100%;
+}
+
+.order-detail-tabs :deep(.ant-tabs-nav) {
+  margin-bottom: 12px;
+}
+</style>

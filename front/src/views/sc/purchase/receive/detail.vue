@@ -6,121 +6,124 @@
       width="75%"
       title="查看"
       :style="{ top: '20px' }"
-      :body-style="{ maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' }"
+      :body-style="{ height: 'calc(100vh - 160px)', overflow: 'hidden' }"
     >
-      <div v-if="visible" v-permission="['purchase:receive:query']" v-loading="loading">
-        <a-tabs v-model:activeKey="activeKey">
+      <div
+        v-if="visible"
+        v-permission="['purchase:receive:query']"
+        v-loading="loading"
+        class="order-detail-modal-content"
+      >
+        <a-tabs v-model:activeKey="activeKey" class="order-detail-tabs">
           <a-tab-pane key="detail" tab="详情">
-            <j-border>
-              <j-form bordered>
-                <j-form-item label="供应商">
-                  {{ formData.supplierName }}
-                </j-form-item>
-                <j-form-item label="订单日期">
-                  {{ formData.orderDate }}
-                </j-form-item>
-                <j-form-item label="采购订单">
-                  <div v-if="!isEmpty(formData.purchaseOrderCode)">
-                    <a
-                      v-permission="['purchase:order:query']"
-                      @click="(e) => $refs.viewPurchaseOrderDetailDialog.openDialog()"
-                      >{{ formData.purchaseOrderCode }}</a
+            <div class="order-detail-pane">
+              <j-border>
+                <j-form bordered>
+                  <j-form-item label="供应商">
+                    {{ formData.supplierName }}
+                  </j-form-item>
+                  <j-form-item label="订单日期">
+                    {{ formData.orderDate }}
+                  </j-form-item>
+                  <j-form-item label="采购订单">
+                    <div v-if="!isEmpty(formData.purchaseOrderCode)">
+                      <a
+                        v-permission="['purchase:order:query']"
+                        @click="(e) => $refs.viewPurchaseOrderDetailDialog.openDialog()"
+                        >{{ formData.purchaseOrderCode }}</a
+                      >
+                      <span v-no-permission="['purchase:order:query']">{{
+                        formData.purchaseOrderCode
+                      }}</span>
+                    </div>
+                  </j-form-item>
+                  <j-form-item label="状态">
+                    <span
+                      v-if="RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status)"
+                      style="color: #52c41a"
+                      >{{ RECEIVE_SHEET_STATUS.getDesc(formData.status) }}</span
                     >
-                    <span v-no-permission="['purchase:order:query']">{{
-                      formData.purchaseOrderCode
+                    <span
+                      v-else-if="RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
+                      style="color: #f5222d"
+                      >{{ RECEIVE_SHEET_STATUS.getDesc(formData.status) }}</span
+                    >
+                    <span v-else style="color: #303133">{{
+                      RECEIVE_SHEET_STATUS.getDesc(formData.status)
                     }}</span>
-                  </div>
-                </j-form-item>
-                <j-form-item label="状态">
-                  <span
-                    v-if="RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status)"
-                    style="color: #52c41a"
-                    >{{ RECEIVE_SHEET_STATUS.getDesc(formData.status) }}</span
+                  </j-form-item>
+
+                  <j-form-item label="操作人">
+                    <span>{{ formData.createBy }}</span>
+                  </j-form-item>
+                  <j-form-item label="操作时间">
+                    <span>{{ formData.createTime }}</span>
+                  </j-form-item>
+                  <j-form-item
+                    v-if="
+                      RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
+                      RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
+                    "
+                    label="审核人"
                   >
-                  <span
-                    v-else-if="RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-                    style="color: #f5222d"
-                    >{{ RECEIVE_SHEET_STATUS.getDesc(formData.status) }}</span
+                    <span>{{ formData.approveBy }}</span>
+                  </j-form-item>
+                  <j-form-item
+                    v-if="
+                      RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
+                      RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
+                    "
+                    label="审核时间"
+                    :span="16"
                   >
-                  <span v-else style="color: #303133">{{
-                    RECEIVE_SHEET_STATUS.getDesc(formData.status)
-                  }}</span>
-                </j-form-item>
-
-                <j-form-item label="操作人">
-                  <span>{{ formData.createBy }}</span>
-                </j-form-item>
-                <j-form-item label="操作时间">
-                  <span>{{ formData.createTime }}</span>
-                </j-form-item>
-                <j-form-item
-                  v-if="
-                    RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
-                    RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
-                  "
-                  label="审核人"
+                    <span>{{ formData.approveTime }}</span>
+                  </j-form-item>
+                  <j-form-item label="拒绝理由" :span="16" :content-nest="false">
+                    <a-input
+                      v-if="RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
+                      v-model:value="formData.refuseReason"
+                      readonly
+                    />
+                  </j-form-item>
+                </j-form>
+              </j-border>
+              <div class="order-detail-grid-wrap">
+                <vxe-grid
+                  id="ReceiveSheetDetail"
+                  ref="grid"
+                  resizable
+                  show-overflow
+                  highlight-hover-row
+                  keep-source
+                  row-id="id"
+                  height="100%"
+                  :data="tableData"
+                  :columns="tableColumn"
+                  :toolbar-config="toolbarConfig"
+                  :custom-config="{}"
                 >
-                  <span>{{ formData.approveBy }}</span>
-                </j-form-item>
-                <j-form-item
-                  v-if="
-                    RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
-                    RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
-                  "
-                  label="审核时间"
-                  :span="16"
-                >
-                  <span>{{ formData.approveTime }}</span>
-                </j-form-item>
-                <j-form-item label="拒绝理由" :span="16" :content-nest="false">
-                  <a-input
-                    v-if="RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-                    v-model:value="formData.refuseReason"
-                    readonly
-                  />
-                </j-form-item>
-              </j-form>
-            </j-border>
-            <vxe-grid
-              id="ReceiveSheetDetail"
-              ref="grid"
-              resizable
-              show-overflow
-              highlight-hover-row
-              keep-source
-              row-id="id"
-              height="320"
-              :data="tableData"
-              :columns="tableColumn"
-              :toolbar-config="toolbarConfig"
-              :custom-config="{}"
-            >
-              <template #taxAmount_default="{ row }">
-                <span v-if="isFloatGeZero(row.purchasePrice) && isFloatGeZero(row.receiveNum)">{{
-                  getNumber(mul(row.purchasePrice, row.receiveNum), 2)
-                }}</span>
-              </template>
-            </vxe-grid>
+                  <template #taxAmount_default="{ row }">
+                    <span v-if="isFloatGeZero(row.purchasePrice) && isFloatGeZero(row.receiveNum)">{{
+                      getNumber(mul(row.purchasePrice, row.receiveNum), 2)
+                    }}</span>
+                  </template>
+                </vxe-grid>
+              </div>
 
-            <j-border title="合计">
-              <j-form bordered label-width="140px">
-                <j-form-item label="收货数量" :span="6">
-                  <a-input v-model:value="formData.totalNum" class="number-input" readonly />
-                </j-form-item>
-                <j-form-item label="含税总金额" :span="6">
-                  <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
-                </j-form-item>
-                <j-form-item label="备注" :span="12" :content-nest="false">
-                  <a-input v-model:value.trim="formData.description" maxlength="200" readonly />
-                </j-form-item>
-              </j-form>
-            </j-border>
-
-            <j-border>
-              <j-form bordered label-width="140px">
-
-              </j-form>
-            </j-border>
+              <j-border title="合计">
+                <j-form bordered label-width="140px">
+                  <j-form-item label="收货数量" :span="6">
+                    <a-input v-model:value="formData.totalNum" class="number-input" readonly />
+                  </j-form-item>
+                  <j-form-item label="含税总金额" :span="6">
+                    <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
+                  </j-form-item>
+                  <j-form-item label="备注" :span="12" :content-nest="false">
+                    <a-input v-model:value.trim="formData.description" maxlength="200" readonly />
+                  </j-form-item>
+                </j-form>
+              </j-border>
+            </div>
           </a-tab-pane>
           <a-tab-pane key="orderTimeLine" tab="变动记录">
             <order-time-line :id="id" />
@@ -357,4 +360,37 @@ export default defineComponent({
     },
   });
 </script>
-<style></style>
+<style scoped>
+.order-detail-modal-content {
+  height: 100%;
+  overflow: hidden;
+}
+
+.order-detail-tabs {
+  height: 100%;
+}
+
+.order-detail-pane {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.order-detail-grid-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.order-detail-tabs :deep(.ant-tabs-content-holder),
+.order-detail-tabs :deep(.ant-tabs-content),
+.order-detail-tabs :deep(.ant-tabs-tabpane) {
+  height: 100%;
+}
+
+.order-detail-tabs :deep(.ant-tabs-nav) {
+  margin-bottom: 12px;
+}
+</style>
