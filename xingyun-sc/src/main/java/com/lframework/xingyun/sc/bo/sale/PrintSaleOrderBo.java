@@ -18,34 +18,10 @@ public class PrintSaleOrderBo extends BaseBo<SaleOrderFullDto> {
     private String code;
 
     /**
-     * 仓库编号
-     */
-    // @ApiModelProperty("仓库编号")
-    // private String scCode;
-
-    /**
-     * 仓库名称
-     */
-    // @ApiModelProperty("仓库名称")
-    // private String scName;
-
-    /**
-     * 客户编号
-     */
-    // @ApiModelProperty("客户编号")
-    // private String customerCode;
-
-    /**
      * 客户名称
      */
     @ApiModelProperty("客户名称")
     private String customerName;
-
-    /**
-     * 销售员姓名
-     */
-    // @ApiModelProperty("销售员姓名")
-    // private String salerName;
 
     /**
      * 备注
@@ -67,18 +43,6 @@ public class PrintSaleOrderBo extends BaseBo<SaleOrderFullDto> {
     private String deliveryDate;
 
     /**
-     * 审核人
-     */
-    // @ApiModelProperty("审核人")
-    // private String approveBy;
-
-    /**
-     * 审核时间
-     */
-    // @ApiModelProperty("审核时间")
-    // private String approveTime;
-
-    /**
      * 订单明细
      */
     @ApiModelProperty("订单明细")
@@ -93,7 +57,7 @@ public class PrintSaleOrderBo extends BaseBo<SaleOrderFullDto> {
          * 排序编号
          */
         @ApiModelProperty("排序编号")
-        private Integer orderNo;
+        private Integer seq;
         /**
          * 商品编号
          */
@@ -106,17 +70,6 @@ public class PrintSaleOrderBo extends BaseBo<SaleOrderFullDto> {
         @ApiModelProperty("商品名称")
         private String productName;
 
-        /**
-         * SKU编号
-         */
-        // @ApiModelProperty("SKU编号")
-        // private String skuCode;
-
-        /**
-         * 简码
-         */
-        // @ApiModelProperty("简码")
-        // private String externalCode;
         /**
          * 规格
          */

@@ -12,7 +12,7 @@ import { CreateSaleOutSheetVo } from '@/api/sc/sale/out/model/createSaleOutSheet
 import { UpdateSaleOutSheetVo } from '@/api/sc/sale/out/model/updateSaleOutSheetVo';
 import { ApprovePassSaleOutSheetVo } from '@/api/sc/sale/out/model/approvePassSaleOutSheetVo';
 import { ApproveRefuseSaleOutSheetVo } from '@/api/sc/sale/out/model/approveRefuseSaleOutSheetVo';
-import { PrintSaleOutSheetBo } from '@/api/sc/sale/out/model/printSaleOutSheetBo';
+import { PrintSaleOrderBo } from '@/api/sc/sale/order/model/printSaleOrderBo';
 import { PrintSaleTagBo } from '@/api/sc/sale/order/model/PrintSaleTagBo';
 
 const baseUrl = '/sale/out/sheet';
@@ -21,8 +21,8 @@ const region = 'cloud-api';
 /**
  * 打印
  */
-export function print(id: string): Promise<PrintSaleOutSheetBo> {
-  return defHttp.get<PrintSaleOutSheetBo>(
+export function print(id: string): Promise<PrintSaleOrderBo> {
+  return defHttp.get<PrintSaleOrderBo>(
     {
       url: baseUrl + '/print',
       params: {

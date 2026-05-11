@@ -11,6 +11,8 @@ import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.utils.EasyExcelUtils;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.xingyun.sc.bo.sale.PrintSaleOrderBo;
+import com.lframework.xingyun.sc.converter.SaleOutSheetConverter;
 import com.lframework.xingyun.sc.bo.purchase.receive.GetPaymentDateBo;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
 import com.lframework.xingyun.sc.bo.sale.out.*;
@@ -60,7 +62,7 @@ public class SaleOutSheetController extends DefaultBaseController {
     @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
     @HasPermission({ "sale:out:query" })
     @GetMapping("/print")
-    public InvokeResult<PrintSaleOutSheetBo> print(
+    public InvokeResult<PrintSaleOrderBo> print(
             @NotBlank(message = "订单ID不能为空！") String id) {
 
         SaleOutSheetFullDto data = saleOutSheetService.getDetail(id);
@@ -68,7 +70,7 @@ public class SaleOutSheetController extends DefaultBaseController {
             throw new DefaultClientException("销售出库单不存在！");
         }
 
-        PrintSaleOutSheetBo result = new PrintSaleOutSheetBo(data);
+        PrintSaleOrderBo result = SaleOutSheetConverter.fullDTO2PrintBO(data);
 
         return InvokeResultBuilder.success(result);
     }

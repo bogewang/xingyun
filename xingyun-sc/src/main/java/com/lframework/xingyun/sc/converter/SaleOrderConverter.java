@@ -32,7 +32,6 @@ public class SaleOrderConverter {
 
         return details.stream().map(item -> {
             PrintSaleOrderBo.OrderDetailBo orderDetailBo = new PrintSaleOrderBo.OrderDetailBo();
-            // orderDetailBo.setOrderNo(item.getOrderNo());
             Product product = productMap.get(item.getProductId());
             if (product == null) {
                 return null;
