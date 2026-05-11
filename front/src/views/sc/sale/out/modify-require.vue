@@ -396,6 +396,11 @@
       closeDialog() {
         this.closeCurrentPage();
       },
+      // 返回销售出库查询页，避免回到缓存中的其他页面
+      goQueryPage() {
+        this.closeCurrentPage(false);
+        this.$router.push('/sc/sale/out/index');
+      },
       // 初始化表单数据
       initFormData() {
         this.formData = {
@@ -792,7 +797,7 @@
             createSuccess('保存成功！');
 
             this.$emit('confirm');
-            this.closeDialog();
+            this.goQueryPage();
           })
           .finally(() => {
             this.loading = false;
