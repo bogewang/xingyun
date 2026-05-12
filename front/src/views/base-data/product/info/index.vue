@@ -34,21 +34,6 @@
                 <j-form-item label="商品分类">
                   <product-category-selector v-model:value="searchFormData.categoryId" :only-final="false" />
                 </j-form-item>
-                <j-form-item label="创建日期" :content-nest="false">
-                  <div class="date-range-container">
-                    <a-date-picker
-                      v-model:value="searchFormData.startTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 00:00:00"
-                    />
-                    <span class="date-split">至</span>
-                    <a-date-picker
-                      v-model:value="searchFormData.endTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 23:59:59"
-                    />
-                  </div>
-                </j-form-item>
               </j-form>
             </j-border>
           </template>
@@ -175,8 +160,6 @@ export default defineComponent({
           skuCode: '',
           categoryId: '',
           brandId: '',
-          startTime: '',
-          endTime: '',
         },
         // 工具栏配置
         toolbarConfig: {
