@@ -60,9 +60,13 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -195,29 +199,227 @@ public class SaleOutSheetServiceImpl extends
 
   @Override
   public void marketBuySummary(QuerySaleOutSheetVo vo) {
-    Map<String, String> headerMap = new HashMap<>();
-    headerMap.put("category", "商品分类");
+    Map<String, String> headerMap = new LinkedHashMap<>();
+    headerMap.put("category", "分类");
     headerMap.put("productName", "商品名称");
     headerMap.put("unit", "单位");
 
-    List<Map<String, String>> data = new ArrayList<>();
+    List<SaleOutSheet> sheets = this.query(vo);
+    if (CollectionUtils.isEmpty(sheets)) {
+      exportMarketBuySummary(headerMap, new ArrayList<>());
+      return;
+    }
 
-    // 查询数据，组装数据
-    // 表头
-    headerMap.put("customer1", "客户1");
-    headerMap.put("customer2", "客户2");
+    Map<String, SaleOutSheet> sheetMap = sheets.stream().collect(Collectors.toMap(
+            SaleOutSheet::getId, item -> item, (v1, v2) -> v2));
+    LinkedHashMap<String, String> customerColumnMap = buildCustomerColumnMap(sheets, headerMap);
     headerMap.put("total", "总计");
 
-    // 数据
-    Map<String, String> map = new HashMap<>();
-    map.put("category", "蔬菜");
-    map.put("productName", "大白菜");
-    map.put("unit", "公斤");
-    map.put("customer1", "100（这里是备注）");
-    map.put("customer2", "200（这里是备注）");
-    map.put("total", "300");
-    data.add(map);
+    List<SaleOutSheetDetail> details = queryMarketBuySummaryDetails(sheets);
+    if (CollectionUtils.isEmpty(details)) {
+      exportMarketBuySummary(headerMap, new ArrayList<>());
+      return;
+    }
+
+    Map<String, Product> productMap = buildProductMap(details);
+    Map<String, ProductCategory> categoryMap = buildCategoryMap(productMap);
+    List<SummaryRow> summaryRows = buildSummaryRows(details, sheetMap, productMap, categoryMap);
+
+    List<Map<String, String>> data = new ArrayList<>();
+    for (SummaryRow row : summaryRows) {
+      Map<String, String> map = new LinkedHashMap<>();
+      map.put("category", row.categoryName);
+      map.put("productName", row.productName);
+      map.put("unit", row.unit);
+
+      for (Map.Entry<String, String> customerColumn : customerColumnMap.entrySet()) {
+        SummaryCell cell = row.cells.get(customerColumn.getKey());
+        map.put(customerColumn.getValue(), buildCellText(cell));
+      }
+      map.put("total", formatNumber(row.total));
+      data.add(map);
+    }
+
+    exportMarketBuySummary(headerMap, data);
+  }
+
+  /**
+   * 按查询结果中的客户顺序生成动态列。
+   *
+   * 导出工具按 Map 的插入顺序渲染表头，因此这里使用 LinkedHashMap，
+   * 保证“固定列 + 客户动态列 + 总计列”的展示顺序稳定。
+   */
+  private LinkedHashMap<String, String> buildCustomerColumnMap(List<SaleOutSheet> sheets,
+                                                               Map<String, String> headerMap) {
+    List<String> customerIds = sheets.stream().map(SaleOutSheet::getCustomerId).distinct()
+            .collect(Collectors.toList());
+    Map<String, Customer> customerMap = customerService.listByIds(customerIds).stream()
+            .collect(Collectors.toMap(Customer::getId, item -> item, (v1, v2) -> v2));
+
+    LinkedHashMap<String, String> customerColumnMap = new LinkedHashMap<>();
+    int customerIndex = 1;
+    for (SaleOutSheet sheet : sheets) {
+      if (customerColumnMap.containsKey(sheet.getCustomerId())) {
+        continue;
+      }
+
+      Customer customer = customerMap.get(sheet.getCustomerId());
+      String customerName = customer == null ? StringPool.EMPTY_STR : customer.getName();
+      String columnKey = "customer" + customerIndex++;
+      customerColumnMap.put(sheet.getCustomerId(), columnKey);
+      headerMap.put(columnKey, customerName);
+    }
+
+    return customerColumnMap;
+  }
+
+  /**
+   * 查询参与买菜汇总的出库明细。
+   *
+   * 这里按明细排序号升序查询，保证同一商品下备注合并时的顺序与录单顺序尽量一致。
+   */
+  private List<SaleOutSheetDetail> queryMarketBuySummaryDetails(List<SaleOutSheet> sheets) {
+    List<String> sheetIds = sheets.stream().map(SaleOutSheet::getId).collect(Collectors.toList());
+    return saleOutSheetDetailService.list(Wrappers.lambdaQuery(SaleOutSheetDetail.class)
+            .in(SaleOutSheetDetail::getSheetId, sheetIds)
+            .orderByAsc(SaleOutSheetDetail::getOrderNo));
+  }
+
+  /**
+   * 批量加载商品基础信息，避免在汇总循环里逐条查询。
+   */
+  private Map<String, Product> buildProductMap(List<SaleOutSheetDetail> details) {
+    List<String> productIds = details.stream().map(SaleOutSheetDetail::getProductId).distinct()
+            .collect(Collectors.toList());
+    return productService.listByIds(productIds).stream()
+            .collect(Collectors.toMap(Product::getId, item -> item, (v1, v2) -> v2));
+  }
+
+  /**
+   * 批量加载商品分类信息，供导出“分类”列使用。
+   */
+  private Map<String, ProductCategory> buildCategoryMap(Map<String, Product> productMap) {
+    List<String> categoryIds = productMap.values().stream().map(Product::getCategoryId)
+            .filter(StringUtils::isNotBlank).distinct().collect(Collectors.toList());
+    return productCategoryService.listByIds(categoryIds).stream()
+            .collect(Collectors.toMap(ProductCategory::getId, item -> item, (v1, v2) -> v2));
+  }
+
+  /**
+   * 将原始出库明细聚合成导出行。
+   *
+   * 聚合维度：
+   * 1. 同商品归并为一行
+   * 2. 同客户同商品数量累加
+   * 3. 同客户同商品备注去重后按出现顺序拼接
+   *
+   * 输出前按“分类 -> 商品名称”升序排序，满足导出展示要求。
+   */
+  private List<SummaryRow> buildSummaryRows(List<SaleOutSheetDetail> details,
+                                            Map<String, SaleOutSheet> sheetMap,
+                                            Map<String, Product> productMap,
+                                            Map<String, ProductCategory> categoryMap) {
+    Map<String, SummaryRow> summaryMap = new LinkedHashMap<>();
+    for (SaleOutSheetDetail detail : details) {
+      SaleOutSheet sheet = sheetMap.get(detail.getSheetId());
+      Product product = productMap.get(detail.getProductId());
+      if (sheet == null || product == null) {
+        continue;
+      }
+
+      // 每个商品汇总成一行，行内再按客户拆分单元格数据。
+      SummaryRow row = summaryMap.computeIfAbsent(product.getId(), key ->
+              new SummaryRow(getCategoryName(product, categoryMap), product.getName(), product.getUnit()));
+
+      // 同一客户的数量累加，备注去重并保留原始出现顺序。
+      SummaryCell cell = row.cells.computeIfAbsent(sheet.getCustomerId(), key -> new SummaryCell());
+      BigDecimal orderNum = detail.getOrderNum() == null ? BigDecimal.ZERO : detail.getOrderNum();
+      cell.orderNum = NumberUtil.add(cell.orderNum, orderNum);
+      if (StringUtils.isNotBlank(detail.getDescription())) {
+        cell.descriptions.add(detail.getDescription());
+      }
+      row.total = NumberUtil.add(row.total, orderNum);
+    }
+
+    return summaryMap.values().stream()
+            .sorted(Comparator.comparing((SummaryRow item) -> defaultString(item.categoryName))
+            .thenComparing(item -> defaultString(item.productName)))
+            .collect(Collectors.toList());
+  }
+
+  /**
+   * 读取商品分类名称；未配置分类时返回空字符串，避免导出空指针。
+   */
+  private String getCategoryName(Product product, Map<String, ProductCategory> categoryMap) {
+    if (StringUtils.isBlank(product.getCategoryId())) {
+      return StringPool.EMPTY_STR;
+    }
+
+    ProductCategory category = categoryMap.get(product.getCategoryId());
+    return category == null ? StringPool.EMPTY_STR : category.getName();
+  }
+
+  private String defaultString(String value) {
+    return value == null ? StringPool.EMPTY_STR : value;
+  }
+
+  /**
+   * 统一执行无模型导出。
+   */
+  private void exportMarketBuySummary(Map<String, String> headerMap, List<Map<String, String>> data) {
     ExcelUtil.exportNoModel("买菜汇总", headerMap, data);
+  }
+
+  /**
+   * 将单个客户单元格格式化成“数量（备注1；备注2）”。
+   *
+   * 没有数量时返回空字符串；没有备注时仅返回数量。
+   */
+  private String buildCellText(SummaryCell cell) {
+    if (cell == null || cell.orderNum == null || cell.orderNum.compareTo(BigDecimal.ZERO) == 0) {
+      return StringPool.EMPTY_STR;
+    }
+
+    String orderNumText = formatNumber(cell.orderNum);
+    if (CollectionUtils.isEmpty(cell.descriptions)) {
+      return orderNumText;
+    }
+
+    return orderNumText + "（" + String.join("；", cell.descriptions) + "）";
+  }
+
+  /**
+   * 去掉数量尾部无意义的 0，便于导出展示。
+   */
+  private String formatNumber(BigDecimal num) {
+    if (num == null) {
+      return "0";
+    }
+
+    return num.stripTrailingZeros().toPlainString();
+  }
+
+  private static class SummaryRow {
+    private String categoryName;
+    private String productName;
+    private String unit;
+    private BigDecimal total = BigDecimal.ZERO;
+
+    // key: customerId，value: 当前商品在该客户下的汇总数量与备注。
+    private Map<String, SummaryCell> cells = new HashMap<>();
+
+    private SummaryRow(String categoryName, String productName, String unit) {
+      this.categoryName = categoryName;
+      this.productName = productName;
+      this.unit = unit;
+    }
+  }
+
+  private static class SummaryCell {
+    private BigDecimal orderNum = BigDecimal.ZERO;
+
+    // 使用 LinkedHashSet 去重并保持备注原始顺序，导出时展示更稳定。
+    private Set<String> descriptions = new LinkedHashSet<>();
   }
 
   @Override
