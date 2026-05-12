@@ -214,7 +214,7 @@
                     AND r.settle_status = #{vo.settleStatus}
                 </if>
                 <if test="vo.idList != null and vo.idList.size() > 0">
-                    AND o.id IN <foreach collection="vo.idList" open="(" separator="," close=")" item="item">#{item}</foreach>
+                    AND r.id IN <foreach collection="vo.idList" open="(" separator="," close=")" item="item">#{item}</foreach>
                 </if>
             </if>
         </where>

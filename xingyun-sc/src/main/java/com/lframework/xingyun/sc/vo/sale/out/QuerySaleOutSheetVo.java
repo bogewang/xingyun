@@ -5,9 +5,11 @@ import com.lframework.starter.web.core.vo.SortPageVo;
 import com.lframework.xingyun.sc.enums.SaleOutSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import lombok.Data;
+import java.util.List;
 
 @Data
 public class QuerySaleOutSheetVo extends SortPageVo {
@@ -19,6 +21,8 @@ public class QuerySaleOutSheetVo extends SortPageVo {
    */
   @ApiModelProperty("单号")
   private String code;
+
+  private List<String> idList;
 
   /**
    * 客户ID
