@@ -121,6 +121,7 @@
           <!-- 工具栏 -->
           <template #toolbar_buttons>
             <a-space>
+              <a-button @click="resetSearchForm">清空</a-button>
               <a-button type="primary" :icon="h(SearchOutlined)" @click="search">查询</a-button>
               <a-button
                 v-permission="['sale:out:add']"
@@ -387,6 +388,20 @@
       // 列表发生查询时的事件
       search() {
         this.$refs.grid.commitProxy('reload');
+      },
+      resetSearchForm() {
+        this.searchFormData = {
+          code: '',
+          scId: '',
+          customerId: undefined,
+          createBy: undefined,
+          approveBy: undefined,
+          status: undefined,
+          saler: '',
+          saleOrderCode: '',
+          settleStatus: undefined,
+        };
+        this.approveDateRange = [];
       },
       // 查询前构建查询参数结构
       buildQueryParams(page, sorts) {

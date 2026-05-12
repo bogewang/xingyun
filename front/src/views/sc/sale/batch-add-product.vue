@@ -70,7 +70,14 @@
       <a-space>
         <a-button @click="closeDialog">取 消</a-button>
         <a-button
-          v-permission="['sale:order:add', 'sale:order:modify']"
+          v-permission="[
+            'sale:order:add',
+            'sale:order:modify',
+            'sale:out:add',
+            'sale:out:modify',
+            'sale:return:add',
+            'sale:return:modify',
+          ]"
           type="primary"
           :loading="loading"
           @click="doSelect"
