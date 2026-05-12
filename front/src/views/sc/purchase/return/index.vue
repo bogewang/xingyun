@@ -27,7 +27,17 @@
                 </j-form-item>
 
                 <j-form-item label="供应商">
-                  <supplier-selector v-model:value="searchFormData.supplierId" />
+                  <a-select
+                    v-model:value="searchFormData.supplierId"
+                    allow-clear
+                    show-search
+                    :filter-option="filterOption"
+                    :options="supplierOptions"
+                    placeholder="请选择供应商"
+                    @focus="loadSupplierOptions()"
+                    @search="loadSupplierOptions"
+                    @change="(value) => handleSelectChange('supplierId', value, supplierOptionMap)"
+                  />
                 </j-form-item>
 
                 <j-form-item label="仓库">
@@ -35,7 +45,17 @@
                 </j-form-item>
 
                 <j-form-item label="操作人">
-                  <user-selector v-model:value="searchFormData.createBy" />
+                  <a-select
+                    v-model:value="searchFormData.createBy"
+                    allow-clear
+                    show-search
+                    :filter-option="filterOption"
+                    :options="createByOptions"
+                    placeholder="请选择操作人"
+                    @focus="loadCreateByOptions()"
+                    @search="loadCreateByOptions"
+                    @change="(value) => handleSelectChange('createBy', value, createByOptionMap)"
+                  />
                 </j-form-item>
 
                 <j-form-item label="操作日期" :content-nest="false">
@@ -56,7 +76,17 @@
                 </j-form-item>
 
                 <j-form-item label="审核人">
-                  <user-selector v-model:value="searchFormData.approveBy" />
+                  <a-select
+                    v-model:value="searchFormData.approveBy"
+                    allow-clear
+                    show-search
+                    :filter-option="filterOption"
+                    :options="approveByOptions"
+                    placeholder="请选择审核人"
+                    @focus="loadApproveByOptions()"
+                    @search="loadApproveByOptions"
+                    @change="(value) => handleSelectChange('approveBy', value, approveByOptionMap)"
+                  />
                 </j-form-item>
 
                 <j-form-item label="审核日期" :content-nest="false">
@@ -87,7 +117,17 @@
                 </j-form-item>
 
                 <j-form-item label="采购员">
-                  <user-selector v-model:value="searchFormData.purchaser" />
+                  <a-select
+                    v-model:value="searchFormData.purchaser"
+                    allow-clear
+                    show-search
+                    :filter-option="filterOption"
+                    :options="purchaserOptions"
+                    placeholder="请选择采购员"
+                    @focus="loadPurchaserOptions()"
+                    @search="loadPurchaserOptions"
+                    @change="(value) => handleSelectChange('purchaser', value, purchaserOptionMap)"
+                  />
                 </j-form-item>
 
                 <template #more>
@@ -237,8 +277,6 @@
   import moment from 'moment';
   import ReceiveSheetDetail from '@/views/sc/purchase/receive/detail.vue';
   import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
-  import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
-  import UserSelector from '@/components/Selector/UserSelector.vue';
   import {
     SearchOutlined,
     PlusOutlined,
@@ -249,6 +287,8 @@
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/purchase/return';
   import * as configApi from '@/api/sc/purchase/config';
+  import * as supplierApi from '@/api/base-data/supplier';
+  import * as userApi from '@/api/system/user';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
     isEmpty,
@@ -257,6 +297,13 @@
     getDateTimeWithMaxTime,
     buildSortPageVo,
   } from '@/utils/utils';
+  import {
+    buildSelectKeywords,
+    buildVisibleSelectOptions,
+    filterSelectOption,
+    mergeSelectOptionMap,
+    normalizeSelectValue,
+  } from '@/utils/searchSelect';
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
   import { PURCHASE_RETURN_STATUS } from '@/enums/biz/purchaseReturnStatus';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
@@ -270,8 +317,6 @@
       ApproveRefuse,
       ReceiveSheetDetail,
       StoreCenterSelector,
-      SupplierSelector,
-      UserSelector,
       BatchHandler,
     },
     mixins: [multiplePageMix],
@@ -299,18 +344,26 @@
         searchFormData: {
           code: '',
           scId: '',
-          supplierId: '',
-          createBy: '',
+          supplierId: undefined,
+          createBy: undefined,
           createStartTime: formatDateTime(getDateTimeWithMinTime(moment().subtract(1, 'M'))),
           createEndTime: formatDateTime(getDateTimeWithMaxTime(moment())),
-          approveBy: '',
+          approveBy: undefined,
           approveStartTime: '',
           approveEndTime: '',
           status: undefined,
-          purchaser: '',
+          purchaser: undefined,
           receiveSheetCode: '',
           settleStatus: undefined,
         },
+        supplierOptions: [],
+        supplierOptionMap: {},
+        createByOptions: [],
+        createByOptionMap: {},
+        approveByOptions: [],
+        approveByOptionMap: {},
+        purchaserOptions: [],
+        purchaserOptionMap: {},
         // 工具栏配置
         toolbarConfig: {
           // 自定义左侧工具栏
@@ -402,6 +455,108 @@
         });
 
         return params;
+      },
+      filterOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      handleSelectChange(field, value, optionMap) {
+        this.searchFormData[field] = normalizeSelectValue(value, optionMap);
+      },
+      async updateSelectOptions(keyword, requestFn, optionMapKey, optionsKey, selectedValueKey) {
+        const options = await requestFn(keyword);
+        const optionMap = mergeSelectOptionMap(this[optionMapKey], options);
+        this[optionMapKey] = optionMap;
+        this[optionsKey] = buildVisibleSelectOptions(
+          this.searchFormData[selectedValueKey],
+          optionMap,
+          options,
+        );
+      },
+      async requestSupplierOptions(keyword = '') {
+        const requests = keyword
+          ? [
+              { code: keyword, name: '' },
+              { code: '', name: keyword },
+            ]
+          : [{ code: '', name: '' }];
+        const responses = await Promise.all(
+          requests.map((params) =>
+            supplierApi.selector({
+              pageIndex: 1,
+              pageSize: 20,
+              ...params,
+            }),
+          ),
+        );
+
+        return responses
+          .flatMap((item) => item.datas || [])
+          .map((item) => ({
+            label: item.name,
+            value: item.id,
+            keywords: buildSelectKeywords(item.code, item.name),
+          }));
+      },
+      async requestUserOptions(keyword = '') {
+        const requests = keyword
+          ? [
+              { code: keyword, name: '', username: '', available: true },
+              { code: '', name: keyword, username: '', available: true },
+            ]
+          : [{ code: '', name: '', username: '', available: true }];
+        const responses = await Promise.all(
+          requests.map((params) =>
+            userApi.selector({
+              pageIndex: 1,
+              pageSize: 20,
+              ...params,
+            }),
+          ),
+        );
+
+        return responses
+          .flatMap((item) => item.datas || [])
+          .map((item) => ({
+            label: item.name,
+            value: item.id,
+            keywords: buildSelectKeywords(item.code, item.name, item.username),
+          }));
+      },
+      async loadSupplierOptions(keyword = '') {
+        await this.updateSelectOptions(
+          keyword,
+          this.requestSupplierOptions,
+          'supplierOptionMap',
+          'supplierOptions',
+          'supplierId',
+        );
+      },
+      async loadCreateByOptions(keyword = '') {
+        await this.updateSelectOptions(
+          keyword,
+          this.requestUserOptions,
+          'createByOptionMap',
+          'createByOptions',
+          'createBy',
+        );
+      },
+      async loadApproveByOptions(keyword = '') {
+        await this.updateSelectOptions(
+          keyword,
+          this.requestUserOptions,
+          'approveByOptionMap',
+          'approveByOptions',
+          'approveBy',
+        );
+      },
+      async loadPurchaserOptions(keyword = '') {
+        await this.updateSelectOptions(
+          keyword,
+          this.requestUserOptions,
+          'purchaserOptionMap',
+          'purchaserOptions',
+          'purchaser',
+        );
       },
       openAddDialog() {
         configApi.get().then((res) => {
