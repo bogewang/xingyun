@@ -391,8 +391,7 @@
       },
       // 返回销售出库查询页，避免在未缓存父页时回到默认首页
       goQueryPage() {
-        this.closeCurrentPage(false);
-        this.$router.push('/sc/sale/out/index');
+        this.closeCurrentPage();
       },
       // 初始化表单数据
       async initFormData() {
