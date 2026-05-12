@@ -157,7 +157,7 @@
               >
               <a-button
                 v-permission="['sale:out:query']"
-                :icon="h(PrinterOutlined)"
+                :icon="h(DownloadOutlined)"
                 @click="marketBuySummary"
                 >买菜汇总</a-button
               >
