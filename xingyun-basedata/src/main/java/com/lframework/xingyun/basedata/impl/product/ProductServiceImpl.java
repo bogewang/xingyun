@@ -35,12 +35,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product> implements
         ProductService {
+
+    private static final DateTimeFormatter PRODUCT_CODE_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
 
     @Autowired
     private RecursionMappingService recursionMappingService;
@@ -608,14 +612,17 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     private void check(List<ProductImportModel> list) {
         List<String> checkCodeList = Lists.newArrayList();
         List<String> checkSkuCodeList = Lists.newArrayList();
+        Map<String, Integer> checkNameSpecUnitMap = new HashMap<>();
         // 检查SKU编号是否重复
         List<Product> availableProducts = selectAllAvailable();
         Set<String> availableCodes = availableProducts.stream().map(Product::getCode).collect(Collectors.toSet());
         Set<String> availableSkuCodes = availableProducts.stream().map(Product::getSkuCode).collect(Collectors.toSet());
+        Set<String> availableNameSpecUnitKeys = availableProducts.stream().map(this::buildNameSpecUnitKey)
+                .collect(Collectors.toSet());
         // 检查分类编号是否重复
         List<ProductCategory> availableCategories = productCategoryService.getAllProductCategories();
         Map<String, String> categoryMap = availableCategories.stream()
-                .collect(Collectors.toMap(ProductCategory::getCode, ProductCategory::getId));
+                .collect(Collectors.toMap(ProductCategory::getName, ProductCategory::getId));
         // 检查品牌编号是否重复
         Map<String, String> brandMap = productBrandService.query(new QueryProductBrandVo())
                 .stream()
@@ -624,8 +631,13 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         List<String> parentCategoryIds = new ArrayList<>();
 
         for (int i = 0; i < list.size(); i++) {
-            checkRules(list, checkCodeList, checkSkuCodeList, availableCodes, availableSkuCodes, categoryMap, brandMap,
-                    parentCategoryIds, i);
+            ProductImportModel data = list.get(i);
+            if (StringUtil.isBlank(data.getCode())) {
+                data.setCode(generateProductCode(checkCodeList, availableCodes));
+            }
+
+            checkRules(list, checkCodeList, checkSkuCodeList, checkNameSpecUnitMap, availableCodes, availableSkuCodes,
+                    availableNameSpecUnitKeys, categoryMap, brandMap, parentCategoryIds, i);
         }
 
         checkIsLeafCategory(list, parentCategoryIds);
@@ -658,16 +670,19 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
      * @param list
      * @param checkCodeList
      * @param checkSkuCodeList
+     * @param checkNameSpecUnitMap
      * @param availableCodes
      * @param availableSkuCodes
+     * @param availableNameSpecUnitKeys
      * @param categoryMap
      * @param brandMap
      * @param parentCategoryIds
      * @param i
      */
     private void checkRules(List<ProductImportModel> list, List<String> checkCodeList, List<String> checkSkuCodeList,
-            Set<String> availableCodes, Set<String> availableSkuCodes, Map<String, String> categoryMap,
-            Map<String, String> brandMap, List<String> parentCategoryIds, int i) {
+            Map<String, Integer> checkNameSpecUnitMap, Set<String> availableCodes, Set<String> availableSkuCodes,
+            Set<String> availableNameSpecUnitKeys, Map<String, String> categoryMap, Map<String, String> brandMap,
+            List<String> parentCategoryIds, int i) {
         ProductImportModel data = list.get(i);
         int rowIndex = (i + 2);
         checkCode(checkCodeList, availableCodes, data, rowIndex);
@@ -675,6 +690,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         if (StringUtil.isBlank(data.getName())) {
             throw new DefaultClientException("第" + rowIndex + "行“名称”不能为空");
         }
+        checkNameSpecUnit(checkNameSpecUnitMap, availableNameSpecUnitKeys, data, rowIndex);
 
         if (StringUtil.isNotBlank(data.getSkuCode())) {
             checkSkuCode(checkSkuCodeList, availableSkuCodes, data, rowIndex);
@@ -722,16 +738,16 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
      */
     private void checkCategory(Map<String, String> categoryMap, List<String> parentCategoryIds, ProductImportModel data,
             int rowIndex) {
-        if (StringUtil.isBlank(data.getCategoryCode())) {
-            throw new DefaultClientException("第" + rowIndex + "行“分类编号”不能为空");
+        if (StringUtil.isBlank(data.getCategoryName())) {
+            throw new DefaultClientException("第" + rowIndex + "行“商品分类”不能为空");
         }
 
-        if (!categoryMap.containsKey(data.getCategoryCode())) {
-            throw new DefaultClientException("第" + rowIndex + "行“分类编号”不存在，请检查");
+        if (!categoryMap.containsKey(data.getCategoryName())) {
+            throw new DefaultClientException("第" + rowIndex + "行“商品分类”不存在，请检查");
         }
 
         parentCategoryIds.add(data.getCategoryId());
-        data.setCategoryId(categoryMap.get(data.getCategoryCode()));
+        data.setCategoryId(categoryMap.get(data.getCategoryName()));
     }
 
     /**
@@ -802,5 +818,57 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         if (availableCodes.contains(data.getCode())) {
             throw new DefaultClientException("第" + rowIndex + "行“编号”已存在");
         }
+    }
+
+    /**
+     * 名称+规格+单位 校验
+     * @param checkNameSpecUnitMap
+     * @param availableNameSpecUnitKeys
+     * @param data
+     * @param rowIndex
+     */
+    private void checkNameSpecUnit(Map<String, Integer> checkNameSpecUnitMap, Set<String> availableNameSpecUnitKeys,
+            ProductImportModel data, int rowIndex) {
+        String key = buildNameSpecUnitKey(data);
+        Integer existsRowIndex = checkNameSpecUnitMap.get(key);
+        if (existsRowIndex != null) {
+            throw new DefaultClientException(
+                    "第" + rowIndex + "行“名称+规格+单位”与第" + existsRowIndex + "行重复");
+        }
+        if (availableNameSpecUnitKeys.contains(key)) {
+            throw new DefaultClientException("第" + rowIndex + "行“名称+规格+单位”已存在");
+        }
+        checkNameSpecUnitMap.put(key, rowIndex);
+    }
+
+    private String generateProductCode(List<String> checkCodeList, Set<String> availableCodes) {
+        String prefix = "P" + LocalDate.now().format(PRODUCT_CODE_DATE_FORMATTER);
+        int sequence = 1;
+        while (true) {
+            String code = prefix + String.format("%05d", sequence);
+            if (!checkCodeList.contains(code) && !availableCodes.contains(code) && !existsProductCode(code)) {
+                return code;
+            }
+            sequence++;
+        }
+    }
+
+    private boolean existsProductCode(String code) {
+        Wrapper<Product> checkWrapper = Wrappers.lambdaQuery(Product.class).eq(Product::getCode, code)
+                .eq(Product::getAvailable, Boolean.TRUE);
+        return getBaseMapper().selectCount(checkWrapper) > 0;
+    }
+
+    private String buildNameSpecUnitKey(ProductImportModel data) {
+        return buildNameSpecUnitKey(data.getName(), data.getSpec(), data.getUnit());
+    }
+
+    private String buildNameSpecUnitKey(Product data) {
+        return buildNameSpecUnitKey(data.getName(), data.getSpec(), data.getUnit());
+    }
+
+    private String buildNameSpecUnitKey(String name, String spec, String unit) {
+        return Objects.toString(name, "").trim() + "||" + Objects.toString(spec, "").trim() + "||"
+                + Objects.toString(unit, "").trim();
     }
 }
