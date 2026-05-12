@@ -229,7 +229,7 @@ public class BaseDataSelectorController extends DefaultBaseController {
    */
   @ApiOperation("会员")
   @GetMapping("/member")
-  public InvokeResult<PageResult<MemberSelectorBo>> selector(@Valid QueryMemberSelectorVo vo) {
+  public InvokeResult<PageResult<MemberSelectorBo>> memberSelector(@Valid QueryMemberSelectorVo vo) {
 
     PageResult<Member> pageResult = memberService.selector(getPageIndex(vo), getPageSize(vo), vo);
     List<Member> datas = pageResult.getDatas();
@@ -307,15 +307,15 @@ public class BaseDataSelectorController extends DefaultBaseController {
    */
   @ApiOperation("供应商")
   @GetMapping("/supplier")
-  public InvokeResult<PageResult<SupplierSelectorBo>> selector(@Valid QuerySupplierSelectorVo vo) {
+  public InvokeResult<PageResult<SelectorBo>> supplierSelector(@Valid QuerySelectorVo vo) {
 
-    PageResult<Supplier> pageResult = supplierService.selector(getPageIndex(vo), getPageSize(vo),
-        vo);
+    QuerySupplierSelectorVo supplierSelectorVo = QuerySupplierSelectorVo.builder().name(vo.getLabel()).build();
+    PageResult<Supplier> pageResult = supplierService.selector(getPageIndex(vo), getPageSize(vo), supplierSelectorVo);
     List<Supplier> datas = pageResult.getDatas();
-    List<SupplierSelectorBo> results = null;
+    List<SelectorBo> results = null;
 
     if (!CollectionUtil.isEmpty(datas)) {
-      results = datas.stream().map(SupplierSelectorBo::new).collect(Collectors.toList());
+      results = datas.stream().map(item -> SelectorBo.builder().value(item.getId()).label(item.getName()).build()).collect(Collectors.toList());
     }
 
     return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
@@ -346,7 +346,7 @@ public class BaseDataSelectorController extends DefaultBaseController {
    */
   @ApiOperation("客户")
   @GetMapping("/customer")
-  public InvokeResult<PageResult<SelectorBo>> selector(@Valid QuerySelectorVo vo) {
+  public InvokeResult<PageResult<SelectorBo>> customerSelector(@Valid QuerySelectorVo vo) {
 
     QueryCustomerSelectorVo customerSelectorVo = QueryCustomerSelectorVo.builder().name(vo.getLabel()).build();
     PageResult<Customer> pageResult = customerService.selector(getPageIndex(vo), getPageSize(vo), customerSelectorVo);
@@ -385,7 +385,7 @@ public class BaseDataSelectorController extends DefaultBaseController {
    */
   @ApiOperation("门店")
   @GetMapping("/shop")
-  public InvokeResult<PageResult<ShopSelectorBo>> selector(@Valid ShopSelectorVo vo) {
+  public InvokeResult<PageResult<ShopSelectorBo>> shopSelector(@Valid ShopSelectorVo vo) {
 
     LambdaQueryWrapper<Shop> queryWrapper = Wrappers.lambdaQuery(Shop.class)
         .orderByAsc(Shop::getCode);
@@ -437,7 +437,7 @@ public class BaseDataSelectorController extends DefaultBaseController {
    */
   @ApiOperation("地址")
   @GetMapping("/address")
-  public InvokeResult<PageResult<AddressSelectorBo>> selector(@Valid AddressSelectorVo vo) {
+  public InvokeResult<PageResult<AddressSelectorBo>> addressSelector(@Valid AddressSelectorVo vo) {
 
     PageResult<Address> pageResult = addressService.selector(getPageIndex(vo), getPageSize(vo),
         vo);
@@ -478,7 +478,7 @@ public class BaseDataSelectorController extends DefaultBaseController {
    */
   @ApiOperation("默认地址")
   @GetMapping("/address/default")
-  public InvokeResult<AddressSelectorBo> selector(
+  public InvokeResult<AddressSelectorBo> defaultAddressSelector(
       @NotBlank(message = "实体ID不能为空！") String entityId,
       @NotNull(message = "实体类型不能为空！") @IsEnum(message = "实体类型格式错误！", enumClass = AddressEntityType.class) Integer entityType,
       @NotNull(message = "地址类型不能为空！") @IsEnum(message = "地址类型格式错误！", enumClass = AddressType.class) Integer addressType) {
@@ -497,7 +497,7 @@ public class BaseDataSelectorController extends DefaultBaseController {
    */
   @ApiOperation("支付方式")
   @GetMapping("/paytype")
-  public InvokeResult<PageResult<PayTypeSelectorBo>> selector(@Valid PayTypeSelectorVo vo) {
+  public InvokeResult<PageResult<PayTypeSelectorBo>> payTypeSelector(@Valid PayTypeSelectorVo vo) {
 
     PageResult<PayType> pageResult = payTypeService.selector(getPageIndex(vo), getPageSize(vo),
         vo);
@@ -538,7 +538,7 @@ public class BaseDataSelectorController extends DefaultBaseController {
    */
   @ApiOperation("物流公司")
   @GetMapping("/logistics/company")
-  public InvokeResult<PageResult<LogisticsCompanySelectorBo>> selector(
+  public InvokeResult<PageResult<LogisticsCompanySelectorBo>> logisticsCompanySelector(
       @Valid QueryLogisticsCompanySelectorVo vo) {
 
     PageResult<LogisticsCompany> pageResult = logisticsCompanyService.selector(getPageIndex(vo),
