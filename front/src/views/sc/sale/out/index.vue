@@ -164,6 +164,11 @@
             </a-space>
           </template>
 
+          <!-- 单据号 列自定义内容 -->
+          <template #code_default="{ row }">
+            <a @click="viewDetail(row.id)">{{ row.code }}</a>
+          </template>
+
           <!-- 销售订单号 列自定义内容 -->
           <template #saleOrderCode_default="{ row }">
             <span v-if="isEmpty(row.saleOrderCode)">-</span>
@@ -343,7 +348,7 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
-          { field: 'code', title: '单据号', width: 180, sortable: true },
+          { field: 'code', title: '单据号', width: 180, sortable: true, slots: { default: 'code_default' } },
           { field: 'customerName', title: '客户名称', width: 120 },
           { field: 'orderDate', title: '订单日期', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
@@ -627,13 +632,16 @@
         this.saleOrderId = id;
         this.$nextTick(() => this.$refs.viewSaleOrderDetailDialog.openDialog());
       },
+      viewDetail(id) {
+        this.id = id;
+        this.$nextTick(() => this.$refs.viewDialog.openDialog());
+      },
       createActions(row) {
         return [
           {
             label: '查看',
             onClick: () => {
-              this.id = row.id;
-              this.$nextTick(() => this.$refs.viewDialog.openDialog());
+              this.viewDetail(row.id);
             },
           },
           {
