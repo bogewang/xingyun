@@ -36,8 +36,7 @@ public class ReceiveSheetDetailExportTaskWorker implements
       return PageResultUtil.convert(new PageInfo<>());
     }
 
-    ReceiveSheetDetailService receiveSheetDetailService = ApplicationUtil.getBean(
-        ReceiveSheetDetailService.class);
+    ReceiveSheetDetailService receiveSheetDetailService = ApplicationUtil.getBean(ReceiveSheetDetailService.class);
     List<ReceiveSheetDetail> details = receiveSheetDetailService.list(
         Wrappers.lambdaQuery(ReceiveSheetDetail.class).in(ReceiveSheetDetail::getSheetId, sheetIds));
 

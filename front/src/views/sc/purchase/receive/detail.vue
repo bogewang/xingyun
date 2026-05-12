@@ -133,7 +133,6 @@
       <template #footer>
         <div class="form-modal-footer">
           <a-space>
-            <a-button type="primary" :loading="loading" @click="print">打印</a-button>
             <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
             <a-button :loading="loading" @click="closeDialog">关闭</a-button>
           </a-space>
