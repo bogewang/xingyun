@@ -17,10 +17,7 @@ import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.components.security.SecurityUtil;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
-import com.lframework.starter.web.core.utils.IdUtil;
-import com.lframework.starter.web.core.utils.OpLogUtil;
-import com.lframework.starter.web.core.utils.PageHelperUtil;
-import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.starter.web.core.utils.*;
 import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
@@ -28,11 +25,7 @@ import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineB
 import com.lframework.starter.web.inner.entity.SysUser;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
-import com.lframework.xingyun.basedata.entity.Customer;
-import com.lframework.xingyun.basedata.entity.Product;
-import com.lframework.xingyun.basedata.entity.ProductBundle;
-import com.lframework.xingyun.basedata.entity.ProductCategory;
-import com.lframework.xingyun.basedata.entity.StoreCenter;
+import com.lframework.xingyun.basedata.entity.*;
 import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.enums.SettleType;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
@@ -41,8 +34,8 @@ import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.core.utils.SplitNumberUtil;
-import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
+import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
@@ -198,6 +191,33 @@ public class SaleOutSheetServiceImpl extends
     });
 
     return res;
+  }
+
+  @Override
+  public void marketBuySummary(QuerySaleOutSheetVo vo) {
+    Map<String, String> headerMap = new HashMap<>();
+    headerMap.put("category", "商品分类");
+    headerMap.put("productName", "商品名称");
+    headerMap.put("unit", "单位");
+
+    List<Map<String, String>> data = new ArrayList<>();
+
+    // 表头
+    headerMap.put("customer1", "客户1");
+    headerMap.put("customer2", "客户2");
+    headerMap.put("total", "总计");
+
+    // 数据
+    Map<String, String> map = new HashMap<>();
+    map.put("category", "蔬菜");
+    map.put("productName", "大白菜");
+    map.put("unit", "公斤");
+    map.put("customer1", "100（这里是备注）");
+    map.put("customer2", "200（这里是备注）");
+    map.put("total", "300");
+    data.add(map);
+
+    ExcelUtil.exportNoModel("买菜汇总", headerMap, data);
   }
 
   @Override

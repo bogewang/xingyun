@@ -158,6 +158,12 @@
               <a-button
                 v-permission="['sale:out:query']"
                 :icon="h(PrinterOutlined)"
+                @click="marketBuySummary"
+                >买菜汇总</a-button
+              >
+              <a-button
+                v-permission="['sale:out:query']"
+                :icon="h(PrinterOutlined)"
                 @click="tagPrint"
                 >标签打印</a-button
               >
@@ -627,6 +633,14 @@
         } finally {
           this.loading = false;
         }
+      },
+      marketBuySummary() {
+        this.loading = true;
+        api
+          .exportMarketBuySummary(this.buildSearchFormData())
+          .finally(() => {
+            this.loading = false;
+          });
       },
       viewSaleOrderDetail(id) {
         this.saleOrderId = id;

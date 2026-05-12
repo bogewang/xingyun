@@ -67,6 +67,22 @@ export function tagPrint(params: QuerySaleOutSheetVo): Promise<PrintSaleTagBo[]>
 }
 
 /**
+ * 买菜汇总导出
+ */
+export function exportMarketBuySummary(params: QuerySaleOutSheetVo): Promise<void> {
+  return defHttp.get<void>(
+    {
+      url: baseUrl + '/export/marketBuySummary',
+      params,
+    },
+    {
+      region,
+      responseType: ResponseEnum.BLOB,
+    },
+  );
+}
+
+/**
  * 导出
  */
 export function exportList(data: QuerySaleOutSheetVo): Promise<void> {

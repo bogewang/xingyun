@@ -160,4 +160,6 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   List<SaleOutProductVo> checkImport(List<SaleOutSheetImportModel> list);
 
   List<PrintSaleTagBo> tagPrint(QuerySaleOutSheetVo vo);
+
+  void marketBuySummary(QuerySaleOutSheetVo vo);
 }

@@ -1,6 +1,7 @@
 package com.lframework.xingyun.sc.controller.sale;
 
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
+import com.lframework.starter.common.exceptions.impl.DefaultSysException;
 import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.mq.core.utils.ExportTaskUtil;
 import com.lframework.starter.web.core.annotations.security.HasPermission;
@@ -11,11 +12,14 @@ import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.utils.EasyExcelUtils;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
-import com.lframework.xingyun.sc.bo.sale.PrintSaleOrderBo;
-import com.lframework.xingyun.sc.converter.SaleOutSheetConverter;
 import com.lframework.xingyun.sc.bo.purchase.receive.GetPaymentDateBo;
+import com.lframework.xingyun.sc.bo.sale.PrintSaleOrderBo;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
-import com.lframework.xingyun.sc.bo.sale.out.*;
+import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
+import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetBo;
+import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetWithReturnBo;
+import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetWithReturnBo;
+import com.lframework.xingyun.sc.converter.SaleOutSheetConverter;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
@@ -107,6 +111,21 @@ public class SaleOutSheetController extends DefaultBaseController {
         List<PrintSaleTagBo> data = saleOutSheetService.tagPrint(vo);
 
         return InvokeResultBuilder.success(data);
+    }
+
+    /**
+     * 买菜汇总导出
+     */
+    @ApiOperation("买菜汇总导出")
+    @HasPermission({ "sale:out:query" })
+    @GetMapping("/export/marketBuySummary")
+    public void exportMarketBuySummary(@Valid QuerySaleOutSheetVo vo) {
+        try {
+            saleOutSheetService.marketBuySummary(vo);
+        } catch (Exception e) {
+            log.error("导出买菜汇总失败", e);
+            throw new DefaultSysException("导出买菜汇总失败！");
+        }
     }
 
     /**
