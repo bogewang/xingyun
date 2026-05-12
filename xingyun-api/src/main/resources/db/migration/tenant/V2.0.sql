@@ -32,3 +32,10 @@ ALTER TABLE tbl_purchase_order modify `sc_id` varchar(32) NULL COMMENT '仓库ID
 ALTER TABLE tbl_receive_sheet modify `sc_id` varchar(32) NULL COMMENT '仓库ID';
 
 alter table tbl_sale_out_sheet_detail modify discount_rate decimal(16,2) NULL COMMENT '折扣率（%）';
+
+
+alter table base_data_supplier modify `mnemonic_code` varchar(20) NULL COMMENT '简码';
+
+
+ALTER TABLE `base_data_supplier` ADD COLUMN `unpaid_amount` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '未支付金额';
+ALTER TABLE `base_data_supplier` ADD COLUMN `paid_amount` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '已支付金额';
