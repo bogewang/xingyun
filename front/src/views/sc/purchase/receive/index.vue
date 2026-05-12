@@ -27,47 +27,61 @@
                 </j-form-item>
 
                 <j-form-item label="供应商">
-                  <supplier-selector v-model:value="searchFormData.supplierId" />
+                  <a-select
+                    v-model:value="searchFormData.supplierId"
+                    allow-clear
+                    show-search
+                    :filter-option="filterSelectOption"
+                    :options="supplierOptions"
+                    placeholder="请选择供应商"
+                    @focus="loadSupplierOptions()"
+                    @search="loadSupplierOptions"
+                    @change="onSupplierChange"
+                  />
                 </j-form-item>
 
                 <j-form-item label="操作人">
-                  <user-selector v-model:value="searchFormData.createBy" />
+                  <a-select
+                    v-model:value="searchFormData.createBy"
+                    allow-clear
+                    show-search
+                    :filter-option="filterSelectOption"
+                    :options="createByOptions"
+                    placeholder="请选择操作人"
+                    @focus="loadCreateByOptions()"
+                    @search="loadCreateByOptions"
+                    @change="onCreateByChange"
+                  />
                 </j-form-item>
 
-                <j-form-item label="订单日期" :content-nest="false">
-                  <div class="date-range-container">
-                    <a-date-picker
-                      v-model:value="searchFormData.orderDateStart"
-                      placeholder=""
-                      value-format="YYYY-MM-DD"
-                    />
-                    <span class="date-split">至</span>
-                    <a-date-picker
-                      v-model:value="searchFormData.orderDateEnd"
-                      placeholder=""
-                      value-format="YYYY-MM-DD"
-                    />
-                  </div>
+                <j-form-item label="订单日期">
+                  <a-range-picker
+                    v-model:value="orderDateRange"
+                    value-format="YYYY-MM-DD"
+                    :placeholder="['开始日期', '结束日期']"
+                  />
                 </j-form-item>
 
                 <j-form-item label="审核人">
-                  <user-selector v-model:value="searchFormData.approveBy" />
+                  <a-select
+                    v-model:value="searchFormData.approveBy"
+                    allow-clear
+                    show-search
+                    :filter-option="filterSelectOption"
+                    :options="approveByOptions"
+                    placeholder="请选择审核人"
+                    @focus="loadApproveByOptions()"
+                    @search="loadApproveByOptions"
+                    @change="onApproveByChange"
+                  />
                 </j-form-item>
 
-                <j-form-item label="审核日期" :content-nest="false">
-                  <div class="date-range-container">
-                    <a-date-picker
-                      v-model:value="searchFormData.approveStartTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 00:00:00"
-                    />
-                    <span class="date-split">至</span>
-                    <a-date-picker
-                      v-model:value="searchFormData.approveEndTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 23:59:59"
-                    />
-                  </div>
+                <j-form-item label="审核日期">
+                  <a-range-picker
+                    v-model:value="approveDateRange"
+                    value-format="YYYY-MM-DD"
+                    :placeholder="['开始日期', '结束日期']"
+                  />
                 </j-form-item>
 
                 <j-form-item label="状态">
@@ -227,8 +241,6 @@
   import ApproveRefuse from '@/components/ApproveRefuse';
   import PurchaseOrderDetail from '@/views/sc/purchase/order/detail.vue';
   import moment from 'moment';
-  import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
-  import UserSelector from '@/components/Selector/UserSelector.vue';
   import {
     CheckOutlined,
     CloseOutlined,
@@ -239,14 +251,17 @@
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/purchase/receive';
   import * as configApi from '@/api/sc/purchase/config';
+  import * as supplierApi from '@/api/base-data/supplier';
+  import * as userApi from '@/api/system/user';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { isEmpty, buildSortPageVo } from '@/utils/utils';
   import {
-    isEmpty,
-    formatDateTime,
-    getDateTimeWithMinTime,
-    getDateTimeWithMaxTime,
-    buildSortPageVo,
-  } from '@/utils/utils';
+    buildSelectKeywords,
+    buildVisibleSelectOptions,
+    filterSelectOption,
+    mergeSelectOptionMap,
+    normalizeSelectValue,
+  } from '@/utils/searchSelect';
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
   import ReceiveSheetPayTypeImporter from '@/components/Importor/ReceiveSheetPayTypeImporter.vue';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
@@ -261,8 +276,6 @@
       ApproveRefuse,
       PurchaseOrderDetail,
       ReceiveSheetPayTypeImporter,
-      SupplierSelector,
-      UserSelector,
       BatchHandler,
     },
     mixins: [multiplePageMix],
@@ -289,18 +302,25 @@
         // 查询列表的查询条件
         searchFormData: {
           code: '',
-          supplierId: '',
-          createBy: '',
-          orderDateStart: moment().subtract(1, 'M').format('YYYY-MM-DD'),
-          orderDateEnd: moment().format('YYYY-MM-DD'),
-          approveBy: '',
-          approveStartTime: '',
-          approveEndTime: '',
+          supplierId: undefined,
+          createBy: undefined,
+          approveBy: undefined,
           status: undefined,
           purchaser: '',
           purchaseOrderCode: '',
           settleStatus: undefined,
         },
+        orderDateRange: [
+          moment().subtract(1, 'M').format('YYYY-MM-DD'),
+          moment().format('YYYY-MM-DD'),
+        ],
+        approveDateRange: [],
+        supplierOptions: [],
+        supplierOptionMap: {},
+        createByOptions: [],
+        createByOptionMap: {},
+        approveByOptions: [],
+        approveByOptionMap: {},
         // 工具栏配置
         toolbarConfig: {
           // 自定义左侧工具栏
@@ -385,11 +405,120 @@
         const params = Object.assign({}, this.searchFormData, {
           supplierId: this.searchFormData.supplierId,
           createBy: this.searchFormData.createBy,
+          orderDateStart: this.orderDateRange?.[0] || '',
+          orderDateEnd: this.orderDateRange?.[1] || '',
           approveBy: this.searchFormData.approveBy,
+          approveStartTime: this.approveDateRange?.[0]
+            ? `${this.approveDateRange[0]} 00:00:00`
+            : '',
+          approveEndTime: this.approveDateRange?.[1] ? `${this.approveDateRange[1]} 23:59:59` : '',
           purchaserId: this.searchFormData.purchaser,
         });
 
         return params;
+      },
+      filterSelectOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      async updateSelectOptions(keyword, requestFn, optionMapKey, optionsKey, selectedValueKey) {
+        const options = await requestFn(keyword);
+        const optionMap = mergeSelectOptionMap(this[optionMapKey], options);
+
+        this[optionMapKey] = optionMap;
+        this[optionsKey] = buildVisibleSelectOptions(
+          this.searchFormData[selectedValueKey],
+          optionMap,
+          options,
+        );
+      },
+      async requestSupplierOptions(keyword = '') {
+        const requests = keyword
+          ? [
+              { code: keyword, name: '' },
+              { code: '', name: keyword },
+            ]
+          : [{ code: '', name: '' }];
+        const responses = await Promise.all(
+          requests.map((params) =>
+            supplierApi.selector({
+              pageIndex: 1,
+              pageSize: 20,
+              ...params,
+            }),
+          ),
+        );
+
+        const records = responses.flatMap((item) => item.datas || []);
+
+        return records.map((item) => ({
+          label: item.name,
+          value: item.id,
+          keywords: buildSelectKeywords(item.code, item.name),
+        }));
+      },
+      async requestUserOptions(keyword = '') {
+        const requests = keyword
+          ? [
+              { code: keyword, name: '', username: '', available: true },
+              { code: '', name: keyword, username: '', available: true },
+            ]
+          : [{ code: '', name: '', username: '', available: true }];
+        const responses = await Promise.all(
+          requests.map((params) =>
+            userApi.selector({
+              pageIndex: 1,
+              pageSize: 20,
+              ...params,
+            }),
+          ),
+        );
+
+        const records = responses.flatMap((item) => item.datas || []);
+
+        return records.map((item) => ({
+          label: item.name,
+          value: item.id,
+          keywords: buildSelectKeywords(item.code, item.name, item.username),
+        }));
+      },
+      async loadSupplierOptions(keyword = '') {
+        await this.updateSelectOptions(
+          keyword,
+          this.requestSupplierOptions,
+          'supplierOptionMap',
+          'supplierOptions',
+          'supplierId',
+        );
+      },
+      async loadCreateByOptions(keyword = '') {
+        await this.updateSelectOptions(
+          keyword,
+          this.requestUserOptions,
+          'createByOptionMap',
+          'createByOptions',
+          'createBy',
+        );
+      },
+      async loadApproveByOptions(keyword = '') {
+        await this.updateSelectOptions(
+          keyword,
+          this.requestUserOptions,
+          'approveByOptionMap',
+          'approveByOptions',
+          'approveBy',
+        );
+      },
+      normalizeSelectValue(value, optionMap) {
+        return normalizeSelectValue(value, optionMap);
+      },
+      onSupplierChange(value) {
+        this.searchFormData.supplierId = this.normalizeSelectValue(value, this.supplierOptionMap);
+      },
+      onCreateByChange(value) {
+        this.searchFormData.createBy = this.normalizeSelectValue(value, this.createByOptionMap);
+      },
+      onApproveByChange(value) {
+        this.searchFormData.approveBy = this.normalizeSelectValue(value, this.approveByOptionMap);
       },
       openAddDialog() {
         configApi.get().then((res) => {

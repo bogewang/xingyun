@@ -27,51 +27,65 @@
                 </j-form-item>
 
                 <j-form-item label="客户">
-                  <customer-selector v-model:value="searchFormData.customerId" />
+                  <a-select
+                    v-model:value="searchFormData.customerId"
+                    allow-clear
+                    show-search
+                    :filter-option="filterSelectOption"
+                    :options="customerOptions"
+                    placeholder="请选择客户"
+                    @focus="loadCustomerOptions()"
+                    @search="loadCustomerOptions"
+                    @change="onCustomerChange"
+                  />
                 </j-form-item>
 
-<!--                <j-form-item label="仓库">-->
-<!--                  <store-center-selector v-model:value="searchFormData.scId" />-->
-<!--                </j-form-item>-->
+                <!-- <j-form-item label="仓库">
+                  <store-center-selector v-model:value="searchFormData.scId" />
+                </j-form-item> -->
 
                 <j-form-item label="操作人">
-                  <user-selector v-model:value="searchFormData.createBy" />
+                  <a-select
+                    v-model:value="searchFormData.createBy"
+                    allow-clear
+                    show-search
+                    :filter-option="filterSelectOption"
+                    :options="createByOptions"
+                    placeholder="请选择操作人"
+                    @focus="loadCreateByOptions()"
+                    @search="loadCreateByOptions"
+                    @change="onCreateByChange"
+                  />
                 </j-form-item>
 
-                <j-form-item label="订单日期" :content-nest="false">
-                  <div class="date-range-container">
-                    <a-date-picker
-                      v-model:value="searchFormData.orderDateStart"
-                      placeholder=""
-                      value-format="YYYY-MM-DD"
-                    />
-                    <span class="date-split">至</span>
-                    <a-date-picker
-                      v-model:value="searchFormData.orderDateEnd"
-                      placeholder=""
-                      value-format="YYYY-MM-DD"
-                    />
-                  </div>
+                <j-form-item label="订单日期">
+                  <a-range-picker
+                    v-model:value="orderDateRange"
+                    value-format="YYYY-MM-DD"
+                    :placeholder="['开始日期', '结束日期']"
+                  />
                 </j-form-item>
 
                 <j-form-item label="审核人">
-                  <user-selector v-model:value="searchFormData.approveBy" />
+                  <a-select
+                    v-model:value="searchFormData.approveBy"
+                    allow-clear
+                    show-search
+                    :filter-option="filterSelectOption"
+                    :options="approveByOptions"
+                    placeholder="请选择审核人"
+                    @focus="loadApproveByOptions()"
+                    @search="loadApproveByOptions"
+                    @change="onApproveByChange"
+                  />
                 </j-form-item>
 
-                <j-form-item label="审核日期" :content-nest="false">
-                  <div class="date-range-container">
-                    <a-date-picker
-                      v-model:value="searchFormData.approveStartTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 00:00:00"
-                    />
-                    <span class="date-split">至</span>
-                    <a-date-picker
-                      v-model:value="searchFormData.approveEndTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 23:59:59"
-                    />
-                  </div>
+                <j-form-item label="审核日期">
+                  <a-range-picker
+                    v-model:value="approveDateRange"
+                    value-format="YYYY-MM-DD"
+                    :placeholder="['开始日期', '结束日期']"
+                  />
                 </j-form-item>
 
                 <j-form-item label="状态">
@@ -84,10 +98,6 @@
                     >
                   </a-select>
                 </j-form-item>
-
-<!--                <j-form-item label="销售员">-->
-<!--                  <user-selector v-model:value="searchFormData.saler" />-->
-<!--                </j-form-item>-->
 
                 <template #more>
                   <j-form-item label="销售订单号">
@@ -242,8 +252,6 @@
   import ApproveRefuse from '@/components/ApproveRefuse';
   import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
   import moment from 'moment';
-  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
-  import UserSelector from '@/components/Selector/UserSelector.vue';
   import {
     SearchOutlined,
     PlusOutlined,
@@ -255,17 +263,19 @@
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
   import * as configApi from '@/api/sc/sale/config';
+  import * as customerApi from '@/api/base-data/customer';
+  import * as userApi from '@/api/system/user';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { printMix } from '@/mixins/print.ts';
+  import { isEmpty, buildSortPageVo } from '@/utils/utils';
   import {
-    isEmpty,
-    formatDateTime,
-    getDateTimeWithMinTime,
-    getDateTimeWithMaxTime,
-    buildSortPageVo,
-  } from '@/utils/utils';
+    buildSelectKeywords,
+    buildVisibleSelectOptions,
+    filterSelectOption,
+    mergeSelectOptionMap,
+    normalizeSelectValue,
+  } from '@/utils/searchSelect';
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
-  import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
@@ -279,9 +289,6 @@
       Detail,
       ApproveRefuse,
       SaleOrderDetail,
-      CustomerSelector,
-      StoreCenterSelector,
-      UserSelector,
       BatchHandler,
       OrderPrintDialog: PrintDialog,
     },
@@ -311,18 +318,25 @@
         searchFormData: {
           code: '',
           scId: '',
-          customerId: '',
-          createBy: '',
-          orderDateStart: moment().subtract(1, 'M').format('YYYY-MM-DD'),
-          orderDateEnd: moment().format('YYYY-MM-DD'),
-          approveBy: '',
-          approveStartTime: '',
-          approveEndTime: '',
+          customerId: undefined,
+          createBy: undefined,
+          approveBy: undefined,
           status: undefined,
           saler: '',
           saleOrderCode: '',
           settleStatus: undefined,
         },
+        orderDateRange: [
+          moment().subtract(1, 'M').format('YYYY-MM-DD'),
+          moment().format('YYYY-MM-DD'),
+        ],
+        approveDateRange: [],
+        customerOptions: [],
+        customerOptionMap: {},
+        createByOptions: [],
+        createByOptionMap: {},
+        approveByOptions: [],
+        approveByOptionMap: {},
         // 工具栏配置
         toolbarConfig: {
           // 自定义左侧工具栏
@@ -335,12 +349,8 @@
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
           { field: 'code', title: '单据号', width: 180, sortable: true },
-          // { field: 'scCode', title: '仓库编号', width: 100 },
-          // { field: 'scName', title: '仓库名称', width: 120 },
-          // { field: 'customerCode', title: '客户编号', width: 100 },
           { field: 'customerName', title: '客户名称', width: 120 },
           { field: 'orderDate', title: '订单日期', width: 120 },
-          // { field: 'salerName', title: '销售员', width: 100 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
           { field: 'totalProfit', title: '总利润', align: 'right', width: 100 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
@@ -356,21 +366,7 @@
           },
           { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
           { field: 'approveBy', title: '审核人', width: 100 },
-          // {
-          //   field: 'settleStatus',
-          //   title: '结算状态',
-          //   width: 100,
-          //   formatter: ({ cellValue }) => {
-          //     return SETTLE_STATUS.getDesc(cellValue);
-          //   },
-          // },
           { field: 'description', title: '备注', width: 200 },
-          // {
-          //   field: 'saleOrderCode',
-          //   title: '销售订单号',
-          //   width: 180,
-          //   slots: { default: 'saleOrderCode_default' },
-          // },
           { title: '操作', width: 200, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
@@ -411,11 +407,121 @@
           customerId: this.searchFormData.customerId,
           scId: this.searchFormData.scId,
           createBy: this.searchFormData.createBy,
+          orderDateStart: this.orderDateRange?.[0] || '',
+          orderDateEnd: this.orderDateRange?.[1] || '',
           approveBy: this.searchFormData.approveBy,
+          approveStartTime: this.approveDateRange?.[0]
+            ? `${this.approveDateRange[0]} 00:00:00`
+            : '',
+          approveEndTime: this.approveDateRange?.[1] ? `${this.approveDateRange[1]} 23:59:59` : '',
           salerId: this.searchFormData.saler,
         });
 
         return params;
+      },
+      filterSelectOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      async updateSelectOptions(keyword, requestFn, optionMapKey, optionsKey, selectedValueKey) {
+        const options = await requestFn(keyword);
+        const optionMap = mergeSelectOptionMap(this[optionMapKey], options);
+
+        this[optionMapKey] = optionMap;
+        this[optionsKey] = buildVisibleSelectOptions(
+          this.searchFormData[selectedValueKey],
+          optionMap,
+          options,
+        );
+      },
+      async requestCustomerOptions(keyword = '') {
+        const requests = keyword
+          ? [
+              { code: keyword, name: '', nickName: '' },
+              { code: '', name: keyword, nickName: '' },
+              { code: '', name: '', nickName: keyword },
+            ]
+          : [{ code: '', name: '', nickName: '' }];
+        const responses = await Promise.all(
+          requests.map((params) =>
+            customerApi.selector({
+              pageIndex: 1,
+              pageSize: 20,
+              ...params,
+            }),
+          ),
+        );
+
+        const records = responses.flatMap((item) => item.datas || []);
+
+        return records.map((item) => ({
+          label: item.name,
+          value: item.id,
+          keywords: buildSelectKeywords(item.code, item.name, item.nickName),
+        }));
+      },
+      async requestUserOptions(keyword = '') {
+        const requests = keyword
+          ? [
+              { code: keyword, name: '', username: '', available: true },
+              { code: '', name: keyword, username: '', available: true },
+            ]
+          : [{ code: '', name: '', username: '', available: true }];
+        const responses = await Promise.all(
+          requests.map((params) =>
+            userApi.selector({
+              pageIndex: 1,
+              pageSize: 20,
+              ...params,
+            }),
+          ),
+        );
+
+        const records = responses.flatMap((item) => item.datas || []);
+
+        return records.map((item) => ({
+          label: item.name,
+          value: item.id,
+          keywords: buildSelectKeywords(item.code, item.name, item.username),
+        }));
+      },
+      async loadCustomerOptions(keyword = '') {
+        await this.updateSelectOptions(
+          keyword,
+          this.requestCustomerOptions,
+          'customerOptionMap',
+          'customerOptions',
+          'customerId',
+        );
+      },
+      async loadCreateByOptions(keyword = '') {
+        await this.updateSelectOptions(
+          keyword,
+          this.requestUserOptions,
+          'createByOptionMap',
+          'createByOptions',
+          'createBy',
+        );
+      },
+      async loadApproveByOptions(keyword = '') {
+        await this.updateSelectOptions(
+          keyword,
+          this.requestUserOptions,
+          'approveByOptionMap',
+          'approveByOptions',
+          'approveBy',
+        );
+      },
+      normalizeSelectValue(value, optionMap) {
+        return normalizeSelectValue(value, optionMap);
+      },
+      onCustomerChange(value) {
+        this.searchFormData.customerId = this.normalizeSelectValue(value, this.customerOptionMap);
+      },
+      onCreateByChange(value) {
+        this.searchFormData.createBy = this.normalizeSelectValue(value, this.createByOptionMap);
+      },
+      onApproveByChange(value) {
+        this.searchFormData.approveBy = this.normalizeSelectValue(value, this.approveByOptionMap);
       },
       openAddDialog() {
         configApi.get().then((res) => {
