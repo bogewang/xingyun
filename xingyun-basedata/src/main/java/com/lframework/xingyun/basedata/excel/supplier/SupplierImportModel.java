@@ -20,7 +20,7 @@ public class SupplierImportModel implements ExcelModel {
   /**
    * 编号
    */
-  @ExcelRequired
+  // @ExcelRequired
   @ExcelProperty("编号")
   private String code;
 
@@ -34,7 +34,7 @@ public class SupplierImportModel implements ExcelModel {
   /**
    * 简码
    */
-  @ExcelRequired
+  // @ExcelRequired
   @ExcelProperty("简码")
   private String mnemonicCode;
 
@@ -95,7 +95,7 @@ public class SupplierImportModel implements ExcelModel {
   /**
    * 经营方式
    */
-  @ExcelRequired
+  // @ExcelRequired
   @ExcelProperty("经营方式")
   private String manageType;
 
@@ -108,7 +108,7 @@ public class SupplierImportModel implements ExcelModel {
   /**
    * 结算方式
    */
-  @ExcelRequired
+  // @ExcelRequired
   @ExcelProperty(value = "结算方式")
   private String settleType;
 
