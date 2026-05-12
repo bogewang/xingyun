@@ -39,3 +39,7 @@ alter table base_data_supplier modify `mnemonic_code` varchar(20) NULL COMMENT '
 
 ALTER TABLE `base_data_supplier` ADD COLUMN `unpaid_amount` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '未支付金额';
 ALTER TABLE `base_data_supplier` ADD COLUMN `paid_amount` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '已支付金额';
+ALTER TABLE `base_data_customer` ADD COLUMN `unpaid_amount` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '未支付金额';
+ALTER TABLE `base_data_customer` ADD COLUMN `paid_amount` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '已支付金额';
+ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `paid_amount` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '已支付金额';
+ALTER TABLE `tbl_receive_sheet` ADD COLUMN `paid_amount` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '已支付金额';

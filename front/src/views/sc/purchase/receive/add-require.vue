@@ -472,8 +472,13 @@
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
+        const purchasePrice = !isEmpty(product.latestPurchasePrice)
+          ? product.latestPurchasePrice
+          : product.purchasePrice;
         // 将选中的商品数据赋值给当前行
-        this.tableData[index] = Object.assign(this.tableData[index], product);
+        this.tableData[index] = Object.assign(this.tableData[index], product, {
+          purchasePrice,
+        });
 
         this.purchasePriceInput(this.tableData[index], this.tableData[index].purchasePrice);
       },

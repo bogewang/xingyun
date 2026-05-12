@@ -60,6 +60,11 @@ export interface SaleProductBo {
   salePrice: number;
 
   /**
+   * 最新销售价
+   */
+  latestSalePrice: number;
+
+  /**
    * 库存数量
    */
   stockNum: number;

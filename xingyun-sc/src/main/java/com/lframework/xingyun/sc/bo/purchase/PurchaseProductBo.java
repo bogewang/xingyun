@@ -5,6 +5,7 @@ import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
+import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseProductDto;
 import com.lframework.xingyun.sc.entity.ProductStock;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
@@ -82,6 +83,12 @@ public class PurchaseProductBo extends BaseBo<PurchaseProductDto> {
   private BigDecimal purchasePrice;
 
   /**
+   * 最新采购价
+   */
+  @ApiModelProperty("最新采购价")
+  private BigDecimal latestPurchasePrice;
+
+  /**
    * 含税成本价
    */
   @ApiModelProperty("含税成本价")
@@ -119,6 +126,10 @@ public class PurchaseProductBo extends BaseBo<PurchaseProductDto> {
     this.productId = dto.getId();
     this.productCode = dto.getCode();
     this.productName = dto.getName();
+    ProductLatestPriceCacheService productLatestPriceCacheService = ApplicationUtil.getBean(
+        ProductLatestPriceCacheService.class);
+    this.latestPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(
+        this.getProductId());
 
     ProductStockService productStockService = ApplicationUtil.getBean(
         ProductStockService.class);

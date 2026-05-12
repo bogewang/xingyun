@@ -551,8 +551,12 @@
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
+        const salePrice = !isEmpty(product.latestSalePrice) ? product.latestSalePrice : product.salePrice;
         // 将选中的商品数据赋值给当前行
-        this.tableData[index] = Object.assign(this.tableData[index], product);
+        this.tableData[index] = Object.assign(this.tableData[index], product, {
+          salePrice,
+          taxPrice: salePrice,
+        });
 
         this.taxPriceInput(this.tableData[index], this.tableData[index].taxPrice);
       },

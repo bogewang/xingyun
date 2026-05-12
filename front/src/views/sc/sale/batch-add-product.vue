@@ -49,12 +49,6 @@
                   :only-final="false"
                 />
               </j-form-item>
-              <j-form-item label="商品品牌">
-                <product-brand-selector
-                  v-model:value="searchFormData.brandId"
-                  :request-params="{ available: true }"
-                />
-              </j-form-item>
             </j-form>
           </j-border>
         </template>
@@ -140,13 +134,10 @@
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
-          { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 260 },
-          { field: 'shortName', title: '简称', width: 120 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           { field: 'stockNum', title: '库存数量', align: 'right', width: 100 },
         ],
         // 请求接口配置

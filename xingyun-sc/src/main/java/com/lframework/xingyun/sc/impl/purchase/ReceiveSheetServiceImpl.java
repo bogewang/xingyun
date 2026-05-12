@@ -36,6 +36,7 @@ import com.lframework.xingyun.basedata.enums.ManageType;
 import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.enums.SettleType;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
+import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
@@ -91,6 +92,9 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private ProductLatestPriceCacheService productLatestPriceCacheService;
 
     @Autowired
     private PurchaseOrderService purchaseOrderService;
@@ -705,6 +709,10 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             }
 
             receiveSheetDetailService.save(detail);
+            if (!receiveRequirePurchase) {
+                productLatestPriceCacheService.updateLatestPrice(product.getId(), null,
+                        detail.getTaxPrice());
+            }
 
             // 这里处理组合商品
             if (product.getProductType() == ProductType.BUNDLE) {
@@ -790,9 +798,10 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     private void checkImportData(List<ReceiveSheetImportModel> list) {
         List<String> productNames = list.stream().map(ReceiveSheetImportModel::getProductName)
                 .collect(Collectors.toList());
-        Map<String, Product> nameSpecUnitMap = productService.selectByProductName(productNames).stream()
+        List<Product> products = productService.selectByProductName(productNames);
+        Map<String, Product> nameSpecUnitMap = products.stream()
                 .collect(Collectors.toMap(item -> item.getName() + item.getSpec() + item.getUnit(), item -> item));
-        Map<String, Product> nameUnitMap = productService.selectByProductName(productNames).stream()
+        Map<String, Product> nameUnitMap = products.stream()
                 .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item));
 
         for (int i = 0; i < list.size(); i++) {
@@ -804,9 +813,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             }
             if (StringUtils.isEmpty(data.getUnit())) {
                 throw new DefaultClientException("第" + rowIndex + "行“单位”不能为空");
-            }
-            if (data.getPurchasePrice() == null) {
-                throw new DefaultClientException("第" + rowIndex + "行“单价”不能为空");
             }
             if (data.getReceiveNum() == null) {
                 throw new DefaultClientException("第" + rowIndex + "行“数量”不能为空");
@@ -830,6 +836,17 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             }
             data.setProductCode(product.getCode());
             data.setProductId(product.getId());
+            BigDecimal latestPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(product.getId());
+            if (latestPurchasePrice == null) {
+                latestPurchasePrice = product.getPurchasePrice();
+            }
+            data.setLatestPurchasePrice(latestPurchasePrice);
+            if (data.getPurchasePrice() == null) {
+                data.setPurchasePrice(latestPurchasePrice);
+            }
+            // if (data.getPurchasePrice() == null) {
+            //     throw new DefaultClientException("第" + rowIndex + "行商品未设置采购价，请填写“单价”或先维护商品采购价");
+            // }
         }
     }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
+import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
 import com.lframework.xingyun.sc.entity.ProductStock;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
@@ -87,6 +88,12 @@ public class SaleProductBo extends BaseBo<SaleProductDto> {
     private BigDecimal salePrice;
 
     /**
+     * 最新销售价
+     */
+    @ApiModelProperty("最新销售价")
+    private BigDecimal latestSalePrice;
+
+    /**
      * 库存数量
      */
     @ApiModelProperty("库存数量")
@@ -117,6 +124,9 @@ public class SaleProductBo extends BaseBo<SaleProductDto> {
         this.productId = dto.getId();
         this.productCode = dto.getCode();
         this.productName = dto.getName();
+        ProductLatestPriceCacheService productLatestPriceCacheService = ApplicationUtil.getBean(
+            ProductLatestPriceCacheService.class);
+        this.latestSalePrice = productLatestPriceCacheService.getLatestSalePrice(this.getProductId());
 
         if (StringUtil.isBlank(this.getScId())) {
             this.stockNum = BigDecimal.ZERO;

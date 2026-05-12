@@ -31,6 +31,7 @@ import com.lframework.xingyun.basedata.enums.SettleType;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
+import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.core.utils.SplitNumberUtil;
@@ -98,6 +99,9 @@ public class SaleOutSheetServiceImpl extends
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private ProductLatestPriceCacheService productLatestPriceCacheService;
 
     @Autowired
     private ProductBundleService productBundleService;
@@ -1058,6 +1062,10 @@ public class SaleOutSheetServiceImpl extends
             }
 
             saleOutSheetDetailService.save(detail);
+            if (!requireSale) {
+                productLatestPriceCacheService.updateLatestPrice(product.getId(), detail.getTaxPrice(),
+                        null);
+            }
 
             // 这里处理组合商品
             if (product.getProductType() == ProductType.BUNDLE) {
@@ -1177,10 +1185,15 @@ public class SaleOutSheetServiceImpl extends
             }
             data.setProductCode(product.getCode());
             data.setProductId(product.getId());
-            data.setSalePrice(product.getSalePrice());
+            BigDecimal latestSalePrice = productLatestPriceCacheService.getLatestSalePrice(
+                    product.getId());
+            if (latestSalePrice == null) {
+                latestSalePrice = product.getSalePrice();
+            }
+            data.setSalePrice(latestSalePrice);
 
             if (data.getTaxPrice() == null) {
-                data.setTaxPrice(product.getSalePrice());
+                data.setTaxPrice(latestSalePrice);
             }
             // if (data.getTaxPrice() == null) {
             //     throw new DefaultClientException("第" + rowIndex + "行商品未设置销售价，请填写“单价”或先维护商品销售价");

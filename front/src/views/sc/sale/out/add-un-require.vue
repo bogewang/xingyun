@@ -89,8 +89,7 @@
                   <vxe-column field="productName" title="商品名称" min-width="200" />
                   <vxe-column field="spec" title="规格" width="80" />
                   <vxe-column field="unit" title="单位" width="80" />
-                  <vxe-column field="salePrice" title="销售价（元）" width="140" align="right" />
-                  <vxe-column field="stockNum" title="库存数量" width="140" align="right" />
+                  <vxe-column field="salePrice" title="参考销售价（元）" width="140" align="right" />
                 </vxe-table>
               </div>
             </template>
@@ -406,9 +405,11 @@
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
+        const salePrice = !isEmpty(product.latestSalePrice) ? product.latestSalePrice : product.salePrice;
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
-          taxPrice: product.salePrice,
+          salePrice,
+          taxPrice: salePrice,
         });
 
         this.taxPriceInput(this.tableData[index], this.tableData[index].taxPrice);
