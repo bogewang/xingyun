@@ -46,6 +46,12 @@ public class SaleOutProductVo implements BaseVo, Serializable {
   private BigDecimal oriPrice;
 
   /**
+   * 销售价
+   */
+  @ApiModelProperty("销售价")
+  private BigDecimal salePrice;
+
+  /**
    * 现价
    */
   @ApiModelProperty("现价")

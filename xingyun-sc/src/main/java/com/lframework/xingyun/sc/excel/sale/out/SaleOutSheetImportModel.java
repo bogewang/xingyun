@@ -31,6 +31,12 @@ public class SaleOutSheetImportModel implements ExcelModel {
     private String productCode;
 
     /**
+     * 销售价
+     */
+    @ExcelIgnore()
+    private BigDecimal salePrice;
+
+    /**
      * 商品规格
      */
     // @ExcelRequired
@@ -56,7 +62,7 @@ public class SaleOutSheetImportModel implements ExcelModel {
     /**
      * 采购价
      */
-    @ExcelRequired
+    // @ExcelRequired
     @ExcelProperty("单价")
     private BigDecimal taxPrice;
 
