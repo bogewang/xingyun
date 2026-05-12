@@ -1,16 +1,11 @@
 export interface SupplierSelectorBo {
   /**
-   * ID
+   * 显示标签
    */
-  id: string;
+  label: string;
 
   /**
-   * 编号
+   * 选项值
    */
-  code: string;
-
-  /**
-   * 名称
-   */
-  name: string;
+  value: string;
 }

@@ -1,16 +1,11 @@
 export interface SysUserSelectorBo {
   /**
-   * ID
+   * 显示标签
    */
-  id: string;
+  label: string;
 
   /**
-   * 编号
+   * 选项值
    */
-  code: string;
-
-  /**
-   * 姓名
-   */
-  name: string;
+  value: string;
 }

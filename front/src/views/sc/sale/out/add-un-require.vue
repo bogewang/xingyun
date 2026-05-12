@@ -9,7 +9,17 @@
       <j-border>
         <j-form bordered>
           <j-form-item label="客户" required>
-            <customer-selector v-model:value="formData.customerId" @update:value="customerChange" />
+            <a-select
+              v-model:value="formData.customerId"
+              allow-clear
+              show-search
+              :filter-option="filterOption"
+              :options="customerOptions"
+              placeholder="请选择客户"
+              @focus="loadCustomerOptions()"
+              @search="loadCustomerOptions"
+              @change="(value) => handleSelectChange('customerId', value, customerOptionMap)"
+            />
           </j-form-item>
           <j-form-item label="订单日期">
             <a-date-picker
@@ -169,7 +179,6 @@
 </template>
 <script>
   import { defineComponent, h } from 'vue';
-  import SaleOrderSelectorWithOut from './SaleOrderSelectorWithOut.vue';
   import BatchAddProduct from '@/views/sc/sale/batch-add-product.vue';
   import Moment from 'moment';
   import {
@@ -197,18 +206,20 @@
     PATTERN_IS_PRICE,
     uuid,
   } from '@/utils/utils';
+  import {
+    buildVisibleSelectOptions,
+    filterSelectOption,
+    mergeSelectOptionMap,
+    normalizeSelectValue,
+  } from '@/utils/searchSelect';
+  import { requestCustomerSelectOptions } from '@/utils/labelSelect';
   import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
-  import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
-  import UserSelector from '@/components/Selector/UserSelector.vue';
 
   export default defineComponent({
     name: 'AddSaleOutSheetUnRequire',
     components: {
-      SaleOrderSelectorWithOut,
       BatchAddProduct,
       SaleOutSheetImporter,
-      CustomerSelector,
-      UserSelector,
     },
     mixins: [multiplePageMix],
     setup() {
@@ -286,6 +297,8 @@
           },
         ],
         tableData: [],
+        customerOptions: [],
+        customerOptionMap: {},
       };
     },
     computed: {},
@@ -423,10 +436,28 @@
       openBatchAddProductDialog() {
         this.$refs.batchAddProductDialog.openDialog();
       },
-      taxPriceInput(row, value) {
+      filterOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      handleSelectChange(field, value, optionMap) {
+        this.formData[field] = normalizeSelectValue(value, optionMap);
+      },
+      async requestCustomerOptions(keyword = '') {
+        return requestCustomerSelectOptions(keyword);
+      },
+      async loadCustomerOptions(keyword = '') {
+        const options = await this.requestCustomerOptions(keyword);
+        this.customerOptionMap = mergeSelectOptionMap(this.customerOptionMap, options);
+        this.customerOptions = buildVisibleSelectOptions(
+          this.formData.customerId,
+          this.customerOptionMap,
+          options,
+        );
+      },
+      taxPriceInput(_row, _value) {
         this.calcSum();
       },
-      outNumInput(value) {
+      outNumInput(_value) {
         this.calcSum();
       },
       // 计算汇总数据
@@ -610,7 +641,7 @@
         this.loading = true;
         api
           .create(params)
-          .then((res) => {
+          .then(() => {
             createSuccess('保存成功！');
 
             this.$emit('confirm');
@@ -630,7 +661,7 @@
         this.tableData
           .filter((item) => isFloatGtZero(item.outNum))
           .forEach((item) => {
-            if (checkStockNumArr.map((v) => item.productId).includes(item.productId)) {
+            if (checkStockNumArr.map((v) => v.productId).includes(item.productId)) {
               checkStockNumArr
                 .filter((v) => v.productId === item.productId)
                 .forEach((v) => {
@@ -669,7 +700,7 @@
           this.loading = true;
           api
             .directApprovePass(params)
-            .then((res) => {
+            .then(() => {
               createSuccess('审核通过！');
 
               this.$emit('confirm');
@@ -704,7 +735,6 @@
               if (!isEmpty(res.salerId)) {
                 this.formData.salerId = res.salerId;
               }
-
             })
             .finally(() => {
               this.loading = false;

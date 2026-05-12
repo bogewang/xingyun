@@ -2,17 +2,7 @@ import { PageVo } from '@/api/model/pageVo';
 
 export interface QueryCustomerSelectorVo extends PageVo {
   /**
-   * 编号
+   * 显示标签
    */
-  code: string;
-
-  /**
-   * 名称
-   */
-  name: string;
-
-  /**
-   * 昵称
-   */
-  nickName: string;
+  label: string;
 }

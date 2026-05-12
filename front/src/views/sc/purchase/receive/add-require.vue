@@ -9,15 +9,28 @@
       <j-border>
         <j-form bordered>
           <j-form-item label="供应商" required>
-            <supplier-selector
+            <a-select
               v-model:value="formData.supplierId"
-              :before-open="beforeSelectSupplier"
+              allow-clear
+              show-search
+              disabled
+              :filter-option="filterOption"
+              :options="supplierOptions"
+              placeholder="请选择供应商"
             />
           </j-form-item>
           <j-form-item label="采购员">
-            <user-selector
+            <a-select
               v-model:value="formData.purchaserId"
-              :before-open="beforeSelectPurchaser"
+              allow-clear
+              show-search
+              :disabled="isEmpty(formData.purchaseOrderId)"
+              :filter-option="filterOption"
+              :options="purchaserOptions"
+              placeholder="请选择采购员"
+              @focus="loadPurchaserOptions()"
+              @search="loadPurchaserOptions"
+              @change="(value) => handleSelectChange('purchaserId', value, purchaserOptionMap)"
             />
           </j-form-item>
           <j-form-item label="订单日期">
@@ -28,9 +41,16 @@
             />
           </j-form-item>
           <j-form-item label="采购订单" required>
-            <purchase-order-selector-with-receive
+            <a-select
               v-model:value="formData.purchaseOrderId"
-              @update:value="purchaseOrderChange"
+              allow-clear
+              show-search
+              :filter-option="filterOption"
+              :options="purchaseOrderOptions"
+              placeholder="请选择采购订单"
+              @focus="loadPurchaseOrderOptions()"
+              @search="loadPurchaseOrderOptions"
+              @change="purchaseOrderChange"
             />
           </j-form-item>
         </j-form>
@@ -196,45 +216,45 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import BatchAddProduct from '@/views/sc/purchase/batch-add-product.vue';
-import PurchaseOrderSelectorWithReceive
-  from '@/views/sc/purchase/receive/PurchaseOrderSelectorWithReceive.vue';
-import Moment from 'moment';
-import {
-  DeleteOutlined,
-  EditOutlined,
-  NumberOutlined,
-  PlusOutlined,
-} from '@ant-design/icons-vue';
-import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
-import UserSelector from '@/components/Selector/UserSelector.vue';
-import * as api from '@/api/sc/purchase/receive';
-import * as purchaseApi from '@/api/sc/purchase/order';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {
-  add,
-  formatDate,
-  getNumber,
-  isEmpty,
-  isFloat,
-  isFloatGeZero,
-  isFloatGtZero,
-  isNumberPrecision,
-  mul,
-  PATTERN_IS_FLOAT_GE_ZERO,
-  sub,
-  uuid,
-} from '@/utils/utils';
-import {createConfirm, createError, createPrompt, createSuccess} from '@/hooks/web/msg';
+  import { defineComponent, h } from 'vue';
+  import BatchAddProduct from '@/views/sc/purchase/batch-add-product.vue';
+  import Moment from 'moment';
+  import {
+    DeleteOutlined,
+    EditOutlined,
+    NumberOutlined,
+    PlusOutlined,
+  } from '@ant-design/icons-vue';
+  import * as api from '@/api/sc/purchase/receive';
+  import * as purchaseApi from '@/api/sc/purchase/order';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    add,
+    formatDate,
+    getNumber,
+    isEmpty,
+    isFloat,
+    isFloatGeZero,
+    isFloatGtZero,
+    isNumberPrecision,
+    mul,
+    PATTERN_IS_FLOAT_GE_ZERO,
+    sub,
+    uuid,
+  } from '@/utils/utils';
+  import {
+    buildVisibleSelectOptions,
+    filterSelectOption,
+    mergeSelectOptionMap,
+    normalizeSelectValue,
+  } from '@/utils/searchSelect';
+  import { requestSupplierSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
+  import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddPurchaseReceiveSheetRequire',
     components: {
       BatchAddProduct,
-      PurchaseOrderSelectorWithReceive,
-      SupplierSelector,
-      UserSelector,
     },
     mixins: [multiplePageMix],
     setup() {
@@ -335,6 +355,12 @@ export default defineComponent({
           },
         ],
         tableData: [],
+        supplierOptions: [],
+        supplierOptionMap: {},
+        purchaserOptions: [],
+        purchaserOptionMap: {},
+        purchaseOrderOptions: [],
+        purchaseOrderOptionMap: {},
       };
     },
     computed: {
@@ -483,10 +509,66 @@ export default defineComponent({
         }
         this.$refs.batchAddProductDialog.openDialog();
       },
-      purchasePriceInput(row, value) {
+      filterOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      handleSelectChange(field, value, optionMap) {
+        this.formData[field] = normalizeSelectValue(value, optionMap);
+      },
+      async requestSupplierOptions(keyword = '') {
+        return requestSupplierSelectOptions(keyword);
+      },
+      async requestUserOptions(keyword = '') {
+        return requestUserSelectOptions(keyword);
+      },
+      async requestPurchaseOrderOptions(keyword = '') {
+        const response = await purchaseApi.queryWithReceive({
+          pageIndex: 1,
+          pageSize: 20,
+          code: keyword,
+          supplierId: this.formData.supplierId || '',
+          createBy: '',
+          createStartTime: '',
+          createEndTime: '',
+        });
+
+        return (response.datas || []).map((item) => ({
+          label: item.code,
+          value: item.id,
+          keywords: buildSelectKeywords(item.code, item.supplierCode, item.supplierName),
+        }));
+      },
+      async loadSupplierOptions(keyword = '') {
+        const options = await this.requestSupplierOptions(keyword);
+        this.supplierOptionMap = mergeSelectOptionMap(this.supplierOptionMap, options);
+        this.supplierOptions = buildVisibleSelectOptions(
+          this.formData.supplierId,
+          this.supplierOptionMap,
+          options,
+        );
+      },
+      async loadPurchaserOptions(keyword = '') {
+        const options = await this.requestUserOptions(keyword);
+        this.purchaserOptionMap = mergeSelectOptionMap(this.purchaserOptionMap, options);
+        this.purchaserOptions = buildVisibleSelectOptions(
+          this.formData.purchaserId,
+          this.purchaserOptionMap,
+          options,
+        );
+      },
+      async loadPurchaseOrderOptions(keyword = '') {
+        const options = await this.requestPurchaseOrderOptions(keyword);
+        this.purchaseOrderOptionMap = mergeSelectOptionMap(this.purchaseOrderOptionMap, options);
+        this.purchaseOrderOptions = buildVisibleSelectOptions(
+          this.formData.purchaseOrderId,
+          this.purchaseOrderOptionMap,
+          options,
+        );
+      },
+      purchasePriceInput(_row, _value) {
         this.calcSum();
       },
-      receiveNumInput(value) {
+      receiveNumInput(_value) {
         this.calcSum();
       },
       // 计算汇总数据
@@ -689,7 +771,7 @@ export default defineComponent({
         this.loading = true;
         api
           .create(params)
-          .then((res) => {
+          .then(() => {
             createSuccess('保存成功！');
 
             this.$emit('confirm');
@@ -711,7 +793,7 @@ export default defineComponent({
           this.loading = true;
           api
             .directApprovePass(params)
-            .then((res) => {
+            .then(() => {
               createSuccess('审核通过！');
 
               this.$emit('confirm');
@@ -752,25 +834,6 @@ export default defineComponent({
               this.loading = false;
             });
         }
-      },
-      beforeSelectSupplier() {
-        if (!this.beforeSelectComponents()) {
-          return false;
-        }
-
-        createError('由于“采购收货单关联采购订单”，不允许修改供应商！');
-        return false;
-      },
-      beforeSelectPurchaser() {
-        return this.beforeSelectComponents();
-      },
-      beforeSelectComponents() {
-        if (isEmpty(this.formData.purchaseOrderId)) {
-          createError('请先选择采购订单！');
-          return false;
-        }
-
-        return true;
       },
     },
   });

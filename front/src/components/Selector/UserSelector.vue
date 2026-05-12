@@ -4,10 +4,9 @@
       ref="selector"
       :request="getList"
       :load="getLoad"
-      :table-column="[
-        { field: 'code', title: '编号', width: 120 },
-        { field: 'name', title: '姓名', minWidth: 160 },
-      ]"
+      :option="{ label: 'label', value: 'value' }"
+      :column-option="{ label: 'label', value: 'value' }"
+      :table-column="[{ field: 'label', title: '用户', minWidth: 220 }]"
       :request-params="_requestParams"
       v-bind="$attrs"
     >
@@ -15,11 +14,8 @@
         <!-- 查询条件 -->
         <j-border>
           <j-form bordered>
-            <j-form-item v-if="isEmpty(requestParams.code)" label="编号">
-              <a-input v-model:value="searchParams.code" />
-            </j-form-item>
-            <j-form-item v-if="isEmpty(requestParams.name)" label="姓名">
-              <a-input v-model:value="searchParams.name" />
+            <j-form-item v-if="isEmpty(requestParams.label)" label="用户">
+              <a-input v-model:value="searchParams.label" allow-clear />
             </j-form-item>
           </j-form>
         </j-border>
@@ -64,8 +60,7 @@
     data() {
       return {
         searchParams: {
-          code: '',
-          name: '',
+          label: '',
         },
       };
     },
@@ -78,7 +73,6 @@
       getList(params) {
         return api.selector({
           ...params,
-          available: true,
           ...this.searchParams,
           ...this.requestParams,
         });

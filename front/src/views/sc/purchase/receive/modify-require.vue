@@ -12,7 +12,17 @@
             {{ formData.supplier.name }}
           </j-form-item>
           <j-form-item label="采购员">
-            <user-selector v-model:value="formData.purchaserId" />
+            <a-select
+              v-model:value="formData.purchaserId"
+              allow-clear
+              show-search
+              :filter-option="filterOption"
+              :options="purchaserOptions"
+              placeholder="请选择采购员"
+              @focus="loadPurchaserOptions()"
+              @search="loadPurchaserOptions"
+              @change="(value) => handleSelectChange('purchaserId', value, purchaserOptionMap)"
+            />
           </j-form-item>
           <j-form-item label="订单日期">
             <a-date-picker
@@ -222,12 +232,12 @@
         @confirm="batchAddProduct"
       />
 
-        <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
-          <a-space>
-            <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
-            <a-button
-              v-permission="['purchase:receive:modify']"
-              type="primary"
+      <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
+        <a-space>
+          <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
+          <a-button
+            v-permission="['purchase:receive:modify']"
+            type="primary"
             :loading="loading"
             @click="updateOrder"
             >保存</a-button
@@ -267,8 +277,14 @@
     uuid,
     PATTERN_IS_FLOAT_GE_ZERO,
   } from '@/utils/utils';
+  import {
+    buildVisibleSelectOptions,
+    filterSelectOption,
+    mergeSelectOptionMap,
+    normalizeSelectValue,
+  } from '@/utils/searchSelect';
+  import { requestUserSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
-  import UserSelector from '@/components/Selector/UserSelector.vue';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
 
@@ -277,7 +293,6 @@
     components: {
       PurchaseOrderDetail,
       BatchAddProduct,
-      UserSelector,
       OrderTimeLine,
     },
     mixins: [multiplePageMix],
@@ -303,6 +318,8 @@
         loading: false,
         // 表单数据
         formData: {},
+        purchaserOptions: [],
+        purchaserOptionMap: {},
         // 工具栏配置
         toolbarConfig: {
           // 缩放
@@ -591,10 +608,28 @@
         }
         this.$refs.batchAddProductDialog.openDialog();
       },
-      purchasePriceInput(row, value) {
+      filterOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      handleSelectChange(field, value, optionMap) {
+        this.formData[field] = normalizeSelectValue(value, optionMap);
+      },
+      async requestUserOptions(keyword = '') {
+        return requestUserSelectOptions(keyword);
+      },
+      async loadPurchaserOptions(keyword = '') {
+        const options = await this.requestUserOptions(keyword);
+        this.purchaserOptionMap = mergeSelectOptionMap(this.purchaserOptionMap, options);
+        this.purchaserOptions = buildVisibleSelectOptions(
+          this.formData.purchaserId,
+          this.purchaserOptionMap,
+          options,
+        );
+      },
+      purchasePriceInput(_row, _value) {
         this.calcSum();
       },
-      receiveNumInput(value) {
+      receiveNumInput(_value) {
         this.calcSum();
       },
       // 计算汇总数据
@@ -812,7 +847,7 @@
         this.loading = true;
         api
           .update(params)
-          .then((res) => {
+          .then(() => {
             createSuccess('保存成功！');
 
             this.$emit('confirm');

@@ -9,13 +9,29 @@
       <j-border>
         <j-form bordered>
           <j-form-item label="客户" required>
-            <customer-selector
+            <a-select
               v-model:value="formData.customerId"
-              :before-open="beforeSelectCustomer"
+              allow-clear
+              show-search
+              disabled
+              :filter-option="filterOption"
+              :options="customerOptions"
+              placeholder="请选择客户"
             />
           </j-form-item>
           <j-form-item label="销售员">
-            <user-selector v-model:value="formData.salerId" :before-open="beforeSelectSaler" />
+            <a-select
+              v-model:value="formData.salerId"
+              allow-clear
+              show-search
+              :disabled="isEmpty(formData.saleOrderId)"
+              :filter-option="filterOption"
+              :options="salerOptions"
+              placeholder="请选择销售员"
+              @focus="loadSalerOptions()"
+              @search="loadSalerOptions"
+              @change="(value) => handleSelectChange('salerId', value, salerOptionMap)"
+            />
           </j-form-item>
           <j-form-item label="订单日期">
             <a-date-picker
@@ -25,9 +41,16 @@
             />
           </j-form-item>
           <j-form-item label="销售订单" required>
-            <sale-order-selector-with-out
+            <a-select
               v-model:value="formData.saleOrderId"
-              @update:value="saleOrderChange"
+              allow-clear
+              show-search
+              :filter-option="filterOption"
+              :options="saleOrderOptions"
+              placeholder="请选择销售订单"
+              @focus="loadSaleOrderOptions()"
+              @search="loadSaleOrderOptions"
+              @change="saleOrderChange"
             />
           </j-form-item>
         </j-form>
@@ -189,39 +212,45 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import SaleOrderSelectorWithOut from './SaleOrderSelectorWithOut.vue';
-import BatchAddProduct from '@/views/sc/sale/batch-add-product.vue';
-import Moment from 'moment';
-import {DeleteOutlined, EditOutlined, NumberOutlined, PlusOutlined,} from '@ant-design/icons-vue';
-import * as api from '@/api/sc/sale/out';
-import * as saleApi from '@/api/sc/sale/order';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {
-  add,
-  formatDate,
-  getNumber,
-  isEmpty,
-  isFloat,
-  isFloatGeZero,
-  isFloatGtZero,
-  isNumberPrecision,
-  mul,
-  PATTERN_IS_FLOAT_GE_ZERO,
-  sub,
-  uuid,
-} from '@/utils/utils';
-import {createConfirm, createError, createPrompt, createSuccess} from '@/hooks/web/msg';
-import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
-import UserSelector from '@/components/Selector/UserSelector.vue';
+  import { defineComponent, h } from 'vue';
+  import BatchAddProduct from '@/views/sc/sale/batch-add-product.vue';
+  import Moment from 'moment';
+  import {
+    DeleteOutlined,
+    EditOutlined,
+    NumberOutlined,
+    PlusOutlined,
+  } from '@ant-design/icons-vue';
+  import * as api from '@/api/sc/sale/out';
+  import * as saleApi from '@/api/sc/sale/order';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    add,
+    formatDate,
+    getNumber,
+    isEmpty,
+    isFloat,
+    isFloatGeZero,
+    isFloatGtZero,
+    isNumberPrecision,
+    mul,
+    PATTERN_IS_FLOAT_GE_ZERO,
+    sub,
+    uuid,
+  } from '@/utils/utils';
+  import {
+    buildVisibleSelectOptions,
+    filterSelectOption,
+    mergeSelectOptionMap,
+    normalizeSelectValue,
+  } from '@/utils/searchSelect';
+  import { requestCustomerSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
+  import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddSaleOutSheetRequire',
     components: {
-      SaleOrderSelectorWithOut,
       BatchAddProduct,
-      CustomerSelector,
-      UserSelector,
     },
     mixins: [multiplePageMix],
     setup() {
@@ -323,6 +352,12 @@ export default defineComponent({
           },
         ],
         tableData: [],
+        customerOptions: [],
+        customerOptionMap: {},
+        salerOptions: [],
+        salerOptionMap: {},
+        saleOrderOptions: [],
+        saleOrderOptionMap: {},
       };
     },
     computed: {},
@@ -471,10 +506,67 @@ export default defineComponent({
         }
         this.$refs.batchAddProductDialog.openDialog();
       },
-      taxPriceInput(row, value) {
+      filterOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      handleSelectChange(field, value, optionMap) {
+        this.formData[field] = normalizeSelectValue(value, optionMap);
+      },
+      async requestCustomerOptions(keyword = '') {
+        return requestCustomerSelectOptions(keyword);
+      },
+      async requestUserOptions(keyword = '') {
+        return requestUserSelectOptions(keyword);
+      },
+      async requestSaleOrderOptions(keyword = '') {
+        const response = await saleApi.queryWithOut({
+          pageIndex: 1,
+          pageSize: 20,
+          code: keyword,
+          scId: '',
+          customerId: this.formData.customerId || '',
+          createBy: '',
+          createStartTime: '',
+          createEndTime: '',
+        });
+
+        return (response.datas || []).map((item) => ({
+          label: item.code,
+          value: item.id,
+          keywords: buildSelectKeywords(item.code, item.customerCode, item.customerName),
+        }));
+      },
+      async loadCustomerOptions(keyword = '') {
+        const options = await this.requestCustomerOptions(keyword);
+        this.customerOptionMap = mergeSelectOptionMap(this.customerOptionMap, options);
+        this.customerOptions = buildVisibleSelectOptions(
+          this.formData.customerId,
+          this.customerOptionMap,
+          options,
+        );
+      },
+      async loadSalerOptions(keyword = '') {
+        const options = await this.requestUserOptions(keyword);
+        this.salerOptionMap = mergeSelectOptionMap(this.salerOptionMap, options);
+        this.salerOptions = buildVisibleSelectOptions(
+          this.formData.salerId,
+          this.salerOptionMap,
+          options,
+        );
+      },
+      async loadSaleOrderOptions(keyword = '') {
+        const options = await this.requestSaleOrderOptions(keyword);
+        this.saleOrderOptionMap = mergeSelectOptionMap(this.saleOrderOptionMap, options);
+        this.saleOrderOptions = buildVisibleSelectOptions(
+          this.formData.saleOrderId,
+          this.saleOrderOptionMap,
+          options,
+        );
+      },
+      taxPriceInput(_row, _value) {
         this.calcSum();
       },
-      outNumInput(value) {
+      outNumInput(_value) {
         this.calcSum();
       },
       // 计算汇总数据
@@ -677,7 +769,7 @@ export default defineComponent({
         this.loading = true;
         api
           .create(params)
-          .then((res) => {
+          .then(() => {
             createSuccess('保存成功！');
 
             this.$emit('confirm');
@@ -697,7 +789,7 @@ export default defineComponent({
         this.tableData
           .filter((item) => isFloatGtZero(item.outNum))
           .forEach((item) => {
-            if (checkStockNumArr.map((v) => item.productId).includes(item.productId)) {
+            if (checkStockNumArr.map((v) => v.productId).includes(item.productId)) {
               checkStockNumArr
                 .filter((v) => v.productId === item.productId)
                 .forEach((v) => {
@@ -736,7 +828,7 @@ export default defineComponent({
           this.loading = true;
           api
             .directApprovePass(params)
-            .then((res) => {
+            .then(() => {
               createSuccess('审核通过！');
 
               this.$emit('confirm');
@@ -772,31 +864,11 @@ export default defineComponent({
               if (!isEmpty(res.salerId)) {
                 this.formData.salerId = res.salerId;
               }
-
             })
             .finally(() => {
               this.loading = false;
             });
         }
-      },
-      beforeSelectCustomer() {
-        if (!this.beforeSelectComponents()) {
-          return false;
-        }
-
-        createError('由于“销售出库单关联销售订单”，不允许修改客户！');
-        return false;
-      },
-      beforeSelectSaler() {
-        return this.beforeSelectComponents();
-      },
-      beforeSelectComponents() {
-        if (isEmpty(this.formData.saleOrderId)) {
-          createError('请先选择销售订单！');
-          return false;
-        }
-
-        return true;
       },
       // 检查库存数量
       checkStockNum(row) {

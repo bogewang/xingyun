@@ -6,14 +6,15 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.common.utils.StringUtil;
-import com.lframework.starter.web.core.components.resp.PageResult;
-import com.lframework.starter.web.core.utils.PageResultUtil;
-import com.lframework.starter.web.core.components.validation.IsEnum;
-import com.lframework.starter.web.core.controller.DefaultBaseController;
+import com.lframework.starter.web.core.bo.SelectorBo;
 import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
+import com.lframework.starter.web.core.components.resp.PageResult;
+import com.lframework.starter.web.core.components.validation.IsEnum;
+import com.lframework.starter.web.core.controller.DefaultBaseController;
+import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.starter.web.inner.vo.system.QuerySelectorVo;
 import com.lframework.xingyun.basedata.bo.address.AddressSelectorBo;
-import com.lframework.xingyun.basedata.bo.customer.CustomerSelectorBo;
 import com.lframework.xingyun.basedata.bo.logistics.company.LogisticsCompanySelectorBo;
 import com.lframework.xingyun.basedata.bo.member.MemberSelectorBo;
 import com.lframework.xingyun.basedata.bo.paytype.PayTypeSelectorBo;
@@ -23,17 +24,7 @@ import com.lframework.xingyun.basedata.bo.product.info.ProductSelectorBo;
 import com.lframework.xingyun.basedata.bo.shop.ShopSelectorBo;
 import com.lframework.xingyun.basedata.bo.storecenter.StoreCenterSelectorBo;
 import com.lframework.xingyun.basedata.bo.supplier.SupplierSelectorBo;
-import com.lframework.xingyun.basedata.entity.Address;
-import com.lframework.xingyun.basedata.entity.Customer;
-import com.lframework.xingyun.basedata.entity.LogisticsCompany;
-import com.lframework.xingyun.basedata.entity.Member;
-import com.lframework.xingyun.basedata.entity.PayType;
-import com.lframework.xingyun.basedata.entity.Product;
-import com.lframework.xingyun.basedata.entity.ProductBrand;
-import com.lframework.xingyun.basedata.entity.ProductCategory;
-import com.lframework.xingyun.basedata.entity.Shop;
-import com.lframework.xingyun.basedata.entity.StoreCenter;
-import com.lframework.xingyun.basedata.entity.Supplier;
+import com.lframework.xingyun.basedata.entity.*;
 import com.lframework.xingyun.basedata.enums.AddressEntityType;
 import com.lframework.xingyun.basedata.enums.AddressType;
 import com.lframework.xingyun.basedata.service.address.AddressService;
@@ -60,19 +51,16 @@ import com.lframework.xingyun.basedata.vo.storecenter.QueryStoreCenterSelectorVo
 import com.lframework.xingyun.basedata.vo.supplier.QuerySupplierSelectorVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 基础数据数据选择器
@@ -358,16 +346,16 @@ public class BaseDataSelectorController extends DefaultBaseController {
    */
   @ApiOperation("客户")
   @GetMapping("/customer")
-  public InvokeResult<PageResult<CustomerSelectorBo>> selector(@Valid QueryCustomerSelectorVo vo) {
+  public InvokeResult<PageResult<SelectorBo>> selector(@Valid QuerySelectorVo vo) {
 
-    PageResult<Customer> pageResult = customerService.selector(getPageIndex(vo), getPageSize(vo),
-        vo);
+    QueryCustomerSelectorVo customerSelectorVo = QueryCustomerSelectorVo.builder().name(vo.getLabel()).build();
+    PageResult<Customer> pageResult = customerService.selector(getPageIndex(vo), getPageSize(vo), customerSelectorVo);
 
     List<Customer> datas = pageResult.getDatas();
-    List<CustomerSelectorBo> results = null;
+    List<SelectorBo> results = null;
 
     if (!CollectionUtil.isEmpty(datas)) {
-      results = datas.stream().map(CustomerSelectorBo::new).collect(Collectors.toList());
+      results = datas.stream().map(item -> SelectorBo.builder().value(item.getId()).label(item.getName()).build()).collect(Collectors.toList());
     }
 
     return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
@@ -378,8 +366,7 @@ public class BaseDataSelectorController extends DefaultBaseController {
    */
   @ApiOperation("加载客户")
   @PostMapping("/customer/load")
-  public InvokeResult<List<CustomerSelectorBo>> loadCustomer(
-      @RequestBody(required = false) List<String> ids) {
+  public InvokeResult<List<SelectorBo>> loadCustomer(@RequestBody(required = false) List<String> ids) {
 
     if (CollectionUtil.isEmpty(ids)) {
       return InvokeResultBuilder.success(CollectionUtil.emptyList());
@@ -388,7 +375,7 @@ public class BaseDataSelectorController extends DefaultBaseController {
     List<Customer> datas = ids.stream().filter(StringUtil::isNotBlank)
         .map(t -> customerService.findById(t))
         .filter(Objects::nonNull).collect(Collectors.toList());
-    List<CustomerSelectorBo> results = datas.stream().map(CustomerSelectorBo::new).collect(
+    List<SelectorBo> results = datas.stream().map(item -> SelectorBo.builder().value(item.getId()).label(item.getName()).build()).collect(
         Collectors.toList());
     return InvokeResultBuilder.success(results);
   }

@@ -2,7 +2,7 @@ import { defHttp } from '/@/utils/http/axios';
 import { PageResult } from '@/api/model/pageResult';
 import { ContentTypeEnum, ResponseEnum } from '@/enums/httpEnum';
 import { QuerySupplierSelectorVo } from '@/api/base-data/supplier/model/querySupplierSelectorVo';
-import { SupplierSelectorBo } from '@/api/base-data/supplier/model/supplierSelectorBo';
+import { SelectorBo } from '@/api/common/SelectorBo';
 import { UpdateSupplierVo } from '@/api/base-data/supplier/model/updateSupplierVo';
 import { CreateSupplierVo } from '@/api/base-data/supplier/model/createSupplierVo';
 import { GetSupplierBo } from '@/api/base-data/supplier/model/getSupplierBo';
@@ -13,8 +13,8 @@ const baseUrl = '/basedata/supplier';
 const selectorBaseUrl = '/selector';
 const region = 'cloud-api';
 
-export function selector(params: QuerySupplierSelectorVo): Promise<PageResult<SupplierSelectorBo>> {
-  return defHttp.get<PageResult<SupplierSelectorBo>>(
+export function selector(params: QuerySupplierSelectorVo): Promise<PageResult<SelectorBo>> {
+  return defHttp.get<PageResult<SelectorBo>>(
     {
       url: selectorBaseUrl + '/supplier',
       params,
@@ -25,8 +25,8 @@ export function selector(params: QuerySupplierSelectorVo): Promise<PageResult<Su
   );
 }
 
-export function loadSupplier(ids: string[]): Promise<SupplierSelectorBo[]> {
-  return defHttp.post<SupplierSelectorBo[]>(
+export function loadSupplier(ids: string[]): Promise<SelectorBo[]> {
+  return defHttp.post<SelectorBo[]>(
     {
       url: selectorBaseUrl + '/supplier/load',
       data: ids,

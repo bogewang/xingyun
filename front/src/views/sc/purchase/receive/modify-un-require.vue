@@ -9,7 +9,17 @@
       <j-border>
         <j-form bordered>
           <j-form-item label="供应商" required>
-            <supplier-selector v-model:value="formData.supplierId" />
+            <a-select
+              v-model:value="formData.supplierId"
+              allow-clear
+              show-search
+              :filter-option="filterOption"
+              :options="supplierOptions"
+              placeholder="请选择供应商"
+              @focus="loadSupplierOptions()"
+              @search="loadSupplierOptions"
+              @change="(value) => handleSelectChange('supplierId', value, supplierOptionMap)"
+            />
           </j-form-item>
           <j-form-item label="订单日期">
             <a-date-picker
@@ -66,7 +76,6 @@
           >
             <span>{{ formData.approveTime }}</span>
           </j-form-item>
-
         </j-form>
       </j-border>
       <!-- 数据列表 -->
@@ -198,12 +207,12 @@
         @confirm="batchAddProduct"
       />
 
-        <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
-          <a-space>
-            <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
-            <a-button
-              v-permission="['purchase:receive:modify']"
-              type="primary"
+      <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
+        <a-space>
+          <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
+          <a-button
+            v-permission="['purchase:receive:modify']"
+            type="primary"
             :loading="loading"
             @click="updateOrder"
             >保存</a-button
@@ -224,8 +233,6 @@
     NumberOutlined,
     EditOutlined,
   } from '@ant-design/icons-vue';
-  import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
-  import UserSelector from '@/components/Selector/UserSelector.vue';
   import * as api from '@/api/sc/purchase/receive';
   import * as purchaseApi from '@/api/sc/purchase/order';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
@@ -242,18 +249,23 @@
     PATTERN_IS_FLOAT_GT_ZERO,
     PATTERN_IS_PRICE,
   } from '@/utils/utils';
+  import {
+    buildVisibleSelectOptions,
+    filterSelectOption,
+    mergeSelectOptionMap,
+    normalizeSelectValue,
+  } from '@/utils/searchSelect';
+  import { requestSupplierSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
-  import JFormItem from "@/components/JFormItem";
+  import JFormItem from '@/components/JFormItem';
 
   export default defineComponent({
     name: 'ModifyPurchaseReceiveSheetUnRequire',
     components: {
       JFormItem,
       BatchAddProduct,
-      SupplierSelector,
-      UserSelector,
       OrderTimeLine,
     },
     mixins: [multiplePageMix],
@@ -278,6 +290,8 @@
         loading: false,
         // 表单数据
         formData: {},
+        supplierOptions: [],
+        supplierOptionMap: {},
         // 工具栏配置
         toolbarConfig: {
           // 缩放
@@ -519,10 +533,28 @@
       openBatchAddProductDialog() {
         this.$refs.batchAddProductDialog.openDialog();
       },
-      purchasePriceInput(row, value) {
+      filterOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      handleSelectChange(field, value, optionMap) {
+        this.formData[field] = normalizeSelectValue(value, optionMap);
+      },
+      async requestSupplierOptions(keyword = '') {
+        return requestSupplierSelectOptions(keyword);
+      },
+      async loadSupplierOptions(keyword = '') {
+        const options = await this.requestSupplierOptions(keyword);
+        this.supplierOptionMap = mergeSelectOptionMap(this.supplierOptionMap, options);
+        this.supplierOptions = buildVisibleSelectOptions(
+          this.formData.supplierId,
+          this.supplierOptionMap,
+          options,
+        );
+      },
+      purchasePriceInput(_row, _value) {
         this.calcSum();
       },
-      receiveNumInput(value) {
+      receiveNumInput(_value) {
         this.calcSum();
       },
       // 计算汇总数据
@@ -704,7 +736,7 @@
         this.loading = true;
         api
           .update(params)
-          .then((res) => {
+          .then(() => {
             createSuccess('保存成功！');
 
             this.$emit('confirm');

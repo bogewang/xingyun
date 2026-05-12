@@ -9,7 +9,17 @@
       <j-border>
         <j-form bordered>
           <j-form-item label="供应商" required>
-            <supplier-selector v-model:value="formData.supplierId" />
+            <a-select
+              v-model:value="formData.supplierId"
+              allow-clear
+              show-search
+              :filter-option="filterOption"
+              :options="supplierOptions"
+              placeholder="请选择供应商"
+              @focus="loadSupplierOptions()"
+              @search="loadSupplierOptions"
+              @change="(value) => handleSelectChange('supplierId', value, supplierOptionMap)"
+            />
           </j-form-item>
           <j-form-item label="订单日期">
             <a-date-picker
@@ -176,50 +186,50 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import BatchAddProduct from '@/views/sc/purchase/batch-add-product.vue';
-import PurchaseOrderSelectorWithReceive
-  from '@/views/sc/purchase/receive/PurchaseOrderSelectorWithReceive.vue';
-import Moment from 'moment';
-import {
-  CloudUploadOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  NumberOutlined,
-  PlusOutlined,
-} from '@ant-design/icons-vue';
-import ReceiveSheetImporter from '@/components/Importor/ReceiveSheetImporter.vue';
-import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
-import UserSelector from '@/components/Selector/UserSelector.vue';
-import * as api from '@/api/sc/purchase/receive';
-import * as purchaseApi from '@/api/sc/purchase/order';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {
-  add,
-  formatDate,
-  getNumber,
-  isEmpty,
-  isFloat,
-  isFloatGeZero,
-  isFloatGtZero,
-  isNumberPrecision,
-  mul,
-  PATTERN_IS_FLOAT_GT_ZERO,
-  PATTERN_IS_PRICE,
-  uuid,
-} from '@/utils/utils';
-import {createConfirm, createError, createPrompt, createSuccess} from '@/hooks/web/msg';
-import JFormItem from "@/components/JFormItem";
+  import { defineComponent, h } from 'vue';
+  import BatchAddProduct from '@/views/sc/purchase/batch-add-product.vue';
+  import Moment from 'moment';
+  import {
+    CloudUploadOutlined,
+    DeleteOutlined,
+    EditOutlined,
+    NumberOutlined,
+    PlusOutlined,
+  } from '@ant-design/icons-vue';
+  import ReceiveSheetImporter from '@/components/Importor/ReceiveSheetImporter.vue';
+  import * as api from '@/api/sc/purchase/receive';
+  import * as purchaseApi from '@/api/sc/purchase/order';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    add,
+    formatDate,
+    getNumber,
+    isEmpty,
+    isFloat,
+    isFloatGeZero,
+    isFloatGtZero,
+    isNumberPrecision,
+    mul,
+    PATTERN_IS_FLOAT_GT_ZERO,
+    PATTERN_IS_PRICE,
+    uuid,
+  } from '@/utils/utils';
+  import {
+    buildVisibleSelectOptions,
+    filterSelectOption,
+    mergeSelectOptionMap,
+    normalizeSelectValue,
+  } from '@/utils/searchSelect';
+  import { requestSupplierSelectOptions } from '@/utils/labelSelect';
+  import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
+  import JFormItem from '@/components/JFormItem';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddPurchaseReceiveSheetUnRequire',
     components: {
       JFormItem,
       BatchAddProduct,
-      PurchaseOrderSelectorWithReceive,
       ReceiveSheetImporter,
-      SupplierSelector,
-      UserSelector,
     },
     mixins: [multiplePageMix],
     setup() {
@@ -304,6 +314,8 @@ export default defineComponent({
           },
         ],
         tableData: [],
+        supplierOptions: [],
+        supplierOptionMap: {},
       };
     },
     computed: {
@@ -437,10 +449,28 @@ export default defineComponent({
       openBatchAddProductDialog() {
         this.$refs.batchAddProductDialog.openDialog();
       },
-      purchasePriceInput(row, value) {
+      filterOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      handleSelectChange(field, value, optionMap) {
+        this.formData[field] = normalizeSelectValue(value, optionMap);
+      },
+      async requestSupplierOptions(keyword = '') {
+        return requestSupplierSelectOptions(keyword);
+      },
+      async loadSupplierOptions(keyword = '') {
+        const options = await this.requestSupplierOptions(keyword);
+        this.supplierOptionMap = mergeSelectOptionMap(this.supplierOptionMap, options);
+        this.supplierOptions = buildVisibleSelectOptions(
+          this.formData.supplierId,
+          this.supplierOptionMap,
+          options,
+        );
+      },
+      purchasePriceInput(_row, _value) {
         this.calcSum();
       },
-      receiveNumInput(value) {
+      receiveNumInput(_value) {
         this.calcSum();
       },
       // 计算汇总数据
@@ -623,7 +653,7 @@ export default defineComponent({
         this.loading = true;
         api
           .create(params)
-          .then((res) => {
+          .then(() => {
             createSuccess('保存成功！');
 
             this.$emit('confirm');
@@ -645,7 +675,7 @@ export default defineComponent({
           this.loading = true;
           api
             .directApprovePass(params)
-            .then((res) => {
+            .then(() => {
               createSuccess('审核通过！');
 
               this.$emit('confirm');

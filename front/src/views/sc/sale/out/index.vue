@@ -40,10 +40,6 @@
                   />
                 </j-form-item>
 
-                <!-- <j-form-item label="仓库">
-                  <store-center-selector v-model:value="searchFormData.scId" />
-                </j-form-item> -->
-
                 <j-form-item label="操作人">
                   <a-select
                     v-model:value="searchFormData.createBy"
@@ -263,18 +259,16 @@
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
   import * as configApi from '@/api/sc/sale/config';
-  import * as customerApi from '@/api/base-data/customer';
-  import * as userApi from '@/api/system/user';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { printMix } from '@/mixins/print.ts';
   import { isEmpty, buildSortPageVo } from '@/utils/utils';
   import {
-    buildSelectKeywords,
     buildVisibleSelectOptions,
     filterSelectOption,
     mergeSelectOptionMap,
     normalizeSelectValue,
   } from '@/utils/searchSelect';
+  import { requestCustomerSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
@@ -434,55 +428,10 @@
         );
       },
       async requestCustomerOptions(keyword = '') {
-        const requests = keyword
-          ? [
-              { code: keyword, name: '', nickName: '' },
-              { code: '', name: keyword, nickName: '' },
-              { code: '', name: '', nickName: keyword },
-            ]
-          : [{ code: '', name: '', nickName: '' }];
-        const responses = await Promise.all(
-          requests.map((params) =>
-            customerApi.selector({
-              pageIndex: 1,
-              pageSize: 20,
-              ...params,
-            }),
-          ),
-        );
-
-        const records = responses.flatMap((item) => item.datas || []);
-
-        return records.map((item) => ({
-          label: item.name,
-          value: item.id,
-          keywords: buildSelectKeywords(item.code, item.name, item.nickName),
-        }));
+        return requestCustomerSelectOptions(keyword);
       },
       async requestUserOptions(keyword = '') {
-        const requests = keyword
-          ? [
-              { code: keyword, name: '', username: '', available: true },
-              { code: '', name: keyword, username: '', available: true },
-            ]
-          : [{ code: '', name: '', username: '', available: true }];
-        const responses = await Promise.all(
-          requests.map((params) =>
-            userApi.selector({
-              pageIndex: 1,
-              pageSize: 20,
-              ...params,
-            }),
-          ),
-        );
-
-        const records = responses.flatMap((item) => item.datas || []);
-
-        return records.map((item) => ({
-          label: item.name,
-          value: item.id,
-          keywords: buildSelectKeywords(item.code, item.name, item.username),
-        }));
+        return requestUserSelectOptions(keyword);
       },
       async loadCustomerOptions(keyword = '') {
         await this.updateSelectOptions(

@@ -9,7 +9,17 @@
       <j-border>
         <j-form bordered>
           <j-form-item label="客户" required>
-            <customer-selector v-model:value="formData.customerId" />
+            <a-select
+              v-model:value="formData.customerId"
+              allow-clear
+              show-search
+              :filter-option="filterOption"
+              :options="customerOptions"
+              placeholder="请选择客户"
+              @focus="loadCustomerOptions()"
+              @search="loadCustomerOptions"
+              @change="(value) => handleSelectChange('customerId', value, customerOptionMap)"
+            />
           </j-form-item>
           <j-form-item label="订单日期">
             <a-date-picker
@@ -37,7 +47,7 @@
           <j-form-item label="操作人">
             <span>{{ formData.createBy }}</span>
           </j-form-item>
-          <j-form-item label="操作时间" >
+          <j-form-item label="操作时间">
             <span>{{ formData.createTime }}</span>
           </j-form-item>
           <j-form-item :content-nest="false" label="拒绝理由">
@@ -66,7 +76,6 @@
           >
             <span>{{ formData.approveTime }}</span>
           </j-form-item>
-
         </j-form>
       </j-border>
       <!-- 数据列表 -->
@@ -198,12 +207,12 @@
         :sc-id="formData.scId"
         @confirm="batchAddProduct"
       />
-        <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
-          <a-space>
-            <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
-            <a-button
-              v-permission="['sale:out:modify']"
-              type="primary"
+      <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
+        <a-space>
+          <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
+          <a-button
+            v-permission="['sale:out:modify']"
+            type="primary"
             :loading="loading"
             @click="updateOrder"
             >保存</a-button
@@ -239,9 +248,14 @@
     PATTERN_IS_FLOAT_GT_ZERO,
     PATTERN_IS_PRICE,
   } from '@/utils/utils';
+  import {
+    buildVisibleSelectOptions,
+    filterSelectOption,
+    mergeSelectOptionMap,
+    normalizeSelectValue,
+  } from '@/utils/searchSelect';
+  import { requestCustomerSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
-  import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
-  import UserSelector from '@/components/Selector/UserSelector.vue';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
 
@@ -249,8 +263,6 @@
     name: 'ModifySaleOutSheetUnRequire',
     components: {
       BatchAddProduct,
-      CustomerSelector,
-      UserSelector,
       OrderTimeLine,
     },
     mixins: [multiplePageMix],
@@ -343,6 +355,8 @@
           },
         ],
         tableData: [],
+        customerOptions: [],
+        customerOptionMap: {},
       };
     },
     computed: {},
@@ -523,10 +537,28 @@
       openBatchAddProductDialog() {
         this.$refs.batchAddProductDialog.openDialog();
       },
-      taxPriceInput(row, value) {
+      filterOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      handleSelectChange(field, value, optionMap) {
+        this.formData[field] = normalizeSelectValue(value, optionMap);
+      },
+      async requestCustomerOptions(keyword = '') {
+        return requestCustomerSelectOptions(keyword);
+      },
+      async loadCustomerOptions(keyword = '') {
+        const options = await this.requestCustomerOptions(keyword);
+        this.customerOptionMap = mergeSelectOptionMap(this.customerOptionMap, options);
+        this.customerOptions = buildVisibleSelectOptions(
+          this.formData.customerId,
+          this.customerOptionMap,
+          options,
+        );
+      },
+      taxPriceInput(_row, _value) {
         this.calcSum();
       },
-      outNumInput(value) {
+      outNumInput(_value) {
         this.calcSum();
       },
       // 计算汇总数据
@@ -716,7 +748,7 @@
         this.loading = true;
         api
           .update(params)
-          .then((res) => {
+          .then(() => {
             createSuccess('保存成功！');
 
             this.$emit('confirm');

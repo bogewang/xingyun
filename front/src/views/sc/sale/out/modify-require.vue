@@ -12,7 +12,17 @@
             {{ formData.customer.name }}
           </j-form-item>
           <j-form-item label="销售员">
-            <user-selector v-model:value="formData.salerId" />
+            <a-select
+              v-model:value="formData.salerId"
+              allow-clear
+              show-search
+              :filter-option="filterOption"
+              :options="salerOptions"
+              placeholder="请选择销售员"
+              @focus="loadSalerOptions()"
+              @search="loadSalerOptions"
+              @change="(value) => handleSelectChange('salerId', value, salerOptionMap)"
+            />
           </j-form-item>
           <j-form-item label="订单日期">
             <a-date-picker
@@ -209,12 +219,12 @@
         :sc-id="formData.sc.id"
         @confirm="batchAddProduct"
       />
-        <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
-          <a-space>
-            <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
-            <a-button
-              v-permission="['sale:out:modify']"
-              type="primary"
+      <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
+        <a-space>
+          <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
+          <a-button
+            v-permission="['sale:out:modify']"
+            type="primary"
             :loading="loading"
             @click="updateOrder"
             >保存</a-button
@@ -250,8 +260,14 @@
     isNumberPrecision,
     PATTERN_IS_FLOAT_GE_ZERO,
   } from '@/utils/utils';
+  import {
+    buildVisibleSelectOptions,
+    filterSelectOption,
+    mergeSelectOptionMap,
+    normalizeSelectValue,
+  } from '@/utils/searchSelect';
+  import { requestUserSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
-  import UserSelector from '@/components/Selector/UserSelector.vue';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
 
@@ -259,7 +275,6 @@
     name: 'ModifySaleOutSheetRequire',
     components: {
       BatchAddProduct,
-      UserSelector,
       OrderTimeLine,
     },
     mixins: [multiplePageMix],
@@ -285,6 +300,8 @@
         loading: false,
         // 表单数据
         formData: {},
+        salerOptions: [],
+        salerOptionMap: {},
         // 工具栏配置
         toolbarConfig: {
           // 缩放
@@ -572,10 +589,28 @@
         }
         this.$refs.batchAddProductDialog.openDialog();
       },
-      taxPriceInput(row, value) {
+      filterOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      handleSelectChange(field, value, optionMap) {
+        this.formData[field] = normalizeSelectValue(value, optionMap);
+      },
+      async requestUserOptions(keyword = '') {
+        return requestUserSelectOptions(keyword);
+      },
+      async loadSalerOptions(keyword = '') {
+        const options = await this.requestUserOptions(keyword);
+        this.salerOptionMap = mergeSelectOptionMap(this.salerOptionMap, options);
+        this.salerOptions = buildVisibleSelectOptions(
+          this.formData.salerId,
+          this.salerOptionMap,
+          options,
+        );
+      },
+      taxPriceInput(_row, _value) {
         this.calcSum();
       },
-      outNumInput(value) {
+      outNumInput(_value) {
         this.calcSum();
       },
       // 计算汇总数据
@@ -793,7 +828,7 @@
         this.loading = true;
         api
           .update(params)
-          .then((res) => {
+          .then(() => {
             createSuccess('保存成功！');
 
             this.$emit('confirm');

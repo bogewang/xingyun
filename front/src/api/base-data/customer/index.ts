@@ -2,19 +2,19 @@ import { defHttp } from '/@/utils/http/axios';
 import { PageResult } from '@/api/model/pageResult';
 import { ContentTypeEnum, ResponseEnum } from '@/enums/httpEnum';
 import { QueryCustomerSelectorVo } from '@/api/base-data/customer/model/queryCustomerSelectorVo';
-import { CustomerSelectorBo } from '@/api/base-data/customer/model/customerSelectorBo';
 import { UpdateCustomerVo } from '@/api/base-data/customer/model/updateCustomerVo';
 import { CreateCustomerVo } from '@/api/base-data/customer/model/createCustomerVo';
 import { GetCustomerBo } from '@/api/base-data/customer/model/getCustomerBo';
 import { QueryCustomerVo } from '@/api/base-data/customer/model/queryCustomerVo';
 import { QueryCustomerBo } from '@/api/base-data/customer/model/queryCustomerBo';
+import {SelectorBo} from "@/api/common/SelectorBo";
 
 const baseUrl = '/basedata/customer';
 const selectorBaseUrl = '/selector';
 const region = 'cloud-api';
 
-export function selector(params: QueryCustomerSelectorVo): Promise<PageResult<CustomerSelectorBo>> {
-  return defHttp.get<PageResult<CustomerSelectorBo>>(
+export function selector(params: QueryCustomerSelectorVo): Promise<PageResult<SelectorBo>> {
+  return defHttp.get<PageResult<SelectorBo>>(
     {
       url: selectorBaseUrl + '/customer',
       params,
@@ -25,8 +25,8 @@ export function selector(params: QueryCustomerSelectorVo): Promise<PageResult<Cu
   );
 }
 
-export function loadCustomer(ids: string[]): Promise<CustomerSelectorBo[]> {
-  return defHttp.post<CustomerSelectorBo[]>(
+export function loadCustomer(ids: string[]): Promise<SelectorBo[]> {
+  return defHttp.post<SelectorBo[]>(
     {
       url: selectorBaseUrl + '/customer/load',
       data: ids,

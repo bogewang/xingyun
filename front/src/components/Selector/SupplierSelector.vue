@@ -4,6 +4,9 @@
       ref="selector"
       :request="getList"
       :load="getLoad"
+      :option="{ label: 'label', value: 'value' }"
+      :column-option="{ label: 'label', value: 'value' }"
+      :table-column="[{ field: 'label', title: '供应商', minWidth: 220 }]"
       :request-params="_requestParams"
       v-bind="$attrs"
     >
@@ -11,11 +14,8 @@
         <!-- 查询条件 -->
         <j-border>
           <j-form bordered>
-            <j-form-item v-if="isEmpty(requestParams.code)" label="编号">
-              <a-input v-model:value="searchParams.code" />
-            </j-form-item>
-            <j-form-item v-if="isEmpty(requestParams.name)" label="名称">
-              <a-input v-model:value="searchParams.name" />
+            <j-form-item v-if="isEmpty(requestParams.label)" label="供应商">
+              <a-input v-model:value="searchParams.label" allow-clear />
             </j-form-item>
           </j-form>
         </j-border>
@@ -60,8 +60,7 @@
     data() {
       return {
         searchParams: {
-          code: '',
-          name: '',
+          label: '',
         },
       };
     },
