@@ -202,6 +202,7 @@ public class SaleOutSheetServiceImpl extends
 
     List<Map<String, String>> data = new ArrayList<>();
 
+    // 查询数据，组装数据
     // 表头
     headerMap.put("customer1", "客户1");
     headerMap.put("customer2", "客户2");
@@ -216,7 +217,6 @@ public class SaleOutSheetServiceImpl extends
     map.put("customer2", "200（这里是备注）");
     map.put("total", "300");
     data.add(map);
-
     ExcelUtil.exportNoModel("买菜汇总", headerMap, data);
   }
 
