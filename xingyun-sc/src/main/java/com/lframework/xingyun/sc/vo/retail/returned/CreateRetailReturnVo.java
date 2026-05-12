@@ -7,24 +7,23 @@ import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.starter.web.core.vo.BaseVo;
-import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.retail.out.RetailOutSheetDetailLotDto;
 import com.lframework.xingyun.sc.entity.RetailConfig;
 import com.lframework.xingyun.sc.entity.RetailOutSheetDetail;
 import com.lframework.xingyun.sc.service.retail.RetailConfigService;
 import com.lframework.xingyun.sc.service.retail.RetailOutSheetDetailLotService;
 import com.lframework.xingyun.sc.service.retail.RetailOutSheetDetailService;
-import com.lframework.xingyun.sc.service.retail.RetailOutSheetService;
 import com.lframework.xingyun.sc.vo.paytype.OrderPayTypeVo;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import lombok.Data;
 
 @Data
 public class CreateRetailReturnVo implements BaseVo, Serializable {
@@ -115,14 +114,6 @@ public class CreateRetailReturnVo implements BaseVo, Serializable {
 
   protected void validate(boolean requireOut) {
 
-    RetailOutSheetService retailOutSheetService = ApplicationUtil.getBean(
-        RetailOutSheetService.class);
-    GetPaymentDateDto paymentDate = retailOutSheetService.getPaymentDate(this.getMemberId());
-    if (paymentDate.getAllowModify()) {
-      if (this.getPaymentDate() == null) {
-        throw new InputErrorException("付款日期不能为空！");
-      }
-    }
 
     if (requireOut) {
       if (StringUtil.isBlank(this.getOutSheetId())) {

@@ -401,7 +401,12 @@
           saleOrderCode: '',
           settleStatus: undefined,
         };
+        this.orderDateRange = [
+          moment().subtract(1, 'M').format('YYYY-MM-DD'),
+          moment().format('YYYY-MM-DD'),
+        ];
         this.approveDateRange = [];
+        this.search();
       },
       // 查询前构建查询参数结构
       buildQueryParams(page, sorts) {

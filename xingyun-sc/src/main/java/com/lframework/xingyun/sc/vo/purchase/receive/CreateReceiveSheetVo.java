@@ -6,22 +6,21 @@ import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.starter.web.core.vo.BaseVo;
-import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.entity.PurchaseConfig;
 import com.lframework.xingyun.sc.entity.PurchaseOrderDetail;
 import com.lframework.xingyun.sc.service.purchase.PurchaseConfigService;
 import com.lframework.xingyun.sc.service.purchase.PurchaseOrderDetailService;
-import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
 import io.swagger.annotations.ApiModelProperty;
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
+import lombok.Data;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import lombok.Data;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class CreateReceiveSheetVo implements BaseVo, Serializable {
@@ -112,14 +111,6 @@ public class CreateReceiveSheetVo implements BaseVo, Serializable {
   }
 
   protected void validate(boolean requirePurchase) {
-
-    ReceiveSheetService receiveSheetService = ApplicationUtil.getBean(ReceiveSheetService.class);
-    GetPaymentDateDto paymentDate = receiveSheetService.getPaymentDate(this.supplierId);
-    if (paymentDate.getAllowModify()) {
-      if (this.getPaymentDate() == null) {
-        throw new InputErrorException("付款日期不能为空！");
-      }
-    }
 
     if (requirePurchase) {
       if (StringUtil.isBlank(this.getPurchaseOrderId())) {
