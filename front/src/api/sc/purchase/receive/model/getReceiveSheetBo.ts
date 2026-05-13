@@ -82,6 +82,11 @@ export interface GetReceiveSheetBo {
   totalAmount: number;
 
   /**
+   * 已支付金额
+   */
+  paidAmount: number;
+
+  /**
    * 支付方式
    */
   payTypes: OrderPayTypeBo[];

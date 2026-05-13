@@ -74,6 +74,18 @@ public class ReceiveSheetExportModel extends BaseBo<ReceiveSheet> implements Exc
   private BigDecimal totalAmount;
 
   /**
+   * 已付金额
+   */
+  @ExcelProperty("已付金额")
+  private BigDecimal paidAmount;
+
+  /**
+   * 未付金额
+   */
+  @ExcelProperty("未付金额")
+  private BigDecimal unpaidAmount;
+
+  /**
    * 商品数量
    */
   @ExcelProperty("商品数量")
@@ -186,6 +198,9 @@ public class ReceiveSheetExportModel extends BaseBo<ReceiveSheet> implements Exc
       this.setOrderDate(DateUtil.toDate(dto.getOrderDate()));
     }
     this.setTotalAmount(dto.getTotalAmount());
+    BigDecimal paidAmount = dto.getPaidAmount() == null ? BigDecimal.ZERO : dto.getPaidAmount();
+    this.setPaidAmount(paidAmount);
+    this.setUnpaidAmount(dto.getTotalAmount() == null ? BigDecimal.ZERO : dto.getTotalAmount().subtract(paidAmount));
     this.setReceiveNum(dto.getTotalNum());
     this.setGiftNum(dto.getTotalGiftNum());
     this.setReceiveDate(DateUtil.toDate(dto.getReceiveDate()));

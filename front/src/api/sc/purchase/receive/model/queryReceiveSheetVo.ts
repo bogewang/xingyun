@@ -70,4 +70,29 @@ export interface QueryReceiveSheetVo extends SortPageVo {
    * 结算状态
    */
   settleStatus: number;
+
+  /**
+   * 是否已付完
+   */
+  fullyPaid: boolean;
+
+  /**
+   * 已付金额起始值
+   */
+  paidAmountStart: number;
+
+  /**
+   * 已付金额截止值
+   */
+  paidAmountEnd: number;
+
+  /**
+   * 未付金额起始值
+   */
+  unpaidAmountStart: number;
+
+  /**
+   * 未付金额截止值
+   */
+  unpaidAmountEnd: number;
 }

@@ -7,6 +7,7 @@ import com.lframework.xingyun.sc.enums.SettleStatus;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -97,4 +98,34 @@ public class QueryReceiveSheetVo extends SortPageVo {
   @ApiModelProperty("结算状态")
   @IsEnum(message = "结算状态格式不正确！", enumClass = SettleStatus.class)
   private Integer settleStatus;
+
+  /**
+   * 是否已付完
+   */
+  @ApiModelProperty("是否已付完")
+  private Boolean fullyPaid;
+
+  /**
+   * 已付金额起始值
+   */
+  @ApiModelProperty("已付金额起始值")
+  private BigDecimal paidAmountStart;
+
+  /**
+   * 已付金额截止值
+   */
+  @ApiModelProperty("已付金额截止值")
+  private BigDecimal paidAmountEnd;
+
+  /**
+   * 未付金额起始值
+   */
+  @ApiModelProperty("未付金额起始值")
+  private BigDecimal unpaidAmountStart;
+
+  /**
+   * 未付金额截止值
+   */
+  @ApiModelProperty("未付金额截止值")
+  private BigDecimal unpaidAmountEnd;
 }

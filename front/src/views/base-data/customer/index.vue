@@ -158,6 +158,8 @@
           { field: 'code', title: '编号', width: 100, sortable: true },
           { field: 'name', title: '名称', minWidth: 180, sortable: true },
           { field: 'nickName', title: '昵称', minWidth: 140, sortable: true },
+          { field: 'paidAmount', title: '累计已付金额', width: 120, align: 'right' },
+          { field: 'unpaidAmount', title: '累计未付金额', width: 120, align: 'right' },
           { field: 'description', title: '备注', minWidth: 200 },
           { field: 'createBy', title: '创建人', width: 100 },
           { field: 'createTime', title: '创建时间', width: 170, sortable: true },

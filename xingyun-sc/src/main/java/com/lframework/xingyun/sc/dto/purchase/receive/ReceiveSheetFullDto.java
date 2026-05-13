@@ -76,6 +76,11 @@ public class ReceiveSheetFullDto implements BaseDto, Serializable {
   private BigDecimal totalAmount;
 
   /**
+   * 已支付金额
+   */
+  private BigDecimal paidAmount;
+
+  /**
    * 备注
    */
   private String description;

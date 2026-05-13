@@ -30,6 +30,18 @@ public class PrintSaleOrderBo extends BaseBo<SaleOrderFullDto> {
     private String description;
 
     /**
+     * 已付金额
+     */
+    @ApiModelProperty("已付金额")
+    private BigDecimal paidAmount;
+
+    /**
+     * 未付金额
+     */
+    @ApiModelProperty("未付金额")
+    private BigDecimal unpaidAmount;
+
+    /**
      * 创建人
      */
     @ApiModelProperty("创建人")

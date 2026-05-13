@@ -87,6 +87,11 @@ public class ReceiveSheet extends BaseEntity implements BaseDto {
   private BigDecimal totalAmount;
 
   /**
+   * 已支付金额
+   */
+  private BigDecimal paidAmount;
+
+  /**
    * 备注
    */
   private String description;

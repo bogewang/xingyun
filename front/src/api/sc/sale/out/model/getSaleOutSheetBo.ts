@@ -78,6 +78,11 @@ export interface GetSaleOutSheetBo {
   totalAmount: number;
 
   /**
+   * 已支付金额
+   */
+  paidAmount: number;
+
+  /**
    * 总利润
    */
   totalProfit: number;

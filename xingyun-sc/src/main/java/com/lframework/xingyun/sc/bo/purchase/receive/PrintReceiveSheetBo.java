@@ -93,6 +93,18 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
   private String description;
 
   /**
+   * 已付金额
+   */
+  @ApiModelProperty("已付金额")
+  private BigDecimal paidAmount;
+
+  /**
+   * 未付金额
+   */
+  @ApiModelProperty("未付金额")
+  private BigDecimal unpaidAmount;
+
+  /**
    * 创建人
    */
   @ApiModelProperty("创建人")
@@ -181,6 +193,8 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
       this.receiveDate = DateUtil.formatDate(dto.getReceiveDate());
     }
 
+    this.paidAmount = dto.getPaidAmount() == null ? BigDecimal.ZERO : dto.getPaidAmount();
+    this.unpaidAmount = NumberUtil.sub(dto.getTotalAmount(), this.paidAmount);
     this.createTime = DateUtil.formatDateTime(dto.getCreateTime());
 
     if (!StringUtil.isBlank(dto.getApproveBy())

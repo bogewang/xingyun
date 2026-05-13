@@ -118,6 +118,18 @@
               <a-input v-model:value.trim="formData.accountNo" allow-clear />
             </a-form-item>
           </a-col>
+          <a-col :span="8">
+            <a-form-item label="累计已付金额">
+              <a-input :value="formData.paidAmount" disabled />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="16">
+          <a-col :span="8">
+            <a-form-item label="累计未付金额">
+              <a-input :value="formData.unpaidAmount" disabled />
+            </a-form-item>
+          </a-col>
         </a-row>
         <a-row :gutter="16">
           <a-col :span="24">
@@ -230,6 +242,8 @@
           bankName: '',
           accountName: '',
           accountNo: '',
+          paidAmount: 0,
+          unpaidAmount: 0,
           description: '',
         };
       },

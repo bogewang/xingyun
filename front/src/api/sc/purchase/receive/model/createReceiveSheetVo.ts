@@ -27,6 +27,11 @@ export interface CreateReceiveSheetVo {
   paymentDate: string;
 
   /**
+   * 付款金额
+   */
+  paidAmount: number;
+
+  /**
    * 是否允许修改付款日期
    */
   allowModifyPaymentDate: boolean;

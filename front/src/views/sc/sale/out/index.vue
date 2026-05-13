@@ -114,6 +114,53 @@
                       >
                     </a-select>
                   </j-form-item>
+
+                  <j-form-item label="是否已付完">
+                    <a-select v-model:value="searchFormData.fullyPaid" placeholder="全部" allow-clear>
+                      <a-select-option :value="true">已付完</a-select-option>
+                      <a-select-option :value="false">未付完</a-select-option>
+                    </a-select>
+                  </j-form-item>
+
+                  <j-form-item label="已付金额">
+                    <a-space>
+                      <a-input-number
+                        v-model:value="searchFormData.paidAmountStart"
+                        :min="0"
+                        :precision="2"
+                        placeholder="最小值"
+                        style="width: 120px"
+                      />
+                      <span>至</span>
+                      <a-input-number
+                        v-model:value="searchFormData.paidAmountEnd"
+                        :min="0"
+                        :precision="2"
+                        placeholder="最大值"
+                        style="width: 120px"
+                      />
+                    </a-space>
+                  </j-form-item>
+
+                  <j-form-item label="未付金额">
+                    <a-space>
+                      <a-input-number
+                        v-model:value="searchFormData.unpaidAmountStart"
+                        :min="0"
+                        :precision="2"
+                        placeholder="最小值"
+                        style="width: 120px"
+                      />
+                      <span>至</span>
+                      <a-input-number
+                        v-model:value="searchFormData.unpaidAmountEnd"
+                        :min="0"
+                        :precision="2"
+                        placeholder="最大值"
+                        style="width: 120px"
+                      />
+                    </a-space>
+                  </j-form-item>
                 </template>
               </j-form>
             </j-border>
@@ -331,6 +378,11 @@
           saler: '',
           saleOrderCode: '',
           settleStatus: undefined,
+          fullyPaid: undefined,
+          paidAmountStart: undefined,
+          paidAmountEnd: undefined,
+          unpaidAmountStart: undefined,
+          unpaidAmountEnd: undefined,
         },
         orderDateRange: [
           moment().subtract(1, 'M').format('YYYY-MM-DD'),
@@ -358,6 +410,8 @@
           { field: 'customerName', title: '客户名称', width: 120 },
           { field: 'orderDate', title: '订单日期', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
+          { field: 'paidAmount', title: '已付金额', align: 'right', width: 100 },
+          { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 100 },
           { field: 'totalProfit', title: '总利润', align: 'right', width: 100 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
@@ -411,6 +465,11 @@
           saler: '',
           saleOrderCode: '',
           settleStatus: undefined,
+          fullyPaid: undefined,
+          paidAmountStart: undefined,
+          paidAmountEnd: undefined,
+          unpaidAmountStart: undefined,
+          unpaidAmountEnd: undefined,
         };
         this.orderDateRange = [
           moment().subtract(1, 'M').format('YYYY-MM-DD'),

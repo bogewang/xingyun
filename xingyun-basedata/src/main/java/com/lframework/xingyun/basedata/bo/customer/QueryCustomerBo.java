@@ -5,6 +5,7 @@ import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.xingyun.basedata.entity.Customer;
 import io.swagger.annotations.ApiModelProperty;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Data;
 
@@ -40,6 +41,18 @@ public class QueryCustomerBo extends BaseBo<Customer> {
      */
     @ApiModelProperty("备注")
     private String description;
+
+    /**
+     * 已付金额
+     */
+    @ApiModelProperty("已付金额")
+    private BigDecimal paidAmount;
+
+    /**
+     * 未付金额
+     */
+    @ApiModelProperty("未付金额")
+    private BigDecimal unpaidAmount;
 
     /**
      * 创建人ID

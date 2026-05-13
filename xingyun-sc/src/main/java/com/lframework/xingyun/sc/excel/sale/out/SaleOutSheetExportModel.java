@@ -74,6 +74,18 @@ public class SaleOutSheetExportModel extends BaseBo<SaleOutSheet> implements Exc
   private BigDecimal totalAmount;
 
   /**
+   * 已付金额
+   */
+  @ExcelProperty("已付金额")
+  private BigDecimal paidAmount;
+
+  /**
+   * 未付金额
+   */
+  @ExcelProperty("未付金额")
+  private BigDecimal unpaidAmount;
+
+  /**
    * 总利润
    */
   @ExcelProperty("总利润")
@@ -185,6 +197,9 @@ public class SaleOutSheetExportModel extends BaseBo<SaleOutSheet> implements Exc
       this.setOrderDate(DateUtil.toDate(dto.getOrderDate()));
     }
     this.setTotalAmount(dto.getTotalAmount());
+    BigDecimal paidAmount = dto.getPaidAmount() == null ? BigDecimal.ZERO : dto.getPaidAmount();
+    this.setPaidAmount(paidAmount);
+    this.setUnpaidAmount(dto.getTotalAmount() == null ? BigDecimal.ZERO : dto.getTotalAmount().subtract(paidAmount));
     this.setTotalProfit(dto.getTotalProfit());
     this.setReceiveNum(dto.getTotalNum());
     this.setGiftNum(dto.getTotalGiftNum());

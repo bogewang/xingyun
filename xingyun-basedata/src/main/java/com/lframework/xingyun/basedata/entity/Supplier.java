@@ -7,6 +7,7 @@ import com.lframework.starter.web.core.entity.BaseEntity;
 import com.lframework.starter.web.core.dto.BaseDto;
 import com.lframework.xingyun.basedata.enums.ManageType;
 import com.lframework.xingyun.basedata.enums.SettleType;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Data;
 
@@ -128,6 +129,16 @@ public class Supplier extends BaseEntity implements BaseDto {
    * 备注
    */
   private String description;
+
+  /**
+   * 未支付金额
+   */
+  private BigDecimal unpaidAmount;
+
+  /**
+   * 已支付金额
+   */
+  private BigDecimal paidAmount;
 
   /**
    * 创建人ID 新增时赋值
