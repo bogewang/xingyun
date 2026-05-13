@@ -16,6 +16,7 @@
         <a-descriptions-item label="简码" :span="2">{{
           formData.externalCode
         }}</a-descriptions-item>
+        <a-descriptions-item label="别名" :span="2">{{ formData.alias }}</a-descriptions-item>
         <a-descriptions-item label="分类" :span="2">{{
           formData.categoryName
         }}</a-descriptions-item>
@@ -43,6 +44,8 @@
         <a-descriptions-item label="零售价（元）" :span="2">{{
           formData.retailPrice
         }}</a-descriptions-item>
+        <a-descriptions-item label="备注" :span="2">{{ formData.remark }}</a-descriptions-item>
+        <a-descriptions-item label="备注2" :span="2">{{ formData.remark2 }}</a-descriptions-item>
         <a-descriptions-item label="商品类型" :span="4">{{
           PRODUCT_TYPE.getDesc(formData.productType)
         }}</a-descriptions-item>
@@ -110,6 +113,7 @@
           name: '',
           skuCode: '',
           externalCode: '',
+          alias: '',
           categoryName: '',
           brandName: '',
           spec: '',
@@ -117,6 +121,8 @@
           purchasePrice: '',
           salePrice: '',
           retailPrice: '',
+          remark: '',
+          remark2: '',
           properties: [],
         };
       },

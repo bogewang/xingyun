@@ -155,3 +155,19 @@ export function importExcel(data: { id: string; file: Blob }): Promise<void> {
     },
   );
 }
+
+/**
+ * 导出
+ */
+export function exportList(data: QueryProductVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/export',
+      data,
+    },
+    {
+      contentType: ContentTypeEnum.FORM_URLENCODED,
+      region,
+    },
+  );
+}

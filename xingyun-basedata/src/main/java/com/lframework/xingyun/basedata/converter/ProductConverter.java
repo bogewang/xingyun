@@ -57,6 +57,9 @@ public class ProductConverter {
             bo.setPurchasePrice(dto.getPurchasePrice());
             bo.setRetailPrice(dto.getRetailPrice());
             bo.setSalePrice(dto.getSalePrice());
+            bo.setAlias(dto.getAlias());
+            bo.setRemark(dto.getRemark());
+            bo.setRemark2(dto.getRemark2());
 
             return bo;
         }).collect(Collectors.toList());

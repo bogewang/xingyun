@@ -54,6 +54,12 @@
                 @click="$refs.importer.openDialog()"
                 >导入Excel</a-button
               >
+              <a-button
+                v-permission="['base-data:product:info:import']"
+                :icon="h(DownloadOutlined)"
+                @click="exportList"
+                >导出</a-button
+              >
               <a-dropdown>
                 <template #overlay>
                   <a-menu @click="handleCommand">
@@ -101,6 +107,7 @@ import Detail from './detail.vue';
 import * as api from '@/api/base-data/product/info';
 import {
   CloudUploadOutlined,
+  DownloadOutlined,
   DeleteOutlined,
   DownOutlined,
   PlusOutlined,
@@ -113,7 +120,7 @@ import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue
 import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
 import {PRODUCT_TYPE} from '@/enums/biz/productType';
 import BatchHandler from '@/components/BatchHandler';
-import {createError} from '@/hooks/web/msg';
+import {createError, createSuccess} from '@/hooks/web/msg';
 import PageWrapper from "@/components/Page/src/PageWrapper.vue";
 import JFormItem from "@/components/JFormItem";
 import JBorder from "@/components/JBorder";
@@ -140,6 +147,7 @@ export default defineComponent({
       return {
         h,
         CloudUploadOutlined,
+        DownloadOutlined,
         PlusOutlined,
         SearchOutlined,
         PRODUCT_TYPE,
@@ -173,10 +181,13 @@ export default defineComponent({
           { type: 'checkbox', width: 45 },
           { field: 'code', title: '编号', width: 120, sortable: true },
           { field: 'name', title: '名称', minWidth: 160, sortable: true },
+          { field: 'alias', title: '别名', minWidth: 180 },
           { field: 'unit', title: '单位', width: 100 },
           { field: 'spec', title: '规格', width: 120 },
           { field: 'purchasePrice', title: '采购价', width: 120 },
           { field: 'salePrice', title: '销售价', width: 120 },
+          { field: 'remark', title: '备注', minWidth: 180 },
+          { field: 'remark2', title: '备注2', minWidth: 180 },
           { field: 'categoryName', title: '分类', width: 120 },
           { field: 'createTime', title: '创建时间', width: 170, sortable: true },
           { field: 'updateTime', title: '修改时间', width: 170, sortable: true },
@@ -223,6 +234,17 @@ export default defineComponent({
         return {
           ...this.searchFormData,
         };
+      },
+      exportList() {
+        this.loading = true;
+        api
+          .exportList(this.buildQueryParams({}))
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
       },
       handleCommand({ key }) {
         if (key === 'batchDelete') {

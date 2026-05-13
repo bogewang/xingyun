@@ -103,6 +103,21 @@ export interface UpdateProductVo {
   retailPrice: number;
 
   /**
+   * 别名
+   */
+  alias: string;
+
+  /**
+   * 备注
+   */
+  remark: string;
+
+  /**
+   * 备注2
+   */
+  remark2: string;
+
+  /**
    * 状态
    */
   available: boolean;

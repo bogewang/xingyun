@@ -61,6 +61,11 @@
             </a-form-item>
           </a-col>
           <a-col :md="8" :sm="24">
+            <a-form-item label="别名" name="alias">
+              <a-textarea v-model:value="formData.alias" allow-clear :rows="2" />
+            </a-form-item>
+          </a-col>
+          <a-col :md="8" :sm="24">
             <a-form-item label="商品分类" name="categoryId">
               <product-category-selector
                 v-model:value="formData.categoryId"
@@ -117,6 +122,16 @@
           <a-col :md="8" :sm="24">
             <a-form-item label="零售价（元）" name="retailPrice">
               <a-input v-model:value="formData.retailPrice" allow-clear />
+            </a-form-item>
+          </a-col>
+          <a-col :md="8" :sm="24">
+            <a-form-item label="备注" name="remark">
+              <a-input v-model:value="formData.remark" allow-clear />
+            </a-form-item>
+          </a-col>
+          <a-col :md="8" :sm="24">
+            <a-form-item label="备注2" name="remark2">
+              <a-input v-model:value="formData.remark2" allow-clear />
             </a-form-item>
           </a-col>
         </a-row>

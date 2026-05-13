@@ -80,6 +80,15 @@ public class QueryProductBo extends BaseBo<Product> {
     @ApiModelProperty("售价")
     private BigDecimal salePrice;
 
+    @ApiModelProperty("别名")
+    private String alias;
+
+    @ApiModelProperty("备注")
+    private String remark;
+
+    @ApiModelProperty("备注2")
+    private String remark2;
+
     /**
      * 分类名称
      */

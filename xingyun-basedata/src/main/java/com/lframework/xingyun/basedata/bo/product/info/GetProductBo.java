@@ -155,6 +155,15 @@ public class GetProductBo extends BaseBo<Product> {
   @ApiModelProperty("零售价")
   private BigDecimal retailPrice;
 
+  @ApiModelProperty("别名")
+  private String alias;
+
+  @ApiModelProperty("备注")
+  private String remark;
+
+  @ApiModelProperty("备注2")
+  private String remark2;
+
   /**
    * 属性
    */
@@ -200,6 +209,9 @@ public class GetProductBo extends BaseBo<Product> {
     this.purchasePrice = dto.getPurchasePrice();
     this.salePrice = dto.getSalePrice();
     this.retailPrice = dto.getRetailPrice();
+    this.alias = dto.getAlias();
+    this.remark = dto.getRemark();
+    this.remark2 = dto.getRemark2();
 
     ProductPropertyRelationService productPropertyRelationService = ApplicationUtil.getBean(
         ProductPropertyRelationService.class);

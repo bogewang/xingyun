@@ -118,6 +118,19 @@ public class Product extends BaseEntity implements BaseDto {
    * 状态
    */
   private Boolean available;
+  /**
+   * 别名
+   */
+  private String alias;
+
+  /**
+   * 备注
+   */
+  private String remark;
+  /**
+   * 备注二
+   */
+  private String remark2;
 
   /**
    * 创建人ID 新增时赋值

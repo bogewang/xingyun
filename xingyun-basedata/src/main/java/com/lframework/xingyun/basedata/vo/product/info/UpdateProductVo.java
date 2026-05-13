@@ -152,4 +152,13 @@ public class UpdateProductVo implements BaseVo, Serializable {
    */
   @ApiModelProperty("零售价")
   private BigDecimal retailPrice;
+
+  @ApiModelProperty("别名")
+  private String alias;
+
+  @ApiModelProperty("备注")
+  private String remark;
+
+  @ApiModelProperty("备注2")
+  private String remark2;
 }

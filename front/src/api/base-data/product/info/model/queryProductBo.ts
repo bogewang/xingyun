@@ -45,6 +45,26 @@ export interface QueryProductBo {
   retailPrice: number;
 
   /**
+   * 销售价
+   */
+  salePrice: number;
+
+  /**
+   * 别名
+   */
+  alias: string;
+
+  /**
+   * 备注
+   */
+  remark: string;
+
+  /**
+   * 备注2
+   */
+  remark2: string;
+
+  /**
    * 分类名称
    */
   categoryName: string;

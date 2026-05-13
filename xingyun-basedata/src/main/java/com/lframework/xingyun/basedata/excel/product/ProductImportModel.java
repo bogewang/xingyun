@@ -3,13 +3,15 @@ package com.lframework.xingyun.basedata.excel.product;
 import com.alibaba.excel.annotation.ExcelIgnore;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.lframework.starter.web.core.annotations.excel.ExcelRequired;
+import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
+import com.lframework.xingyun.basedata.entity.Product;
 import lombok.Data;
 
 import java.math.BigDecimal;
 
 @Data
-public class ProductImportModel implements ExcelModel {
+public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
 
     /**
      * ID
@@ -59,14 +61,6 @@ public class ProductImportModel implements ExcelModel {
     @ExcelRequired
     private String unit;
 
-
-    /**
-     * 简码
-     */
-    // @ExcelProperty("简码")
-    // private String externalCode;
-
-
     /**
      * 采购价
      */
@@ -89,6 +83,23 @@ public class ProductImportModel implements ExcelModel {
     private BigDecimal retailPrice;
 
     /**
+     * 备注
+     */
+    @ExcelProperty("备注")
+    private String remark;
+    /**
+     * 备注二
+     */
+    @ExcelProperty("备注2")
+    private String remark2;
+
+    /**
+     * 别名
+     */
+    @ExcelProperty("别名")
+    private String alias;
+
+    /**
      * 品牌编号
      */
     @ExcelProperty("品牌编号")
@@ -108,6 +119,12 @@ public class ProductImportModel implements ExcelModel {
     private String skuCode;
 
     /**
+     * 简码
+     */
+    @ExcelProperty("简码")
+    private String externalCode;
+
+    /**
      * 进项税率（%）
      */
     @ExcelProperty("进项税率（%）")
@@ -125,7 +142,16 @@ public class ProductImportModel implements ExcelModel {
     @ExcelIgnore
     private String brandId;
 
+    public ProductImportModel() {
+    }
 
+    public ProductImportModel(Product dto) {
+        super(dto);
+    }
+
+    @Override
+    protected void afterInit(Product dto) {
+    }
 
 
 }

@@ -44,4 +44,6 @@ ALTER TABLE `tbl_receive_sheet` ADD COLUMN `paid_amount` decimal(24,6) NULL DEFA
 
 ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `fill_all_cost` boolean NULL DEFAULT NULL COMMENT '是否录完所有成本';
 ALTER TABLE `base_data_product` ADD COLUMN `alias` varchar(5000) NULL COMMENT '别名';
+ALTER TABLE `base_data_product` ADD COLUMN `remark` varchar(255) NULL COMMENT '备注';
+ALTER TABLE `base_data_product` ADD COLUMN `remark2` varchar(255) NULL COMMENT '备注二';
 
