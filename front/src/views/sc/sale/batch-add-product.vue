@@ -15,6 +15,7 @@
 
   export default defineComponent({
     name: 'SaleBatchAddProduct',
+    emits: ['close', 'confirm'],
     components: {
       SharedBatchAddProduct,
     },
