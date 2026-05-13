@@ -13,6 +13,7 @@
     >
       <vxe-grid
         v-if="visible"
+        :id="gridId"
         ref="grid"
         resizable
         show-overflow
@@ -23,6 +24,7 @@
         :proxy-config="proxyConfig"
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
+        :custom-config="{}"
         :pager-config="{}"
         :checkbox-config="{
           trigger: 'row',
@@ -117,6 +119,8 @@
           brandId: '',
         },
         toolbarConfig: {
+          custom: true,
+          refresh: false,
           slots: {
             buttons: 'toolbar_buttons',
           },
@@ -157,6 +161,9 @@
       };
     },
     computed: {
+      gridId() {
+        return `ScBatchAddProduct_${this.bizType}`;
+      },
       permissionCodes() {
         if (this.bizType === 'purchase') {
           return [
