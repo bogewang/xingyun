@@ -304,37 +304,37 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     }
 
     private void handleRetailPrice(CreateProductVo vo, Product data) {
-        if (vo.getRetailPrice() == null) {
-            throw new DefaultClientException("零售价不能为空！");
-        }
-
-        if (NumberUtil.lt(vo.getRetailPrice(), 0D)) {
-            throw new DefaultClientException("零售价不允许小于0！");
-        }
+        // if (vo.getRetailPrice() == null) {
+        //     throw new DefaultClientException("零售价不能为空！");
+        // }
+        //
+        // if (NumberUtil.lt(vo.getRetailPrice(), 0D)) {
+        //     throw new DefaultClientException("零售价不允许小于0！");
+        // }
 
         data.setRetailPrice(vo.getRetailPrice());
     }
 
     private void handleSalePrice(CreateProductVo vo, Product data) {
-        if (vo.getSalePrice() == null) {
-            throw new DefaultClientException("销售价不能为空！");
-        }
-
-        if (NumberUtil.lt(vo.getSalePrice(), 0)) {
-            throw new DefaultClientException("销售价不允许小于0！");
-        }
+        // if (vo.getSalePrice() == null) {
+        //     throw new DefaultClientException("销售价不能为空！");
+        // }
+        //
+        // if (NumberUtil.lt(vo.getSalePrice(), 0)) {
+        //     throw new DefaultClientException("销售价不允许小于0！");
+        // }
 
         data.setSalePrice(vo.getSalePrice());
     }
 
     private void handlePurchasePrice(CreateProductVo vo, Product data) {
-        if (vo.getPurchasePrice() == null) {
-            throw new DefaultClientException("采购价不能为空！");
-        }
-
-        if (NumberUtil.lt(vo.getPurchasePrice(), 0)) {
-            throw new DefaultClientException("采购价不允许小于0！");
-        }
+        // if (vo.getPurchasePrice() == null) {
+        //     throw new DefaultClientException("采购价不能为空！");
+        // }
+        //
+        // if (NumberUtil.lt(vo.getPurchasePrice(), 0)) {
+        //     throw new DefaultClientException("采购价不允许小于0！");
+        // }
         data.setPurchasePrice(vo.getPurchasePrice());
     }
 
@@ -758,37 +758,31 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
      * @param rowIndex
      */
     private void checkPrice(ProductImportModel data, int rowIndex) {
-        if (data.getPurchasePrice() == null) {
-            throw new DefaultClientException("第" + rowIndex + "行“采购价（元）”不能为空");
+        if (data.getPurchasePrice() != null) {
+            if (!NumberUtil.isNumberPrecision(data.getPurchasePrice(), 6)) {
+                throw new DefaultClientException("第" + rowIndex + "行“采购价（元）”最多允许6位小数");
+            }
+            if (NumberUtil.lt(data.getPurchasePrice(), 0)) {
+                throw new DefaultClientException("第" + rowIndex + "行“采购价（元）”不允许小于0");
+            }
         }
 
-        if (!NumberUtil.isNumberPrecision(data.getPurchasePrice(), 6)) {
-            throw new DefaultClientException("第" + rowIndex + "行“采购价（元）”最多允许6位小数");
-        }
-        if (NumberUtil.lt(data.getPurchasePrice(), 0)) {
-            throw new DefaultClientException("第" + rowIndex + "行“采购价（元）”不允许小于0");
-        }
-
-        if (data.getSalePrice() == null) {
-            throw new DefaultClientException("第" + rowIndex + "行“销售价（元）”不能为空");
+        if (data.getSalePrice() != null) {
+            if (!NumberUtil.isNumberPrecision(data.getSalePrice(), 6)) {
+                throw new DefaultClientException("第" + rowIndex + "行“销售价（元）”最多允许6位小数");
+            }
+            if (NumberUtil.lt(data.getSalePrice(), 0)) {
+                throw new DefaultClientException("第" + rowIndex + "行“销售价（元）”不允许小于0");
+            }
         }
 
-        if (!NumberUtil.isNumberPrecision(data.getSalePrice(), 6)) {
-            throw new DefaultClientException("第" + rowIndex + "行“销售价（元）”最多允许6位小数");
-        }
-        if (NumberUtil.lt(data.getSalePrice(), 0)) {
-            throw new DefaultClientException("第" + rowIndex + "行“销售价（元）”不允许小于0");
-        }
-
-        if (data.getRetailPrice() == null) {
-            throw new DefaultClientException("第" + rowIndex + "行“零售价（元）”不能为空");
-        }
-
-        if (!NumberUtil.isNumberPrecision(data.getRetailPrice(), 6)) {
-            throw new DefaultClientException("第" + rowIndex + "行“零售价（元）”最多允许6位小数");
-        }
-        if (NumberUtil.lt(data.getRetailPrice(), 0)) {
-            throw new DefaultClientException("第" + rowIndex + "行“零售价（元）”不允许小于0");
+        if (data.getRetailPrice() != null) {
+            if (!NumberUtil.isNumberPrecision(data.getRetailPrice(), 6)) {
+                throw new DefaultClientException("第" + rowIndex + "行“零售价（元）”最多允许6位小数");
+            }
+            if (NumberUtil.lt(data.getRetailPrice(), 0)) {
+                throw new DefaultClientException("第" + rowIndex + "行“零售价（元）”不允许小于0");
+            }
         }
     }
 

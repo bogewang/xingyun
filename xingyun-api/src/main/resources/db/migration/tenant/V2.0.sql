@@ -43,3 +43,5 @@ ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `paid_amount` decimal(24,6) NULL DEF
 ALTER TABLE `tbl_receive_sheet` ADD COLUMN `paid_amount` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '已支付金额';
 
 ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `fill_all_cost` boolean NULL DEFAULT NULL COMMENT '是否录完所有成本';
+ALTER TABLE `base_data_product` ADD COLUMN `alias` varchar(5000) NULL COMMENT '别名';
+

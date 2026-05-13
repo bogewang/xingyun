@@ -33,7 +33,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -156,7 +155,7 @@ public class ProductController extends DefaultBaseController {
       productService.importExcel(list);
 
       return InvokeResultBuilder.success();
-    } catch (IOException e) {
+    } catch (Exception e) {
       log.error("请求出错", e);
       return InvokeResultBuilder.fail(e.getMessage());
     }

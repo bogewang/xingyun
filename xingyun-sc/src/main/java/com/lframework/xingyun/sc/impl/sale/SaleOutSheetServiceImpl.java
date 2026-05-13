@@ -1234,11 +1234,11 @@ public class SaleOutSheetServiceImpl extends
         BigDecimal totalCostAmount = BigDecimal.ZERO;
         boolean fillAllCost = true;
         for (SaleOutSheetDetail saleDetail : saleDetails) {
-            boolean detailFillAllCost = true;
 
             BigDecimal productCostPrice = receiveCostPriceMap.get(saleDetail.getProductId());
             if (productCostPrice == null) {
-                detailFillAllCost = false;
+                fillAllCost = false;
+                continue;
             }
 
             BigDecimal detailCostAmount = NumberUtil.getNumber(NumberUtil.mul(productCostPrice, saleDetail.getOrderNum()), 6);
@@ -1249,12 +1249,13 @@ public class SaleOutSheetServiceImpl extends
             saleOutSheetDetailService.updateById(saleDetail);
 
             totalCostAmount = NumberUtil.add(totalCostAmount, detailCostAmount);
-            if (!detailFillAllCost) {
-                fillAllCost = false;
-            }
         }
 
-        BigDecimal totalProfit = NumberUtil.getNumber(NumberUtil.sub(saleOutSheet.getTotalAmount(), totalCostAmount), 6);
+        // 所有成本都有了，再计算利润，不然利润偏高；
+        BigDecimal totalProfit = null;
+        if (fillAllCost) {
+            totalProfit = NumberUtil.getNumber(NumberUtil.sub(saleOutSheet.getTotalAmount(), totalCostAmount), 6);
+        }
 
         LambdaUpdateWrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
                 .set(SaleOutSheet::getTotalCost, totalCostAmount)

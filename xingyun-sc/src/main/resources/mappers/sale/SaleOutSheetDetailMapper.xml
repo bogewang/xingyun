@@ -14,6 +14,7 @@
         <result column="description" property="description"/>
         <result column="order_no" property="orderNo"/>
         <result column="return_num" property="returnNum"/>
+        <result column="tax_amount" property="taxAmount"/>
     </resultMap>
 
     <sql id="SaleOutSheetDetailDto_sql">
@@ -29,7 +30,8 @@
             d.tax_rate,
             d.description,
             d.order_no,
-            d.return_num
+            d.return_num,
+            d.tax_amount
         FROM tbl_sale_out_sheet_detail AS d
     </sql>
     <update id="addReturnNum">
