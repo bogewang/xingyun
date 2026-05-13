@@ -8,10 +8,7 @@ import com.google.common.collect.Lists;
 import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.exceptions.impl.InputErrorException;
-import com.lframework.starter.common.utils.Assert;
-import com.lframework.starter.common.utils.BeanUtil;
-import com.lframework.starter.common.utils.NumberUtil;
-import com.lframework.starter.common.utils.StringUtil;
+import com.lframework.starter.common.utils.*;
 import com.lframework.starter.web.core.annotations.oplog.OpLog;
 import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
 import com.lframework.starter.web.core.components.resp.PageResult;
@@ -50,6 +47,7 @@ import com.lframework.xingyun.sc.enums.ProductStockBizType;
 import com.lframework.xingyun.sc.enums.PurchaseOpLogType;
 import com.lframework.xingyun.sc.enums.ReceiveSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
+import com.lframework.xingyun.sc.excel.purchase.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import com.lframework.xingyun.sc.mappers.ReceiveSheetMapper;
 import com.lframework.xingyun.sc.service.purchase.*;
@@ -848,5 +846,43 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             //     throw new DefaultClientException("第" + rowIndex + "行商品未设置采购价，请填写“单价”或先维护商品采购价");
             // }
         }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public List<String> importByQuery(List<ReceiveSheetQueryImportModel> list) {
+        if (CollectionUtil.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+        Map<String, List<ReceiveSheetQueryImportModel>> map = list.stream().collect(
+                Collectors.groupingBy(item -> item.getOrderDate() + item.getSupplierName()));
+
+        return map.keySet().stream().map(item -> this.create(buildCreateVo(map.get(item)))).collect(Collectors.toList());
+    }
+
+    private CreateReceiveSheetVo buildCreateVo(List<ReceiveSheetQueryImportModel> list) {
+        ReceiveSheetQueryImportModel model = list.get(0);
+        List<Supplier> suppliers = supplierService.queryByNames(Lists.newArrayList(model.getSupplierName()));
+        Assert.notEmpty(suppliers, "供应商不存在：" + model.getSupplierName());
+
+        CreateReceiveSheetVo res = new CreateReceiveSheetVo();
+        res.setSupplierId(suppliers.get(0).getId());
+        res.setOrderDate(DateUtil.parseDate(model.getOrderDate(), "yyyy/MM/dd"));
+        res.setProducts(buildProducts(list));
+
+        return res;
+    }
+
+    private List<ReceiveProductVo> buildProducts(List<ReceiveSheetQueryImportModel> list) {
+        if (CollectionUtil.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+
+        List<ReceiveSheetImportModel> collect = list.stream().map(item
+                -> BeanUtil.copyProperties(item, ReceiveSheetImportModel.class)).collect(Collectors.toList());
+        List<ReceiveProductVo> checked = checkImport(collect);
+
+        return checked.stream().map(item
+                -> BeanUtil.copyProperties(item, ReceiveProductVo.class)).collect(Collectors.toList());
     }
 }

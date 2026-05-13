@@ -17,6 +17,7 @@ import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.PurchaseConfig;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
+import com.lframework.xingyun.sc.excel.purchase.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.*;
 import com.lframework.xingyun.sc.service.purchase.PurchaseConfigService;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
@@ -348,5 +349,28 @@ public class ReceiveSheetController extends DefaultBaseController {
         ExcelUtil.read(file, ReceiveSheetPayTypeImportModel.class, listener).sheet().doRead();
 
         return InvokeResultBuilder.success();
+    }
+
+
+    @ApiOperation("下载采购查询导入模板")
+    @HasPermission({"purchase:receive:import"})
+    @GetMapping("/import/query/template")
+    public void downloadQueryImportTemplate() {
+        ExcelUtil.export("采购订单查询导入模板", ReceiveSheetQueryImportModel.class);
+    }
+
+    @ApiOperation("采购查询页面导入并创建订单")
+    @HasPermission({"purchase:receive:import"})
+    @PostMapping("/import/query")
+    public InvokeResult<List<String>> importByQuery(@NotNull(message = "请上传文件") MultipartFile file) {
+        try {
+            List<ReceiveSheetQueryImportModel> list = EasyExcelUtils.syncReadModel(
+                    file.getInputStream(), ReceiveSheetQueryImportModel.class);
+            List<String> data = receiveSheetService.importByQuery(list);
+            return InvokeResultBuilder.success(data);
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
     }
 }

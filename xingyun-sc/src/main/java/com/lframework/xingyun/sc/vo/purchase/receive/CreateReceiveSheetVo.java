@@ -69,7 +69,6 @@ public class CreateReceiveSheetVo implements BaseVo, Serializable {
    * 到货日期
    */
   @ApiModelProperty(value = "到货日期", required = true)
-  @NotNull(message = "到货日期不能为空！")
   private LocalDate receiveDate;
 
   /**

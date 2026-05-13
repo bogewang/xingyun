@@ -7,6 +7,7 @@ import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.enums.SettleStatus;
+import com.lframework.xingyun.sc.excel.purchase.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import com.lframework.xingyun.sc.vo.purchase.receive.*;
 
@@ -157,5 +158,11 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
       SettleStatus settleStatus);
 
   List<ReceiveProductVo> checkImport(List<ReceiveSheetImportModel> list);
-
+  /**
+   * 从采购查询页面导入并创建订单
+   *
+   * @param list 导入数据
+   * @return 创建的订单ID列表
+   */
+  List<String> importByQuery(List<ReceiveSheetQueryImportModel> list);
 }

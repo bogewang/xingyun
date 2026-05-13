@@ -44,7 +44,7 @@ import com.lframework.xingyun.sc.enums.PurchaseOpLogType;
 import com.lframework.xingyun.sc.enums.PurchaseOrderStatus;
 import com.lframework.xingyun.sc.events.order.impl.ApprovePassPurchaseOrderEvent;
 import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderImportModel;
-import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderQueryImportModel;
+import com.lframework.xingyun.sc.excel.purchase.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.mappers.PurchaseOrderMapper;
 import com.lframework.xingyun.sc.service.paytype.OrderPayTypeService;
 import com.lframework.xingyun.sc.service.purchase.*;
@@ -748,43 +748,7 @@ public class PurchaseOrderServiceImpl extends
         return list;
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public List<String> importByQuery(List<PurchaseOrderQueryImportModel> list) {
-        if (CollectionUtil.isEmpty(list)) {
-            return new ArrayList<>();
-        }
-        Map<String, List<PurchaseOrderQueryImportModel>> map = list.stream().collect(
-                Collectors.groupingBy(item -> item.getOrderDate() + item.getSupplierName()));
 
-        return map.keySet().stream().map(item -> this.create(buildCreateVo(map.get(item)))).collect(Collectors.toList());
-    }
-
-    private CreatePurchaseOrderVo buildCreateVo(List<PurchaseOrderQueryImportModel> list) {
-        PurchaseOrderQueryImportModel model = list.get(0);
-        List<Supplier> suppliers = supplierService.queryByNames(Lists.newArrayList(model.getSupplierName()));
-        Assert.notEmpty(suppliers, "供应商不存在：" + model.getSupplierName());
-
-        CreatePurchaseOrderVo res = new CreatePurchaseOrderVo();
-        res.setSupplierId(suppliers.get(0).getId());
-        res.setOrderDate(DateUtil.parseDate(model.getOrderDate(), "yyyy/MM/dd"));
-        res.setProducts(buildProducts(list));
-
-        return res;
-    }
-
-    private List<PurchaseProductVo> buildProducts(List<PurchaseOrderQueryImportModel> list) {
-        if (CollectionUtil.isEmpty(list)) {
-            return new ArrayList<>();
-        }
-
-        List<PurchaseOrderImportModel> collect = list.stream().map(item
-                -> BeanUtil.copyProperties(item, PurchaseOrderImportModel.class)).collect(Collectors.toList());
-        List<PurchaseOrderImportModel> checked = checkImport(collect);
-
-        return checked.stream().map(item
-                -> BeanUtil.copyProperties(item, PurchaseProductVo.class)).collect(Collectors.toList());
-    }
 
     private void sendApprovePassEvent(PurchaseOrder order) {
 

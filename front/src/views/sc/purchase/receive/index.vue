@@ -193,7 +193,7 @@
       <detail :id="id" ref="viewDialog" />
 
       <approve-refuse ref="approveRefuseDialog" @confirm="doApproveRefuse" />
-      <purchase-order-query-importer ref="importer" @confirm="handleImportSuccess" />
+      <receive-sheet-query-importer ref="importer" @confirm="handleImportSuccess" />
 
       <!-- 采购订单查看窗口 -->
       <purchase-order-detail :id="purchaseOrderId" ref="viewPurchaseOrderDetailDialog" />
@@ -273,12 +273,12 @@
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
   import BatchHandler from '@/components/BatchHandler';
-  import PurchaseOrderQueryImporter from "@/components/Importor/PurchaseOrderQueryImporter.vue";
+  import ReceiveSheetQueryImporter from "@/components/Importor/PurchaseOrderQueryImporter.vue";
 
   export default defineComponent({
     name: 'ReceiveSheet',
     components: {
-      PurchaseOrderQueryImporter,
+      ReceiveSheetQueryImporter,
       Detail,
       ApproveRefuse,
       PurchaseOrderDetail,
