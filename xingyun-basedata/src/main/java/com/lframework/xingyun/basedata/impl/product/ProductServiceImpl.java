@@ -622,8 +622,10 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         Map<String, Integer> checkNameSpecUnitMap = new HashMap<>();
         // 检查SKU编号是否重复
         List<Product> availableProducts = selectAllAvailable();
-        Set<String> availableCodes = availableProducts.stream().map(Product::getCode).collect(Collectors.toSet());
-        Set<String> availableSkuCodes = availableProducts.stream().map(Product::getSkuCode).collect(Collectors.toSet());
+        Map<String, Product> availableCodes = availableProducts.stream().collect(Collectors.toMap(Product::getCode, item -> item));
+        Map<String, Product> availableSkuCodes = availableProducts.stream()
+                .filter(item -> item.getSkuCode() != null)
+                .collect(Collectors.toMap(Product::getSkuCode, item -> item));
         Map<String, Product> availableNameSpecUnitKeys = availableProducts.stream()
                 .collect(Collectors.toMap(this::buildNameSpecUnitKey, item -> item));
         // 检查分类编号是否重复
@@ -687,7 +689,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
      * @param i
      */
     private void checkRules(List<ProductImportModel> list, List<String> checkCodeList, List<String> checkSkuCodeList,
-            Map<String, Integer> checkNameSpecUnitMap, Set<String> availableCodes, Set<String> availableSkuCodes,
+            Map<String, Integer> checkNameSpecUnitMap, Map<String, Product> availableCodes, Map<String, Product> availableSkuCodes,
                             Map<String, Product> availableNameSpecUnitKeys, Map<String, String> categoryMap, Map<String, String> brandMap,
             List<String> parentCategoryIds, int i) {
         ProductImportModel data = list.get(i);
@@ -697,12 +699,12 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         if (StringUtil.isBlank(data.getName())) {
             throw new DefaultClientException("第" + rowIndex + "行“名称”不能为空");
         }
-        checkNameSpecUnit(checkNameSpecUnitMap, availableNameSpecUnitKeys, data, rowIndex);
 
         if (StringUtil.isNotBlank(data.getSkuCode())) {
             checkSkuCode(checkSkuCodeList, availableSkuCodes, data, rowIndex);
         }
 
+        checkNameSpecUnit(checkNameSpecUnitMap, availableNameSpecUnitKeys, data, rowIndex);
         checkCategory(categoryMap, parentCategoryIds, data, rowIndex);
 
         if (StringUtil.isNotBlank(data.getBrandCode())) {
@@ -792,19 +794,19 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         }
     }
 
-    private void checkSkuCode(List<String> checkSkuCodeList, Set<String> availableSkuCodes, ProductImportModel data,
+    private void checkSkuCode(List<String> checkSkuCodeList, Map<String, Product> availableSkuCodes, ProductImportModel data,
             int rowIndex) {
         if (checkSkuCodeList.contains(data.getSkuCode())) {
             throw new DefaultClientException(
                     "第" + rowIndex + "行“SKU编号”与第" + (checkSkuCodeList.indexOf(data.getSkuCode()) + 1) + "行重复");
         }
         checkSkuCodeList.add(data.getSkuCode());
-        if (availableSkuCodes.contains(data.getSkuCode())) {
-            throw new DefaultClientException("第" + rowIndex + "行“SKU编号”重复，请检查");
+        if (availableSkuCodes.containsKey(data.getSkuCode()) && data.getId() == null) {
+            data.setId(availableSkuCodes.get(data.getSkuCode()).getSkuCode());
         }
     }
 
-    private void checkCode(List<String> checkList, Set<String> availableCodes, ProductImportModel data, int rowIndex) {
+    private void checkCode(List<String> checkList, Map<String, Product> availableCodes, ProductImportModel data, int rowIndex) {
         if (StringUtil.isBlank(data.getCode())) {
             throw new DefaultClientException("第" + rowIndex + "行“编号”不能为空");
         }
@@ -816,8 +818,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                     "第" + rowIndex + "行“编号”与第" + (checkList.indexOf(data.getCode()) + 1) + "行重复");
         }
         checkList.add(data.getCode());
-        if (availableCodes.contains(data.getCode())) {
-            throw new DefaultClientException("第" + rowIndex + "行“编号”已存在");
+        if (availableCodes.containsKey(data.getCode())) {
+            data.setId(availableCodes.get(data.getCode()).getId());
         }
     }
 
@@ -836,18 +838,18 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             throw new DefaultClientException(
                     "第" + rowIndex + "行“名称+规格+单位”与第" + existsRowIndex + "行重复");
         }
-        if (availableNameSpecUnitKeys.containsKey(key)) {
+        if (availableNameSpecUnitKeys.containsKey(key) && data.getId() == null) {
             data.setId(availableNameSpecUnitKeys.get(key).getId());
         }
         checkNameSpecUnitMap.put(key, rowIndex);
     }
 
-    private String generateProductCode(List<String> checkCodeList, Set<String> availableCodes) {
+    private String generateProductCode(List<String> checkCodeList, Map<String, Product> availableCodes) {
         String prefix = "P" + LocalDate.now().format(PRODUCT_CODE_DATE_FORMATTER);
         int sequence = 1;
         while (true) {
             String code = prefix + String.format("%05d", sequence);
-            if (!checkCodeList.contains(code) && !availableCodes.contains(code) && !existsProductCode(code)) {
+            if (!checkCodeList.contains(code) && !availableCodes.containsKey(code) && !existsProductCode(code)) {
                 return code;
             }
             sequence++;

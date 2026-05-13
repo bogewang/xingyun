@@ -5,7 +5,10 @@ import com.alibaba.excel.annotation.ExcelProperty;
 import com.lframework.starter.web.core.annotations.excel.ExcelRequired;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
+import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.basedata.entity.Product;
+import com.lframework.xingyun.basedata.entity.ProductCategory;
+import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -151,6 +154,11 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
 
     @Override
     protected void afterInit(Product dto) {
+        ProductCategoryService productCategoryService =  ApplicationUtil.getBean(ProductCategoryService.class);
+        if (dto.getCategoryId() != null) {
+            ProductCategory category = productCategoryService.findById(dto.getCategoryId());
+            this.categoryName = category.getName();
+        }
     }
 
 
