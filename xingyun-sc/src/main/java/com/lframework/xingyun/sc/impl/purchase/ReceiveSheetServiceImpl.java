@@ -221,6 +221,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         sheet.setStatus(ReceiveSheetStatus.CREATED);
 
         getBaseMapper().insert(sheet);
+        this.adjustSupplierAmount(sheet.getSupplierId());
 
         // todo
         // OpLogUtil.setVariable("code", sheet.getCode());
@@ -249,6 +250,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
             throw new DefaultClientException("采购收货单无法修改！");
         }
+
+        String oldSupplierId = sheet.getSupplierId();
 
         boolean requirePurchase = !StringUtil.isBlank(sheet.getPurchaseOrderId());
 
@@ -285,6 +288,11 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
                 .eq(ReceiveSheet::getId, sheet.getId()).in(ReceiveSheet::getStatus, statusList);
         if (getBaseMapper().updateAllColumn(sheet, updateOrderWrapper) != 1) {
             throw new DefaultClientException("采购收货单信息已过期，请刷新重试！");
+        }
+
+        this.adjustSupplierAmount(oldSupplierId);
+        if (!StringUtil.equals(oldSupplierId, sheet.getSupplierId())) {
+            this.adjustSupplierAmount(sheet.getSupplierId());
         }
 
         OpLogUtil.setVariable("code", sheet.getCode());
@@ -536,6 +544,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new DefaultClientException("采购收货单信息已过期，请刷新重试！");
         }
 
+        this.adjustSupplierAmount(sheet.getSupplierId());
+
         OpLogUtil.setVariable("code", sheet.getCode());
     }
 
@@ -760,6 +770,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         sheet.setTotalNum(purchaseNum);
         sheet.setTotalGiftNum(giftNum);
         sheet.setTotalAmount(totalAmount);
+        sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), totalAmount));
         sheet.setDescription(
                 StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(supplier));
@@ -777,6 +788,58 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             return SettleStatus.UN_SETTLE;
         } else {
             return SettleStatus.UN_REQUIRE;
+        }
+    }
+
+    private BigDecimal normalizePaidAmount(BigDecimal paidAmount, BigDecimal totalAmount) {
+
+        BigDecimal actualPaidAmount = paidAmount == null ? totalAmount : paidAmount;
+        if (NumberUtil.lt(actualPaidAmount, BigDecimal.ZERO)) {
+            throw new InputErrorException("付款金额不允许小于0！");
+        }
+
+        if (!NumberUtil.isNumberPrecision(actualPaidAmount, 6)) {
+            throw new InputErrorException("付款金额最多允许6位小数！");
+        }
+
+        if (NumberUtil.gt(actualPaidAmount, totalAmount)) {
+            throw new InputErrorException("付款金额不允许大于单据总金额！");
+        }
+
+        return actualPaidAmount;
+    }
+
+    private BigDecimal getUnpaidAmount(ReceiveSheet sheet) {
+
+        BigDecimal totalAmount = sheet.getTotalAmount() == null ? BigDecimal.ZERO : sheet.getTotalAmount();
+        BigDecimal paidAmount = sheet.getPaidAmount() == null ? BigDecimal.ZERO : sheet.getPaidAmount();
+        return NumberUtil.sub(totalAmount, paidAmount);
+    }
+
+    private void adjustSupplierAmount(String supplierId) {
+
+        if (StringUtil.isBlank(supplierId)) {
+            return;
+        }
+
+        List<ReceiveSheet> sheets = this.list(Wrappers.lambdaQuery(ReceiveSheet.class)
+                .eq(ReceiveSheet::getSupplierId, supplierId));
+
+        BigDecimal paidAmount = BigDecimal.ZERO;
+        BigDecimal unpaidAmount = BigDecimal.ZERO;
+        for (ReceiveSheet item : sheets) {
+            BigDecimal itemPaidAmount = item.getPaidAmount() == null ? BigDecimal.ZERO : item.getPaidAmount();
+            BigDecimal itemTotalAmount = item.getTotalAmount() == null ? BigDecimal.ZERO : item.getTotalAmount();
+            paidAmount = NumberUtil.add(paidAmount, itemPaidAmount);
+            unpaidAmount = NumberUtil.add(unpaidAmount, NumberUtil.sub(itemTotalAmount, itemPaidAmount));
+        }
+
+        Supplier supplier = new Supplier();
+        supplier.setId(supplierId);
+        supplier.setPaidAmount(paidAmount);
+        supplier.setUnpaidAmount(unpaidAmount);
+        if (!supplierService.updateById(supplier)) {
+            throw new DefaultClientException("供应商金额更新失败，请重试！");
         }
     }
 

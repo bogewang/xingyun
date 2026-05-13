@@ -2,6 +2,7 @@ package com.lframework.xingyun.sc.bo.sale.out;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.lframework.starter.common.constants.StringPool;
+import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
@@ -107,6 +108,18 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
     private BigDecimal totalCost;
 
     /**
+     * 已付金额
+     */
+    @ApiModelProperty("已付金额")
+    private BigDecimal paidAmount;
+
+    /**
+     * 未付金额
+     */
+    @ApiModelProperty("未付金额")
+    private BigDecimal unpaidAmount;
+
+    /**
      * 总利润
      */
     @ApiModelProperty("总利润")
@@ -197,6 +210,8 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
 
         this.status = dto.getStatus().getCode();
         this.settleStatus = dto.getSettleStatus().getCode();
+        this.paidAmount = dto.getPaidAmount() == null ? BigDecimal.ZERO : dto.getPaidAmount();
+        this.unpaidAmount = NumberUtil.sub(dto.getTotalAmount(), this.paidAmount);
 
         if (!StringUtil.isBlank(dto.getSaleOrderId())) {
             SaleOrderService saleOrderService = ApplicationUtil.getBean(SaleOrderService.class);

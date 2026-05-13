@@ -173,11 +173,21 @@
 
       <j-border title="合计">
         <j-form bordered label-width="140px">
-          <j-form-item label="出库数量" :span="6">
+          <j-form-item label="出库数量" :span="8">
             <a-input v-model:value="formData.totalNum" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="含税总金额" :span="6">
+          <j-form-item label="含税总金额" :span="8">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
+          </j-form-item>
+          <j-form-item label="付款金额" :span="8">
+            <a-space>
+              <a-input
+                v-model:value="formData.paidAmount"
+                class="number-input"
+                @input="(e) => paidAmountInput(e.target.value)"
+              />
+              <a-button @click="setUnpaid">未付款</a-button>
+            </a-space>
           </j-form-item>
         </j-form>
       </j-border>
@@ -279,6 +289,7 @@
         loading: false,
         // 表单数据
         formData: {},
+        paidAmountDirty: false,
         // 工具栏配置
         toolbarConfig: {
           // 缩放
@@ -409,9 +420,11 @@
           orderDate: formatDate(Moment()),
           totalNum: 0,
           totalAmount: 0,
+          paidAmount: 0,
           description: '',
         };
 
+        this.paidAmountDirty = false;
         this.tableData = [];
       },
       emptyProduct() {
@@ -575,6 +588,10 @@
       taxPriceInput(_row, _value) {
         this.calcSum();
       },
+      paidAmountInput(value) {
+        this.formData.paidAmount = value;
+        this.paidAmountDirty = true;
+      },
       outNumInput(_value) {
         this.calcSum();
       },
@@ -582,6 +599,7 @@
       calcSum() {
         let totalNum = 0;
         let totalAmount = 0;
+        const previousTotalAmount = this.formData.totalAmount;
 
         this.tableData
           .filter((t) => {
@@ -595,6 +613,14 @@
 
         this.formData.totalNum = totalNum;
         this.formData.totalAmount = totalAmount;
+        if (!this.paidAmountDirty || this.formData.paidAmount === previousTotalAmount) {
+          this.formData.paidAmount = totalAmount;
+          this.paidAmountDirty = false;
+        }
+      },
+      setUnpaid() {
+        this.formData.paidAmount = 0;
+        this.paidAmountDirty = true;
       },
       // 批量录入数量
       batchInputOutNum() {
@@ -650,6 +676,31 @@
 
         if (isEmpty(this.formData.saleOrderId)) {
           createError('销售订单不允许为空！');
+          return false;
+        }
+
+        if (isEmpty(this.formData.paidAmount)) {
+          createError('付款金额不允许为空！');
+          return false;
+        }
+
+        if (!isFloat(this.formData.paidAmount)) {
+          createError('付款金额必须是数字！');
+          return false;
+        }
+
+        if (!isFloatGeZero(this.formData.paidAmount)) {
+          createError('付款金额不允许小于0！');
+          return false;
+        }
+
+        if (!isNumberPrecision(this.formData.paidAmount, 6)) {
+          createError('付款金额最多允许6位小数！');
+          return false;
+        }
+
+        if (parseFloat(this.formData.paidAmount) > parseFloat(this.formData.totalAmount || 0)) {
+          createError('付款金额不允许大于含税总金额！');
           return false;
         }
 
@@ -744,6 +795,7 @@
           customerId: this.formData.customerId,
           salerId: this.formData.salerId || '',
           orderDate: this.formData.orderDate || '',
+          paidAmount: this.formData.paidAmount,
           saleOrderId: this.formData.saleOrderId,
           description: this.formData.description,
           required: true,

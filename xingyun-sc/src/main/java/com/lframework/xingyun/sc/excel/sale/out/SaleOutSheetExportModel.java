@@ -8,18 +8,17 @@ import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
-import com.lframework.xingyun.basedata.entity.Customer;
-import com.lframework.xingyun.basedata.entity.StoreCenter;
-import com.lframework.xingyun.basedata.service.customer.CustomerService;
-import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.starter.web.inner.entity.SysUser;
+import com.lframework.starter.web.inner.service.system.SysUserService;
+import com.lframework.xingyun.basedata.entity.Customer;
+import com.lframework.xingyun.basedata.service.customer.CustomerService;
 import com.lframework.xingyun.sc.entity.SaleOrder;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.service.sale.SaleOrderService;
-import com.lframework.starter.web.inner.service.system.SysUserService;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.util.Date;
-import lombok.Data;
 
 @Data
 public class SaleOutSheetExportModel extends BaseBo<SaleOutSheet> implements ExcelModel {
@@ -72,6 +71,18 @@ public class SaleOutSheetExportModel extends BaseBo<SaleOutSheet> implements Exc
    */
   @ExcelProperty("单据总金额")
   private BigDecimal totalAmount;
+
+  /**
+   * 已付金额
+   */
+  @ExcelProperty("已付金额")
+  private BigDecimal paidAmount;
+
+  /**
+   * 未付金额
+   */
+  @ExcelProperty("未付金额")
+  private BigDecimal unpaidAmount;
 
   /**
    * 总利润
@@ -159,9 +170,6 @@ public class SaleOutSheetExportModel extends BaseBo<SaleOutSheet> implements Exc
   @Override
   protected void afterInit(SaleOutSheet dto) {
 
-    StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
-    StoreCenter sc = storeCenterService.findById(dto.getScId());
-
     CustomerService customerService = ApplicationUtil.getBean(CustomerService.class);
     Customer customer = customerService.findById(dto.getCustomerId());
 
@@ -176,8 +184,6 @@ public class SaleOutSheetExportModel extends BaseBo<SaleOutSheet> implements Exc
     }
 
     this.setCode(dto.getCode());
-    this.setScCode(sc.getCode());
-    this.setScName(sc.getName());
     this.setCustomerCode(customer.getCode());
     this.setCustomerName(customer.getName());
     this.setSalerName(saler == null ? null : saler.getName());
@@ -185,6 +191,9 @@ public class SaleOutSheetExportModel extends BaseBo<SaleOutSheet> implements Exc
       this.setOrderDate(DateUtil.toDate(dto.getOrderDate()));
     }
     this.setTotalAmount(dto.getTotalAmount());
+    BigDecimal paidAmount = dto.getPaidAmount() == null ? BigDecimal.ZERO : dto.getPaidAmount();
+    this.setPaidAmount(paidAmount);
+    this.setUnpaidAmount(dto.getTotalAmount() == null ? BigDecimal.ZERO : dto.getTotalAmount().subtract(paidAmount));
     this.setTotalProfit(dto.getTotalProfit());
     this.setReceiveNum(dto.getTotalNum());
     this.setGiftNum(dto.getTotalGiftNum());

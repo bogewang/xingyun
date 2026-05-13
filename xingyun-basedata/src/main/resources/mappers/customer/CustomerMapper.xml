@@ -23,6 +23,8 @@
         <result column="account_no" property="accountNo"/>
         <result column="available" property="available"/>
         <result column="description" property="description"/>
+        <result column="unpaid_amount" property="unpaidAmount"/>
+        <result column="paid_amount" property="paidAmount"/>
         <result column="create_by" property="createBy"/>
         <result column="create_time" property="createTime"/>
         <result column="update_by" property="updateBy"/>
@@ -51,6 +53,8 @@
             account_no,
             available,
             description,
+            unpaid_amount,
+            paid_amount,
             create_by,
             create_time,
             update_by,

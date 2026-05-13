@@ -8,18 +8,17 @@ import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
-import com.lframework.xingyun.basedata.entity.StoreCenter;
-import com.lframework.xingyun.basedata.entity.Supplier;
-import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
-import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.starter.web.inner.entity.SysUser;
+import com.lframework.starter.web.inner.service.system.SysUserService;
+import com.lframework.xingyun.basedata.entity.Supplier;
+import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.sc.entity.PurchaseOrder;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.service.purchase.PurchaseOrderService;
-import com.lframework.starter.web.inner.service.system.SysUserService;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.util.Date;
-import lombok.Data;
 
 @Data
 public class ReceiveSheetExportModel extends BaseBo<ReceiveSheet> implements ExcelModel {
@@ -72,6 +71,18 @@ public class ReceiveSheetExportModel extends BaseBo<ReceiveSheet> implements Exc
    */
   @ExcelProperty("单据总金额")
   private BigDecimal totalAmount;
+
+  /**
+   * 已付金额
+   */
+  @ExcelProperty("已付金额")
+  private BigDecimal paidAmount;
+
+  /**
+   * 未付金额
+   */
+  @ExcelProperty("未付金额")
+  private BigDecimal unpaidAmount;
 
   /**
    * 商品数量
@@ -160,9 +171,6 @@ public class ReceiveSheetExportModel extends BaseBo<ReceiveSheet> implements Exc
   @Override
   protected void afterInit(ReceiveSheet dto) {
 
-    StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
-    StoreCenter sc = storeCenterService.findById(dto.getScId());
-
     SupplierService supplierService = ApplicationUtil.getBean(SupplierService.class);
     Supplier supplier = supplierService.findById(dto.getSupplierId());
 
@@ -177,8 +185,6 @@ public class ReceiveSheetExportModel extends BaseBo<ReceiveSheet> implements Exc
     }
 
     this.setCode(dto.getCode());
-    this.setScCode(sc.getCode());
-    this.setScName(sc.getName());
     this.setSupplierCode(supplier.getCode());
     this.setSupplierName(supplier.getName());
     this.setPurchaserName(purchaser == null ? null : purchaser.getName());
@@ -186,6 +192,9 @@ public class ReceiveSheetExportModel extends BaseBo<ReceiveSheet> implements Exc
       this.setOrderDate(DateUtil.toDate(dto.getOrderDate()));
     }
     this.setTotalAmount(dto.getTotalAmount());
+    BigDecimal paidAmount = dto.getPaidAmount() == null ? BigDecimal.ZERO : dto.getPaidAmount();
+    this.setPaidAmount(paidAmount);
+    this.setUnpaidAmount(dto.getTotalAmount() == null ? BigDecimal.ZERO : dto.getTotalAmount().subtract(paidAmount));
     this.setReceiveNum(dto.getTotalNum());
     this.setGiftNum(dto.getTotalGiftNum());
     this.setReceiveDate(DateUtil.toDate(dto.getReceiveDate()));

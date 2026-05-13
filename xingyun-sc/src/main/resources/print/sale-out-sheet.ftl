@@ -55,8 +55,15 @@
         </td>
         <td colspan="4" class="et3" style="border-width: 1px; border-style: solid;">${customerName!''}</td>
         <td colspan="2" class="et2" x:str="" style="border-width: 1px; border-style: solid;">
+            已付金额
         </td>
-        <td class="et3" style="border-width: 1px; border-style: solid;"></td>
+        <td class="et3" style="border-width: 1px; border-style: solid;">${paidAmount!''}</td>
+    </tr>
+    <tr height="24" style="height:14.40pt;">
+        <td class="et2" height="14" x:str="" style="border-width: 1px; border-style: solid;">
+            未付金额
+        </td>
+        <td colspan="10" class="et3" style="border-width: 1px; border-style: solid;">${unpaidAmount!''}</td>
     </tr>
     <tr height="24" style="height:14.40pt;">
         <td class="et2" height="14" x:str="" style="border-width: 1px; border-style: solid;">

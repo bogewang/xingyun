@@ -15,6 +15,8 @@
         <result column="total_gift_num" property="totalGiftNum"/>
         <result column="total_amount" property="totalAmount"/>
         <result column="total_cost" property="totalCost"/>
+        <result column="paid_amount" property="paidAmount"/>
+        <result column="cost_price" property="costPrice"/>
         <result column="total_profit" property="totalProfit"/>
         <result column="fill_all_cost" property="fillAllCost"/>
         <result column="description" property="description"/>
@@ -40,6 +42,8 @@
         <result column="total_gift_num" property="totalGiftNum"/>
         <result column="total_amount" property="totalAmount"/>
         <result column="total_cost" property="totalCost"/>
+        <result column="paid_amount" property="paidAmount"/>
+        <result column="cost_price" property="costPrice"/>
         <result column="total_profit" property="totalProfit"/>
         <result column="fill_all_cost" property="fillAllCost"/>
         <result column="description" property="description"/>
@@ -106,6 +110,8 @@
             s.total_gift_num,
             s.total_amount,
             s.total_cost,
+            s.paid_amount,
+            s.cost_price,
             s.total_profit,
             s.fill_all_cost,
             s.description,
@@ -133,6 +139,8 @@
             s.total_num,
             s.total_gift_num,
             s.total_amount,
+            s.paid_amount,
+            s.cost_price,
             s.total_cost,
             s.total_profit,
             s.fill_all_cost,
@@ -213,6 +221,28 @@
                 </if>
                 <if test="vo.settleStatus != null">
                     AND s.settle_status = #{vo.settleStatus}
+                </if>
+                <if test="vo.fullyPaid != null">
+                    <choose>
+                        <when test="vo.fullyPaid">
+                            AND IFNULL(s.total_amount, 0) &lt;= IFNULL(s.paid_amount, 0)
+                        </when>
+                        <otherwise>
+                            AND IFNULL(s.total_amount, 0) &gt; IFNULL(s.paid_amount, 0)
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="vo.paidAmountStart != null">
+                    AND IFNULL(s.paid_amount, 0) &gt;= #{vo.paidAmountStart}
+                </if>
+                <if test="vo.paidAmountEnd != null">
+                    AND IFNULL(s.paid_amount, 0) &lt;= #{vo.paidAmountEnd}
+                </if>
+                <if test="vo.unpaidAmountStart != null">
+                    AND (IFNULL(s.total_amount, 0) - IFNULL(s.paid_amount, 0)) &gt;= #{vo.unpaidAmountStart}
+                </if>
+                <if test="vo.unpaidAmountEnd != null">
+                    AND (IFNULL(s.total_amount, 0) - IFNULL(s.paid_amount, 0)) &lt;= #{vo.unpaidAmountEnd}
                 </if>
                 <if test="vo.idList != null and vo.idList.size() > 0">
                     AND s.id IN <foreach collection="vo.idList" open="(" separator="," close=")" item="item">#{item}</foreach>

@@ -20,6 +20,16 @@ export interface QuerySupplierBo {
   description: string;
 
   /**
+   * 已付金额
+   */
+  paidAmount: number;
+
+  /**
+   * 未付金额
+   */
+  unpaidAmount: number;
+
+  /**
    * 创建人ID
    */
   createBy: string;

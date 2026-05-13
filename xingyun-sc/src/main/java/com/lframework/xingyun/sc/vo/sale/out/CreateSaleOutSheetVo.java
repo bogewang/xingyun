@@ -56,6 +56,12 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
   private LocalDate paymentDate;
 
   /**
+   * 付款金额
+   */
+  @ApiModelProperty("付款金额")
+  private BigDecimal paidAmount;
+
+  /**
    * 是否允许修改付款日期
    */
   @ApiModelProperty("是否允许修改付款日期")
@@ -111,6 +117,16 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
         SaleOrderDetailService.class);
 
     int orderNo = 1;
+    if (this.paidAmount != null) {
+      if (NumberUtil.lt(this.paidAmount, BigDecimal.ZERO)) {
+        throw new InputErrorException("付款金额不允许小于0！");
+      }
+
+      if (!NumberUtil.isNumberPrecision(this.paidAmount, 6)) {
+        throw new InputErrorException("付款金额最多允许6位小数！");
+      }
+    }
+
     for (SaleOutProductVo product : this.products) {
 
       if (StringUtil.isBlank(product.getProductId())) {

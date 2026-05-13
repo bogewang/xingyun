@@ -578,6 +578,7 @@ public class SaleOutSheetServiceImpl extends
         sheet.setStatus(SaleOutSheetStatus.CREATED);
 
         getBaseMapper().insert(sheet);
+        this.adjustCustomerAmount(sheet.getCustomerId());
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
@@ -605,6 +606,8 @@ public class SaleOutSheetServiceImpl extends
 
             throw new DefaultClientException("销售出库单无法修改！");
         }
+
+        String oldCustomerId = sheet.getCustomerId();
 
         boolean requireSale = !StringUtil.isBlank(sheet.getSaleOrderId());
 
@@ -645,6 +648,11 @@ public class SaleOutSheetServiceImpl extends
                 .eq(SaleOutSheet::getId, sheet.getId()).in(SaleOutSheet::getStatus, statusList);
         if (getBaseMapper().updateAllColumn(sheet, updateOrderWrapper) != 1) {
             throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
+        }
+
+        this.adjustCustomerAmount(oldCustomerId);
+        if (!StringUtil.equals(oldCustomerId, sheet.getCustomerId())) {
+            this.adjustCustomerAmount(sheet.getCustomerId());
         }
 
         OpLogUtil.setVariable("code", sheet.getCode());
@@ -958,6 +966,8 @@ public class SaleOutSheetServiceImpl extends
             throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
         }
 
+        this.adjustCustomerAmount(sheet.getCustomerId());
+
         OpLogUtil.setVariable("code", sheet.getCode());
     }
 
@@ -1178,6 +1188,8 @@ public class SaleOutSheetServiceImpl extends
         sheet.setTotalNum(purchaseNum);
         sheet.setTotalGiftNum(giftNum);
         sheet.setTotalAmount(totalAmount);
+        sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), totalAmount));
+        sheet.setCostPrice(BigDecimal.ZERO);
         sheet.setTotalCost(BigDecimal.ZERO);
         sheet.setTotalProfit(BigDecimal.ZERO);
         sheet.setDescription(
@@ -1194,6 +1206,51 @@ public class SaleOutSheetServiceImpl extends
     private SettleStatus getInitSettleStatus(Customer customer) {
 
         return SettleStatus.UN_SETTLE;
+    }
+
+    private BigDecimal normalizePaidAmount(BigDecimal paidAmount, BigDecimal totalAmount) {
+
+        BigDecimal actualPaidAmount = paidAmount == null ? totalAmount : paidAmount;
+        if (NumberUtil.lt(actualPaidAmount, BigDecimal.ZERO)) {
+            throw new InputErrorException("付款金额不允许小于0！");
+        }
+
+        if (!NumberUtil.isNumberPrecision(actualPaidAmount, 6)) {
+            throw new InputErrorException("付款金额最多允许6位小数！");
+        }
+
+        if (NumberUtil.gt(actualPaidAmount, totalAmount)) {
+            throw new InputErrorException("付款金额不允许大于单据总金额！");
+        }
+
+        return actualPaidAmount;
+    }
+
+    private void adjustCustomerAmount(String customerId) {
+
+        if (StringUtil.isBlank(customerId)) {
+            return;
+        }
+
+        List<SaleOutSheet> sheets = this.list(Wrappers.lambdaQuery(SaleOutSheet.class)
+                .eq(SaleOutSheet::getCustomerId, customerId));
+
+        BigDecimal paidAmount = BigDecimal.ZERO;
+        BigDecimal unpaidAmount = BigDecimal.ZERO;
+        for (SaleOutSheet item : sheets) {
+            BigDecimal itemPaidAmount = item.getPaidAmount() == null ? BigDecimal.ZERO : item.getPaidAmount();
+            BigDecimal itemTotalAmount = item.getTotalAmount() == null ? BigDecimal.ZERO : item.getTotalAmount();
+            paidAmount = NumberUtil.add(paidAmount, itemPaidAmount);
+            unpaidAmount = NumberUtil.add(unpaidAmount, NumberUtil.sub(itemTotalAmount, itemPaidAmount));
+        }
+
+        Customer customer = new Customer();
+        customer.setId(customerId);
+        customer.setPaidAmount(paidAmount);
+        customer.setUnpaidAmount(unpaidAmount);
+        if (!customerService.updateById(customer)) {
+            throw new DefaultClientException("客户金额更新失败，请重试！");
+        }
     }
 
     @Override

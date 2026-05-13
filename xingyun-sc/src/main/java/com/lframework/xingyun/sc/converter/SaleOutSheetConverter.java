@@ -3,6 +3,7 @@ package com.lframework.xingyun.sc.converter;
 import cn.hutool.core.bean.BeanUtil;
 import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.common.utils.DateUtil;
+import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.basedata.entity.Customer;
 import com.lframework.xingyun.basedata.entity.Product;
@@ -11,6 +12,7 @@ import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleOrderBo;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,8 @@ public class SaleOutSheetConverter {
     PrintSaleOrderBo res = BeanUtil.copyProperties(data, PrintSaleOrderBo.class);
     res.setCustomerName(customer.getName());
     res.setDeliveryDate(DateUtil.formatDate(data.getOrderDate(), "yyyy-MM-dd"));
+    res.setPaidAmount(data.getPaidAmount() == null ? BigDecimal.ZERO : data.getPaidAmount());
+    res.setUnpaidAmount(NumberUtil.sub(data.getTotalAmount(), res.getPaidAmount()));
     res.setDetails(orderDetailDTO2PrintDetailBOS(data.getDetails()));
 
     return res;

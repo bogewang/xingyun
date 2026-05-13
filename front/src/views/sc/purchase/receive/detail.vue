@@ -112,14 +112,17 @@
 
               <j-border title="合计">
                 <j-form bordered label-width="140px">
-                  <j-form-item label="收货数量" :span="6">
+                  <j-form-item label="收货数量" :span="8">
                     <a-input v-model:value="formData.totalNum" class="number-input" readonly />
                   </j-form-item>
-                  <j-form-item label="含税总金额" :span="6">
+                  <j-form-item label="含税总金额" :span="8">
                     <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
                   </j-form-item>
-                  <j-form-item label="备注" :span="12" :content-nest="false">
-                    <a-input v-model:value.trim="formData.description" maxlength="200" readonly />
+                  <j-form-item label="已付金额" :span="8">
+                    <a-input v-model:value="formData.paidAmount" class="number-input" readonly />
+                  </j-form-item>
+                  <j-form-item label="备注" :span="24" :content-nest="false">
+                    <a-textarea v-model:value.trim="formData.description" maxlength="200" readonly />
                   </j-form-item>
                 </j-form>
               </j-border>
@@ -149,7 +152,7 @@ import {defineComponent} from 'vue';
 import PurchaseOrderDetail from '@/views/sc/purchase/order/detail.vue';
 import * as api from '@/api/sc/purchase/receive';
 import {printMix} from '@/mixins/print.ts';
-import {add, getNumber, isEmpty, isFloatGeZero, mul} from '@/utils/utils';
+import {add, getNumber, isEmpty, isFloatGeZero, mul, sub} from '@/utils/utils';
 import {RECEIVE_SHEET_STATUS} from '@/enums/biz/receiveSheetStatus';
 import {PRINT_TYPE} from '@/enums/biz/printType';
 import OrderTimeLine from '@/components/OrderTimeLine';
@@ -267,6 +270,8 @@ export default defineComponent({
           purchaseOrderCode: '',
           totalNum: 0,
           totalAmount: 0,
+          paidAmount: 0,
+          unpaidAmount: 0,
           description: '',
         };
 
@@ -295,6 +300,8 @@ export default defineComponent({
               refuseReason: res.refuseReason,
               totalNum: 0,
               totalAmount: 0,
+              paidAmount: res.paidAmount || 0,
+              unpaidAmount: 0,
             };
             this.tableData = res.details || [];
 
@@ -327,6 +334,7 @@ export default defineComponent({
 
         this.formData.totalNum = totalNum;
         this.formData.totalAmount = totalAmount;
+        this.formData.unpaidAmount = sub(this.formData.totalAmount || 0, this.formData.paidAmount || 0);
       },
       async print() {
         this.loading = true;

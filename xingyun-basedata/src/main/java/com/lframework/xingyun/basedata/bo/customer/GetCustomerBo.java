@@ -8,6 +8,7 @@ import com.lframework.xingyun.basedata.entity.Customer;
 import com.lframework.starter.web.inner.dto.dic.city.DicCityDto;
 import com.lframework.starter.web.inner.service.DicCityService;
 import io.swagger.annotations.ApiModelProperty;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.Data;
@@ -134,6 +135,18 @@ public class GetCustomerBo extends BaseBo<Customer> {
      */
     @ApiModelProperty("备注")
     private String description;
+
+    /**
+     * 已付金额
+     */
+    @ApiModelProperty("已付金额")
+    private BigDecimal paidAmount;
+
+    /**
+     * 未付金额
+     */
+    @ApiModelProperty("未付金额")
+    private BigDecimal unpaidAmount;
 
     public GetCustomerBo() {
 

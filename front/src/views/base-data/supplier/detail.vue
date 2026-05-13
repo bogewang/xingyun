@@ -63,6 +63,12 @@
         <a-descriptions-item label="银行账号" :span="2">
           {{ formData.accountNo }}
         </a-descriptions-item>
+        <a-descriptions-item label="累计已付金额" :span="2">
+          {{ formData.paidAmount }}
+        </a-descriptions-item>
+        <a-descriptions-item label="累计未付金额" :span="2">
+          {{ formData.unpaidAmount }}
+        </a-descriptions-item>
         <a-descriptions-item label="备注" :span="4">
           {{ formData.description }}
         </a-descriptions-item>
@@ -139,6 +145,8 @@
           bankName: '',
           accountName: '',
           accountNo: '',
+          paidAmount: 0,
+          unpaidAmount: 0,
           description: '',
         };
       },

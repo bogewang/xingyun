@@ -128,6 +128,12 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
   private BigDecimal totalAmount;
 
   /**
+   * 已支付金额
+   */
+  @ApiModelProperty("已支付金额")
+  private BigDecimal paidAmount;
+
+  /**
    * 成本单价
    */
   @ApiModelProperty("成本单价")
@@ -251,6 +257,7 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
     this.giftNum = dto.getTotalGiftNum();
     this.totalAmount = dto.getTotalAmount();
     this.totalCost = dto.getTotalCost();
+    this.paidAmount = dto.getPaidAmount();
     this.totalProfit = dto.getTotalProfit();
     this.fillAllCost = dto.getFillAllCost();
 

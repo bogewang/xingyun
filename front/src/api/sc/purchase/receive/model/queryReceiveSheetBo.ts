@@ -70,6 +70,16 @@ export interface QueryReceiveSheetBo {
   totalAmount: number;
 
   /**
+   * 已付金额
+   */
+  paidAmount: number;
+
+  /**
+   * 未付金额
+   */
+  unpaidAmount: number;
+
+  /**
    * 备注
    */
   description: string;

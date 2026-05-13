@@ -134,6 +134,12 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
   private BigDecimal totalAmount;
 
   /**
+   * 已支付金额
+   */
+  @ApiModelProperty("已支付金额")
+  private BigDecimal paidAmount;
+
+  /**
    * 支付方式
    */
   @ApiModelProperty("支付方式")
@@ -246,6 +252,7 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
     this.totalNum = dto.getTotalNum();
     this.giftNum = dto.getTotalGiftNum();
     this.totalAmount = dto.getTotalAmount();
+    this.paidAmount = dto.getPaidAmount();
 
     if (!CollectionUtil.isEmpty(dto.getDetails())) {
       this.details = dto.getDetails().stream().map(t -> new OrderDetailBo(this.getScId(), t))

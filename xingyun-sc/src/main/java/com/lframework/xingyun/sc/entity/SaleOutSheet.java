@@ -83,6 +83,11 @@ public class SaleOutSheet extends BaseEntity implements BaseDto {
   private BigDecimal totalAmount;
 
   /**
+   * 已支付金额
+   */
+  private BigDecimal paidAmount;
+
+  /**
    * 总成本成本
    */
   private BigDecimal totalCost;

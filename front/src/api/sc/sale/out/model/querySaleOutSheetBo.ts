@@ -70,6 +70,16 @@ export interface QuerySaleOutSheetBo {
   totalCost: number;
 
   /**
+   * 已付金额
+   */
+  paidAmount: number;
+
+  /**
+   * 未付金额
+   */
+  unpaidAmount: number;
+
+  /**
    * 总利润
    */
   totalProfit: number;

@@ -103,4 +103,14 @@ export interface GetSupplierBo {
    * 备注
    */
   description: string;
+
+  /**
+   * 已付金额
+   */
+  paidAmount: number;
+
+  /**
+   * 未付金额
+   */
+  unpaidAmount: number;
 }
