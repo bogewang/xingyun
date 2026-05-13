@@ -7,10 +7,11 @@ import com.lframework.starter.web.core.dto.BaseDto;
 import com.lframework.starter.web.core.entity.BaseEntity;
 import com.lframework.xingyun.sc.enums.SaleOutSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 /**
  * <p>
@@ -82,14 +83,19 @@ public class SaleOutSheet extends BaseEntity implements BaseDto {
   private BigDecimal totalAmount;
 
   /**
-   * 成本单价
+   * 总成本成本
    */
-  private BigDecimal costPrice;
+  private BigDecimal totalCost;
 
   /**
    * 总利润
    */
   private BigDecimal totalProfit;
+
+  /**
+   * 是否录完所有成本
+   */
+  private Boolean fillAllCost;
 
   /**
    * 备注

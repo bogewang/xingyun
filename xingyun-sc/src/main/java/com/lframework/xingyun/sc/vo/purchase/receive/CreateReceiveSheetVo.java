@@ -50,6 +50,7 @@ public class CreateReceiveSheetVo implements BaseVo, Serializable {
    * 订单日期
    */
   @ApiModelProperty("订单日期")
+  @NotNull(message = "订单日期不能为空！")
   private LocalDate orderDate;
 
   /**

@@ -3,12 +3,13 @@ package com.lframework.xingyun.sc.dto.sale.out;
 import com.lframework.starter.web.core.dto.BaseDto;
 import com.lframework.xingyun.sc.enums.SaleOutSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import lombok.Data;
 
 @Data
 public class SaleOutSheetFullDto implements BaseDto, Serializable {
@@ -66,14 +67,19 @@ public class SaleOutSheetFullDto implements BaseDto, Serializable {
   private BigDecimal totalAmount;
 
   /**
-   * 成本单价
+   * 总成本
    */
-  private BigDecimal costPrice;
+  private BigDecimal totalCost;
 
   /**
    * 总利润
    */
   private BigDecimal totalProfit;
+
+  /**
+   * 是否录完所有成本
+   */
+  private Boolean fillAllCost;
 
   /**
    * 备注
@@ -209,5 +215,15 @@ public class SaleOutSheetFullDto implements BaseDto, Serializable {
      * 总金额
      */
     private BigDecimal taxAmount;
+
+    /**
+     * 成本单价
+     */
+    private BigDecimal costPrice;
+
+    /**
+     * 总利润
+     */
+    private BigDecimal totalProfit;
   }
 }

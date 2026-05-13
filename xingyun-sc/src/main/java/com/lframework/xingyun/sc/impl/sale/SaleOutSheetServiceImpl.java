@@ -1,6 +1,7 @@
 package com.lframework.xingyun.sc.impl.sale;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.pagehelper.PageInfo;
@@ -46,6 +47,8 @@ import com.lframework.xingyun.sc.enums.*;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.mappers.SaleOutSheetMapper;
 import com.lframework.xingyun.sc.service.logistics.LogisticsSheetDetailService;
+import com.lframework.xingyun.sc.service.purchase.ReceiveSheetDetailService;
+import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
 import com.lframework.xingyun.sc.service.sale.*;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import com.lframework.xingyun.sc.vo.sale.out.*;
@@ -60,14 +63,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -123,6 +119,12 @@ public class SaleOutSheetServiceImpl extends
 
     @Autowired
     private LogisticsSheetDetailService logisticsSheetDetailService;
+
+    @Autowired
+    private ReceiveSheetService receiveSheetService;
+
+    @Autowired
+    private ReceiveSheetDetailService receiveSheetDetailService;
 
     @Override
     public PageResult<SaleOutSheet> query(Integer pageIndex, Integer pageSize,
@@ -763,7 +765,7 @@ public class SaleOutSheetServiceImpl extends
         BigDecimal totalProfit = NumberUtil.getNumber(NumberUtil.sub(totalAmount, totalCostAmount), 6);
         Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
                 .set(SaleOutSheet::getTotalNum, totalNum).set(SaleOutSheet::getTotalGiftNum, giftNum)
-                .set(SaleOutSheet::getTotalAmount, totalAmount).set(SaleOutSheet::getCostPrice, costPrice)
+                .set(SaleOutSheet::getTotalAmount, totalAmount).set(SaleOutSheet::getTotalCost, costPrice)
                 .set(SaleOutSheet::getTotalProfit, totalProfit).eq(SaleOutSheet::getId, sheet.getId());
         this.update(updateWrapper);
 
@@ -1113,7 +1115,7 @@ public class SaleOutSheetServiceImpl extends
         sheet.setTotalNum(purchaseNum);
         sheet.setTotalGiftNum(giftNum);
         sheet.setTotalAmount(totalAmount);
-        sheet.setCostPrice(BigDecimal.ZERO);
+        sheet.setTotalCost(BigDecimal.ZERO);
         sheet.setTotalProfit(BigDecimal.ZERO);
         sheet.setDescription(
                 StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
@@ -1199,5 +1201,105 @@ public class SaleOutSheetServiceImpl extends
             //     throw new DefaultClientException("第" + rowIndex + "行商品未设置销售价，请填写“单价”或先维护商品销售价");
             // }
         }
+    }
+
+    @Override
+    public void refreshCostPrice(LocalDate orderDate) {
+        LambdaQueryWrapper<SaleOutSheet> orderDateQuery = Wrappers.lambdaQuery(SaleOutSheet.class)
+                .eq(SaleOutSheet::getOrderDate, orderDate);
+        List<SaleOutSheet> list = getBaseMapper().selectList(orderDateQuery);
+        if (CollectionUtils.isEmpty(list)) {
+            return;
+        }
+        list.forEach(item -> {
+            refreshCostPrice(item.getId());
+        });
+    }
+
+    @Override
+    public void refreshCostPrice(String orderId) {
+        SaleOutSheet saleOutSheet = getBaseMapper().selectById(orderId);
+        if (saleOutSheet == null) {
+            return;
+        }
+        LocalDate orderDate = saleOutSheet.getOrderDate();
+        // 1. 查询当天的所有采购单，同一商品按照总金额、总数量，计算采购价；
+        // 2. 获取销售明细，补齐cost_price,total_profit
+        // 3. 汇总单据明细，补齐单据cost_price,total_profit
+        // 4. 如果所有的商品采购成本都已经录入，则标记单据fill_all_cost=true, 单据查询页面也展示该字段
+        Map<String, BigDecimal> receiveCostPriceMap = getCostPriceMap(orderDate);
+
+        List<SaleOutSheetDetail> saleDetails = saleOutSheetDetailService.getBySheetId(orderId);
+
+        BigDecimal totalCostAmount = BigDecimal.ZERO;
+        boolean fillAllCost = true;
+        for (SaleOutSheetDetail saleDetail : saleDetails) {
+            boolean detailFillAllCost = true;
+
+            BigDecimal productCostPrice = receiveCostPriceMap.get(saleDetail.getProductId());
+            if (productCostPrice == null) {
+                detailFillAllCost = false;
+            }
+
+            BigDecimal detailCostAmount = NumberUtil.getNumber(NumberUtil.mul(productCostPrice, saleDetail.getOrderNum()), 6);
+            BigDecimal detailTotalProfit = NumberUtil.getNumber(NumberUtil.sub(saleDetail.getTaxAmount(), detailCostAmount), 6);
+
+            saleDetail.setCostPrice(productCostPrice);
+            saleDetail.setTotalProfit(detailTotalProfit);
+            saleOutSheetDetailService.updateById(saleDetail);
+
+            totalCostAmount = NumberUtil.add(totalCostAmount, detailCostAmount);
+            if (!detailFillAllCost) {
+                fillAllCost = false;
+            }
+        }
+
+        BigDecimal totalProfit = NumberUtil.getNumber(NumberUtil.sub(saleOutSheet.getTotalAmount(), totalCostAmount), 6);
+
+        LambdaUpdateWrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
+                .set(SaleOutSheet::getTotalCost, totalCostAmount)
+                .set(SaleOutSheet::getTotalProfit, totalProfit)
+                .set(SaleOutSheet::getFillAllCost, fillAllCost)
+                .eq(SaleOutSheet::getId, orderId);
+        this.update(updateWrapper);
+    }
+
+    /**
+     * 查询当天的所有采购单, 获取商品的采购价
+     *
+     * @param orderDate
+     * @return
+     */
+    private Map<String, BigDecimal> getCostPriceMap(LocalDate orderDate) {
+        Map<String, BigDecimal> res = new HashMap<>();
+        LambdaQueryWrapper<ReceiveSheet> receiveSheetQuery = Wrappers.lambdaQuery(ReceiveSheet.class)
+                .eq(ReceiveSheet::getOrderDate, orderDate);
+        List<ReceiveSheet> receiveSheets = receiveSheetService.list(receiveSheetQuery);
+        if (CollectionUtils.isEmpty(receiveSheets)) {
+            return res;
+        }
+        List<String> receiveSheetIds = receiveSheets.stream().map(ReceiveSheet::getId).collect(Collectors.toList());
+        LambdaQueryWrapper<ReceiveSheetDetail> receiveDetailQuery = Wrappers.lambdaQuery(ReceiveSheetDetail.class)
+                .in(ReceiveSheetDetail::getSheetId, receiveSheetIds);
+
+        List<ReceiveSheetDetail> receiveDetails = receiveSheetDetailService.list(receiveDetailQuery);
+        if (CollectionUtils.isEmpty(receiveDetails)) {
+            return res;
+        }
+        Map<String, BigDecimal> receiveTotalNumMap = new HashMap<>();
+        Map<String, BigDecimal> receiveTotalAmountMap = new HashMap<>();
+        for (ReceiveSheetDetail receiveDetail : receiveDetails) {
+            receiveTotalNumMap.merge(receiveDetail.getProductId(), receiveDetail.getOrderNum(), NumberUtil::add);
+            receiveTotalAmountMap.merge(receiveDetail.getProductId(), receiveDetail.getTaxAmount(), NumberUtil::add);
+        }
+        receiveTotalNumMap.forEach((productId, totalNum) -> {
+            BigDecimal totalAmount = receiveTotalAmountMap.get(productId);
+            BigDecimal costPrice = BigDecimal.ZERO;
+            if (NumberUtil.gt(totalNum, BigDecimal.ZERO)) {
+                costPrice = NumberUtil.getNumber(NumberUtil.div(totalAmount, totalNum), 6);
+            }
+            res.put(productId, costPrice);
+        });
+        return res;
     }
 }

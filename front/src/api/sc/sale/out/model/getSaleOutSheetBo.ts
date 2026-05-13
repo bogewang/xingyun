@@ -1,4 +1,3 @@
-import list from '@/views/development/custom/list/index.vue';
 import { OrderPayTypeBo } from '@/api/sc/pay-type/model/orderPayTypeBo';
 
 export interface GetSaleOutSheetBo {
@@ -78,9 +77,19 @@ export interface GetSaleOutSheetBo {
   totalAmount: number;
 
   /**
+   * 总成本
+   */
+  totalCost: number;
+
+  /**
    * 总利润
    */
   totalProfit: number;
+
+  /**
+   * 是否录完所有成本
+   */
+  fillAllCost: boolean;
 
   /**
    * 支付方式
@@ -223,6 +232,16 @@ export interface OrderDetailBo {
    * 折扣
    */
   discountRate: number;
+
+  /**
+   * 成本单价
+   */
+  costPrice: number;
+
+  /**
+   * 总利润
+   */
+  totalProfit: number;
 
   /**
    * 库存数量

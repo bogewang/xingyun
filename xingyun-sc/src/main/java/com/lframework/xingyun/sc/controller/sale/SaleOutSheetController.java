@@ -256,6 +256,7 @@ public class SaleOutSheetController extends DefaultBaseController {
         vo.validate();
 
         String id = saleOutSheetService.create(vo);
+        saleOutSheetService.refreshCostPrice(id);
 
         return InvokeResultBuilder.success(id);
     }
@@ -271,6 +272,7 @@ public class SaleOutSheetController extends DefaultBaseController {
         vo.validate();
 
         saleOutSheetService.update(vo);
+        saleOutSheetService.refreshCostPrice(vo.getId());
 
         return InvokeResultBuilder.success();
     }

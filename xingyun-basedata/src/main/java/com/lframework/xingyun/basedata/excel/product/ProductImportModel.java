@@ -23,13 +23,12 @@ public class ProductImportModel implements ExcelModel {
     @ExcelRequired
     @ExcelProperty("名称")
     private String name;
-
     /**
-     * 编号
+     * 简称
      */
-    // @ExcelRequired
-    @ExcelProperty("商品编码")
-    private String code;
+    @ExcelProperty("简称")
+    private String shortName;
+
 
 
     /**
@@ -51,11 +50,7 @@ public class ProductImportModel implements ExcelModel {
     @ExcelProperty("商品分类")
     private String categoryName;
 
-    /**
-     * 品牌编号
-     */
-    @ExcelProperty("品牌编号")
-    private String brandCode;
+
 
     /**
      * 单位
@@ -94,6 +89,19 @@ public class ProductImportModel implements ExcelModel {
     private BigDecimal retailPrice;
 
     /**
+     * 品牌编号
+     */
+    @ExcelProperty("品牌编号")
+    private String brandCode;
+
+    /**
+     * 编号
+     */
+    // @ExcelRequired
+    @ExcelProperty("商品编码")
+    private String code;
+
+    /**
      * SKU编号
      */
     @ExcelProperty("SKU编号")
@@ -117,11 +125,7 @@ public class ProductImportModel implements ExcelModel {
     @ExcelIgnore
     private String brandId;
 
-    /**
-     * 简称
-     */
-    @ExcelProperty("简称")
-    private String shortName;
+
 
 
 }

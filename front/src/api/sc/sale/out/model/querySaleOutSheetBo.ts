@@ -65,9 +65,19 @@ export interface QuerySaleOutSheetBo {
   totalAmount: number;
 
   /**
+   * 成本单价
+   */
+  totalCost: number;
+
+  /**
    * 总利润
    */
   totalProfit: number;
+
+  /**
+   * 是否录完所有成本
+   */
+  fillAllCost: boolean;
 
   /**
    * 备注

@@ -128,10 +128,22 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
   private BigDecimal totalAmount;
 
   /**
+   * 成本单价
+   */
+  @ApiModelProperty("成本单价")
+  private BigDecimal totalCost;
+
+  /**
    * 总利润
    */
   @ApiModelProperty("总利润")
   private BigDecimal totalProfit;
+
+  /**
+   * 是否录完所有成本
+   */
+  @ApiModelProperty("是否录完所有成本")
+  private Boolean fillAllCost;
 
   /**
    * 支付方式
@@ -238,7 +250,9 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
     this.totalNum = dto.getTotalNum();
     this.giftNum = dto.getTotalGiftNum();
     this.totalAmount = dto.getTotalAmount();
+    this.totalCost = dto.getTotalCost();
     this.totalProfit = dto.getTotalProfit();
+    this.fillAllCost = dto.getFillAllCost();
 
     if (!CollectionUtil.isEmpty(dto.getDetails())) {
       this.details = dto.getDetails().stream().map(t -> new OrderDetailBo(this.getScId(), t))
@@ -360,6 +374,18 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
      */
     @ApiModelProperty("折扣")
     private BigDecimal discountRate;
+
+    /**
+     * 成本单价
+     */
+    @ApiModelProperty("成本单价")
+    private BigDecimal totalCost;
+
+    /**
+     * 总利润
+     */
+    @ApiModelProperty("总利润")
+    private BigDecimal totalProfit;
 
     /**
      * 库存数量

@@ -101,10 +101,22 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
     private BigDecimal totalAmount;
 
     /**
+     * 成本单价
+     */
+    @ApiModelProperty("成本单价")
+    private BigDecimal totalCost;
+
+    /**
      * 总利润
      */
     @ApiModelProperty("总利润")
     private BigDecimal totalProfit;
+
+    /**
+     * 是否录完所有成本
+     */
+    @ApiModelProperty("是否录完所有成本")
+    private Boolean fillAllCost;
 
     /**
      * 备注

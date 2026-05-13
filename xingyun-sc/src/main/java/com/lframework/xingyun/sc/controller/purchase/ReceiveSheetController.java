@@ -17,13 +17,10 @@ import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.PurchaseConfig;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
-import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetDetailExportTaskWorker;
-import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetExportTaskWorker;
-import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
-import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetPayTypeImportListener;
-import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetPayTypeImportModel;
+import com.lframework.xingyun.sc.excel.purchase.receive.*;
 import com.lframework.xingyun.sc.service.purchase.PurchaseConfigService;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
+import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
 import com.lframework.xingyun.sc.vo.purchase.receive.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -58,6 +55,9 @@ public class ReceiveSheetController extends DefaultBaseController {
 
     @Autowired
     private PurchaseConfigService purchaseConfigService;
+
+    @Autowired
+    private SaleOutSheetService saleOutSheetService;
 
     /**
      * 打印
@@ -224,7 +224,7 @@ public class ReceiveSheetController extends DefaultBaseController {
         vo.validate();
 
         String id = receiveSheetService.create(vo);
-
+        saleOutSheetService.refreshCostPrice(vo.getOrderDate());
         return InvokeResultBuilder.success(id);
     }
 
@@ -239,7 +239,7 @@ public class ReceiveSheetController extends DefaultBaseController {
         vo.validate();
 
         receiveSheetService.update(vo);
-
+        saleOutSheetService.refreshCostPrice(vo.getOrderDate());
         return InvokeResultBuilder.success();
     }
 

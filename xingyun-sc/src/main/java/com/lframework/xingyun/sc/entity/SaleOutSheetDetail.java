@@ -100,4 +100,14 @@ public class SaleOutSheetDetail extends BaseEntity implements BaseDto {
    * 总金额
    */
   private BigDecimal taxAmount;
+
+  /**
+   * 成本单价
+   */
+  private BigDecimal costPrice;
+
+  /**
+   * 总利润
+   */
+  private BigDecimal totalProfit;
 }
