@@ -1189,7 +1189,6 @@ public class SaleOutSheetServiceImpl extends
         sheet.setTotalGiftNum(giftNum);
         sheet.setTotalAmount(totalAmount);
         sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), totalAmount));
-        sheet.setCostPrice(BigDecimal.ZERO);
         sheet.setTotalCost(BigDecimal.ZERO);
         sheet.setTotalProfit(BigDecimal.ZERO);
         sheet.setDescription(
