@@ -39,11 +39,7 @@
               <a-input v-model:value="formData.externalCode" allow-clear />
             </a-form-item>
           </a-col>
-          <a-col :md="8" :sm="24">
-            <a-form-item label="别名" name="alias">
-              <a-textarea v-model:value="formData.alias" allow-clear :rows="2" />
-            </a-form-item>
-          </a-col>
+
           <a-col :md="8" :sm="24">
             <a-form-item label="商品分类" name="categoryId">
               <product-category-selector
@@ -111,6 +107,11 @@
           <a-col :md="8" :sm="24">
             <a-form-item label="备注2" name="remark2">
               <a-input v-model:value="formData.remark2" allow-clear />
+            </a-form-item>
+          </a-col>
+          <a-col :md="8" :sm="24">
+            <a-form-item label="别名" name="alias">
+              <a-textarea v-model:value="formData.alias" allow-clear :rows="2" />
             </a-form-item>
           </a-col>
         </a-row>

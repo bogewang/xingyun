@@ -114,6 +114,23 @@ export function exportDetail(data: QuerySaleOutSheetVo): Promise<void> {
   );
 }
 
+/**
+ * 销售导出
+ */
+export function exportSales(data: QuerySaleOutSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/export/sales',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+      responseType: ResponseEnum.BLOB,
+    },
+  );
+}
+
 export function downloadImportTemplate(): Promise<void> {
   return defHttp.get<void>(
     {

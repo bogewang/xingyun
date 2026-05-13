@@ -156,6 +156,12 @@
                 >导出</a-button
               >
               <a-button
+                v-permission="['sale:out:export']"
+                :icon="h(DownloadOutlined)"
+                @click="exportSales"
+                >销售导出</a-button
+              >
+              <a-button
                 v-permission="['sale:out:query']"
                 :icon="h(DownloadOutlined)"
                 @click="marketBuySummary"
@@ -620,6 +626,22 @@
           .exportList(this.buildQueryParams({}))
           .then(() => {
             createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
+      exportSales() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要执行销售导出的销售出库单！');
+          return;
+        }
+
+        this.loading = true;
+        api
+          .exportSales({
+            idList: records.map((item) => item.id),
           })
           .finally(() => {
             this.loading = false;

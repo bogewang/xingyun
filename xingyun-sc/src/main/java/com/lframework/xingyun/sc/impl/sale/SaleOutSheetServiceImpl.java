@@ -37,6 +37,7 @@ import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.core.utils.SplitNumberUtil;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
+import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
@@ -45,6 +46,7 @@ import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
 import com.lframework.xingyun.sc.entity.*;
 import com.lframework.xingyun.sc.enums.*;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetSalesExportHelper;
 import com.lframework.xingyun.sc.mappers.SaleOutSheetMapper;
 import com.lframework.xingyun.sc.service.logistics.LogisticsSheetDetailService;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetDetailService;
@@ -59,6 +61,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -247,6 +250,66 @@ public class SaleOutSheetServiceImpl extends
         }
 
         exportMarketBuySummary(headerMap, data);
+    }
+
+    @Override
+    public void exportSales(QuerySaleOutSheetVo vo, HttpServletResponse response) {
+        List<SaleOutSheet> sheets = this.query(vo);
+        if (CollectionUtils.isEmpty(sheets)) {
+            throw new DefaultClientException("未查询到可导出的销售出库单！");
+        }
+
+        List<SaleOutSheetSalesExportHelper.SheetData> exportDatas = sheets.stream()
+                .map(this::buildSalesExportSheetData)
+                .collect(Collectors.toList());
+
+        try {
+            SaleOutSheetSalesExportHelper.export(exportDatas, response);
+        } catch (Exception e) {
+            throw new DefaultClientException("销售导出失败！");
+        }
+    }
+
+    private SaleOutSheetSalesExportHelper.SheetData buildSalesExportSheetData(SaleOutSheet sheet) {
+        SaleOutSheetFullDto detail = this.getDetail(sheet.getId());
+        GetSaleOutSheetBo detailBo = new GetSaleOutSheetBo(detail);
+        Customer customer = customerService.findById(detail.getCustomerId());
+
+        SaleOutSheetSalesExportHelper.SheetData data = new SaleOutSheetSalesExportHelper.SheetData();
+        data.setCode(sheet.getCode());
+        data.setTitle("销售单");
+        data.setCustomerName(detailBo.getCustomerName());
+        data.setAddress(customer == null ? StringPool.EMPTY_STR : customer.getAddress());
+        data.setOrderDate(detail.getOrderDate());
+        data.setTotalQty(detailBo.getTotalNum());
+        data.setTotalAmount(detailBo.getTotalAmount());
+        data.setDescription(detailBo.getDescription());
+
+        if (!CollectionUtils.isEmpty(detailBo.getDetails())) {
+            List<SaleOutSheetSalesExportHelper.DetailData> details = detailBo.getDetails().stream()
+                    .map(this::buildSalesExportDetailData)
+                    .collect(Collectors.toList());
+            data.setDetails(details);
+        }
+
+        return data;
+    }
+
+    private SaleOutSheetSalesExportHelper.DetailData buildSalesExportDetailData(
+            GetSaleOutSheetBo.OrderDetailBo detail) {
+        SaleOutSheetSalesExportHelper.DetailData data =
+                new SaleOutSheetSalesExportHelper.DetailData();
+        data.setProductName(detail.getProductName());
+        data.setSpec(detail.getSpec());
+        data.setUnit(detail.getUnit());
+        data.setQty(detail.getOutNum());
+        data.setPrice(detail.getTaxPrice());
+        if (detail.getTaxPrice() != null && detail.getOutNum() != null) {
+            data.setAmount(detail.getTaxPrice().multiply(detail.getOutNum()).setScale(2,
+                    RoundingMode.HALF_UP));
+        }
+        data.setRemark(detail.getDescription());
+        return data;
     }
 
     /**

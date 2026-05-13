@@ -38,6 +38,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -152,6 +153,22 @@ public class SaleOutSheetController extends DefaultBaseController {
         ExportTaskUtil.exportTask("销售出库单明细", SaleOutSheetDetailExportTaskWorker.class, vo);
 
         return InvokeResultBuilder.success();
+    }
+
+    /**
+     * 销售导出
+     */
+    @ApiOperation("销售导出")
+    @HasPermission({ "sale:out:export" })
+    @PostMapping("/export/sales")
+    public void exportSales(@RequestBody @Valid QuerySaleOutSheetVo vo,
+                            HttpServletResponse response) {
+        try {
+            saleOutSheetService.exportSales(vo, response);
+        } catch (Exception e) {
+            log.error("销售导出失败", e);
+            throw new DefaultSysException("销售导出失败！");
+        }
     }
 
     /**

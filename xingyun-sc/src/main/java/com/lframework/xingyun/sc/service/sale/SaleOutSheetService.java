@@ -10,6 +10,7 @@ import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.vo.sale.out.*;
+import javax.servlet.http.HttpServletResponse;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -163,6 +164,8 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   List<PrintSaleTagBo> tagPrint(QuerySaleOutSheetVo vo);
 
   void marketBuySummary(QuerySaleOutSheetVo vo);
+
+  void exportSales(QuerySaleOutSheetVo vo, HttpServletResponse response);
 
   /**
    * 刷新成本(当天销售）
