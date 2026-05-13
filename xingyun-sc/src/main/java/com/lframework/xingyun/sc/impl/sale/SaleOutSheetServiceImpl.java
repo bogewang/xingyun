@@ -62,6 +62,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -265,7 +266,7 @@ public class SaleOutSheetServiceImpl extends
 
         try {
             SaleOutSheetSalesExportHelper.export(exportDatas, response);
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new DefaultClientException("销售导出失败！");
         }
     }
@@ -283,7 +284,6 @@ public class SaleOutSheetServiceImpl extends
         data.setOrderDate(detail.getOrderDate());
         data.setTotalQty(detailBo.getTotalNum());
         data.setTotalAmount(detailBo.getTotalAmount());
-        data.setDescription(detailBo.getDescription());
 
         if (!CollectionUtils.isEmpty(detailBo.getDetails())) {
             List<SaleOutSheetSalesExportHelper.DetailData> details = detailBo.getDetails().stream()

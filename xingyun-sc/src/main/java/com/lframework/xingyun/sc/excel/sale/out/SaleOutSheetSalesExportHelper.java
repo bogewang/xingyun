@@ -20,6 +20,13 @@ import java.util.List;
 public final class SaleOutSheetSalesExportHelper {
 
   private static final int COLUMN_COUNT = 8;
+  private static final short DEFAULT_FONT_SIZE = 12;
+  private static final String DEFAULT_FONT_NAME = "宋体";
+  private static final String CUSTOMER = "云南交投绿美生活服务有限公司";
+  private static final String DEFAULT_TITLE = "红河聚亿商贸有限公司销售单";
+  private static final String[] TABLE_HEADERS = {
+      "序号", "商品名称", "规格", "单位", "数量", "单价", "金额", "备注"
+  };
 
   private SaleOutSheetSalesExportHelper() {
   }
@@ -42,7 +49,7 @@ public final class SaleOutSheetSalesExportHelper {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       Styles styles = new Styles(workbook);
       for (int i = 0; i < datas.size(); i++) {
-        writeSheet(workbook, styles, datas.get(i), i + 1);
+        writeSheet(styles, datas.get(i), i + 1);
       }
 
       workbook.write(response.getOutputStream());
@@ -50,35 +57,34 @@ public final class SaleOutSheetSalesExportHelper {
     }
   }
 
-  private static void writeSheet(XSSFWorkbook workbook, Styles styles, SheetData data, int index) {
+  private static void writeSheet(Styles styles, SheetData data, int index) {
 
-    Sheet sheet = workbook.createSheet(buildSheetName(data.getCode(), index));
+    Sheet sheet = styles.workbook.createSheet(buildSheetName(data.getCustomerName(), index));
     setColumnWidths(sheet);
 
     int rowIndex = 0;
 
     Row titleRow = sheet.createRow(rowIndex++);
     titleRow.setHeightInPoints(22);
-    setCell(titleRow, 0, defaultString(data.getTitle(), "销售单"), styles.title);
+    setCell(titleRow, 0, DEFAULT_TITLE, styles.title);
     merge(sheet, 0, 0, 0, COLUMN_COUNT - 1);
 
     Row customerRow = sheet.createRow(rowIndex++);
     customerRow.setHeightInPoints(20);
-    setCell(customerRow, 0, "客户: " + defaultString(data.getCustomerName()), styles.infoLeft);
+    setCell(customerRow, 0, "客户: " + CUSTOMER, styles.infoLeft);
     merge(sheet, 1, 1, 0, COLUMN_COUNT - 1);
 
     Row infoRow = sheet.createRow(rowIndex++);
     infoRow.setHeightInPoints(20);
-    setCell(infoRow, 0, "收货地址：" + defaultString(data.getAddress()), styles.infoLeft);
+    setCell(infoRow, 0, "收货地址：" + defaultString(data.getCustomerName()), styles.infoLeft);
     merge(sheet, 2, 2, 0, 4);
     setCell(infoRow, 5, "单据日期: " + formatDate(data.getOrderDate()), styles.infoRight);
     merge(sheet, 2, 2, 5, 7);
 
     Row headerRow = sheet.createRow(rowIndex++);
     headerRow.setHeightInPoints(20);
-    String[] headers = { "序号", "商品名称", "规格", "单位", "数量", "单价", "金额", "备注" };
-    for (int i = 0; i < headers.length; i++) {
-      setCell(headerRow, i, headers[i], styles.header);
+    for (int i = 0; i < TABLE_HEADERS.length; i++) {
+      setCell(headerRow, i, TABLE_HEADERS[i], styles.header);
     }
 
     List<DetailData> details = data.getDetails() == null ? new ArrayList<>() : data.getDetails();
@@ -187,7 +193,6 @@ public final class SaleOutSheetSalesExportHelper {
     private LocalDate orderDate;
     private BigDecimal totalQty;
     private BigDecimal totalAmount;
-    private String description;
     private List<DetailData> details = new ArrayList<>();
   }
 
@@ -203,6 +208,7 @@ public final class SaleOutSheetSalesExportHelper {
   }
 
   private static class Styles {
+    private final XSSFWorkbook workbook;
     private final CellStyle title;
     private final CellStyle infoLeft;
     private final CellStyle infoRight;
@@ -215,11 +221,10 @@ public final class SaleOutSheetSalesExportHelper {
     private final CellStyle totalAmount;
     private final CellStyle totalBlank;
     private final CellStyle signLeft;
-    private final CellStyle signCenter;
-    private final CellStyle signRight;
     private final CellStyle signBlank;
 
     private Styles(XSSFWorkbook workbook) {
+      this.workbook = workbook;
       this.title = createTitleStyle(workbook);
       this.infoLeft = createInfoStyle(workbook, HorizontalAlignment.LEFT);
       this.infoRight = createInfoStyle(workbook, HorizontalAlignment.RIGHT);
@@ -232,8 +237,6 @@ public final class SaleOutSheetSalesExportHelper {
       this.totalAmount = createTotalStyle(workbook, HorizontalAlignment.RIGHT);
       this.totalBlank = createTotalStyle(workbook, HorizontalAlignment.LEFT);
       this.signLeft = createSignStyle(workbook, HorizontalAlignment.LEFT);
-      this.signCenter = createSignStyle(workbook, HorizontalAlignment.CENTER);
-      this.signRight = createSignStyle(workbook, HorizontalAlignment.RIGHT);
       this.signBlank = createSignStyle(workbook, HorizontalAlignment.LEFT);
     }
 
@@ -290,9 +293,9 @@ public final class SaleOutSheetSalesExportHelper {
 
     private Font createFont(XSSFWorkbook workbook, boolean bold) {
       Font font = workbook.createFont();
-      font.setFontName("宋体");
+      font.setFontName(DEFAULT_FONT_NAME);
       font.setBold(bold);
-      font.setFontHeightInPoints((short) 12);
+      font.setFontHeightInPoints(DEFAULT_FONT_SIZE);
       return font;
     }
 
