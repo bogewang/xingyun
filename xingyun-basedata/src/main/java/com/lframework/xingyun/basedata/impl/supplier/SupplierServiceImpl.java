@@ -13,12 +13,7 @@ import com.lframework.starter.web.core.annotations.oplog.OpLog;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.event.DataChangeEventBuilder;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
-import com.lframework.starter.web.core.utils.ApplicationUtil;
-import com.lframework.starter.web.core.utils.EnumUtil;
-import com.lframework.starter.web.core.utils.IdUtil;
-import com.lframework.starter.web.core.utils.OpLogUtil;
-import com.lframework.starter.web.core.utils.PageHelperUtil;
-import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.starter.web.core.utils.*;
 import com.lframework.starter.web.inner.dto.dic.city.DicCityDto;
 import com.lframework.starter.web.inner.service.DicCityService;
 import com.lframework.xingyun.basedata.entity.Supplier;
@@ -32,13 +27,16 @@ import com.lframework.xingyun.basedata.vo.supplier.CreateSupplierVo;
 import com.lframework.xingyun.basedata.vo.supplier.QuerySupplierSelectorVo;
 import com.lframework.xingyun.basedata.vo.supplier.QuerySupplierVo;
 import com.lframework.xingyun.basedata.vo.supplier.UpdateSupplierVo;
-import java.io.Serializable;
-import java.util.List;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 public class SupplierServiceImpl extends BaseMpServiceImpl<SupplierMapper, Supplier> implements
@@ -57,6 +55,17 @@ public class SupplierServiceImpl extends BaseMpServiceImpl<SupplierMapper, Suppl
     List<Supplier> datas = this.query(vo);
 
     return PageResultUtil.convert(new PageInfo<>(datas));
+  }
+
+  @Override
+  public List<Supplier> queryByNames(List<String> names) {
+    if (CollectionUtils.isEmpty(names)) {
+      return Collections.emptyList();
+    }
+
+    return getBaseMapper().selectList(Wrappers.lambdaQuery(Supplier.class)
+            .in(Supplier::getName, names)
+            .eq(Supplier::getAvailable, Boolean.TRUE));
   }
 
   @Override

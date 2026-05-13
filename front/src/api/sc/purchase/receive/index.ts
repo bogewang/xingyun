@@ -413,3 +413,37 @@ export function importPayTypeExcel(data: { id: string; file: Blob }): Promise<vo
     },
   );
 }
+/**
+ * 下载采购查询导入模板
+ */
+export function downloadQueryImportTemplate(): Promise<void> {
+  return defHttp.get<void>(
+    {
+      url: baseUrl + '/import/query/template',
+    },
+    {
+      responseType: ResponseEnum.BLOB,
+      region,
+    },
+  );
+}
+
+/**
+ * 采购查询页面导入并创建订单
+ */
+export function importByQuery(data: {
+  scId: string;
+  purchaserId?: string;
+  file: Blob;
+}): Promise<string[]> {
+  return defHttp.post<string[]>(
+    {
+      url: baseUrl + '/import/query',
+      data,
+    },
+    {
+      contentType: ContentTypeEnum.BLOB,
+      region,
+    },
+  );
+}

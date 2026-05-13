@@ -20,6 +20,7 @@ import com.lframework.xingyun.sc.entity.PurchaseOrder;
 import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderDetailExportTaskWorker;
 import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderExportTaskWorker;
 import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderImportModel;
+import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderQueryImportModel;
 import com.lframework.xingyun.sc.service.purchase.PurchaseOrderService;
 import com.lframework.xingyun.sc.vo.purchase.*;
 import io.swagger.annotations.Api;
@@ -315,6 +316,28 @@ public class PurchaseOrderController extends DefaultBaseController {
                     PurchaseOrderImportModel.class);
             List<PurchaseOrderImportModel> data = purchaseOrderService.checkImport(list);
 
+            return InvokeResultBuilder.success(data);
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    @ApiOperation("下载采购查询导入模板")
+    @HasPermission({"purchase:order:import"})
+    @GetMapping("/import/query/template")
+    public void downloadQueryImportTemplate() {
+        ExcelUtil.export("采购订单查询导入模板", PurchaseOrderQueryImportModel.class);
+    }
+
+    @ApiOperation("采购查询页面导入并创建订单")
+    @HasPermission({"purchase:order:import"})
+    @PostMapping("/import/query")
+    public InvokeResult<List<String>> importByQuery(@NotNull(message = "请上传文件") MultipartFile file) {
+        try {
+            List<PurchaseOrderQueryImportModel> list = EasyExcelUtils.syncReadModel(
+                    file.getInputStream(), PurchaseOrderQueryImportModel.class);
+            List<String> data = purchaseOrderService.importByQuery(list);
             return InvokeResultBuilder.success(data);
         } catch (Exception e) {
             log.error("请求出错", e);

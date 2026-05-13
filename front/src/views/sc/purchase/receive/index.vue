@@ -149,12 +149,12 @@
                 @click="batchDelete"
                 >批量删除</a-button
               >
-              <!-- <a-button
-                v-permission="['purchase:receive:import']"
+              <a-button
+                v-permission="['purchase:receive:export']"
                 :icon="h(CloudUploadOutlined)"
-                @click="$refs.importer2.openDialog()"
-                >批量设置支付方式</a-button
-              > -->
+                @click="$refs.importer.openDialog()"
+              >导入Excel</a-button
+              >
               <a-button
                 v-permission="['purchase:receive:export']"
                 :icon="h(DownloadOutlined)"
@@ -193,6 +193,7 @@
       <detail :id="id" ref="viewDialog" />
 
       <approve-refuse ref="approveRefuseDialog" @confirm="doApproveRefuse" />
+      <purchase-order-query-importer ref="importer" @confirm="handleImportSuccess" />
 
       <!-- 采购订单查看窗口 -->
       <purchase-order-detail :id="purchaseOrderId" ref="viewPurchaseOrderDetailDialog" />
@@ -249,7 +250,7 @@
   import moment from 'moment';
   import {
     CheckOutlined,
-    CloseOutlined,
+    CloseOutlined, CloudUploadOutlined,
     DeleteOutlined,
     DownloadOutlined,
     PlusOutlined,
@@ -272,10 +273,12 @@
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
   import BatchHandler from '@/components/BatchHandler';
+  import PurchaseOrderQueryImporter from "@/components/Importor/PurchaseOrderQueryImporter.vue";
 
   export default defineComponent({
     name: 'ReceiveSheet',
     components: {
+      PurchaseOrderQueryImporter,
       Detail,
       ApproveRefuse,
       PurchaseOrderDetail,
@@ -393,6 +396,7 @@
     },
     created() {},
     methods: {
+      CloudUploadOutlined,
       // 列表发生查询时的事件
       search() {
         this.$refs.grid.commitProxy('reload');
@@ -609,6 +613,12 @@
         this.batchRefuseReason = reason;
 
         this.$refs.batchApproveRefuseHandlerDialog.openDialog();
+      },
+      handleImportSuccess(res) {
+        const ids = res?.data || res?.datas || res || [];
+        const count = Array.isArray(ids) ? ids.length : 0;
+        createSuccess('导入成功，已创建' + count + '张采购订单！');
+        this.search();
       },
       exportList() {
         this.loading = true;

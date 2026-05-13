@@ -5,15 +5,16 @@ import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.vo.BaseVo;
 import io.swagger.annotations.ApiModelProperty;
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
+import lombok.Data;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import lombok.Data;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class CreatePurchaseOrderVo implements BaseVo, Serializable {
@@ -24,7 +25,6 @@ public class CreatePurchaseOrderVo implements BaseVo, Serializable {
    * 仓库ID
    */
   @ApiModelProperty(value = "仓库ID", required = true)
-  @NotBlank(message = "仓库ID不能为空！")
   private String scId;
 
   /**

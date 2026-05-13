@@ -7,6 +7,7 @@ import com.lframework.xingyun.sc.dto.purchase.PurchaseOrderWithReceiveDto;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseProductDto;
 import com.lframework.xingyun.sc.entity.PurchaseOrder;
 import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderImportModel;
+import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderQueryImportModel;
 import com.lframework.xingyun.sc.vo.purchase.ApprovePassPurchaseOrderVo;
 import com.lframework.xingyun.sc.vo.purchase.ApproveRefusePurchaseOrderVo;
 import com.lframework.xingyun.sc.vo.purchase.CreatePurchaseOrderVo;
@@ -161,4 +162,12 @@ public interface PurchaseOrderService extends BaseMpService<PurchaseOrder> {
    * @return 校验后的数据
    */
   List<PurchaseOrderImportModel> checkImport(List<PurchaseOrderImportModel> list);
+
+  /**
+   * 从采购查询页面导入并创建订单
+   *
+   * @param list 导入数据
+   * @return 创建的订单ID列表
+   */
+  List<String> importByQuery(List<PurchaseOrderQueryImportModel> list);
 }

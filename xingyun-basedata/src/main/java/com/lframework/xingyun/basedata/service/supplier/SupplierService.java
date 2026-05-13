@@ -27,6 +27,14 @@ public interface SupplierService extends BaseMpService<Supplier> {
     List<Supplier> query(QuerySupplierVo vo);
 
     /**
+     * 根据名称查询
+     *
+     * @param names
+     * @return
+     */
+    List<Supplier> queryByNames(List<String> names);
+
+    /**
      * 根据ID查询
      *
      * @param id

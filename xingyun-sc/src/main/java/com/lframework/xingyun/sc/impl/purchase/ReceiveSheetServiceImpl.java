@@ -802,7 +802,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         Map<String, Product> nameSpecUnitMap = products.stream()
                 .collect(Collectors.toMap(item -> item.getName() + item.getSpec() + item.getUnit(), item -> item));
         Map<String, Product> nameUnitMap = products.stream()
-                .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item));
+                .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item, (oldValue, newValue) -> oldValue));
 
         for (int i = 0; i < list.size(); i++) {
             ReceiveSheetImportModel data = list.get(i);
