@@ -12,6 +12,9 @@ import java.util.Date;
 @Data
 public class ReceiveSheetImportModel implements ExcelModel {
 
+  @ExcelIgnore
+  private Integer seq;
+
   /**
    * 仓库ID
    */

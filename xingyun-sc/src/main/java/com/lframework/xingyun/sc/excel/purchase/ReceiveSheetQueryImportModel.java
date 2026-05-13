@@ -3,10 +3,11 @@ package com.lframework.xingyun.sc.excel.purchase;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.lframework.starter.web.core.annotations.excel.ExcelRequired;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import lombok.Data;
 
 @Data
-public class ReceiveSheetQueryImportModel extends PurchaseOrderImportModel implements ExcelModel {
+public class ReceiveSheetQueryImportModel extends ReceiveSheetImportModel implements ExcelModel {
   @ExcelRequired
   @ExcelProperty("单据日期")
   private String orderDate;

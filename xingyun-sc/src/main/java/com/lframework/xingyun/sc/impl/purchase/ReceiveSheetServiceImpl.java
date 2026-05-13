@@ -222,8 +222,9 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         getBaseMapper().insert(sheet);
 
-        OpLogUtil.setVariable("code", sheet.getCode());
-        OpLogUtil.setExtra(vo);
+        // todo
+        // OpLogUtil.setVariable("code", sheet.getCode());
+        // OpLogUtil.setExtra(vo);
 
         return sheet.getId();
     }
@@ -804,7 +805,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         for (int i = 0; i < list.size(); i++) {
             ReceiveSheetImportModel data = list.get(i);
-            int rowIndex = i + 2;
+            int rowIndex = data.getSeq();
 
             if (StringUtils.isEmpty(data.getProductName())) {
                 throw new DefaultClientException("第" + rowIndex + "行“商品名称”不能为空");
@@ -854,6 +855,11 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         if (CollectionUtil.isEmpty(list)) {
             return new ArrayList<>();
         }
+
+        for (int i = 0; i < list.size(); i++) {
+            list.get(i).setSeq(i+1);
+        }
+
         Map<String, List<ReceiveSheetQueryImportModel>> map = list.stream().collect(
                 Collectors.groupingBy(item -> item.getOrderDate() + item.getSupplierName()));
 
@@ -867,10 +873,30 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         CreateReceiveSheetVo res = new CreateReceiveSheetVo();
         res.setSupplierId(suppliers.get(0).getId());
-        res.setOrderDate(DateUtil.parseDate(model.getOrderDate(), "yyyy/MM/dd"));
+        res.setOrderDate(DateUtil.parseDate(normalizeImportOrderDate(model.getOrderDate()), "yyyy/MM/dd"));
         res.setProducts(buildProducts(list));
 
         return res;
+    }
+
+    private String normalizeImportOrderDate(String orderDate) {
+        if (StringUtil.isBlank(orderDate)) {
+            throw new InputErrorException("单据日期不能为空！");
+        }
+
+        String[] parts = orderDate.trim().split("/");
+        if (parts.length != 3) {
+            throw new InputErrorException("单据日期格式错误，请使用 yyyy/M/d 或 yyyy/MM/dd 格式！");
+        }
+
+        try {
+            int year = Integer.parseInt(parts[0]);
+            int month = Integer.parseInt(parts[1]);
+            int day = Integer.parseInt(parts[2]);
+            return String.format("%04d/%02d/%02d", year, month, day);
+        } catch (NumberFormatException e) {
+            throw new InputErrorException("单据日期格式错误，请使用 yyyy/M/d 或 yyyy/MM/dd 格式！");
+        }
     }
 
     private List<ReceiveProductVo> buildProducts(List<ReceiveSheetQueryImportModel> list) {

@@ -47,6 +47,7 @@
 import {defineComponent} from 'vue';
 import {InboxOutlined} from '@ant-design/icons-vue';
 import {isEmpty} from '@/utils/utils';
+import { createError } from '@/hooks/web/msg';
 
 export default defineComponent({
     name: 'ExcelImporter',
@@ -87,6 +88,45 @@ export default defineComponent({
       };
     },
     methods: {
+      async resolveErrorMessage(err) {
+        if (!err) {
+          return '导入失败，请稍后重试！';
+        }
+
+        const parseTextMessage = (text) => {
+          if (!text) {
+            return '';
+          }
+
+          try {
+            const data = JSON.parse(text);
+            return data?.msg || data?.message || data?.error?.message || text;
+          } catch (e) {
+            return text;
+          }
+        };
+
+        if (err instanceof Blob) {
+          return parseTextMessage(await err.text());
+        }
+
+        if (err?.data instanceof Blob) {
+          return parseTextMessage(await err.data.text());
+        }
+
+        if (typeof err === 'string') {
+          return parseTextMessage(err);
+        }
+
+        return (
+          err?.msg ||
+          err?.message ||
+          err?.error?.message ||
+          err?.data?.msg ||
+          err?.data?.message ||
+          '导入失败，请稍后重试！'
+        );
+      },
       openDialog() {
         this.visible = true;
       },
@@ -114,6 +154,9 @@ export default defineComponent({
             if (this.closeAfterFinish) {
               this.closeDialog();
             }
+          })
+          .catch(async (err) => {
+            createError(await this.resolveErrorMessage(err));
           })
           .finally(() => {
             this.loading = false;
