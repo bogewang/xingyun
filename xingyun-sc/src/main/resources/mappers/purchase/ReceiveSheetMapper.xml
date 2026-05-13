@@ -218,7 +218,7 @@
                 </if>
             </if>
         </where>
-        ORDER BY r.create_time DESC
+        ORDER BY r.order_date DESC
     </select>
     <select id="getDetail" resultMap="ReceiveSheetFullDto">
         <include refid="ReceiveSheetFullDto_sql"/>

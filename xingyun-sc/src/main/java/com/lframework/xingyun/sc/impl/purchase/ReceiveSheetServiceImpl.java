@@ -857,7 +857,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
 
         for (int i = 0; i < list.size(); i++) {
-            list.get(i).setSeq(i+1);
+            list.get(i).setSeq(i+2);
         }
 
         Map<String, List<ReceiveSheetQueryImportModel>> map = list.stream().collect(

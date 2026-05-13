@@ -330,7 +330,7 @@ public class ReceiveSheetController extends DefaultBaseController {
 
             List<ReceiveSheetImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(), ReceiveSheetImportModel.class);
             for (int i = 0; i < list.size(); i++) {
-                list.get(i).setSeq(i + 1);
+                list.get(i).setSeq(i + 2);
             }
             List<ReceiveProductVo> data = receiveSheetService.checkImport(list);
 
