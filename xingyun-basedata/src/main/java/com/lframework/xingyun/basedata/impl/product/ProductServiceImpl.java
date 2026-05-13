@@ -578,7 +578,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         List<Product> persists = this.buildProducts(list);
 
         if (CollectionUtil.isNotEmpty(persists)) {
-            super.saveBatch(persists);
+            super.saveOrUpdateBatch(persists);
         }
     }
 
@@ -590,8 +590,9 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         List<Product> res = Lists.newArrayList();
         list.forEach(data -> {
             Product record = BeanUtil.copyProperties(data, Product.class);
-
-            record.setId(IdUtil.getId());
+            if (StringUtil.isBlank(record.getId())) {
+                record.setId(IdUtil.getId());
+            }
             record.setTaxRate(data.getTaxRate() == null ? BigDecimal.ZERO : data.getTaxRate());
             record.setSaleTaxRate(data.getSaleTaxRate() == null ? BigDecimal.ZERO : data.getSaleTaxRate());
             record.setProductType(ProductType.NORMAL);
@@ -617,8 +618,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         List<Product> availableProducts = selectAllAvailable();
         Set<String> availableCodes = availableProducts.stream().map(Product::getCode).collect(Collectors.toSet());
         Set<String> availableSkuCodes = availableProducts.stream().map(Product::getSkuCode).collect(Collectors.toSet());
-        Set<String> availableNameSpecUnitKeys = availableProducts.stream().map(this::buildNameSpecUnitKey)
-                .collect(Collectors.toSet());
+        Map<String, Product> availableNameSpecUnitKeys = availableProducts.stream()
+                .collect(Collectors.toMap(this::buildNameSpecUnitKey, item -> item));
         // 检查分类编号是否重复
         List<ProductCategory> availableCategories = productCategoryService.getAllProductCategories();
         Map<String, String> categoryMap = availableCategories.stream()
@@ -681,7 +682,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
      */
     private void checkRules(List<ProductImportModel> list, List<String> checkCodeList, List<String> checkSkuCodeList,
             Map<String, Integer> checkNameSpecUnitMap, Set<String> availableCodes, Set<String> availableSkuCodes,
-            Set<String> availableNameSpecUnitKeys, Map<String, String> categoryMap, Map<String, String> brandMap,
+                            Map<String, Product> availableNameSpecUnitKeys, Map<String, String> categoryMap, Map<String, String> brandMap,
             List<String> parentCategoryIds, int i) {
         ProductImportModel data = list.get(i);
         int rowIndex = (i + 2);
@@ -827,7 +828,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
      * @param data
      * @param rowIndex
      */
-    private void checkNameSpecUnit(Map<String, Integer> checkNameSpecUnitMap, Set<String> availableNameSpecUnitKeys,
+    private void checkNameSpecUnit(Map<String, Integer> checkNameSpecUnitMap, Map<String, Product> availableNameSpecUnitKeys,
             ProductImportModel data, int rowIndex) {
         String key = buildNameSpecUnitKey(data);
         Integer existsRowIndex = checkNameSpecUnitMap.get(key);
@@ -835,8 +836,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             throw new DefaultClientException(
                     "第" + rowIndex + "行“名称+规格+单位”与第" + existsRowIndex + "行重复");
         }
-        if (availableNameSpecUnitKeys.contains(key)) {
-            throw new DefaultClientException("第" + rowIndex + "行“名称+规格+单位”已存在");
+        if (availableNameSpecUnitKeys.containsKey(key)) {
+            data.setId(availableNameSpecUnitKeys.get(key).getId());
         }
         checkNameSpecUnitMap.put(key, rowIndex);
     }

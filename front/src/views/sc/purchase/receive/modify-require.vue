@@ -158,7 +158,13 @@
                   <vxe-column field="unit" title="单位" width="80" />
                   <vxe-column
                     field="purchasePrice"
-                    title="采购价（元）"
+                    title="参考采购价（元）"
+                    width="140"
+                    align="right"
+                  />
+                  <vxe-column
+                    field="latestPurchasePrice"
+                    title="最新采购价（元）"
                     width="140"
                     align="right"
                   />

@@ -127,6 +127,9 @@ public class SaleProductBo extends BaseBo<SaleProductDto> {
         ProductLatestPriceCacheService productLatestPriceCacheService = ApplicationUtil.getBean(
             ProductLatestPriceCacheService.class);
         this.latestSalePrice = productLatestPriceCacheService.getLatestSalePrice(this.getProductId());
+        if (this.latestSalePrice == null) {
+            this.latestSalePrice = dto.getSalePrice();
+        }
 
         if (StringUtil.isBlank(this.getScId())) {
             this.stockNum = BigDecimal.ZERO;

@@ -114,14 +114,18 @@
                   @cell-click="({ row: product }) => handleSelectProduct(rowIndex, product)"
                 >
                   <vxe-column type="seq" title="序号" width="60" />
-                  <vxe-column field="productCode" title="商品编号" width="120" />
                   <vxe-column field="productName" title="商品名称" min-width="200" />
-                  <vxe-column field="skuCode" title="商品SKU编号" width="120" />
                   <vxe-column field="spec" title="规格" width="80" />
                   <vxe-column field="unit" title="单位" width="80" />
                   <vxe-column
                     field="purchasePrice"
-                    title="采购价（元）"
+                    title="参考采购价（元）"
+                    width="140"
+                    align="right"
+                  />
+                  <vxe-column
+                    field="latestPurchasePrice"
+                    title="最新采购价（元）"
                     width="140"
                     align="right"
                   />

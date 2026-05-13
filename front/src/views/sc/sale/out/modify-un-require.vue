@@ -87,7 +87,7 @@
         highlight-hover-row
         keep-source
         row-id="id"
-        height="500"
+        height="380"
         :data="tableData"
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
@@ -130,13 +130,18 @@
                   :row-config="{ isHover: true }"
                   @cell-click="({ row: product }) => handleSelectProduct(rowIndex, product)"
                 >
-                  <vxe-column field="productCode" title="商品编号" width="120" />
                   <vxe-column field="productName" title="商品名称" min-width="200" />
                   <vxe-column field="spec" title="规格" width="80" />
                   <vxe-column field="unit" title="单位" width="80" />
                   <vxe-column
                     field="salePrice"
                     title="参考销售价（元）"
+                    width="140"
+                    align="right"
+                  />
+                  <vxe-column
+                    field="latestSalePrice"
+                    title="最新销售价（元）"
                     width="140"
                     align="right"
                   />
@@ -435,7 +440,24 @@
               totalNum: 0,
               totalAmount: 0,
             });
-
+            if (!isEmpty(res.customerId) && !isEmpty(res.customerName)) {
+              const selectedCustomerOptions = [
+                {
+                  label: res.customerName,
+                  value: res.customerId,
+                  keywords: [res.customerName, res.customerId].filter((value) => !!value).join(' '),
+                },
+              ];
+              this.customerOptionMap = mergeSelectOptionMap(
+                this.customerOptionMap,
+                selectedCustomerOptions,
+              );
+              this.customerOptions = buildVisibleSelectOptions(
+                this.formData.customerId,
+                this.customerOptionMap,
+                selectedCustomerOptions,
+              );
+            }
             const tableData = res.details || [];
             tableData.forEach((item) => {
               item.isFixed = false;

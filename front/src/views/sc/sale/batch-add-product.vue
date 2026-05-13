@@ -138,6 +138,8 @@
           { field: 'unit', title: '单位', width: 80 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
+          { field: 'salePrice', title: '参考销售价（元）', align: 'right', width: 140 },
+          { field: 'latestSalePrice', title: '最新销售价（元）', align: 'right', width: 140 },
           { field: 'stockNum', title: '库存数量', align: 'right', width: 100 },
         ],
         // 请求接口配置

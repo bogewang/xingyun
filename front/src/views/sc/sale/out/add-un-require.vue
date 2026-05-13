@@ -85,11 +85,16 @@
                   :row-config="{ isHover: true }"
                   @cell-click="({ row: product }) => handleSelectProduct(rowIndex, product)"
                 >
-                  <vxe-column field="productCode" title="商品编号" width="120" />
                   <vxe-column field="productName" title="商品名称" min-width="200" />
                   <vxe-column field="spec" title="规格" width="80" />
                   <vxe-column field="unit" title="单位" width="80" />
                   <vxe-column field="salePrice" title="参考销售价（元）" width="140" align="right" />
+                  <vxe-column
+                    field="latestSalePrice"
+                    title="最新销售价（元）"
+                    width="140"
+                    align="right"
+                  />
                 </vxe-table>
               </div>
             </template>
