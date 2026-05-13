@@ -655,18 +655,15 @@
           return false;
         }
 
-        if (isEmpty(this.tableData)) {
+        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
+
+        if (isEmpty(validTableData)) {
           createError('请录入商品！');
           return false;
         }
 
-        for (let i = 0; i < this.tableData.length; i++) {
-          const product = this.tableData[i];
-
-          if (isEmpty(product.productId)) {
-            createError('第' + (i + 1) + '行商品不允许为空！');
-            return false;
-          }
+        for (let i = 0; i < validTableData.length; i++) {
+          const product = validTableData[i];
 
           if (isEmpty(product.purchasePrice)) {
             createError('第' + (i + 1) + '行商品采购价不允许为空！');
@@ -735,7 +732,7 @@
           }
         }
 
-        if (this.tableData.filter((item) => isFloatGtZero(item.receiveNum)).length === 0) {
+        if (validTableData.filter((item) => isFloatGtZero(item.receiveNum)).length === 0) {
           createError('采购订单中的商品必须全部或部分收货！');
           return false;
         }
@@ -743,6 +740,7 @@
         return true;
       },
       buildParams() {
+        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
         return {
           scId: this.formData.scId,
           supplierId: this.formData.supplierId,
@@ -752,7 +750,7 @@
           purchaseOrderId: this.formData.purchaseOrderId,
           description: this.formData.description,
           required: true,
-          products: this.tableData
+          products: validTableData
             .filter((t) => isFloatGtZero(t.receiveNum))
             .map((t) => {
               const product = {

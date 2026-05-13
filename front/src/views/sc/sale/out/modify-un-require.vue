@@ -656,18 +656,15 @@
           return false;
         }
 
-        if (isEmpty(this.tableData)) {
+        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
+
+        if (isEmpty(validTableData)) {
           createError('请录入商品！');
           return false;
         }
 
-        for (let i = 0; i < this.tableData.length; i++) {
-          const product = this.tableData[i];
-
-          if (isEmpty(product.productId)) {
-            createError('第' + (i + 1) + '行商品不允许为空！');
-            return false;
-          }
+        for (let i = 0; i < validTableData.length; i++) {
+          const product = validTableData[i];
 
           if (isEmpty(product.taxPrice)) {
             createError('第' + (i + 1) + '行商品价格不允许为空！');
@@ -745,6 +742,7 @@
           return;
         }
 
+        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
         const params = {
           id: this.id,
           scId: this.formData.scId,
@@ -752,7 +750,7 @@
           salerId: this.formData.salerId || '',
           orderDate: this.formData.orderDate || '',
           description: this.formData.description,
-          products: this.tableData
+          products: validTableData
             .filter((t) => isFloatGtZero(t.outNum))
             .map((t) => {
               const product = {

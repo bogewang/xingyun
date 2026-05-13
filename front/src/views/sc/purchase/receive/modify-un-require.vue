@@ -135,7 +135,6 @@
                   @cell-click="({ row: product }) => handleSelectProduct(rowIndex, product)"
                 >
                   <vxe-column type="seq" title="序号" width="60" />
-                  <vxe-column field="productCode" title="商品编号" width="120" />
                   <vxe-column field="productName" title="商品名称" min-width="200" />
                   <vxe-column field="spec" title="规格" width="80" />
                   <vxe-column field="unit" title="单位" width="80" />
@@ -443,6 +442,25 @@
               totalAmount: 0,
             });
 
+            if (!isEmpty(res.supplierId) && !isEmpty(res.supplierName)) {
+              const selectedSupplierOptions = [
+                {
+                  label: res.supplierName,
+                  value: res.supplierId,
+                  keywords: [res.supplierName, res.supplierId].filter((value) => !!value).join(' '),
+                },
+              ];
+              this.supplierOptionMap = mergeSelectOptionMap(
+                this.supplierOptionMap,
+                selectedSupplierOptions,
+              );
+              this.supplierOptions = buildVisibleSelectOptions(
+                this.formData.supplierId,
+                this.supplierOptionMap,
+                selectedSupplierOptions,
+              );
+            }
+
             const tableData = res.details || [];
             tableData.forEach((item) => {
               item.isFixed = false;
@@ -641,18 +659,15 @@
           return false;
         }
 
-        if (isEmpty(this.tableData)) {
+        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
+
+        if (isEmpty(validTableData)) {
           createError('请录入商品！');
           return false;
         }
 
-        for (let i = 0; i < this.tableData.length; i++) {
-          const product = this.tableData[i];
-
-          if (isEmpty(product.productId)) {
-            createError('第' + (i + 1) + '行商品不允许为空！');
-            return false;
-          }
+        for (let i = 0; i < validTableData.length; i++) {
+          const product = validTableData[i];
 
           if (isEmpty(product.purchasePrice)) {
             createError('第' + (i + 1) + '行商品采购价不允许为空！');
@@ -721,6 +736,7 @@
           return;
         }
 
+        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
         const params = {
           id: this.id,
           scId: this.formData.scId,
@@ -729,7 +745,7 @@
           orderDate: this.formData.orderDate || '',
           receiveDate: this.formData.receiveDate,
           description: this.formData.description,
-          products: this.tableData
+          products: validTableData
             .filter((t) => isFloatGtZero(t.receiveNum))
             .map((t) => {
               const product = {

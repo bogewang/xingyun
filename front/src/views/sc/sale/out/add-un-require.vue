@@ -556,18 +556,15 @@
           return false;
         }
 
-        if (isEmpty(this.tableData)) {
+        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
+
+        if (isEmpty(validTableData)) {
           createError('请录入商品！');
           return false;
         }
 
-        for (let i = 0; i < this.tableData.length; i++) {
-          const product = this.tableData[i];
-
-          if (isEmpty(product.productId)) {
-            createError('第' + (i + 1) + '行商品不允许为空！');
-            return false;
-          }
+        for (let i = 0; i < validTableData.length; i++) {
+          const product = validTableData[i];
 
           if (isEmpty(product.taxPrice)) {
             createError('第' + (i + 1) + '行商品价格不允许为空！');
@@ -613,6 +610,7 @@
         return true;
       },
       buildParams() {
+        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
         return {
           scId: this.formData.scId,
           customerId: this.formData.customerId,
@@ -620,7 +618,7 @@
           orderDate: this.formData.orderDate || '',
           description: this.formData.description,
           required: false,
-          products: this.tableData
+          products: validTableData
             .filter((t) => isFloatGtZero(t.outNum))
             .map((t) => {
               const product = {
@@ -662,8 +660,9 @@
           return;
         }
 
+        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
         const checkStockNumArr = [];
-        this.tableData
+        validTableData
           .filter((item) => isFloatGtZero(item.outNum))
           .forEach((item) => {
             if (checkStockNumArr.map((v) => v.productId).includes(item.productId)) {

@@ -653,18 +653,15 @@
           return false;
         }
 
-        if (isEmpty(this.tableData)) {
+        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
+
+        if (isEmpty(validTableData)) {
           createError('请录入商品！');
           return false;
         }
 
-        for (let i = 0; i < this.tableData.length; i++) {
-          const product = this.tableData[i];
-
-          if (isEmpty(product.productId)) {
-            createError('第' + (i + 1) + '行商品不允许为空！');
-            return false;
-          }
+        for (let i = 0; i < validTableData.length; i++) {
+          const product = validTableData[i];
 
           if (isEmpty(product.taxPrice)) {
             createError('第' + (i + 1) + '行商品价格不允许为空！');
@@ -733,7 +730,7 @@
           }
         }
 
-        if (this.tableData.filter((item) => isFloatGtZero(item.outNum)).length === 0) {
+        if (validTableData.filter((item) => isFloatGtZero(item.outNum)).length === 0) {
           createError('销售订单中的商品必须全部或部分出库！');
           return false;
         }
@@ -741,6 +738,7 @@
         return true;
       },
       buildParams() {
+        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
         return {
           scId: this.formData.scId,
           customerId: this.formData.customerId,
@@ -749,7 +747,7 @@
           saleOrderId: this.formData.saleOrderId,
           description: this.formData.description,
           required: true,
-          products: this.tableData
+          products: validTableData
             .filter((t) => isFloatGtZero(t.outNum))
             .map((t) => {
               const product = {
@@ -794,8 +792,9 @@
           return;
         }
 
+        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
         const checkStockNumArr = [];
-        this.tableData
+        validTableData
           .filter((item) => isFloatGtZero(item.outNum))
           .forEach((item) => {
             if (checkStockNumArr.map((v) => v.productId).includes(item.productId)) {
