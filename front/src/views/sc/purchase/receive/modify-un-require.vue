@@ -240,6 +240,7 @@
   import * as api from '@/api/sc/purchase/receive';
   import * as purchaseApi from '@/api/sc/purchase/order';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { useRefreshStore } from '@/store/modules/multipleTab';
   import {
     isEmpty,
     isFloatGeZero,
@@ -392,6 +393,10 @@
       },
       // 关闭对话框
       closeDialog() {
+        this.closeCurrentPage();
+      },
+      // 返回采购收货查询页，避免保存后回到其他缓存页面
+      goQueryPage() {
         this.closeCurrentPage();
       },
       // 初始化表单数据
@@ -766,7 +771,7 @@
             createSuccess('保存成功！');
 
             this.$emit('confirm');
-            this.closeDialog();
+            this.goQueryPage();
           })
           .finally(() => {
             this.loading = false;
