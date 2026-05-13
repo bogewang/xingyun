@@ -93,6 +93,7 @@
         <result column="spec" property="spec"/>
         <result column="unit" property="unit"/>
         <result column="sale_price" property="salePrice"/>
+        <result column="purchase_price" property="purchasePrice"/>
         <result column="sale_tax_rate" property="taxRate"/>
         <result column="available" property="available"/>
     </resultMap>
@@ -171,6 +172,7 @@
             g.external_code,
             g.spec,
             g.unit,
+            g.purchase_price,
             g.sale_price,
             g.sale_tax_rate,
             g.available

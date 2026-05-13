@@ -370,9 +370,8 @@ export function searchSaleProducts(scId: string | undefined, condition: string):
 /**
  * 查询可销售商品列表
  */
-export function querySaleProductList(
-  params: QuerySaleProductVo,
-): Promise<PageResult<SaleProductBo>> {
+export function querySaleProductList(params: QuerySaleProductVo,
+                                     ): Promise<PageResult<SaleProductBo>> {
   return defHttp.get<PageResult<SaleProductBo>>(
     {
       url: baseUrl + '/product/list',

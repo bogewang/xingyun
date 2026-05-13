@@ -326,17 +326,18 @@ public class SaleOrderController extends DefaultBaseController {
     @HasPermission({ "sale:order:add", "sale:order:modify", "sale:out:add", "sale:out:modify",
             "sale:return:add", "sale:return:modify" })
     @GetMapping("/product/list")
-    public InvokeResult<PageResult<SaleProductBo>> querySaleProductList(
-            @Valid QuerySaleProductVo vo) {
+    public InvokeResult<PageResult<SaleProductBo>> querySaleProductList(@Valid QuerySaleProductVo vo) {
 
         PageResult<SaleProductDto> pageResult = saleOrderService.querySaleList(getPageIndex(vo),
                 getPageSize(vo), vo);
-        List<SaleProductBo> results = null;
-        List<SaleProductDto> datas = pageResult.getDatas();
-        if (!CollectionUtil.isEmpty(datas)) {
-            results = datas.stream().map(t -> new SaleProductBo(vo.getScId(), t))
-                    .collect(Collectors.toList());
+
+        if (CollectionUtil.isEmpty(pageResult.getDatas())) {
+            return InvokeResultBuilder.success(new PageResult<>());
         }
+
+        List<SaleProductBo> results = pageResult.getDatas().stream().map(
+                t -> new SaleProductBo(vo.getScId(), t))
+                    .collect(Collectors.toList());
 
         return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
     }

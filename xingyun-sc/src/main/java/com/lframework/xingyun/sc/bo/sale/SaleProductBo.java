@@ -9,8 +9,9 @@ import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
 import com.lframework.xingyun.sc.entity.ProductStock;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import io.swagger.annotations.ApiModelProperty;
-import java.math.BigDecimal;
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 @Data
 public class SaleProductBo extends BaseBo<SaleProductDto> {
@@ -82,6 +83,18 @@ public class SaleProductBo extends BaseBo<SaleProductDto> {
     private String unit;
 
     /**
+     * 采购价
+     */
+    @ApiModelProperty("采购价")
+    private BigDecimal purchasePrice;
+
+    /**
+     * 最新采购价
+     */
+    @ApiModelProperty("最新采购价")
+    private BigDecimal latestPurchasePrice;
+
+    /**
      * 销售价
      */
     @ApiModelProperty("销售价")
@@ -124,11 +137,15 @@ public class SaleProductBo extends BaseBo<SaleProductDto> {
         this.productId = dto.getId();
         this.productCode = dto.getCode();
         this.productName = dto.getName();
-        ProductLatestPriceCacheService productLatestPriceCacheService = ApplicationUtil.getBean(
-            ProductLatestPriceCacheService.class);
+        ProductLatestPriceCacheService productLatestPriceCacheService = ApplicationUtil.getBean(ProductLatestPriceCacheService.class);
         this.latestSalePrice = productLatestPriceCacheService.getLatestSalePrice(this.getProductId());
         if (this.latestSalePrice == null) {
             this.latestSalePrice = dto.getSalePrice();
+        }
+
+        this.latestPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(this.getProductId());
+        if (this.latestPurchasePrice == null) {
+            this.latestPurchasePrice = dto.getPurchasePrice();
         }
 
         if (StringUtil.isBlank(this.getScId())) {

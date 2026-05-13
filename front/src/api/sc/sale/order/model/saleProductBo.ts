@@ -65,6 +65,16 @@ export interface SaleProductBo {
   latestSalePrice: number;
 
   /**
+   * 采购价
+   */
+  purchasePrice: number;
+
+  /**
+   * 最新采购价
+   */
+  latestPurchasePrice: number;
+
+  /**
    * 库存数量
    */
   stockNum: number;

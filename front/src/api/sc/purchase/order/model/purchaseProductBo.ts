@@ -65,6 +65,16 @@ export interface PurchaseProductBo {
   latestPurchasePrice: number;
 
   /**
+   * 销售价
+   */
+  salePrice: number;
+
+  /**
+   * 最新销售价
+   */
+  latestSalePrice: number;
+
+  /**
    * 含税成本价
    */
   taxCostPrice: number;
