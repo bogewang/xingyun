@@ -8,18 +8,17 @@ import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
-import com.lframework.xingyun.basedata.entity.Customer;
-import com.lframework.xingyun.basedata.entity.StoreCenter;
-import com.lframework.xingyun.basedata.service.customer.CustomerService;
-import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.starter.web.inner.entity.SysUser;
+import com.lframework.starter.web.inner.service.system.SysUserService;
+import com.lframework.xingyun.basedata.entity.Customer;
+import com.lframework.xingyun.basedata.service.customer.CustomerService;
 import com.lframework.xingyun.sc.entity.SaleOrder;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.service.sale.SaleOrderService;
-import com.lframework.starter.web.inner.service.system.SysUserService;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.util.Date;
-import lombok.Data;
 
 @Data
 public class SaleOutSheetExportModel extends BaseBo<SaleOutSheet> implements ExcelModel {
@@ -171,9 +170,6 @@ public class SaleOutSheetExportModel extends BaseBo<SaleOutSheet> implements Exc
   @Override
   protected void afterInit(SaleOutSheet dto) {
 
-    StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
-    StoreCenter sc = storeCenterService.findById(dto.getScId());
-
     CustomerService customerService = ApplicationUtil.getBean(CustomerService.class);
     Customer customer = customerService.findById(dto.getCustomerId());
 
@@ -188,8 +184,6 @@ public class SaleOutSheetExportModel extends BaseBo<SaleOutSheet> implements Exc
     }
 
     this.setCode(dto.getCode());
-    this.setScCode(sc.getCode());
-    this.setScName(sc.getName());
     this.setCustomerCode(customer.getCode());
     this.setCustomerName(customer.getName());
     this.setSalerName(saler == null ? null : saler.getName());

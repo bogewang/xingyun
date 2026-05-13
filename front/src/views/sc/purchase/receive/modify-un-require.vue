@@ -206,7 +206,7 @@
                 class="number-input"
                 @input="(e) => paidAmountInput(e.target.value)"
               />
-              <a-button @click="setUnpaid">未付款</a-button>
+              <a-button type="primary" @click="setUnpaid">未付款</a-button>
             </a-space>
           </j-form-item>
         </j-form>

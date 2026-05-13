@@ -112,17 +112,14 @@
 
               <j-border title="合计">
                 <j-form bordered label-width="140px">
-                  <j-form-item label="收货数量" :span="6">
+                  <j-form-item label="收货数量" :span="8">
                     <a-input v-model:value="formData.totalNum" class="number-input" readonly />
                   </j-form-item>
-                  <j-form-item label="含税总金额" :span="6">
+                  <j-form-item label="含税总金额" :span="8">
                     <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
                   </j-form-item>
-                  <j-form-item label="已付金额" :span="6">
+                  <j-form-item label="已付金额" :span="8">
                     <a-input v-model:value="formData.paidAmount" class="number-input" readonly />
-                  </j-form-item>
-                  <j-form-item label="未付金额" :span="6">
-                    <a-input v-model:value="formData.unpaidAmount" class="number-input" readonly />
                   </j-form-item>
                   <j-form-item label="备注" :span="24" :content-nest="false">
                     <a-textarea v-model:value.trim="formData.description" maxlength="200" readonly />

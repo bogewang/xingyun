@@ -8,18 +8,17 @@ import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
-import com.lframework.xingyun.basedata.entity.StoreCenter;
-import com.lframework.xingyun.basedata.entity.Supplier;
-import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
-import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.starter.web.inner.entity.SysUser;
+import com.lframework.starter.web.inner.service.system.SysUserService;
+import com.lframework.xingyun.basedata.entity.Supplier;
+import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.sc.entity.PurchaseOrder;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.service.purchase.PurchaseOrderService;
-import com.lframework.starter.web.inner.service.system.SysUserService;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.util.Date;
-import lombok.Data;
 
 @Data
 public class ReceiveSheetExportModel extends BaseBo<ReceiveSheet> implements ExcelModel {
@@ -172,9 +171,6 @@ public class ReceiveSheetExportModel extends BaseBo<ReceiveSheet> implements Exc
   @Override
   protected void afterInit(ReceiveSheet dto) {
 
-    StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
-    StoreCenter sc = storeCenterService.findById(dto.getScId());
-
     SupplierService supplierService = ApplicationUtil.getBean(SupplierService.class);
     Supplier supplier = supplierService.findById(dto.getSupplierId());
 
@@ -189,8 +185,6 @@ public class ReceiveSheetExportModel extends BaseBo<ReceiveSheet> implements Exc
     }
 
     this.setCode(dto.getCode());
-    this.setScCode(sc.getCode());
-    this.setScName(sc.getName());
     this.setSupplierCode(supplier.getCode());
     this.setSupplierName(supplier.getName());
     this.setPurchaserName(purchaser == null ? null : purchaser.getName());
