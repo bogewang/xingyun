@@ -77,7 +77,7 @@
             </if>
             AND available = TRUE
         </where>
-        ORDER BY code
+        ORDER BY create_time DESC
     </select>
 
     <select id="selector" resultMap="SupplierDto">

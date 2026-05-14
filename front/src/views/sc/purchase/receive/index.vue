@@ -215,8 +215,8 @@
           </template>
 
           <!-- 单据号 列自定义内容 -->
-          <template #code_default="{ row }">
-            <a @click="viewDetail(row.id)">{{ row.code }}</a>
+          <template #id_default="{ row }">
+            <a @click="viewDetail(row.id)">{{ row.id }}</a>
           </template>
 
           <!-- 采购订单号 列自定义内容 -->
@@ -393,11 +393,11 @@
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
           {
-            field: 'code',
-            title: '单据号',
+            field: 'id',
+            title: '单据ID',
             width: 180,
             sortable: true,
-            slots: { default: 'code_default' },
+            slots: { default: 'id_default' },
           },
           { field: 'supplierCode', title: '供应商编号', width: 100 },
           { field: 'supplierName', title: '供应商名称', width: 120 },

@@ -191,7 +191,8 @@
         getNumber,
         mul,
         hasCostPrice: (row) =>
-          row && row.costPrice !== null && row.costPrice !== undefined && row.costPrice !== '',
+          row && row.costPrice !== null && row.costPrice !== undefined && row.costPrice !== ''
+        && row.costPrice > 0,
         SALE_OUT_SHEET_STATUS,
       };
     },
@@ -214,7 +215,7 @@
         tableColumn: [
           { type: 'seq', width: 50 },
           { field: 'productCode', title: '商品编号', width: 120 },
-          { field: 'productName', title: '商品名称', width: 260 },
+          { field: 'productName', title: '商品名称', width: 150 },
           { field: 'skuCode', title: '商品SKU编号', width: 120 },
           { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
@@ -222,7 +223,7 @@
           { field: 'categoryName', title: '商品分类', width: 80 },
           { field: 'brandName', title: '商品品牌', width: 120 },
           { field: 'mainProductName', title: '所属组合商品', width: 120 },
-          { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 150 },
+          { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 80 },
           { field: 'taxPrice', title: '价格（元）', align: 'right', width: 80 },
           {
             field: 'orderNum',
@@ -250,7 +251,7 @@
             width: 80,
             slots: { default: 'taxAmount_default' },
           },
-          { field: 'costPrice', title: '成本单价', align: 'right', width: 100 },
+          // { field: 'costPrice', title: '成本单价', align: 'right', width: 100 },
           {
             field: 'costStatus',
             title: '成本状态',

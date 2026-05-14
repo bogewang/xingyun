@@ -68,12 +68,30 @@
           </a-space>
         </template>
 
+        <template #operation_default="{ row, rowIndex }">
+          <a-space size="small">
+            <a-button
+              type="link"
+              size="small"
+              :icon="h(PlusCircleTwoTone)"
+              @click="insertProduct(rowIndex)"
+            />
+            <a-button
+              type="link"
+              size="small"
+              danger
+              :icon="h(MinusCircleTwoTone)"
+              @click="removeCurrentProduct(row)"
+            />
+          </a-space>
+        </template>
+
         <!-- 商品名称 列自定义内容 -->
         <template #productName_default="{ row, rowIndex }">
           <a-auto-complete
-            v-if="isEmpty(row.productId)"
+            v-if="isEmpty(row.productId) || row.editingProduct"
             :ref="'productInputRef' + rowIndex"
-            v-model:value="row.productName"
+            v-model:value="row.productQuery"
             placeholder="请输入商品编号/名称/SKU编号/简码"
             :options="row.productOptions"
             :dropdown-match-select-width="false"
@@ -113,7 +131,12 @@
               </div>
             </template>
           </a-auto-complete>
-          <span v-else>{{ row.productName }}</span>
+          <span
+            v-else
+            style="color: #1677ff; cursor: pointer"
+            @click="enableProductEdit(rowIndex)"
+            >{{ row.productName }}</span
+          >
         </template>
 
         <!-- 采购价 列自定义内容 -->
@@ -212,7 +235,9 @@
     CloudUploadOutlined,
     DeleteOutlined,
     EditOutlined,
+    MinusCircleTwoTone,
     NumberOutlined,
+    PlusCircleTwoTone,
     PlusOutlined,
   } from '@ant-design/icons-vue';
   import ReceiveSheetImporter from '@/components/Importor/ReceiveSheetImporter.vue';
@@ -255,7 +280,9 @@
       return {
         h,
         PlusOutlined,
+        PlusCircleTwoTone,
         DeleteOutlined,
+        MinusCircleTwoTone,
         NumberOutlined,
         EditOutlined,
         CloudUploadOutlined,
@@ -289,11 +316,17 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
+          {
+            field: 'operation',
+            title: '操作',
+            width: 80,
+            slots: { default: 'operation_default' },
+          },
           { field: 'productCode', title: '商品编号', width: 120 },
           {
             field: 'productName',
             title: '商品名称',
-            width: 260,
+            width: 200,
             slots: { default: 'productName_default' },
           },
           { field: 'spec', title: '规格', width: 80 },
@@ -404,6 +437,8 @@
           taxAmount: '',
           description: '',
           isFixed: false,
+          editingProduct: false,
+          productQuery: '',
           products: [],
           productOptions: [],
         };
@@ -413,6 +448,31 @@
         this.tableData.push(this.emptyProduct());
         this.$nextTick(() => {
           const productInputRef = this.$refs['productInputRef' + (this.tableData.length - 1)];
+          if (productInputRef) {
+            productInputRef.focus();
+          }
+        });
+      },
+      insertProduct(index) {
+        this.tableData.splice(index + 1, 0, this.emptyProduct());
+        this.$nextTick(() => {
+          const productInputRef = this.$refs['productInputRef' + (index + 1)];
+          if (productInputRef) {
+            productInputRef.focus();
+          }
+        });
+      },
+      removeCurrentProduct(row) {
+        this.tableData = this.tableData.filter((item) => item.id !== row.id);
+        this.calcSum();
+      },
+      enableProductEdit(index) {
+        this.tableData[index].editingProduct = true;
+        this.tableData[index].productQuery = '';
+        this.tableData[index].products = [];
+        this.tableData[index].productOptions = [];
+        this.$nextTick(() => {
+          const productInputRef = this.$refs['productInputRef' + index];
           if (productInputRef) {
             productInputRef.focus();
           }
@@ -444,6 +504,8 @@
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           purchasePrice,
+          editingProduct: false,
+          productQuery: '',
         });
 
         this.purchasePriceInput(this.tableData[index], this.tableData[index].purchasePrice);

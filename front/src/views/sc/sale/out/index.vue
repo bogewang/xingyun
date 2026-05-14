@@ -235,8 +235,8 @@
           </template>
 
           <!-- 单据号 列自定义内容 -->
-          <template #code_default="{ row }">
-            <a @click="viewDetail(row.id)">{{ row.code }}</a>
+          <template #id_default="{ row }">
+            <a @click="viewDetail(row.id)">{{ row.id }}</a>
           </template>
 
           <!-- 销售订单号 列自定义内容 -->
@@ -279,11 +279,7 @@
         ref="batchApprovePassHandlerDialog"
         :table-column="[
           { field: 'code', title: '单据号', width: 180 },
-          // { field: 'scCode', title: '仓库编号', width: 100 },
-          // { field: 'scName', title: '仓库名称', width: 120 },
-          // { field: 'customerCode', title: '客户编号', width: 100 },
           { field: 'customerName', title: '客户名称', width: 120 },
-          // { field: 'salerName', title: '销售员', width: 100 },
         ]"
         title="审核通过"
         :tableData="batchHandleDatas"
@@ -294,11 +290,7 @@
         ref="batchApproveRefuseHandlerDialog"
         :table-column="[
           { field: 'code', title: '单据号', width: 180 },
-          // { field: 'scCode', title: '仓库编号', width: 100 },
-          // { field: 'scName', title: '仓库名称', width: 120 },
-          // { field: 'customerCode', title: '客户编号', width: 100 },
           { field: 'customerName', title: '客户名称', width: 120 },
-          // { field: 'salerName', title: '销售员', width: 100 },
         ]"
         title="审核拒绝"
         :tableData="batchHandleDatas"
@@ -309,11 +301,7 @@
         ref="batchDeleteHandlerDialog"
         :table-column="[
           { field: 'code', title: '单据号', width: 180 },
-          // { field: 'scCode', title: '仓库编号', width: 100 },
-          // { field: 'scName', title: '仓库名称', width: 120 },
-          // { field: 'customerCode', title: '客户编号', width: 100 },
           { field: 'customerName', title: '客户名称', width: 120 },
-          // { field: 'salerName', title: '销售员', width: 100 },
         ]"
         title="批量删除"
         :tableData="batchHandleDatas"
@@ -432,11 +420,11 @@
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
           {
-            field: 'code',
-            title: '单据号',
+            field: 'id',
+            title: '单据ID',
             width: 180,
             sortable: true,
-            slots: { default: 'code_default' },
+            slots: { default: 'id_default' },
           },
           { field: 'customerName', title: '客户名称', width: 120 },
           { field: 'orderDate', title: '订单日期', width: 120 },

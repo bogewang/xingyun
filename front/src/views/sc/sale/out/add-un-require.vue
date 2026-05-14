@@ -1,11 +1,6 @@
 <template>
   <div class="app-card-container">
     <div v-permission="['sale:out:add']" v-loading="loading">
-      <a-alert
-        description="提示：使用回车键可以快速添加商品；使用Tab键可以快速跳转至下一个输入框。"
-        type="info"
-        show-icon
-      />
       <j-border>
         <j-form bordered>
           <j-form-item label="客户" required>
@@ -61,12 +56,30 @@
           </a-space>
         </template>
 
+        <template #operation_default="{ row, rowIndex }">
+          <a-space size="small">
+            <a-button
+              type="link"
+              size="small"
+              :icon="h(PlusCircleTwoTone)"
+              @click="insertProduct(rowIndex)"
+            />
+            <a-button
+              type="link"
+              size="small"
+              danger
+              :icon="h(MinusCircleTwoTone)"
+              @click="removeCurrentProduct(row)"
+            />
+          </a-space>
+        </template>
+
         <!-- 商品名称 列自定义内容 -->
         <template #productName_default="{ row, rowIndex }">
           <a-auto-complete
-            v-if="isEmpty(row.productId)"
+            v-if="isEmpty(row.productId) || row.editingProduct"
             :ref="'productInputRef' + rowIndex"
-            v-model:value="row.productName"
+            v-model:value="row.productQuery"
             placeholder="请输入商品编号/名称/SKU编号/简码"
             :options="row.productOptions"
             :dropdown-match-select-width="false"
@@ -88,7 +101,12 @@
                   <vxe-column field="productName" title="商品名称" min-width="200" />
                   <vxe-column field="spec" title="规格" width="80" />
                   <vxe-column field="unit" title="单位" width="80" />
-                  <vxe-column field="salePrice" title="参考销售价（元）" width="140" align="right" />
+                  <vxe-column
+                    field="salePrice"
+                    title="参考销售价（元）"
+                    width="140"
+                    align="right"
+                  />
                   <vxe-column
                     field="latestSalePrice"
                     title="最新销售价（元）"
@@ -99,7 +117,12 @@
               </div>
             </template>
           </a-auto-complete>
-          <span v-else>{{ row.productName }}</span>
+          <span
+            v-else
+            style="color: #1677ff; cursor: pointer"
+            @click="enableProductEdit(rowIndex)"
+            >{{ row.productName }}</span
+          >
         </template>
 
         <!-- 价格 列自定义内容 -->
@@ -204,7 +227,9 @@
     CloudUploadOutlined,
     DeleteOutlined,
     EditOutlined,
+    MinusCircleTwoTone,
     NumberOutlined,
+    PlusCircleTwoTone,
     PlusOutlined,
   } from '@ant-design/icons-vue';
   import SaleOutSheetImporter from '@/components/Importor/SaleOutSheetImporter.vue';
@@ -245,7 +270,9 @@
       return {
         h,
         PlusOutlined,
+        PlusCircleTwoTone,
         DeleteOutlined,
+        MinusCircleTwoTone,
         NumberOutlined,
         EditOutlined,
         CloudUploadOutlined,
@@ -279,6 +306,12 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
+          {
+            field: 'operation',
+            title: '操作',
+            width: 80,
+            slots: { default: 'operation_default' },
+          },
           { field: 'productCode', title: '商品编号', width: 120 },
           {
             field: 'productName',
@@ -394,6 +427,8 @@
           taxAmount: '',
           description: '',
           isFixed: false,
+          editingProduct: false,
+          productQuery: '',
           products: [],
           productOptions: [],
         };
@@ -403,6 +438,31 @@
         this.tableData.push(this.emptyProduct());
         this.$nextTick(() => {
           const productInputRef = this.$refs['productInputRef' + (this.tableData.length - 1)];
+          if (productInputRef) {
+            productInputRef.focus();
+          }
+        });
+      },
+      insertProduct(index) {
+        this.tableData.splice(index + 1, 0, this.emptyProduct());
+        this.$nextTick(() => {
+          const productInputRef = this.$refs['productInputRef' + (index + 1)];
+          if (productInputRef) {
+            productInputRef.focus();
+          }
+        });
+      },
+      removeCurrentProduct(row) {
+        this.tableData = this.tableData.filter((item) => item.id !== row.id);
+        this.calcSum();
+      },
+      enableProductEdit(index) {
+        this.tableData[index].editingProduct = true;
+        this.tableData[index].productQuery = '';
+        this.tableData[index].products = [];
+        this.tableData[index].productOptions = [];
+        this.$nextTick(() => {
+          const productInputRef = this.$refs['productInputRef' + index];
           if (productInputRef) {
             productInputRef.focus();
           }
@@ -432,6 +492,8 @@
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           oriPrice: product.salePrice,
           taxPrice: product.latestSalePrice,
+          editingProduct: false,
+          productQuery: '',
         });
 
         this.taxPriceInput(this.tableData[index], this.tableData[index].taxPrice);
