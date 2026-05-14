@@ -797,8 +797,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     }
 
     private BigDecimal normalizePaidAmount(BigDecimal paidAmount, BigDecimal totalAmount) {
-
-        BigDecimal actualPaidAmount = paidAmount == null ? totalAmount : paidAmount;
+        // 未付款则=0
+        BigDecimal actualPaidAmount = paidAmount == null ? BigDecimal.ZERO : paidAmount;
         if (NumberUtil.lt(actualPaidAmount, BigDecimal.ZERO)) {
             throw new InputErrorException("付款金额不允许小于0！");
         }

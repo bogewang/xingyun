@@ -9,11 +9,7 @@ import com.google.common.collect.Lists;
 import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.exceptions.impl.InputErrorException;
-import com.lframework.starter.common.utils.Assert;
-import com.lframework.starter.common.utils.BeanUtil;
-import com.lframework.starter.common.utils.DateUtil;
-import com.lframework.starter.common.utils.NumberUtil;
-import com.lframework.starter.common.utils.StringUtil;
+import com.lframework.starter.common.utils.*;
 import com.lframework.starter.web.core.annotations.oplog.OpLog;
 import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
 import com.lframework.starter.web.core.components.resp.PageResult;
@@ -27,27 +23,29 @@ import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineB
 import com.lframework.starter.web.inner.entity.SysUser;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
-import com.lframework.xingyun.basedata.entity.*;
+import com.lframework.xingyun.basedata.entity.Customer;
+import com.lframework.xingyun.basedata.entity.Product;
+import com.lframework.xingyun.basedata.entity.ProductCategory;
+import com.lframework.xingyun.basedata.entity.StoreCenter;
 import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.enums.SettleType;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
-import com.lframework.xingyun.basedata.vo.customer.QueryCustomerVo;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
-import com.lframework.xingyun.core.utils.SplitNumberUtil;
+import com.lframework.xingyun.basedata.vo.customer.QueryCustomerVo;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
 import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
-import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
 import com.lframework.xingyun.sc.entity.*;
 import com.lframework.xingyun.sc.enums.*;
+import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetSalesExportHelper;
 import com.lframework.xingyun.sc.mappers.SaleOutSheetMapper;
@@ -583,8 +581,8 @@ public class SaleOutSheetServiceImpl extends
         sheet.setStatus(SaleOutSheetStatus.CREATED);
 
         getBaseMapper().insert(sheet);
-        this.adjustCustomerAmount(sheet.getCustomerId());
 
+        this.adjustCustomerAmount(sheet.getCustomerId());
         refreshCostPrice(sheet.getId());
 
         OpLogUtil.setVariable("code", sheet.getCode());
@@ -1058,25 +1056,7 @@ public class SaleOutSheetServiceImpl extends
         sheet.setOrderDate(vo.getOrderDate());
 
         if (requireSale) {
-
-            SaleOrder saleOrder = saleOrderService.getById(vo.getSaleOrderId());
-            if (saleOrder == null) {
-                throw new DefaultClientException("销售订单不存在！");
-            }
-
-            sheet.setScId(saleOrder.getScId());
-            sheet.setCustomerId(saleOrder.getCustomerId());
-            sheet.setSaleOrderId(saleOrder.getId());
-
-            if (!saleConfig.getOutStockMultipleRelateSale()) {
-                Wrapper<SaleOutSheet> checkWrapper = Wrappers.lambdaQuery(SaleOutSheet.class)
-                        .eq(SaleOutSheet::getSaleOrderId, saleOrder.getId())
-                        .ne(SaleOutSheet::getId, sheet.getId());
-                if (getBaseMapper().selectCount(checkWrapper) > 0) {
-                    throw new DefaultClientException("销售订单号：" + saleOrder.getCode()
-                            + "，已关联其他销售出库单，不允许关联多个销售出库单！");
-                }
-            }
+            handleRequireSale(sheet, vo, saleConfig);
         }
 
         BigDecimal purchaseNum = BigDecimal.ZERO;
@@ -1150,47 +1130,6 @@ public class SaleOutSheetServiceImpl extends
                         null);
             }
 
-            // 这里处理组合商品
-            if (product.getProductType() == ProductType.BUNDLE) {
-                if (!NumberUtil.isInteger(productVo.getOrderNum())) {
-                    throw new InputErrorException("第" + orderNo + "行商品出库数量必须是整数！");
-                }
-                List<ProductBundle> productBundles = productBundleService.getByMainProductId(
-                        product.getId());
-                // 构建指标项
-                Map<Object, Number> bundleWeight = new HashMap<>(productBundles.size());
-                for (ProductBundle productBundle : productBundles) {
-                    bundleWeight.put(productBundle.getProductId(),
-                            NumberUtil.mul(productBundle.getSalePrice(), productBundle.getBundleNum()));
-                }
-                Map<Object, Number> splitPriceMap = SplitNumberUtil.split(detail.getTaxAmount(),
-                        bundleWeight, 2);
-                List<SaleOutSheetDetailBundle> saleOutSheetDetailBundles = productBundles.stream()
-                        .map(productBundle -> {
-                            Product bundle = productService.findById(productBundle.getProductId());
-                            SaleOutSheetDetailBundle saleOutSheetDetailBundle = new SaleOutSheetDetailBundle();
-                            saleOutSheetDetailBundle.setId(IdUtil.getId());
-                            saleOutSheetDetailBundle.setSheetId(sheet.getId());
-                            saleOutSheetDetailBundle.setDetailId(detail.getId());
-                            saleOutSheetDetailBundle.setMainProductId(product.getId());
-                            saleOutSheetDetailBundle.setOrderNum(detail.getOrderNum());
-                            saleOutSheetDetailBundle.setProductId(productBundle.getProductId());
-                            saleOutSheetDetailBundle.setProductOrderNum(
-                                    NumberUtil.mul(detail.getOrderNum(), productBundle.getBundleNum()));
-                            saleOutSheetDetailBundle.setProductOriPrice(productBundle.getSalePrice());
-                            saleOutSheetDetailBundle.setProductTaxAmount(BigDecimal.valueOf(
-                                    splitPriceMap.get(productBundle.getProductId()).doubleValue()));
-                            // 这里会有尾差
-                            saleOutSheetDetailBundle.setProductTaxPrice(NumberUtil.getNumber(NumberUtil.div(
-                                    saleOutSheetDetailBundle.getProductTaxAmount(),
-                                    saleOutSheetDetailBundle.getProductOrderNum()), 6));
-                            saleOutSheetDetailBundle.setProductTaxRate(bundle.getSaleTaxRate());
-
-                            return saleOutSheetDetailBundle;
-                        }).collect(Collectors.toList());
-
-                saleOutSheetDetailBundleService.saveBatch(saleOutSheetDetailBundles);
-            }
             orderNo++;
         }
         sheet.setTotalNum(purchaseNum);
@@ -1202,6 +1141,33 @@ public class SaleOutSheetServiceImpl extends
         sheet.setDescription(
                 StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(customer));
+    }
+
+    /**
+     * 处理关联销售订单
+     * @param sheet
+     * @param vo
+     * @param saleConfig
+     */
+    private void handleRequireSale(SaleOutSheet sheet, CreateSaleOutSheetVo vo, SaleConfig saleConfig) {
+        SaleOrder saleOrder = saleOrderService.getById(vo.getSaleOrderId());
+        if (saleOrder == null) {
+            throw new DefaultClientException("销售订单不存在！");
+        }
+
+        sheet.setScId(saleOrder.getScId());
+        sheet.setCustomerId(saleOrder.getCustomerId());
+        sheet.setSaleOrderId(saleOrder.getId());
+
+        if (!saleConfig.getOutStockMultipleRelateSale()) {
+            Wrapper<SaleOutSheet> checkWrapper = Wrappers.lambdaQuery(SaleOutSheet.class)
+                    .eq(SaleOutSheet::getSaleOrderId, saleOrder.getId())
+                    .ne(SaleOutSheet::getId, sheet.getId());
+            if (getBaseMapper().selectCount(checkWrapper) > 0) {
+                throw new DefaultClientException("销售订单号：" + saleOrder.getCode()
+                        + "，已关联其他销售出库单，不允许关联多个销售出库单！");
+            }
+        }
     }
 
     /**
@@ -1217,7 +1183,7 @@ public class SaleOutSheetServiceImpl extends
 
     private BigDecimal normalizePaidAmount(BigDecimal paidAmount, BigDecimal totalAmount) {
 
-        BigDecimal actualPaidAmount = paidAmount == null ? totalAmount : paidAmount;
+        BigDecimal actualPaidAmount = paidAmount == null ? BigDecimal.ZERO : paidAmount;
         if (NumberUtil.lt(actualPaidAmount, BigDecimal.ZERO)) {
             throw new InputErrorException("付款金额不允许小于0！");
         }
