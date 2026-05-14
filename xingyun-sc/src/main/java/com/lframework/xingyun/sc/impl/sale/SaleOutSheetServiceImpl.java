@@ -11,6 +11,7 @@ import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.exceptions.impl.InputErrorException;
 import com.lframework.starter.common.utils.Assert;
 import com.lframework.starter.common.utils.BeanUtil;
+import com.lframework.starter.common.utils.DateUtil;
 import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.annotations.oplog.OpLog;
@@ -30,6 +31,7 @@ import com.lframework.xingyun.basedata.entity.*;
 import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.enums.SettleType;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
+import com.lframework.xingyun.basedata.vo.customer.QueryCustomerVo;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
@@ -40,6 +42,7 @@ import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
 import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
+import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
@@ -69,6 +72,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.lframework.xingyun.sc.impl.purchase.ReceiveSheetServiceImpl.normalizeImportOrderDate;
 
 @Service
 public class SaleOutSheetServiceImpl extends
@@ -1262,6 +1267,72 @@ public class SaleOutSheetServiceImpl extends
         checkImportData(list);
 
         return list.stream()
+                .map(item -> BeanUtil.copyProperties(item, SaleOutProductVo.class))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public List<String> importByQuery(List<SaleOutSheetQueryImportModel> list) {
+        if (CollectionUtils.isEmpty(list)) {
+            return Lists.newArrayList();
+        }
+
+        SaleConfig saleConfig = saleConfigService.get();
+        if (Boolean.TRUE.equals(saleConfig.getOutStockRequireSale())) {
+            throw new DefaultClientException("“销售出库单是否关联销售订单”必须设置为“否”才可以导入！");
+        }
+
+        Map<String, List<SaleOutSheetQueryImportModel>> map = list.stream().collect(
+                Collectors.groupingBy(item -> item.getOrderDate() + "|" + item.getCustomerName()));
+
+        return map.keySet().stream()
+                .map(item -> this.create(buildCreateVo(map.get(item))))
+                .collect(Collectors.toList());
+    }
+
+    private CreateSaleOutSheetVo buildCreateVo(List<SaleOutSheetQueryImportModel> list) {
+        SaleOutSheetQueryImportModel model = list.get(0);
+        Customer customer = getImportCustomer(model.getCustomerName());
+
+        CreateSaleOutSheetVo res = new CreateSaleOutSheetVo();
+        res.setCustomerId(customer.getId());
+        res.setOrderDate(DateUtil.parseDate(normalizeImportOrderDate(model.getOrderDate()), "yyyy/MM/dd"));
+        res.setRequired(Boolean.FALSE);
+        res.setProducts(buildImportProducts(list));
+
+        return res;
+    }
+
+    private Customer getImportCustomer(String customerName) {
+        if (StringUtil.isBlank(customerName)) {
+            throw new InputErrorException("客户不能为空！");
+        }
+
+        QueryCustomerVo queryCustomerVo = new QueryCustomerVo();
+        queryCustomerVo.setName(customerName);
+        List<Customer> customers = customerService.query(queryCustomerVo).stream()
+                .filter(item -> customerName.equals(item.getName()))
+                .collect(Collectors.toList());
+        Assert.notEmpty(customers, "客户不存在：" + customerName);
+        if (customers.size() > 1) {
+            throw new InputErrorException("存在多个同名客户，请先整理基础资料后再导入：" + customerName);
+        }
+
+        return customers.get(0);
+    }
+
+    private List<SaleOutProductVo> buildImportProducts(List<SaleOutSheetQueryImportModel> list) {
+        if (CollectionUtils.isEmpty(list)) {
+            return Lists.newArrayList();
+        }
+
+        List<SaleOutSheetImportModel> collect = list.stream()
+                .map(item -> BeanUtil.copyProperties(item, SaleOutSheetImportModel.class))
+                .collect(Collectors.toList());
+        List<SaleOutProductVo> checked = checkImport(collect);
+
+        return checked.stream()
                 .map(item -> BeanUtil.copyProperties(item, SaleOutProductVo.class))
                 .collect(Collectors.toList());
     }

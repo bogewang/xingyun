@@ -942,7 +942,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         return res;
     }
 
-    private String normalizeImportOrderDate(String orderDate) {
+    public static String normalizeImportOrderDate(String orderDate) {
         if (StringUtil.isBlank(orderDate)) {
             throw new InputErrorException("单据日期不能为空！");
         }

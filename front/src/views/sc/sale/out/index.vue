@@ -197,6 +197,12 @@
                 >批量删除</a-button
               >
               <a-button
+                v-permission="['sale:out:add']"
+                :icon="h(CloudUploadOutlined)"
+                @click="$refs.importer.openDialog()"
+                >导入Excel</a-button
+              >
+              <a-button
                 v-permission="['sale:out:export']"
                 :icon="h(DownloadOutlined)"
                 @click="exportList"
@@ -252,6 +258,7 @@
       <detail :id="id" ref="viewDialog" />
 
       <approve-refuse ref="approveRefuseDialog" @confirm="doApproveRefuse" />
+      <sale-out-sheet-query-importer ref="importer" @confirm="handleImportSuccess" />
 
       <!-- 销售订单查看窗口 -->
       <sale-order-detail :id="saleOrderId" ref="viewSaleOrderDetailDialog" />
@@ -318,6 +325,7 @@
     PlusOutlined,
     CheckOutlined,
     CloseOutlined,
+    CloudUploadOutlined,
     DeleteOutlined,
     DownloadOutlined,
     PrinterOutlined,
@@ -341,6 +349,7 @@
   import { PRINT_TYPE } from '@/enums/biz/printType';
   import BatchHandler from '@/components/BatchHandler';
   import PrintDialog from '/@/components/PrintDialog';
+  import SaleOutSheetQueryImporter from '@/components/Importor/SaleOutSheetQueryImporter.vue';
 
   export default defineComponent({
     name: 'SaleOutSheet',
@@ -350,6 +359,7 @@
       SaleOrderDetail,
       BatchHandler,
       OrderPrintDialog: PrintDialog,
+      SaleOutSheetQueryImporter,
     },
     mixins: [multiplePageMix, printMix],
     setup() {
@@ -359,6 +369,7 @@
         PlusOutlined,
         CheckOutlined,
         CloseOutlined,
+        CloudUploadOutlined,
         DeleteOutlined,
         DownloadOutlined,
         PrinterOutlined,
@@ -678,6 +689,12 @@
         this.batchRefuseReason = reason;
 
         this.$refs.batchApproveRefuseHandlerDialog.openDialog();
+      },
+      handleImportSuccess(res) {
+        const ids = res?.data || res?.datas || res || [];
+        const count = Array.isArray(ids) ? ids.length : 0;
+        createSuccess('导入成功，已创建' + count + '张销售出库单！');
+        this.search();
       },
       exportList() {
         this.loading = true;

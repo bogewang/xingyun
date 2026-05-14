@@ -157,6 +157,37 @@ export function importExcel(data: { id: string; file: Blob }): Promise<void> {
 }
 
 /**
+ * 下载销售出库查询导入模板
+ */
+export function downloadQueryImportTemplate(): Promise<void> {
+  return defHttp.get<void>(
+    {
+      url: baseUrl + '/import/query/template',
+    },
+    {
+      responseType: ResponseEnum.BLOB,
+      region,
+    },
+  );
+}
+
+/**
+ * 销售出库查询页面导入并创建订单
+ */
+export function importByQuery(data: { file: Blob }): Promise<string[]> {
+  return defHttp.post<string[]>(
+    {
+      url: baseUrl + '/import/query',
+      data,
+    },
+    {
+      contentType: ContentTypeEnum.BLOB,
+      region,
+    },
+  );
+}
+
+/**
  * 查询详情
  */
 export function get(id: string): Promise<GetSaleOutSheetBo> {

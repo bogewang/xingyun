@@ -21,6 +21,7 @@ import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetWithReturnBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetWithReturnBo;
 import com.lframework.xingyun.sc.converter.SaleOutSheetConverter;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
+import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
@@ -371,6 +372,29 @@ public class SaleOutSheetController extends DefaultBaseController {
             List<SaleOutSheetImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(),
                     SaleOutSheetImportModel.class);
             List<SaleOutProductVo> data = saleOutSheetService.checkImport(list);
+
+            return InvokeResultBuilder.success(data);
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    @ApiOperation("下载销售出库查询导入模板")
+    @HasPermission({ "sale:out:add" })
+    @GetMapping("/import/query/template")
+    public void downloadQueryImportTemplate() {
+        ExcelUtil.export("销售出库查询导入模板", SaleOutSheetQueryImportModel.class);
+    }
+
+    @ApiOperation("销售出库查询页面导入并创建订单")
+    @HasPermission({ "sale:out:add" })
+    @PostMapping("/import/query")
+    public InvokeResult<List<String>> importByQuery(@NotNull(message = "请上传文件") MultipartFile file) {
+        try {
+            List<SaleOutSheetQueryImportModel> list = EasyExcelUtils.syncReadModel(
+                    file.getInputStream(), SaleOutSheetQueryImportModel.class);
+            List<String> data = saleOutSheetService.importByQuery(list);
 
             return InvokeResultBuilder.success(data);
         } catch (Exception e) {

@@ -4,6 +4,7 @@ import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.service.BaseMpService;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
+import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
@@ -178,4 +179,12 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
    * @param orderId
    */
   void refreshCostPrice(String orderId);
+
+  /**
+   * 从销售出库查询页面导入并创建订单
+   *
+   * @param list 导入数据
+   * @return 创建的订单ID列表
+   */
+  List<String> importByQuery(List<SaleOutSheetQueryImportModel> list);
 }
