@@ -1278,6 +1278,8 @@ public class SaleOutSheetServiceImpl extends
             return Lists.newArrayList();
         }
 
+        SaleOutSheetService thisService = getThis(this.getClass());
+
         SaleConfig saleConfig = saleConfigService.get();
         if (Boolean.TRUE.equals(saleConfig.getOutStockRequireSale())) {
             throw new DefaultClientException("“销售出库单是否关联销售订单”必须设置为“否”才可以导入！");
@@ -1289,7 +1291,7 @@ public class SaleOutSheetServiceImpl extends
                 Collectors.groupingBy(item -> item.getOrderDate() + "|" + item.getCustomerName()));
 
         return map.keySet().stream()
-                .map(item -> this.create(buildCreateVo(map.get(item))))
+                .map(item -> thisService.create(buildCreateVo(map.get(item))))
                 .collect(Collectors.toList());
     }
 
@@ -1345,7 +1347,7 @@ public class SaleOutSheetServiceImpl extends
         Map<String, Product> nameSpecUnitMap = products.stream()
                 .collect(Collectors.toMap(item -> item.getName() + item.getSpec() + item.getUnit(), item -> item));
         Map<String, Product> nameUnitMap = products.stream()
-                .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item));
+                .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item, (oldValue, newValue) -> oldValue));
 
         for (int i = 0; i < list.size(); i++) {
             SaleOutSheetImportModel data = list.get(i);

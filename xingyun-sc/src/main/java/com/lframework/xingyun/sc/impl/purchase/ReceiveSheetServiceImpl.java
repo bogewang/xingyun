@@ -223,9 +223,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         getBaseMapper().insert(sheet);
         this.adjustSupplierAmount(sheet.getSupplierId());
 
-        // todo
-        // OpLogUtil.setVariable("code", sheet.getCode());
-        // OpLogUtil.setExtra(vo);
+        OpLogUtil.setVariable("code", sheet.getCode());
+        OpLogUtil.setExtra(vo);
 
         return sheet.getId();
     }
@@ -922,11 +921,11 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         for (int i = 0; i < list.size(); i++) {
             list.get(i).setSeq(i+2);
         }
-
+        ReceiveSheetService thisService = getThis(this.getClass());
         Map<String, List<ReceiveSheetQueryImportModel>> map = list.stream().collect(
                 Collectors.groupingBy(item -> item.getOrderDate() + item.getSupplierName()));
 
-        return map.keySet().stream().map(item -> this.create(buildCreateVo(map.get(item)))).collect(Collectors.toList());
+        return map.keySet().stream().map(item -> thisService.create(buildCreateVo(map.get(item)))).collect(Collectors.toList());
     }
 
     private CreateReceiveSheetVo buildCreateVo(List<ReceiveSheetQueryImportModel> list) {
