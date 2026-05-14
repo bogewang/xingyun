@@ -6,8 +6,10 @@
         <vxe-grid
           id="SaleOutSheet"
           ref="grid"
+          auto-resize
           resizable
           show-overflow
+          show-footer
           highlight-hover-row
           keep-source
           row-id="id"
@@ -16,6 +18,7 @@
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
           :pager-config="{}"
+          :footer-method="footerMethod"
           :loading="loading"
           height="auto"
         >
@@ -475,6 +478,44 @@
     },
     created() {},
     methods: {
+      footerMethod({ columns, data }) {
+        const totalAmount = this.sumByField(data, 'totalAmount');
+        const totalNum = this.sumByField(data, 'totalNum');
+
+        return [
+          columns.map((column) => {
+            if (column.type === 'seq') {
+              return '合计';
+            }
+
+            if (column.field === 'totalAmount') {
+              return this.formatAmount(totalAmount);
+            }
+
+            if (column.field === 'totalNum') {
+              return this.formatQuantity(totalNum);
+            }
+
+            return '';
+          }),
+        ];
+      },
+      sumByField(data, field) {
+        return (data || []).reduce((total, item) => {
+          const value = Number(item?.[field] ?? 0);
+          return total + (Number.isNaN(value) ? 0 : value);
+        }, 0);
+      },
+      formatAmount(value) {
+        return this.toFixedNumber(value, 2);
+      },
+      formatQuantity(value) {
+        return this.toFixedNumber(value, 2, true);
+      },
+      toFixedNumber(value, digits = 2, trimZero = false) {
+        const text = Number(value || 0).toFixed(digits);
+        return trimZero ? text.replace(/\.?0+$/, '') : text;
+      },
       // 列表发生查询时的事件
       search() {
         this.$refs.grid.commitProxy('reload');

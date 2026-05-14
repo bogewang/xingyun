@@ -7,7 +7,6 @@
       <Layout :class="`${prefixCls}-main`">
         <LayoutMultipleHeader />
         <LayoutContent />
-        <LayoutFooter />
       </Layout>
     </Layout>
   </Layout>
@@ -34,7 +33,6 @@
     name: 'DefaultLayout',
     components: {
       LayoutFeatures: createAsyncComponent(() => import('/@/layouts/default/feature/index.vue')),
-      LayoutFooter: createAsyncComponent(() => import('/@/layouts/default/footer/index.vue')),
       LayoutHeader,
       LayoutContent,
       LayoutSideBar,
