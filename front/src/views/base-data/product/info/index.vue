@@ -23,13 +23,10 @@
             <j-border>
               <j-form bordered @collapse="$refs.grid.refreshColumn()">
                 <j-form-item label="名称">
-                  <a-input v-model:value="searchFormData.name" allow-clear />
+                  <a-input v-model:value="searchFormData.name" allow-clear @press-enter="search" />
                 </j-form-item>
                 <j-form-item label="编号">
-                  <a-input v-model:value="searchFormData.code" allow-clear />
-                </j-form-item>
-                <j-form-item label="简称">
-                  <a-input v-model:value="searchFormData.shortName" allow-clear />
+                  <a-input v-model:value="searchFormData.code" allow-clear @press-enter="search" />
                 </j-form-item>
                 <j-form-item label="商品分类">
                   <product-category-selector v-model:value="searchFormData.categoryId" :only-final="false" />

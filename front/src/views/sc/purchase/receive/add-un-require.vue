@@ -1,11 +1,6 @@
 <template>
   <div class="app-card-container">
     <div v-permission="['purchase:receive:add']" v-loading="loading">
-      <a-alert
-        description="提示：使用回车键可以快速添加商品；使用Tab键可以快速跳转至下一个输入框。"
-        type="info"
-        show-icon
-      />
       <j-border>
         <j-form bordered>
           <j-form-item label="供应商" required>
