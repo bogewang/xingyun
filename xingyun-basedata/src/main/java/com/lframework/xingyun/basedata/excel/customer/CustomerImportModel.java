@@ -19,7 +19,6 @@ public class CustomerImportModel implements ExcelModel {
   /**
    * 编号
    */
-  @ExcelRequired
   @ExcelProperty("编号")
   private String code;
 
@@ -39,7 +38,6 @@ public class CustomerImportModel implements ExcelModel {
   /**
    * 简码
    */
-  @ExcelRequired
   @ExcelProperty("简码")
   private String mnemonicCode;
 
@@ -94,7 +92,6 @@ public class CustomerImportModel implements ExcelModel {
   /**
    * 结算方式
    */
-  @ExcelRequired
   @ExcelProperty("结算方式")
   private String settleType;
 

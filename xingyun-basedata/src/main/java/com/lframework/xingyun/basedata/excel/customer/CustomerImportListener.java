@@ -18,6 +18,7 @@ import com.lframework.xingyun.basedata.enums.SettleType;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
 import com.lframework.starter.web.inner.dto.dic.city.DicCityDto;
 import com.lframework.starter.web.inner.service.DicCityService;
+import com.lframework.starter.web.inner.service.GenerateCodeService;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -25,52 +26,36 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CustomerImportListener extends ExcelImportListener<CustomerImportModel> {
 
+  private static final Integer CUSTOMER_CODE_TYPE = 5;
+
   private List<String> checkList = new ArrayList<>();
 
   @Override
   protected void doInvoke(CustomerImportModel data, AnalysisContext context) {
     if (StringUtil.isBlank(data.getCode())) {
-      throw new DefaultClientException(
-          "第" + context.readRowHolder().getRowIndex() + "行“编号”不能为空");
+      data.setCode(generateCode());
     }
-    if (!RegUtil.isMatch(PatternPool.PATTERN_CODE, data.getCode())) {
-      throw new DefaultClientException(
-          "第" + context.readRowHolder().getRowIndex()
-              + "行“编号”必须由字母、数字、“-_.”组成，长度不能超过20位");
-    }
-    if (checkList.contains(data.getCode())) {
-      throw new DefaultClientException(
-          "第" + context.readRowHolder().getRowIndex() + "行“编号”与第" + (checkList.indexOf(data.getCode()) + 1) + "行重复");
-    }
-    checkList.add(data.getCode());
-    Wrapper<Customer> checkWrapper = Wrappers.lambdaQuery(Customer.class)
-        .eq(Customer::getCode, data.getCode())
-        .eq(Customer::getAvailable, Boolean.TRUE);
-    CustomerService customerService = ApplicationUtil.getBean(CustomerService.class);
-    if (customerService.count(checkWrapper) > 0) {
-      throw new DefaultClientException(
-          "第" + context.readRowHolder().getRowIndex() + "行“编号”已存在");
-    }
+    validAndCheckCode(data, context);
+
     if (StringUtil.isBlank(data.getName())) {
       throw new DefaultClientException(
           "第" + context.readRowHolder().getRowIndex() + "行“名称”不能为空");
     }
     if (StringUtil.isBlank(data.getMnemonicCode())) {
-      throw new DefaultClientException(
-          "第" + context.readRowHolder().getRowIndex() + "行“简码”不能为空");
+      data.setMnemonicCode(data.getCode());
     }
     if (StringUtil.isBlank(data.getSettleType())) {
-      throw new DefaultClientException(
-          "第" + context.readRowHolder().getRowIndex() + "行“结算方式”不能为空");
+      data.setSettleTypeEnum(SettleType.ARBITRARILY);
+    } else {
+      SettleType settleType = EnumUtil.getByDesc(SettleType.class, data.getSettleType());
+      if (settleType == null) {
+        throw new DefaultClientException(
+            "第" + context.readRowHolder().getRowIndex() + "行“结算方式”只能填写“"
+                + CollectionUtil.join(
+                EnumUtil.getDescs(SettleType.class), "、") + "”");
+      }
+      data.setSettleTypeEnum(settleType);
     }
-    SettleType settleType = EnumUtil.getByDesc(SettleType.class, data.getSettleType());
-    if (settleType == null) {
-      throw new DefaultClientException(
-          "第" + context.readRowHolder().getRowIndex() + "行“结算方式”只能填写“"
-              + CollectionUtil.join(
-              EnumUtil.getDescs(SettleType.class), "、") + "”");
-    }
-    data.setSettleTypeEnum(settleType);
 
     if (!StringUtil.isBlank(data.getCity())) {
       String[] arr = data.getCity().split("/");
@@ -158,5 +143,49 @@ public class CustomerImportListener extends ExcelImportListener<CustomerImportMo
 
   @Override
   protected void doComplete() {
+  }
+
+  private void validAndCheckCode(CustomerImportModel data, AnalysisContext context) {
+    if (!RegUtil.isMatch(PatternPool.PATTERN_CODE, data.getCode())) {
+      throw new DefaultClientException(
+          "第" + context.readRowHolder().getRowIndex()
+              + "行“编号”必须由字母、数字、“-_.”组成，长度不能超过20位");
+    }
+
+    if (checkList.contains(data.getCode())) {
+      throw new DefaultClientException(
+          "第" + context.readRowHolder().getRowIndex() + "行“编号”与第"
+              + (checkList.indexOf(data.getCode()) + 1) + "行重复");
+    }
+
+    Wrapper<Customer> checkWrapper = Wrappers.lambdaQuery(Customer.class)
+        .eq(Customer::getCode, data.getCode())
+        .eq(Customer::getAvailable, Boolean.TRUE);
+    CustomerService customerService = ApplicationUtil.getBean(CustomerService.class);
+    if (customerService.count(checkWrapper) > 0) {
+      throw new DefaultClientException(
+          "第" + context.readRowHolder().getRowIndex() + "行“编号”已存在");
+    }
+
+    checkList.add(data.getCode());
+  }
+
+  private String generateCode() {
+    GenerateCodeService generateCodeService = ApplicationUtil.getBean(GenerateCodeService.class);
+    CustomerService customerService = ApplicationUtil.getBean(CustomerService.class);
+
+    while (true) {
+      String code = generateCodeService.generate(CUSTOMER_CODE_TYPE);
+      if (checkList.contains(code)) {
+        continue;
+      }
+
+      Wrapper<Customer> checkWrapper = Wrappers.lambdaQuery(Customer.class)
+          .eq(Customer::getCode, code)
+          .eq(Customer::getAvailable, Boolean.TRUE);
+      if (customerService.count(checkWrapper) == 0) {
+        return code;
+      }
+    }
   }
 }

@@ -1,14 +1,10 @@
 package com.lframework.xingyun.basedata.vo.customer;
 
-import com.lframework.starter.web.core.components.validation.IsCode;
-import com.lframework.starter.web.core.components.validation.IsEnum;
 import com.lframework.starter.web.core.vo.BaseVo;
-import com.lframework.xingyun.basedata.enums.SettleType;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
@@ -19,9 +15,7 @@ public class CreateCustomerVo implements BaseVo, Serializable {
   /**
    * 编号
    */
-  @ApiModelProperty(value = "编号", required = true)
-  @IsCode
-  @NotBlank(message = "请输入编号！")
+  @ApiModelProperty("编号")
   private String code;
 
   /**
@@ -40,8 +34,7 @@ public class CreateCustomerVo implements BaseVo, Serializable {
   /**
    * 简码
    */
-  @ApiModelProperty(value = "简码", required = true)
-  @NotBlank(message = "请输入简码！")
+  @ApiModelProperty("简码")
   private String mnemonicCode;
 
   /**
@@ -90,9 +83,7 @@ public class CreateCustomerVo implements BaseVo, Serializable {
   /**
    * 结算方式
    */
-  @ApiModelProperty(value = "结算方式", required = true)
-  @NotNull(message = "请选择结算方式！")
-  @IsEnum(message = "请选择结算方式！", enumClass = SettleType.class)
+  @ApiModelProperty("结算方式")
   private Integer settleType;
 
   /**

@@ -2,7 +2,7 @@ export interface CreateCustomerVo {
   /**
    * 编号
    */
-  code: string;
+  code?: string;
 
   /**
    * 名称
@@ -12,80 +12,80 @@ export interface CreateCustomerVo {
   /**
    * 昵称
    */
-  nickName: string;
+  nickName?: string;
 
   /**
    * 简码
    */
-  mnemonicCode: string;
+  mnemonicCode?: string;
 
   /**
    * 联系人
    */
-  contact: string;
+  contact?: string;
 
   /**
    * 联系电话
    */
-  telephone: string;
+  telephone?: string;
 
   /**
    * 电子邮箱
    */
-  email: string;
+  email?: string;
 
   /**
    * 邮编
    */
-  zipCode: string;
+  zipCode?: string;
 
   /**
    * 传真
    */
-  fax: string;
+  fax?: string;
 
   /**
    * 地区ID
    */
-  cityId: string;
+  cityId?: string;
 
   /**
    * 地址
    */
-  address: string;
+  address?: string;
 
   /**
    * 结算方式
    */
-  settleType: number;
+  settleType?: number;
 
   /**
    * 统一社会信用代码
    */
-  creditCode: string;
+  creditCode?: string;
 
   /**
    * 纳税人识别号
    */
-  taxIdentifyNo: string;
+  taxIdentifyNo?: string;
 
   /**
    * 开户银行
    */
-  bankName: string;
+  bankName?: string;
 
   /**
    * 户名
    */
-  accountName: string;
+  accountName?: string;
 
   /**
    * 银行账号
    */
-  accountNo: string;
+  accountNo?: string;
 
   /**
    * 备注
    */
-  description: string;
+  description?: string;
 }

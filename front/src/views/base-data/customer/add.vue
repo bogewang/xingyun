@@ -175,9 +175,8 @@ export default defineComponent({
         formData: {},
         // 表单校验规则
         rules: {
-          code: [{ required: true, message: '请输入编号' }, { validator: validCode }],
           name: [{ required: true, message: '请输入名称' }],
-          mnemonicCode: [{ required: true, message: '请输入简码' }],
+          code: [{ validator: validCode }],
           email: [
             {
               validator: (rule, value) => {
@@ -189,7 +188,6 @@ export default defineComponent({
               },
             },
           ],
-          settleType: [{ required: true, message: '请选择结算方式' }],
         },
       };
     },
@@ -265,8 +263,6 @@ export default defineComponent({
       open() {
         // 初始化表单数据
         this.initFormData();
-
-        this.onGenerateCode();
       },
       // 名称改变
       changeName(e) {

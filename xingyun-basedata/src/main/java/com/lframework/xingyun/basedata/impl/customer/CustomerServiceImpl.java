@@ -18,6 +18,7 @@ import com.lframework.starter.web.core.utils.IdUtil;
 import com.lframework.starter.web.core.utils.OpLogUtil;
 import com.lframework.starter.web.core.utils.PageHelperUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.starter.web.inner.dto.dic.city.DicCityDto;
 import com.lframework.starter.web.inner.service.DicCityService;
 import com.lframework.xingyun.basedata.entity.Customer;
@@ -42,8 +43,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class CustomerServiceImpl extends BaseMpServiceImpl<CustomerMapper, Customer> implements
     CustomerService {
 
+  private static final Integer CUSTOMER_CODE_TYPE = 5;
+
   @Autowired
   private DicCityService dicCityService;
+
+  @Autowired
+  private GenerateCodeService generateCodeService;
 
   @Override
   public PageResult<Customer> query(Integer pageIndex, Integer pageSize, QueryCustomerVo vo) {
@@ -105,8 +111,10 @@ public class CustomerServiceImpl extends BaseMpServiceImpl<CustomerMapper, Custo
   @Override
   public String create(CreateCustomerVo vo) {
 
+    String code = StringUtil.isBlank(vo.getCode()) ? generateCode() : vo.getCode();
+
     Wrapper<Customer> checkWrapper = Wrappers.lambdaQuery(Customer.class)
-        .eq(Customer::getCode, vo.getCode())
+        .eq(Customer::getCode, code)
         .eq(Customer::getAvailable, Boolean.TRUE);
     if (getBaseMapper().selectCount(checkWrapper) > 0) {
       throw new DefaultClientException("编号重复，请重新输入！");
@@ -114,14 +122,12 @@ public class CustomerServiceImpl extends BaseMpServiceImpl<CustomerMapper, Custo
 
     Customer data = new Customer();
     data.setId(IdUtil.getId());
-    data.setCode(vo.getCode());
+    data.setCode(code);
     data.setName(vo.getName());
     if (!StringUtil.isBlank(vo.getNickName())) {
       data.setNickName(vo.getNickName());
     }
-    if (!StringUtil.isBlank(vo.getMnemonicCode())) {
-      data.setMnemonicCode(vo.getMnemonicCode());
-    }
+    data.setMnemonicCode(StringUtil.isBlank(vo.getMnemonicCode()) ? code : vo.getMnemonicCode());
     if (!StringUtil.isBlank(vo.getContact())) {
       data.setContact(vo.getContact());
     }
@@ -146,7 +152,9 @@ public class CustomerServiceImpl extends BaseMpServiceImpl<CustomerMapper, Custo
     if (!StringUtil.isBlank(vo.getAddress())) {
       data.setAddress(vo.getAddress());
     }
-    data.setSettleType(EnumUtil.getByCode(SettleType.class, vo.getSettleType()));
+    data.setSettleType(vo.getSettleType() == null
+        ? SettleType.ARBITRARILY
+        : EnumUtil.getByCode(SettleType.class, vo.getSettleType()));
     if (!StringUtil.isBlank(vo.getCreditCode())) {
       data.setCreditCode(vo.getCreditCode());
     }
@@ -169,7 +177,7 @@ public class CustomerServiceImpl extends BaseMpServiceImpl<CustomerMapper, Custo
     getBaseMapper().insert(data);
 
     OpLogUtil.setVariable("id", data.getId());
-    OpLogUtil.setVariable("code", vo.getCode());
+    OpLogUtil.setVariable("code", code);
     OpLogUtil.setExtra(vo);
 
     return data.getId();
@@ -239,5 +247,19 @@ public class CustomerServiceImpl extends BaseMpServiceImpl<CustomerMapper, Custo
   @Override
   public void cleanCacheByKey(Serializable key) {
 
+  }
+
+  private String generateCode() {
+
+    while (true) {
+      String code = generateCodeService.generate(CUSTOMER_CODE_TYPE);
+
+      Wrapper<Customer> checkWrapper = Wrappers.lambdaQuery(Customer.class)
+          .eq(Customer::getCode, code)
+          .eq(Customer::getAvailable, Boolean.TRUE);
+      if (getBaseMapper().selectCount(checkWrapper) == 0) {
+        return code;
+      }
+    }
   }
 }
