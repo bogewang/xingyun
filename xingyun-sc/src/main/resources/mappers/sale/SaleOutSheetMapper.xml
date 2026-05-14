@@ -16,7 +16,6 @@
         <result column="total_amount" property="totalAmount"/>
         <result column="total_cost" property="totalCost"/>
         <result column="paid_amount" property="paidAmount"/>
-        <result column="cost_price" property="costPrice"/>
         <result column="total_profit" property="totalProfit"/>
         <result column="fill_all_cost" property="fillAllCost"/>
         <result column="description" property="description"/>
@@ -43,7 +42,6 @@
         <result column="total_amount" property="totalAmount"/>
         <result column="total_cost" property="totalCost"/>
         <result column="paid_amount" property="paidAmount"/>
-        <result column="cost_price" property="costPrice"/>
         <result column="total_profit" property="totalProfit"/>
         <result column="fill_all_cost" property="fillAllCost"/>
         <result column="description" property="description"/>
@@ -111,7 +109,6 @@
             s.total_amount,
             s.total_cost,
             s.paid_amount,
-            s.cost_price,
             s.total_profit,
             s.fill_all_cost,
             s.description,
@@ -140,7 +137,6 @@
             s.total_gift_num,
             s.total_amount,
             s.paid_amount,
-            s.cost_price,
             s.total_cost,
             s.total_profit,
             s.fill_all_cost,
