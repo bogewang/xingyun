@@ -2,7 +2,9 @@ package com.lframework.xingyun.basedata.impl.product;
 
 import com.lframework.starter.web.core.components.redis.RedisHandler;
 import com.lframework.starter.web.core.components.tenant.TenantContextHolder;
+import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
+import com.lframework.xingyun.basedata.service.product.ProductService;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,18 +20,39 @@ public class ProductLatestPriceCacheServiceImpl implements ProductLatestPriceCac
     @Autowired
     private RedisHandler redisHandler;
 
+    @Autowired
+    private ProductService productService;
+
     @Override
     public BigDecimal getLatestSalePrice(String productId) {
 
         ProductLatestPriceCacheItem item = this.getCacheItem(productId);
-        return item == null ? null : item.getLatestSalePrice();
+        if (item == null) {
+            Product product = productService.findById(productId);
+            if (product == null) {
+                return null;
+            }
+
+            updateLatestPrice(productId, product.getSalePrice(), null);
+            return product.getSalePrice();
+        }
+        return item.getLatestSalePrice();
     }
 
     @Override
     public BigDecimal getLatestPurchasePrice(String productId) {
 
         ProductLatestPriceCacheItem item = this.getCacheItem(productId);
-        return item == null ? null : item.getLatestPurchasePrice();
+        if (item == null) {
+            Product product = productService.findById(productId);
+            if (product == null) {
+                return null;
+            }
+            updateLatestPrice(productId, null, product.getPurchasePrice());
+            return product.getPurchasePrice();
+        }
+
+        return item.getLatestPurchasePrice();
     }
 
     @Override

@@ -131,9 +131,6 @@ public class PurchaseProductBo extends BaseBo<PurchaseProductDto> {
                 ProductLatestPriceCacheService.class);
         this.latestPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(
                 this.getProductId());
-        if (this.latestPurchasePrice == null) {
-            this.latestPurchasePrice = dto.getPurchasePrice();
-        }
 
         ProductStockService productStockService = ApplicationUtil.getBean(
                 ProductStockService.class);

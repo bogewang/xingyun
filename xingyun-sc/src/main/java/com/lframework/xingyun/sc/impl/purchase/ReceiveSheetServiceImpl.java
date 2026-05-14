@@ -903,13 +903,10 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             }
             data.setProductCode(product.getCode());
             data.setProductId(product.getId());
-            BigDecimal latestPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(product.getId());
-            if (latestPurchasePrice == null) {
-                latestPurchasePrice = product.getPurchasePrice();
-            }
-            data.setLatestPurchasePrice(latestPurchasePrice);
+            BigDecimal defaultPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(product.getId());
+            data.setLatestPurchasePrice(defaultPurchasePrice);
             if (data.getPurchasePrice() == null) {
-                data.setPurchasePrice(latestPurchasePrice);
+                data.setPurchasePrice(defaultPurchasePrice);
             }
             // if (data.getPurchasePrice() == null) {
             //     throw new DefaultClientException("第" + rowIndex + "行商品未设置采购价，请填写“单价”或先维护商品采购价");

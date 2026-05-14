@@ -1384,15 +1384,11 @@ public class SaleOutSheetServiceImpl extends
             }
             data.setProductCode(product.getCode());
             data.setProductId(product.getId());
-            BigDecimal latestSalePrice = productLatestPriceCacheService.getLatestSalePrice(
-                    product.getId());
-            if (latestSalePrice == null) {
-                latestSalePrice = product.getSalePrice();
-            }
-            data.setSalePrice(latestSalePrice);
+            BigDecimal defaultSalePrice = productLatestPriceCacheService.getLatestSalePrice(product.getId());
+            data.setSalePrice(defaultSalePrice);
 
             if (data.getTaxPrice() == null) {
-                data.setTaxPrice(latestSalePrice);
+                data.setTaxPrice(defaultSalePrice);
             }
             // if (data.getTaxPrice() == null) {
             //     throw new DefaultClientException("第" + rowIndex + "行商品未设置销售价，请填写“单价”或先维护商品销售价");

@@ -406,10 +406,7 @@
           unpaidAmountStart: undefined,
           unpaidAmountEnd: undefined,
         },
-        orderDateRange: [
-          moment().subtract(1, 'M').format('YYYY-MM-DD'),
-          moment().format('YYYY-MM-DD'),
-        ],
+        orderDateRange: this.getDefaultOrderDateRange(),
         approveDateRange: [],
         customerOptions: [],
         customerOptionMap: {},
@@ -520,6 +517,10 @@
       search() {
         this.$refs.grid.commitProxy('reload');
       },
+      getDefaultOrderDateRange() {
+        const endDate = moment().add(2, 'd');
+        return [endDate.clone().subtract(1, 'M').format('YYYY-MM-DD'), endDate.format('YYYY-MM-DD')];
+      },
       resetSearchForm() {
         this.searchFormData = {
           code: '',
@@ -537,10 +538,7 @@
           unpaidAmountStart: undefined,
           unpaidAmountEnd: undefined,
         };
-        this.orderDateRange = [
-          moment().subtract(1, 'M').format('YYYY-MM-DD'),
-          moment().format('YYYY-MM-DD'),
-        ];
+        this.orderDateRange = this.getDefaultOrderDateRange();
         this.approveDateRange = [];
         this.search();
       },
