@@ -814,13 +814,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         return actualPaidAmount;
     }
 
-    private BigDecimal getUnpaidAmount(ReceiveSheet sheet) {
-
-        BigDecimal totalAmount = sheet.getTotalAmount() == null ? BigDecimal.ZERO : sheet.getTotalAmount();
-        BigDecimal paidAmount = sheet.getPaidAmount() == null ? BigDecimal.ZERO : sheet.getPaidAmount();
-        return NumberUtil.sub(totalAmount, paidAmount);
-    }
-
     private void adjustSupplierAmount(String supplierId) {
 
         if (StringUtil.isBlank(supplierId)) {
