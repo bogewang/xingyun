@@ -37,6 +37,11 @@
               SALE_OUT_SHEET_STATUS.getDesc(formData.status)
             }}</span>
           </j-form-item>
+          <j-form-item label="成本状态">
+            <span :style="{ color: formData.fillAllCost ? '#52c41a' : '#fa8c16' }">
+              {{ formData.fillAllCost ? '已补全' : '未补全' }}
+            </span>
+          </j-form-item>
           <j-form-item label="拒绝理由" :span="16" :content-nest="false">
             <a-input
               v-if="SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
@@ -269,6 +274,7 @@
           totalNum: 0,
           totalAmount: 0,
           totalProfit: 0,
+          fillAllCost: false,
           description: '',
         };
 
@@ -305,6 +311,7 @@
               totalNum: 0,
               totalAmount: 0,
               totalProfit: res.totalProfit || 0,
+              fillAllCost: !!res.fillAllCost,
             };
             this.tableData = res.details || [];
 

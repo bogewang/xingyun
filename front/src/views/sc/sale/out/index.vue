@@ -438,6 +438,14 @@
           { field: 'paidAmount', title: '已付金额', align: 'right', width: 100 },
           { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 100 },
           { field: 'totalProfit', title: '总利润', align: 'right', width: 100 },
+          {
+            field: 'fillAllCost',
+            title: '成本状态',
+            width: 100,
+            formatter: ({ cellValue }) => {
+              return cellValue ? '已补全' : '未补全';
+            },
+          },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },

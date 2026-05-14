@@ -43,6 +43,11 @@
               SALE_OUT_SHEET_STATUS.getDesc(formData.status)
             }}</span>
           </j-form-item>
+          <j-form-item label="成本状态">
+            <span :style="{ color: formData.fillAllCost ? '#52c41a' : '#fa8c16' }">
+              {{ formData.fillAllCost ? '已补全' : '未补全' }}
+            </span>
+          </j-form-item>
 
           <j-form-item label="操作人">
             <span>{{ formData.createBy }}</span>
@@ -423,6 +428,7 @@
           totalNum: 0,
           totalAmount: 0,
           paidAmount: 0,
+          fillAllCost: false,
           description: '',
         };
 
@@ -458,6 +464,7 @@
               refuseReason: res.refuseReason,
               totalNum: 0,
               totalAmount: 0,
+              fillAllCost: !!res.fillAllCost,
             });
             if (!isEmpty(res.customerId) && !isEmpty(res.customerName)) {
               const selectedCustomerOptions = [
