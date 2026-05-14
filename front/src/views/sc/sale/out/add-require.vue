@@ -255,6 +255,7 @@
     uuid,
   } from '@/utils/utils';
   import {
+    buildSelectKeywords,
     buildVisibleSelectOptions,
     filterSelectOption,
     mergeSelectOptionMap,
@@ -321,7 +322,7 @@
           { field: 'categoryName', title: '商品分类', width: 120 },
           { field: 'brandName', title: '商品品牌', width: 120 },
           { field: 'mainProductName', title: '所属组合商品', width: 120 },
-          { field: 'salePrice', title: '参考销售价（元）', align: 'right', width: 140 },
+          { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 140 },
           {
             field: 'stockNum',
             title: '库存数量',
@@ -439,7 +440,7 @@
           spec: '',
           categoryName: '',
           brandName: '',
-          salePrice: '',
+          oriPrice: '',
           taxPrice: 0,
           stockNum: '',
           orderNum: '',
@@ -487,11 +488,11 @@
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
-        const salePrice = !isEmpty(product.latestSalePrice) ? product.latestSalePrice : product.salePrice;
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
-          salePrice,
-          taxPrice: salePrice,
+          // 参考价=》商品的售价，价格=》最新价格
+          oriPrice: product.salePrice,
+          taxPrice: product.latestSalePrice,
         });
 
         this.taxPriceInput(this.tableData[index], this.tableData[index].taxPrice);
@@ -806,7 +807,8 @@
                 productId: t.productId,
                 orderNum: t.outNum,
                 description: t.description,
-                oriPrice: t.salePrice,
+                oriPrice: t.oriPrice,
+                taxPrice: t.taxPrice,
               };
 
               if (t.isFixed) {

@@ -201,7 +201,7 @@
           { field: 'categoryName', title: '商品分类', width: 120 },
           { field: 'brandName', title: '商品品牌', width: 120 },
           { field: 'mainProductName', title: '所属组合商品', width: 120 },
-          { field: 'salePrice', title: '参考销售价（元）', align: 'right', width: 150 },
+          { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 150 },
           {
             field: 'stockNum',
             title: '库存数量',

@@ -189,7 +189,7 @@ public class SaleOutSheetWithReturnBo extends BaseBo<SaleOutSheetWithReturnDto> 
      * 原价
      */
     @ApiModelProperty("原价")
-    private BigDecimal salePrice;
+    private BigDecimal oriPrice;
 
     /**
      * 价格
@@ -279,7 +279,7 @@ public class SaleOutSheetWithReturnBo extends BaseBo<SaleOutSheetWithReturnDto> 
       this.brandName = product.getBrandName();
 
       this.outNum = dto.getOrderNum();
-      this.salePrice = dto.getOriPrice();
+      this.oriPrice = dto.getOriPrice();
       this.taxPrice = dto.getTaxPrice();
       this.discountRate = dto.getDiscountRate();
       this.remainNum = NumberUtil.sub(dto.getOrderNum(), dto.getReturnNum());

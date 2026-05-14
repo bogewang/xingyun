@@ -368,7 +368,7 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
      * 原价
      */
     @ApiModelProperty("原价")
-    private BigDecimal salePrice;
+    private BigDecimal oriPrice;
 
     /**
      * 价格
@@ -449,7 +449,7 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
 
       this.outNum = dto.getOrderNum();
       this.taxPrice = dto.getTaxPrice();
-      this.salePrice = dto.getOriPrice();
+      this.oriPrice = dto.getOriPrice();
 
       SaleOrderService saleOrderService = ApplicationUtil.getBean(SaleOrderService.class);
       SaleProductDto product = saleOrderService.getSaleById(dto.getProductId());

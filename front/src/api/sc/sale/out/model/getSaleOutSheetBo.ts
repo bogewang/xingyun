@@ -226,7 +226,7 @@ export interface OrderDetailBo {
   /**
    * 原价
    */
-  salePrice: number;
+  oriPrice: number;
 
   /**
    * 价格

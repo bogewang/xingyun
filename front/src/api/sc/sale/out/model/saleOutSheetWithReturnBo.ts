@@ -99,7 +99,7 @@ export interface DetailBo {
   /**
    * 原价
    */
-  salePrice: number;
+  oriPrice: number;
 
   /**
    * 价格
