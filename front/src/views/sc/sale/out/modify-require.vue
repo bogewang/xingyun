@@ -217,7 +217,7 @@
                 class="number-input"
                 @input="(e) => paidAmountInput(e.target.value)"
               />
-              <a-button @click="setUnpaid">未付款</a-button>
+              <a-button @click="setPaid">已付款</a-button>
             </a-space>
           </j-form-item>
         </j-form>
@@ -644,8 +644,6 @@
       calcSum() {
         let totalNum = 0;
         let totalAmount = 0;
-        const previousTotalAmount = this.formData.totalAmount;
-
         this.tableData
           .filter((t) => {
             return isFloatGeZero(t.taxPrice) && isFloatGeZero(t.outNum);
@@ -658,13 +656,9 @@
 
         this.formData.totalNum = totalNum;
         this.formData.totalAmount = totalAmount;
-        if (!this.paidAmountDirty || this.formData.paidAmount === previousTotalAmount) {
-          this.formData.paidAmount = totalAmount;
-          this.paidAmountDirty = false;
-        }
       },
-      setUnpaid() {
-        this.formData.paidAmount = 0;
+      setPaid() {
+        this.formData.paidAmount = this.formData.totalAmount || 0;
         this.paidAmountDirty = true;
       },
       // 批量录入数量
