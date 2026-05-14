@@ -1,6 +1,7 @@
 package com.lframework.xingyun.sc.impl.sale;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.Assert;
@@ -15,11 +16,12 @@ import com.lframework.xingyun.sc.entity.SaleOutSheetDetailBundle;
 import com.lframework.xingyun.sc.mappers.SaleOutSheetDetailMapper;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetDetailBundleService;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetDetailService;
-import java.math.BigDecimal;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class SaleOutSheetDetailServiceImpl extends
@@ -34,8 +36,9 @@ public class SaleOutSheetDetailServiceImpl extends
 
   @Override
   public List<SaleOutSheetDetail> getBySheetId(String sheetId) {
-
-    return getBaseMapper().getBySheetId(sheetId);
+      LambdaQueryWrapper<SaleOutSheetDetail> wrapper = Wrappers.lambdaQuery(SaleOutSheetDetail.class)
+              .eq(SaleOutSheetDetail::getSheetId, sheetId);
+      return getBaseMapper().selectList(wrapper);
   }
 
   @Transactional(rollbackFor = Exception.class)

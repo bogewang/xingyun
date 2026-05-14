@@ -227,6 +227,11 @@ public class SaleOutSheetFullDto implements BaseDto, Serializable {
     private BigDecimal costPrice;
 
     /**
+     * 是否手动录入成本
+     */
+    private Boolean manualInputCost;
+
+    /**
      * 总利润
      */
     private BigDecimal totalProfit;

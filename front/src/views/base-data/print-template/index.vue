@@ -261,7 +261,7 @@
             },
           },
           {
-            permission: ['base-data:print-template:query'],
+            permission: ['base-data:print-template:add'],
             label: '设置',
             onClick: () => {
               this.id = row.id;

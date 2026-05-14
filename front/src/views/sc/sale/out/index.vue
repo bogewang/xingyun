@@ -252,6 +252,12 @@
             </span>
           </template>
 
+          <template #fillAllCost_default="{ row }">
+            <span :style="{ color: row.fillAllCost ? '#52c41a' : '#f5222d' }">
+              {{ row.fillAllCost ? '已补全' : '未补全' }}
+            </span>
+          </template>
+
           <!-- 操作 列自定义内容 -->
           <template #action_default="{ row }">
             <table-action outside :actions="createActions(row)" />
@@ -437,14 +443,18 @@
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
           { field: 'paidAmount', title: '已付金额', align: 'right', width: 100 },
           { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 100 },
-          { field: 'totalProfit', title: '总利润', align: 'right', width: 100 },
+          {
+            field: 'totalProfit',
+            title: '总利润',
+            align: 'right',
+            width: 100,
+            formatter: ({ cellValue }) => Number(cellValue || 0).toFixed(2),
+          },
           {
             field: 'fillAllCost',
             title: '成本状态',
             width: 100,
-            formatter: ({ cellValue }) => {
-              return cellValue ? '已补全' : '未补全';
-            },
+            slots: { default: 'fillAllCost_default' },
           },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
@@ -485,6 +495,9 @@
     methods: {
       footerMethod({ columns, data }) {
         const totalAmount = this.sumByField(data, 'totalAmount');
+        const paidAmount = this.sumByField(data, 'paidAmount');
+        const unpaidAmount = this.sumByField(data, 'unpaidAmount');
+        const totalProfit = this.sumByField(data, 'totalProfit');
         const totalNum = this.sumByField(data, 'totalNum');
 
         return [
@@ -495,6 +508,18 @@
 
             if (column.field === 'totalAmount') {
               return this.formatAmount(totalAmount);
+            }
+
+            if (column.field === 'paidAmount') {
+              return this.formatAmount(paidAmount);
+            }
+
+            if (column.field === 'unpaidAmount') {
+              return this.formatAmount(unpaidAmount);
+            }
+
+            if (column.field === 'totalProfit') {
+              return this.formatAmount(totalProfit);
             }
 
             if (column.field === 'totalNum') {
@@ -527,7 +552,10 @@
       },
       getDefaultOrderDateRange() {
         const endDate = moment().add(2, 'd');
-        return [endDate.clone().subtract(1, 'M').format('YYYY-MM-DD'), endDate.format('YYYY-MM-DD')];
+        return [
+          endDate.clone().subtract(1, 'M').format('YYYY-MM-DD'),
+          endDate.format('YYYY-MM-DD'),
+        ];
       },
       resetSearchForm() {
         this.searchFormData = {
@@ -778,6 +806,38 @@
             this.loading = false;
           });
       },
+      buildPrintData(printData) {
+        // 基础属性保持不变， details字段需要重新赋值，比如 orderNum=>qty
+        const res = {
+          ...printData,
+        };
+
+        const newDetails = printData.details.map((item, index) => {
+          // 新生成一个对象，避免修改原对象
+          const newItem = {};
+          newItem.seq = index + 1;
+          newItem.orderNum = item.orderNum;
+          newItem.unit = item.unit;
+          newItem.orderAmount = item.orderAmount;
+          newItem.taxPrice = item.taxPrice;
+          newItem.productName = item.productName;
+          return newItem;
+        });
+        res.details = newDetails;
+
+        return res;
+      },
+      async printOrder(row) {
+        this.loading = true;
+        try {
+          const res = await api.print(row.id);
+          // 将res组装成模板定义和打印数据的格式，然后调用打印预览组件进行预览
+          const printData = this.buildPrintData(res);
+          await this.vgPrintPreview(PRINT_TYPE.SALE_ORDER.code, printData);
+        } finally {
+          this.loading = false;
+        }
+      },
       async tagPrint() {
         this.loading = true;
         try {
@@ -807,6 +867,12 @@
             label: '查看',
             onClick: () => {
               this.viewDetail(row.id);
+            },
+          },
+          {
+            label: '打印',
+            onClick: () => {
+              this.printOrder(row);
             },
           },
           {

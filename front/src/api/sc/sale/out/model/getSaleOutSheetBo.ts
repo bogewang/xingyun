@@ -244,6 +244,11 @@ export interface OrderDetailBo {
   costPrice: number;
 
   /**
+   * 是否手动录入成本
+   */
+  manualInputCost: boolean;
+
+  /**
    * 总利润
    */
   totalProfit: number;

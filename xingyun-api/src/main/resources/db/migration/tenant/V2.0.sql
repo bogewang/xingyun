@@ -50,3 +50,5 @@ ALTER TABLE `base_data_product` ADD COLUMN `alias` varchar(5000) NULL COMMENT '�
 ALTER TABLE `base_data_product` ADD COLUMN `remark` varchar(255) NULL COMMENT '备注';
 ALTER TABLE `base_data_product` ADD COLUMN `remark2` varchar(255) NULL COMMENT '备注二';
 
+-- 0514
+ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `manual_input_cost` tinyint(1) NULL COMMENT '是否手动录入成本';

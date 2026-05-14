@@ -24,7 +24,7 @@
                 <j-form-item label="订单日期">
                   {{ formData.orderDate }}
                 </j-form-item>
-                <j-form-item label="销售订单" >
+                <j-form-item label="销售订单">
                   <div v-if="!isEmpty(formData.saleOrderCode)">
                     <a
                       v-permission="['sale:order:query']"
@@ -50,7 +50,7 @@
                   }}</span>
                 </j-form-item>
                 <j-form-item label="成本状态">
-                  <span :style="{ color: formData.fillAllCost ? '#52c41a' : '#fa8c16' }">
+                  <span :style="{ color: formData.fillAllCost ? '#52c41a' : '#f5222d' }">
                     {{ formData.fillAllCost ? '已补全' : '未补全' }}
                   </span>
                 </j-form-item>
@@ -87,7 +87,6 @@
                 >
                   <span>{{ formData.approveTime }}</span>
                 </j-form-item>
-
               </j-form>
             </j-border>
             <div class="order-detail-grid-wrap">
@@ -110,11 +109,16 @@
                     getNumber(mul(row.taxPrice, row.outNum), 2)
                   }}</span>
                 </template>
+                <template #costStatus_default="{ row }">
+                  <span :style="{ color: hasCostPrice(row) ? '#52c41a' : '#f5222d' }">
+                    {{ hasCostPrice(row) ? '已补全' : '未补全' }}
+                  </span>
+                </template>
               </vxe-grid>
             </div>
 
-              <j-border title="合计">
-                <j-form bordered label-width="140px">
+            <j-border title="合计">
+              <j-form bordered label-width="140px">
                 <j-form-item label="出库数量" :span="6">
                   <a-input v-model:value="formData.totalNum" class="number-input" readonly />
                 </j-form-item>
@@ -154,19 +158,19 @@
   <order-print-dialog />
 </template>
 <script>
-import {defineComponent} from 'vue';
-import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
-import * as api from '@/api/sc/sale/out';
-import {printMix} from '@/mixins/print.ts';
-import {add, getNumber, isEmpty, isFloatGeZero, mul, sub} from '@/utils/utils';
-import {SALE_OUT_SHEET_STATUS} from '@/enums/biz/saleOutSheetStatus';
-import {PRINT_TYPE} from '@/enums/biz/printType';
-import OrderTimeLine from '@/components/OrderTimeLine';
-import PrintDialog from '/@/components/PrintDialog';
-import JFormItem from "@/components/JFormItem";
-import { createSuccess } from '@/hooks/web/msg';
+  import { defineComponent } from 'vue';
+  import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
+  import * as api from '@/api/sc/sale/out';
+  import { printMix } from '@/mixins/print.ts';
+  import { add, getNumber, isEmpty, isFloatGeZero, mul, sub } from '@/utils/utils';
+  import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
+  import { PRINT_TYPE } from '@/enums/biz/printType';
+  import OrderTimeLine from '@/components/OrderTimeLine';
+  import PrintDialog from '/@/components/PrintDialog';
+  import JFormItem from '@/components/JFormItem';
+  import { createSuccess } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       JFormItem,
       SaleOrderDetail,
@@ -186,6 +190,8 @@ export default defineComponent({
         isFloatGeZero,
         getNumber,
         mul,
+        hasCostPrice: (row) =>
+          row && row.costPrice !== null && row.costPrice !== undefined && row.costPrice !== '',
         SALE_OUT_SHEET_STATUS,
       };
     },
@@ -243,6 +249,13 @@ export default defineComponent({
             align: 'right',
             width: 80,
             slots: { default: 'taxAmount_default' },
+          },
+          { field: 'costPrice', title: '成本单价', align: 'right', width: 100 },
+          {
+            field: 'costStatus',
+            title: '成本状态',
+            width: 100,
+            slots: { default: 'costStatus_default' },
           },
           { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           { field: 'description', title: '备注', width: 200 },
@@ -346,7 +359,10 @@ export default defineComponent({
 
         this.formData.totalNum = totalNum;
         this.formData.totalAmount = totalAmount;
-        this.formData.unpaidAmount = sub(this.formData.totalAmount || 0, this.formData.paidAmount || 0);
+        this.formData.unpaidAmount = sub(
+          this.formData.totalAmount || 0,
+          this.formData.paidAmount || 0,
+        );
       },
       async print() {
         this.loading = true;
@@ -359,7 +375,8 @@ export default defineComponent({
       },
       exportDetails() {
         this.loading = true;
-        api.exportDetail(this.buildQueryParams())
+        api
+          .exportDetail(this.buildQueryParams())
           .then(() => {
             createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
           })
@@ -378,36 +395,36 @@ export default defineComponent({
   });
 </script>
 <style scoped>
-.order-detail-modal-content {
-  height: 100%;
-  overflow: hidden;
-}
+  .order-detail-modal-content {
+    height: 100%;
+    overflow: hidden;
+  }
 
-.order-detail-tabs {
-  height: 100%;
-}
+  .order-detail-tabs {
+    height: 100%;
+  }
 
-.order-detail-pane {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow: hidden;
-}
+  .order-detail-pane {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+  }
 
-.order-detail-grid-wrap {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
+  .order-detail-grid-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
 
-.order-detail-tabs :deep(.ant-tabs-content-holder),
-.order-detail-tabs :deep(.ant-tabs-content),
-.order-detail-tabs :deep(.ant-tabs-tabpane) {
-  height: 100%;
-}
+  .order-detail-tabs :deep(.ant-tabs-content-holder),
+  .order-detail-tabs :deep(.ant-tabs-content),
+  .order-detail-tabs :deep(.ant-tabs-tabpane) {
+    height: 100%;
+  }
 
-.order-detail-tabs :deep(.ant-tabs-nav) {
-  margin-bottom: 12px;
-}
+  .order-detail-tabs :deep(.ant-tabs-nav) {
+    margin-bottom: 12px;
+  }
 </style>

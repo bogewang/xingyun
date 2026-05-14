@@ -93,6 +93,18 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
   @ApiModelProperty("是否关联销售订单")
   private Boolean required;
 
+  /**
+   * 是否录完所有成本
+   */
+  @ApiModelProperty("是否录完所有成本")
+  private Boolean fillAllCost;
+
+  /**
+   * 是否手动修改成本状态
+   */
+  @ApiModelProperty("是否手动修改成本状态")
+  private Boolean fillAllCostModified;
+
   public void validate() {
 
     SaleConfigService saleConfigService = ApplicationUtil.getBean(SaleConfigService.class);
@@ -179,6 +191,16 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
           product.setTaxPrice(orderDetail.getTaxPrice());
         } else {
           product.setTaxPrice(BigDecimal.ZERO);
+        }
+      }
+
+      if (product.getCostPrice() != null) {
+        if (NumberUtil.lt(product.getCostPrice(), BigDecimal.ZERO)) {
+          throw new InputErrorException("第" + orderNo + "行商品成本单价不允许小于0！");
+        }
+
+        if (!NumberUtil.isNumberPrecision(product.getCostPrice(), 6)) {
+          throw new InputErrorException("第" + orderNo + "行商品成本单价最多允许6位小数！");
         }
       }
 

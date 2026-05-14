@@ -583,7 +583,7 @@ public class SaleOutSheetServiceImpl extends
         getBaseMapper().insert(sheet);
 
         this.adjustCustomerAmount(sheet.getCustomerId());
-        refreshCostPrice(sheet.getId());
+        refreshCostPrice(sheet.getId(), vo.getFillAllCost(), Boolean.TRUE.equals(vo.getFillAllCostModified()));
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
@@ -659,7 +659,7 @@ public class SaleOutSheetServiceImpl extends
         if (!StringUtil.equals(oldCustomerId, sheet.getCustomerId())) {
             this.adjustCustomerAmount(sheet.getCustomerId());
         }
-        refreshCostPrice(sheet.getId());
+        refreshCostPrice(sheet.getId(), vo.getFillAllCost(), Boolean.TRUE.equals(vo.getFillAllCostModified()));
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
@@ -1119,6 +1119,17 @@ public class SaleOutSheetServiceImpl extends
             detail.setSettleStatus(this.getInitSettleStatus(customer));
             detail.setTaxAmount(
                     NumberUtil.getNumber(NumberUtil.mul(detail.getTaxPrice(), detail.getOrderNum()), 2));
+            boolean hasInputCost = productVo.getCostPrice() != null && productVo.getCostPrice().doubleValue() > 0;
+            detail.setManualInputCost(hasInputCost);
+            detail.setCostPrice(productVo.getCostPrice());
+            if (Boolean.TRUE.equals(detail.getManualInputCost())) {
+                BigDecimal detailCostAmount = NumberUtil.getNumber(
+                        NumberUtil.mul(productVo.getCostPrice(), detail.getOrderNum()), 6);
+                detail.setTotalProfit(
+                        NumberUtil.getNumber(NumberUtil.sub(detail.getTaxAmount(), detailCostAmount), 6));
+            } else {
+                detail.setTotalProfit(null);
+            }
             if (requireSale && !StringUtil.isBlank(productVo.getSaleOrderDetailId())) {
                 detail.setSaleOrderDetailId(productVo.getSaleOrderDetailId());
                 saleOrderDetailService.addOutNum(productVo.getSaleOrderDetailId(), detail.getOrderNum());
@@ -1377,6 +1388,10 @@ public class SaleOutSheetServiceImpl extends
 
     @Override
     public void refreshCostPrice(String orderId) {
+        refreshCostPrice(orderId, null, false);
+    }
+
+    private void refreshCostPrice(String orderId, Boolean manualFillAllCost, boolean overrideFillAllCost) {
         SaleOutSheet saleOutSheet = getBaseMapper().selectById(orderId);
         if (saleOutSheet == null) {
             return;
@@ -1394,9 +1409,30 @@ public class SaleOutSheetServiceImpl extends
         boolean fillAllCost = true;
         for (SaleOutSheetDetail saleDetail : saleDetails) {
 
+            if (Boolean.TRUE.equals(saleDetail.getManualInputCost())) {
+                if (saleDetail.getCostPrice() == null) {
+                    fillAllCost = false;
+                    saleDetail.setTotalProfit(null);
+                    saleOutSheetDetailService.updateById(saleDetail);
+                    continue;
+                }
+
+                BigDecimal detailCostAmount = NumberUtil.getNumber(
+                        NumberUtil.mul(saleDetail.getCostPrice(), saleDetail.getOrderNum()), 6);
+                BigDecimal detailTotalProfit = NumberUtil.getNumber(
+                        NumberUtil.sub(saleDetail.getTaxAmount(), detailCostAmount), 6);
+                saleDetail.setTotalProfit(detailTotalProfit);
+                saleOutSheetDetailService.updateById(saleDetail);
+                totalCostAmount = NumberUtil.add(totalCostAmount, detailCostAmount);
+                continue;
+            }
+
             BigDecimal productCostPrice = receiveCostPriceMap.get(saleDetail.getProductId());
             if (productCostPrice == null) {
                 fillAllCost = false;
+                saleDetail.setCostPrice(null);
+                saleDetail.setTotalProfit(null);
+                saleOutSheetDetailService.updateById(saleDetail);
                 continue;
             }
 
@@ -1416,10 +1452,12 @@ public class SaleOutSheetServiceImpl extends
             totalProfit = NumberUtil.getNumber(NumberUtil.sub(saleOutSheet.getTotalAmount(), totalCostAmount), 6);
         }
 
+        Boolean finalFillAllCost = overrideFillAllCost ? manualFillAllCost : fillAllCost;
+
         LambdaUpdateWrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
                 .set(SaleOutSheet::getTotalCost, totalCostAmount)
                 .set(SaleOutSheet::getTotalProfit, totalProfit)
-                .set(SaleOutSheet::getFillAllCost, fillAllCost)
+                .set(SaleOutSheet::getFillAllCost, finalFillAllCost)
                 .eq(SaleOutSheet::getId, orderId);
         this.update(updateWrapper);
     }

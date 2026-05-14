@@ -70,6 +70,12 @@ public class SaleOutProductVo implements BaseVo, Serializable {
   private String description;
 
   /**
+   * 成本单价
+   */
+  @ApiModelProperty("成本单价")
+  private BigDecimal costPrice;
+
+  /**
    * 销售订单明细ID
    */
   @ApiModelProperty("销售订单明细ID")

@@ -1,11 +1,6 @@
 <template>
   <div class="app-card-container">
     <div v-permission="['sale:out:modify']" v-loading="loading">
-      <a-alert
-        description="提示：使用回车键可以快速添加商品；使用Tab键可以快速跳转至下一个输入框。"
-        type="info"
-        show-icon
-      />
       <j-border>
         <j-form bordered>
           <j-form-item label="客户" required>
@@ -44,9 +39,14 @@
             }}</span>
           </j-form-item>
           <j-form-item label="成本状态">
-            <span :style="{ color: formData.fillAllCost ? '#52c41a' : '#fa8c16' }">
-              {{ formData.fillAllCost ? '已补全' : '未补全' }}
-            </span>
+            <a-select
+              v-model:value="formData.fillAllCost"
+              style="width: 140px"
+              @change="handleFillAllCostChange"
+            >
+              <a-select-option :value="true">已补全</a-select-option>
+              <a-select-option :value="false">未补全</a-select-option>
+            </a-select>
           </j-form-item>
 
           <j-form-item label="操作人">
@@ -189,6 +189,22 @@
           }}</span>
         </template>
 
+        <template #costPrice_default="{ row }">
+          <a-input
+            v-if="canEditCostPrice(row)"
+            v-model:value="row.costPrice"
+            class="number-input"
+            @input="(e) => costPriceInput(row, e.target.value)"
+          />
+          <span v-else></span>
+        </template>
+
+        <template #costStatus_default="{ row }">
+          <span :style="{ color: hasCostPrice(row) ? '#52c41a' : '#f5222d' }">
+            {{ hasCostPrice(row) ? '已补全' : '未补全' }}
+          </span>
+        </template>
+
         <!-- 备注 列自定义内容 -->
         <template #description_default="{ row }">
           <a-input v-model:value="row.description" />
@@ -301,6 +317,19 @@
         isFloatGeZero,
         getNumber,
         mul,
+        hasCostPrice: (row) =>
+          row &&
+          row.costPrice !== null &&
+          row.costPrice !== undefined &&
+          row.costPrice !== '' &&
+          row.costPrice > 0,
+        canEditCostPrice: (row) =>
+          row &&
+          (row.manualInputCost === true ||
+            row.costPrice === null ||
+            row.costPrice === undefined ||
+            row.costPrice === '' ||
+            row.costPrice <= 0),
         SALE_OUT_SHEET_STATUS,
       };
     },
@@ -311,6 +340,7 @@
         loading: false,
         // 表单数据
         formData: {},
+        originalFillAllCost: false,
         paidAmountDirty: false,
         // 工具栏配置
         toolbarConfig: {
@@ -329,11 +359,11 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
-          { field: 'productCode', title: '商品编号', width: 120 },
+          { field: 'id', title: '商品ID', width: 150 },
           {
             field: 'productName',
             title: '商品名称',
-            width: 260,
+            width: 150,
             slots: { default: 'productName_default' },
           },
           { field: 'skuCode', title: '商品SKU编号', width: 120 },
@@ -370,6 +400,19 @@
             align: 'right',
             width: 80,
             slots: { default: 'taxAmount_default' },
+          },
+          {
+            field: 'costPrice',
+            title: '成本单价',
+            align: 'right',
+            width: 100,
+            slots: { default: 'costPrice_default' },
+          },
+          {
+            field: 'costStatus',
+            title: '成本状态',
+            width: 100,
+            slots: { default: 'costStatus_default' },
           },
           { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           {
@@ -433,6 +476,7 @@
         };
 
         this.paidAmountDirty = false;
+        this.originalFillAllCost = false;
         this.tableData = [];
       },
       // 加载数据
@@ -466,6 +510,7 @@
               totalAmount: 0,
               fillAllCost: !!res.fillAllCost,
             });
+            this.originalFillAllCost = !!res.fillAllCost;
             if (!isEmpty(res.customerId) && !isEmpty(res.customerName)) {
               const selectedCustomerOptions = [
                 {
@@ -519,6 +564,8 @@
           outNum: '',
           taxRate: '',
           taxAmount: '',
+          costPrice: '',
+          manualInputCost: false,
           description: '',
           isFixed: false,
           products: [],
@@ -610,8 +657,15 @@
         this.formData.paidAmount = value;
         this.paidAmountDirty = true;
       },
+      costPriceInput(_row, _value) {
+        _row.manualInputCost = !isEmpty(_value);
+        this.calcSum();
+      },
       outNumInput(_value) {
         this.calcSum();
+      },
+      handleFillAllCostChange(value) {
+        this.formData.fillAllCost = value;
       },
       // 计算汇总数据
       calcSum() {
@@ -745,6 +799,23 @@
           }
 
           if (!isEmpty(product.outNum)) {
+            if (!isEmpty(product.costPrice)) {
+              if (!isFloat(product.costPrice)) {
+                createError('第' + (i + 1) + '行商品成本单价必须是数字！');
+                return false;
+              }
+
+              if (!isFloatGeZero(product.costPrice)) {
+                createError('第' + (i + 1) + '行商品成本单价不允许小于0！');
+                return false;
+              }
+
+              if (!isNumberPrecision(product.costPrice, 6)) {
+                createError('第' + (i + 1) + '行商品成本单价最多允许6位小数！');
+                return false;
+              }
+            }
+
             if (!isFloat(product.outNum)) {
               createError('第' + (i + 1) + '行商品出库数量必须是数字！');
               return false;
@@ -808,6 +879,8 @@
           salerId: this.formData.salerId || '',
           orderDate: this.formData.orderDate || '',
           paidAmount: this.formData.paidAmount,
+          fillAllCost: this.formData.fillAllCost,
+          fillAllCostModified: this.formData.fillAllCost !== this.originalFillAllCost,
           description: this.formData.description,
           products: validTableData
             .filter((t) => isFloatGtZero(t.outNum))
@@ -818,24 +891,36 @@
                 taxPrice: t.taxPrice,
                 orderNum: t.outNum,
                 description: t.description,
+                costPrice: this.canEditCostPrice(t) && !isEmpty(t.costPrice) ? t.costPrice : null,
               };
 
               return product;
             }),
         };
 
-        this.loading = true;
-        api
-          .update(params)
-          .then(() => {
-            createSuccess('保存成功！');
+        const doUpdate = () => {
+          this.loading = true;
+          api
+            .update(params)
+            .then(() => {
+              createSuccess('保存成功！');
 
-            this.$emit('confirm');
-            this.goQueryPage();
-          })
-          .finally(() => {
-            this.loading = false;
-          });
+              this.$emit('confirm');
+              this.goQueryPage();
+            })
+            .finally(() => {
+              this.loading = false;
+            });
+        };
+
+        if (params.fillAllCostModified) {
+          createConfirm(
+            '你正在手动修改单据成本状态，保存后将覆盖系统自动计算的“已补全/未补全”结果，是否继续？',
+          ).then(() => doUpdate());
+          return;
+        }
+
+        doUpdate();
       },
       // 检查库存数量
       checkStockNum(row) {

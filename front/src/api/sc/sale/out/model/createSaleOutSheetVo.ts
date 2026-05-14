@@ -55,4 +55,14 @@ export interface CreateSaleOutSheetVo {
    * 是否关联销售订单
    */
   required: boolean;
+
+  /**
+   * 是否录完所有成本
+   */
+  fillAllCost: boolean;
+
+  /**
+   * 是否手动修改成本状态
+   */
+  fillAllCostModified: boolean;
 }

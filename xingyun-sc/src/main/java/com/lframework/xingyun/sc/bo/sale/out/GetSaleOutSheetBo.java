@@ -386,7 +386,13 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
      * 成本单价
      */
     @ApiModelProperty("成本单价")
-    private BigDecimal totalCost;
+    private BigDecimal costPrice;
+
+    /**
+     * 是否手动录入成本
+     */
+    @ApiModelProperty("是否手动录入成本")
+    private Boolean manualInputCost;
 
     /**
      * 总利润

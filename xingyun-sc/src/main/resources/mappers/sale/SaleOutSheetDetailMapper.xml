@@ -15,6 +15,7 @@
         <result column="order_no" property="orderNo"/>
         <result column="return_num" property="returnNum"/>
         <result column="tax_amount" property="taxAmount"/>
+        <result column="manual_input_cost" property="manualInputCost"/>
     </resultMap>
 
     <sql id="SaleOutSheetDetailDto_sql">
@@ -31,7 +32,8 @@
             d.description,
             d.order_no,
             d.return_num,
-            d.tax_amount
+            d.tax_amount,
+            d.manual_input_cost
         FROM tbl_sale_out_sheet_detail AS d
     </sql>
     <update id="addReturnNum">
@@ -46,9 +48,4 @@
         WHERE id = #{id}
         AND return_num >= #{num}
     </update>
-    <select id="getBySheetId" resultMap="SaleOutSheetDetail">
-        <include refid="SaleOutSheetDetailDto_sql"/>
-        WHERE d.sheet_id = #{sheetId}
-        ORDER BY d.order_no
-    </select>
 </mapper>

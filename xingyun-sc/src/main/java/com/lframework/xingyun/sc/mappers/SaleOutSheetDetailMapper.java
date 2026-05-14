@@ -2,9 +2,9 @@ package com.lframework.xingyun.sc.mappers;
 
 import com.lframework.starter.web.core.mapper.BaseMapper;
 import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
-import java.math.BigDecimal;
-import java.util.List;
 import org.apache.ibatis.annotations.Param;
+
+import java.math.BigDecimal;
 
 /**
  * <p>
@@ -15,14 +15,6 @@ import org.apache.ibatis.annotations.Param;
  * @since 2021-10-26
  */
 public interface SaleOutSheetDetailMapper extends BaseMapper<SaleOutSheetDetail> {
-
-  /**
-   * 根据出库单ID查询
-   *
-   * @param sheetId
-   * @return
-   */
-  List<SaleOutSheetDetail> getBySheetId(String sheetId);
 
   /**
    * 增加退货数量

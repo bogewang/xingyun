@@ -4,8 +4,9 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.lframework.starter.web.core.dto.BaseDto;
 import com.lframework.starter.web.core.entity.BaseEntity;
 import com.lframework.xingyun.sc.enums.SettleStatus;
-import java.math.BigDecimal;
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 /**
  * <p>
@@ -105,6 +106,11 @@ public class SaleOutSheetDetail extends BaseEntity implements BaseDto {
    * 成本单价
    */
   private BigDecimal costPrice;
+
+  /**
+   * 是否手动录入成本
+   */
+  private Boolean manualInputCost;
 
   /**
    * 总利润

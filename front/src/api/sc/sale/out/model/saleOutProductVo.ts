@@ -30,6 +30,11 @@ export interface SaleOutProductVo {
   description: string;
 
   /**
+   * 成本单价
+   */
+  costPrice: number;
+
+  /**
    * 销售订单明细ID
    */
   saleOrderDetailId: string;
