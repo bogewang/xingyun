@@ -22,10 +22,13 @@
           <template #form>
             <j-border>
               <j-form bordered @collapse="$refs.grid.refreshColumn()">
-                <j-form-item label="单据号">
-                  <a-input v-model:value="searchFormData.code" allow-clear />
+                <j-form-item label="订单日期">
+                  <a-range-picker
+                    v-model:value="orderDateRange"
+                    value-format="YYYY-MM-DD"
+                    :placeholder="['开始日期', '结束日期']"
+                  />
                 </j-form-item>
-
                 <j-form-item label="供应商">
                   <a-select
                     v-model:value="searchFormData.supplierId"
@@ -39,63 +42,56 @@
                     @change="onSupplierChange"
                   />
                 </j-form-item>
-
-                <j-form-item label="操作人">
-                  <a-select
-                    v-model:value="searchFormData.createBy"
-                    allow-clear
-                    show-search
-                    :filter-option="filterSelectOption"
-                    :options="createByOptions"
-                    placeholder="请选择操作人"
-                    @focus="loadCreateByOptions()"
-                    @search="loadCreateByOptions"
-                    @change="onCreateByChange"
-                  />
+                <j-form-item label="单据号">
+                  <a-input v-model:value="searchFormData.code" allow-clear />
                 </j-form-item>
-
-                <j-form-item label="订单日期">
-                  <a-range-picker
-                    v-model:value="orderDateRange"
-                    value-format="YYYY-MM-DD"
-                    :placeholder="['开始日期', '结束日期']"
-                  />
-                </j-form-item>
-
-                <j-form-item label="审核人">
-                  <a-select
-                    v-model:value="searchFormData.approveBy"
-                    allow-clear
-                    show-search
-                    :filter-option="filterSelectOption"
-                    :options="approveByOptions"
-                    placeholder="请选择审核人"
-                    @focus="loadApproveByOptions()"
-                    @search="loadApproveByOptions"
-                    @change="onApproveByChange"
-                  />
-                </j-form-item>
-
-                <j-form-item label="审核日期">
-                  <a-range-picker
-                    v-model:value="approveDateRange"
-                    value-format="YYYY-MM-DD"
-                    :placeholder="['开始日期', '结束日期']"
-                  />
-                </j-form-item>
-
-                <j-form-item label="状态">
-                  <a-select v-model:value="searchFormData.status" placeholder="全部" allow-clear>
-                    <a-select-option
-                      v-for="item in RECEIVE_SHEET_STATUS.values()"
-                      :key="item.code"
-                      :value="item.code"
-                      >{{ item.desc }}</a-select-option
-                    >
-                  </a-select>
-                </j-form-item>
-
                 <template #more>
+                  <j-form-item label="操作人">
+                    <a-select
+                      v-model:value="searchFormData.createBy"
+                      allow-clear
+                      show-search
+                      :filter-option="filterSelectOption"
+                      :options="createByOptions"
+                      placeholder="请选择操作人"
+                      @focus="loadCreateByOptions()"
+                      @search="loadCreateByOptions"
+                      @change="onCreateByChange"
+                    />
+                  </j-form-item>
+
+                  <j-form-item label="审核人">
+                    <a-select
+                      v-model:value="searchFormData.approveBy"
+                      allow-clear
+                      show-search
+                      :filter-option="filterSelectOption"
+                      :options="approveByOptions"
+                      placeholder="请选择审核人"
+                      @focus="loadApproveByOptions()"
+                      @search="loadApproveByOptions"
+                      @change="onApproveByChange"
+                    />
+                  </j-form-item>
+
+                  <j-form-item label="审核日期">
+                    <a-range-picker
+                      v-model:value="approveDateRange"
+                      value-format="YYYY-MM-DD"
+                      :placeholder="['开始日期', '结束日期']"
+                    />
+                  </j-form-item>
+
+                  <j-form-item label="状态">
+                    <a-select v-model:value="searchFormData.status" placeholder="全部" allow-clear>
+                      <a-select-option
+                        v-for="item in RECEIVE_SHEET_STATUS.values()"
+                        :key="item.code"
+                        :value="item.code"
+                        >{{ item.desc }}</a-select-option
+                      >
+                    </a-select>
+                  </j-form-item>
                   <j-form-item label="采购订单号">
                     <a-input v-model:value="searchFormData.purchaseOrderCode" allow-clear />
                   </j-form-item>
@@ -116,7 +112,11 @@
                   </j-form-item>
 
                   <j-form-item label="是否已付完">
-                    <a-select v-model:value="searchFormData.fullyPaid" placeholder="全部" allow-clear>
+                    <a-select
+                      v-model:value="searchFormData.fullyPaid"
+                      placeholder="全部"
+                      allow-clear
+                    >
                       <a-select-option :value="true">已付完</a-select-option>
                       <a-select-option :value="false">未付完</a-select-option>
                     </a-select>
@@ -200,7 +200,7 @@
                 v-permission="['purchase:receive:export']"
                 :icon="h(CloudUploadOutlined)"
                 @click="$refs.importer.openDialog()"
-              >导入Excel</a-button
+                >导入Excel</a-button
               >
               <a-button
                 v-permission="['purchase:receive:export']"
@@ -297,7 +297,8 @@
   import moment from 'moment';
   import {
     CheckOutlined,
-    CloseOutlined, CloudUploadOutlined,
+    CloseOutlined,
+    CloudUploadOutlined,
     DeleteOutlined,
     DownloadOutlined,
     PlusOutlined,
@@ -320,7 +321,7 @@
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
   import BatchHandler from '@/components/BatchHandler';
-  import ReceiveSheetQueryImporter from "@/components/Importor/PurchaseOrderQueryImporter.vue";
+  import ReceiveSheetQueryImporter from '@/components/Importor/PurchaseOrderQueryImporter.vue';
 
   export default defineComponent({
     name: 'ReceiveSheet',
@@ -391,7 +392,13 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
-          { field: 'code', title: '单据号', width: 180, sortable: true, slots: { default: 'code_default' } },
+          {
+            field: 'code',
+            title: '单据号',
+            width: 180,
+            sortable: true,
+            slots: { default: 'code_default' },
+          },
           { field: 'supplierCode', title: '供应商编号', width: 100 },
           { field: 'supplierName', title: '供应商名称', width: 120 },
           { field: 'purchaserName', title: '采购员', width: 100 },

@@ -22,8 +22,12 @@
           <template #form>
             <j-border>
               <j-form bordered @collapse="$refs.grid.refreshColumn()">
-                <j-form-item label="单据号">
-                  <a-input v-model:value="searchFormData.code" allow-clear />
+                <j-form-item label="订单日期">
+                  <a-range-picker
+                    v-model:value="orderDateRange"
+                    value-format="YYYY-MM-DD"
+                    :placeholder="['开始日期', '结束日期']"
+                  />
                 </j-form-item>
 
                 <j-form-item label="客户">
@@ -39,63 +43,57 @@
                     @change="onCustomerChange"
                   />
                 </j-form-item>
-
-                <j-form-item label="操作人">
-                  <a-select
-                    v-model:value="searchFormData.createBy"
-                    allow-clear
-                    show-search
-                    :filter-option="filterSelectOption"
-                    :options="createByOptions"
-                    placeholder="请选择操作人"
-                    @focus="loadCreateByOptions()"
-                    @search="loadCreateByOptions"
-                    @change="onCreateByChange"
-                  />
-                </j-form-item>
-
-                <j-form-item label="订单日期">
-                  <a-range-picker
-                    v-model:value="orderDateRange"
-                    value-format="YYYY-MM-DD"
-                    :placeholder="['开始日期', '结束日期']"
-                  />
-                </j-form-item>
-
-                <j-form-item label="审核人">
-                  <a-select
-                    v-model:value="searchFormData.approveBy"
-                    allow-clear
-                    show-search
-                    :filter-option="filterSelectOption"
-                    :options="approveByOptions"
-                    placeholder="请选择审核人"
-                    @focus="loadApproveByOptions()"
-                    @search="loadApproveByOptions"
-                    @change="onApproveByChange"
-                  />
-                </j-form-item>
-
-                <j-form-item label="审核日期">
-                  <a-range-picker
-                    v-model:value="approveDateRange"
-                    value-format="YYYY-MM-DD"
-                    :placeholder="['开始日期', '结束日期']"
-                  />
-                </j-form-item>
-
-                <j-form-item label="状态">
-                  <a-select v-model:value="searchFormData.status" placeholder="全部" allow-clear>
-                    <a-select-option
-                      v-for="item in RECEIVE_SHEET_STATUS.values()"
-                      :key="item.code"
-                      :value="item.code"
-                      >{{ item.desc }}</a-select-option
-                    >
-                  </a-select>
+                <j-form-item label="单据号">
+                  <a-input v-model:value="searchFormData.code" allow-clear />
                 </j-form-item>
 
                 <template #more>
+                  <j-form-item label="操作人">
+                    <a-select
+                      v-model:value="searchFormData.createBy"
+                      allow-clear
+                      show-search
+                      :filter-option="filterSelectOption"
+                      :options="createByOptions"
+                      placeholder="请选择操作人"
+                      @focus="loadCreateByOptions()"
+                      @search="loadCreateByOptions"
+                      @change="onCreateByChange"
+                    />
+                  </j-form-item>
+
+                  <j-form-item label="审核人">
+                    <a-select
+                      v-model:value="searchFormData.approveBy"
+                      allow-clear
+                      show-search
+                      :filter-option="filterSelectOption"
+                      :options="approveByOptions"
+                      placeholder="请选择审核人"
+                      @focus="loadApproveByOptions()"
+                      @search="loadApproveByOptions"
+                      @change="onApproveByChange"
+                    />
+                  </j-form-item>
+
+                  <j-form-item label="审核日期">
+                    <a-range-picker
+                      v-model:value="approveDateRange"
+                      value-format="YYYY-MM-DD"
+                      :placeholder="['开始日期', '结束日期']"
+                    />
+                  </j-form-item>
+
+                  <j-form-item label="状态">
+                    <a-select v-model:value="searchFormData.status" placeholder="全部" allow-clear>
+                      <a-select-option
+                        v-for="item in RECEIVE_SHEET_STATUS.values()"
+                        :key="item.code"
+                        :value="item.code"
+                        >{{ item.desc }}</a-select-option
+                      >
+                    </a-select>
+                  </j-form-item>
                   <j-form-item label="销售订单号">
                     <a-input v-model:value="searchFormData.saleOrderCode" allow-clear />
                   </j-form-item>
@@ -116,7 +114,11 @@
                   </j-form-item>
 
                   <j-form-item label="是否已付完">
-                    <a-select v-model:value="searchFormData.fullyPaid" placeholder="全部" allow-clear>
+                    <a-select
+                      v-model:value="searchFormData.fullyPaid"
+                      placeholder="全部"
+                      allow-clear
+                    >
                       <a-select-option :value="true">已付完</a-select-option>
                       <a-select-option :value="false">未付完</a-select-option>
                     </a-select>
@@ -423,7 +425,13 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
-          { field: 'code', title: '单据号', width: 180, sortable: true, slots: { default: 'code_default' } },
+          {
+            field: 'code',
+            title: '单据号',
+            width: 180,
+            sortable: true,
+            slots: { default: 'code_default' },
+          },
           { field: 'customerName', title: '客户名称', width: 120 },
           { field: 'orderDate', title: '订单日期', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
@@ -734,11 +742,9 @@
       },
       marketBuySummary() {
         this.loading = true;
-        api
-          .exportMarketBuySummary(this.buildSearchFormData())
-          .finally(() => {
-            this.loading = false;
-          });
+        api.exportMarketBuySummary(this.buildSearchFormData()).finally(() => {
+          this.loading = false;
+        });
       },
       viewSaleOrderDetail(id) {
         this.saleOrderId = id;
