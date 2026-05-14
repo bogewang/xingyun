@@ -224,7 +224,6 @@ public class ReceiveSheetController extends DefaultBaseController {
         vo.validate();
 
         String id = receiveSheetService.create(vo);
-        saleOutSheetService.refreshCostPrice(vo.getOrderDate());
         return InvokeResultBuilder.success(id);
     }
 
@@ -239,7 +238,6 @@ public class ReceiveSheetController extends DefaultBaseController {
         vo.validate();
 
         receiveSheetService.update(vo);
-        saleOutSheetService.refreshCostPrice(vo.getOrderDate());
         return InvokeResultBuilder.success();
     }
 

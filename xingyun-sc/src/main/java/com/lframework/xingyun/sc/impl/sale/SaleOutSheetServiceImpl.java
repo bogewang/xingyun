@@ -585,6 +585,8 @@ public class SaleOutSheetServiceImpl extends
         getBaseMapper().insert(sheet);
         this.adjustCustomerAmount(sheet.getCustomerId());
 
+        refreshCostPrice(sheet.getId());
+
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
 
@@ -659,6 +661,7 @@ public class SaleOutSheetServiceImpl extends
         if (!StringUtil.equals(oldCustomerId, sheet.getCustomerId())) {
             this.adjustCustomerAmount(sheet.getCustomerId());
         }
+        refreshCostPrice(sheet.getId());
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);

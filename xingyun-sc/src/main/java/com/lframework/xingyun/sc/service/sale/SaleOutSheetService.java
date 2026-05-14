@@ -169,7 +169,7 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   void exportSales(QuerySaleOutSheetVo vo, HttpServletResponse response);
 
   /**
-   * 刷新成本(当天销售）
+   * 刷新成本(当天成本价）
    * @param orderDate
    */
   void refreshCostPrice(LocalDate orderDate);

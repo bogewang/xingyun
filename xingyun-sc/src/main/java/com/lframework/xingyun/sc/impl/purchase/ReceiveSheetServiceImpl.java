@@ -51,6 +51,7 @@ import com.lframework.xingyun.sc.excel.purchase.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import com.lframework.xingyun.sc.mappers.ReceiveSheetMapper;
 import com.lframework.xingyun.sc.service.purchase.*;
+import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import com.lframework.xingyun.sc.vo.purchase.receive.*;
 import com.lframework.xingyun.sc.vo.stock.AddProductStockVo;
@@ -111,6 +112,9 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     @Autowired
     private ReceiveSheetDetailBundleService receiveSheetDetailBundleService;
+    @Autowired
+    private SaleOutSheetService saleOutSheetService;
+
 
     @Override
     public PageResult<ReceiveSheet> query(Integer pageIndex, Integer pageSize,
@@ -222,6 +226,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         getBaseMapper().insert(sheet);
         this.adjustSupplierAmount(sheet.getSupplierId());
+        saleOutSheetService.refreshCostPrice(vo.getOrderDate());
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
@@ -293,6 +298,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         if (!StringUtil.equals(oldSupplierId, sheet.getSupplierId())) {
             this.adjustSupplierAmount(sheet.getSupplierId());
         }
+        saleOutSheetService.refreshCostPrice(vo.getOrderDate());
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
