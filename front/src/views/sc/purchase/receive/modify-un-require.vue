@@ -1,11 +1,6 @@
 <template>
   <div class="app-card-container">
     <div v-permission="['purchase:receive:modify']" v-loading="loading">
-      <a-alert
-        description="提示：使用回车键可以快速添加商品；使用Tab键可以快速跳转至下一个输入框。"
-        type="info"
-        show-icon
-      />
       <j-border>
         <j-form bordered>
           <j-form-item label="供应商" required>
@@ -27,54 +22,6 @@
               placeholder=""
               value-format="YYYY-MM-DD"
             />
-          </j-form-item>
-          <j-form-item label="状态">
-            <span
-              v-if="RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status)"
-              style="color: #52c41a"
-              >{{ RECEIVE_SHEET_STATUS.getDesc(formData.status) }}</span
-            >
-            <span
-              v-else-if="RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-              style="color: #f5222d"
-              >{{ RECEIVE_SHEET_STATUS.getDesc(formData.status) }}</span
-            >
-            <span v-else style="color: #303133">{{
-              RECEIVE_SHEET_STATUS.getDesc(formData.status)
-            }}</span>
-          </j-form-item>
-
-          <j-form-item label="操作人">
-            <span>{{ formData.createBy }}</span>
-          </j-form-item>
-          <j-form-item label="操作时间">
-            <span>{{ formData.createTime }}</span>
-          </j-form-item>
-          <j-form-item :content-nest="false" label="拒绝理由">
-            <a-input
-              v-if="RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-              v-model:value="formData.refuseReason"
-              readonly
-            />
-          </j-form-item>
-          <j-form-item
-            v-if="
-              RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
-              RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
-            "
-            label="审核人"
-          >
-            <span>{{ formData.approveBy }}</span>
-          </j-form-item>
-          <j-form-item
-            v-if="
-              RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
-              RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
-            "
-            label="审核时间"
-            :span="16"
-          >
-            <span>{{ formData.approveTime }}</span>
           </j-form-item>
         </j-form>
       </j-border>

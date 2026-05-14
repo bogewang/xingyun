@@ -23,21 +23,6 @@
               value-format="YYYY-MM-DD"
             />
           </j-form-item>
-          <j-form-item label="状态">
-            <span
-              v-if="SALE_OUT_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status)"
-              style="color: #52c41a"
-              >{{ SALE_OUT_SHEET_STATUS.getDesc(formData.status) }}</span
-            >
-            <span
-              v-else-if="SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-              style="color: #f5222d"
-              >{{ SALE_OUT_SHEET_STATUS.getDesc(formData.status) }}</span
-            >
-            <span v-else style="color: #303133">{{
-              SALE_OUT_SHEET_STATUS.getDesc(formData.status)
-            }}</span>
-          </j-form-item>
           <j-form-item label="成本状态">
             <a-select
               v-model:value="formData.fillAllCost"
@@ -47,39 +32,6 @@
               <a-select-option :value="true">已补全</a-select-option>
               <a-select-option :value="false">未补全</a-select-option>
             </a-select>
-          </j-form-item>
-
-          <j-form-item label="操作人">
-            <span>{{ formData.createBy }}</span>
-          </j-form-item>
-          <j-form-item label="操作时间">
-            <span>{{ formData.createTime }}</span>
-          </j-form-item>
-          <j-form-item :content-nest="false" label="拒绝理由">
-            <a-input
-              v-if="SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-              v-model:value="formData.refuseReason"
-              readonly
-            />
-          </j-form-item>
-          <j-form-item
-            v-if="
-              SALE_OUT_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
-              SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
-            "
-            label="审核人"
-          >
-            <span>{{ formData.approveBy }}</span>
-          </j-form-item>
-          <j-form-item
-            v-if="
-              SALE_OUT_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
-              SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
-            "
-            label="审核时间"
-            :span="16"
-          >
-            <span>{{ formData.approveTime }}</span>
           </j-form-item>
         </j-form>
       </j-border>
