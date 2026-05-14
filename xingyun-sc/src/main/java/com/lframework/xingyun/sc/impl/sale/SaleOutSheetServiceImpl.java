@@ -1282,7 +1282,9 @@ public class SaleOutSheetServiceImpl extends
         if (Boolean.TRUE.equals(saleConfig.getOutStockRequireSale())) {
             throw new DefaultClientException("“销售出库单是否关联销售订单”必须设置为“否”才可以导入！");
         }
-
+        for (int i = 0; i < list.size(); i++) {
+            list.get(i).setSeq(i+2);
+        }
         Map<String, List<SaleOutSheetQueryImportModel>> map = list.stream().collect(
                 Collectors.groupingBy(item -> item.getOrderDate() + "|" + item.getCustomerName()));
 
@@ -1347,7 +1349,7 @@ public class SaleOutSheetServiceImpl extends
 
         for (int i = 0; i < list.size(); i++) {
             SaleOutSheetImportModel data = list.get(i);
-            int rowIndex = i + 2;
+            int rowIndex = data.getSeq();
 
             if (StringUtils.isEmpty(data.getProductName())) {
                 throw new DefaultClientException("第" + rowIndex + "行“商品名称”不能为空");

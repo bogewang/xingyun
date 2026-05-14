@@ -10,7 +10,8 @@ import java.math.BigDecimal;
 
 @Data
 public class SaleOutSheetImportModel implements ExcelModel {
-
+    @ExcelIgnore
+    private Integer seq;
     /**
      * 商品名称
      */
