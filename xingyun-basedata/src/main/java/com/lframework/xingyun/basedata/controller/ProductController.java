@@ -145,7 +145,7 @@ public class ProductController extends DefaultBaseController {
     @HasPermission({"base-data:product:info:import"})
     @PostMapping("/export")
     public InvokeResult<Void> export(@Valid QueryProductVo vo) {
-        vo.setOrderBy("g.category_id, g.name");
+        vo.setIsExport(true);
         ExportTaskUtil.exportTask("商品信息", ProductExportTaskWorker.class, vo);
 
         return InvokeResultBuilder.success();

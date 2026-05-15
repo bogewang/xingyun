@@ -47,12 +47,14 @@
             </if>
             AND g.available = TRUE
         </where>
-        <if test="vo.orderBy != null">
-            ORDER BY #{vo.orderBy}
-        </if>
-        <if test="vo.orderBy == null">
-            ORDER BY g.create_time desc
-        </if>
+        <choose>
+            <when test="vo.isExport == true">
+                ORDER BY g.category_id, g.name
+            </when>
+            <otherwise>
+                ORDER BY g.create_time desc
+            </otherwise>
+        </choose>
     </select>
 
     <select id="findById" resultType="com.lframework.xingyun.basedata.entity.Product">

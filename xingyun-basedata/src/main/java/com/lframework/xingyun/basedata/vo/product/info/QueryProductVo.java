@@ -75,7 +75,7 @@ public class QueryProductVo extends SortPageVo implements BaseVo, Serializable {
 	@ApiModelProperty("创建截止时间")
 	private LocalDateTime endTime;
 	/**
-	 * 排序
+	 * 导出时，需要按分类ID排序
 	 */
-	private String orderBy;
+	private Boolean isExport;
 }
