@@ -1,91 +1,157 @@
 <template>
-  <div>
-    <dialog-table
-      ref="selector"
-      :request="getList"
-      :load="getLoad"
-      :option="{ label: 'label', value: 'value' }"
-      :column-option="{ label: 'label', value: 'value' }"
-      :table-column="[{ field: 'label', title: '供应商', minWidth: 220 }]"
-      :request-params="_requestParams"
-      v-bind="$attrs"
-    >
-      <template #form>
-        <!-- 查询条件 -->
-        <j-border>
-          <j-form bordered>
-            <j-form-item v-if="isEmpty(requestParams.label)" label="供应商">
-              <a-input v-model:value="searchParams.label" allow-clear />
-            </j-form-item>
-          </j-form>
-        </j-border>
-      </template>
-      <!-- 工具栏 -->
-      <template #toolbar_buttons>
-        <a-space class="operator">
-          <a-button type="primary" @click="$refs.selector.search()">
-            <template #icon>
-              <SearchOutlined />
-            </template>
-            查询</a-button
-          >
-        </a-space>
-      </template>
-    </dialog-table>
-  </div>
+  <a-select
+    v-model:value="model"
+    allow-clear
+    show-search
+    show-arrow
+    style="width: 100%"
+    :filter-option="filterOption"
+    :loading="loading"
+    :options="options"
+    :placeholder="placeholder"
+    v-bind="$attrs"
+    @focus="loadOptions()"
+    @search="loadOptions"
+    @dropdown-visible-change="handleDropdownVisibleChange"
+    @change="onChange"
+  />
 </template>
 
 <script>
   import { defineComponent } from 'vue';
-  import { SearchOutlined } from '@ant-design/icons-vue';
   import * as api from '@/api/base-data/supplier';
+  import {
+    buildVisibleSelectOptions,
+    filterSelectOption,
+    mergeSelectOptionMap,
+  } from '@/utils/searchSelect';
   import { isEmpty } from '@/utils/utils';
+
+  function normalizeValue(value) {
+    return isEmpty(value) ? undefined : value.toString();
+  }
+
+  function mapSupplierOption(item) {
+    const value = normalizeValue(item.value ?? item.id);
+    const label = item.label ?? item.name;
+    return {
+      label,
+      value,
+      keywords: [label, value].filter((text) => !!text).join(' '),
+    };
+  }
 
   export default defineComponent({
     name: 'SupplierSelector',
-    components: { SearchOutlined },
+    inheritAttrs: false,
     props: {
+      value: {
+        type: [String, Number],
+        default: undefined,
+      },
       requestParams: {
         type: Object,
         default: () => {
           return {};
         },
       },
-    },
-    setup() {
-      return {
-        isEmpty,
-      };
+      placeholder: {
+        type: String,
+        default: '请选择供应商',
+      },
     },
     data() {
       return {
-        searchParams: {
-          label: '',
-        },
+        loading: false,
+        options: [],
+        optionMap: {},
+        loaded: false,
       };
     },
     computed: {
-      _requestParams() {
-        return { ...this.searchParams, ...this.requestParams };
+      model: {
+        get() {
+          return normalizeValue(this.value);
+        },
+        set() {},
       },
     },
-    methods: {
-      getList(params) {
-        return api.selector({
-          ...params,
-          ...this.searchParams,
-          ...this.requestParams,
-        });
+    watch: {
+      value: {
+        immediate: true,
+        handler(value) {
+          const normalizedValue = normalizeValue(value);
+          if (isEmpty(normalizedValue)) {
+            this.options = buildVisibleSelectOptions(undefined, this.optionMap, []);
+            return;
+          }
+
+          this.ensureOption(normalizedValue);
+        },
       },
-      getLoad(ids) {
-        return api.loadSupplier(ids).then((res) => {
-          return res.map((item) => {
-            return {
-              label: item.label ?? item.name,
-              value: item.value ?? item.id,
-            };
-          });
+    },
+    created() {
+      this.loadOptions();
+    },
+    methods: {
+      filterOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      async requestOptions(keyword = '') {
+        const response = await api.selector({
+          pageIndex: 1,
+          pageSize: 20,
+          ...this.requestParams,
+          label: isEmpty(this.requestParams.label) ? keyword : this.requestParams.label,
         });
+
+        return (response.datas || []).map((item) => mapSupplierOption(item));
+      },
+      syncOptions(searchOptions = []) {
+        this.options = buildVisibleSelectOptions(this.model, this.optionMap, searchOptions);
+      },
+      async loadOptions(keyword = '') {
+        this.loading = true;
+        try {
+          const options = await this.requestOptions(keyword);
+          this.optionMap = mergeSelectOptionMap(this.optionMap, options);
+          this.syncOptions(options);
+          this.loaded = true;
+        } finally {
+          this.loading = false;
+        }
+      },
+      handleDropdownVisibleChange(open) {
+        if (open && !this.loaded) {
+          this.loadOptions();
+        }
+      },
+      async ensureOption(value) {
+        const normalizedValue = normalizeValue(value);
+        if (isEmpty(normalizedValue)) {
+          this.syncOptions();
+          return;
+        }
+
+        if (this.optionMap[normalizedValue]) {
+          this.syncOptions();
+          return;
+        }
+
+        const res = await api.loadSupplier([normalizedValue]);
+        const options = (res || []).map((item) => mapSupplierOption(item));
+        this.optionMap = mergeSelectOptionMap(this.optionMap, options);
+        this.syncOptions(options);
+        this.loaded = true;
+      },
+      onChange(value) {
+        const normalizedValue = normalizeValue(value);
+        this.$emit('update:value', normalizedValue);
+        if (isEmpty(normalizedValue)) {
+          this.$emit('clear', normalizedValue);
+        } else {
+          this.$emit('change', normalizedValue);
+        }
       },
     },
   });

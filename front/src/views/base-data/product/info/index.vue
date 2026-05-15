@@ -29,7 +29,13 @@
                   <a-input v-model:value="searchFormData.code" allow-clear @press-enter="search" />
                 </j-form-item>
                 <j-form-item label="商品分类">
-                  <product-category-selector v-model:value="searchFormData.categoryId" :only-final="false" />
+                  <product-category-selector
+                    v-model:value="searchFormData.categoryId"
+                    :only-final="false"
+                  />
+                </j-form-item>
+                <j-form-item label="商品品牌">
+                  <product-brand-selector v-model:value="searchFormData.brandId" />
                 </j-form-item>
               </j-form>
             </j-border>
@@ -65,7 +71,9 @@
                     </a-menu-item>
                   </a-menu>
                 </template>
-                <a-button v-permission="['base-data:product:info:delete']">更多<DownOutlined /></a-button>
+                <a-button v-permission="['base-data:product:info:delete']"
+                  >更多<DownOutlined
+                /></a-button>
               </a-dropdown>
             </a-space>
           </template>
@@ -99,32 +107,32 @@
 </template>
 
 <script>
-import {defineComponent, h} from 'vue';
-import Detail from './detail.vue';
-import * as api from '@/api/base-data/product/info';
-import {
-  CloudUploadOutlined,
-  DownloadOutlined,
-  DeleteOutlined,
-  DownOutlined,
-  PlusOutlined,
-  SearchOutlined,
-} from '@ant-design/icons-vue';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {buildSortPageVo, isEmpty, isEqualWithStr} from '@/utils/utils';
-import ProductImporter from '@/components/Importor/ProductImporter.vue';
-import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
-import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
-import {PRODUCT_TYPE} from '@/enums/biz/productType';
-import BatchHandler from '@/components/BatchHandler';
-import {createError, createSuccess} from '@/hooks/web/msg';
-import PageWrapper from "@/components/Page/src/PageWrapper.vue";
-import JFormItem from "@/components/JFormItem";
-import JBorder from "@/components/JBorder";
-import JForm from "@/components/JForm";
-import {TableAction} from "@/components/Table";
+  import { defineComponent, h } from 'vue';
+  import Detail from './detail.vue';
+  import * as api from '@/api/base-data/product/info';
+  import {
+    CloudUploadOutlined,
+    DownloadOutlined,
+    DeleteOutlined,
+    DownOutlined,
+    PlusOutlined,
+    SearchOutlined,
+  } from '@ant-design/icons-vue';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { buildSortPageVo, isEmpty, isEqualWithStr } from '@/utils/utils';
+  import ProductImporter from '@/components/Importor/ProductImporter.vue';
+  import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
+  import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
+  import { PRODUCT_TYPE } from '@/enums/biz/productType';
+  import BatchHandler from '@/components/BatchHandler';
+  import { createError, createSuccess } from '@/hooks/web/msg';
+  import PageWrapper from '@/components/Page/src/PageWrapper.vue';
+  import JFormItem from '@/components/JFormItem';
+  import JBorder from '@/components/JBorder';
+  import JForm from '@/components/JForm';
+  import { TableAction } from '@/components/Table';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'ProductInfo',
     components: {
       TableAction,

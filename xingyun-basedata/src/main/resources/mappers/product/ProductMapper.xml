@@ -48,7 +48,7 @@
             AND g.available = TRUE
         </where>
         <if test="vo.orderBy != null">
-            ORDER BY #{vo.orderBy} desc
+            ORDER BY #{vo.orderBy}
         </if>
         <if test="vo.orderBy == null">
             ORDER BY g.create_time desc

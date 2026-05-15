@@ -1,85 +1,158 @@
 <template>
-  <div>
-    <dialog-table
-      ref="selector"
-      :request="getList"
-      :load="getLoad"
-      :request-params="_requestParams"
-      v-bind="$attrs"
-    >
-      <template #form>
-        <!-- 查询条件 -->
-        <j-border>
-          <j-form bordered>
-            <j-form-item v-if="isEmpty(requestParams.code)" label="编号">
-              <a-input v-model:value="searchParams.code" />
-            </j-form-item>
-            <j-form-item v-if="isEmpty(requestParams.name)" label="名称">
-              <a-input v-model:value="searchParams.name" />
-            </j-form-item>
-          </j-form>
-        </j-border>
-      </template>
-      <!-- 工具栏 -->
-      <template #toolbar_buttons>
-        <a-space class="operator">
-          <a-button type="primary" @click="$refs.selector.search()">
-            <template #icon>
-              <SearchOutlined />
-            </template>
-            查询</a-button
-          >
-        </a-space>
-      </template>
-    </dialog-table>
-  </div>
+  <a-select
+    v-model:value="model"
+    allow-clear
+    show-search
+    show-arrow
+    style="width: 100%"
+    :filter-option="filterOption"
+    :loading="loading"
+    :options="options"
+    :placeholder="placeholder"
+    v-bind="$attrs"
+    @focus="loadOptions()"
+    @search="loadOptions"
+    @dropdown-visible-change="handleDropdownVisibleChange"
+    @change="onChange"
+  />
 </template>
 
 <script>
   import { defineComponent } from 'vue';
-  import { SearchOutlined } from '@ant-design/icons-vue';
   import * as api from '@/api/base-data/product/brand';
+  import {
+    buildVisibleSelectOptions,
+    filterSelectOption,
+    mergeSelectOptionMap,
+  } from '@/utils/searchSelect';
   import { isEmpty } from '@/utils/utils';
+
+  function normalizeValue(value) {
+    return isEmpty(value) ? undefined : value.toString();
+  }
+
+  function mapBrandOption(item) {
+    const value = normalizeValue(item.value ?? item.id);
+    const label = item.label ?? item.name;
+
+    return {
+      label,
+      value,
+      keywords: [item.code, label, value].filter((text) => !!text).join(' '),
+    };
+  }
 
   export default defineComponent({
     name: 'ProductBrandSelector',
-    components: { SearchOutlined },
+    inheritAttrs: false,
     props: {
+      value: {
+        type: [String, Number],
+        default: undefined,
+      },
       requestParams: {
         type: Object,
         default: () => {
           return {};
         },
       },
-    },
-    setup() {
-      return {
-        isEmpty,
-      };
+      placeholder: {
+        type: String,
+        default: '请选择商品品牌',
+      },
     },
     data() {
       return {
-        searchParams: {
-          code: '',
-          name: '',
-        },
+        loading: false,
+        options: [],
+        optionMap: {},
+        loaded: false,
       };
     },
     computed: {
-      _requestParams() {
-        return { ...this.searchParams, ...this.requestParams };
+      model: {
+        get() {
+          return normalizeValue(this.value);
+        },
+        set() {},
       },
     },
-    methods: {
-      getList(params) {
-        return api.selector({
-          ...params,
-          ...this.searchParams,
-          ...this.requestParams,
-        });
+    watch: {
+      value: {
+        immediate: true,
+        handler(value) {
+          const normalizedValue = normalizeValue(value);
+          if (isEmpty(normalizedValue)) {
+            this.options = buildVisibleSelectOptions(undefined, this.optionMap, []);
+            return;
+          }
+
+          this.ensureOption(normalizedValue);
+        },
       },
-      getLoad(ids) {
-        return api.loadProductBrand(ids);
+    },
+    created() {
+      this.loadOptions();
+    },
+    methods: {
+      filterOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      async requestOptions(keyword = '') {
+        const response = await api.selector({
+          pageIndex: 1,
+          pageSize: 20,
+          ...this.requestParams,
+          name: isEmpty(this.requestParams.name) ? keyword : this.requestParams.name,
+        });
+
+        return (response.datas || []).map((item) => mapBrandOption(item));
+      },
+      syncOptions(searchOptions = []) {
+        this.options = buildVisibleSelectOptions(this.model, this.optionMap, searchOptions);
+      },
+      async loadOptions(keyword = '') {
+        this.loading = true;
+        try {
+          const options = await this.requestOptions(keyword);
+          this.optionMap = mergeSelectOptionMap(this.optionMap, options);
+          this.syncOptions(options);
+          this.loaded = true;
+        } finally {
+          this.loading = false;
+        }
+      },
+      handleDropdownVisibleChange(open) {
+        if (open && !this.loaded) {
+          this.loadOptions();
+        }
+      },
+      async ensureOption(value) {
+        const normalizedValue = normalizeValue(value);
+        if (isEmpty(normalizedValue)) {
+          this.syncOptions();
+          return;
+        }
+
+        if (this.optionMap[normalizedValue]) {
+          this.syncOptions();
+          return;
+        }
+
+        const res = await api.loadProductBrand([normalizedValue]);
+        const options = (res || []).map((item) => mapBrandOption(item));
+        this.optionMap = mergeSelectOptionMap(this.optionMap, options);
+        this.syncOptions(options);
+        this.loaded = true;
+      },
+      onChange(value) {
+        const normalizedValue = normalizeValue(value);
+        this.$emit('update:value', normalizedValue);
+        if (isEmpty(normalizedValue)) {
+          this.$emit('clear', normalizedValue);
+        } else {
+          this.$emit('change', normalizedValue);
+        }
       },
     },
   });

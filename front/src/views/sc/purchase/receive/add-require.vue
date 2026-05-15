@@ -9,14 +9,9 @@
       <j-border>
         <j-form bordered>
           <j-form-item label="供应商" required>
-            <a-select
+            <supplier-selector
               v-model:value="formData.supplierId"
-              allow-clear
-              show-search
               disabled
-              :filter-option="filterOption"
-              :options="supplierOptions"
-              placeholder="请选择供应商"
             />
           </j-form-item>
           <j-form-item label="采购员">
@@ -290,11 +285,13 @@
   } from '@/utils/searchSelect';
   import { requestSupplierSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
   import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
+  import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
 
   export default defineComponent({
     name: 'AddPurchaseReceiveSheetRequire',
     components: {
       BatchAddProduct,
+      SupplierSelector,
     },
     mixins: [multiplePageMix],
     setup() {

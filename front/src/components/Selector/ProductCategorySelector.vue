@@ -1,111 +1,125 @@
 <template>
-  <div>
-    <dialog-tree
-      ref="selector"
-      :request="getList"
-      :load="getLoad"
-      :handle-search="handleSearch"
-      :check-strictly="checkStrictly"
-      :request-params="_requestParams"
-      v-bind="$attrs"
-    >
-      <template #form>
-        <!-- 查询条件 -->
-        <j-border>
-          <j-form bordered>
-            <j-form-item v-if="isEmpty(requestParams.name)" label="名称">
-              <a-input v-model:value="searchParams.name" />
-            </j-form-item>
-          </j-form>
-        </j-border>
-      </template>
-      <!-- 工具栏 -->
-      <template #toolbar_buttons>
-        <a-space class="operator">
-          <a-button type="primary" @click="$refs.selector.search()">
-            <template #icon>
-              <SearchOutlined />
-            </template>
-            查询</a-button
-          >
-        </a-space>
-      </template>
-    </dialog-tree>
-  </div>
+  <a-tree-select
+    v-model:value="model"
+    show-search
+    style="width: 100%"
+    :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
+    :placeholder="placeholder"
+    allow-clear
+    tree-default-expand-all
+    :tree-data="treeData"
+    tree-node-filter-prop="label"
+    :field-names="{ label: 'label', key: 'value', value: 'value', children: 'children' }"
+    :disabled="disabled"
+    v-bind="$attrs"
+    @change="onChange"
+  >
+    <template #title="{ label }">
+      {{ label }}
+    </template>
+  </a-tree-select>
 </template>
 
 <script>
   import { defineComponent } from 'vue';
-  import { SearchOutlined } from '@ant-design/icons-vue';
   import * as api from '@/api/base-data/product/category';
-  import { isEmpty, toString, searchTree } from '@/utils/utils';
+  import { isEmpty } from '@/utils/utils';
+
+  function normalizeTreeValue(value) {
+    if (Array.isArray(value)) {
+      return value.map((item) => normalizeTreeValue(item)).filter((item) => !isEmpty(item));
+    }
+
+    return isEmpty(value) ? undefined : value.toString();
+  }
+
+  function mapTreeNodes(list, onlyFinal) {
+    return (list || []).map((item) => {
+      const children = mapTreeNodes(item.children || [], onlyFinal);
+      const disabled = !!onlyFinal && !isEmpty(children);
+      return {
+        label: item.name,
+        value: normalizeTreeValue(item.id),
+        children,
+        disabled,
+      };
+    });
+  }
+
+  function buildCategoryTree(list) {
+    const nodeMap = {};
+    const roots = [];
+
+    (list || []).forEach((item) => {
+      nodeMap[item.id] = {
+        ...item,
+        children: [],
+      };
+    });
+
+    Object.values(nodeMap).forEach((item) => {
+      const parent = nodeMap[item.parentId];
+      if (parent) {
+        parent.children.push(item);
+      } else {
+        roots.push(item);
+      }
+    });
+
+    return roots;
+  }
 
   export default defineComponent({
     name: 'ProductCategorySelector',
-    components: { SearchOutlined },
+    inheritAttrs: false,
     props: {
-      requestParams: {
-        type: Object,
-        default: () => {
-          return {};
-        },
+      value: {
+        type: [String, Number, Array],
+        default: undefined,
       },
-      checkStrictly: {
+      onlyFinal: {
         type: Boolean,
-        default: true,
+        default: false,
       },
-    },
-    setup() {
-      return {
-        isEmpty,
-      };
+      disabled: {
+        type: Boolean,
+        default: false,
+      },
+      placeholder: {
+        type: String,
+        default: '请选择商品分类',
+      },
     },
     data() {
       return {
-        searchParams: {
-          code: '',
-          name: '',
-        },
+        treeData: [],
       };
     },
     computed: {
-      _requestParams() {
-        return { ...this.searchParams, ...this.requestParams };
+      model: {
+        get() {
+          return normalizeTreeValue(this.value);
+        },
+        set() {},
       },
     },
+    created() {
+      this.loadTreeData();
+    },
     methods: {
-      getList(params) {
-        return api.selector({
-          ...params,
-          ...this.searchParams,
-          ...this.requestParams,
+      loadTreeData() {
+        api.selector({}).then((res) => {
+          this.treeData = mapTreeNodes(buildCategoryTree(res), this.onlyFinal);
         });
       },
-      getLoad(ids) {
-        return api.loadProductCategory(ids);
-      },
-      handleSearch(datas) {
-        const filterName = toString(this.searchParams.name).trim();
-        const isFilterName = !isEmpty(filterName);
-        if (isFilterName) {
-          const options = { key: 'id', parentKey: 'parentId', children: 'children', strict: true };
-          let tableData = searchTree(
-            datas,
-            (item) => {
-              let filterResult = true;
-
-              if (isFilterName) {
-                filterResult &= toString(item['name']).indexOf(filterName) > -1;
-              }
-
-              return filterResult;
-            },
-            options,
-          );
-
-          return tableData;
+      onChange(value) {
+        const normalizedValue = normalizeTreeValue(value);
+        if (isEmpty(value)) {
+          this.$emit('update:value', normalizedValue);
+          this.$emit('clear', normalizedValue);
         } else {
-          return datas;
+          this.$emit('update:value', normalizedValue);
+          this.$emit('change', normalizedValue);
         }
       },
     },

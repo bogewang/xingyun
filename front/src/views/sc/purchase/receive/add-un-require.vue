@@ -4,16 +4,8 @@
       <j-border>
         <j-form bordered>
           <j-form-item label="供应商" required>
-            <a-select
+            <supplier-selector
               v-model:value="formData.supplierId"
-              allow-clear
-              show-search
-              :filter-option="filterOption"
-              :options="supplierOptions"
-              placeholder="请选择供应商"
-              @focus="loadSupplierOptions()"
-              @search="loadSupplierOptions"
-              @change="(value) => handleSelectChange('supplierId', value, supplierOptionMap)"
             />
           </j-form-item>
           <j-form-item label="订单日期">
@@ -262,6 +254,7 @@
   import { requestSupplierSelectOptions } from '@/utils/labelSelect';
   import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
   import JFormItem from '@/components/JFormItem';
+  import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
 
   export default defineComponent({
     name: 'AddPurchaseReceiveSheetUnRequire',
@@ -269,6 +262,7 @@
       JFormItem,
       BatchAddProduct,
       ReceiveSheetImporter,
+      SupplierSelector,
     },
     mixins: [multiplePageMix],
     setup() {

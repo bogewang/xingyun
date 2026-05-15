@@ -33,16 +33,10 @@
                   />
                 </j-form-item>
                 <j-form-item label="供应商">
-                  <a-select
+                  <supplier-selector
                     v-model:value="searchFormData.supplierId"
                     allow-clear
-                    show-search
-                    :filter-option="filterSelectOption"
-                    :options="supplierOptions"
                     placeholder="请选择供应商"
-                    @focus="loadSupplierOptions()"
-                    @search="loadSupplierOptions"
-                    @change="onSupplierChange"
                   />
                 </j-form-item>
                 <j-form-item label="单据号">
@@ -325,6 +319,7 @@
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
   import BatchHandler from '@/components/BatchHandler';
   import ReceiveSheetQueryImporter from '@/components/Importor/PurchaseOrderQueryImporter.vue';
+  import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
 
   export default defineComponent({
     name: 'ReceiveSheet',
@@ -335,6 +330,7 @@
       PurchaseOrderDetail,
       ReceiveSheetPayTypeImporter,
       BatchHandler,
+      SupplierSelector,
     },
     mixins: [multiplePageMix],
     setup() {
