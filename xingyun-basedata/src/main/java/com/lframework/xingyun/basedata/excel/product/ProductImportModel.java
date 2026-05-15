@@ -107,10 +107,10 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
     private String profit;
 
     /**
-     * 供应商
+     * 默认供应商
      */
-    @ExcelProperty("供应商")
-    private String supplier;
+    @ExcelProperty("默认供应商")
+    private String defaultSupplier;
 
 
 
