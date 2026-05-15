@@ -1243,12 +1243,23 @@ public class SaleOutSheetServiceImpl extends
             return Lists.newArrayList();
         }
 
+        handleSeq(list);
+
         // 匹配编号
         checkImportData(list);
 
         return list.stream()
                 .map(item -> BeanUtil.copyProperties(item, SaleOutProductVo.class))
                 .collect(Collectors.toList());
+    }
+
+    private void handleSeq(List<SaleOutSheetImportModel> list) {
+        for (int i = 0; i < list.size(); i++) {
+            SaleOutSheetImportModel model = list.get(i);
+            if (model.getSeq() == null) {
+                model.setSeq(i + 2);
+            }
+        }
     }
 
     @Transactional(rollbackFor = Exception.class)

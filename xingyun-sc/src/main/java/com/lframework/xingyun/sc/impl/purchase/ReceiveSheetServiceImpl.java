@@ -846,13 +846,22 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         if (CollectionUtils.isEmpty(list)) {
             return Lists.newArrayList();
         }
-
+        handleSeq(list);
         // 匹配编号
         checkImportData(list);
 
         return list.stream()
                 .map(item -> BeanUtil.copyProperties(item, ReceiveProductVo.class))
                 .collect(Collectors.toList());
+    }
+
+    private void handleSeq(List<ReceiveSheetImportModel> list) {
+        for (int i = 0; i < list.size(); i++) {
+            ReceiveSheetImportModel model = list.get(i);
+            if (model.getSeq() == null) {
+                model.setSeq(i + 2);
+            }
+        }
     }
 
     private void checkImportData(List<ReceiveSheetImportModel> list) {
