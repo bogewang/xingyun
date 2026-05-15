@@ -34,9 +34,6 @@
                     :only-final="false"
                   />
                 </j-form-item>
-                <j-form-item label="商品品牌">
-                  <product-brand-selector v-model:value="searchFormData.brandId" />
-                </j-form-item>
               </j-form>
             </j-border>
           </template>

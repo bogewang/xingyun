@@ -28,6 +28,7 @@ import com.lframework.xingyun.basedata.vo.product.brand.QueryProductBrandVo;
 import com.lframework.xingyun.basedata.vo.product.info.*;
 import com.lframework.xingyun.basedata.vo.product.property.realtion.CreateProductPropertyRelationVo;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -145,6 +146,9 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     @Transactional(rollbackFor = Exception.class)
     @Override
     public String create(CreateProductVo vo) {
+        if (StringUtils.isBlank(vo.getAlias())) {
+            vo.setAlias(String.format("、%s、", vo.getName()));
+        }
 
         Wrapper<Product> checkWrapper = Wrappers.lambdaQuery(Product.class)
                 .eq(Product::getCode, vo.getCode()).eq(Product::getAvailable, Boolean.TRUE);
@@ -221,27 +225,30 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                 throw new DefaultClientException("单品数据不能为空！");
             }
 
-            BigDecimal purchasePrice = vo.getProductBundles().stream().map(
-                    productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
+            BigDecimal purchasePrice = vo.getProductBundles().stream()
+                    .filter(productBundleVo -> productBundleVo.getPurchasePrice() != null)
+                    .map(productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
                             productBundleVo.getPurchasePrice()))
                     .reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
-            if (!NumberUtil.equal(vo.getPurchasePrice(), purchasePrice)) {
+            if (vo.getPurchasePrice() != null && !NumberUtil.equal(vo.getPurchasePrice(), purchasePrice)) {
                 throw new DefaultClientException("单品的采购价设置错误！");
             }
 
-            BigDecimal salePrice = vo.getProductBundles().stream().map(
-                    productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
+            BigDecimal salePrice = vo.getProductBundles().stream()
+                    .filter(productBundleVo -> productBundleVo.getSalePrice() != null)
+                    .map(productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
                             productBundleVo.getSalePrice()))
                     .reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
-            if (!NumberUtil.equal(vo.getSalePrice(), salePrice)) {
+            if (vo.getSalePrice() != null && !NumberUtil.equal(vo.getSalePrice(), salePrice)) {
                 throw new DefaultClientException("单品的销售价设置错误！");
             }
 
-            BigDecimal retailPrice = vo.getProductBundles().stream().map(
-                    productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
+            BigDecimal retailPrice = vo.getProductBundles().stream()
+                    .filter(productBundleVo -> productBundleVo.getRetailPrice() != null)
+                    .map(productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
                             productBundleVo.getRetailPrice()))
                     .reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
-            if (!NumberUtil.equal(vo.getRetailPrice(), retailPrice)) {
+            if (vo.getRetailPrice() != null && !NumberUtil.equal(vo.getRetailPrice(), retailPrice)) {
                 throw new DefaultClientException("单品的零售价设置错误！");
             }
 
@@ -417,27 +424,30 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                 throw new DefaultClientException("单品数据不能为空！");
             }
 
-            BigDecimal purchasePrice = vo.getProductBundles().stream().map(
-                    productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
+            BigDecimal purchasePrice = vo.getProductBundles().stream()
+                    .filter(productBundleVo -> productBundleVo.getPurchasePrice() != null)
+                    .map(productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
                             productBundleVo.getPurchasePrice()))
                     .reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
-            if (!NumberUtil.equal(vo.getPurchasePrice(), purchasePrice)) {
+            if (vo.getPurchasePrice() != null && !NumberUtil.equal(vo.getPurchasePrice(), purchasePrice)) {
                 throw new DefaultClientException("单品的采购价设置错误！");
             }
 
-            BigDecimal salePrice = vo.getProductBundles().stream().map(
-                    productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
+            BigDecimal salePrice = vo.getProductBundles().stream()
+                    .filter(productBundleVo -> productBundleVo.getSalePrice() != null)
+                    .map(productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
                             productBundleVo.getSalePrice()))
                     .reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
-            if (!NumberUtil.equal(vo.getSalePrice(), salePrice)) {
+            if (vo.getSalePrice() != null && !NumberUtil.equal(vo.getSalePrice(), salePrice)) {
                 throw new DefaultClientException("单品的销售价设置错误！");
             }
 
-            BigDecimal retailPrice = vo.getProductBundles().stream().map(
-                    productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
+            BigDecimal retailPrice = vo.getProductBundles().stream()
+                    .filter(productBundleVo -> productBundleVo.getRetailPrice() != null)
+                    .map(productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
                             productBundleVo.getRetailPrice()))
                     .reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
-            if (!NumberUtil.equal(vo.getRetailPrice(), retailPrice)) {
+            if (vo.getRetailPrice() != null && !NumberUtil.equal(vo.getRetailPrice(), retailPrice)) {
                 throw new DefaultClientException("单品的零售价设置错误！");
             }
 

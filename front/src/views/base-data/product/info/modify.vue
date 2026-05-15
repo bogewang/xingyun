@@ -478,7 +478,6 @@
             },
           ],
           purchasePrice: [
-            { required: true, message: '请输入采购价（元）' },
             {
               validator: (rule, value) => {
                 if (!isEmpty(value)) {
@@ -498,7 +497,6 @@
             },
           ],
           salePrice: [
-            { required: true, message: '请输入销售价（元）' },
             {
               validator: (rule, value) => {
                 if (!isEmpty(value)) {
@@ -518,7 +516,6 @@
             },
           ],
           retailPrice: [
-            { required: true, message: '请输入零售价（元）' },
             {
               validator: (rule, value) => {
                 if (!isEmpty(value)) {
@@ -596,66 +593,60 @@
               return;
             }
 
-            if (isEmpty(bundleProduct.purchasePrice)) {
-              createError('第' + (i + 1) + '行单品采购价（元）不能为空！');
-              return;
+            if (!isEmpty(bundleProduct.purchasePrice)) {
+              if (!isFloat(bundleProduct.purchasePrice)) {
+                createError('第' + (i + 1) + '行单品采购价（元）必须是数字！');
+                return;
+              }
+              if (!isFloatGtZero(bundleProduct.purchasePrice)) {
+                createError('第' + (i + 1) + '行单品采购价（元）必须大于0！');
+                return;
+              }
+              if (!isNumberPrecision(bundleProduct.purchasePrice, 6)) {
+                createError('第' + (i + 1) + '行单品采购价（元）最多允许6位小数！');
+                return;
+              }
+              purchasePrice = add(
+                purchasePrice,
+                mul(bundleProduct.bundleNum, bundleProduct.purchasePrice),
+              );
             }
-            if (!isFloat(bundleProduct.purchasePrice)) {
-              createError('第' + (i + 1) + '行单品采购价（元）必须是数字！');
-              return;
+            if (!isEmpty(bundleProduct.salePrice)) {
+              if (!isFloat(bundleProduct.salePrice)) {
+                createError('第' + (i + 1) + '行单品销售价（元）必须是数字！');
+                return;
+              }
+              if (!isFloatGtZero(bundleProduct.salePrice)) {
+                createError('第' + (i + 1) + '行单品销售价（元）必须大于0！');
+                return;
+              }
+              if (!isNumberPrecision(bundleProduct.salePrice, 6)) {
+                createError('第' + (i + 1) + '行单品销售价（元）最多允许6位小数！');
+                return;
+              }
+              salePrice = add(salePrice, mul(bundleProduct.bundleNum, bundleProduct.salePrice));
             }
-            if (!isFloatGtZero(bundleProduct.purchasePrice)) {
-              createError('第' + (i + 1) + '行单品采购价（元）必须大于0！');
-              return;
+            if (!isEmpty(bundleProduct.retailPrice)) {
+              if (!isFloat(bundleProduct.retailPrice)) {
+                createError('第' + (i + 1) + '行单品零售价（元）必须是数字！');
+                return;
+              }
+              if (!isFloatGtZero(bundleProduct.retailPrice)) {
+                createError('第' + (i + 1) + '行单品零售价（元）必须大于0！');
+                return;
+              }
+              if (!isNumberPrecision(bundleProduct.retailPrice, 6)) {
+                createError('第' + (i + 1) + '行单品零售价（元）最多允许6位小数！');
+                return;
+              }
+              retailPrice = add(
+                retailPrice,
+                mul(bundleProduct.bundleNum, bundleProduct.retailPrice),
+              );
             }
-            if (!isNumberPrecision(bundleProduct.purchasePrice, 6)) {
-              createError('第' + (i + 1) + '行单品采购价（元）最多允许6位小数！');
-              return;
-            }
-
-            if (isEmpty(bundleProduct.salePrice)) {
-              createError('第' + (i + 1) + '行单品销售价（元）不能为空！');
-              return;
-            }
-            if (!isFloat(bundleProduct.salePrice)) {
-              createError('第' + (i + 1) + '行单品销售价（元）必须是数字！');
-              return;
-            }
-            if (!isFloatGtZero(bundleProduct.salePrice)) {
-              createError('第' + (i + 1) + '行单品销售价（元）必须大于0！');
-              return;
-            }
-            if (!isNumberPrecision(bundleProduct.salePrice, 6)) {
-              createError('第' + (i + 1) + '行单品销售价（元）最多允许6位小数！');
-              return;
-            }
-
-            if (isEmpty(bundleProduct.retailPrice)) {
-              createError('第' + (i + 1) + '行单品零售价（元）不能为空！');
-              return;
-            }
-            if (!isFloat(bundleProduct.retailPrice)) {
-              createError('第' + (i + 1) + '行单品零售价（元）必须是数字！');
-              return;
-            }
-            if (!isFloatGtZero(bundleProduct.retailPrice)) {
-              createError('第' + (i + 1) + '行单品零售价（元）必须大于0！');
-              return;
-            }
-            if (!isNumberPrecision(bundleProduct.retailPrice, 6)) {
-              createError('第' + (i + 1) + '行单品零售价（元）最多允许6位小数！');
-              return;
-            }
-
-            purchasePrice = add(
-              purchasePrice,
-              mul(bundleProduct.bundleNum, bundleProduct.purchasePrice),
-            );
-            salePrice = add(salePrice, mul(bundleProduct.bundleNum, bundleProduct.salePrice));
-            retailPrice = add(retailPrice, mul(bundleProduct.bundleNum, bundleProduct.retailPrice));
           }
 
-          if (!eq(purchasePrice, this.formData.purchasePrice)) {
+          if (!isEmpty(this.formData.purchasePrice) && !eq(purchasePrice, this.formData.purchasePrice)) {
             createError(
               '当前所有单品的【包含数量】乘以【采购价（元）】的总和为' +
                 purchasePrice +
@@ -666,7 +657,7 @@
             return;
           }
 
-          if (!eq(salePrice, this.formData.salePrice)) {
+          if (!isEmpty(this.formData.salePrice) && !eq(salePrice, this.formData.salePrice)) {
             createError(
               '当前所有单品的【包含数量】乘以【销售价（元）】的总和为' +
                 salePrice +
@@ -677,7 +668,7 @@
             return;
           }
 
-          if (!eq(retailPrice, this.formData.retailPrice)) {
+          if (!isEmpty(this.formData.retailPrice) && !eq(retailPrice, this.formData.retailPrice)) {
             createError(
               '当前所有单品的【包含数量】乘以【零售价（元）】的总和为' +
                 retailPrice +

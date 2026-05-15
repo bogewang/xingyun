@@ -31,8 +31,7 @@ public class ProductBundleVo implements BaseVo, Serializable {
   /**
    * 采购价
    */
-  @ApiModelProperty(value = "采购价", required = true)
-  @NotNull(message = "采购价不能为空！")
+  @ApiModelProperty("采购价")
   @Digits(integer = 10, fraction = 6, message = "采购价最多允许6位小数！")
   @Positive(message = "采购价必须大于0！")
   private BigDecimal purchasePrice;
@@ -40,8 +39,7 @@ public class ProductBundleVo implements BaseVo, Serializable {
   /**
    * 销售价
    */
-  @ApiModelProperty(value = "销售价", required = true)
-  @NotNull(message = "销售价不能为空！")
+  @ApiModelProperty("销售价")
   @Digits(integer = 10, fraction = 6, message = "销售价最多允许6位小数！")
   @Positive(message = "销售价必须大于0！")
   private BigDecimal salePrice;
@@ -49,8 +47,7 @@ public class ProductBundleVo implements BaseVo, Serializable {
   /**
    * 零售价
    */
-  @ApiModelProperty(value = "零售价", required = true)
-  @NotNull(message = "零售价不能为空！")
+  @ApiModelProperty("零售价")
   @Digits(integer = 10, fraction = 6, message = "零售价最多允许6位小数！")
   @Positive(message = "零售价必须大于0！")
   private BigDecimal retailPrice;
