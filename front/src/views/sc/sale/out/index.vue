@@ -14,7 +14,7 @@
           keep-source
           row-id="id"
           :proxy-config="proxyConfig"
-          :columns="tableColumn"
+          :columns="visibleTableColumn"
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
           :pager-config="{}"
@@ -239,16 +239,11 @@
             <a @click="viewDetail(row.id)">{{ row.id }}</a>
           </template>
 
-          <!-- 销售订单号 列自定义内容 -->
-          <template #saleOrderCode_default="{ row }">
-            <span v-if="isEmpty(row.saleOrderCode)">-</span>
+          <!-- 总利润 列自定义内容 -->
+          <template #total_profit="{ row }">
+            <span v-if="isEmpty(row.totalProfit)">-</span>
             <span v-else>
-              <a
-                v-permission="['sale:order:query']"
-                @click="viewSaleOrderDetail(row.saleOrderId)"
-                >{{ row.saleOrderCode }}</a
-              >
-              <span v-no-permission="['sale:order:query']">{{ row.saleOrderCode }}</span>
+              {{ Number(row.totalProfit || 0).toFixed(2) }}
             </span>
           </template>
 
@@ -349,6 +344,7 @@
   import BatchHandler from '@/components/BatchHandler';
   import PrintDialog from '/@/components/PrintDialog';
   import SaleOutSheetQueryImporter from '@/components/Importor/SaleOutSheetQueryImporter.vue';
+  import { usePermission } from '/@/hooks/web/usePermission';
 
   export default defineComponent({
     name: 'SaleOutSheet',
@@ -362,6 +358,7 @@
     },
     mixins: [multiplePageMix, printMix],
     setup() {
+      const { hasPermission } = usePermission();
       return {
         h,
         SearchOutlined,
@@ -373,6 +370,7 @@
         DownloadOutlined,
         PrinterOutlined,
         isEmpty,
+        hasPermission,
         RECEIVE_SHEET_STATUS,
         SETTLE_STATUS,
       };
@@ -436,7 +434,7 @@
             title: '总利润',
             align: 'right',
             width: 100,
-            formatter: ({ cellValue }) => Number(cellValue || 0).toFixed(2),
+            slots: { default: 'total_profit' },
           },
           {
             field: 'fillAllCost',
@@ -479,6 +477,19 @@
         batchRefuseReason: '',
       };
     },
+    computed: {
+      visibleTableColumn() {
+        return this.tableColumn.filter((column) => {
+          if (column.field === 'totalProfit') {
+            return this.hasPermission('sale:out:approve', false);
+          }
+          return true;
+        });
+      },
+      canViewProfit() {
+        return this.hasPermission('sale:out:approve', false);
+      },
+    },
     created() {},
     methods: {
       footerMethod({ columns, data }) {
@@ -507,6 +518,9 @@
             }
 
             if (column.field === 'totalProfit') {
+              if (!this.canViewProfit) {
+                return '';
+              }
               return this.formatAmount(totalProfit);
             }
 
