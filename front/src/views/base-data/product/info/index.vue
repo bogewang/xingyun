@@ -179,6 +179,7 @@ export default defineComponent({
           { field: 'code', title: '编号', width: 120, sortable: true },
           { field: 'name', title: '名称', minWidth: 160, sortable: true },
           { field: 'alias', title: '别名', minWidth: 180 },
+          { field: 'defaultSupplier', title: '默认供应商', minWidth: 160 },
           { field: 'unit', title: '单位', width: 100 },
           { field: 'spec', title: '规格', width: 120 },
           { field: 'purchasePrice', title: '采购价', width: 120 },

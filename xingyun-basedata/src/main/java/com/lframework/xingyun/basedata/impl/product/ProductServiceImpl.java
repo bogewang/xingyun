@@ -199,6 +199,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         data.setWeight(vo.getWeight());
         data.setVolume(vo.getVolume());
         data.setAlias(StringUtil.isBlank(vo.getAlias()) ? null : vo.getAlias());
+        data.setDefaultSupplier(
+                StringUtil.isBlank(vo.getDefaultSupplier()) ? null : vo.getDefaultSupplier());
         data.setRemark(StringUtil.isBlank(vo.getRemark()) ? null : vo.getRemark());
         data.setRemark2(StringUtil.isBlank(vo.getRemark2()) ? null : vo.getRemark2());
 
@@ -398,6 +400,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                 .set(Product::getPurchasePrice, vo.getPurchasePrice())
                 .set(Product::getRetailPrice, vo.getRetailPrice())
                 .set(Product::getAlias, StringUtil.isBlank(vo.getAlias()) ? null : vo.getAlias())
+                .set(Product::getDefaultSupplier,
+                        StringUtil.isBlank(vo.getDefaultSupplier()) ? null : vo.getDefaultSupplier())
                 .set(Product::getRemark, StringUtil.isBlank(vo.getRemark()) ? null : vo.getRemark())
                 .set(Product::getRemark2, StringUtil.isBlank(vo.getRemark2()) ? null : vo.getRemark2())
                 .eq(Product::getId, vo.getId());

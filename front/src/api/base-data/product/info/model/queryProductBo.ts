@@ -55,6 +55,11 @@ export interface QueryProductBo {
   alias: string;
 
   /**
+   * 默认供应商
+   */
+  defaultSupplier: string;
+
+  /**
    * 备注
    */
   remark: string;

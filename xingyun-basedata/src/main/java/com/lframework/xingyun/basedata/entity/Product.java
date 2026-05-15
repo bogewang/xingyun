@@ -124,6 +124,11 @@ public class Product extends BaseEntity implements BaseDto {
   private String alias;
 
   /**
+   * 默认供应商
+   */
+  private String defaultSupplier;
+
+  /**
    * 备注
    */
   private String remark;

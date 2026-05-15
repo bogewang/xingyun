@@ -150,6 +150,9 @@ public class CreateProductVo implements BaseVo, Serializable {
   @ApiModelProperty("别名")
   private String alias;
 
+  @ApiModelProperty("默认供应商")
+  private String defaultSupplier;
+
   @ApiModelProperty("备注")
   private String remark;
 

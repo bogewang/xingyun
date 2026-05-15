@@ -112,6 +112,11 @@ export interface GetProductBo {
   alias: string;
 
   /**
+   * 默认供应商
+   */
+  defaultSupplier: string;
+
+  /**
    * 备注
    */
   remark: string;

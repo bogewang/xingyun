@@ -158,6 +158,9 @@ public class GetProductBo extends BaseBo<Product> {
   @ApiModelProperty("别名")
   private String alias;
 
+  @ApiModelProperty("默认供应商")
+  private String defaultSupplier;
+
   @ApiModelProperty("备注")
   private String remark;
 
@@ -210,6 +213,7 @@ public class GetProductBo extends BaseBo<Product> {
     this.salePrice = dto.getSalePrice();
     this.retailPrice = dto.getRetailPrice();
     this.alias = dto.getAlias();
+    this.defaultSupplier = dto.getDefaultSupplier();
     this.remark = dto.getRemark();
     this.remark2 = dto.getRemark2();
 

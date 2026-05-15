@@ -135,6 +135,11 @@
               <a-textarea v-model:value="formData.alias" allow-clear :rows="2" />
             </a-form-item>
           </a-col>
+          <a-col :md="8" :sm="24">
+            <a-form-item label="默认供应商" name="defaultSupplier">
+              <a-input v-model:value="formData.defaultSupplier" allow-clear />
+            </a-form-item>
+          </a-col>
         </a-row>
         <a-row v-if="PRODUCT_TYPE.BUNDLE.equalsCode(productType)">
           <a-col :span="24">
