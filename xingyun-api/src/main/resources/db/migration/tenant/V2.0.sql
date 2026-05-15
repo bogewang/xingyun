@@ -2,6 +2,10 @@ DROP TABLE IF EXISTS `base_data_product_retail`;
 DROP TABLE IF EXISTS `base_data_product_purchase`;
 DROP TABLE IF EXISTS `base_data_product_sale`;
 
+ALTER TABLE `base_data_product` ADD COLUMN  `sale_price` decimal(24,6) DEFAULT NULL COMMENT '销售价';
+ALTER TABLE `base_data_product` ADD COLUMN  `purchase_price` decimal(24,6) DEFAULT NULL COMMENT '采购价';
+ALTER TABLE `base_data_product` ADD COLUMN  `retail_price` decimal(24,6) DEFAULT NULL COMMENT '零售价';
+
 update sys_menu set sys_module_id = 3 where code = '2000011';
 
 -- 语言
@@ -51,3 +55,7 @@ ALTER TABLE `base_data_product` ADD COLUMN `remark2` varchar(255) NULL COMMENT '
 
 -- 0514
 ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `manual_input_cost` tinyint(1) NULL COMMENT '是否手动录入成本';
+-- 0515
+ALTER TABLE tbl_sale_out_sheet_detail modify `ori_price` decimal(24,6) NULL COMMENT '原价';
+
+

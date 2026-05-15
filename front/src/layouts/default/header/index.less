@@ -107,6 +107,49 @@
     align-items: center;
     min-width: 180px;
 
+    .@{header-prefix-cls}-tenant {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 240px;
+      height: 30px;
+      margin-right: 10px;
+      padding: 0 12px;
+      overflow: hidden;
+      border: 1px solid fade(@primary-color, 14%);
+      border-radius: 999px;
+      background: linear-gradient(90deg, fade(@primary-color, 8%) 0%, fade(@primary-color, 3%) 100%);
+      color: @text-color;
+      font-size: 12px;
+      line-height: 30px;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: fade(@primary-color, 24%);
+        background: linear-gradient(90deg, fade(@primary-color, 12%) 0%, fade(@primary-color, 5%) 100%);
+      }
+    }
+
+    .@{header-prefix-cls}-tenant__label {
+      flex: none;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: fade(@primary-color, 12%);
+      color: @primary-color;
+      font-size: 12px;
+      line-height: 20px;
+    }
+
+    .@{header-prefix-cls}-tenant__name {
+      display: inline-block;
+      min-width: 0;
+      overflow: hidden;
+      color: @text-color-secondary;
+      font-weight: 500;
+      text-overflow: ellipsis;
+    }
+
     &__item {
       display: flex !important;
       align-items: center;

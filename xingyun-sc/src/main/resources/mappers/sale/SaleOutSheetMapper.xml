@@ -247,7 +247,7 @@
                 </if>
             </if>
         </where>
-        ORDER BY s.create_time DESC
+        ORDER BY s.order_date DESC
     </select>
     <select id="selector" resultMap="SaleOutSheet">
         <include refid="SaleOutSheetDto_sql"/>

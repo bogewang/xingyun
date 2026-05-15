@@ -33,6 +33,11 @@
 
     <!-- action  -->
     <div :class="`${prefixCls}-action`">
+      <div v-if="tenantName" :class="`${prefixCls}-tenant`" :title="tenantName">
+        <span :class="`${prefixCls}-tenant__label`">租户</span>
+        <span :class="`${prefixCls}-tenant__name`">{{ tenantName }}</span>
+      </div>
+
       <AppSearch v-if="getShowSearch" :class="`${prefixCls}-action__item `" />
 
       <ExportCenter :class="`${prefixCls}-action__item export-center-item`" />
@@ -55,6 +60,7 @@
   import { useHeaderSetting } from '@/hooks/setting/useHeaderSetting';
   import { useMenuSetting } from '@/hooks/setting/useMenuSetting';
   import { useRootSetting } from '@/hooks/setting/useRootSetting';
+  import { useUserStore } from '@/store/modules/user';
   import { useAppInject } from '@/hooks/web/useAppInject';
   import { useDesign } from '@/hooks/web/useDesign';
   import { propTypes } from '@/utils/propTypes';
@@ -69,6 +75,7 @@
     fixed: propTypes.bool,
   });
   const { prefixCls } = useDesign('layout-header');
+  const userStore = useUserStore();
   const {
     getShowTopMenu,
     getShowHeaderTrigger,
@@ -131,6 +138,8 @@
   const getMenuMode = computed(() => {
     return unref(getSplit) ? MenuModeEnum.HORIZONTAL : null;
   });
+
+  const tenantName = computed(() => userStore.getUserInfo?.tenantName || '');
 </script>
 <style lang="less">
   @import url('./index.less');

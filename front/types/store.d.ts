@@ -14,6 +14,7 @@ export interface UserInfo {
   userId: string | number;
   username: string;
   name: string;
+  tenantName?: string;
   avatar: string;
   desc?: string;
   homePath?: string;

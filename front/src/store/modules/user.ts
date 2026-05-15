@@ -97,6 +97,7 @@ export const useUserStore = defineStore({
             } as RoleInfo;
           }),
           name: data.user.name,
+          tenantName: params.tenantName,
         };
 
         await this.afterLoginAction(userInfo);
