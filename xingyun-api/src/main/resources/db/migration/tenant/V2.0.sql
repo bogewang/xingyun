@@ -57,5 +57,6 @@ ALTER TABLE `base_data_product` ADD COLUMN `remark2` varchar(255) NULL COMMENT '
 ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `manual_input_cost` tinyint(1) NULL COMMENT '是否手动录入成本';
 -- 0515
 ALTER TABLE tbl_sale_out_sheet_detail modify `ori_price` decimal(24,6) NULL COMMENT '原价';
+ALTER TABLE `base_data_product` ADD COLUMN `default_supplier` varchar(255) NULL COMMENT '默认供应商';
 
 
