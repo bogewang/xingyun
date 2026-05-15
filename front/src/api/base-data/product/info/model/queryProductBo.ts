@@ -60,6 +60,11 @@ export interface QueryProductBo {
   defaultSupplier: string;
 
   /**
+   * 默认供应商名称
+   */
+  defaultSupplierName: string;
+
+  /**
    * 备注
    */
   remark: string;

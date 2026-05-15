@@ -18,7 +18,7 @@
         }}</a-descriptions-item>
         <a-descriptions-item label="别名" :span="2">{{ formData.alias }}</a-descriptions-item>
         <a-descriptions-item label="默认供应商" :span="2">{{
-          formData.defaultSupplier
+          formData.defaultSupplierName
         }}</a-descriptions-item>
         <a-descriptions-item label="分类" :span="2">{{
           formData.categoryName
@@ -118,6 +118,7 @@
           externalCode: '',
           alias: '',
           defaultSupplier: '',
+          defaultSupplierName: '',
           categoryName: '',
           brandName: '',
           spec: '',

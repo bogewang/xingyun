@@ -7,8 +7,10 @@ import com.lframework.xingyun.basedata.bo.product.info.QueryProductBo;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductBrand;
 import com.lframework.xingyun.basedata.entity.ProductCategory;
+import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.service.product.ProductBrandService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
+import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +32,7 @@ public class ProductConverter {
 
         ProductCategoryService productCategoryService = ApplicationUtil.getBean(ProductCategoryService.class);
         ProductBrandService productBrandService = ApplicationUtil.getBean(ProductBrandService.class);
+        SupplierService supplierService = ApplicationUtil.getBean(SupplierService.class);
         // 转换分类名称
         List<String> categoryIds = datas.stream().map(Product::getCategoryId).filter(StringUtil::isNotBlank)
                 .distinct().collect(Collectors.toList());
@@ -42,6 +45,13 @@ public class ProductConverter {
         Map<String, ProductBrand> brandMap = CollectionUtil.isEmpty(brandIds) ? Collections.emptyMap()
                 : productBrandService.listByIds(brandIds).stream()
                         .collect(Collectors.toMap(ProductBrand::getId, Function.identity()));
+        // 转换默认供应商名称
+        List<String> supplierIds = datas.stream().map(Product::getDefaultSupplier).filter(StringUtil::isNotBlank)
+                .distinct().collect(Collectors.toList());
+        Map<String, Supplier> supplierMap = CollectionUtil.isEmpty(supplierIds) ? Collections.emptyMap()
+                : supplierService.listByIds(supplierIds).stream()
+                        .collect(Collectors.toMap(Supplier::getId, Function.identity()));
+
         // 转换库存数量字段 todo
 
         return datas.stream().map(dto -> {
@@ -59,6 +69,9 @@ public class ProductConverter {
             bo.setSalePrice(dto.getSalePrice());
             bo.setAlias(dto.getAlias());
             bo.setDefaultSupplier(dto.getDefaultSupplier());
+            if (supplierMap.containsKey(dto.getDefaultSupplier())) {
+                bo.setDefaultSupplierName(supplierMap.get(dto.getDefaultSupplier()).getName());
+            }
             bo.setRemark(dto.getRemark());
             bo.setRemark2(dto.getRemark2());
 

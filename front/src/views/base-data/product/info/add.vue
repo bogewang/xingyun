@@ -63,16 +63,35 @@
 
           <a-col :md="8" :sm="24">
             <a-form-item label="商品分类" name="categoryId">
-              <product-category-selector
+              <a-tree-select
                 v-model:value="formData.categoryId"
-                :only-final="true"
-                @update:value="selectCategory"
+                tree-default-expand-all
+                show-search
+                allow-clear
+                style="width: 100%"
+                :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
+                :field-names="{ label: 'name', key: 'id', value: 'id', children: 'children' }"
+                :tree-data="categoryOptions"
+                :filter-tree-node="filterCategoryTreeNode"
+                @change="selectCategory"
               />
             </a-form-item>
           </a-col>
           <a-col :md="8" :sm="24">
             <a-form-item label="商品品牌" name="brandId">
-              <product-brand-selector v-model:value="formData.brandId" />
+              <a-select
+                v-model:value="formData.brandId"
+                show-search
+                allow-clear
+                style="width: 100%"
+                :filter-option="filterOption"
+                :loading="brandLoading"
+                :options="brandOptions"
+                placeholder="请选择商品品牌"
+                @focus="loadBrandOptions()"
+                @search="loadBrandOptions"
+                @change="(value) => handleSelectChange('brandId', value, brandOptionMap)"
+              />
             </a-form-item>
           </a-col>
           <a-col :md="8" :sm="24">
@@ -137,7 +156,20 @@
           </a-col>
           <a-col :md="8" :sm="24">
             <a-form-item label="默认供应商" name="defaultSupplier">
-              <a-input v-model:value="formData.defaultSupplier" allow-clear />
+              <a-select
+                v-model:value="formData.defaultSupplier"
+                show-search
+                allow-clear
+                style="width: 100%"
+                :filter-option="filterOption"
+                :loading="supplierLoading"
+                :options="supplierOptions"
+                placeholder="请选择默认供应商"
+                @focus="loadSupplierOptions()"
+                @search="loadSupplierOptions"
+                @change="(value) =>
+                  handleSelectChange('defaultSupplier', value, supplierOptionMap)"
+              />
             </a-form-item>
           </a-col>
         </a-row>
@@ -358,6 +390,8 @@
 import {defineComponent, h} from 'vue';
 import {validCode} from '@/utils/validate';
 import * as api from '@/api/base-data/product/info';
+import * as productBrandApi from '@/api/base-data/product/brand';
+import * as productCategoryApi from '@/api/base-data/product/category';
 import * as propertyApi from '@/api/base-data/product/property';
 import {DeleteOutlined, PlusOutlined} from '@ant-design/icons-vue';
 import {multiplePageMix} from '@/mixins/multiplePageMix';
@@ -376,9 +410,14 @@ import {
   mul,
   uuid,
 } from '@/utils/utils';
+import {
+  buildVisibleSelectOptions,
+  filterSelectOption,
+  mergeSelectOptionMap,
+  normalizeSelectValue,
+} from '@/utils/searchSelect';
+import {requestSupplierSelectOptions} from '@/utils/labelSelect';
 import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
-import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
 import ProductSelector from '@/components/Selector/ProductSelector.vue';
 import {PRODUCT_TYPE} from '@/enums/biz/productType';
 import {COLUMN_TYPE} from '@/enums/biz/columnType';
@@ -388,8 +427,6 @@ import {GENERATE_CODE_TYPE} from '@/enums/biz/generateCodeType';
 export default defineComponent({
     name: 'AddProduct',
     components: {
-      ProductBrandSelector,
-      ProductCategorySelector,
       ProductSelector,
     },
     mixins: [multiplePageMix],
@@ -412,6 +449,13 @@ export default defineComponent({
         formData: {},
         productType: PRODUCT_TYPE.NORMAL.code,
         productBundles: [],
+        brandOptions: [],
+        brandOptionMap: {},
+        categoryOptions: [],
+        supplierOptions: [],
+        supplierOptionMap: {},
+        brandLoading: false,
+        supplierLoading: false,
         // 属性列表
         modelorList: [],
         // 表单校验规则
@@ -566,8 +610,69 @@ export default defineComponent({
     created() {
       // 初始化表单数据
       this.initFormData();
+      this.loadCategoryOptions();
+      this.loadBrandOptions();
+      this.loadSupplierOptions();
     },
     methods: {
+      filterOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      handleSelectChange(field, value, optionMap) {
+        this.formData[field] = normalizeSelectValue(value, optionMap);
+      },
+      async requestBrandOptions(keyword = '') {
+        const response = await productBrandApi.selector({
+          pageIndex: 1,
+          pageSize: 20,
+          code: '',
+          name: keyword,
+        });
+
+        return (response.datas || []).map((item) => {
+          return {
+            label: item.name,
+            value: item.id,
+            keywords: [item.code, item.name, item.id].filter((value) => !!value).join(' '),
+          };
+        });
+      },
+      loadCategoryOptions() {
+        productCategoryApi.query().then((res) => {
+          this.categoryOptions = res || [];
+        });
+      },
+      async loadBrandOptions(keyword = '') {
+        this.brandLoading = true;
+        try {
+          const options = await this.requestBrandOptions(keyword);
+          this.brandOptionMap = mergeSelectOptionMap(this.brandOptionMap, options);
+          this.brandOptions = buildVisibleSelectOptions(
+            this.formData.brandId,
+            this.brandOptionMap,
+            options,
+          );
+        } finally {
+          this.brandLoading = false;
+        }
+      },
+      async loadSupplierOptions(keyword = '') {
+        this.supplierLoading = true;
+        try {
+          const options = await requestSupplierSelectOptions(keyword);
+          this.supplierOptionMap = mergeSelectOptionMap(this.supplierOptionMap, options);
+          this.supplierOptions = buildVisibleSelectOptions(
+            this.formData.defaultSupplier,
+            this.supplierOptionMap,
+            options,
+          );
+        } finally {
+          this.supplierLoading = false;
+        }
+      },
+      filterCategoryTreeNode(inputValue, node) {
+        return (node.name || '').indexOf(inputValue) > -1;
+      },
       // 关闭对话框
       closeDialog() {
         this.closeCurrentPage();

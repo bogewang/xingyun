@@ -78,7 +78,14 @@
         });
       },
       getLoad(ids) {
-        return api.loadSupplier(ids);
+        return api.loadSupplier(ids).then((res) => {
+          return res.map((item) => {
+            return {
+              label: item.label ?? item.name,
+              value: item.value ?? item.id,
+            };
+          });
+        });
       },
     },
   });

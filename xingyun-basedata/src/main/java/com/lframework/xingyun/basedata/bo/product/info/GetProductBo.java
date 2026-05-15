@@ -11,12 +11,14 @@ import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductBrand;
 import com.lframework.xingyun.basedata.entity.ProductBundle;
 import com.lframework.xingyun.basedata.entity.ProductCategory;
+import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.enums.ColumnType;
 import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.service.product.ProductBrandService;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductPropertyRelationService;
+import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -161,6 +163,9 @@ public class GetProductBo extends BaseBo<Product> {
   @ApiModelProperty("默认供应商")
   private String defaultSupplier;
 
+  @ApiModelProperty("默认供应商名称")
+  private String defaultSupplierName;
+
   @ApiModelProperty("备注")
   private String remark;
 
@@ -214,6 +219,13 @@ public class GetProductBo extends BaseBo<Product> {
     this.retailPrice = dto.getRetailPrice();
     this.alias = dto.getAlias();
     this.defaultSupplier = dto.getDefaultSupplier();
+    if (StringUtil.isNotBlank(dto.getDefaultSupplier())) {
+      SupplierService supplierService = ApplicationUtil.getBean(SupplierService.class);
+      Supplier supplier = supplierService.findById(dto.getDefaultSupplier());
+      if (supplier != null) {
+        this.defaultSupplierName = supplier.getName();
+      }
+    }
     this.remark = dto.getRemark();
     this.remark2 = dto.getRemark2();
 

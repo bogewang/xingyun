@@ -281,15 +281,15 @@
 
           this.load(params).then((res) => {
             if (reloadSeq === this.reloadSeq) {
-              if (!isEmpty(res)) {
-                if (this.multiple) {
-                  this.selectValue = res.map((item) => item[this.columnOption]);
+                if (!isEmpty(res)) {
+                  if (this.multiple) {
+                  this.selectValue = res.map((item) => item[this.columnOption.value]);
                   this.selectRow = res;
                   const tmpRes = res.map((item) => item[this.columnOption.label]);
                   this.label = tmpRes.join('，');
                 } else {
                   this.label = res[0][this.columnOption.label];
-                  this.selectValue = [res[0][this.columnOption]];
+                  this.selectValue = [res[0][this.columnOption.value]];
                   this.selectRow = [res[0]];
                 }
               } else {

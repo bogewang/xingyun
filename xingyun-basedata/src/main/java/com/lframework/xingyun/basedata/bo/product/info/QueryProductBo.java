@@ -86,6 +86,9 @@ public class QueryProductBo extends BaseBo<Product> {
     @ApiModelProperty("默认供应商")
     private String defaultSupplier;
 
+    @ApiModelProperty("默认供应商名称")
+    private String defaultSupplierName;
+
     @ApiModelProperty("备注")
     private String remark;
 
