@@ -271,6 +271,7 @@
     mergeSelectOptionMap,
     normalizeSelectValue,
   } from '@/utils/searchSelect';
+  import { focusVxeGridRow } from '@/utils/vxeGrid';
   import { requestCustomerSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
@@ -559,24 +560,24 @@
           productOptions: [],
         };
       },
+      async focusProductRow(index) {
+        await focusVxeGridRow({
+          grid: this.$refs.grid,
+          row: this.tableData[index],
+          rowIndex: index,
+          nextTick: () => this.$nextTick(),
+          focus: () => this.$refs['productInputRef' + index]?.focus(),
+        });
+      },
       // 新增商品
       addProduct() {
         this.tableData.push(this.emptyProduct());
-        this.$nextTick(() => {
-          const productInputRef = this.$refs['productInputRef' + (this.tableData.length - 1)];
-          if (productInputRef) {
-            productInputRef.focus();
-          }
-        });
+        this.focusProductRow(this.tableData.length - 1);
       },
       insertProduct(index) {
-        this.tableData.splice(index + 1, 0, this.emptyProduct());
-        this.$nextTick(() => {
-          const productInputRef = this.$refs['productInputRef' + (index + 1)];
-          if (productInputRef) {
-            productInputRef.focus();
-          }
-        });
+        const insertedIndex = index + 1;
+        this.tableData.splice(insertedIndex, 0, this.emptyProduct());
+        this.focusProductRow(insertedIndex);
       },
       removeCurrentProduct(row) {
         this.tableData = this.tableData.filter((item) => item.id !== row.id);
