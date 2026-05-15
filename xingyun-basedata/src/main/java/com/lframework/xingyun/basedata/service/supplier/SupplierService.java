@@ -58,6 +58,13 @@ public interface SupplierService extends BaseMpService<Supplier> {
     String create(CreateSupplierVo vo);
 
     /**
+     * 生成不重复的编号
+     *
+     * @return
+     */
+    String generateCode();
+
+    /**
      * 修改
      *
      * @param vo

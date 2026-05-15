@@ -360,7 +360,6 @@
   import * as propertyApi from '@/api/base-data/product/property';
   import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import { generateCode } from '@/api/components';
   import {
     add,
     eq,
@@ -383,7 +382,6 @@
   import { PRODUCT_TYPE } from '@/enums/biz/productType';
   import { COLUMN_TYPE } from '@/enums/biz/columnType';
   import { COLUMN_DATA_TYPE } from '@/enums/biz/columnDataType';
-  import { GENERATE_CODE_TYPE } from '@/enums/biz/generateCodeType';
 
   export default defineComponent({
     name: 'AddProduct',
@@ -675,7 +673,10 @@
             }
           }
 
-          if (!isEmpty(this.formData.purchasePrice) && !eq(purchasePrice, this.formData.purchasePrice)) {
+          if (
+            !isEmpty(this.formData.purchasePrice) &&
+            !eq(purchasePrice, this.formData.purchasePrice)
+          ) {
             createError(
               '当前所有单品的【包含数量】乘以【采购价（元）】的总和为' +
                 purchasePrice +
@@ -785,7 +786,7 @@
         });
       },
       onGenerateCode() {
-        generateCode(GENERATE_CODE_TYPE.PRODUCT.code).then((res) => {
+        api.generateCode().then((res) => {
           this.formData.code = res;
         });
       },

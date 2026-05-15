@@ -90,6 +90,14 @@ public class SupplierController extends DefaultBaseController {
     return InvokeResultBuilder.success(result);
   }
 
+  @ApiOperation("生成供应商编号")
+  @HasPermission({"base-data:supplier:add", "base-data:supplier:modify"})
+  @GetMapping("/generate/code")
+  public InvokeResult<String> generateCode() {
+
+    return InvokeResultBuilder.success(supplierService.generateCode());
+  }
+
   /**
    * 删除供应商
    */

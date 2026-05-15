@@ -16,6 +16,7 @@ import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
 import com.lframework.starter.web.core.utils.*;
 import com.lframework.starter.web.inner.dto.dic.city.DicCityDto;
 import com.lframework.starter.web.inner.service.DicCityService;
+import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.enums.BaseDataOpLogType;
 import com.lframework.xingyun.basedata.enums.ManageType;
@@ -42,8 +43,13 @@ import java.util.List;
 public class SupplierServiceImpl extends BaseMpServiceImpl<SupplierMapper, Supplier> implements
     SupplierService {
 
+  private static final Integer SUPPLIER_CODE_TYPE = 6;
+
   @Autowired
   private DicCityService dicCityService;
+
+  @Autowired
+  private GenerateCodeService generateCodeService;
 
   @Override
   public PageResult<Supplier> query(Integer pageIndex, Integer pageSize, QuerySupplierVo vo) {
@@ -102,8 +108,10 @@ public class SupplierServiceImpl extends BaseMpServiceImpl<SupplierMapper, Suppl
   @Override
   public String create(CreateSupplierVo vo) {
 
+    String code = StringUtil.isBlank(vo.getCode()) ? generateCode() : vo.getCode();
+
     Wrapper<Supplier> checkWrapper = Wrappers.lambdaQuery(Supplier.class)
-        .eq(Supplier::getCode, vo.getCode())
+        .eq(Supplier::getCode, code)
         .eq(Supplier::getAvailable, Boolean.TRUE);
     if (getBaseMapper().selectCount(checkWrapper) > 0) {
       throw new DefaultClientException("编号重复，请重新输入！");
@@ -111,7 +119,7 @@ public class SupplierServiceImpl extends BaseMpServiceImpl<SupplierMapper, Suppl
 
     Supplier data = new Supplier();
     data.setId(IdUtil.getId());
-    data.setCode(vo.getCode());
+    data.setCode(code);
     data.setName(vo.getName());
     if (!StringUtil.isBlank(vo.getMnemonicCode())) {
       data.setMnemonicCode(vo.getMnemonicCode());
@@ -169,10 +177,25 @@ public class SupplierServiceImpl extends BaseMpServiceImpl<SupplierMapper, Suppl
     getBaseMapper().insert(data);
 
     OpLogUtil.setVariable("id", data.getId());
-    OpLogUtil.setVariable("code", vo.getCode());
+    OpLogUtil.setVariable("code", code);
     OpLogUtil.setExtra(vo);
 
     return data.getId();
+  }
+
+  @Override
+  public String generateCode() {
+
+    while (true) {
+      String code = generateCodeService.generate(SUPPLIER_CODE_TYPE);
+
+      Wrapper<Supplier> checkWrapper = Wrappers.lambdaQuery(Supplier.class)
+          .eq(Supplier::getCode, code)
+          .eq(Supplier::getAvailable, Boolean.TRUE);
+      if (getBaseMapper().selectCount(checkWrapper) == 0) {
+        return code;
+      }
+    }
   }
 
   @OpLog(type = BaseDataOpLogType.class, name = "修改供应商，ID：{}, 编号：{}", params = {"#id",

@@ -57,6 +57,13 @@ public interface CustomerService extends BaseMpService<Customer> {
   String create(CreateCustomerVo vo);
 
   /**
+   * 生成不重复的编号
+   *
+   * @return
+   */
+  String generateCode();
+
+  /**
    * 修改
    *
    * @param vo

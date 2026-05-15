@@ -7,7 +7,7 @@ import { CreateCustomerVo } from '@/api/base-data/customer/model/createCustomerV
 import { GetCustomerBo } from '@/api/base-data/customer/model/getCustomerBo';
 import { QueryCustomerVo } from '@/api/base-data/customer/model/queryCustomerVo';
 import { QueryCustomerBo } from '@/api/base-data/customer/model/queryCustomerBo';
-import {SelectorBo} from "@/api/common/SelectorBo";
+import { SelectorBo } from '@/api/common/SelectorBo';
 
 const baseUrl = '/basedata/customer';
 const selectorBaseUrl = '/selector';
@@ -64,6 +64,20 @@ export function get(id: string): Promise<GetCustomerBo> {
       params: {
         id: id,
       },
+    },
+    {
+      region,
+    },
+  );
+}
+
+/**
+ * 生成编号
+ */
+export function generateCode(): Promise<string> {
+  return defHttp.get<string>(
+    {
+      url: baseUrl + '/generate/code',
     },
     {
       region,

@@ -89,6 +89,14 @@ public class CustomerController extends DefaultBaseController {
     return InvokeResultBuilder.success(result);
   }
 
+  @ApiOperation("生成客户编号")
+  @HasPermission({"base-data:customer:add", "base-data:customer:modify"})
+  @GetMapping("/generate/code")
+  public InvokeResult<String> generateCode() {
+
+    return InvokeResultBuilder.success(customerService.generateCode());
+  }
+
   /**
    * 删除客户
    */

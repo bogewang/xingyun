@@ -72,6 +72,20 @@ export function get(id: string): Promise<GetProductBo> {
 }
 
 /**
+ * 生成编号
+ */
+export function generateCode(): Promise<string> {
+  return defHttp.get<string>(
+    {
+      url: baseUrl + '/generate/code',
+    },
+    {
+      region,
+    },
+  );
+}
+
+/**
  * 新增
  * @param data
  */

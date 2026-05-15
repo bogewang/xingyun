@@ -146,17 +146,15 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {isEmail, validCode} from '@/utils/validate';
-import * as api from '@/api/base-data/customer';
-import {generateCode} from '@/api/components';
-import {getCamelCharsUpperCase, isEmpty} from '@/utils/utils';
-import {createConfirm, createSuccess} from '@/hooks/web/msg';
-import CitySelector from '@/components/Selector/CitySelector.vue';
-import {SETTLE_TYPE} from '@/enums/biz/settleType';
-import {GENERATE_CODE_TYPE} from '@/enums/biz/generateCodeType';
+  import { defineComponent } from 'vue';
+  import { isEmail, validCode } from '@/utils/validate';
+  import * as api from '@/api/base-data/customer';
+  import { getCamelCharsUpperCase, isEmpty } from '@/utils/utils';
+  import { createConfirm, createSuccess } from '@/hooks/web/msg';
+  import CitySelector from '@/components/Selector/CitySelector.vue';
+  import { SETTLE_TYPE } from '@/enums/biz/settleType';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       CitySelector,
     },
@@ -269,7 +267,7 @@ export default defineComponent({
         this.formData.mnemonicCode = getCamelCharsUpperCase(e);
       },
       onGenerateCode() {
-        generateCode(GENERATE_CODE_TYPE.CUSTOMER.code).then((res) => {
+        api.generateCode().then((res) => {
           this.formData.code = res;
         });
       },

@@ -84,6 +84,13 @@ public interface ProductService extends BaseMpService<Product> {
     String create(CreateProductVo vo);
 
     /**
+     * 生成不重复的编号
+     *
+     * @return
+     */
+    String generateCode();
+
+    /**
      * 修改
      *
      * @param vo

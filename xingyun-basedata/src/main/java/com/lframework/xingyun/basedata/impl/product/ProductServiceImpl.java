@@ -13,6 +13,7 @@ import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.event.DataChangeEventBuilder;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
 import com.lframework.starter.web.core.utils.*;
+import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.starter.web.inner.service.RecursionMappingService;
 import com.lframework.xingyun.basedata.entity.*;
 import com.lframework.xingyun.basedata.enums.BaseDataOpLogType;
@@ -48,6 +49,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
 
     private static final DateTimeFormatter PRODUCT_CODE_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
 
+    private static final Integer PRODUCT_CODE_TYPE = 10;
+
     @Autowired
     private RecursionMappingService recursionMappingService;
 
@@ -70,6 +73,9 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     private ProductBrandService productBrandService;
     @Autowired
     private SupplierService supplierService;
+
+    @Autowired
+    private GenerateCodeService generateCodeService;
 
     @Override
     public PageResult<Product> query(Integer pageIndex, Integer pageSize, QueryProductVo vo) {
@@ -150,8 +156,10 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             vo.setAlias(String.format("、%s、", vo.getName()));
         }
 
+        String code = StringUtil.isBlank(vo.getCode()) ? generateCode() : vo.getCode();
+
         Wrapper<Product> checkWrapper = Wrappers.lambdaQuery(Product.class)
-                .eq(Product::getCode, vo.getCode()).eq(Product::getAvailable, Boolean.TRUE);
+                .eq(Product::getCode, code).eq(Product::getAvailable, Boolean.TRUE);
         if (getBaseMapper().selectCount(checkWrapper) > 0) {
             throw new DefaultClientException("编号重复，请重新输入！");
         }
@@ -166,7 +174,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
 
         Product data = new Product();
         data.setId(IdUtil.getId());
-        data.setCode(vo.getCode());
+        data.setCode(code);
         data.setName(vo.getName());
         if (StringUtil.isNotBlank(vo.getShortName())) {
             data.setShortName(vo.getShortName());
@@ -316,6 +324,16 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         }
 
         return data.getId();
+    }
+
+    @Override
+    public String generateCode() {
+        while (true) {
+            String code = generateCodeService.generate(PRODUCT_CODE_TYPE);
+            if (!existsProductCode(code)) {
+                return code;
+            }
+        }
     }
 
     private void handleRetailPrice(CreateProductVo vo, Product data) {

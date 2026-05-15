@@ -89,6 +89,14 @@ public class ProductController extends DefaultBaseController {
         return InvokeResultBuilder.success(result);
     }
 
+    @ApiOperation("生成商品编号")
+    @HasPermission({"base-data:product:info:add", "base-data:product:info:modify"})
+    @GetMapping("/generate/code")
+    public InvokeResult<String> generateCode() {
+
+        return InvokeResultBuilder.success(productService.generateCode());
+    }
+
     /**
      * 新增商品
      */

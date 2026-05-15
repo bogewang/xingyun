@@ -249,7 +249,8 @@ public class CustomerServiceImpl extends BaseMpServiceImpl<CustomerMapper, Custo
 
   }
 
-  private String generateCode() {
+  @Override
+  public String generateCode() {
 
     while (true) {
       String code = generateCodeService.generate(CUSTOMER_CODE_TYPE);
