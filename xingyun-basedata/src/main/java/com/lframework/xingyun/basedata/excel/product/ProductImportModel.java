@@ -8,7 +8,9 @@ import com.lframework.starter.web.core.components.excel.ExcelModel;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductCategory;
+import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
+import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -169,6 +171,11 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
         if (dto.getCategoryId() != null) {
             ProductCategory category = productCategoryService.findById(dto.getCategoryId());
             this.categoryName = category.getName();
+        }
+        if (dto.getDefaultSupplier() != null) {
+            SupplierService bean = ApplicationUtil.getBean(SupplierService.class);
+            Supplier supplier = bean.findById(dto.getDefaultSupplier());
+            this.defaultSupplier = supplier.getName();
         }
     }
 

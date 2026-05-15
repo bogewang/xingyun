@@ -23,6 +23,7 @@ import com.lframework.xingyun.basedata.events.DeleteProductEvent;
 import com.lframework.xingyun.basedata.excel.product.ProductImportModel;
 import com.lframework.xingyun.basedata.mappers.ProductMapper;
 import com.lframework.xingyun.basedata.service.product.*;
+import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.basedata.vo.product.brand.QueryProductBrandVo;
 import com.lframework.xingyun.basedata.vo.product.info.*;
 import com.lframework.xingyun.basedata.vo.product.property.realtion.CreateProductPropertyRelationVo;
@@ -66,6 +67,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
 
     @Autowired
     private ProductBrandService productBrandService;
+    @Autowired
+    private SupplierService supplierService;
 
     @Override
     public PageResult<Product> query(Integer pageIndex, Integer pageSize, QueryProductVo vo) {
@@ -596,6 +599,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         if (CollectionUtil.isEmpty(list)) {
             return CollectionUtil.emptyList();
         }
+        List<String> supplierNames = list.stream().map(ProductImportModel::getDefaultSupplier).collect(Collectors.toList());
+        Map<String, String> map = supplierService.queryByNames(supplierNames).stream().collect(Collectors.toMap(Supplier::getName, Supplier::getId, (a, b) -> b));
 
         List<Product> res = Lists.newArrayList();
         list.forEach(data -> {
@@ -610,6 +615,12 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             record.setSalePrice(data.getSalePrice() == null ? BigDecimal.ZERO : data.getSalePrice());
             record.setPurchasePrice(data.getPurchasePrice() == null ? BigDecimal.ZERO : data.getPurchasePrice());
             record.setRetailPrice(data.getRetailPrice() == null ? BigDecimal.ZERO : data.getRetailPrice());
+            if (StringUtil.isNotBlank(data.getDefaultSupplier())) {
+                if (!map.containsKey(data.getDefaultSupplier())) {
+                    throw new DefaultClientException(String.format("供应商%s不存在", data.getDefaultSupplier()));
+                }
+                record.setDefaultSupplier(map.get(data.getDefaultSupplier()));
+            }
             res.add(record);
 
             data.setId(record.getId());
