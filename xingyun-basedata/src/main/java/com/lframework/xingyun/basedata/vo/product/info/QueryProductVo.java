@@ -5,9 +5,10 @@ import com.lframework.starter.web.core.vo.BaseVo;
 import com.lframework.starter.web.core.vo.SortPageVo;
 import com.lframework.xingyun.basedata.enums.ProductType;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 @Data
 public class QueryProductVo extends SortPageVo implements BaseVo, Serializable {
@@ -73,4 +74,8 @@ public class QueryProductVo extends SortPageVo implements BaseVo, Serializable {
 	 */
 	@ApiModelProperty("创建截止时间")
 	private LocalDateTime endTime;
+	/**
+	 * 排序
+	 */
+	private String orderBy;
 }

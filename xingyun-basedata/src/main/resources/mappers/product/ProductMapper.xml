@@ -47,7 +47,12 @@
             </if>
             AND g.available = TRUE
         </where>
-        ORDER BY g.create_time desc
+        <if test="vo.orderBy != null">
+            ORDER BY #{orderBy} desc
+        </if>
+        <if test="vo.orderBy == null">
+            ORDER BY g.create_time desc
+        </if>
     </select>
 
     <select id="findById" resultType="com.lframework.xingyun.basedata.entity.Product">
