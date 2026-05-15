@@ -261,6 +261,8 @@
       open() {
         // 初始化表单数据
         this.initFormData();
+
+        this.onGenerateCode();
       },
       // 名称改变
       changeName(e) {
