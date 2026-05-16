@@ -214,10 +214,10 @@
                 >导出</a-button
               >
               <a-button
-                v-permission="['sale:out:export']"
+                v-permission="['wenshan:sale:out:saleexport']"
                 :icon="h(DownloadOutlined)"
                 @click="exportSales"
-                >销售导出</a-button
+                >销售单导出</a-button
               >
               <a-button
                 v-permission="['sale:out:query']"

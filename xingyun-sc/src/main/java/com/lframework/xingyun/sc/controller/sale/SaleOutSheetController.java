@@ -157,10 +157,10 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
-     * 销售导出
+     * 文山销售单导出
      */
-    @ApiOperation("销售导出")
-    @HasPermission({ "sale:out:export" })
+    @ApiOperation("文山销售单导出")
+    @HasPermission({ "wenshan:sale:out:saleexport" })
     @PostMapping("/export/sales")
     public void exportSales(@RequestBody @Valid QuerySaleOutSheetVo vo,
                             HttpServletResponse response) {
