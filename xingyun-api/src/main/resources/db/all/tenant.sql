@@ -6728,7 +6728,7 @@ CREATE TABLE `tbl_purchase_config`  (
 -- ----------------------------
 -- Records of tbl_purchase_config
 -- ----------------------------
-INSERT INTO `tbl_purchase_config` VALUES ('1', 0, NULL, NULL, 1, 1, 1, 1);
+INSERT INTO `tbl_purchase_config` VALUES ('1', 0, NULL, NULL, 0, 0, 1, 1);
 
 -- ----------------------------
 -- Table structure for tbl_purchase_order

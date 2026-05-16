@@ -168,7 +168,7 @@ public class SaleOutSheetController extends DefaultBaseController {
             saleOutSheetService.exportSales(vo, response);
         } catch (Exception e) {
             log.error("销售导出失败", e);
-            throw new DefaultSysException("销售导出失败！");
+            throw new DefaultSysException(e.getMessage());
         }
     }
 

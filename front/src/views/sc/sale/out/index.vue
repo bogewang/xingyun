@@ -481,13 +481,13 @@
       visibleTableColumn() {
         return this.tableColumn.filter((column) => {
           if (column.field === 'totalProfit') {
-            return this.hasPermission('sale:out:approve', false);
+            return this.hasPermission('sale:out:profit', false);
           }
           return true;
         });
       },
       canViewProfit() {
-        return this.hasPermission('sale:out:approve', false);
+        return this.hasPermission('sale:out:profit', false);
       },
     },
     created() {},
