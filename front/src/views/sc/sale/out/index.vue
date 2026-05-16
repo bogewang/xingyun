@@ -456,7 +456,7 @@
           { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
           { field: 'approveBy', title: '审核人', width: 100 },
           { field: 'description', title: '备注', width: 200 },
-          { title: '操作', width: 200, fixed: 'right', slots: { default: 'action_default' } },
+          { title: '操作', width: 280, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -792,6 +792,21 @@
             this.loading = false;
           });
       },
+      exportDetails(row) {
+        this.loading = true;
+        api
+          .exportDetail({
+            pageIndex: 1,
+            pageSize: 2147483647,
+            idList: [row.id],
+          })
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
       exportSales() {
         const records = this.$refs.grid.getCheckboxRecords();
         if (isEmpty(records)) {
@@ -869,6 +884,12 @@
             label: '查看',
             onClick: () => {
               this.viewDetail(row.id);
+            },
+          },
+          {
+            label: '导出明细',
+            onClick: () => {
+              this.exportDetails(row);
             },
           },
           {

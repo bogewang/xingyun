@@ -430,7 +430,7 @@
             width: 180,
             slots: { default: 'purchaseOrderCode_default' },
           },
-          { title: '操作', width: 200, fixed: 'right', slots: { default: 'action_default' } },
+          { title: '操作', width: 300, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -511,7 +511,10 @@
       },
       getDefaultOrderDateRange() {
         const endDate = moment().add(2, 'd');
-        return [endDate.clone().subtract(1, 'M').format('YYYY-MM-DD'), endDate.format('YYYY-MM-DD')];
+        return [
+          endDate.clone().subtract(1, 'M').format('YYYY-MM-DD'),
+          endDate.format('YYYY-MM-DD'),
+        ];
       },
       resetSearchForm() {
         this.searchFormData = {
@@ -745,6 +748,21 @@
             this.loading = false;
           });
       },
+      exportDetails(row) {
+        this.loading = true;
+        api
+          .exportDetail({
+            pageIndex: 1,
+            pageSize: 2147483647,
+            idList: [row.id],
+          })
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
       viewPurchaseOrderDetail(id) {
         this.purchaseOrderId = id;
         this.$refs.viewPurchaseOrderDetailDialog.openDialog();
@@ -759,6 +777,12 @@
             label: '查看',
             onClick: () => {
               this.viewDetail(row.id);
+            },
+          },
+          {
+            label: '导出明细',
+            onClick: () => {
+              this.exportDetails(row);
             },
           },
           {
