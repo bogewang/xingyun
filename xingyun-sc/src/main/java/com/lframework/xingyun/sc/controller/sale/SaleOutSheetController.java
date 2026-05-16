@@ -1,7 +1,6 @@
 package com.lframework.xingyun.sc.controller.sale;
 
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
-import com.lframework.starter.common.exceptions.impl.DefaultSysException;
 import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.mq.core.utils.ExportTaskUtil;
 import com.lframework.starter.web.core.annotations.security.HasPermission;
@@ -21,10 +20,10 @@ import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetWithReturnBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetWithReturnBo;
 import com.lframework.xingyun.sc.converter.SaleOutSheetConverter;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
-import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
+import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetDetailExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
@@ -126,7 +125,7 @@ public class SaleOutSheetController extends DefaultBaseController {
             saleOutSheetService.marketBuySummary(vo);
         } catch (Exception e) {
             log.error("导出买菜汇总失败", e);
-            throw new DefaultSysException("导出买菜汇总失败！");
+            throw new DefaultClientException(e.getMessage());
         }
     }
 
@@ -166,9 +165,11 @@ public class SaleOutSheetController extends DefaultBaseController {
                             HttpServletResponse response) {
         try {
             saleOutSheetService.exportSales(vo, response);
+        } catch (DefaultClientException e) {
+            throw e;
         } catch (Exception e) {
             log.error("销售导出失败", e);
-            throw new DefaultSysException(e.getMessage());
+            throw new DefaultClientException(e.getMessage());
         }
     }
 
