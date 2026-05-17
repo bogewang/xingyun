@@ -32,6 +32,8 @@
   import * as api from '@/api/base-data/print-template';
   // 导入统一成功提示方法。
   import { createSuccess } from '@/hooks/web/msg';
+  import { normalizeDemoData } from '@/components/PrintDesigner/src/printUtils';
+  import PrintDesigner from '@/components/PrintDesigner';
 
   /**
    * 创建新的空模板结构。
@@ -56,6 +58,7 @@
   export default defineComponent({
     // 定义组件名称，便于调试与组件树识别。
     name: 'PrintTemplateSetting',
+    components: { PrintDesigner },
     props: {
       // 接收当前模板主键。
       id: {
@@ -207,18 +210,19 @@
        *
        * 异常:
        * 无显式抛出异常；接口异常由 Promise 链自行处理。
+       * @param {Object|Array} data - 设计器保存事件返回的示例数据。
        */
-      submit(templateJson) {
+      submit(templateJson, data) {
         // 开启加载状态，防止重复提交。
         this.loading = true;
-        // 将模板对象序列化为字符串，匹配后端字段约定。
-        this.formData.templateJson = JSON.stringify(templateJson || {});
+        const demoData = normalizeDemoData(data);
         api
           .updateSetting({
             // 传入模板主键，定位需要更新的记录。
             id: this.formData.id,
             // 传入序列化后的模板 JSON 内容。
-            templateJson: this.formData.templateJson,
+            templateJson: JSON.stringify(templateJson || {}),
+            demoData: JSON.stringify(demoData),
           })
           .then(() => {
             // 提示用户模板保存成功。
@@ -294,7 +298,7 @@
             // 保留模板组件列表结果，便于后续页面能力扩展。
             this.widgets = (templateComp || []).map((item) => item.compJson);
             // 回填示例数据，供新设计器预览使用。
-            this.demoData = this.formData.demoData;
+            this.demoData = normalizeDemoData(this.formData.demoData);
           })
           .finally(() => {
             // 结束加载状态。

@@ -8,4 +8,9 @@ export interface UpdatePrintTemplateSettingVo {
    * JSON配置
    */
   templateJson: string;
+
+  /**
+   * 示例数据
+   */
+  demoData?: string;
 }

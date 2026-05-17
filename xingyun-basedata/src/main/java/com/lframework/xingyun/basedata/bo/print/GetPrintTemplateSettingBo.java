@@ -1,16 +1,16 @@
 package com.lframework.xingyun.basedata.bo.print;
 
-import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.starter.web.core.utils.JsonUtil;
 import com.lframework.xingyun.basedata.entity.PrintTemplate;
 import com.lframework.xingyun.basedata.service.print.PrintTemplateCompService;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import lombok.Data;
 
 @Data
 public class GetPrintTemplateSettingBo extends BaseBo<PrintTemplate> {
@@ -31,7 +31,7 @@ public class GetPrintTemplateSettingBo extends BaseBo<PrintTemplate> {
    * 示例数据
    */
   @ApiModelProperty("示例数据")
-  private Map<String, Object> demoData;
+  private String demoData;
 
   /**
    * 附加组件配置
@@ -58,9 +58,7 @@ public class GetPrintTemplateSettingBo extends BaseBo<PrintTemplate> {
   protected void afterInit(PrintTemplate dto) {
     this.templateJson = JsonUtil.parseMap(dto.getTemplateJson(), String.class, Object.class);
 
-    if (!StringUtil.isBlank(dto.getDemoData())) {
-      this.demoData = JsonUtil.parseMap(dto.getDemoData(), String.class, Object.class);
-    }
+    this.demoData = dto.getDemoData();
 
     PrintTemplateCompService printTemplateCompService = ApplicationUtil.getBean(
         PrintTemplateCompService.class);

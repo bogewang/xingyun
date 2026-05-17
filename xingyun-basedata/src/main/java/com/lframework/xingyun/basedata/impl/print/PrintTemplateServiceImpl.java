@@ -5,11 +5,11 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.pagehelper.PageInfo;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.Assert;
-import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
+import com.lframework.starter.web.core.annotations.oplog.OpLog;
 import com.lframework.starter.web.core.components.resp.PageResult;
+import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
 import com.lframework.starter.web.core.utils.PageHelperUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
-import com.lframework.starter.web.core.utils.IdUtil;
 import com.lframework.xingyun.basedata.entity.PrintTemplate;
 import com.lframework.xingyun.basedata.entity.PrintTemplateComp;
 import com.lframework.xingyun.basedata.enums.BaseDataOpLogType;
@@ -22,7 +22,6 @@ import com.lframework.xingyun.basedata.vo.print.QueryPrintTemplateVo;
 import com.lframework.xingyun.basedata.vo.print.UpdatePrintTemplateDemoDataVo;
 import com.lframework.xingyun.basedata.vo.print.UpdatePrintTemplateSettingVo;
 import com.lframework.xingyun.basedata.vo.print.UpdatePrintTemplateVo;
-import com.lframework.starter.web.core.annotations.oplog.OpLog;
 import java.io.Serializable;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -163,7 +162,8 @@ public class PrintTemplateServiceImpl extends
 
     Wrapper<PrintTemplate> updateWrapper = Wrappers.lambdaUpdate(PrintTemplate.class)
         .eq(PrintTemplate::getId, vo.getId())
-        .set(PrintTemplate::getTemplateJson, vo.getTemplateJson());
+        .set(PrintTemplate::getTemplateJson, vo.getTemplateJson())
+        .set(PrintTemplate::getDemoData, vo.getDemoData());
 
     getBaseMapper().update(updateWrapper);
   }

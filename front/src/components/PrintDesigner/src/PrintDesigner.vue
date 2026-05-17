@@ -15,8 +15,10 @@
   import { FullDesigner, hiprint } from 'vg-print';
   import {
     createEmptyTemplate,
+    normalizeDemoData,
     normalizePrintData,
     normalizeTemplate,
+    type PrintDemoData,
     type PrintTemplateJson,
   } from './printUtils';
 
@@ -26,6 +28,7 @@
 
   type SavePayload = {
     template?: PrintTemplateJson;
+    data?: PrintDemoData;
   };
 
   type DesignerTemplateItem = {
@@ -33,7 +36,7 @@
     name: string;
     desc: string;
     template: PrintTemplateJson;
-    testData?: unknown[] | Record<string, unknown>;
+    testData?: PrintDemoData;
   };
 
   /**
@@ -106,7 +109,7 @@
         default: () => createEmptyTemplate(),
       },
       demoData: {
-        type: [Array, Object],
+        type: [Array, Object, String],
         default: () => ({}),
       },
     },
@@ -122,7 +125,11 @@
        * 接收设计器保存事件，并向业务页面输出规范化模板。
        */
       function handleSave(payload?: SavePayload) {
-        emit('save', payload?.template || createEmptyTemplate());
+        emit(
+          'save',
+          payload?.template || createEmptyTemplate(),
+          normalizeDemoData(payload?.data ?? props.demoData),
+        );
       }
 
       /**
@@ -194,13 +201,14 @@
 
           try {
             const content = await file.text();
-            const parsedTemplate = normalizeTemplate(JSON.parse(content));
+            const parsedContent = JSON.parse(content);
 
-            if (!Array.isArray((parsedTemplate as { panels?: unknown[] }).panels)) {
+            if (!Array.isArray((parsedContent as { panels?: unknown[] }).panels)) {
               designer.$message?.warning?.('选中的文件不是有效的模板文件');
               return;
             }
 
+            const parsedTemplate = normalizeTemplate(parsedContent);
             const templateItem: DesignerTemplateItem = {
               tempId: `imported:${file.name}`,
               name: buildImportedTemplateName(file.name),

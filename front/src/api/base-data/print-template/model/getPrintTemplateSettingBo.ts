@@ -12,7 +12,7 @@ export interface GetPrintTemplateSettingBo {
   /**
    * 示例数据
    */
-  demoData: object;
+  demoData: string;
 
   /**
    * 附加组件配置

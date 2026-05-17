@@ -26,7 +26,8 @@
   import { defineComponent } from 'vue';
   import * as api from '@/api/base-data/print-template';
   import { CodeEditor } from '@/components/CodeEditor';
-  import { createSuccess } from '@/hooks/web/msg';
+  import { createError, createSuccess } from '@/hooks/web/msg';
+  import { stringifyDemoData } from '@/components/PrintDesigner/src/printUtils';
 
   export default defineComponent({
     components: {
@@ -77,17 +78,30 @@
         this.loading = true;
         try {
           const { demoData } = await api.getSetting(this.id);
-          this.formData = JSON.stringify(demoData || {});
+          this.formData = stringifyDemoData(demoData);
         } finally {
           this.loading = false;
         }
       },
       submit() {
+        let demoData;
+        try {
+          demoData = JSON.parse(this.formData || '{}');
+        } catch {
+          createError('示例数据不是有效的 JSON！');
+          return;
+        }
+
+        if (!demoData || typeof demoData !== 'object') {
+          createError('示例数据必须是 JSON 对象或数组！');
+          return;
+        }
+
         this.loading = true;
         api
           .updateDemoData({
             id: this.id,
-            demoData: this.formData,
+            demoData: JSON.stringify(demoData),
           })
           .then(() => {
             createSuccess('保存成功！');
