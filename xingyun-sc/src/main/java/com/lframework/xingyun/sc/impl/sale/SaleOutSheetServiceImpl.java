@@ -188,7 +188,7 @@ public class SaleOutSheetServiceImpl extends
             List<PrintSaleTagBo> collect = map.keySet().stream()
                     .map(productId -> {
                         PrintSaleTagBo bo = new PrintSaleTagBo();
-                        bo.setCustomerSimpleName(customer.getNickName());
+                        bo.setCustomerSimpleName(customer.getNickName() == null ? customer.getName() : customer.getNickName());
                         bo.setProductName(productMap.get(productId).getName());
 
                         List<SaleOutSheetDetail> outDetails = map.get(productId);
