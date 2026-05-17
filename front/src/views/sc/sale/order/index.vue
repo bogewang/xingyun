@@ -74,7 +74,7 @@
                     >
                   </a-select>
                 </j-form-item>
-<!--                <j-form-item label="销售员">
+                <!--                <j-form-item label="销售员">
                   <user-selector v-model:value="searchFormData.saler" />
                 </j-form-item>-->
               </j-form>
@@ -120,7 +120,7 @@
                 v-permission="['sale:order:query']"
                 :icon="h(PrinterOutlined)"
                 @click="tagPrint"
-              >标签打印</a-button
+                >标签打印</a-button
               >
             </a-space>
           </template>
@@ -184,7 +184,6 @@
   import Detail from './detail.vue';
   import ApproveRefuse from '@/components/ApproveRefuse';
   import moment from 'moment';
-  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
   import UserSelector from '@/components/Selector/UserSelector.vue';
   import {
     SearchOutlined,
@@ -198,18 +197,13 @@
   import * as api from '@/api/sc/sale/order';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { printMix } from '@/mixins/print.ts';
-  import {
-    formatDate,
-    buildSortPageVo,
-    isEmpty,
-  } from '@/utils/utils';
+  import { formatDate, buildSortPageVo, isEmpty } from '@/utils/utils';
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
   import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
   import { SALE_ORDER_STATUS } from '@/enums/biz/saleOrderStatus';
   import { PRINT_TYPE } from '@/enums/biz/printType';
   import BatchHandler from '@/components/BatchHandler';
   import PrintDialog from '/@/components/PrintDialog';
-  import {tagPrint} from "@/api/sc/sale/order";
 
   export default defineComponent({
     name: 'SaleOrder',
@@ -217,7 +211,6 @@
       Detail,
       ApproveRefuse,
       CustomerSelector,
-      StoreCenterSelector,
       UserSelector,
       BatchHandler,
       OrderPrintDialog: PrintDialog,
@@ -453,9 +446,18 @@
         }
       },
       async tagPrint() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要打印标签的销售单据！');
+          return;
+        }
+
         this.loading = true;
         try {
-          const res = await api.tagPrint(this.buildQueryParams({}, {}));
+          const res = await api.tagPrint({
+            ...this.buildQueryParams({}, {}),
+            idList: records.map((item) => item.id),
+          });
           // 将res组装成模板定义和打印数据的格式，然后调用打印预览组件进行预览
           await this.vgPrintPreview(PRINT_TYPE.SALE_TAG.code, res);
         } finally {

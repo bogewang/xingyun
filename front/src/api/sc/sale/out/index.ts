@@ -18,6 +18,10 @@ import { PrintSaleTagBo } from '@/api/sc/sale/order/model/PrintSaleTagBo';
 const baseUrl = '/sale/out/sheet';
 const region = 'cloud-api';
 
+type TagPrintParams = QuerySaleOutSheetVo & {
+  idList?: string[];
+};
+
 /**
  * 打印
  */
@@ -53,11 +57,11 @@ export function query(params: QuerySaleOutSheetVo): Promise<PageResult<QuerySale
 /**
  * 标签打印
  */
-export function tagPrint(params: QuerySaleOutSheetVo): Promise<PrintSaleTagBo[]> {
-  return defHttp.get<PrintSaleTagBo[]>(
+export function tagPrint(params: TagPrintParams): Promise<PrintSaleTagBo[]> {
+  return defHttp.post<PrintSaleTagBo[]>(
     {
       url: baseUrl + '/tagPrint',
-      params,
+      data: params,
     },
     {
       region,

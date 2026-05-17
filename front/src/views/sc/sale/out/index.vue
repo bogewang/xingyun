@@ -857,9 +857,17 @@
         }
       },
       async tagPrint() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要打印标签的销售出库单！');
+          return;
+        }
         this.loading = true;
         try {
-          const res = await api.tagPrint(this.buildQueryParams({}, {}));
+          const res = await api.tagPrint({
+            ...this.buildQueryParams({}, {}),
+            idList: records.map((item) => item.id),
+          });
           await this.vgPrintPreview(PRINT_TYPE.SALE_TAG.code, res);
         } finally {
           this.loading = false;

@@ -167,8 +167,8 @@
       pdfOptions: {
         scale: 3,
         pixelRatio: 3, // 图片清晰度/性能权衡（也可用 scale）
-        quality: 1,  // 图片质量 0-1 默认 0.8
-      }
+        quality: 1, // 图片质量 0-1 默认 0.8
+      },
     });
   }
 

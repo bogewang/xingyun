@@ -1,5 +1,5 @@
 import { defHttp } from '/@/utils/http/axios';
-import {ContentTypeEnum, ResponseEnum} from '@/enums/httpEnum';
+import { ContentTypeEnum, ResponseEnum } from '@/enums/httpEnum';
 import { QuerySaleOrderVo } from '@/api/sc/sale/order/model/querySaleOrderVo';
 import { PageResult } from '@/api/model/pageResult';
 import { QuerySaleOrderBo } from '@/api/sc/sale/order/model/querySaleOrderBo';
@@ -14,10 +14,14 @@ import { QuerySaleOrderWithOutBo } from '@/api/sc/sale/order/model/querySaleOrde
 import { QuerySaleOrderWithOutVo } from '@/api/sc/sale/order/model/querySaleOrderWithOutVo';
 import { QuerySaleProductVo } from '@/api/sc/sale/order/model/querySaleProductVo';
 import { PrintSaleOrderBo } from '@/api/sc/sale/order/model/printSaleOrderBo';
-import {PrintSaleTagBo} from "@/api/sc/sale/order/model/PrintSaleTagBo";
+import { PrintSaleTagBo } from '@/api/sc/sale/order/model/PrintSaleTagBo';
 
 const baseUrl = '/sale/order';
 const region = 'cloud-api';
+
+type TagPrintParams = QuerySaleOrderVo & {
+  idList?: string[];
+};
 
 /**
  * 打印
@@ -54,11 +58,11 @@ export function query(params: QuerySaleOrderVo): Promise<PageResult<QuerySaleOrd
 /**
  * 标签打印
  */
-export function tagPrint(params: QuerySaleOrderVo): Promise<PrintSaleTagBo[]> {
-  return defHttp.get<PrintSaleTagBo[]>(
+export function tagPrint(params: TagPrintParams): Promise<PrintSaleTagBo[]> {
+  return defHttp.post<PrintSaleTagBo[]>(
     {
       url: baseUrl + '/tagPrint',
-      params,
+      data: params,
     },
     {
       region,
@@ -82,7 +86,6 @@ export function exportList(data: QuerySaleOrderVo): Promise<void> {
     },
   );
 }
-
 
 /**
  * 导出订单详情
@@ -352,7 +355,10 @@ export function batchDelete(id: string, showError: boolean = false): Promise<voi
 /**
  * 根据关键字查询商品
  */
-export function searchSaleProducts(scId: string | undefined, condition: string): Promise<SaleProductBo[]> {
+export function searchSaleProducts(
+  scId: string | undefined,
+  condition: string,
+): Promise<SaleProductBo[]> {
   return defHttp.get<SaleProductBo[]>(
     {
       url: baseUrl + '/product/search',
@@ -370,8 +376,9 @@ export function searchSaleProducts(scId: string | undefined, condition: string):
 /**
  * 查询可销售商品列表
  */
-export function querySaleProductList(params: QuerySaleProductVo,
-                                     ): Promise<PageResult<SaleProductBo>> {
+export function querySaleProductList(
+  params: QuerySaleProductVo,
+): Promise<PageResult<SaleProductBo>> {
   return defHttp.get<PageResult<SaleProductBo>>(
     {
       url: baseUrl + '/product/list',

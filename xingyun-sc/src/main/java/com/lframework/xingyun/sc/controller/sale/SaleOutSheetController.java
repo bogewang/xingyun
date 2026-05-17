@@ -106,8 +106,8 @@ public class SaleOutSheetController extends DefaultBaseController {
      */
     @ApiOperation("标签打印")
     @HasPermission({ "sale:out:query" })
-    @GetMapping("/tagPrint")
-    public InvokeResult<List<PrintSaleTagBo>> tagPrint(@Valid QuerySaleOutSheetVo vo) {
+    @PostMapping("/tagPrint")
+    public InvokeResult<List<PrintSaleTagBo>> tagPrint(@RequestBody @Valid QuerySaleOutSheetVo vo) {
 
         List<PrintSaleTagBo> data = saleOutSheetService.tagPrint(vo);
 
