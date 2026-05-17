@@ -908,7 +908,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             BigDecimal defaultPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(product.getId());
             data.setLatestPurchasePrice(defaultPurchasePrice);
             if (data.getPurchasePrice() == null) {
-                data.setPurchasePrice(defaultPurchasePrice);
+                data.setPurchasePrice(defaultPurchasePrice == null ? BigDecimal.ZERO : defaultPurchasePrice);
             }
             // if (data.getPurchasePrice() == null) {
             //     throw new DefaultClientException("第" + rowIndex + "行商品未设置采购价，请填写“单价”或先维护商品采购价");

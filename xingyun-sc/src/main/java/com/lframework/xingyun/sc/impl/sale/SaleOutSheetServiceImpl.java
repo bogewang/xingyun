@@ -1376,7 +1376,7 @@ public class SaleOutSheetServiceImpl extends
             data.setSalePrice(defaultSalePrice);
 
             if (data.getTaxPrice() == null) {
-                data.setTaxPrice(defaultSalePrice);
+                data.setTaxPrice(defaultSalePrice == null ? BigDecimal.ZERO : defaultSalePrice);
             }
             // if (data.getTaxPrice() == null) {
             //     throw new DefaultClientException("第" + rowIndex + "行商品未设置销售价，请填写“单价”或先维护商品销售价");
