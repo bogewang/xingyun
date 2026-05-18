@@ -74,9 +74,9 @@ export const useUserStore = defineStore({
       this.sessionTimeout = flag;
     },
     resetState() {
-      this.userInfo = null;
-      this.token = '';
-      this.roleList = [];
+      this.setUserInfo(null);
+      this.setToken(undefined);
+      this.setRoleList([]);
       this.sessionTimeout = false;
     },
     /**

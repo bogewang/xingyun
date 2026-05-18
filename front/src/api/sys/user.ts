@@ -27,6 +27,7 @@ export function loginApi(params: LoginParams): Promise<LoginResultModel> {
     {
       contentType: ContentTypeEnum.FORM_URLENCODED,
       region,
+      withToken: false,
     },
   );
 }
@@ -49,7 +50,7 @@ export function getCaptchaRequireApi(tenantName: string, username: string, tenan
         username,
       },
     },
-    { region, contentType: ContentTypeEnum.FORM_URLENCODED },
+    { region, contentType: ContentTypeEnum.FORM_URLENCODED, withToken: false },
   );
 }
 
@@ -58,7 +59,7 @@ export function getTenantRequireApi() {
     {
       url: Api.TenantRequire,
     },
-    { region },
+    { region, withToken: false },
   );
 }
 

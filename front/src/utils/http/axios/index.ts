@@ -24,12 +24,7 @@ const defaultErrorMessageMode = 'message';
 function resolveResponseErrorMessage(data?: Result) {
   const payload = (data || {}) as Record<string, any>;
 
-  return (
-    payload.msg ||
-    payload.message ||
-    payload.error?.message ||
-    '网络请求错误，请稍后重试！'
-  );
+  return payload.msg || payload.message || payload.error?.message || '网络请求错误，请稍后重试！';
 }
 
 /**
@@ -159,6 +154,13 @@ const transform: AxiosTransform = {
    */
   requestInterceptors: (config) => {
     // 请求之前处理config
+    const requestOptions = (config as unknown as { requestOptions?: RequestOptions })
+      .requestOptions;
+    if (requestOptions?.withToken === false) {
+      delete config.headers['X-Auth-Token'];
+      return config;
+    }
+
     const token = getToken();
     config.headers['X-Auth-Token'] = token;
     return config;
