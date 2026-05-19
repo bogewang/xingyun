@@ -461,10 +461,10 @@
                 <if test="vo.hasCostPrice != null">
                     <choose>
                         <when test="vo.hasCostPrice">
-                            AND IFNULL(d.cost_price, 0) &gt; 0
+                            AND (d.manual_input_cost = 1 OR IFNULL(d.cost_price, 0) &gt; 0)
                         </when>
                         <otherwise>
-                            AND IFNULL(d.cost_price, 0) &lt;= 0
+                            AND IFNULL(d.manual_input_cost, 0) = 0 AND IFNULL(d.cost_price, 0) &lt;= 0
                         </otherwise>
                     </choose>
                 </if>

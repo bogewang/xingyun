@@ -378,11 +378,7 @@
         this.$refs.grid.commitProxy('reload');
       },
       getDefaultOrderDateRange() {
-        const endDate = moment().add(2, 'd');
-        return [
-          endDate.clone().subtract(1, 'M').format('YYYY-MM-DD'),
-          endDate.format('YYYY-MM-DD'),
-        ];
+        return [moment().startOf('month').format('YYYY-MM-DD'), moment().format('YYYY-MM-DD')];
       },
       resetSearchForm() {
         this.searchFormData = {

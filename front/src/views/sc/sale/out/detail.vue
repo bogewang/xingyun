@@ -192,8 +192,7 @@
         getNumber,
         mul,
         hasCostPrice: (row) =>
-          row && row.costPrice !== null && row.costPrice !== undefined && row.costPrice !== ''
-        && row.costPrice > 0,
+          row && row.costPrice !== null && row.costPrice !== undefined && row.costPrice !== '',
         SALE_OUT_SHEET_STATUS,
       };
     },

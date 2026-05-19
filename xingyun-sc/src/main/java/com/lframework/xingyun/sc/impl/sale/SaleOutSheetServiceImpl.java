@@ -1142,7 +1142,7 @@ public class SaleOutSheetServiceImpl extends
             detail.setSettleStatus(this.getInitSettleStatus(customer));
             detail.setTaxAmount(
                     NumberUtil.getNumber(NumberUtil.mul(detail.getTaxPrice(), detail.getOrderNum()), 2));
-            boolean hasInputCost = productVo.getCostPrice() != null && productVo.getCostPrice().doubleValue() > 0;
+            boolean hasInputCost = productVo.getCostPrice() != null;
             detail.setManualInputCost(hasInputCost);
             detail.setCostPrice(productVo.getCostPrice());
             if (Boolean.TRUE.equals(detail.getManualInputCost())) {
