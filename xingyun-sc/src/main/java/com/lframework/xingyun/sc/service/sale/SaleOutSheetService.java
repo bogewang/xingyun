@@ -3,6 +3,7 @@ package com.lframework.xingyun.sc.service.sale;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.service.BaseMpService;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
+import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
@@ -37,6 +38,14 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
    * @return
    */
   List<SaleOutSheet> query(QuerySaleOutSheetVo vo);
+
+  /**
+   * 查询销售利润汇总
+   *
+   * @param vo
+   * @return
+   */
+  SaleOutSheetProfitSummaryBo queryProfitSummary(QuerySaleOutSheetVo vo);
 
   PageResult<QuerySaleOutSheetDetailDto> queryDetail(Integer pageIndex, Integer pageSize,
       QuerySaleOutSheetVo vo);

@@ -5,6 +5,7 @@ import { GetPaymentDateBo } from '@/api/sc/purchase/receive/model/getPaymentDate
 import { QuerySaleOutSheetBo } from '@/api/sc/sale/out/model/querySaleOutSheetBo';
 import { QuerySaleOutSheetDetailBo } from '@/api/sc/sale/out/model/querySaleOutSheetDetailBo';
 import { QuerySaleOutSheetVo } from '@/api/sc/sale/out/model/querySaleOutSheetVo';
+import { SaleOutSheetProfitSummaryBo } from '@/api/sc/sale/out/model/saleOutSheetProfitSummaryBo';
 import { GetSaleOutSheetBo } from '@/api/sc/sale/out/model/getSaleOutSheetBo';
 import { SaleOutSheetWithReturnBo } from '@/api/sc/sale/out/model/saleOutSheetWithReturnBo';
 import { QuerySaleOutSheetWithReturnVo } from '@/api/sc/sale/out/model/querySaleOutSheetWithReturnVo';
@@ -61,6 +62,38 @@ export function queryDetail(
   return defHttp.get<PageResult<QuerySaleOutSheetDetailBo>>(
     {
       url: baseUrl + '/query/detail',
+      params,
+    },
+    {
+      region,
+    },
+  );
+}
+
+/**
+ * 销售利润汇总
+ */
+export function queryProfitSummary(
+  params: QuerySaleOutSheetVo,
+): Promise<SaleOutSheetProfitSummaryBo> {
+  return defHttp.get<SaleOutSheetProfitSummaryBo>(
+    {
+      url: baseUrl + '/profit/summary',
+      params,
+    },
+    {
+      region,
+    },
+  );
+}
+
+/**
+ * 销售利润列表
+ */
+export function queryProfit(params: QuerySaleOutSheetVo): Promise<PageResult<QuerySaleOutSheetBo>> {
+  return defHttp.get<PageResult<QuerySaleOutSheetBo>>(
+    {
+      url: baseUrl + '/profit/query',
       params,
     },
     {
@@ -129,6 +162,22 @@ export function exportDetail(data: QuerySaleOutSheetVo): Promise<void> {
     {
       region,
       contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/**
+ * 销售利润（按单据）导出
+ */
+export function exportProfit(data: QuerySaleOutSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/profit/export',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.FORM_URLENCODED,
     },
   );
 }

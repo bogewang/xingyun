@@ -456,6 +456,7 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
       this.outNum = dto.getOrderNum();
       this.taxPrice = dto.getTaxPrice();
       this.oriPrice = dto.getOriPrice();
+      this.manualInputCost = dto.getManualInputCost();
 
       SaleOrderService saleOrderService = ApplicationUtil.getBean(SaleOrderService.class);
       SaleProductDto product = saleOrderService.getSaleById(dto.getProductId());

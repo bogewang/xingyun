@@ -37,6 +37,7 @@ import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.basedata.vo.customer.QueryCustomerVo;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
+import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo;
 import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
@@ -57,6 +58,7 @@ import com.lframework.xingyun.sc.service.sale.*;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import com.lframework.xingyun.sc.vo.sale.out.*;
 import com.lframework.xingyun.sc.vo.stock.SubProductStockVo;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +77,7 @@ import java.util.stream.Collectors;
 import static com.lframework.xingyun.sc.impl.purchase.ReceiveSheetServiceImpl.normalizeImportOrderDate;
 
 @Service
+@Slf4j
 public class SaleOutSheetServiceImpl extends
         BaseMpServiceImpl<SaleOutSheetMapper, SaleOutSheet> implements SaleOutSheetService {
 
@@ -151,6 +154,12 @@ public class SaleOutSheetServiceImpl extends
     public List<SaleOutSheet> query(QuerySaleOutSheetVo vo) {
 
         return getBaseMapper().query(vo);
+    }
+
+    @Override
+    public SaleOutSheetProfitSummaryBo queryProfitSummary(QuerySaleOutSheetVo vo) {
+
+        return getBaseMapper().queryProfitSummary(vo);
     }
 
     @Override
@@ -1417,6 +1426,7 @@ public class SaleOutSheetServiceImpl extends
     }
 
     private void refreshCostPrice(String orderId, Boolean manualFillAllCost, boolean overrideFillAllCost) {
+        log.info("refreshCostPrice start, orderId: {}, manualFillAllCost: {}, overrideFillAllCost: {}", orderId, manualFillAllCost, overrideFillAllCost);
         SaleOutSheet saleOutSheet = getBaseMapper().selectById(orderId);
         if (saleOutSheet == null) {
             return;
@@ -1471,11 +1481,7 @@ public class SaleOutSheetServiceImpl extends
             totalCostAmount = NumberUtil.add(totalCostAmount, detailCostAmount);
         }
 
-        // 所有成本都有了，再计算利润，不然利润偏高；
-        BigDecimal totalProfit = null;
-        if (fillAllCost) {
-            totalProfit = NumberUtil.getNumber(NumberUtil.sub(saleOutSheet.getTotalAmount(), totalCostAmount), 6);
-        }
+        BigDecimal totalProfit = NumberUtil.getNumber(NumberUtil.sub(saleOutSheet.getTotalAmount(), totalCostAmount), 6);
 
         Boolean finalFillAllCost = overrideFillAllCost ? manualFillAllCost : fillAllCost;
 
@@ -1485,6 +1491,7 @@ public class SaleOutSheetServiceImpl extends
                 .set(SaleOutSheet::getFillAllCost, finalFillAllCost)
                 .eq(SaleOutSheet::getId, orderId);
         this.update(updateWrapper);
+        log.info("refreshCostPrice end, orderId: {}", orderId);
     }
 
     /**

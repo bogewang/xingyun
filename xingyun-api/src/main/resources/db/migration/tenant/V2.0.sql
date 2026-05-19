@@ -29,7 +29,6 @@ ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `total_profit` decimal(24,6) 
 ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `total_cost` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '成本单价';
 ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `total_profit` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '总利润';
 ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `total_profit` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '总利润';
-ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `cost_price` decimal(24,6)  NULL DEFAULT '0.000000' COMMENT '成本单价';
 
 -- 仓库非必填
 ALTER TABLE tbl_sale_out_sheet modify `sc_id` varchar(32) NULL COMMENT '仓库ID';
@@ -90,4 +89,8 @@ INSERT INTO `base_data_product_category` (`id`, `code`, `name`, `parent_id`, `av
 INSERT INTO `base_data_product_category` (`id`, `code`, `name`, `parent_id`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('2055257804960305152', 'SPFL1024', '牛肉', '2055106271056629777', 1, '', '王波', '2055100001188712448', '2026-05-15 20:03:40', '王波', '2055100001188712448', '2026-05-15 20:03:40');
 INSERT INTO `base_data_product_category` (`id`, `code`, `name`, `parent_id`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('2055258065732767744', 'SPFL1025', '鸡鸭肉', '2055106271056629777', 1, '', '王波', '2055100001188712448', '2026-05-15 20:04:42', '王波', '2055100001188712448', '2026-05-15 20:04:42');
 
-
+-- 0519
+delete from sys_menu where id in ('6000', '6000001', '6000001001');
+INSERT INTO `sys_menu` (`id`, `code`, `name`, `title`, `icon`, `component_type`, `component`, `request_param`, `parent_id`, `sys_module_id`, `path`, `no_cache`, `display`, `hidden`, `permission`, `is_special`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('6000', '6000', 'Report', '报表', 'ant-design:bar-chart-outlined', NULL, '', NULL, NULL, '17', '/report', 0, 0, 0, '', 1, 1, '', '系统管理员', '1', now(), '系统管理员', '1', now());
+INSERT INTO `sys_menu` (`id`, `code`, `name`, `title`, `icon`, `component_type`, `component`, `request_param`, `parent_id`, `sys_module_id`, `path`, `no_cache`, `display`, `hidden`, `permission`, `is_special`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('6000001', '6000001', 'SaleProfitSheetReport', '销售利润（按单据）', NULL, 0, '/report/sale-profit/sheet', NULL, '6000', '17', '/sale-profit/sheet', 0, 1, 0, 'report:sale-profit:query', 1, 1, '', '系统管理员', '1', now(), '系统管理员', '1', now());
+INSERT INTO `sys_menu` (`id`, `code`, `name`, `title`, `icon`, `component_type`, `component`, `request_param`, `parent_id`, `sys_module_id`, `path`, `no_cache`, `display`, `hidden`, `permission`, `is_special`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('6000001001', '6000001001', '', '导出销售利润（按单据）', NULL, 0, '', NULL, '6000001', '17', '', 0, 2, 0, 'report:sale-profit:export', 1, 1, '', '系统管理员', '1', now(), '系统管理员', '1', now());
