@@ -23,6 +23,12 @@ public class QuerySaleOutSheetVo extends SortPageVo {
   @ApiModelProperty("单号")
   private String code;
 
+  /**
+   * 商品名称
+   */
+  @ApiModelProperty("商品名称")
+  private String productName;
+
   private List<String> idList;
 
   /**

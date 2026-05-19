@@ -24,7 +24,7 @@
         >
           <template #form>
             <j-border>
-              <j-form bordered @collapse="$refs.grid.refreshColumn()">
+              <j-form bordered @collapse="$refs.grid.refreshColumn()" @keyup.enter="search">
                 <j-form-item label="订单日期">
                   <a-range-picker
                     v-model:value="orderDateRange"
@@ -39,10 +39,13 @@
                     placeholder="请选择供应商"
                   />
                 </j-form-item>
-                <j-form-item label="单据号">
-                  <a-input v-model:value="searchFormData.code" allow-clear />
+                <j-form-item label="商品名称">
+                  <a-input v-model:value="searchFormData.productName" allow-clear />
                 </j-form-item>
                 <template #more>
+                  <j-form-item label="单据号">
+                    <a-input v-model:value="searchFormData.code" allow-clear />
+                  </j-form-item>
                   <j-form-item label="操作人">
                     <a-select
                       v-model:value="searchFormData.createBy"
@@ -356,6 +359,7 @@
         // 查询列表的查询条件
         searchFormData: {
           code: '',
+          productName: '',
           supplierId: undefined,
           createBy: undefined,
           approveBy: undefined,
@@ -519,6 +523,7 @@
       resetSearchForm() {
         this.searchFormData = {
           code: '',
+          productName: '',
           supplierId: undefined,
           createBy: undefined,
           approveBy: undefined,

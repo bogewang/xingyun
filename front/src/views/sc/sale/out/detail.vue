@@ -2,10 +2,11 @@
   <a-modal
     v-model:open="visible"
     :mask-closable="false"
+    wrap-class-name="order-detail-modal-wrap"
     width="75%"
     title="查看"
-    :style="{ top: '20px' }"
-    :body-style="{ height: 'calc(100vh - 160px)', overflow: 'hidden' }"
+    :style="{ top: '2px', paddingBottom: 0 }"
+    :body-style="{ flex: 1, minHeight: 0, overflow: 'hidden' }"
   >
     <div
       v-if="visible"
@@ -396,6 +397,23 @@
   });
 </script>
 <style scoped>
+  :global(.order-detail-modal-wrap .ant-modal) {
+    top: 2px !important;
+    padding-bottom: 0;
+  }
+
+  :global(.order-detail-modal-wrap .ant-modal-content) {
+    height: calc(100vh - 4px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  :global(.order-detail-modal-wrap .ant-modal-body) {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
   .order-detail-modal-content {
     height: 100%;
     overflow: hidden;
@@ -410,12 +428,12 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .order-detail-grid-wrap {
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 500px;
     overflow: hidden;
   }
 

@@ -177,6 +177,15 @@
                 <if test="vo.code != null and vo.code != ''">
                     AND r.code = #{vo.code}
                 </if>
+                <if test="vo.productName != null and vo.productName != ''">
+                    AND EXISTS (
+                        SELECT 1
+                        FROM tbl_receive_sheet_detail AS rd
+                        INNER JOIN base_data_product AS g ON g.id = rd.product_id
+                        WHERE rd.sheet_id = r.id
+                        AND g.name LIKE CONCAT('%', #{vo.productName}, '%')
+                    )
+                </if>
                 <if test="vo.supplierId != null and vo.supplierId != ''">
                     AND r.supplier_id = #{vo.supplierId}
                 </if>

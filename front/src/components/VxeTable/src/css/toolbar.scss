@@ -2,6 +2,17 @@
   display: flex;
 }
 
+.vxe-table-custom-wrapper,
+.vxe-toolbar .vxe-custom--option-wrapper {
+  height: 320px !important;
+  max-height: calc(100vh - 160px) !important;
+}
+
+.vxe-table-custom-wrapper .vxe-table-custom--list-wrapper,
+.vxe-toolbar .vxe-custom--option-wrapper .vxe-custom--body {
+  min-height: 220px;
+}
+
 .vxe-toolbar .vxe-tools--wrapper,
 .vxe-toolbar .vxe-tools--operate button:first-child {
   margin: 0;

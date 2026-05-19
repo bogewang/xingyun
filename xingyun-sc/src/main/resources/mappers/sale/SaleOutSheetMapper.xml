@@ -180,6 +180,15 @@
                 <if test="vo.code != null and vo.code != ''">
                     AND s.code = #{vo.code}
                 </if>
+                <if test="vo.productName != null and vo.productName != ''">
+                    AND EXISTS (
+                        SELECT 1
+                        FROM tbl_sale_out_sheet_detail AS sd
+                        INNER JOIN base_data_product AS g ON g.id = sd.product_id
+                        WHERE sd.sheet_id = s.id
+                        AND g.name LIKE CONCAT('%', #{vo.productName}, '%')
+                    )
+                </if>
                 <if test="vo.customerId != null and vo.customerId != ''">
                     AND s.customer_id = #{vo.customerId}
                 </if>

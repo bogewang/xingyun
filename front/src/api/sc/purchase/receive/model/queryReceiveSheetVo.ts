@@ -12,6 +12,11 @@ export interface QueryReceiveSheetVo extends SortPageVo {
   code: string;
 
   /**
+   * 商品名称
+   */
+  productName: string;
+
+  /**
    * 供应商ID
    */
   supplierId: string;
