@@ -40,6 +40,7 @@ import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
 import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
+import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
@@ -150,6 +151,19 @@ public class SaleOutSheetServiceImpl extends
     public List<SaleOutSheet> query(QuerySaleOutSheetVo vo) {
 
         return getBaseMapper().query(vo);
+    }
+
+    @Override
+    public PageResult<QuerySaleOutSheetDetailDto> queryDetail(Integer pageIndex, Integer pageSize,
+                                                              QuerySaleOutSheetVo vo) {
+
+        Assert.greaterThanZero(pageIndex);
+        Assert.greaterThanZero(pageSize);
+
+        PageHelperUtil.startPage(pageIndex, pageSize);
+        List<QuerySaleOutSheetDetailDto> datas = getBaseMapper().queryDetail(vo);
+
+        return PageResultUtil.convert(new PageInfo<>(datas));
     }
 
     @Override

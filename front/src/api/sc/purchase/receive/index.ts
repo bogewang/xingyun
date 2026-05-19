@@ -4,6 +4,7 @@ import { PageResult } from '@/api/model/pageResult';
 import { ReceiveSheetSelectorVo } from '@/api/sc/purchase/receive/model/receiveSheetSelectorVo';
 import { ReceiveSheetSelectorBo } from '@/api/sc/purchase/receive/model/receiveSheetSelectorBo';
 import { QueryReceiveSheetBo } from '@/api/sc/purchase/receive/model/queryReceiveSheetBo';
+import { QueryReceiveSheetDetailBo } from '@/api/sc/purchase/receive/model/queryReceiveSheetDetailBo';
 import { QueryReceiveSheetVo } from '@/api/sc/purchase/receive/model/queryReceiveSheetVo';
 import { GetReceiveSheetBo } from '@/api/sc/purchase/receive/model/getReceiveSheetBo';
 import { GetPaymentDateBo } from '@/api/sc/purchase/receive/model/getPaymentDateBo';
@@ -71,6 +72,20 @@ export function query(params: QueryReceiveSheetVo): Promise<PageResult<QueryRece
   return defHttp.get<PageResult<QueryReceiveSheetBo>>(
     {
       url: baseUrl + '/query',
+      params,
+    },
+    {
+      region,
+    },
+  );
+}
+
+export function queryDetail(
+  params: QueryReceiveSheetVo,
+): Promise<PageResult<QueryReceiveSheetDetailBo>> {
+  return defHttp.get<PageResult<QueryReceiveSheetDetailBo>>(
+    {
+      url: baseUrl + '/query/detail',
       params,
     },
     {

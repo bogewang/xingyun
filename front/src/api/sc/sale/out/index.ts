@@ -3,6 +3,7 @@ import { ContentTypeEnum, ResponseEnum } from '@/enums/httpEnum';
 import { PageResult } from '@/api/model/pageResult';
 import { GetPaymentDateBo } from '@/api/sc/purchase/receive/model/getPaymentDateBo';
 import { QuerySaleOutSheetBo } from '@/api/sc/sale/out/model/querySaleOutSheetBo';
+import { QuerySaleOutSheetDetailBo } from '@/api/sc/sale/out/model/querySaleOutSheetDetailBo';
 import { QuerySaleOutSheetVo } from '@/api/sc/sale/out/model/querySaleOutSheetVo';
 import { GetSaleOutSheetBo } from '@/api/sc/sale/out/model/getSaleOutSheetBo';
 import { SaleOutSheetWithReturnBo } from '@/api/sc/sale/out/model/saleOutSheetWithReturnBo';
@@ -46,6 +47,20 @@ export function query(params: QuerySaleOutSheetVo): Promise<PageResult<QuerySale
   return defHttp.get<PageResult<QuerySaleOutSheetBo>>(
     {
       url: baseUrl + '/query',
+      params,
+    },
+    {
+      region,
+    },
+  );
+}
+
+export function queryDetail(
+  params: QuerySaleOutSheetVo,
+): Promise<PageResult<QuerySaleOutSheetDetailBo>> {
+  return defHttp.get<PageResult<QuerySaleOutSheetDetailBo>>(
+    {
+      url: baseUrl + '/query/detail',
       params,
     },
     {

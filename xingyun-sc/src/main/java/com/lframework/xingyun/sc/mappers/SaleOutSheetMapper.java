@@ -6,6 +6,7 @@ import com.lframework.starter.web.core.annotations.permission.DataPermissions;
 import com.lframework.starter.web.core.annotations.sort.Sort;
 import com.lframework.starter.web.core.annotations.sort.Sorts;
 import com.lframework.starter.web.inner.components.permission.OrderDataPermissionDataPermissionType;
+import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
@@ -42,6 +43,17 @@ public interface SaleOutSheetMapper extends BaseMapper<SaleOutSheet> {
       @DataPermission(template = "order", alias = "s")
   })
   List<SaleOutSheet> query(@Param("vo") QuerySaleOutSheetVo vo);
+
+  @Sorts({
+      @Sort(value = "code", alias = "s", autoParse = true),
+      @Sort(value = "orderDate", alias = "s", autoParse = true),
+      @Sort(value = "createTime", alias = "s", autoParse = true),
+      @Sort(value = "approveTime", alias = "s", autoParse = true),
+  })
+  @DataPermissions(type = OrderDataPermissionDataPermissionType.class, value = {
+      @DataPermission(template = "order", alias = "s")
+  })
+  List<QuerySaleOutSheetDetailDto> queryDetail(@Param("vo") QuerySaleOutSheetVo vo);
 
   /**
    * 选择器

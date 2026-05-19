@@ -13,6 +13,7 @@ import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.sc.bo.purchase.receive.*;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
+import com.lframework.xingyun.sc.dto.purchase.receive.QueryReceiveSheetDetailDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.PurchaseConfig;
@@ -92,6 +93,24 @@ public class ReceiveSheetController extends DefaultBaseController {
 
         if (!CollectionUtil.isEmpty(datas)) {
             results = datas.stream().map(QueryReceiveSheetBo::new).collect(Collectors.toList());
+        }
+
+        return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
+    }
+
+    @ApiOperation("订单明细列表")
+    @HasPermission({"purchase:receive:query"})
+    @GetMapping("/query/detail")
+    public InvokeResult<PageResult<QueryReceiveSheetDetailBo>> queryDetail(
+            @Valid QueryReceiveSheetVo vo) {
+
+        PageResult<QueryReceiveSheetDetailDto> pageResult = receiveSheetService.queryDetail(
+                getPageIndex(vo), getPageSize(vo), vo);
+
+        List<QueryReceiveSheetDetailBo> results = null;
+        if (!CollectionUtil.isEmpty(pageResult.getDatas())) {
+            results = pageResult.getDatas().stream().map(QueryReceiveSheetDetailBo::new)
+                    .collect(Collectors.toList());
         }
 
         return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));

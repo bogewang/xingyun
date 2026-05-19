@@ -1,0 +1,33 @@
+export interface QuerySaleOutSheetDetailBo {
+  id: string;
+  code: string;
+  customerId: string;
+  customerCode: string;
+  customerName: string;
+  orderDate: string;
+  saleOrderId: string;
+  saleOrderCode: string;
+  detailId: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+  skuCode: string;
+  externalCode: string;
+  spec: string;
+  unit: string;
+  categoryName: string;
+  brandName: string;
+  orderNum: number;
+  taxPrice: number;
+  taxAmount: number;
+  costPrice: number;
+  totalProfit: number;
+  isGift: boolean;
+  description: string;
+  settleStatus: number;
+  createBy: string;
+  createTime: string;
+  approveBy: string;
+  approveTime: string;
+  status: number;
+}

@@ -3,6 +3,7 @@ package com.lframework.xingyun.sc.service.purchase;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.service.BaseMpService;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
+import com.lframework.xingyun.sc.dto.purchase.receive.QueryReceiveSheetDetailDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
@@ -33,6 +34,9 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
    * @return
    */
   List<ReceiveSheet> query(QueryReceiveSheetVo vo);
+
+  PageResult<QueryReceiveSheetDetailDto> queryDetail(Integer pageIndex, Integer pageSize,
+      QueryReceiveSheetVo vo);
 
   /**
    * 选择器

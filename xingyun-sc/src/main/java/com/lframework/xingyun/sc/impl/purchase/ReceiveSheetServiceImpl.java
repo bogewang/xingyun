@@ -40,6 +40,7 @@ import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.core.utils.SplitNumberUtil;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
+import com.lframework.xingyun.sc.dto.purchase.receive.QueryReceiveSheetDetailDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.*;
@@ -133,6 +134,19 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     public List<ReceiveSheet> query(QueryReceiveSheetVo vo) {
 
         return getBaseMapper().query(vo);
+    }
+
+    @Override
+    public PageResult<QueryReceiveSheetDetailDto> queryDetail(Integer pageIndex, Integer pageSize,
+                                                              QueryReceiveSheetVo vo) {
+
+        Assert.greaterThanZero(pageIndex);
+        Assert.greaterThanZero(pageSize);
+
+        PageHelperUtil.startPage(pageIndex, pageSize);
+        List<QueryReceiveSheetDetailDto> datas = getBaseMapper().queryDetail(vo);
+
+        return PageResultUtil.convert(new PageInfo<>(datas));
     }
 
     @Override

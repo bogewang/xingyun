@@ -15,11 +15,13 @@ import com.lframework.xingyun.sc.bo.purchase.receive.GetPaymentDateBo;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleOrderBo;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
 import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
+import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetDetailBo;
 import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetBo;
 import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetWithReturnBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetWithReturnBo;
 import com.lframework.xingyun.sc.converter.SaleOutSheetConverter;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
+import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
@@ -96,6 +98,23 @@ public class SaleOutSheetController extends DefaultBaseController {
 
         if (!CollectionUtil.isEmpty(datas)) {
             results = datas.stream().map(QuerySaleOutSheetBo::new).collect(Collectors.toList());
+        }
+
+        return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
+    }
+
+    @ApiOperation("订单明细列表")
+    @HasPermission({ "sale:out:query" })
+    @GetMapping("/query/detail")
+    public InvokeResult<PageResult<QuerySaleOutSheetDetailBo>> queryDetail(@Valid QuerySaleOutSheetVo vo) {
+
+        PageResult<QuerySaleOutSheetDetailDto> pageResult = saleOutSheetService.queryDetail(
+                getPageIndex(vo), getPageSize(vo), vo);
+
+        List<QuerySaleOutSheetDetailBo> results = null;
+        if (!CollectionUtil.isEmpty(pageResult.getDatas())) {
+            results = pageResult.getDatas().stream().map(QuerySaleOutSheetDetailBo::new)
+                    .collect(Collectors.toList());
         }
 
         return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));

@@ -170,6 +170,48 @@
         LEFT JOIN tbl_receive_sheet_detail AS d ON d.sheet_id = s.id
     </sql>
 
+    <sql id="ReceiveSheetDetailDto_sql">
+        SELECT
+            r.id,
+            r.code,
+            r.supplier_id,
+            su.code AS supplier_code,
+            su.name AS supplier_name,
+            r.order_date,
+            r.receive_date,
+            r.purchase_order_id,
+            o.code AS purchase_order_code,
+            d.id AS detail_id,
+            d.product_id,
+            g.code AS product_code,
+            g.name AS product_name,
+            g.sku_code,
+            g.external_code,
+            g.spec,
+            g.unit,
+            c.name AS category_name,
+            b.name AS brand_name,
+            d.order_num,
+            d.tax_price,
+            d.tax_amount,
+            d.is_gift,
+            d.description,
+            r.settle_status,
+            r.create_by,
+            r.create_time,
+            au.name AS approve_by,
+            r.approve_time,
+            r.status
+        FROM tbl_receive_sheet AS r
+        INNER JOIN tbl_receive_sheet_detail AS d ON d.sheet_id = r.id
+        LEFT JOIN tbl_purchase_order AS o ON o.id = r.purchase_order_id
+        LEFT JOIN base_data_supplier AS su ON su.id = r.supplier_id
+        LEFT JOIN base_data_product AS g ON g.id = d.product_id
+        LEFT JOIN base_data_product_category AS c ON c.id = g.category_id
+        LEFT JOIN base_data_product_brand AS b ON b.id = g.brand_id
+        LEFT JOIN sys_user AS au ON au.id = r.approve_by
+    </sql>
+
     <select id="query" resultMap="ReceiveSheet">
         <include refid="ReceiveSheetDto_sql"/>
         <where>
@@ -254,6 +296,85 @@
             </if>
         </where>
         ORDER BY r.order_date DESC, create_time desc
+    </select>
+    <select id="queryDetail" resultType="com.lframework.xingyun.sc.dto.purchase.receive.QueryReceiveSheetDetailDto">
+        <include refid="ReceiveSheetDetailDto_sql"/>
+        <where>
+            <if test="vo != null">
+                <if test="vo.code != null and vo.code != ''">
+                    AND r.code = #{vo.code}
+                </if>
+                <if test="vo.productName != null and vo.productName != ''">
+                    AND g.name LIKE CONCAT('%', #{vo.productName}, '%')
+                </if>
+                <if test="vo.supplierId != null and vo.supplierId != ''">
+                    AND r.supplier_id = #{vo.supplierId}
+                </if>
+                <if test="vo.scId != null and vo.scId != ''">
+                    AND r.sc_id = #{vo.scId}
+                </if>
+                <if test="vo.purchaserId != null and vo.purchaserId != ''">
+                    AND r.purchaser_id = #{vo.purchaserId}
+                </if>
+                <if test="vo.status != null">
+                    AND r.status = #{vo.status}
+                </if>
+                <if test="vo.createBy != null and vo.createBy != ''">
+                    AND r.create_by_id = #{vo.createBy}
+                </if>
+                <if test="vo.approveBy != null and vo.approveBy != ''">
+                    AND r.approve_by = #{vo.approveBy}
+                </if>
+                <if test="vo.orderDateStart != null">
+                    AND r.order_date >= #{vo.orderDateStart}
+                </if>
+                <if test="vo.orderDateEnd != null">
+                    <![CDATA[
+                    AND r.order_date <= #{vo.orderDateEnd}
+                    ]]>
+                </if>
+                <if test="vo.approveStartTime != null">
+                    AND r.approve_time >= #{vo.approveStartTime}
+                </if>
+                <if test="vo.approveEndTime != null">
+                    <![CDATA[
+                    AND r.approve_time <= #{vo.approveEndTime}
+                    ]]>
+                </if>
+                <if test="vo.purchaseOrderCode != null and vo.purchaseOrderCode != ''">
+                    AND o.code = #{vo.purchaseOrderCode}
+                </if>
+                <if test="vo.settleStatus != null">
+                    AND r.settle_status = #{vo.settleStatus}
+                </if>
+                <if test="vo.fullyPaid != null">
+                    <choose>
+                        <when test="vo.fullyPaid">
+                            AND IFNULL(r.total_amount, 0) &lt;= IFNULL(r.paid_amount, 0)
+                        </when>
+                        <otherwise>
+                            AND IFNULL(r.total_amount, 0) &gt; IFNULL(r.paid_amount, 0)
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="vo.paidAmountStart != null">
+                    AND IFNULL(r.paid_amount, 0) &gt;= #{vo.paidAmountStart}
+                </if>
+                <if test="vo.paidAmountEnd != null">
+                    AND IFNULL(r.paid_amount, 0) &lt;= #{vo.paidAmountEnd}
+                </if>
+                <if test="vo.unpaidAmountStart != null">
+                    AND (IFNULL(r.total_amount, 0) - IFNULL(r.paid_amount, 0)) &gt;= #{vo.unpaidAmountStart}
+                </if>
+                <if test="vo.unpaidAmountEnd != null">
+                    AND (IFNULL(r.total_amount, 0) - IFNULL(r.paid_amount, 0)) &lt;= #{vo.unpaidAmountEnd}
+                </if>
+                <if test="vo.idList != null and vo.idList.size() > 0">
+                    AND r.id IN <foreach collection="vo.idList" open="(" separator="," close=")" item="item">#{item}</foreach>
+                </if>
+            </if>
+        </where>
+        ORDER BY r.order_date DESC, r.code DESC, d.order_no ASC
     </select>
     <select id="getDetail" resultMap="ReceiveSheetFullDto">
         <include refid="ReceiveSheetFullDto_sql"/>

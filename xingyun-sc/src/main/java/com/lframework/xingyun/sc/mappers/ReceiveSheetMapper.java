@@ -6,6 +6,7 @@ import com.lframework.starter.web.core.annotations.permission.DataPermissions;
 import com.lframework.starter.web.core.annotations.sort.Sort;
 import com.lframework.starter.web.core.annotations.sort.Sorts;
 import com.lframework.starter.web.inner.components.permission.OrderDataPermissionDataPermissionType;
+import com.lframework.xingyun.sc.dto.purchase.receive.QueryReceiveSheetDetailDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
@@ -42,6 +43,17 @@ public interface ReceiveSheetMapper extends BaseMapper<ReceiveSheet> {
       @DataPermission(template = "order", alias = "r")
   })
   List<ReceiveSheet> query(@Param("vo") QueryReceiveSheetVo vo);
+
+  @Sorts({
+      @Sort(value = "code", alias = "r", autoParse = true),
+      @Sort(value = "orderDate", alias = "r", autoParse = true),
+      @Sort(value = "createTime", alias = "r", autoParse = true),
+      @Sort(value = "approveTime", alias = "r", autoParse = true),
+  })
+  @DataPermissions(type = OrderDataPermissionDataPermissionType.class, value = {
+      @DataPermission(template = "order", alias = "r")
+  })
+  List<QueryReceiveSheetDetailDto> queryDetail(@Param("vo") QueryReceiveSheetVo vo);
 
   /**
    * 选择器
