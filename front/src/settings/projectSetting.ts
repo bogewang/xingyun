@@ -98,7 +98,7 @@ const setting: ProjectConfig = {
     // Menu mode
     mode: MenuModeEnum.INLINE,
     // Menu type
-    type: MenuTypeEnum.MIX_SIDEBAR,
+    type: MenuTypeEnum.SIDEBAR,
     // Menu theme
     theme: ThemeEnum.DARK,
     // Split menu
