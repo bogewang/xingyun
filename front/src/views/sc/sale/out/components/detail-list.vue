@@ -108,9 +108,6 @@
                     </a-select-option>
                   </a-select>
                 </j-form-item>
-                <j-form-item label="销售订单号">
-                  <a-input v-model:value="searchFormData.saleOrderCode" allow-clear />
-                </j-form-item>
                 <j-form-item label="结算状态">
                   <a-select
                     v-model:value="searchFormData.settleStatus"
@@ -154,25 +151,6 @@
 
         <template #code_default="{ row }">
           <a @click="viewDetail(row.id)">{{ row.code }}</a>
-        </template>
-
-        <template #saleOrderCode_default="{ row }">
-          <span v-if="isEmpty(row.saleOrderCode)">-</span>
-          <span v-else>
-            <a v-permission="['sale:order:query']" @click="viewSaleOrderDetail(row.saleOrderId)">
-              {{ row.saleOrderCode }}
-            </a>
-            <span v-no-permission="['sale:order:query']">{{ row.saleOrderCode }}</span>
-          </span>
-        </template>
-
-        <template #isGift_default="{ row }">
-          {{ row.isGift ? '是' : '否' }}
-        </template>
-
-        <template #totalProfit_default="{ row }">
-          <span v-if="isEmpty(row.totalProfit)">-</span>
-          <span v-else>{{ Number(row.totalProfit || 0).toFixed(2) }}</span>
         </template>
       </vxe-grid>
     </page-wrapper>
@@ -263,32 +241,13 @@
           },
           { field: 'customerName', title: '客户名称', width: 140 },
           { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
-          {
-            field: 'saleOrderCode',
-            title: '销售订单号',
-            width: 180,
-            slots: { default: 'saleOrderCode_default' },
-          },
           { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 180 },
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'spec', title: '规格', width: 100 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
           { field: 'orderNum', title: '出库数量', align: 'right', width: 100 },
           { field: 'taxPrice', title: '销售价', align: 'right', width: 100 },
-          { field: 'taxAmount', title: '销售金额', align: 'right', width: 100 },
-          { field: 'costPrice', title: '成本价', align: 'right', width: 100 },
-          {
-            field: 'totalProfit',
-            title: '利润',
-            align: 'right',
-            width: 100,
-            slots: { default: 'totalProfit_default' },
-          },
-          { field: 'isGift', title: '赠品', width: 80, slots: { default: 'isGift_default' } },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
           { field: 'approveTime', title: '审核时间', width: 170, sortable: true },

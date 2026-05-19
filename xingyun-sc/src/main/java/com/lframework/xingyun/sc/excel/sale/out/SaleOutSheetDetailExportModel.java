@@ -11,6 +11,12 @@ import java.math.BigDecimal;
 @Data
 public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetailDto> implements ExcelModel {
 
+  @ExcelProperty("订单日期")
+  private String orderDate;
+
+  @ExcelProperty("客户名称")
+  private String customerName;
+
   @ExcelProperty("商品编号")
   private String productCode;
 
@@ -57,6 +63,10 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
 
   @Override
   protected void afterInit(QuerySaleOutSheetDetailDto dto) {
+
+    // 补齐订单日期和客户名称
+    this.setOrderDate(dto.getOrderDate());
+    this.setCustomerName(dto.getCustomerName());
 
     this.setProductCode(dto.getProductCode());
     this.setProductName(dto.getProductName());

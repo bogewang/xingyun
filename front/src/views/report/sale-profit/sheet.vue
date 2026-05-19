@@ -28,10 +28,12 @@
         <template #form>
           <j-border>
             <j-form bordered @collapse="$refs.grid.refreshColumn()" @keyup.enter="search">
-              <j-form-item label="单据类型">
-                <a-select v-model:value="sheetType" disabled>
-                  <a-select-option value="saleOut">销售出库单</a-select-option>
-                </a-select>
+              <j-form-item label="单据日期">
+                <a-range-picker
+                  v-model:value="orderDateRange"
+                  value-format="YYYY-MM-DD"
+                  :placeholder="['开始日期', '结束日期']"
+                />
               </j-form-item>
 
               <j-form-item label="客户">
@@ -48,12 +50,10 @@
                 />
               </j-form-item>
 
-              <j-form-item label="单据日期">
-                <a-range-picker
-                  v-model:value="orderDateRange"
-                  value-format="YYYY-MM-DD"
-                  :placeholder="['开始日期', '结束日期']"
-                />
+              <j-form-item label="单据类型">
+                <a-select v-model:value="sheetType" disabled>
+                  <a-select-option value="saleOut">销售出库单</a-select-option>
+                </a-select>
               </j-form-item>
 
               <template #more>
@@ -176,7 +176,7 @@ export default defineComponent({
         },
         {
           field: 'totalProfit', title: '销售毛利', align: 'right', width: 120,
-          formatter: ({ cellValue }) => this.formatCurrency(cellValue)
+          formatter: ({ cellValue }) => this.formatAmount(cellValue)
         },
         {
           field: 'profitRate',
@@ -193,7 +193,6 @@ export default defineComponent({
           width: 120,
           formatter: () => '0.00',
         },
-        {field: 'salerName', title: '销售员', width: 120},
       ],
       proxyConfig: {
         props: {
