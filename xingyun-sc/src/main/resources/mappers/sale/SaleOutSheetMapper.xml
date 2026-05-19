@@ -282,6 +282,9 @@
                         </otherwise>
                     </choose>
                 </if>
+                <if test="vo.fillAllCost != null">
+                    AND s.fill_all_cost = #{vo.fillAllCost}
+                </if>
                 <if test="vo.paidAmountStart != null">
                     AND IFNULL(s.paid_amount, 0) &gt;= #{vo.paidAmountStart}
                 </if>
@@ -464,6 +467,9 @@
                             AND IFNULL(d.cost_price, 0) &lt;= 0
                         </otherwise>
                     </choose>
+                </if>
+                <if test="vo.fillAllCost != null">
+                    AND s.fill_all_cost = #{vo.fillAllCost}
                 </if>
                 <if test="vo.paidAmountStart != null">
                     AND IFNULL(s.paid_amount, 0) &gt;= #{vo.paidAmountStart}

@@ -32,25 +32,35 @@
                     :placeholder="['开始日期', '结束日期']"
                   />
                 </j-form-item>
-
-                <j-form-item label="客户">
-                  <a-select
-                    v-model:value="searchFormData.customerId"
-                    allow-clear
-                    show-search
-                    :filter-option="filterSelectOption"
-                    :options="customerOptions"
-                    placeholder="请选择客户"
-                    @focus="loadCustomerOptions()"
-                    @search="loadCustomerOptions"
-                    @change="onCustomerChange"
-                  />
-                </j-form-item>
                 <j-form-item label="商品名称">
                   <a-input v-model:value="searchFormData.productName" allow-clear />
                 </j-form-item>
+                <j-form-item label="成本状态">
+                  <a-select
+                    v-model:value="searchFormData.fillAllCost"
+                    placeholder="全部"
+                    allow-clear
+                  >
+                    <a-select-option :value="true">已补全</a-select-option>
+                    <a-select-option :value="false">未补全</a-select-option>
+                  </a-select>
+                </j-form-item>
 
                 <template #more>
+                  <j-form-item label="客户">
+                    <a-select
+                      v-model:value="searchFormData.customerId"
+                      allow-clear
+                      show-search
+                      :filter-option="filterSelectOption"
+                      :options="customerOptions"
+                      placeholder="请选择客户"
+                      @focus="loadCustomerOptions()"
+                      @search="loadCustomerOptions"
+                      @change="onCustomerChange"
+                    />
+                  </j-form-item>
+
                   <j-form-item label="单据号">
                     <a-input v-model:value="searchFormData.code" allow-clear />
                   </j-form-item>
@@ -116,17 +126,6 @@
                         :value="item.code"
                         >{{ item.desc }}</a-select-option
                       >
-                    </a-select>
-                  </j-form-item>
-
-                  <j-form-item label="是否已付完">
-                    <a-select
-                      v-model:value="searchFormData.fullyPaid"
-                      placeholder="全部"
-                      allow-clear
-                    >
-                      <a-select-option :value="true">已付完</a-select-option>
-                      <a-select-option :value="false">未付完</a-select-option>
                     </a-select>
                   </j-form-item>
 
@@ -238,8 +237,9 @@
           </template>
 
           <!-- 单据号 列自定义内容 -->
-          <template #id_default="{ row }">
-            <a @click="viewDetail(row.id)">{{ row.id }}</a>
+          <template #code_default="{ row }">
+            <a v-permission="['sale:out:modify']" @click="openModifyDialog(row)">{{ row.code }}</a>
+            <span v-no-permission="['sale:out:modify']">{{ row.code }}</span>
           </template>
 
           <!-- 总利润 列自定义内容 -->
@@ -396,7 +396,7 @@
           saler: '',
           saleOrderCode: '',
           settleStatus: undefined,
-          fullyPaid: undefined,
+          fillAllCost: undefined,
           paidAmountStart: undefined,
           paidAmountEnd: undefined,
           unpaidAmountStart: undefined,
@@ -422,11 +422,11 @@
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
           {
-            field: 'id',
-            title: '单据ID',
+            field: 'code',
+            title: '单据号',
             width: 180,
             sortable: true,
-            slots: { default: 'id_default' },
+            slots: { default: 'code_default' },
           },
           { field: 'customerName', title: '客户名称', width: 120 },
           { field: 'orderDate', title: '订单日期', width: 120 },
@@ -557,11 +557,7 @@
         this.$refs.grid.commitProxy('reload');
       },
       getDefaultOrderDateRange() {
-        const endDate = moment().add(2, 'd');
-        return [
-          endDate.clone().subtract(1, 'M').format('YYYY-MM-DD'),
-          endDate.format('YYYY-MM-DD'),
-        ];
+        return [moment().startOf('month').format('YYYY-MM-DD'), moment().format('YYYY-MM-DD')];
       },
       resetSearchForm() {
         this.searchFormData = {
@@ -575,7 +571,7 @@
           saler: '',
           saleOrderCode: '',
           settleStatus: undefined,
-          fullyPaid: undefined,
+          fillAllCost: undefined,
           paidAmountStart: undefined,
           paidAmountEnd: undefined,
           unpaidAmountStart: undefined,
@@ -606,6 +602,7 @@
             : '',
           approveEndTime: this.approveDateRange?.[1] ? `${this.approveDateRange[1]} 23:59:59` : '',
           salerId: this.searchFormData.saler,
+          fillAllCost: this.searchFormData.fillAllCost,
         });
 
         return params;

@@ -1457,7 +1457,7 @@ public class SaleOutSheetServiceImpl extends
                 BigDecimal detailTotalProfit = NumberUtil.getNumber(
                         NumberUtil.sub(saleDetail.getTaxAmount(), detailCostAmount), 6);
                 saleDetail.setTotalProfit(detailTotalProfit);
-                saleOutSheetDetailService.updateById(saleDetail);
+                saleOutSheetDetailService.saveOrUpdateAllColumn(saleDetail);
                 totalCostAmount = NumberUtil.add(totalCostAmount, detailCostAmount);
                 continue;
             }
@@ -1467,7 +1467,7 @@ public class SaleOutSheetServiceImpl extends
                 fillAllCost = false;
                 saleDetail.setCostPrice(null);
                 saleDetail.setTotalProfit(null);
-                saleOutSheetDetailService.updateById(saleDetail);
+                saleOutSheetDetailService.saveOrUpdateAllColumn(saleDetail);
                 continue;
             }
 
@@ -1476,7 +1476,7 @@ public class SaleOutSheetServiceImpl extends
 
             saleDetail.setCostPrice(productCostPrice);
             saleDetail.setTotalProfit(detailTotalProfit);
-            saleOutSheetDetailService.updateById(saleDetail);
+            saleOutSheetDetailService.saveOrUpdateAllColumn(saleDetail);
 
             totalCostAmount = NumberUtil.add(totalCostAmount, detailCostAmount);
         }

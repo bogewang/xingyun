@@ -212,8 +212,11 @@
           </template>
 
           <!-- 单据号 列自定义内容 -->
-          <template #id_default="{ row }">
-            <a @click="viewDetail(row.id)">{{ row.id }}</a>
+          <template #code_default="{ row }">
+            <a v-permission="['purchase:receive:modify']" @click="openModifyDialog(row)">{{
+              row.code
+            }}</a>
+            <span v-no-permission="['purchase:receive:modify']">{{ row.code }}</span>
           </template>
 
           <!-- 采购订单号 列自定义内容 -->
@@ -393,11 +396,11 @@
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
           {
-            field: 'id',
-            title: '单据ID',
+            field: 'code',
+            title: '单据号',
             width: 180,
             sortable: true,
-            slots: { default: 'id_default' },
+            slots: { default: 'code_default' },
           },
           { field: 'supplierCode', title: '供应商编号', width: 100 },
           { field: 'supplierName', title: '供应商名称', width: 120 },
@@ -514,11 +517,7 @@
         this.$refs.grid.commitProxy('reload');
       },
       getDefaultOrderDateRange() {
-        const endDate = moment().add(2, 'd');
-        return [
-          endDate.clone().subtract(1, 'M').format('YYYY-MM-DD'),
-          endDate.format('YYYY-MM-DD'),
-        ];
+        return [moment().startOf('month').format('YYYY-MM-DD'), moment().add(2, 'd').format('YYYY-MM-DD')];
       },
       resetSearchForm() {
         this.searchFormData = {
