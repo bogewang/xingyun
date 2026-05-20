@@ -6,6 +6,9 @@ import { QuerySaleOutSheetBo } from '@/api/sc/sale/out/model/querySaleOutSheetBo
 import { QuerySaleOutSheetDetailBo } from '@/api/sc/sale/out/model/querySaleOutSheetDetailBo';
 import { QuerySaleOutSheetVo } from '@/api/sc/sale/out/model/querySaleOutSheetVo';
 import { SaleOutSheetProfitSummaryBo } from '@/api/sc/sale/out/model/saleOutSheetProfitSummaryBo';
+import { SaleOutSheetProductProfitBo } from '@/api/sc/sale/out/model/saleOutSheetProductProfitBo';
+import { SaleOutSheetProductProfitSummaryBo } from '@/api/sc/sale/out/model/saleOutSheetProductProfitSummaryBo';
+import { SaleOutSheetProductProfitTrendBo } from '@/api/sc/sale/out/model/saleOutSheetProductProfitTrendBo';
 import { GetSaleOutSheetBo } from '@/api/sc/sale/out/model/getSaleOutSheetBo';
 import { SaleOutSheetWithReturnBo } from '@/api/sc/sale/out/model/saleOutSheetWithReturnBo';
 import { QuerySaleOutSheetWithReturnVo } from '@/api/sc/sale/out/model/querySaleOutSheetWithReturnVo';
@@ -103,6 +106,57 @@ export function queryProfit(params: QuerySaleOutSheetVo): Promise<PageResult<Que
 }
 
 /**
+ * 销售利润（按商品）汇总
+ */
+export function queryProductProfitSummary(
+  params: QuerySaleOutSheetVo,
+): Promise<SaleOutSheetProductProfitSummaryBo> {
+  return defHttp.get<SaleOutSheetProductProfitSummaryBo>(
+    {
+      url: baseUrl + '/profit/product/summary',
+      params,
+    },
+    {
+      region,
+    },
+  );
+}
+
+/**
+ * 销售利润（按商品）列表
+ */
+export function queryProductProfit(
+  params: QuerySaleOutSheetVo,
+): Promise<PageResult<SaleOutSheetProductProfitBo>> {
+  return defHttp.get<PageResult<SaleOutSheetProductProfitBo>>(
+    {
+      url: baseUrl + '/profit/product/query',
+      params,
+    },
+    {
+      region,
+    },
+  );
+}
+
+/**
+ * 销售利润（按商品）趋势
+ */
+export function queryProductProfitTrend(
+  params: QuerySaleOutSheetVo,
+): Promise<SaleOutSheetProductProfitTrendBo[]> {
+  return defHttp.get<SaleOutSheetProductProfitTrendBo[]>(
+    {
+      url: baseUrl + '/profit/product/trend',
+      params,
+    },
+    {
+      region,
+    },
+  );
+}
+
+/**
  * 标签打印
  */
 export function tagPrint(params: TagPrintParams): Promise<PrintSaleTagBo[]> {
@@ -173,6 +227,22 @@ export function exportProfit(data: QuerySaleOutSheetVo): Promise<void> {
   return defHttp.post<void>(
     {
       url: baseUrl + '/profit/export',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.FORM_URLENCODED,
+    },
+  );
+}
+
+/**
+ * 销售利润（按商品）导出
+ */
+export function exportProductProfit(data: QuerySaleOutSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/profit/product/export',
       data,
     },
     {

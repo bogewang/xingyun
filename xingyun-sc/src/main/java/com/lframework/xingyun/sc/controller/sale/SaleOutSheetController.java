@@ -18,18 +18,24 @@ import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
 import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetDetailBo;
 import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetBo;
 import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetWithReturnBo;
+import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitBo;
+import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitSummaryBo;
+import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitTrendBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetWithReturnBo;
 import com.lframework.xingyun.sc.converter.SaleOutSheetConverter;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
+import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
+import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetDetailExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetProductProfitExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetProfitExportTaskWorker;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
 import com.lframework.xingyun.sc.vo.sale.out.*;
@@ -161,6 +167,69 @@ public class SaleOutSheetController extends DefaultBaseController {
         }
     }
 
+    @ApiOperation("销售利润（按商品）列表")
+    @HasPermission({ "report:sale-profit:product:query" })
+    @GetMapping("/profit/product/query")
+    public InvokeResult<PageResult<SaleOutSheetProductProfitBo>> queryProductProfit(
+            @Valid QuerySaleOutSheetVo vo) {
+
+        try {
+            PageResult<SaleOutSheetProductProfitDto> pageResult = saleOutSheetService
+                    .queryProductProfit(getPageIndex(vo), getPageSize(vo), vo);
+
+            List<SaleOutSheetProductProfitBo> results = null;
+            if (!CollectionUtil.isEmpty(pageResult.getDatas())) {
+                results = pageResult.getDatas().stream().map(SaleOutSheetProductProfitBo::new)
+                        .collect(Collectors.toList());
+            }
+
+            return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    @ApiOperation("销售利润（按商品）汇总")
+    @HasPermission({ "report:sale-profit:product:query" })
+    @GetMapping("/profit/product/summary")
+    public InvokeResult<SaleOutSheetProductProfitSummaryBo> queryProductProfitSummary(
+            @Valid QuerySaleOutSheetVo vo) {
+
+        try {
+            SaleOutSheetProductProfitSummaryBo result = saleOutSheetService
+                    .queryProductProfitSummary(vo);
+
+            return InvokeResultBuilder.success(result);
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    @ApiOperation("销售利润（按商品）趋势")
+    @HasPermission({ "report:sale-profit:product:query" })
+    @GetMapping("/profit/product/trend")
+    public InvokeResult<List<SaleOutSheetProductProfitTrendBo>> queryProductProfitTrend(
+            @Valid QuerySaleOutSheetVo vo) {
+
+        try {
+            List<SaleOutSheetProductProfitTrendDto> datas = saleOutSheetService
+                    .queryProductProfitTrend(vo);
+
+            List<SaleOutSheetProductProfitTrendBo> results = null;
+            if (!CollectionUtil.isEmpty(datas)) {
+                results = datas.stream().map(SaleOutSheetProductProfitTrendBo::new)
+                        .collect(Collectors.toList());
+            }
+
+            return InvokeResultBuilder.success(results);
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
     /**
      * 标签打印
      */
@@ -224,6 +293,20 @@ public class SaleOutSheetController extends DefaultBaseController {
     public InvokeResult<Void> exportProfit(@Valid QuerySaleOutSheetVo vo) {
 
         ExportTaskUtil.exportTask("销售利润（按单据）", SaleOutSheetProfitExportTaskWorker.class, vo);
+
+        return InvokeResultBuilder.success();
+    }
+
+    /**
+     * 销售利润（按商品）导出
+     */
+    @ApiOperation("销售利润（按商品）导出")
+    @HasPermission({ "report:sale-profit:product:export" })
+    @PostMapping("/profit/product/export")
+    public InvokeResult<Void> exportProductProfit(@Valid QuerySaleOutSheetVo vo) {
+
+        ExportTaskUtil.exportTask("销售利润（按商品）", SaleOutSheetProductProfitExportTaskWorker.class,
+                vo);
 
         return InvokeResultBuilder.success();
     }

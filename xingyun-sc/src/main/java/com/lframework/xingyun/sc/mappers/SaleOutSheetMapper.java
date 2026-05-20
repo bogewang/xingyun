@@ -7,8 +7,11 @@ import com.lframework.starter.web.core.annotations.sort.Sort;
 import com.lframework.starter.web.core.annotations.sort.Sorts;
 import com.lframework.starter.web.inner.components.permission.OrderDataPermissionDataPermissionType;
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
+import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
+import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
+import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitSummaryBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.enums.SettleStatus;
@@ -55,6 +58,34 @@ public interface SaleOutSheetMapper extends BaseMapper<SaleOutSheet> {
       @DataPermission(template = "order", alias = "s")
   })
   SaleOutSheetProfitSummaryBo queryProfitSummary(@Param("vo") QuerySaleOutSheetVo vo);
+
+  /**
+   * 查询销售利润（按商品）汇总
+   *
+   * @param vo
+   * @return
+   */
+  @DataPermissions(type = OrderDataPermissionDataPermissionType.class, value = {
+      @DataPermission(template = "order", alias = "s")
+  })
+  SaleOutSheetProductProfitSummaryBo queryProductProfitSummary(@Param("vo") QuerySaleOutSheetVo vo);
+
+  @Sorts({
+      @Sort(value = "productName", alias = "g", autoParse = true),
+      @Sort(value = "saleNum", autoParse = false),
+      @Sort(value = "salesAmount", autoParse = false),
+      @Sort(value = "salesCost", autoParse = false),
+      @Sort(value = "salesProfit", autoParse = false),
+  })
+  @DataPermissions(type = OrderDataPermissionDataPermissionType.class, value = {
+      @DataPermission(template = "order", alias = "s")
+  })
+  List<SaleOutSheetProductProfitDto> queryProductProfit(@Param("vo") QuerySaleOutSheetVo vo);
+
+  @DataPermissions(type = OrderDataPermissionDataPermissionType.class, value = {
+      @DataPermission(template = "order", alias = "s")
+  })
+  List<SaleOutSheetProductProfitTrendDto> queryProductProfitTrend(@Param("vo") QuerySaleOutSheetVo vo);
 
   @Sorts({
       @Sort(value = "code", alias = "s", autoParse = true),

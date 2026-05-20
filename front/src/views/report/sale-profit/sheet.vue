@@ -1,13 +1,6 @@
 <template>
   <div v-permission="['report:sale-profit:query']">
     <page-wrapper content-full-height fixed-height>
-      <div class="summary-panel">
-        <div v-for="item in summaryItems" :key="item.key" class="summary-item">
-          <div class="summary-title">{{ item.title }}</div>
-          <div class="summary-value">{{ item.value }}</div>
-        </div>
-      </div>
-
       <vxe-grid
         id="SaleProfitSheetReport"
         ref="grid"
@@ -26,6 +19,13 @@
         height="auto"
       >
         <template #form>
+          <div class="summary-panel">
+            <div v-for="item in summaryItems" :key="item.key" class="summary-item">
+              <div class="summary-title">{{ item.title }}</div>
+              <div class="summary-value">{{ item.value }}</div>
+            </div>
+          </div>
+
           <j-border>
             <j-form bordered @collapse="$refs.grid.refreshColumn()" @keyup.enter="search">
               <j-form-item label="单据日期">
@@ -83,7 +83,10 @@
         </template>
 
         <template #code_default="{ row }">
-          <a @click="viewDetail(row.id)">{{ row.code }}</a>
+          <a-space size="small">
+            <a @click="viewDetail(row.id)">{{ row.code }}</a>
+            <a @click="openSheetChart(row)">饼图</a>
+          </a-space>
         </template>
 
         <template #salesCost_default="{ row }">
@@ -95,6 +98,25 @@
         </template>
       </vxe-grid>
 
+      <a-modal
+        v-model:open="sheetChartVisible"
+        :title="sheetChartTitle"
+        width="760px"
+        :footer="null"
+        @cancel="disposeSheetChart"
+      >
+        <div class="chart-toolbar">
+          <a-button v-if="sheetChartLevel === 'product'" size="small" @click="renderCategoryPie">
+            返回分类
+          </a-button>
+          <span class="chart-tip">{{ sheetChartTip }}</span>
+        </div>
+        <div v-if="sheetChartEmpty" class="chart-empty">
+          <a-empty description="暂无商品销售数据"/>
+        </div>
+        <div v-show="!sheetChartEmpty" ref="sheetPieChartRef" class="chart-container"></div>
+      </a-modal>
+
       <detail :id="id" ref="viewDialog"/>
     </page-wrapper>
   </div>
@@ -105,8 +127,9 @@ import {h, defineComponent} from 'vue';
 import moment from 'moment';
 import {SearchOutlined, DownloadOutlined} from '@ant-design/icons-vue';
 import * as api from '@/api/sc/sale/out';
-import Detail from '@/views/sc/sale/out/detail.vue';
 import {buildSortPageVo} from '@/utils/utils';
+import echarts from '/@/utils/lib/echarts';
+import Detail from '@/views/sc/sale/out/detail.vue';
 import {
   buildVisibleSelectOptions,
   filterSelectOption,
@@ -133,6 +156,13 @@ export default defineComponent({
       loading: false,
       id: '',
       sheetType: 'saleOut',
+      sheetChartVisible: false,
+      sheetChartTitle: '商品分类销售额占比',
+      sheetChartTip: '点击分类查看商品占比',
+      sheetChartLevel: 'category',
+      sheetChartDetails: [],
+      sheetPieChart: null,
+      sheetChartEmpty: false,
       searchFormData: {
         code: '',
         productName: '',
@@ -157,6 +187,7 @@ export default defineComponent({
         },
       },
       tableColumn: [
+        {type: 'seq', title: '序号', width: 50},
         {field: 'orderDate', title: '单据日期', width: 140},
         {
           field: 'code',
@@ -251,6 +282,9 @@ export default defineComponent({
         {key: 'otherFee', title: '其他费用', value: this.formatCurrency(this.summary.otherFee)},
       ];
     },
+  },
+  beforeUnmount() {
+    this.disposeSheetChart();
   },
   methods: {
     search() {
@@ -363,6 +397,125 @@ export default defineComponent({
       this.id = id;
       this.$nextTick(() => this.$refs.viewDialog.openDialog());
     },
+    openSheetChart(row) {
+      this.loading = true;
+      api
+        .get(row.id)
+        .then((res) => {
+          this.sheetChartDetails = res?.details || [];
+          this.sheetChartTitle = `商品分类销售额占比 - ${row.code} - ${row.orderDate || ''} - ${
+            row.customerName || ''
+          }`;
+          this.sheetChartVisible = true;
+          this.$nextTick(() => this.renderCategoryPie());
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+    },
+    renderCategoryPie() {
+      this.sheetChartLevel = 'category';
+      this.sheetChartTip = '点击分类查看商品占比';
+      const data = this.buildPieData((detail) => detail.categoryName || '未分类');
+      this.renderPie(data, '商品分类销售额占比', (params) => {
+        this.renderProductPie(params.name);
+      });
+    },
+    renderProductPie(categoryName) {
+      this.sheetChartLevel = 'product';
+      this.sheetChartTip = `${categoryName} 下各商品销售额占比`;
+      const data = this.buildPieData(
+        (detail) => detail.productName || '未命名商品',
+        (detail) => (detail.categoryName || '未分类') === categoryName,
+      );
+      this.renderPie(data, `${categoryName} - 商品销售额占比`);
+    },
+    buildPieData(getName, filterDetail) {
+      const dataMap = {};
+      (this.sheetChartDetails || [])
+        .filter((detail) => !filterDetail || filterDetail(detail))
+        .forEach((detail) => {
+          const name = getName(detail);
+          dataMap[name] = (dataMap[name] || 0) + this.calcDetailSalesAmount(detail);
+        });
+
+      return Object.keys(dataMap)
+        .map((name) => ({
+          name,
+          value: Number(dataMap[name].toFixed(2)),
+        }))
+        .filter((item) => item.value !== 0)
+        .sort((prev, next) => next.value - prev.value);
+    },
+    calcDetailSalesAmount(detail) {
+      const outNum = Number(detail?.outNum ?? detail?.orderNum ?? 0);
+      return Number(detail?.taxPrice || 0) * (Number.isNaN(outNum) ? 0 : outNum);
+    },
+    renderPie(data, title, clickHandler) {
+      this.sheetChartEmpty = data.length === 0;
+      if (this.sheetChartEmpty) {
+        this.disposeSheetChart();
+        return;
+      }
+
+      const chartDom = this.$refs.sheetPieChartRef;
+      if (!chartDom) {
+        return;
+      }
+
+      if (!this.sheetPieChart) {
+        this.sheetPieChart = echarts.init(chartDom);
+      }
+      this.sheetPieChart.off('click');
+      if (clickHandler) {
+        this.sheetPieChart.on('click', clickHandler);
+      }
+
+      this.sheetPieChart.setOption({
+        color: ['#1677ff', '#13c2c2', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#eb2f96'],
+        title: {
+          text: title,
+          left: 'center',
+          top: 0,
+          textStyle: {
+            fontSize: 16,
+            fontWeight: 500,
+          },
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: (params) =>
+            `${params.name}<br/>销售额：${this.formatCurrency(params.value)}<br/>占比：${params.percent}%`,
+        },
+        legend: {
+          type: 'scroll',
+          orient: 'vertical',
+          right: 0,
+          top: 36,
+          bottom: 12,
+        },
+        series: [
+          {
+            name: '销售额',
+            type: 'pie',
+            radius: ['42%', '68%'],
+            center: ['40%', '56%'],
+            avoidLabelOverlap: true,
+            label: {
+              formatter: '{b}\n{d}%',
+            },
+            data,
+          },
+        ],
+      });
+      this.$nextTick(() => this.sheetPieChart?.resize());
+    },
+    disposeSheetChart() {
+      if (this.sheetPieChart) {
+        this.sheetPieChart.dispose();
+        this.sheetPieChart = null;
+      }
+    },
   },
 });
 </script>
@@ -397,6 +550,31 @@ export default defineComponent({
   font-weight: 700;
   line-height: 30px;
   white-space: nowrap;
+}
+
+.chart-toolbar {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  margin-bottom: 8px;
+}
+
+.chart-tip {
+  color: #8c8c8c;
+  font-size: 13px;
+}
+
+.chart-toolbar .ant-btn + .chart-tip {
+  margin-left: 12px;
+}
+
+.chart-container {
+  width: 100%;
+  height: 420px;
+}
+
+.chart-empty {
+  padding: 64px 0;
 }
 
 @media (max-width: 1400px) {

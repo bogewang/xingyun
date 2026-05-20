@@ -232,6 +232,15 @@
                         AND g.name LIKE CONCAT('%', #{vo.productName}, '%')
                     )
                 </if>
+                <if test="vo.productSpec != null and vo.productSpec != ''">
+                    AND EXISTS (
+                        SELECT 1
+                        FROM tbl_sale_out_sheet_detail AS sd
+                        INNER JOIN base_data_product AS g ON g.id = sd.product_id
+                        WHERE sd.sheet_id = s.id
+                        AND g.spec LIKE CONCAT('%', #{vo.productSpec}, '%')
+                    )
+                </if>
                 <if test="vo.customerId != null and vo.customerId != ''">
                     AND s.customer_id = #{vo.customerId}
                 </if>
@@ -330,6 +339,15 @@
                         AND g.name LIKE CONCAT('%', #{vo.productName}, '%')
                     )
                 </if>
+                <if test="vo.productSpec != null and vo.productSpec != ''">
+                    AND EXISTS (
+                        SELECT 1
+                        FROM tbl_sale_out_sheet_detail AS sd
+                        INNER JOIN base_data_product AS g ON g.id = sd.product_id
+                        WHERE sd.sheet_id = s.id
+                        AND g.spec LIKE CONCAT('%', #{vo.productSpec}, '%')
+                    )
+                </if>
                 <if test="vo.customerId != null and vo.customerId != ''">
                     AND s.customer_id = #{vo.customerId}
                 </if>
@@ -398,6 +416,266 @@
             </if>
         </where>
     </select>
+    <select id="queryProductProfitSummary" resultType="com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitSummaryBo">
+        SELECT
+            IFNULL(SUM(IFNULL(d.order_num, 0)), 0) AS saleNum,
+            IFNULL(SUM(IFNULL(d.tax_amount, 0)), 0) AS salesAmount,
+            IFNULL(SUM(IFNULL(d.tax_amount, 0) - IFNULL(d.total_profit, 0)), 0) AS salesCost,
+            IFNULL(SUM(IFNULL(d.total_profit, 0)), 0) AS salesProfit,
+            0 AS otherIncome,
+            0 AS otherExpense,
+            IFNULL(SUM(IFNULL(d.total_profit, 0)), 0) AS netProfit,
+            0 AS otherFee
+        FROM tbl_sale_out_sheet AS s
+        INNER JOIN tbl_sale_out_sheet_detail AS d ON d.sheet_id = s.id
+        LEFT JOIN tbl_sale_order AS o ON o.id = s.sale_order_id
+        LEFT JOIN base_data_product AS g ON g.id = d.product_id
+        <where>
+            <if test="vo != null">
+                <if test="vo.code != null and vo.code != ''">
+                    AND s.code = #{vo.code}
+                </if>
+                <if test="vo.productName != null and vo.productName != ''">
+                    AND g.name LIKE CONCAT('%', #{vo.productName}, '%')
+                </if>
+                <if test="vo.productId != null and vo.productId != ''">
+                    AND d.product_id = #{vo.productId}
+                </if>
+                <if test="vo.productSpec != null and vo.productSpec != ''">
+                    AND g.spec LIKE CONCAT('%', #{vo.productSpec}, '%')
+                </if>
+                <if test="vo.customerId != null and vo.customerId != ''">
+                    AND s.customer_id = #{vo.customerId}
+                </if>
+                <if test="vo.scId != null and vo.scId != ''">
+                    AND s.sc_id = #{vo.scId}
+                </if>
+                <if test="vo.salerId != null and vo.salerId != ''">
+                    AND s.saler_id = #{vo.salerId}
+                </if>
+                <if test="vo.status != null">
+                    AND s.status = #{vo.status}
+                </if>
+                <if test="vo.createBy != null and vo.createBy != ''">
+                    AND s.create_by_id = #{vo.createBy}
+                </if>
+                <if test="vo.approveBy != null and vo.approveBy != ''">
+                    AND s.approve_by = #{vo.approveBy}
+                </if>
+                <if test="vo.orderDateStart != null">
+                    AND s.order_date >= #{vo.orderDateStart}
+                </if>
+                <if test="vo.orderDateEnd != null">
+                    <![CDATA[
+                    AND s.order_date <= #{vo.orderDateEnd}
+                    ]]>
+                </if>
+                <if test="vo.approveStartTime != null">
+                    AND s.approve_time >= #{vo.approveStartTime}
+                </if>
+                <if test="vo.approveEndTime != null">
+                    <![CDATA[
+                    AND s.approve_time <= #{vo.approveEndTime}
+                    ]]>
+                </if>
+                <if test="vo.saleOrderCode != null and vo.saleOrderCode != ''">
+                    AND o.code = #{vo.saleOrderCode}
+                </if>
+                <if test="vo.settleStatus != null">
+                    AND s.settle_status = #{vo.settleStatus}
+                </if>
+                <if test="vo.fullyPaid != null">
+                    <choose>
+                        <when test="vo.fullyPaid">
+                            AND IFNULL(s.total_amount, 0) &lt;= IFNULL(s.paid_amount, 0)
+                        </when>
+                        <otherwise>
+                            AND IFNULL(s.total_amount, 0) &gt; IFNULL(s.paid_amount, 0)
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="vo.idList != null and vo.idList.size() > 0">
+                    AND s.id IN <foreach collection="vo.idList" open="(" separator="," close=")" item="item">#{item}</foreach>
+                </if>
+            </if>
+        </where>
+    </select>
+    <select id="queryProductProfit" resultType="com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto">
+        SELECT
+            d.product_id AS productId,
+            g.code AS productCode,
+            g.name AS productName,
+            g.spec,
+            g.unit,
+            IFNULL(SUM(IFNULL(d.order_num, 0)), 0) AS saleNum,
+            CASE
+                WHEN IFNULL(SUM(IFNULL(d.order_num, 0)), 0) = 0 THEN 0
+                ELSE IFNULL(SUM(IFNULL(d.tax_amount, 0)), 0) / SUM(IFNULL(d.order_num, 0))
+            END AS salePrice,
+            IFNULL(SUM(IFNULL(d.tax_amount, 0)), 0) AS salesAmount,
+            IFNULL(SUM(IFNULL(d.tax_amount, 0) - IFNULL(d.total_profit, 0)), 0) AS salesCost,
+            IFNULL(SUM(IFNULL(d.total_profit, 0)), 0) AS salesProfit
+        FROM tbl_sale_out_sheet AS s
+        INNER JOIN tbl_sale_out_sheet_detail AS d ON d.sheet_id = s.id
+        LEFT JOIN tbl_sale_order AS o ON o.id = s.sale_order_id
+        LEFT JOIN base_data_product AS g ON g.id = d.product_id
+        <where>
+            <if test="vo != null">
+                <if test="vo.code != null and vo.code != ''">
+                    AND s.code = #{vo.code}
+                </if>
+                <if test="vo.productName != null and vo.productName != ''">
+                    AND g.name LIKE CONCAT('%', #{vo.productName}, '%')
+                </if>
+                <if test="vo.productId != null and vo.productId != ''">
+                    AND d.product_id = #{vo.productId}
+                </if>
+                <if test="vo.productSpec != null and vo.productSpec != ''">
+                    AND g.spec LIKE CONCAT('%', #{vo.productSpec}, '%')
+                </if>
+                <if test="vo.customerId != null and vo.customerId != ''">
+                    AND s.customer_id = #{vo.customerId}
+                </if>
+                <if test="vo.scId != null and vo.scId != ''">
+                    AND s.sc_id = #{vo.scId}
+                </if>
+                <if test="vo.salerId != null and vo.salerId != ''">
+                    AND s.saler_id = #{vo.salerId}
+                </if>
+                <if test="vo.status != null">
+                    AND s.status = #{vo.status}
+                </if>
+                <if test="vo.createBy != null and vo.createBy != ''">
+                    AND s.create_by_id = #{vo.createBy}
+                </if>
+                <if test="vo.approveBy != null and vo.approveBy != ''">
+                    AND s.approve_by = #{vo.approveBy}
+                </if>
+                <if test="vo.orderDateStart != null">
+                    AND s.order_date >= #{vo.orderDateStart}
+                </if>
+                <if test="vo.orderDateEnd != null">
+                    <![CDATA[
+                    AND s.order_date <= #{vo.orderDateEnd}
+                    ]]>
+                </if>
+                <if test="vo.approveStartTime != null">
+                    AND s.approve_time >= #{vo.approveStartTime}
+                </if>
+                <if test="vo.approveEndTime != null">
+                    <![CDATA[
+                    AND s.approve_time <= #{vo.approveEndTime}
+                    ]]>
+                </if>
+                <if test="vo.saleOrderCode != null and vo.saleOrderCode != ''">
+                    AND o.code = #{vo.saleOrderCode}
+                </if>
+                <if test="vo.settleStatus != null">
+                    AND s.settle_status = #{vo.settleStatus}
+                </if>
+                <if test="vo.fullyPaid != null">
+                    <choose>
+                        <when test="vo.fullyPaid">
+                            AND IFNULL(s.total_amount, 0) &lt;= IFNULL(s.paid_amount, 0)
+                        </when>
+                        <otherwise>
+                            AND IFNULL(s.total_amount, 0) &gt; IFNULL(s.paid_amount, 0)
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="vo.idList != null and vo.idList.size() > 0">
+                    AND s.id IN <foreach collection="vo.idList" open="(" separator="," close=")" item="item">#{item}</foreach>
+                </if>
+            </if>
+        </where>
+        GROUP BY d.product_id, g.code, g.name, g.spec, g.unit
+        ORDER BY salesProfit DESC, g.name ASC
+    </select>
+    <select id="queryProductProfitTrend" resultType="com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto">
+        SELECT
+            s.order_date AS orderDate,
+            IFNULL(SUM(IFNULL(d.tax_amount, 0)), 0) AS salesAmount,
+            IFNULL(SUM(IFNULL(d.total_profit, 0)), 0) AS salesProfit,
+            CASE
+                WHEN IFNULL(SUM(IFNULL(d.tax_amount, 0)), 0) = 0 THEN 0
+                ELSE IFNULL(SUM(IFNULL(d.total_profit, 0)), 0) / SUM(IFNULL(d.tax_amount, 0)) * 100
+            END AS profitRate
+        FROM tbl_sale_out_sheet AS s
+        INNER JOIN tbl_sale_out_sheet_detail AS d ON d.sheet_id = s.id
+        LEFT JOIN tbl_sale_order AS o ON o.id = s.sale_order_id
+        LEFT JOIN base_data_product AS g ON g.id = d.product_id
+        <where>
+            <if test="vo != null">
+                <if test="vo.code != null and vo.code != ''">
+                    AND s.code = #{vo.code}
+                </if>
+                <if test="vo.productName != null and vo.productName != ''">
+                    AND g.name LIKE CONCAT('%', #{vo.productName}, '%')
+                </if>
+                <if test="vo.productId != null and vo.productId != ''">
+                    AND d.product_id = #{vo.productId}
+                </if>
+                <if test="vo.productSpec != null and vo.productSpec != ''">
+                    AND g.spec LIKE CONCAT('%', #{vo.productSpec}, '%')
+                </if>
+                <if test="vo.customerId != null and vo.customerId != ''">
+                    AND s.customer_id = #{vo.customerId}
+                </if>
+                <if test="vo.scId != null and vo.scId != ''">
+                    AND s.sc_id = #{vo.scId}
+                </if>
+                <if test="vo.salerId != null and vo.salerId != ''">
+                    AND s.saler_id = #{vo.salerId}
+                </if>
+                <if test="vo.status != null">
+                    AND s.status = #{vo.status}
+                </if>
+                <if test="vo.createBy != null and vo.createBy != ''">
+                    AND s.create_by_id = #{vo.createBy}
+                </if>
+                <if test="vo.approveBy != null and vo.approveBy != ''">
+                    AND s.approve_by = #{vo.approveBy}
+                </if>
+                <if test="vo.orderDateStart != null">
+                    AND s.order_date >= #{vo.orderDateStart}
+                </if>
+                <if test="vo.orderDateEnd != null">
+                    <![CDATA[
+                    AND s.order_date <= #{vo.orderDateEnd}
+                    ]]>
+                </if>
+                <if test="vo.approveStartTime != null">
+                    AND s.approve_time >= #{vo.approveStartTime}
+                </if>
+                <if test="vo.approveEndTime != null">
+                    <![CDATA[
+                    AND s.approve_time <= #{vo.approveEndTime}
+                    ]]>
+                </if>
+                <if test="vo.saleOrderCode != null and vo.saleOrderCode != ''">
+                    AND o.code = #{vo.saleOrderCode}
+                </if>
+                <if test="vo.settleStatus != null">
+                    AND s.settle_status = #{vo.settleStatus}
+                </if>
+                <if test="vo.fullyPaid != null">
+                    <choose>
+                        <when test="vo.fullyPaid">
+                            AND IFNULL(s.total_amount, 0) &lt;= IFNULL(s.paid_amount, 0)
+                        </when>
+                        <otherwise>
+                            AND IFNULL(s.total_amount, 0) &gt; IFNULL(s.paid_amount, 0)
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="vo.idList != null and vo.idList.size() > 0">
+                    AND s.id IN <foreach collection="vo.idList" open="(" separator="," close=")" item="item">#{item}</foreach>
+                </if>
+            </if>
+        </where>
+        GROUP BY s.order_date
+        ORDER BY s.order_date ASC
+    </select>
     <select id="queryDetail" resultType="com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto">
         <include refid="SaleOutSheetDetailDto_sql"/>
         <where>
@@ -407,6 +685,9 @@
                 </if>
                 <if test="vo.productName != null and vo.productName != ''">
                     AND g.name LIKE CONCAT('%', #{vo.productName}, '%')
+                </if>
+                <if test="vo.productSpec != null and vo.productSpec != ''">
+                    AND g.spec LIKE CONCAT('%', #{vo.productSpec}, '%')
                 </if>
                 <if test="vo.customerId != null and vo.customerId != ''">
                     AND s.customer_id = #{vo.customerId}

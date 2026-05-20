@@ -37,12 +37,15 @@ import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.basedata.vo.customer.QueryCustomerVo;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
+import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitSummaryBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo;
 import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
+import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
+import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
 import com.lframework.xingyun.sc.entity.*;
@@ -163,6 +166,12 @@ public class SaleOutSheetServiceImpl extends
     }
 
     @Override
+    public SaleOutSheetProductProfitSummaryBo queryProductProfitSummary(QuerySaleOutSheetVo vo) {
+
+        return getBaseMapper().queryProductProfitSummary(vo);
+    }
+
+    @Override
     public PageResult<QuerySaleOutSheetDetailDto> queryDetail(Integer pageIndex, Integer pageSize,
                                                               QuerySaleOutSheetVo vo) {
 
@@ -173,6 +182,26 @@ public class SaleOutSheetServiceImpl extends
         List<QuerySaleOutSheetDetailDto> datas = getBaseMapper().queryDetail(vo);
 
         return PageResultUtil.convert(new PageInfo<>(datas));
+    }
+
+    @Override
+    public PageResult<SaleOutSheetProductProfitDto> queryProductProfit(Integer pageIndex,
+                                                                       Integer pageSize,
+                                                                       QuerySaleOutSheetVo vo) {
+
+        Assert.greaterThanZero(pageIndex);
+        Assert.greaterThanZero(pageSize);
+
+        PageHelperUtil.startPage(pageIndex, pageSize);
+        List<SaleOutSheetProductProfitDto> datas = getBaseMapper().queryProductProfit(vo);
+
+        return PageResultUtil.convert(new PageInfo<>(datas));
+    }
+
+    @Override
+    public List<SaleOutSheetProductProfitTrendDto> queryProductProfitTrend(QuerySaleOutSheetVo vo) {
+
+        return getBaseMapper().queryProductProfitTrend(vo);
     }
 
     @Override
