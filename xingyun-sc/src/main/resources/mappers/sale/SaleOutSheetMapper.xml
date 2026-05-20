@@ -589,7 +589,13 @@
             </if>
         </where>
         GROUP BY d.product_id, g.code, g.name, g.spec, g.unit
-        ORDER BY salesProfit DESC, g.name ASC
+        ORDER BY
+            CASE
+                WHEN IFNULL(SUM(IFNULL(d.tax_amount, 0)), 0) = 0 THEN 0
+                ELSE IFNULL(SUM(IFNULL(d.total_profit, 0)), 0) / SUM(IFNULL(d.tax_amount, 0))
+            END DESC,
+            salesProfit DESC,
+            g.name ASC
     </select>
     <select id="queryProductProfitTrend" resultType="com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto">
         SELECT
