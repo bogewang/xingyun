@@ -494,8 +494,24 @@
         return this.hasPermission('sale:out:profit', false);
       },
     },
-    created() {},
+    watch: {
+      '$route.query': {
+        handler() {
+          this.applyRouteQuery();
+          this.$nextTick(() => this.search());
+        },
+      },
+    },
+    created() {
+      this.applyRouteQuery();
+    },
     methods: {
+      applyRouteQuery() {
+        const { orderDateStart, orderDateEnd } = this.$route.query || {};
+        if (orderDateStart || orderDateEnd) {
+          this.orderDateRange = [orderDateStart || orderDateEnd, orderDateEnd || orderDateStart];
+        }
+      },
       footerMethod({ columns, data }) {
         const totalAmount = this.sumByField(data, 'totalAmount');
         const paidAmount = this.sumByField(data, 'paidAmount');

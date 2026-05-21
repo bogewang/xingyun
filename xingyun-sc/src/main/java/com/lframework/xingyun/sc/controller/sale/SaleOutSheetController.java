@@ -22,6 +22,7 @@ import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitSummaryBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitTrendBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo;
+import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitTrendBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetWithReturnBo;
 import com.lframework.xingyun.sc.converter.SaleOutSheetConverter;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
@@ -29,6 +30,7 @@ import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
+import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
@@ -201,6 +203,28 @@ public class SaleOutSheetController extends DefaultBaseController {
                     .queryProductProfitSummary(vo);
 
             return InvokeResultBuilder.success(result);
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    @ApiOperation("销售趋势")
+    @HasPermission({ "report:sale-trend:query" })
+    @GetMapping("/profit/trend")
+    public InvokeResult<List<SaleOutSheetProfitTrendBo>> queryProfitTrend(
+            @Valid QuerySaleOutSheetVo vo) {
+
+        try {
+            List<SaleOutSheetProfitTrendDto> datas = saleOutSheetService.queryProfitTrend(vo);
+
+            List<SaleOutSheetProfitTrendBo> results = null;
+            if (!CollectionUtil.isEmpty(datas)) {
+                results = datas.stream().map(SaleOutSheetProfitTrendBo::new)
+                        .collect(Collectors.toList());
+            }
+
+            return InvokeResultBuilder.success(results);
         } catch (Exception e) {
             log.error("请求出错", e);
             return InvokeResultBuilder.fail(e.getMessage(), null);

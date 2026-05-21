@@ -46,6 +46,7 @@ import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
+import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
 import com.lframework.xingyun.sc.entity.*;
@@ -196,6 +197,12 @@ public class SaleOutSheetServiceImpl extends
         List<SaleOutSheetProductProfitDto> datas = getBaseMapper().queryProductProfit(vo);
 
         return PageResultUtil.convert(new PageInfo<>(datas));
+    }
+
+    @Override
+    public List<SaleOutSheetProfitTrendDto> queryProfitTrend(QuerySaleOutSheetVo vo) {
+
+        return getBaseMapper().queryProfitTrend(vo);
     }
 
     @Override

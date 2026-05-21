@@ -9,6 +9,7 @@ import com.lframework.starter.web.inner.components.permission.OrderDataPermissio
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
+import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitSummaryBo;
@@ -81,6 +82,11 @@ public interface SaleOutSheetMapper extends BaseMapper<SaleOutSheet> {
       @DataPermission(template = "order", alias = "s")
   })
   List<SaleOutSheetProductProfitDto> queryProductProfit(@Param("vo") QuerySaleOutSheetVo vo);
+
+  @DataPermissions(type = OrderDataPermissionDataPermissionType.class, value = {
+      @DataPermission(template = "order", alias = "s")
+  })
+  List<SaleOutSheetProfitTrendDto> queryProfitTrend(@Param("vo") QuerySaleOutSheetVo vo);
 
   @DataPermissions(type = OrderDataPermissionDataPermissionType.class, value = {
       @DataPermission(template = "order", alias = "s")

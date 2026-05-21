@@ -6,6 +6,7 @@ import { QuerySaleOutSheetBo } from '@/api/sc/sale/out/model/querySaleOutSheetBo
 import { QuerySaleOutSheetDetailBo } from '@/api/sc/sale/out/model/querySaleOutSheetDetailBo';
 import { QuerySaleOutSheetVo } from '@/api/sc/sale/out/model/querySaleOutSheetVo';
 import { SaleOutSheetProfitSummaryBo } from '@/api/sc/sale/out/model/saleOutSheetProfitSummaryBo';
+import { SaleOutSheetProfitTrendBo } from '@/api/sc/sale/out/model/saleOutSheetProfitTrendBo';
 import { SaleOutSheetProductProfitBo } from '@/api/sc/sale/out/model/saleOutSheetProductProfitBo';
 import { SaleOutSheetProductProfitSummaryBo } from '@/api/sc/sale/out/model/saleOutSheetProductProfitSummaryBo';
 import { SaleOutSheetProductProfitTrendBo } from '@/api/sc/sale/out/model/saleOutSheetProductProfitTrendBo';
@@ -97,6 +98,23 @@ export function queryProfit(params: QuerySaleOutSheetVo): Promise<PageResult<Que
   return defHttp.get<PageResult<QuerySaleOutSheetBo>>(
     {
       url: baseUrl + '/profit/query',
+      params,
+    },
+    {
+      region,
+    },
+  );
+}
+
+/**
+ * 销售趋势
+ */
+export function queryProfitTrend(
+  params: QuerySaleOutSheetVo,
+): Promise<SaleOutSheetProfitTrendBo[]> {
+  return defHttp.get<SaleOutSheetProfitTrendBo[]>(
+    {
+      url: baseUrl + '/profit/trend',
       params,
     },
     {

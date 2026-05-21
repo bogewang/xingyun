@@ -9,6 +9,7 @@ import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
+import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProfitTrendDto;
 import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
@@ -63,6 +64,8 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
 
   PageResult<SaleOutSheetProductProfitDto> queryProductProfit(Integer pageIndex, Integer pageSize,
       QuerySaleOutSheetVo vo);
+
+  List<SaleOutSheetProfitTrendDto> queryProfitTrend(QuerySaleOutSheetVo vo);
 
   List<SaleOutSheetProductProfitTrendDto> queryProductProfitTrend(QuerySaleOutSheetVo vo);
 
