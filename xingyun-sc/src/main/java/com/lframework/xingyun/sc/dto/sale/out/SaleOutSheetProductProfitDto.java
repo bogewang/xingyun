@@ -24,6 +24,8 @@ public class SaleOutSheetProductProfitDto implements BaseDto, Serializable {
 
   private BigDecimal salePrice;
 
+  private BigDecimal purchasePrice;
+
   private BigDecimal salesAmount;
 
   private BigDecimal salesCost;

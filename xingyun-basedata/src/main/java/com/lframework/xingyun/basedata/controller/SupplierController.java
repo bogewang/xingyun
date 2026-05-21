@@ -2,6 +2,7 @@ package com.lframework.xingyun.basedata.controller;
 
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.CollectionUtil;
+import com.lframework.starter.mq.core.utils.ExportTaskUtil;
 import com.lframework.starter.web.core.annotations.security.HasPermission;
 import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
@@ -12,6 +13,7 @@ import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.basedata.bo.supplier.GetSupplierBo;
 import com.lframework.xingyun.basedata.bo.supplier.QuerySupplierBo;
 import com.lframework.xingyun.basedata.entity.Supplier;
+import com.lframework.xingyun.basedata.excel.supplier.SupplierExportTaskWorker;
 import com.lframework.xingyun.basedata.excel.supplier.SupplierImportListener;
 import com.lframework.xingyun.basedata.excel.supplier.SupplierImportModel;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
@@ -138,6 +140,19 @@ public class SupplierController extends DefaultBaseController {
     supplierService.update(vo);
 
     supplierService.cleanCacheByKey(vo.getId());
+
+    return InvokeResultBuilder.success();
+  }
+
+  /**
+   * 导出
+   */
+  @ApiOperation("导出")
+  @HasPermission({"base-data:supplier:import"})
+  @PostMapping("/export")
+  public InvokeResult<Void> export(@Valid QuerySupplierVo vo) {
+
+    ExportTaskUtil.exportTask("供应商信息", SupplierExportTaskWorker.class, vo);
 
     return InvokeResultBuilder.success();
   }

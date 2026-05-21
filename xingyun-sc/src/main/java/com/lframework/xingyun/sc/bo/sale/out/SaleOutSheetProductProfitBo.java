@@ -30,6 +30,9 @@ public class SaleOutSheetProductProfitBo extends BaseBo<SaleOutSheetProductProfi
   @ApiModelProperty("销售均价")
   private BigDecimal salePrice;
 
+  @ApiModelProperty("采购均价")
+  private BigDecimal purchasePrice;
+
   @ApiModelProperty("销售金额")
   private BigDecimal salesAmount;
 

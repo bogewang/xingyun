@@ -47,6 +47,12 @@
               @click="$refs.importer.openDialog()"
               >导入Excel</a-button
             >
+            <a-button
+              v-permission="['base-data:supplier:import']"
+              :icon="h(DownloadOutlined)"
+              @click="exportList"
+              >导出</a-button
+            >
             <a-dropdown>
               <template #overlay>
                 <a-menu @click="handleCommand">
@@ -101,6 +107,7 @@
     CheckOutlined,
     CloudUploadOutlined,
     DownOutlined,
+    DownloadOutlined,
     PlusOutlined,
     SearchOutlined,
     SettingOutlined,
@@ -108,7 +115,7 @@
     ThunderboltOutlined,
   } from '@ant-design/icons-vue';
   import { isEmpty, buildSortPageVo } from '@/utils/utils';
-  import { createError } from '@/hooks/web/msg';
+  import { createError, createSuccess } from '@/hooks/web/msg';
   import SupplierImporter from '@/components/Importor/SupplierImporter.vue';
   import BatchHandler from '@/components/BatchHandler';
 
@@ -132,6 +139,7 @@
         CheckOutlined,
         DeleteOutlined,
         CloudUploadOutlined,
+        DownloadOutlined,
       };
     },
     data() {
@@ -220,6 +228,17 @@
         this.batchHandleDatas = records;
 
         this.$refs.batchDeleteHandlerDialog.openDialog();
+      },
+      exportList() {
+        this.loading = true;
+        api
+          .exportList(this.buildQueryParams({}))
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
       },
       createActions(row) {
         return [

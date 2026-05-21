@@ -6,6 +6,7 @@ export interface SaleOutSheetProductProfitBo {
   unit: string;
   saleNum: number;
   salePrice: number;
+  purchasePrice: number;
   salesAmount: number;
   salesCost: number;
   salesProfit: number;

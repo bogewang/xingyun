@@ -27,6 +27,9 @@ public class SaleOutSheetProductProfitExportModel extends BaseBo<SaleOutSheetPro
   @ExcelProperty("销售均价")
   private BigDecimal salePrice;
 
+  @ExcelProperty("采购均价")
+  private BigDecimal purchasePrice;
+
   @ExcelProperty("销售金额")
   private BigDecimal salesAmount;
 
@@ -58,6 +61,7 @@ public class SaleOutSheetProductProfitExportModel extends BaseBo<SaleOutSheetPro
     this.unit = dto.getUnit();
     this.saleNum = defaultValue(dto.getSaleNum());
     this.salePrice = defaultValue(dto.getSalePrice());
+    this.purchasePrice = defaultValue(dto.getPurchasePrice());
     this.salesAmount = defaultValue(dto.getSalesAmount());
     this.salesCost = defaultValue(dto.getSalesCost());
     this.salesProfit = defaultValue(dto.getSalesProfit());

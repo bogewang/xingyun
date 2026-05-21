@@ -512,6 +512,10 @@
                 WHEN IFNULL(SUM(IFNULL(d.order_num, 0)), 0) = 0 THEN 0
                 ELSE IFNULL(SUM(IFNULL(d.tax_amount, 0)), 0) / SUM(IFNULL(d.order_num, 0))
             END AS salePrice,
+            CASE
+                WHEN IFNULL(SUM(IFNULL(d.order_num, 0)), 0) = 0 THEN 0
+                ELSE IFNULL(SUM(IFNULL(d.tax_amount, 0) - IFNULL(d.total_profit, 0)), 0) / SUM(IFNULL(d.order_num, 0))
+            END AS purchasePrice,
             IFNULL(SUM(IFNULL(d.tax_amount, 0)), 0) AS salesAmount,
             IFNULL(SUM(IFNULL(d.tax_amount, 0) - IFNULL(d.total_profit, 0)), 0) AS salesCost,
             IFNULL(SUM(IFNULL(d.total_profit, 0)), 0) AS salesProfit

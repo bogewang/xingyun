@@ -114,7 +114,6 @@
   import { requestCustomerSelectOptions } from '@/utils/labelSelect';
   import { createSuccess } from '@/hooks/web/msg';
 
-  const AMOUNT_FOOTER_FIELDS = ['salesAmount', 'salesCost', 'salesProfit'];
   const TREND_SERIES_NAMES = ['销售金额', '毛利', '毛利率'];
 
   export default defineComponent({
@@ -178,6 +177,13 @@
           {
             field: 'salePrice',
             title: '销售均价',
+            align: 'right',
+            width: 120,
+            formatter: ({ cellValue }) => this.formatAmount(cellValue),
+          },
+          {
+            field: 'purchasePrice',
+            title: '采购均价',
             align: 'right',
             width: 120,
             formatter: ({ cellValue }) => this.formatAmount(cellValue),
@@ -301,13 +307,20 @@
         };
       },
       footerMethod({ columns, data }) {
+        const saleNum = this.sumBy(data, 'saleNum');
+        const salesAmount = this.sumBy(data, 'salesAmount');
+        const salesCost = this.sumBy(data, 'salesCost');
+        const salesProfit = salesAmount - salesCost;
         return [
           columns.map((column) => {
             if (column.field === 'productName') return '合计';
-            if (column.field === 'saleNum') return this.formatQuantity(this.sumBy(data, 'saleNum'));
-            if (AMOUNT_FOOTER_FIELDS.includes(column.field)) {
-              return this.formatAmount(this.sumBy(data, column.field));
-            }
+            if (column.field === 'saleNum') return this.formatQuantity(saleNum);
+            if (column.field === 'salePrice') return this.calcAverage(salesAmount, saleNum);
+            if (column.field === 'purchasePrice') return this.calcAverage(salesCost, saleNum);
+            if (column.field === 'salesAmount') return this.formatAmount(salesAmount);
+            if (column.field === 'salesCost') return this.formatAmount(salesCost);
+            if (column.field === 'salesProfit') return this.formatAmount(salesProfit);
+            if (column.field === 'profitRate') return this.calcProfitRate(salesProfit, salesAmount);
             return '';
           }),
         ];
@@ -325,6 +338,11 @@
         const amountNumber = this.toNumber(amount);
         if (!amountNumber) return this.formatPercent(0);
         return this.formatPercent((this.toNumber(profit) / amountNumber) * 100);
+      },
+      calcAverage(amount, num) {
+        const numNumber = this.toNumber(num);
+        if (!numNumber) return this.formatAmount(0);
+        return this.formatAmount(this.toNumber(amount) / numNumber);
       },
       formatAmount(value) {
         return this.toNumber(value).toFixed(2);
