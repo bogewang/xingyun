@@ -316,16 +316,21 @@ export default defineComponent({
       };
     },
     footerMethod({columns, data}) {
+      const totalAmount = this.sumBy(data, 'totalAmount');
+      const totalProfit = this.sumBy(data, 'totalProfit');
       return [
         columns.map((column) => {
           if (column.field === 'totalAmount') {
-            return this.formatAmount(this.sumBy(data, 'totalAmount'));
+            return this.formatAmount(totalAmount);
           }
           if (column.field === 'salesCost') {
             return this.formatAmount(data.reduce((sum, row) => sum + this.calcSalesCost(row), 0));
           }
           if (column.field === 'totalProfit') {
-            return this.formatAmount(this.sumBy(data, 'totalProfit'));
+            return this.formatAmount(totalProfit);
+          }
+          if (column.field === 'profitRate') {
+            return this.calcProfitRate(totalProfit, totalAmount);
           }
           if (column.field === 'paidAmount') {
             return this.formatAmount(this.sumBy(data, 'paidAmount'));

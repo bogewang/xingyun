@@ -28,25 +28,6 @@
 
           <j-border>
             <j-form bordered @collapse="$refs.grid.refreshColumn()" @keyup.enter="search">
-              <j-form-item label="商品名称">
-                <a-input v-model:value="searchFormData.productName" allow-clear />
-              </j-form-item>
-              <j-form-item label="规格型号">
-                <a-input v-model:value="searchFormData.productSpec" allow-clear />
-              </j-form-item>
-              <j-form-item label="客户">
-                <a-select
-                  v-model:value="searchFormData.customerId"
-                  allow-clear
-                  show-search
-                  :filter-option="filterSelectOption"
-                  :options="customerOptions"
-                  placeholder="请选择客户"
-                  @focus="loadCustomerOptions()"
-                  @search="loadCustomerOptions"
-                  @change="onCustomerChange"
-                />
-              </j-form-item>
               <j-form-item label="单据日期">
                 <a-range-picker
                   v-model:value="orderDateRange"
@@ -54,6 +35,13 @@
                   :placeholder="['开始日期', '结束日期']"
                 />
               </j-form-item>
+              <j-form-item label="商品名称">
+                <a-input v-model:value="searchFormData.productName" allow-clear />
+              </j-form-item>
+              <j-form-item label="规格型号">
+                <a-input v-model:value="searchFormData.productSpec" allow-clear />
+              </j-form-item>
+
             </j-form>
           </j-border>
         </template>
@@ -170,7 +158,7 @@
             field: 'saleNum',
             title: '销售数量',
             align: 'right',
-            width: 120,
+            width: 100,
             sortable: true,
             formatter: ({ cellValue }) => this.formatQuantity(cellValue),
           },

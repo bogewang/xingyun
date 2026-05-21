@@ -69,6 +69,9 @@
         <a-descriptions-item label="累计未付金额" :span="2">
           {{ formData.unpaidAmount }}
         </a-descriptions-item>
+        <a-descriptions-item label="金额合计" :span="2">
+          {{ amountTotal }}
+        </a-descriptions-item>
         <a-descriptions-item label="备注" :span="4">
           {{ formData.description }}
         </a-descriptions-item>
@@ -106,6 +109,13 @@
         // 表单数据
         formData: {},
       };
+    },
+    computed: {
+      amountTotal() {
+        return (
+          Number(this.formData?.paidAmount || 0) + Number(this.formData?.unpaidAmount || 0)
+        ).toFixed(2);
+      },
     },
     created() {
       this.initFormData();

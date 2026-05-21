@@ -140,6 +140,11 @@
               <a-input :value="formData.unpaidAmount" disabled />
             </a-form-item>
           </a-col>
+          <a-col :span="8">
+            <a-form-item label="金额合计">
+              <a-input :value="amountTotal" disabled />
+            </a-form-item>
+          </a-col>
         </a-row>
         <a-row :gutter="16">
           <a-col :span="24">
@@ -208,8 +213,6 @@
                 } else {
                   return Promise.reject('邮箱地址格式不正确');
                 }
-
-                return Promise.resolve();
               },
             },
           ],
@@ -234,6 +237,13 @@
           ],
         },
       };
+    },
+    computed: {
+      amountTotal() {
+        return (
+          Number(this.formData?.paidAmount || 0) + Number(this.formData?.unpaidAmount || 0)
+        ).toFixed(2);
+      },
     },
     created() {
       this.initFormData();

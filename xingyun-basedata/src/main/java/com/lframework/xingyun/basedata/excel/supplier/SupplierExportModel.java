@@ -137,6 +137,12 @@ public class SupplierExportModel implements ExcelModel {
   private BigDecimal unpaidAmount;
 
   /**
+   * 金额合计
+   */
+  @ExcelProperty("金额合计")
+  private BigDecimal amountTotal;
+
+  /**
    * 备注
    */
   @ExcelProperty("备注")
@@ -167,6 +173,7 @@ public class SupplierExportModel implements ExcelModel {
     this.accountNo = dto.getAccountNo();
     this.paidAmount = dto.getPaidAmount();
     this.unpaidAmount = dto.getUnpaidAmount();
+    this.amountTotal = getAmountOrZero(this.paidAmount).add(getAmountOrZero(this.unpaidAmount));
     this.description = dto.getDescription();
 
     if (!StringUtil.isBlank(dto.getCityId())) {
@@ -175,5 +182,9 @@ public class SupplierExportModel implements ExcelModel {
       this.city = cityList.stream().map(DicCityDto::getName)
           .collect(Collectors.joining(StringPool.CITY_SPLIT));
     }
+  }
+
+  private BigDecimal getAmountOrZero(BigDecimal value) {
+    return value == null ? BigDecimal.ZERO : value;
   }
 }

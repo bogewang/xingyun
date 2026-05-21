@@ -7,6 +7,7 @@
         ref="grid"
         resizable
         show-overflow
+        show-footer
         highlight-hover-row
         keep-source
         row-id="id"
@@ -15,6 +16,7 @@
         :toolbar-config="toolbarConfig"
         :custom-config="{}"
         :pager-config="{}"
+        :footer-method="footerMethod"
         :loading="loading"
         height="auto"
       >
@@ -160,10 +162,18 @@
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
+          { type: 'seq', width: 45 },
           { field: 'code', title: '编号', width: 100, sortable: true },
           { field: 'name', title: '名称', minWidth: 180, sortable: true },
           { field: 'paidAmount', title: '累计已付金额', width: 120, align: 'right' },
           { field: 'unpaidAmount', title: '累计未付金额', width: 120, align: 'right' },
+          {
+            field: 'amountTotal',
+            title: '金额合计',
+            width: 120,
+            align: 'right',
+            formatter: ({ row }) => this.calcAmountTotal(row),
+          },
           { field: 'description', title: '备注', minWidth: 200 },
           { field: 'createBy', title: '创建人', width: 100 },
           { field: 'createTime', title: '创建时间', width: 170, sortable: true },
@@ -215,6 +225,41 @@
       },
       doBatchDelete(row) {
         return api.deleteById(row.id);
+      },
+      footerMethod({ columns, data }) {
+        const paidAmount = this.sumBy(data, 'paidAmount');
+        const unpaidAmount = this.sumBy(data, 'unpaidAmount');
+
+        return [
+          columns.map((column) => {
+            if (column.field === 'code') {
+              return '合计';
+            }
+            if (column.field === 'paidAmount') {
+              return this.formatAmount(paidAmount);
+            }
+            if (column.field === 'unpaidAmount') {
+              return this.formatAmount(unpaidAmount);
+            }
+            if (column.field === 'amountTotal') {
+              return this.formatAmount(paidAmount + unpaidAmount);
+            }
+            return '';
+          }),
+        ];
+      },
+      sumBy(data, field) {
+        return (data || []).reduce((sum, item) => sum + this.toNumber(item?.[field]), 0);
+      },
+      toNumber(value) {
+        const valueNumber = Number(value || 0);
+        return Number.isNaN(valueNumber) ? 0 : valueNumber;
+      },
+      formatAmount(value) {
+        return this.toNumber(value).toFixed(2);
+      },
+      calcAmountTotal(row) {
+        return this.formatAmount(this.toNumber(row?.paidAmount) + this.toNumber(row?.unpaidAmount));
       },
       // 批量删除
       batchDelete() {
