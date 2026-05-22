@@ -15,7 +15,7 @@
         :columns="visibleTableColumn"
         :toolbar-config="toolbarConfig"
         :custom-config="{}"
-        :pager-config="{}"
+        :pager-config="pagerConfig"
         :footer-method="footerMethod"
         :loading="loading"
         height="auto"
@@ -30,7 +30,6 @@
                   :placeholder="['开始日期', '结束日期']"
                 />
               </j-form-item>
-
 
               <j-form-item label="商品名称">
                 <a-input v-model:value="searchFormData.productName" allow-clear />
@@ -129,7 +128,6 @@
                     <a-select-option :value="false">未付完</a-select-option>
                   </a-select>
                 </j-form-item>
-
               </template>
             </j-form>
           </j-border>
@@ -229,6 +227,9 @@
           slots: {
             buttons: 'toolbar_buttons',
           },
+        },
+        pagerConfig: {
+          layouts: ['Home', 'PrevPage', 'Jump', 'PageCount', 'NextPage', 'End', 'Sizes', 'Total'],
         },
         tableColumn: [
           { type: 'seq', width: 50, title: '序号' },

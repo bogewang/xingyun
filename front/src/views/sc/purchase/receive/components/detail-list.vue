@@ -15,7 +15,7 @@
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
         :custom-config="{}"
-        :pager-config="{}"
+        :pager-config="pagerConfig"
         :footer-method="footerMethod"
         :loading="loading"
         height="auto"
@@ -38,11 +38,11 @@
                 />
               </j-form-item>
               <j-form-item label="商品名称">
-                <a-input v-model:value="searchFormData.productName" allow-clear/>
+                <a-input v-model:value="searchFormData.productName" allow-clear />
               </j-form-item>
               <template #more>
                 <j-form-item label="单据号">
-                  <a-input v-model:value="searchFormData.code" allow-clear/>
+                  <a-input v-model:value="searchFormData.code" allow-clear />
                 </j-form-item>
                 <j-form-item label="操作人">
                   <a-select
@@ -89,7 +89,7 @@
                   </a-select>
                 </j-form-item>
                 <j-form-item label="采购订单号">
-                  <a-input v-model:value="searchFormData.purchaseOrderCode" allow-clear/>
+                  <a-input v-model:value="searchFormData.purchaseOrderCode" allow-clear />
                 </j-form-item>
                 <j-form-item label="结算状态">
                   <a-select
@@ -133,8 +133,8 @@
 
         <template #code_default="{ row }">
           <a v-permission="['purchase:receive:modify']" @click="openModifyDialog(row)">{{
-              row.code
-            }}</a>
+            row.code
+          }}</a>
           <span v-no-permission="['purchase:receive:modify']">{{ row.code }}</span>
         </template>
 
@@ -157,273 +157,276 @@
       </vxe-grid>
     </page-wrapper>
 
-    <detail :id="id" ref="viewDialog"/>
-    <purchase-order-detail :id="purchaseOrderId" ref="viewPurchaseOrderDetailDialog"/>
+    <detail :id="id" ref="viewDialog" />
+    <purchase-order-detail :id="purchaseOrderId" ref="viewPurchaseOrderDetailDialog" />
   </div>
 </template>
 
 <script>
-import {defineComponent, h} from 'vue';
-import moment from 'moment';
-import {DownloadOutlined, SearchOutlined} from '@ant-design/icons-vue';
-import Detail from '../detail.vue';
-import PurchaseOrderDetail from '@/views/sc/purchase/order/detail.vue';
-import * as api from '@/api/sc/purchase/receive';
-import { multiplePageMix } from '@/mixins/multiplePageMix';
-import {buildSortPageVo, isEmpty} from '@/utils/utils';
-import {
-  buildVisibleSelectOptions,
-  filterSelectOption,
-  mergeSelectOptionMap,
-  normalizeSelectValue,
-} from '@/utils/searchSelect';
-import {requestUserSelectOptions} from '@/utils/labelSelect';
-import {RECEIVE_SHEET_STATUS} from '@/enums/biz/receiveSheetStatus';
-import {SETTLE_STATUS} from '@/enums/biz/settleStatus';
-import {createSuccess} from '@/hooks/web/msg';
-import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
+  import { defineComponent, h } from 'vue';
+  import moment from 'moment';
+  import { DownloadOutlined, SearchOutlined } from '@ant-design/icons-vue';
+  import Detail from '../detail.vue';
+  import PurchaseOrderDetail from '@/views/sc/purchase/order/detail.vue';
+  import * as api from '@/api/sc/purchase/receive';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { buildSortPageVo, isEmpty } from '@/utils/utils';
+  import {
+    buildVisibleSelectOptions,
+    filterSelectOption,
+    mergeSelectOptionMap,
+    normalizeSelectValue,
+  } from '@/utils/searchSelect';
+  import { requestUserSelectOptions } from '@/utils/labelSelect';
+  import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
+  import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
+  import { createSuccess } from '@/hooks/web/msg';
+  import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
 
-export default defineComponent({
-  name: 'ReceiveSheetDetailList',
-  components: {
-    Detail,
-    PurchaseOrderDetail,
-    SupplierSelector,
-  },
-  mixins: [multiplePageMix],
-  setup() {
-    return {
-      h,
-      isEmpty,
-      SearchOutlined,
-      DownloadOutlined,
-      RECEIVE_SHEET_STATUS,
-      SETTLE_STATUS,
-    };
-  },
-  data() {
-    return {
-      loading: false,
-      id: '',
-      purchaseOrderId: '',
-      searchFormData: {
-        code: '',
-        productName: '',
-        supplierId: undefined,
-        createBy: undefined,
-        approveBy: undefined,
-        status: undefined,
-        purchaser: '',
-        purchaseOrderCode: '',
-        settleStatus: undefined,
-        fullyPaid: undefined,
-      },
-      orderDateRange: [],
-      approveDateRange: [],
-      createByOptions: [],
-      createByOptionMap: {},
-      approveByOptions: [],
-      approveByOptionMap: {},
-      toolbarConfig: {
-        slots: {
-          buttons: 'toolbar_buttons',
+  export default defineComponent({
+    name: 'ReceiveSheetDetailList',
+    components: {
+      Detail,
+      PurchaseOrderDetail,
+      SupplierSelector,
+    },
+    mixins: [multiplePageMix],
+    setup() {
+      return {
+        h,
+        isEmpty,
+        SearchOutlined,
+        DownloadOutlined,
+        RECEIVE_SHEET_STATUS,
+        SETTLE_STATUS,
+      };
+    },
+    data() {
+      return {
+        loading: false,
+        id: '',
+        purchaseOrderId: '',
+        searchFormData: {
+          code: '',
+          productName: '',
+          supplierId: undefined,
+          createBy: undefined,
+          approveBy: undefined,
+          status: undefined,
+          purchaser: '',
+          purchaseOrderCode: '',
+          settleStatus: undefined,
+          fullyPaid: undefined,
         },
-      },
-      tableColumn: [
-        {type: 'seq', width: 50, title: '序号'},
-        {
-          field: 'code',
-          title: '单据号',
-          width: 180,
-          sortable: true,
-          slots: {default: 'code_default'},
-        },
-        {field: 'supplierCode', title: '供应商编号', width: 120},
-        {field: 'supplierName', title: '供应商名称', width: 140},
-        {field: 'orderDate', title: '订单日期', width: 120, sortable: true},
-        {field: 'receiveDate', title: '到货日期', width: 120},
-        {
-          field: 'purchaseOrderCode',
-          title: '采购订单号',
-          width: 180,
-          slots: {default: 'purchaseOrderCode_default'},
-        },
-        {field: 'productCode', title: '商品编号', width: 120},
-        {field: 'productName', title: '商品名称', width: 180},
-        {field: 'skuCode', title: '商品SKU编号', width: 120},
-        {field: 'externalCode', title: '商品简码', width: 120},
-        {field: 'spec', title: '规格', width: 100},
-        {field: 'unit', title: '单位', width: 80},
-        {field: 'categoryName', title: '商品分类', width: 120},
-        {field: 'brandName', title: '商品品牌', width: 120},
-        {field: 'orderNum', title: '收货数量', align: 'right', width: 100},
-        {field: 'taxPrice', title: '采购价', align: 'right', width: 100},
-        {field: 'taxAmount', title: '采购金额', align: 'right', width: 100},
-        {field: 'isGift', title: '赠品', width: 80, slots: {default: 'isGift_default'}},
-        {field: 'createTime', title: '操作时间', width: 170, sortable: true},
-        {field: 'createBy', title: '操作人', width: 100},
-        {field: 'approveTime', title: '审核时间', width: 170, sortable: true},
-        {field: 'approveBy', title: '审核人', width: 100},
-        {
-          field: 'status',
-          title: '状态',
-          width: 100,
-          formatter: ({cellValue}) => RECEIVE_SHEET_STATUS.getDesc(cellValue),
-        },
-        {
-          field: 'settleStatus',
-          title: '结算状态',
-          width: 100,
-          formatter: ({cellValue}) => SETTLE_STATUS.getDesc(cellValue),
-        },
-        {field: 'description', title: '备注', width: 200},
-      ],
-      proxyConfig: {
-        props: {
-          result: 'datas',
-          total: 'totalCount',
-        },
-        ajax: {
-          query: ({page, sorts}) => {
-            return api.queryDetail(this.buildQueryParams(page, sorts));
+        orderDateRange: [],
+        approveDateRange: [],
+        createByOptions: [],
+        createByOptionMap: {},
+        approveByOptions: [],
+        approveByOptionMap: {},
+        toolbarConfig: {
+          slots: {
+            buttons: 'toolbar_buttons',
           },
         },
-      },
-    };
-  },
-  created() {
-    this.orderDateRange = this.getDefaultOrderDateRange();
-  },
-  methods: {
-    footerMethod({columns, data}) {
-      const orderNum = this.sumByField(data, 'orderNum');
-      const taxAmount = this.sumByField(data, 'taxAmount');
-
-      return [
-        columns.map((column) => {
-          if (column.type === 'seq') {
-            return '合计';
-          }
-          if (column.field === 'orderNum') {
-            return this.formatQuantity(orderNum);
-          }
-          if (column.field === 'taxAmount') {
-            return this.formatAmount(taxAmount);
-          }
-          return '';
-        }),
-      ];
-    },
-    sumByField(data, field) {
-      return (data || []).reduce((total, item) => {
-        const value = Number(item?.[field] ?? 0);
-        return total + (Number.isNaN(value) ? 0 : value);
-      }, 0);
-    },
-    formatAmount(value) {
-      return Number(value || 0).toFixed(2);
-    },
-    formatQuantity(value) {
-      return Number(value || 0)
-        .toFixed(2)
-        .replace(/\.?0+$/, '');
-    },
-    search() {
-      this.$refs.grid.commitProxy('reload');
-    },
-    getDefaultOrderDateRange() {
-      return [moment().startOf('month').format('YYYY-MM-DD'), moment().format('YYYY-MM-DD')];
-    },
-    resetSearchForm() {
-      this.searchFormData = {
-        code: '',
-        productName: '',
-        supplierId: undefined,
-        createBy: undefined,
-        approveBy: undefined,
-        status: undefined,
-        purchaser: '',
-        purchaseOrderCode: '',
-        settleStatus: undefined,
-        fullyPaid: undefined,
+        pagerConfig: {
+          layouts: ['Home', 'PrevPage', 'Jump', 'PageCount', 'NextPage', 'End', 'Sizes', 'Total'],
+        },
+        tableColumn: [
+          { type: 'seq', width: 50, title: '序号' },
+          {
+            field: 'code',
+            title: '单据号',
+            width: 180,
+            sortable: true,
+            slots: { default: 'code_default' },
+          },
+          { field: 'supplierCode', title: '供应商编号', width: 120 },
+          { field: 'supplierName', title: '供应商名称', width: 140 },
+          { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
+          { field: 'receiveDate', title: '到货日期', width: 120 },
+          {
+            field: 'purchaseOrderCode',
+            title: '采购订单号',
+            width: 180,
+            slots: { default: 'purchaseOrderCode_default' },
+          },
+          { field: 'productCode', title: '商品编号', width: 120 },
+          { field: 'productName', title: '商品名称', width: 180 },
+          { field: 'skuCode', title: '商品SKU编号', width: 120 },
+          { field: 'externalCode', title: '商品简码', width: 120 },
+          { field: 'spec', title: '规格', width: 100 },
+          { field: 'unit', title: '单位', width: 80 },
+          { field: 'categoryName', title: '商品分类', width: 120 },
+          { field: 'brandName', title: '商品品牌', width: 120 },
+          { field: 'orderNum', title: '收货数量', align: 'right', width: 100 },
+          { field: 'taxPrice', title: '采购价', align: 'right', width: 100 },
+          { field: 'taxAmount', title: '采购金额', align: 'right', width: 100 },
+          { field: 'isGift', title: '赠品', width: 80, slots: { default: 'isGift_default' } },
+          { field: 'createTime', title: '操作时间', width: 170, sortable: true },
+          { field: 'createBy', title: '操作人', width: 100 },
+          { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
+          { field: 'approveBy', title: '审核人', width: 100 },
+          {
+            field: 'status',
+            title: '状态',
+            width: 100,
+            formatter: ({ cellValue }) => RECEIVE_SHEET_STATUS.getDesc(cellValue),
+          },
+          {
+            field: 'settleStatus',
+            title: '结算状态',
+            width: 100,
+            formatter: ({ cellValue }) => SETTLE_STATUS.getDesc(cellValue),
+          },
+          { field: 'description', title: '备注', width: 200 },
+        ],
+        proxyConfig: {
+          props: {
+            result: 'datas',
+            total: 'totalCount',
+          },
+          ajax: {
+            query: ({ page, sorts }) => {
+              return api.queryDetail(this.buildQueryParams(page, sorts));
+            },
+          },
+        },
       };
+    },
+    created() {
       this.orderDateRange = this.getDefaultOrderDateRange();
-      this.approveDateRange = [];
-      this.search();
     },
-    buildQueryParams(page, sorts) {
-      return {
-        ...buildSortPageVo(page, sorts),
-        ...this.buildSearchFormData(),
-      };
+    methods: {
+      footerMethod({ columns, data }) {
+        const orderNum = this.sumByField(data, 'orderNum');
+        const taxAmount = this.sumByField(data, 'taxAmount');
+
+        return [
+          columns.map((column) => {
+            if (column.type === 'seq') {
+              return '合计';
+            }
+            if (column.field === 'orderNum') {
+              return this.formatQuantity(orderNum);
+            }
+            if (column.field === 'taxAmount') {
+              return this.formatAmount(taxAmount);
+            }
+            return '';
+          }),
+        ];
+      },
+      sumByField(data, field) {
+        return (data || []).reduce((total, item) => {
+          const value = Number(item?.[field] ?? 0);
+          return total + (Number.isNaN(value) ? 0 : value);
+        }, 0);
+      },
+      formatAmount(value) {
+        return Number(value || 0).toFixed(2);
+      },
+      formatQuantity(value) {
+        return Number(value || 0)
+          .toFixed(2)
+          .replace(/\.?0+$/, '');
+      },
+      search() {
+        this.$refs.grid.commitProxy('reload');
+      },
+      getDefaultOrderDateRange() {
+        return [moment().startOf('month').format('YYYY-MM-DD'), moment().format('YYYY-MM-DD')];
+      },
+      resetSearchForm() {
+        this.searchFormData = {
+          code: '',
+          productName: '',
+          supplierId: undefined,
+          createBy: undefined,
+          approveBy: undefined,
+          status: undefined,
+          purchaser: '',
+          purchaseOrderCode: '',
+          settleStatus: undefined,
+          fullyPaid: undefined,
+        };
+        this.orderDateRange = this.getDefaultOrderDateRange();
+        this.approveDateRange = [];
+        this.search();
+      },
+      buildQueryParams(page, sorts) {
+        return {
+          ...buildSortPageVo(page, sorts),
+          ...this.buildSearchFormData(),
+        };
+      },
+      buildSearchFormData() {
+        return Object.assign({}, this.searchFormData, {
+          supplierId: this.searchFormData.supplierId,
+          createBy: this.searchFormData.createBy,
+          orderDateStart: this.orderDateRange?.[0] || '',
+          orderDateEnd: this.orderDateRange?.[1] || '',
+          approveBy: this.searchFormData.approveBy,
+          approveStartTime: this.approveDateRange?.[0]
+            ? `${this.approveDateRange[0]} 00:00:00`
+            : '',
+          approveEndTime: this.approveDateRange?.[1] ? `${this.approveDateRange[1]} 23:59:59` : '',
+          purchaserId: this.searchFormData.purchaser,
+        });
+      },
+      filterSelectOption(input, option) {
+        return filterSelectOption(input, option);
+      },
+      async updateSelectOptions(keyword, optionMapKey, optionsKey, selectedValueKey) {
+        const options = await requestUserSelectOptions(keyword);
+        const optionMap = mergeSelectOptionMap(this[optionMapKey], options);
+        this[optionMapKey] = optionMap;
+        this[optionsKey] = buildVisibleSelectOptions(
+          this.searchFormData[selectedValueKey],
+          optionMap,
+          options,
+        );
+      },
+      async loadCreateByOptions(keyword = '') {
+        await this.updateSelectOptions(keyword, 'createByOptionMap', 'createByOptions', 'createBy');
+      },
+      async loadApproveByOptions(keyword = '') {
+        await this.updateSelectOptions(
+          keyword,
+          'approveByOptionMap',
+          'approveByOptions',
+          'approveBy',
+        );
+      },
+      normalizeSelectValue(value, optionMap) {
+        return normalizeSelectValue(value, optionMap);
+      },
+      onCreateByChange(value) {
+        this.searchFormData.createBy = this.normalizeSelectValue(value, this.createByOptionMap);
+      },
+      onApproveByChange(value) {
+        this.searchFormData.approveBy = this.normalizeSelectValue(value, this.approveByOptionMap);
+      },
+      exportDetails() {
+        api.exportDetail(this.buildSearchFormData()).then(() => {
+          createSuccess('已加入导出任务，请到导出中心查看！');
+        });
+      },
+      viewDetail(id) {
+        this.id = id;
+        this.$nextTick(() => this.$refs.viewDialog.openDialog());
+      },
+      viewPurchaseOrderDetail(id) {
+        this.purchaseOrderId = id;
+        this.$nextTick(() => this.$refs.viewPurchaseOrderDetailDialog.openDialog());
+      },
+      openModifyDialog(row) {
+        if (!isEmpty(row.purchaseOrderId)) {
+          this.openChildPage('/purchase/receive/modify/require/' + row.id);
+        } else {
+          this.openChildPage('/purchase/receive/modify/un-require/' + row.id);
+        }
+      },
     },
-    buildSearchFormData() {
-      return Object.assign({}, this.searchFormData, {
-        supplierId: this.searchFormData.supplierId,
-        createBy: this.searchFormData.createBy,
-        orderDateStart: this.orderDateRange?.[0] || '',
-        orderDateEnd: this.orderDateRange?.[1] || '',
-        approveBy: this.searchFormData.approveBy,
-        approveStartTime: this.approveDateRange?.[0]
-          ? `${this.approveDateRange[0]} 00:00:00`
-          : '',
-        approveEndTime: this.approveDateRange?.[1] ? `${this.approveDateRange[1]} 23:59:59` : '',
-        purchaserId: this.searchFormData.purchaser,
-      });
-    },
-    filterSelectOption(input, option) {
-      return filterSelectOption(input, option);
-    },
-    async updateSelectOptions(keyword, optionMapKey, optionsKey, selectedValueKey) {
-      const options = await requestUserSelectOptions(keyword);
-      const optionMap = mergeSelectOptionMap(this[optionMapKey], options);
-      this[optionMapKey] = optionMap;
-      this[optionsKey] = buildVisibleSelectOptions(
-        this.searchFormData[selectedValueKey],
-        optionMap,
-        options,
-      );
-    },
-    async loadCreateByOptions(keyword = '') {
-      await this.updateSelectOptions(keyword, 'createByOptionMap', 'createByOptions', 'createBy');
-    },
-    async loadApproveByOptions(keyword = '') {
-      await this.updateSelectOptions(
-        keyword,
-        'approveByOptionMap',
-        'approveByOptions',
-        'approveBy',
-      );
-    },
-    normalizeSelectValue(value, optionMap) {
-      return normalizeSelectValue(value, optionMap);
-    },
-    onCreateByChange(value) {
-      this.searchFormData.createBy = this.normalizeSelectValue(value, this.createByOptionMap);
-    },
-    onApproveByChange(value) {
-      this.searchFormData.approveBy = this.normalizeSelectValue(value, this.approveByOptionMap);
-    },
-    exportDetails() {
-      api.exportDetail(this.buildSearchFormData()).then(() => {
-        createSuccess('已加入导出任务，请到导出中心查看！');
-      });
-    },
-    viewDetail(id) {
-      this.id = id;
-      this.$nextTick(() => this.$refs.viewDialog.openDialog());
-    },
-    viewPurchaseOrderDetail(id) {
-      this.purchaseOrderId = id;
-      this.$nextTick(() => this.$refs.viewPurchaseOrderDetailDialog.openDialog());
-    },
-    openModifyDialog(row) {
-      if (!isEmpty(row.purchaseOrderId)) {
-        this.openChildPage('/purchase/receive/modify/require/' + row.id);
-      } else {
-        this.openChildPage('/purchase/receive/modify/un-require/' + row.id);
-      }
-    },
-  },
-});
+  });
 </script>

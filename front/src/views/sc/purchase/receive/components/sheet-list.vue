@@ -17,7 +17,7 @@
           :columns="tableColumn"
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
-          :pager-config="{}"
+          :pager-config="pagerConfig"
           :footer-method="footerMethod"
           :loading="loading"
           height="auto"
@@ -391,6 +391,9 @@
             buttons: 'toolbar_buttons',
           },
         },
+        pagerConfig: {
+          layouts: ['Home', 'PrevPage', 'Jump', 'PageCount', 'NextPage', 'End', 'Sizes', 'Total'],
+        },
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
@@ -517,7 +520,10 @@
         this.$refs.grid.commitProxy('reload');
       },
       getDefaultOrderDateRange() {
-        return [moment().startOf('month').format('YYYY-MM-DD'), moment().add(2, 'd').format('YYYY-MM-DD')];
+        return [
+          moment().startOf('month').format('YYYY-MM-DD'),
+          moment().add(2, 'd').format('YYYY-MM-DD'),
+        ];
       },
       resetSearchForm() {
         this.searchFormData = {

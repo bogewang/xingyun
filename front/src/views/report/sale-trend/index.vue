@@ -92,6 +92,34 @@
             </div>
           </div>
         </div>
+
+        <div class="bar-chart-grid">
+          <div class="product-bar-section">
+            <div class="chart-toolbar">
+              <span class="chart-section-title">商品正毛利率 TOP10</span>
+              <span class="chart-tip">按商品汇总毛利率后取前 10</span>
+            </div>
+            <div v-if="positiveProfitBarEmpty" class="chart-empty">
+              <a-empty description="暂无正毛利率商品数据" />
+            </div>
+            <div v-show="!positiveProfitBarEmpty" class="product-bar-wrapper">
+              <div ref="positiveProfitBarChartRef" class="product-bar-chart"></div>
+            </div>
+          </div>
+
+          <div class="product-bar-section">
+            <div class="chart-toolbar">
+              <span class="chart-section-title">商品负毛利率 TOP10</span>
+              <span class="chart-tip">按商品汇总毛利率后取最低 10 条</span>
+            </div>
+            <div v-if="negativeProfitBarEmpty" class="chart-empty">
+              <a-empty description="暂无负毛利率商品数据" />
+            </div>
+            <div v-show="!negativeProfitBarEmpty" class="product-bar-wrapper">
+              <div ref="negativeProfitBarChartRef" class="product-bar-chart"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </page-wrapper>
   </div>
@@ -137,6 +165,10 @@
         profitPieTitle: '商品分类利润占比',
         profitPieTip: '点击分类查看商品占比',
         profitPieLevel: 'category',
+        positiveProfitBarDatas: [],
+        positiveProfitBarEmpty: false,
+        negativeProfitBarDatas: [],
+        negativeProfitBarEmpty: false,
         orderDateRange: this.getDefaultOrderDateRange(),
         summary: {
           saleCount: 0,
@@ -155,19 +187,6 @@
         customerOptions: [],
         customerOptionMap: {},
       };
-    },
-    created() {
-      this._trendChart = null;
-      this._salesPieChart = null;
-      this._profitPieChart = null;
-    },
-    mounted() {
-      this.loadTrendDatas();
-    },
-    beforeUnmount() {
-      this.disposeTrendChart();
-      this.disposeSalesPieChart();
-      this.disposeProfitPieChart();
     },
     computed: {
       summaryItems() {
@@ -207,6 +226,23 @@
           { key: 'otherFee', title: '其他费用', value: this.formatCurrency(this.summary.otherFee) },
         ];
       },
+    },
+    created() {
+      this._trendChart = null;
+      this._salesPieChart = null;
+      this._profitPieChart = null;
+      this._positiveProfitBarChart = null;
+      this._negativeProfitBarChart = null;
+    },
+    mounted() {
+      this.loadTrendDatas();
+    },
+    beforeUnmount() {
+      this.disposeTrendChart();
+      this.disposeSalesPieChart();
+      this.disposeProfitPieChart();
+      this.disposePositiveProfitBarChart();
+      this.disposeNegativeProfitBarChart();
     },
     methods: {
       search() {
@@ -250,6 +286,7 @@
               this.renderTrendChart();
               this.renderSalesCategoryPie();
               this.renderProfitCategoryPie();
+              this.renderProfitBarCharts();
             });
           })
           .finally(() => {
@@ -398,6 +435,44 @@
           .filter((item) => item.value !== 0)
           .sort((prev, next) => next.value - prev.value);
       },
+      renderProfitBarCharts() {
+        const productProfitDatas = this.buildProductProfitRateDatas();
+        this.positiveProfitBarDatas = productProfitDatas
+          .filter((item) => item.value > 0)
+          .sort((prev, next) => next.value - prev.value)
+          .slice(0, 10)
+          .reverse();
+        this.negativeProfitBarDatas = productProfitDatas
+          .filter((item) => item.value < 0)
+          .sort((prev, next) => prev.value - next.value)
+          .slice(0, 10);
+
+        this.renderPositiveProfitBarChart();
+        this.renderNegativeProfitBarChart();
+      },
+      buildProductProfitRateDatas() {
+        const dataMap = {};
+        (this.detailDatas || []).forEach((detail) => {
+          const name = this.formatDetailProductLabel(detail);
+          const current = dataMap[name] || { salesAmount: 0, salesProfit: 0 };
+          current.salesAmount += this.toNumber(detail.taxAmount);
+          current.salesProfit += this.toNumber(detail.totalProfit);
+          dataMap[name] = current;
+        });
+
+        return Object.keys(dataMap)
+          .map((name) => {
+            const item = dataMap[name];
+            const value = item.salesAmount
+              ? Number(((item.salesProfit / item.salesAmount) * 100).toFixed(2))
+              : 0;
+            return {
+              name,
+              value,
+            };
+          })
+          .filter((item) => item.value !== 0);
+      },
       renderSalesPieChart(clickHandler) {
         this.salesPieEmpty = this.salesPieDatas.length === 0;
         if (this.salesPieEmpty) {
@@ -421,7 +496,9 @@
           tooltip: {
             trigger: 'item',
             formatter: (params) =>
-              `${params.name}<br/>销售额：${this.formatCurrency(params.value)}<br/>占比：${params.percent}%`,
+              `${params.name}<br/>销售额：${this.formatCurrency(params.value)}<br/>占比：${
+                params.percent
+              }%`,
           },
           legend: {
             type: 'scroll',
@@ -472,7 +549,9 @@
           tooltip: {
             trigger: 'item',
             formatter: (params) =>
-              `${params.name}<br/>利润：${this.formatCurrency(params.value)}<br/>占比：${params.percent}%`,
+              `${params.name}<br/>利润：${this.formatCurrency(params.value)}<br/>占比：${
+                params.percent
+              }%`,
           },
           legend: {
             type: 'scroll',
@@ -499,6 +578,98 @@
         setTimeout(() => {
           this._profitPieChart?.resize();
         }, 200);
+      },
+      renderPositiveProfitBarChart() {
+        this.positiveProfitBarEmpty = this.positiveProfitBarDatas.length === 0;
+        if (this.positiveProfitBarEmpty) {
+          this.disposePositiveProfitBarChart();
+          return;
+        }
+
+        const chartDom = this.$refs.positiveProfitBarChartRef;
+        if (!chartDom) {
+          return;
+        }
+
+        this.disposePositiveProfitBarChart();
+        this._positiveProfitBarChart = markRaw(echarts.init(chartDom));
+        this._positiveProfitBarChart.setOption(
+          this.buildProfitBarOption(this.positiveProfitBarDatas, '#52c41a', '正毛利率'),
+        );
+
+        setTimeout(() => {
+          this._positiveProfitBarChart?.resize();
+        }, 200);
+      },
+      renderNegativeProfitBarChart() {
+        this.negativeProfitBarEmpty = this.negativeProfitBarDatas.length === 0;
+        if (this.negativeProfitBarEmpty) {
+          this.disposeNegativeProfitBarChart();
+          return;
+        }
+
+        const chartDom = this.$refs.negativeProfitBarChartRef;
+        if (!chartDom) {
+          return;
+        }
+
+        this.disposeNegativeProfitBarChart();
+        this._negativeProfitBarChart = markRaw(echarts.init(chartDom));
+        this._negativeProfitBarChart.setOption(
+          this.buildProfitBarOption(this.negativeProfitBarDatas, '#f5222d', '负毛利率'),
+        );
+
+        setTimeout(() => {
+          this._negativeProfitBarChart?.resize();
+        }, 200);
+      },
+      buildProfitBarOption(datas, color, seriesName) {
+        return {
+          color: [color],
+          tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'shadow' },
+            confine: true,
+            formatter: (params) => {
+              const item = Array.isArray(params) ? params[0] : params;
+              return `${item.name}<br/>${seriesName}：${this.formatPercent(item.value)}`;
+            },
+          },
+          grid: {
+            left: 12,
+            right: 24,
+            top: 12,
+            bottom: 12,
+            containLabel: true,
+          },
+          xAxis: {
+            type: 'value',
+            axisLabel: {
+              formatter: (value) => this.formatPercent(value),
+            },
+          },
+          yAxis: {
+            type: 'category',
+            data: datas.map((item) => item.name),
+            axisLabel: {
+              width: 180,
+              overflow: 'truncate',
+            },
+          },
+          series: [
+            {
+              name: seriesName,
+              type: 'bar',
+              barMaxWidth: 28,
+              label: {
+                show: true,
+                position: 'right',
+                formatter: ({ value }) => this.formatPercent(value),
+              },
+              data: datas.map((item) => item.value),
+            },
+          ],
+        };
       },
       handleTrendChartZrClick(event) {
         if (!this._trendChart) {
@@ -616,6 +787,18 @@
           this._profitPieChart = null;
         }
       },
+      disposePositiveProfitBarChart() {
+        if (this._positiveProfitBarChart) {
+          this._positiveProfitBarChart.dispose();
+          this._positiveProfitBarChart = null;
+        }
+      },
+      disposeNegativeProfitBarChart() {
+        if (this._negativeProfitBarChart) {
+          this._negativeProfitBarChart.dispose();
+          this._negativeProfitBarChart = null;
+        }
+      },
     },
   });
 </script>
@@ -677,7 +860,19 @@
     margin-top: 12px;
   }
 
+  .bar-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+
   .product-pie-section {
+    padding: 16px;
+    background: #fff;
+  }
+
+  .product-bar-section {
     padding: 16px;
     background: #fff;
   }
@@ -715,7 +910,21 @@
     height: 420px !important;
   }
 
+  .product-bar-wrapper {
+    width: 100%;
+  }
+
+  .product-bar-chart {
+    width: 100%;
+    height: 420px !important;
+  }
+
   .product-pie-section .chart-empty {
+    margin-top: 0;
+    padding: 64px 0;
+  }
+
+  .product-bar-section .chart-empty {
     margin-top: 0;
     padding: 64px 0;
   }
@@ -733,6 +942,10 @@
     }
 
     .pie-chart-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .bar-chart-grid {
       grid-template-columns: 1fr;
     }
   }

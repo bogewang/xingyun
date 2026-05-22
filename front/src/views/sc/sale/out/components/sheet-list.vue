@@ -17,7 +17,7 @@
           :columns="visibleTableColumn"
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
-          :pager-config="{}"
+          :pager-config="pagerConfig"
           :footer-method="footerMethod"
           :loading="loading"
           height="auto"
@@ -416,6 +416,9 @@
           slots: {
             buttons: 'toolbar_buttons',
           },
+        },
+        pagerConfig: {
+          layouts: ['Home', 'PrevPage', 'Jump', 'PageCount', 'NextPage', 'End', 'Sizes', 'Total'],
         },
         // 列表数据配置
         tableColumn: [
