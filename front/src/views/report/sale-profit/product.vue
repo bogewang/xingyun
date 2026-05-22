@@ -13,7 +13,9 @@
         :proxy-config="proxyConfig"
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
-        :pager-config="{}"
+        :pager-config="{
+          layouts: ['Home', 'PrevPage', 'Jump', 'PageCount', 'NextPage', 'End', 'Sizes', 'Total'],
+        }"
         :footer-method="footerMethod"
         :loading="loading"
         height="auto"

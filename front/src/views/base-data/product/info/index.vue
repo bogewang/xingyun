@@ -15,7 +15,9 @@
           :columns="tableColumn"
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
-          :pager-config="{}"
+          :pager-config="{
+            layouts: ['Home', 'PrevPage', 'Jump', 'PageCount', 'NextPage', 'End', 'Sizes', 'Total'],
+          }"
           :loading="loading"
           height="auto"
         >

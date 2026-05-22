@@ -250,6 +250,10 @@
             </span>
           </template>
 
+          <template #profit_rate="{ row }">
+            {{ calcProfitRate(row.totalProfit, row.totalAmount) }}
+          </template>
+
           <template #fillAllCost_default="{ row }">
             <span :style="{ color: row.fillAllCost ? '#52c41a' : '#f5222d' }">
               {{ row.fillAllCost ? '已补全' : '未补全' }}
@@ -424,6 +428,7 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
+          { field: 'orderDate', title: '订单日期', width: 120 },
           {
             field: 'code',
             title: '单据号',
@@ -432,7 +437,6 @@
             slots: { default: 'code_default' },
           },
           { field: 'customerName', title: '客户名称', width: 120 },
-          { field: 'orderDate', title: '订单日期', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
           { field: 'paidAmount', title: '已付金额', align: 'right', width: 100 },
           { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 100 },
@@ -442,6 +446,13 @@
             align: 'right',
             width: 100,
             slots: { default: 'total_profit' },
+          },
+          {
+            field: 'profitRate',
+            title: '毛利率',
+            align: 'right',
+            width: 100,
+            slots: { default: 'profit_rate' },
           },
           {
             field: 'fillAllCost',
@@ -487,7 +498,7 @@
     computed: {
       visibleTableColumn() {
         return this.tableColumn.filter((column) => {
-          if (column.field === 'totalProfit') {
+          if (['totalProfit', 'profitRate'].includes(column.field)) {
             return this.hasPermission('sale:out:profit', false);
           }
           return true;
@@ -547,6 +558,10 @@
               return this.formatAmount(totalProfit);
             }
 
+            if (column.field === 'profitRate') {
+              return this.canViewProfit ? this.calcProfitRate(totalProfit, totalAmount) : '';
+            }
+
             if (column.field === 'totalNum') {
               return this.formatQuantity(totalNum);
             }
@@ -566,6 +581,13 @@
       },
       formatQuantity(value) {
         return this.toFixedNumber(value, 2, true);
+      },
+      calcProfitRate(profit, amount) {
+        const amountNumber = Number(amount || 0);
+        if (!amountNumber) {
+          return '0.00%';
+        }
+        return `${this.toFixedNumber((Number(profit || 0) / amountNumber) * 100)}%`;
       },
       toFixedNumber(value, digits = 2, trimZero = false) {
         const text = Number(value || 0).toFixed(digits);
