@@ -1484,7 +1484,6 @@ public class SaleOutSheetServiceImpl extends
 
         List<SaleOutSheetDetail> saleDetails = saleOutSheetDetailService.getBySheetId(orderId);
 
-        BigDecimal totalCostAmount = BigDecimal.ZERO;
         boolean fillAllCost = true;
         for (SaleOutSheetDetail saleDetail : saleDetails) {
 
@@ -1502,7 +1501,6 @@ public class SaleOutSheetServiceImpl extends
                         NumberUtil.sub(saleDetail.getTaxAmount(), detailCostAmount), 6);
                 saleDetail.setTotalProfit(detailTotalProfit);
                 saleOutSheetDetailService.saveOrUpdateAllColumn(saleDetail);
-                totalCostAmount = NumberUtil.add(totalCostAmount, detailCostAmount);
                 continue;
             }
 
@@ -1522,10 +1520,15 @@ public class SaleOutSheetServiceImpl extends
             saleDetail.setTotalProfit(detailTotalProfit);
             saleOutSheetDetailService.saveOrUpdateAllColumn(saleDetail);
 
-            totalCostAmount = NumberUtil.add(totalCostAmount, detailCostAmount);
         }
 
-        BigDecimal totalProfit = NumberUtil.getNumber(NumberUtil.sub(saleOutSheet.getTotalAmount(), totalCostAmount), 6);
+        // 总利润由明细汇总
+        BigDecimal totalProfit = saleDetails.stream()
+                .map(item -> item.getTotalProfit() == null ? BigDecimal.ZERO : item.getTotalProfit())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalCostAmount = saleDetails.stream()
+                .map(item -> item.getCostPrice() == null ? BigDecimal.ZERO : item.getCostPrice())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Boolean finalFillAllCost = overrideFillAllCost ? manualFillAllCost : fillAllCost;
 
