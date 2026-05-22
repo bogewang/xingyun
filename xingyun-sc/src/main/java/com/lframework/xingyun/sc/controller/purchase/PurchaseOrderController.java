@@ -13,6 +13,7 @@ import com.lframework.starter.web.core.utils.EasyExcelUtils;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.sc.bo.purchase.*;
+import com.lframework.xingyun.sc.converter.PurchaseOrderConverter;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseOrderFullDto;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseOrderWithReceiveDto;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseProductDto;
@@ -345,14 +346,12 @@ public class PurchaseOrderController extends DefaultBaseController {
 
         PageResult<PurchaseProductDto> pageResult = purchaseOrderService.queryPurchaseByCondition(
                 getPageIndex(), getPageSize(), condition, isReturn);
-        List<PurchaseProductBo> results = CollectionUtil.emptyList();
         List<PurchaseProductDto> datas = pageResult.getDatas();
-        if (!CollectionUtil.isEmpty(datas)) {
-            results = datas.stream().map(t -> new PurchaseProductBo(scId, t))
-                    .collect(Collectors.toList());
+        if (CollectionUtil.isNotEmpty(datas)) {
+            return InvokeResultBuilder.success(PurchaseOrderConverter.purchaseProductDto2Bos(scId, datas));
         }
 
-        return InvokeResultBuilder.success(results);
+        return InvokeResultBuilder.success(CollectionUtil.emptyList());
     }
 
     /**

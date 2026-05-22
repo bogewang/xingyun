@@ -108,7 +108,18 @@
                   :row-class-name="({ row: product }) => getProductSelectRowClass(row, product)"
                   @cell-click="({ row: product }) => handleSelectProduct(rowIndex, product)"
                 >
-                  <vxe-column field="productName" title="商品名称" min-width="200" />
+                  <vxe-column field="productName" title="商品名称" min-width="200">
+                    <template #default="{ row: product }">
+                      <span>{{ product.productName }}</span>
+                      <span v-if="product.hotLevel" class="inline-product-hot-stars">
+                        <StarTwoTone
+                          v-for="star in product.hotLevel"
+                          :key="star"
+                          two-tone-color="#faad14"
+                        />
+                      </span>
+                    </template>
+                  </vxe-column>
                   <vxe-column field="spec" title="规格" width="80" />
                   <vxe-column field="unit" title="单位" width="80" />
                   <vxe-column
@@ -258,6 +269,7 @@
     MinusCircleTwoTone,
     NumberOutlined,
     EditOutlined,
+    StarTwoTone,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
   import * as saleApi from '@/api/sc/sale/order';
@@ -298,6 +310,7 @@
     components: {
       BatchAddProduct,
       OrderTimeLine,
+      StarTwoTone,
     },
     mixins: [multiplePageMix],
     setup() {
@@ -305,6 +318,7 @@
         h,
         PlusOutlined,
         PlusCircleTwoTone,
+        StarTwoTone,
         DeleteOutlined,
         MinusCircleTwoTone,
         NumberOutlined,

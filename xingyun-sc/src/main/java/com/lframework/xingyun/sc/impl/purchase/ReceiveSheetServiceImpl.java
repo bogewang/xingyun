@@ -51,6 +51,7 @@ import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.excel.purchase.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import com.lframework.xingyun.sc.mappers.ReceiveSheetMapper;
+import com.lframework.xingyun.sc.service.ProductHotnessService;
 import com.lframework.xingyun.sc.service.purchase.*;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
@@ -95,6 +96,9 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     @Autowired
     private ProductLatestPriceCacheService productLatestPriceCacheService;
+
+    @Autowired
+    private ProductHotnessService productHotnessService;
 
     @Autowired
     private PurchaseOrderService purchaseOrderService;
@@ -241,6 +245,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         getBaseMapper().insert(sheet);
         this.adjustSupplierAmount(sheet.getSupplierId());
         saleOutSheetService.refreshCostPrice(vo.getOrderDate());
+        productHotnessService.increment(
+                vo.getProducts().stream().map(ReceiveProductVo::getProductId).collect(Collectors.toList()));
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
@@ -313,6 +319,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             this.adjustSupplierAmount(sheet.getSupplierId());
         }
         saleOutSheetService.refreshCostPrice(vo.getOrderDate());
+        productHotnessService.increment(
+                vo.getProducts().stream().map(ReceiveProductVo::getProductId).collect(Collectors.toList()));
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);

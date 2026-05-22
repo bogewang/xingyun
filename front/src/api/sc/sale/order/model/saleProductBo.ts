@@ -15,6 +15,11 @@ export interface SaleProductBo {
   productName: string;
 
   /**
+   * 热度星级
+   */
+  hotLevel: number;
+
+  /**
    * 简称
    */
   shortName: string;

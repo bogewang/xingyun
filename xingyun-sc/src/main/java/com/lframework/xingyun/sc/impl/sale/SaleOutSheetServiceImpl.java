@@ -55,6 +55,7 @@ import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetSalesExportHelper;
 import com.lframework.xingyun.sc.mappers.SaleOutSheetMapper;
+import com.lframework.xingyun.sc.service.ProductHotnessService;
 import com.lframework.xingyun.sc.service.logistics.LogisticsSheetDetailService;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetDetailService;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
@@ -113,6 +114,9 @@ public class SaleOutSheetServiceImpl extends
 
     @Autowired
     private ProductLatestPriceCacheService productLatestPriceCacheService;
+
+    @Autowired
+    private ProductHotnessService productHotnessService;
 
     @Autowired
     private ProductBundleService productBundleService;
@@ -643,6 +647,8 @@ public class SaleOutSheetServiceImpl extends
 
         this.adjustCustomerAmount(sheet.getCustomerId());
         refreshCostPrice(sheet.getId(), vo.getFillAllCost(), Boolean.TRUE.equals(vo.getFillAllCostModified()));
+        productHotnessService.increment(
+                vo.getProducts().stream().map(SaleOutProductVo::getProductId).collect(Collectors.toList()));
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
@@ -719,6 +725,8 @@ public class SaleOutSheetServiceImpl extends
             this.adjustCustomerAmount(sheet.getCustomerId());
         }
         refreshCostPrice(sheet.getId(), vo.getFillAllCost(), Boolean.TRUE.equals(vo.getFillAllCostModified()));
+        productHotnessService.increment(
+                vo.getProducts().stream().map(SaleOutProductVo::getProductId).collect(Collectors.toList()));
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);

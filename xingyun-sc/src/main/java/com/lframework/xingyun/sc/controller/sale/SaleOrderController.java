@@ -14,6 +14,7 @@ import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.sc.bo.sale.*;
 import com.lframework.xingyun.sc.converter.SaleOrderConverter;
+import com.lframework.xingyun.sc.converter.SaleOutSheetConverter;
 import com.lframework.xingyun.sc.dto.sale.SaleOrderFullDto;
 import com.lframework.xingyun.sc.dto.sale.SaleOrderWithOutDto;
 import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
@@ -21,6 +22,7 @@ import com.lframework.xingyun.sc.entity.SaleOrder;
 import com.lframework.xingyun.sc.excel.sale.SaleOrderDetailExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.SaleOrderExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.SaleOrderImportModel;
+import com.lframework.xingyun.sc.service.ProductHotnessService;
 import com.lframework.xingyun.sc.service.sale.SaleOrderService;
 import com.lframework.xingyun.sc.vo.sale.*;
 import io.swagger.annotations.Api;
@@ -53,6 +55,9 @@ public class SaleOrderController extends DefaultBaseController {
 
     @Autowired
     private SaleOrderService saleOrderService;
+
+    @Autowired
+    private ProductHotnessService productHotnessService;
 
     /**
      * 打印
@@ -310,13 +315,12 @@ public class SaleOrderController extends DefaultBaseController {
 
         PageResult<SaleProductDto> pageResult = saleOrderService.querySaleByCondition(getPageIndex(),
                 getPageSize(), condition, isReturn);
-        List<SaleProductBo> results = CollectionUtil.emptyList();
         List<SaleProductDto> datas = pageResult.getDatas();
-        if (!CollectionUtil.isEmpty(datas)) {
-            results = datas.stream().map(t -> new SaleProductBo(scId, t)).collect(Collectors.toList());
+        if (CollectionUtil.isNotEmpty(datas)) {
+            return InvokeResultBuilder.success(SaleOutSheetConverter.saleOutProductDto2Bos(scId, datas));
         }
 
-        return InvokeResultBuilder.success(results);
+        return InvokeResultBuilder.success(CollectionUtil.emptyList());
     }
 
     /**

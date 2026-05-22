@@ -24,3 +24,10 @@
 .inline-product-select-add:hover {
   background-color: #f5faff;
 }
+
+.inline-product-hot-stars {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 6px;
+  vertical-align: -1px;
+}

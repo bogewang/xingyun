@@ -35,6 +35,12 @@ public class SaleProductBo extends BaseBo<SaleProductDto> {
     private String productName;
 
     /**
+     * 热度星级
+     */
+    @ApiModelProperty("热度星级")
+    private Integer hotLevel;
+
+    /**
      * 简称
      */
     @ApiModelProperty("简称")
