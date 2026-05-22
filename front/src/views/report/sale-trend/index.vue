@@ -1,7 +1,14 @@
 <template>
   <div v-permission="['report:sale-trend:query']">
-    <page-wrapper content-full-height fixed-height>
+    <page-wrapper content-full-height fixed-height :content-style="{ overflowY: 'auto' }">
       <div v-loading="loading" class="sale-trend-page">
+        <div class="summary-panel">
+          <div v-for="item in summaryItems" :key="item.key" class="summary-item">
+            <div class="summary-title">{{ item.title }}</div>
+            <div class="summary-value">{{ item.value }}</div>
+          </div>
+        </div>
+
         <j-border>
           <j-form bordered @keyup.enter="search">
             <j-form-item label="销售日期">
@@ -43,6 +50,48 @@
         <div v-show="!trendEmpty" class="trend-chart-wrapper">
           <div ref="trendChartRef" class="trend-chart"></div>
         </div>
+
+        <div class="pie-chart-grid">
+          <div class="product-pie-section">
+            <div class="chart-toolbar">
+              <a-button
+                v-if="salesPieLevel === 'product'"
+                size="small"
+                @click="renderSalesCategoryPie"
+              >
+                返回分类
+              </a-button>
+              <span class="chart-section-title">{{ salesPieTitle }}</span>
+              <span class="chart-tip">{{ salesPieTip }}</span>
+            </div>
+            <div v-if="salesPieEmpty" class="chart-empty">
+              <a-empty description="暂无商品销售数据" />
+            </div>
+            <div v-show="!salesPieEmpty" class="product-pie-wrapper">
+              <div ref="salesPieChartRef" class="product-pie-chart"></div>
+            </div>
+          </div>
+
+          <div class="product-pie-section">
+            <div class="chart-toolbar">
+              <a-button
+                v-if="profitPieLevel === 'product'"
+                size="small"
+                @click="renderProfitCategoryPie"
+              >
+                返回分类
+              </a-button>
+              <span class="chart-section-title">{{ profitPieTitle }}</span>
+              <span class="chart-tip">{{ profitPieTip }}</span>
+            </div>
+            <div v-if="profitPieEmpty" class="chart-empty">
+              <a-empty description="暂无商品利润数据" />
+            </div>
+            <div v-show="!profitPieEmpty" class="product-pie-wrapper">
+              <div ref="profitPieChartRef" class="product-pie-chart"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </page-wrapper>
   </div>
@@ -77,7 +126,28 @@
         loading: false,
         trendDatas: [],
         trendEmpty: false,
+        detailDatas: [],
+        salesPieDatas: [],
+        salesPieEmpty: false,
+        salesPieTitle: '商品分类销售额占比',
+        salesPieTip: '点击分类查看商品占比',
+        salesPieLevel: 'category',
+        profitPieDatas: [],
+        profitPieEmpty: false,
+        profitPieTitle: '商品分类利润占比',
+        profitPieTip: '点击分类查看商品占比',
+        profitPieLevel: 'category',
         orderDateRange: this.getDefaultOrderDateRange(),
+        summary: {
+          saleCount: 0,
+          salesAmount: 0,
+          salesCost: 0,
+          salesProfit: 0,
+          otherIncome: 0,
+          otherExpense: 0,
+          netProfit: 0,
+          otherFee: 0,
+        },
         searchFormData: {
           customerId: undefined,
           productName: '',
@@ -88,12 +158,55 @@
     },
     created() {
       this._trendChart = null;
+      this._salesPieChart = null;
+      this._profitPieChart = null;
     },
     mounted() {
       this.loadTrendDatas();
     },
     beforeUnmount() {
       this.disposeTrendChart();
+      this.disposeSalesPieChart();
+      this.disposeProfitPieChart();
+    },
+    computed: {
+      summaryItems() {
+        return [
+          {
+            key: 'saleCount',
+            title: '销售笔数',
+            value: this.formatQuantity(this.summary.saleCount),
+          },
+          {
+            key: 'salesAmount',
+            title: '销售额',
+            value: this.formatCurrency(this.summary.salesAmount),
+          },
+          { key: 'salesCost', title: '成本', value: this.formatCurrency(this.summary.salesCost) },
+          {
+            key: 'salesProfit',
+            title: '销售毛利',
+            value: this.formatCurrency(this.summary.salesProfit),
+          },
+          {
+            key: 'profitRate',
+            title: '毛利率',
+            value: this.calcProfitRate(this.summary.salesProfit, this.summary.salesAmount),
+          },
+          {
+            key: 'otherIncome',
+            title: '其他收入',
+            value: this.formatCurrency(this.summary.otherIncome),
+          },
+          {
+            key: 'otherExpense',
+            title: '其他支出',
+            value: this.formatCurrency(this.summary.otherExpense),
+          },
+          { key: 'netProfit', title: '净利润', value: this.formatCurrency(this.summary.netProfit) },
+          { key: 'otherFee', title: '其他费用', value: this.formatCurrency(this.summary.otherFee) },
+        ];
+      },
     },
     methods: {
       search() {
@@ -119,11 +232,25 @@
       },
       loadTrendDatas() {
         this.loading = true;
-        api
-          .queryProfitTrend(this.buildSearchFormData())
-          .then((res) => {
-            this.trendDatas = res || [];
-            this.$nextTick(() => this.renderTrendChart());
+        const params = this.buildSearchFormData();
+        Promise.all([
+          api.queryProfitSummary(params),
+          api.queryProfitTrend(params),
+          api.queryDetail({
+            ...params,
+            pageIndex: 1,
+            pageSize: 10000,
+          }),
+        ])
+          .then(([summary, trendDatas, detailResult]) => {
+            this.summary = Object.assign({}, this.summary, summary || {});
+            this.trendDatas = trendDatas || [];
+            this.detailDatas = detailResult?.datas || [];
+            this.$nextTick(() => {
+              this.renderTrendChart();
+              this.renderSalesCategoryPie();
+              this.renderProfitCategoryPie();
+            });
           })
           .finally(() => {
             this.loading = false;
@@ -206,6 +333,173 @@
           this._trendChart?.resize();
         }, 200);
       },
+      renderSalesCategoryPie() {
+        this.salesPieLevel = 'category';
+        this.salesPieTitle = '商品分类销售额占比';
+        this.salesPieTip = '点击分类查看商品占比';
+        this.salesPieDatas = this.buildPieData(
+          (detail) => detail.categoryName || '未分类',
+          null,
+          'taxAmount',
+        );
+        this.renderSalesPieChart((params) => {
+          this.renderSalesProductPie(params.name);
+        });
+      },
+      renderSalesProductPie(categoryName) {
+        this.salesPieLevel = 'product';
+        this.salesPieTitle = `${categoryName} - 商品销售额占比`;
+        this.salesPieTip = `${categoryName} 下各商品销售额占比`;
+        this.salesPieDatas = this.buildPieData(
+          (detail) => this.formatDetailProductLabel(detail),
+          (detail) => (detail.categoryName || '未分类') === categoryName,
+          'taxAmount',
+        );
+        this.renderSalesPieChart();
+      },
+      renderProfitCategoryPie() {
+        this.profitPieLevel = 'category';
+        this.profitPieTitle = '商品分类利润占比';
+        this.profitPieTip = '点击分类查看商品占比';
+        this.profitPieDatas = this.buildPieData(
+          (detail) => detail.categoryName || '未分类',
+          null,
+          'totalProfit',
+        );
+        this.renderProfitPieChart((params) => {
+          this.renderProfitProductPie(params.name);
+        });
+      },
+      renderProfitProductPie(categoryName) {
+        this.profitPieLevel = 'product';
+        this.profitPieTitle = `${categoryName} - 商品利润占比`;
+        this.profitPieTip = `${categoryName} 下各商品利润占比`;
+        this.profitPieDatas = this.buildPieData(
+          (detail) => this.formatDetailProductLabel(detail),
+          (detail) => (detail.categoryName || '未分类') === categoryName,
+          'totalProfit',
+        );
+        this.renderProfitPieChart();
+      },
+      buildPieData(getName, filterDetail, valueField) {
+        const dataMap = {};
+        (this.detailDatas || [])
+          .filter((detail) => !filterDetail || filterDetail(detail))
+          .forEach((detail) => {
+            const name = getName(detail);
+            dataMap[name] = (dataMap[name] || 0) + this.toNumber(detail[valueField]);
+          });
+
+        return Object.keys(dataMap)
+          .map((name) => ({
+            name,
+            value: Number(dataMap[name].toFixed(2)),
+          }))
+          .filter((item) => item.value !== 0)
+          .sort((prev, next) => next.value - prev.value);
+      },
+      renderSalesPieChart(clickHandler) {
+        this.salesPieEmpty = this.salesPieDatas.length === 0;
+        if (this.salesPieEmpty) {
+          this.disposeSalesPieChart();
+          return;
+        }
+
+        const chartDom = this.$refs.salesPieChartRef;
+        if (!chartDom) {
+          return;
+        }
+
+        this.disposeSalesPieChart();
+        this._salesPieChart = markRaw(echarts.init(chartDom));
+        this._salesPieChart.off('click');
+        if (clickHandler) {
+          this._salesPieChart.on('click', clickHandler);
+        }
+        this._salesPieChart.setOption({
+          color: ['#1677ff', '#13c2c2', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#eb2f96'],
+          tooltip: {
+            trigger: 'item',
+            formatter: (params) =>
+              `${params.name}<br/>销售额：${this.formatCurrency(params.value)}<br/>占比：${params.percent}%`,
+          },
+          legend: {
+            type: 'scroll',
+            orient: 'vertical',
+            right: 0,
+            top: 24,
+            bottom: 12,
+          },
+          series: [
+            {
+              name: '销售额',
+              type: 'pie',
+              radius: ['42%', '68%'],
+              center: ['40%', '56%'],
+              avoidLabelOverlap: true,
+              label: {
+                formatter: '{b}\n{d}%',
+              },
+              data: this.salesPieDatas,
+            },
+          ],
+        });
+
+        setTimeout(() => {
+          this._salesPieChart?.resize();
+        }, 200);
+      },
+      renderProfitPieChart(clickHandler) {
+        this.profitPieEmpty = this.profitPieDatas.length === 0;
+        if (this.profitPieEmpty) {
+          this.disposeProfitPieChart();
+          return;
+        }
+
+        const chartDom = this.$refs.profitPieChartRef;
+        if (!chartDom) {
+          return;
+        }
+
+        this.disposeProfitPieChart();
+        this._profitPieChart = markRaw(echarts.init(chartDom));
+        this._profitPieChart.off('click');
+        if (clickHandler) {
+          this._profitPieChart.on('click', clickHandler);
+        }
+        this._profitPieChart.setOption({
+          color: ['#52c41a', '#1677ff', '#13c2c2', '#faad14', '#f5222d', '#722ed1', '#eb2f96'],
+          tooltip: {
+            trigger: 'item',
+            formatter: (params) =>
+              `${params.name}<br/>利润：${this.formatCurrency(params.value)}<br/>占比：${params.percent}%`,
+          },
+          legend: {
+            type: 'scroll',
+            orient: 'vertical',
+            right: 0,
+            top: 24,
+            bottom: 12,
+          },
+          series: [
+            {
+              name: '利润',
+              type: 'pie',
+              radius: ['42%', '68%'],
+              center: ['40%', '56%'],
+              avoidLabelOverlap: true,
+              label: {
+                formatter: '{b}\n{d}%',
+              },
+              data: this.profitPieDatas,
+            },
+          ],
+        });
+
+        setTimeout(() => {
+          this._profitPieChart?.resize();
+        }, 200);
+      },
       handleTrendChartZrClick(event) {
         if (!this._trendChart) {
           return;
@@ -258,6 +552,11 @@
       formatChartDate(value) {
         return value ? moment(value).format('YYYY-MM-DD') : '';
       },
+      formatDetailProductLabel(item) {
+        const productName = item?.productName || '未命名商品';
+        const spec = item?.spec || '';
+        return spec ? `${productName} / ${spec}` : productName;
+      },
       sumBy(data, field) {
         return (data || []).reduce((sum, item) => sum + this.toNumber(item?.[field]), 0);
       },
@@ -275,6 +574,9 @@
       },
       formatCurrency(value) {
         return '￥' + this.formatAmount(value);
+      },
+      formatQuantity(value) {
+        return this.toNumber(value).toFixed(0);
       },
       formatPercent(value) {
         return this.formatAmount(value) + '%';
@@ -302,6 +604,18 @@
           this._trendChart = null;
         }
       },
+      disposeSalesPieChart() {
+        if (this._salesPieChart) {
+          this._salesPieChart.dispose();
+          this._salesPieChart = null;
+        }
+      },
+      disposeProfitPieChart() {
+        if (this._profitPieChart) {
+          this._profitPieChart.dispose();
+          this._profitPieChart = null;
+        }
+      },
     },
   });
 </script>
@@ -309,6 +623,37 @@
 <style lang="less" scoped>
   .sale-trend-page {
     min-height: 100%;
+  }
+
+  .summary-panel {
+    display: grid;
+    grid-template-columns: repeat(9, minmax(110px, 1fr));
+    gap: 0;
+    margin-bottom: 12px;
+    padding: 20px 16px;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 8%);
+  }
+
+  .summary-item {
+    min-width: 0;
+    text-align: center;
+  }
+
+  .summary-title {
+    color: #52616f;
+    font-size: 14px;
+    line-height: 22px;
+  }
+
+  .summary-value {
+    margin-top: 8px;
+    color: #2f3f48;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 30px;
+    white-space: nowrap;
   }
 
   .toolbar {
@@ -325,9 +670,70 @@
     cursor: pointer;
   }
 
+  .pie-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .product-pie-section {
+    padding: 16px;
+    background: #fff;
+  }
+
+  .chart-section-title {
+    color: #2f3f48;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .chart-toolbar {
+    display: flex;
+    align-items: center;
+    min-height: 32px;
+    color: #2f3f48;
+    margin-bottom: 8px;
+  }
+
+  .chart-toolbar .ant-btn + .chart-section-title {
+    margin-left: 12px;
+  }
+
+  .chart-tip {
+    margin-left: 12px;
+    color: #8c8c8c;
+    font-size: 13px;
+  }
+
+  .product-pie-wrapper {
+    width: 100%;
+  }
+
+  .product-pie-chart {
+    width: 100%;
+    height: 420px !important;
+  }
+
+  .product-pie-section .chart-empty {
+    margin-top: 0;
+    padding: 64px 0;
+  }
+
   .chart-empty {
     margin-top: 12px;
     padding: 96px 0;
     background: #fff;
+  }
+
+  @media (max-width: 1400px) {
+    .summary-panel {
+      grid-template-columns: repeat(3, minmax(140px, 1fr));
+      row-gap: 16px;
+    }
+
+    .pie-chart-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
