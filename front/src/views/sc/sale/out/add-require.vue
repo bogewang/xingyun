@@ -150,6 +150,13 @@
                   />
                   <vxe-column field="stockNum" title="库存数量" width="140" align="right" />
                 </vxe-table>
+                <div
+                  class="inline-product-select-add"
+                  @mousedown.prevent
+                  @click.stop="openProductAddPage"
+                >
+                  + 新增商品
+                </div>
               </div>
             </template>
           </a-auto-complete>
@@ -587,6 +594,9 @@
       },
       getProductSelectRowClass(row, product) {
         return getInlineProductSelectRowClass(row, product);
+      },
+      openProductAddPage() {
+        this.openChildPage('/product/info/add');
       },
       // 删除商品
       delProduct() {

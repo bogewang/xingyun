@@ -10,3 +10,17 @@
 .vxe-table--body .inline-product-select-active-row > td {
   background-color: #e6f4ff !important;
 }
+
+.inline-product-select-add {
+  height: 40px;
+  line-height: 40px;
+  padding: 0 16px;
+  color: #1677ff;
+  cursor: pointer;
+  border-top: 1px solid #f0f0f0;
+  background-color: #ffffff;
+}
+
+.inline-product-select-add:hover {
+  background-color: #f5faff;
+}

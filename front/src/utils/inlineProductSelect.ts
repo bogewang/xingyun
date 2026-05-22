@@ -55,9 +55,37 @@ export function handleInlineProductSelectKeydown(
 
 function scrollActiveInlineProductIntoView(nextTick: () => Promise<void>) {
   nextTick().then(() => {
-    document.querySelector(`.${ACTIVE_ROW_CLASS}`)?.scrollIntoView({
-      block: 'nearest',
-      inline: 'nearest',
-    });
+    const activeRow = getVisibleActiveRow();
+    if (!activeRow) {
+      return;
+    }
+
+    const table = activeRow.closest('.vxe-table');
+    const bodyWrapper = table?.querySelector('.vxe-table--body-wrapper.body--wrapper') as
+      | HTMLElement
+      | null
+      | undefined;
+
+    if (!bodyWrapper) {
+      activeRow.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      return;
+    }
+
+    const rowRect = activeRow.getBoundingClientRect();
+    const wrapperRect = bodyWrapper.getBoundingClientRect();
+
+    if (rowRect.bottom > wrapperRect.bottom) {
+      bodyWrapper.scrollTop += rowRect.bottom - wrapperRect.bottom;
+    } else if (rowRect.top < wrapperRect.top) {
+      bodyWrapper.scrollTop -= wrapperRect.top - rowRect.top;
+    }
+  });
+}
+
+function getVisibleActiveRow() {
+  const rows = Array.from(document.querySelectorAll(`.${ACTIVE_ROW_CLASS}`)) as HTMLElement[];
+  return rows.find((row) => {
+    const rect = row.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
   });
 }

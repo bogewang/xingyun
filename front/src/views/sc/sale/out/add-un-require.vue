@@ -117,6 +117,13 @@
                     align="right"
                   />
                 </vxe-table>
+                <div
+                  class="inline-product-select-add"
+                  @mousedown.prevent
+                  @click.stop="openProductAddPage"
+                >
+                  + 新增商品
+                </div>
               </div>
             </template>
           </a-auto-complete>
@@ -321,7 +328,6 @@
             width: 80,
             slots: { default: 'operation_default' },
           },
-          { field: 'productCode', title: '商品编号', width: 120 },
           {
             field: 'productName',
             title: '商品名称',
@@ -518,6 +524,9 @@
       },
       getProductSelectRowClass(row, product) {
         return getInlineProductSelectRowClass(row, product);
+      },
+      openProductAddPage() {
+        this.openChildPage('/product/info/add');
       },
       // 删除商品
       delProduct() {
