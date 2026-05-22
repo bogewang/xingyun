@@ -155,18 +155,21 @@
             :options="row.productOptions"
             :dropdown-match-select-width="false"
             :dropdown-style="{ width: '890px' }"
+            placement="bottomLeft"
             @search="(e) => queryProduct(e, row)"
+            @keydown="(e) => handleProductSelectKeydown(e, row, rowIndex)"
           >
             <!-- 自定义下拉框内容 -->
             <template #dropdownRender>
               <div v-if="!isEmpty(row.products)">
                 <vxe-table
                   :data="row.products"
-                  max-height="500"
+                  max-height="360"
                   class="cursor-pointer"
                   highlight-hover-row
                   show-overflow
                   :row-config="{ isHover: true }"
+                  :row-class-name="({ row: product }) => getProductSelectRowClass(row, product)"
                   @cell-click="({ row: product }) => handleSelectProduct(rowIndex, product)"
                 >
                   <vxe-column type="seq" title="序号" width="60" />
@@ -326,6 +329,12 @@
     normalizeSelectValue,
   } from '@/utils/searchSelect';
   import { focusVxeGridRow } from '@/utils/vxeGrid';
+  import {
+    getInlineProductSelectRowClass,
+    handleInlineProductSelectKeydown,
+    resetInlineProductSelect,
+    setInlineProductSelectProducts,
+  } from '@/utils/inlineProductSelect';
   import { requestUserSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
@@ -597,6 +606,7 @@
           productQuery: '',
           products: [],
           productOptions: [],
+          activeProductIndex: -1,
         };
       },
       async focusProductRow(index) {
@@ -638,6 +648,7 @@
         this.tableData[index].productQuery = '';
         this.tableData[index].products = [];
         this.tableData[index].productOptions = [];
+        resetInlineProductSelect(this.tableData[index]);
         this.$nextTick(() => {
           const productInputRef = this.$refs['productInputRef' + index];
           if (productInputRef) {
@@ -650,11 +661,12 @@
         if (isEmpty(queryString)) {
           row.products = [];
           row.productOptions = [];
+          resetInlineProductSelect(row);
           return;
         }
 
         purchaseApi.searchPurchaseProducts(this.formData.sc.id, queryString).then((res) => {
-          row.products = res;
+          setInlineProductSelectProducts(row, res);
           row.productOptions = res.map((item) => {
             return {
               value: item.productId,
@@ -674,8 +686,17 @@
           editingProduct: false,
           productQuery: '',
         });
+        resetInlineProductSelect(this.tableData[index]);
 
         this.purchasePriceInput(this.tableData[index], this.tableData[index].purchasePrice);
+      },
+      handleProductSelectKeydown(event, row, rowIndex) {
+        handleInlineProductSelectKeydown(event, row, rowIndex, this.handleSelectProduct, () =>
+          this.$nextTick(),
+        );
+      },
+      getProductSelectRowClass(row, product) {
+        return getInlineProductSelectRowClass(row, product);
       },
       // 删除商品
       delProduct() {

@@ -4,9 +4,7 @@
       <j-border>
         <j-form bordered>
           <j-form-item label="供应商" required>
-            <supplier-selector
-              v-model:value="formData.supplierId"
-            />
+            <supplier-selector v-model:value="formData.supplierId" />
           </j-form-item>
           <j-form-item label="订单日期">
             <a-date-picker
@@ -83,18 +81,21 @@
             :options="row.productOptions"
             :dropdown-match-select-width="false"
             :dropdown-style="{ width: '890px' }"
+            placement="bottomLeft"
             @search="(e) => queryProduct(e, row)"
+            @keydown="(e) => handleProductSelectKeydown(e, row, rowIndex)"
           >
             <!-- 自定义下拉框内容 -->
             <template #dropdownRender>
               <div v-if="!isEmpty(row.products)">
                 <vxe-table
                   :data="row.products"
-                  max-height="500"
+                  max-height="360"
                   class="cursor-pointer"
                   highlight-hover-row
                   show-overflow
                   :row-config="{ isHover: true }"
+                  :row-class-name="({ row: product }) => getProductSelectRowClass(row, product)"
                   @cell-click="({ row: product }) => handleSelectProduct(rowIndex, product)"
                 >
                   <vxe-column type="seq" title="序号" width="60" />
@@ -253,6 +254,12 @@
   } from '@/utils/searchSelect';
   import { requestSupplierSelectOptions } from '@/utils/labelSelect';
   import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
+  import {
+    getInlineProductSelectRowClass,
+    handleInlineProductSelectKeydown,
+    resetInlineProductSelect,
+    setInlineProductSelectProducts,
+  } from '@/utils/inlineProductSelect';
   import JFormItem from '@/components/JFormItem';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
 
@@ -430,6 +437,7 @@
           productQuery: '',
           products: [],
           productOptions: [],
+          activeProductIndex: -1,
         };
       },
       // 新增商品
@@ -460,6 +468,7 @@
         this.tableData[index].productQuery = '';
         this.tableData[index].products = [];
         this.tableData[index].productOptions = [];
+        resetInlineProductSelect(this.tableData[index]);
         this.$nextTick(() => {
           const productInputRef = this.$refs['productInputRef' + index];
           if (productInputRef) {
@@ -472,11 +481,12 @@
         if (isEmpty(queryString)) {
           row.products = [];
           row.productOptions = [];
+          resetInlineProductSelect(row);
           return;
         }
 
         purchaseApi.searchPurchaseProducts(this.formData.scId, queryString).then((res) => {
-          row.products = res;
+          setInlineProductSelectProducts(row, res);
           row.productOptions = res.map((item) => {
             return {
               value: item.productId,
@@ -496,8 +506,17 @@
           editingProduct: false,
           productQuery: '',
         });
+        resetInlineProductSelect(this.tableData[index]);
 
         this.purchasePriceInput(this.tableData[index], this.tableData[index].purchasePrice);
+      },
+      handleProductSelectKeydown(event, row, rowIndex) {
+        handleInlineProductSelectKeydown(event, row, rowIndex, this.handleSelectProduct, () =>
+          this.$nextTick(),
+        );
+      },
+      getProductSelectRowClass(row, product) {
+        return getInlineProductSelectRowClass(row, product);
       },
       // 删除商品
       delProduct() {
