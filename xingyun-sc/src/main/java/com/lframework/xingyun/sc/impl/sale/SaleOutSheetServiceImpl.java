@@ -79,7 +79,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.lframework.xingyun.sc.impl.purchase.ReceiveSheetServiceImpl.normalizeImportOrderDate;
 
 @Service
 @Slf4j
@@ -1360,7 +1359,7 @@ public class SaleOutSheetServiceImpl extends
 
         CreateSaleOutSheetVo res = new CreateSaleOutSheetVo();
         res.setCustomerId(customer.getId());
-        res.setOrderDate(DateUtil.parseDate(normalizeImportOrderDate(model.getOrderDate()), "yyyy/MM/dd"));
+        res.setOrderDate(DateUtil.parseDate(model.getOrderDate(), "yyyyMMdd"));
         res.setRequired(Boolean.FALSE);
         res.setProducts(buildImportProducts(list));
 

@@ -963,30 +963,10 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         CreateReceiveSheetVo res = new CreateReceiveSheetVo();
         res.setSupplierId(suppliers.get(0).getId());
-        res.setOrderDate(DateUtil.parseDate(normalizeImportOrderDate(model.getOrderDate()), "yyyy/MM/dd"));
+        res.setOrderDate(DateUtil.parseDate(model.getOrderDate(), "yyyyMMdd"));
         res.setProducts(buildProducts(list));
 
         return res;
-    }
-
-    public static String normalizeImportOrderDate(String orderDate) {
-        if (StringUtil.isBlank(orderDate)) {
-            throw new InputErrorException("单据日期不能为空！");
-        }
-
-        String[] parts = orderDate.trim().split("/");
-        if (parts.length != 3) {
-            throw new InputErrorException("单据日期格式错误，请使用 yyyy/M/d 或 yyyy/MM/dd 格式！");
-        }
-
-        try {
-            int year = Integer.parseInt(parts[0]);
-            int month = Integer.parseInt(parts[1]);
-            int day = Integer.parseInt(parts[2]);
-            return String.format("%04d/%02d/%02d", year, month, day);
-        } catch (NumberFormatException e) {
-            throw new InputErrorException("单据日期格式错误，请使用 yyyy/M/d 或 yyyy/MM/dd 格式！");
-        }
     }
 
     private List<ReceiveProductVo> buildProducts(List<ReceiveSheetQueryImportModel> list) {
