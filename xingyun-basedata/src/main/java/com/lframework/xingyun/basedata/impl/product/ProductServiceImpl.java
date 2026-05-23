@@ -610,6 +610,28 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
 
     @Transactional(rollbackFor = Exception.class)
     @Override
+    public void updatePrice(String id, BigDecimal salePrice, BigDecimal purchasePrice) {
+        Assert.notBlank(id);
+
+        LambdaUpdateWrapper<Product> updateWrapper = Wrappers.lambdaUpdate(Product.class)
+                .eq(Product::getId, id);
+
+        if (salePrice != null) {
+            updateWrapper.set(Product::getSalePrice, salePrice);
+        }
+        if (purchasePrice != null) {
+            updateWrapper.set(Product::getPurchasePrice, purchasePrice);
+        }
+
+        if (updateWrapper.getSqlSet() == null) {
+            return;
+        }
+
+        getBaseMapper().update(null, updateWrapper);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
     public void importExcel(List<ProductImportModel> list) {
         if (CollectionUtil.isEmpty(list)) {
             throw new DefaultClientException("导入数据为空！");

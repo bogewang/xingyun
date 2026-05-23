@@ -1204,6 +1204,7 @@ public class SaleOutSheetServiceImpl extends
 
             saleOutSheetDetailService.save(detail);
             if (!requireSale) {
+                productService.updatePrice(product.getId(), detail.getTaxPrice(), null);
                 productLatestPriceCacheService.updateLatestPrice(product.getId(), detail.getTaxPrice(),
                         null);
             }

@@ -746,6 +746,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
             receiveSheetDetailService.save(detail);
             if (!receiveRequirePurchase) {
+                productService.updatePrice(product.getId(), null, detail.getTaxPrice());
                 productLatestPriceCacheService.updateLatestPrice(product.getId(), null,
                         detail.getTaxPrice());
             }

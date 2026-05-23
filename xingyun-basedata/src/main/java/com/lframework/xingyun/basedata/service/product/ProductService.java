@@ -9,6 +9,7 @@ import com.lframework.xingyun.basedata.vo.product.info.QueryProductSelectorVo;
 import com.lframework.xingyun.basedata.vo.product.info.QueryProductVo;
 import com.lframework.xingyun.basedata.vo.product.info.UpdateProductVo;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface ProductService extends BaseMpService<Product> {
@@ -130,4 +131,6 @@ public interface ProductService extends BaseMpService<Product> {
      * @return
      */
     List<Product> selectByIds(List<String> ids);
+
+    void updatePrice(String id, BigDecimal salePrice, BigDecimal purchasePrice);
 }
