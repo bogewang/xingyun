@@ -40,6 +40,11 @@ export interface QueryProductBo {
   purchasePrice: number;
 
   /**
+   * 最新采购价
+   */
+  latestPurchasePrice: number;
+
+  /**
    * 零售价
    */
   retailPrice: number;
@@ -48,6 +53,11 @@ export interface QueryProductBo {
    * 销售价
    */
   salePrice: number;
+
+  /**
+   * 最新售价
+   */
+  latestSalePrice: number;
 
   /**
    * 别名

@@ -69,6 +69,12 @@ public class QueryProductBo extends BaseBo<Product> {
     private BigDecimal purchasePrice;
 
     /**
+     * 最新采购价
+     */
+    @ApiModelProperty("最新采购价")
+    private BigDecimal latestPurchasePrice;
+
+    /**
      * 零售价
      */
     @ApiModelProperty("零售价")
@@ -79,6 +85,12 @@ public class QueryProductBo extends BaseBo<Product> {
      */
     @ApiModelProperty("售价")
     private BigDecimal salePrice;
+
+    /**
+     * 最新售价
+     */
+    @ApiModelProperty("最新售价")
+    private BigDecimal latestSalePrice;
 
     @ApiModelProperty("别名")
     private String alias;

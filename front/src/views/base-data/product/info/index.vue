@@ -120,7 +120,6 @@
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { buildSortPageVo, isEmpty, isEqualWithStr } from '@/utils/utils';
   import ProductImporter from '@/components/Importor/ProductImporter.vue';
-  import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
   import { PRODUCT_TYPE } from '@/enums/biz/productType';
   import BatchHandler from '@/components/BatchHandler';
@@ -143,7 +142,6 @@
       DownOutlined,
       Detail,
       ProductImporter,
-      ProductBrandSelector,
       ProductCategorySelector,
     },
     mixins: [multiplePageMix],
@@ -190,7 +188,9 @@
           { field: 'unit', title: '单位', width: 100 },
           { field: 'spec', title: '规格', width: 120 },
           { field: 'purchasePrice', title: '采购价', width: 120 },
+          { field: 'latestPurchasePrice', title: '最新采购价', width: 120 },
           { field: 'salePrice', title: '销售价', width: 120 },
+          { field: 'latestSalePrice', title: '最新售价', width: 120 },
           { field: 'remark', title: '备注', minWidth: 180 },
           { field: 'remark2', title: '备注2', minWidth: 180 },
           { field: 'categoryName', title: '分类', width: 120 },

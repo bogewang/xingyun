@@ -10,6 +10,7 @@ import com.lframework.xingyun.basedata.entity.ProductCategory;
 import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.service.product.ProductBrandService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
+import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 
 import java.util.Collections;
@@ -32,6 +33,7 @@ public class ProductConverter {
 
         ProductCategoryService productCategoryService = ApplicationUtil.getBean(ProductCategoryService.class);
         ProductBrandService productBrandService = ApplicationUtil.getBean(ProductBrandService.class);
+        ProductLatestPriceCacheService productLatestPriceCacheService = ApplicationUtil.getBean(ProductLatestPriceCacheService.class);
         SupplierService supplierService = ApplicationUtil.getBean(SupplierService.class);
         // 转换分类名称
         List<String> categoryIds = datas.stream().map(Product::getCategoryId).filter(StringUtil::isNotBlank)
@@ -65,8 +67,10 @@ public class ProductConverter {
             }
 
             bo.setPurchasePrice(dto.getPurchasePrice());
+            bo.setLatestPurchasePrice(productLatestPriceCacheService.getLatestPurchasePrice(dto.getId()));
             bo.setRetailPrice(dto.getRetailPrice());
             bo.setSalePrice(dto.getSalePrice());
+            bo.setLatestSalePrice(productLatestPriceCacheService.getLatestSalePrice(dto.getId()));
             bo.setAlias(dto.getAlias());
             bo.setDefaultSupplier(dto.getDefaultSupplier());
             if (supplierMap.containsKey(dto.getDefaultSupplier())) {
