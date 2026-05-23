@@ -1,5 +1,6 @@
 package com.lframework.xingyun.sc.impl.purchase;
 
+import cn.hutool.core.util.BooleanUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -22,9 +23,12 @@ import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTime
 import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineBizType;
+import com.lframework.starter.web.inner.entity.SysParameter;
 import com.lframework.starter.web.inner.entity.SysUser;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
+import com.lframework.starter.web.inner.service.system.SysParameterService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
+import com.lframework.starter.web.inner.vo.system.parameter.QuerySysParameterVo;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductBundle;
 import com.lframework.xingyun.basedata.entity.StoreCenter;
@@ -119,6 +123,9 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     private ReceiveSheetDetailBundleService receiveSheetDetailBundleService;
     @Autowired
     private SaleOutSheetService saleOutSheetService;
+
+    @Autowired
+    private SysParameterService sysParameterService;
 
 
     @Override
@@ -746,7 +753,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
             receiveSheetDetailService.save(detail);
             if (!receiveRequirePurchase) {
-                productService.updatePrice(product.getId(), null, detail.getTaxPrice());
+                updateProductPrice(product, detail);
                 productLatestPriceCacheService.updateLatestPrice(product.getId(), null,
                         detail.getTaxPrice());
             }
@@ -802,6 +809,25 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         sheet.setDescription(
                 StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(supplier));
+    }
+
+    /**
+     * 更新商品价格
+     * @param product
+     * @param detail
+     */
+    private void updateProductPrice(Product product, ReceiveSheetDetail detail) {
+        QuerySysParameterVo sysParameterVo = new QuerySysParameterVo();
+        sysParameterVo.setPmKey("latest_price_override_product_price");
+        List<SysParameter> list = sysParameterService.query(sysParameterVo);
+        if (CollectionUtil.isEmpty(list)) {
+            return;
+        }
+
+        boolean override = BooleanUtil.toBoolean(list.get(0).getPmValue());
+        if (override) {
+            productService.updatePrice(product.getId(), null, detail.getTaxPrice());
+        }
     }
 
     /**

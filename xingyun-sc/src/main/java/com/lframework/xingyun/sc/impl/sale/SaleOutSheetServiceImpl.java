@@ -1,5 +1,6 @@
 package com.lframework.xingyun.sc.impl.sale;
 
+import cn.hutool.core.util.BooleanUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -20,9 +21,12 @@ import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTime
 import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineBizType;
+import com.lframework.starter.web.inner.entity.SysParameter;
 import com.lframework.starter.web.inner.entity.SysUser;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
+import com.lframework.starter.web.inner.service.system.SysParameterService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
+import com.lframework.starter.web.inner.vo.system.parameter.QuerySysParameterVo;
 import com.lframework.xingyun.basedata.entity.Customer;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductCategory;
@@ -30,24 +34,18 @@ import com.lframework.xingyun.basedata.entity.StoreCenter;
 import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.enums.SettleType;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
-import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.basedata.vo.customer.QueryCustomerVo;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
+import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitSummaryBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo;
-import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
-import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
-import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
-import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
-import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
-import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProfitTrendDto;
-import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
+import com.lframework.xingyun.sc.dto.sale.out.*;
 import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
 import com.lframework.xingyun.sc.entity.*;
 import com.lframework.xingyun.sc.enums.*;
@@ -118,7 +116,7 @@ public class SaleOutSheetServiceImpl extends
     private ProductHotnessService productHotnessService;
 
     @Autowired
-    private ProductBundleService productBundleService;
+    private SysParameterService sysParameterService;
 
     @Autowired
     private ProductCategoryService productCategoryService;
@@ -1203,7 +1201,7 @@ public class SaleOutSheetServiceImpl extends
 
             saleOutSheetDetailService.save(detail);
             if (!requireSale) {
-                productService.updatePrice(product.getId(), detail.getTaxPrice(), null);
+                updateProductPrice(product, detail);
                 productLatestPriceCacheService.updateLatestPrice(product.getId(), detail.getTaxPrice(),
                         null);
             }
@@ -1219,6 +1217,25 @@ public class SaleOutSheetServiceImpl extends
         sheet.setDescription(
                 StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(customer));
+    }
+
+    /**
+     * 更新商品价格
+     * @param product
+     * @param detail
+     */
+    private void updateProductPrice(Product product, SaleOutSheetDetail detail) {
+        QuerySysParameterVo sysParameterVo = new QuerySysParameterVo();
+        sysParameterVo.setPmKey("latest_price_override_product_price");
+        List<SysParameter> list = sysParameterService.query(sysParameterVo);
+        if (CollectionUtil.isEmpty(list)) {
+            return;
+        }
+
+        boolean override = BooleanUtil.toBoolean(list.get(0).getPmValue());
+        if (override) {
+            productService.updatePrice(product.getId(), detail.getTaxPrice(), null);
+        }
     }
 
     /**

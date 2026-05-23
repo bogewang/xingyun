@@ -10,6 +10,7 @@ import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductCategory;
 import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
+import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import lombok.Data;
 
@@ -84,6 +85,18 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
      */
     @ExcelProperty("零售价（元）")
     private BigDecimal retailPrice;
+
+    /**
+     * 最新采购价
+     */
+    @ExcelProperty("最新采购价（元）")
+    private BigDecimal latestPurchasePrice;
+
+    /**
+     * 最新销售价
+     */
+    @ExcelProperty("最新销售价（元）")
+    private BigDecimal latestSalePrice;
 
     /**
      * 别名
@@ -177,6 +190,11 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
             Supplier supplier = bean.findById(dto.getDefaultSupplier());
             this.defaultSupplier = supplier.getName();
         }
+
+        // 最新采购价和最新售价
+        ProductLatestPriceCacheService productLatestPriceCacheService =  ApplicationUtil.getBean(ProductLatestPriceCacheService.class);
+        this.latestPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(dto.getId());
+        this.latestSalePrice = productLatestPriceCacheService.getLatestSalePrice(dto.getId());
     }
 
 

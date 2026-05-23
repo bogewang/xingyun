@@ -104,3 +104,8 @@ INSERT INTO `sys_menu` (`id`, `code`, `name`, `title`, `icon`, `component_type`,
 -- 0521 销售趋势分析
 delete from sys_menu where id = '6000003';
 INSERT INTO `sys_menu` (`id`, `code`, `name`, `title`, `icon`, `component_type`, `component`, `request_param`, `parent_id`, `sys_module_id`, `path`, `no_cache`, `display`, `hidden`, `permission`, `is_special`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('6000003', '6000003', 'SaleTrendReport', '销售趋势分析', NULL, 0, '/report/sale-trend/index', NULL, '6000', '17', '/sale-trend', 0, 1, 0, 'report:sale-trend:query', 1, 1, '', '系统管理员', '1', now(), '系统管理员', '1', now());
+
+
+-- 0523 系统参数
+delete from sys_parameter where pm_key = 'latest_price_override_product_price';
+INSERT INTO `sys_parameter` (`id`, `pm_key`, `pm_value`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES (null, 'latest_price_override_product_price', 'false', '最新价格是否覆盖商品价格', '系统管理员', '1', now(), '系统管理员', '1', now());
