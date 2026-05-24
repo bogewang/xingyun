@@ -4,9 +4,10 @@ import com.alibaba.excel.annotation.ExcelProperty;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import lombok.Data;
 
 @Data
 public class SaleOutSheetProductProfitExportModel extends BaseBo<SaleOutSheetProductProfitDto>
@@ -14,6 +15,9 @@ public class SaleOutSheetProductProfitExportModel extends BaseBo<SaleOutSheetPro
 
   @ExcelProperty("商品名称")
   private String productName;
+
+  @ExcelProperty("商品分类")
+  private String productCategory;
 
   @ExcelProperty("规格型号")
   private String spec;
@@ -59,6 +63,7 @@ public class SaleOutSheetProductProfitExportModel extends BaseBo<SaleOutSheetPro
     this.productName = dto.getProductName();
     this.spec = dto.getSpec();
     this.unit = dto.getUnit();
+    this.productCategory = dto.getProductCategory();
     this.saleNum = defaultValue(dto.getSaleNum());
     this.salePrice = defaultValue(dto.getSalePrice());
     this.purchasePrice = defaultValue(dto.getPurchasePrice());

@@ -43,7 +43,6 @@
               <j-form-item label="规格型号">
                 <a-input v-model:value="searchFormData.productSpec" allow-clear />
               </j-form-item>
-
             </j-form>
           </j-border>
         </template>
@@ -154,6 +153,7 @@
             sortable: true,
             slots: { default: 'productName_default' },
           },
+          { field: 'productCategory', title: '商品分类', width: 100 },
           { field: 'spec', title: '规格型号', minWidth: 120 },
           { field: 'unit', title: '单位', width: 90 },
           {

@@ -507,6 +507,7 @@
             g.name AS productName,
             g.spec,
             g.unit,
+            c.name as productCategory,
             IFNULL(SUM(IFNULL(d.order_num, 0)), 0) AS saleNum,
             CASE
                 WHEN IFNULL(SUM(IFNULL(d.order_num, 0)), 0) = 0 THEN 0
@@ -523,6 +524,7 @@
         INNER JOIN tbl_sale_out_sheet_detail AS d ON d.sheet_id = s.id
         LEFT JOIN tbl_sale_order AS o ON o.id = s.sale_order_id
         LEFT JOIN base_data_product AS g ON g.id = d.product_id
+        LEFT JOIN base_data_product_category as c on c.id = g.category_id
         <where>
             <if test="vo != null">
                 <if test="vo.code != null and vo.code != ''">

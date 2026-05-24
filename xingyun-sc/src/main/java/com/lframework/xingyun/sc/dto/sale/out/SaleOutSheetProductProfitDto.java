@@ -1,9 +1,10 @@
 package com.lframework.xingyun.sc.dto.sale.out;
 
 import com.lframework.starter.web.core.dto.BaseDto;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
-import lombok.Data;
 
 @Data
 public class SaleOutSheetProductProfitDto implements BaseDto, Serializable {
@@ -31,4 +32,9 @@ public class SaleOutSheetProductProfitDto implements BaseDto, Serializable {
   private BigDecimal salesCost;
 
   private BigDecimal salesProfit;
+
+  /**
+   * 商品分类
+   */
+  private String productCategory;
 }

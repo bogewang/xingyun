@@ -3,8 +3,9 @@ package com.lframework.xingyun.sc.bo.sale.out;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
 import io.swagger.annotations.ApiModelProperty;
-import java.math.BigDecimal;
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 @Data
 public class SaleOutSheetProductProfitBo extends BaseBo<SaleOutSheetProductProfitDto> {
@@ -41,6 +42,9 @@ public class SaleOutSheetProductProfitBo extends BaseBo<SaleOutSheetProductProfi
 
   @ApiModelProperty("销售毛利")
   private BigDecimal salesProfit;
+
+  @ApiModelProperty("商品分类")
+  private String productCategory;
 
   public SaleOutSheetProductProfitBo(SaleOutSheetProductProfitDto dto) {
     super(dto);
