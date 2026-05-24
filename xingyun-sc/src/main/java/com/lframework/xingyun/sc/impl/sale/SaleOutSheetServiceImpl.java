@@ -624,6 +624,18 @@ public class SaleOutSheetServiceImpl extends
         return PageResultUtil.convert(new PageInfo<>(datas));
     }
 
+    private String generateCode() {
+        while (true) {
+            String code = generateCodeService.generate(GenerateCodeTypePool.SALE_OUT_SHEET);
+            QuerySaleOutSheetVo vo = new QuerySaleOutSheetVo();
+            vo.setCode(code);
+            List<SaleOutSheet> list = query(vo);
+            if (CollectionUtils.isEmpty(list)) {
+                return code;
+            }
+        }
+    }
+
     @OpLog(type = SaleOpLogType.class, name = "创建销售出库单，单号：{}", params = "#code")
     @OrderTimeLineLog(type = CreateOrderTimeLineBizType.class, orderId = "#_result", name = "创建出库单")
     @Transactional(rollbackFor = Exception.class)
@@ -632,7 +644,7 @@ public class SaleOutSheetServiceImpl extends
 
         SaleOutSheet sheet = new SaleOutSheet();
         sheet.setId(IdUtil.getId());
-        sheet.setCode(generateCodeService.generate(GenerateCodeTypePool.SALE_OUT_SHEET));
+        sheet.setCode(generateCode());
 
         SaleConfig saleConfig = saleConfigService.get();
 

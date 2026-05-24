@@ -233,6 +233,18 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         return PageResultUtil.convert(new PageInfo<>(datas));
     }
 
+    private String generateCode() {
+        while (true) {
+            String code = generateCodeService.generate(GenerateCodeTypePool.SALE_OUT_SHEET);
+            QueryReceiveSheetVo vo = new QueryReceiveSheetVo();
+            vo.setCode(code);
+            List<ReceiveSheet> list = query(vo);
+            if (CollectionUtils.isEmpty(list)) {
+                return code;
+            }
+        }
+    }
+
     @OpLog(type = PurchaseOpLogType.class, name = "创建采购收货单，单号：{}", params = "#code")
     @OrderTimeLineLog(type = CreateOrderTimeLineBizType.class, orderId = "#_result", name = "创建收货单")
     @Transactional(rollbackFor = Exception.class)
@@ -241,7 +253,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         ReceiveSheet sheet = new ReceiveSheet();
         sheet.setId(IdUtil.getId());
-        sheet.setCode(generateCodeService.generate(GenerateCodeTypePool.RECEIVE_SHEET));
+        sheet.setCode(generateCode());
 
         PurchaseConfig purchaseConfig = purchaseConfigService.get();
 
