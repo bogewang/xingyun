@@ -27,7 +27,7 @@ public class ProductLatestPriceCacheServiceImpl implements ProductLatestPriceCac
     public BigDecimal getLatestSalePrice(String productId) {
 
         ProductLatestPriceCacheItem item = this.getCacheItem(productId);
-        if (item == null) {
+        if (item == null || item.getLatestSalePrice() == null) {
             Product product = productService.findById(productId);
             if (product == null) {
                 return null;
@@ -43,7 +43,7 @@ public class ProductLatestPriceCacheServiceImpl implements ProductLatestPriceCac
     public BigDecimal getLatestPurchasePrice(String productId) {
 
         ProductLatestPriceCacheItem item = this.getCacheItem(productId);
-        if (item == null) {
+        if (item == null || item.getLatestPurchasePrice() == null) {
             Product product = productService.findById(productId);
             if (product == null) {
                 return null;
