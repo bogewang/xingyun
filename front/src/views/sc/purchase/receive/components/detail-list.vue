@@ -138,19 +138,6 @@
           <span v-no-permission="['purchase:receive:modify']">{{ row.code }}</span>
         </template>
 
-        <template #purchaseOrderCode_default="{ row }">
-          <span v-if="isEmpty(row.purchaseOrderCode)">-</span>
-          <span v-else>
-            <a
-              v-permission="['purchase:order:query']"
-              @click="viewPurchaseOrderDetail(row.purchaseOrderId)"
-            >
-              {{ row.purchaseOrderCode }}
-            </a>
-            <span v-no-permission="['purchase:order:query']">{{ row.purchaseOrderCode }}</span>
-          </span>
-        </template>
-
         <template #isGift_default="{ row }">
           {{ row.isGift ? '是' : '否' }}
         </template>
@@ -241,28 +228,16 @@
             sortable: true,
             slots: { default: 'code_default' },
           },
-          { field: 'supplierCode', title: '供应商编号', width: 120 },
           { field: 'supplierName', title: '供应商名称', width: 140 },
           { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
-          { field: 'receiveDate', title: '到货日期', width: 120 },
-          {
-            field: 'purchaseOrderCode',
-            title: '采购订单号',
-            width: 180,
-            slots: { default: 'purchaseOrderCode_default' },
-          },
           { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 180 },
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'spec', title: '规格', width: 100 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
           { field: 'orderNum', title: '收货数量', align: 'right', width: 100 },
           { field: 'taxPrice', title: '采购价', align: 'right', width: 100 },
           { field: 'taxAmount', title: '采购金额', align: 'right', width: 100 },
-          { field: 'isGift', title: '赠品', width: 80, slots: { default: 'isGift_default' } },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
           { field: 'approveTime', title: '审核时间', width: 170, sortable: true },

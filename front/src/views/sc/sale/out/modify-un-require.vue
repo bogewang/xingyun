@@ -375,19 +375,15 @@
             width: 80,
             slots: { default: 'operation_default' },
           },
-          { field: 'id', title: '商品ID', width: 150 },
           {
             field: 'productName',
             title: '商品名称',
             width: 150,
             slots: { default: 'productName_default' },
           },
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 80 },
-          { field: 'brandName', title: '商品品牌', width: 80 },
           { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 140 },
           {
             field: 'stockNum',
@@ -430,7 +426,6 @@
             width: 100,
             slots: { default: 'costStatus_default' },
           },
-          { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           {
             field: 'description',
             title: '备注',
