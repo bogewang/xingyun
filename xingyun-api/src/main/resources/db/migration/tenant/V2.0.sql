@@ -109,3 +109,7 @@ INSERT INTO `sys_menu` (`id`, `code`, `name`, `title`, `icon`, `component_type`,
 -- 0523 系统参数
 delete from sys_parameter where pm_key = 'latest_price_override_product_price';
 INSERT INTO `sys_parameter` (`id`, `pm_key`, `pm_value`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES (null, 'latest_price_override_product_price', 'false', '最新价格是否覆盖商品价格', '系统管理员', '1', now(), '系统管理员', '1', now());
+
+-- 0525 仓库非必填
+ALTER TABLE tbl_product_stock modify `sc_id` varchar(32) NULL COMMENT '仓库ID';
+ALTER TABLE tbl_product_stock_log modify `sc_id` varchar(32) NULL COMMENT '仓库ID';

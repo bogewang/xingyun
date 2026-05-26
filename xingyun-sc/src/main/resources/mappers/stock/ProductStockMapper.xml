@@ -29,7 +29,6 @@
         SET stock_num = stock_num + #{stockNum}, tax_amount = tax_amount + #{taxAmount}
         <if test="reCalcCostPrice">,tax_price = CASE WHEN stock_num = 0 THEN 0 ELSE tax_amount / stock_num END</if>
         WHERE product_id = #{productId}
-        AND sc_id = #{scId}
         AND stock_num = #{oriStockNum}
         AND tax_amount = #{oriTaxAmount}
     </update>
@@ -50,7 +49,6 @@
     </select>
     <select id="query" resultMap="ProductStock">
         <include refid="ProductStockDto_sql"/>
-        INNER JOIN base_data_store_center AS sc ON sc.id = gs.sc_id
         LEFT JOIN recursion_mapping AS rm ON rm.node_id = g.category_id and rm.node_type = 2
         <where>
             <if test="vo != null">
@@ -71,7 +69,7 @@
                 </if>
             </if>
         </where>
-        ORDER BY sc.code, g.code
+        ORDER BY g.code
     </select>
     <select id="getByProductIdsAndScId" resultMap="ProductStock">
         <include refid="ProductStockDto_sql"/>

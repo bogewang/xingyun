@@ -1,6 +1,5 @@
 package com.lframework.xingyun.sc.bo.stock.product;
 
-import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
@@ -14,8 +13,9 @@ import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.sc.entity.ProductStock;
 import io.swagger.annotations.ApiModelProperty;
-import java.math.BigDecimal;
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 @Data
 public class QueryProductStockBo extends BaseBo<ProductStock> {
@@ -104,10 +104,12 @@ public class QueryProductStockBo extends BaseBo<ProductStock> {
   @Override
   protected void afterInit(ProductStock dto) {
 
-    StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
-    StoreCenter sc = storeCenterService.findById(dto.getScId());
-    this.scCode = sc.getCode();
-    this.scName = sc.getName();
+    if (StringUtil.isNotBlank(dto.getScId())) {
+      StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
+      StoreCenter sc = storeCenterService.findById(dto.getScId());
+      this.scCode = sc.getCode();
+      this.scName = sc.getName();
+    }
 
     ProductService productService = ApplicationUtil.getBean(ProductService.class);
     Product product = productService.findById(dto.getProductId());

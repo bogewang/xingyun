@@ -267,10 +267,14 @@ public class ReceiveSheetController extends DefaultBaseController {
     @HasPermission({"purchase:receive:approve"})
     @PatchMapping("/approve/pass")
     public InvokeResult<Void> approvePass(@RequestBody @Valid ApprovePassReceiveSheetVo vo) {
+        try {
+            receiveSheetService.approvePass(vo);
 
-        receiveSheetService.approvePass(vo);
-
-        return InvokeResultBuilder.success();
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("审核通过失败", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
     }
 
     /**
