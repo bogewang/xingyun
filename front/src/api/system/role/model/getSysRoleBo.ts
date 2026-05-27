@@ -23,4 +23,9 @@ export interface GetSysRoleBo {
    * 备注
    */
   description: string;
+
+  /**
+   * 分类ID
+   */
+  categoryId?: string;
 }
