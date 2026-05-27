@@ -150,6 +150,16 @@ export default defineComponent({
     },
     mounted() {},
     methods: {
+      resolveErrorMessage(error) {
+        return (
+          error?.msg ||
+          error?.message ||
+          error?.response?.data?.msg ||
+          error?.response?.data?.message ||
+          error?.response?.data?.error?.message ||
+          '网络请求错误，请稍后重试！'
+        );
+      },
       openDialog() {
         this.dialogVisible = true;
       },
@@ -196,7 +206,7 @@ export default defineComponent({
                 })
                 .catch((e) => {
                   console.log(e);
-                  item.__errorMsg = e?.msg || '网络请求错误，请稍后重试！';
+                  item.__errorMsg = this.resolveErrorMessage(e);
                   item.__status = 3;
                 })
                 .finally(() => {
