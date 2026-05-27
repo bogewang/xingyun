@@ -187,6 +187,20 @@ public class SaleOutSheetServiceImpl extends
     }
 
     @Override
+    public PageResult<QuerySaleOutSheetDetailDto> queryPriceCheckDetail(Integer pageIndex,
+                                                                        Integer pageSize,
+                                                                        QuerySaleOutSheetVo vo) {
+
+        Assert.greaterThanZero(pageIndex);
+        Assert.greaterThanZero(pageSize);
+
+        PageHelperUtil.startPage(pageIndex, pageSize);
+        List<QuerySaleOutSheetDetailDto> datas = getBaseMapper().queryPriceCheckDetail(vo);
+
+        return PageResultUtil.convert(new PageInfo<>(datas));
+    }
+
+    @Override
     public PageResult<SaleOutSheetProductProfitDto> queryProductProfit(Integer pageIndex,
                                                                        Integer pageSize,
                                                                        QuerySaleOutSheetVo vo) {
@@ -268,6 +282,19 @@ public class SaleOutSheetServiceImpl extends
         });
 
         return res;
+    }
+
+    @Override
+    public Boolean getPriceUniqueConfig() {
+
+        QuerySysParameterVo sysParameterVo = new QuerySysParameterVo();
+        sysParameterVo.setPmKey("product_sale_price_unique");
+        List<SysParameter> list = sysParameterService.query(sysParameterVo);
+        if (CollectionUtil.isEmpty(list)) {
+            return Boolean.FALSE;
+        }
+
+        return BooleanUtil.toBoolean(list.get(0).getPmValue());
     }
 
     @Override
@@ -738,6 +765,80 @@ public class SaleOutSheetServiceImpl extends
                 vo.getProducts().stream().map(SaleOutProductVo::getProductId).collect(Collectors.toList()));
 
         OpLogUtil.setVariable("code", sheet.getCode());
+        OpLogUtil.setExtra(vo);
+    }
+
+    @OpLog(type = SaleOpLogType.class, name = "批量调整销售出库明细售价")
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void batchUpdatePrice(BatchUpdateSaleOutSheetPriceVo vo) {
+
+        if (NumberUtil.lt(vo.getTaxPrice(), BigDecimal.ZERO)) {
+            throw new InputErrorException("销售价不允许小于0！");
+        }
+
+        if (!NumberUtil.isNumberPrecision(vo.getTaxPrice(), 6)) {
+            throw new InputErrorException("销售价最多允许6位小数！");
+        }
+
+        List<SaleOutSheetDetail> details = saleOutSheetDetailService.listByIds(vo.getDetailIds());
+        if (CollectionUtils.isEmpty(details)) {
+            throw new DefaultClientException("未查询到需要调整售价的明细数据！");
+        }
+
+        if (details.size() != vo.getDetailIds().size()) {
+            throw new DefaultClientException("部分销售出库明细不存在，请刷新后重试！");
+        }
+
+        String productId = null;
+        for (SaleOutSheetDetail detail : details) {
+            if (productId == null) {
+                productId = detail.getProductId();
+                continue;
+            }
+            if (!StringUtil.equals(productId, detail.getProductId())) {
+                throw new DefaultClientException("一次只能调整同一种商品的售价！");
+            }
+        }
+
+        Set<String> customerIds = new LinkedHashSet<>();
+        Set<String> sheetIds = new LinkedHashSet<>();
+        for (SaleOutSheetDetail detail : details) {
+            validateBatchUpdatePriceDetail(detail);
+
+            detail.setTaxPrice(vo.getTaxPrice());
+            detail.setTaxAmount(
+                    NumberUtil.getNumber(NumberUtil.mul(vo.getTaxPrice(), detail.getOrderNum()), 2));
+            saleOutSheetDetailService.updateById(detail);
+
+            sheetIds.add(detail.getSheetId());
+        }
+
+        for (String sheetId : sheetIds) {
+            SaleOutSheet sheet = getBaseMapper().selectById(sheetId);
+            if (sheet == null) {
+                throw new DefaultClientException("销售出库单不存在，请刷新后重试！");
+            }
+
+            BigDecimal totalAmount = calcSheetTotalAmount(sheetId);
+            BigDecimal paidAmount = sheet.getPaidAmount() == null ? BigDecimal.ZERO : sheet.getPaidAmount();
+            if (NumberUtil.gt(paidAmount, totalAmount)) {
+                throw new DefaultClientException("单据号：" + sheet.getCode() + " 的已付金额大于调整后的单据金额，不允许调整售价！");
+            }
+
+            LambdaUpdateWrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
+                    .set(SaleOutSheet::getTotalAmount, totalAmount)
+                    .eq(SaleOutSheet::getId, sheetId);
+            if (!this.update(updateWrapper)) {
+                throw new DefaultClientException("销售出库单金额更新失败，请重试！");
+            }
+
+            customerIds.add(sheet.getCustomerId());
+        }
+
+        sheetIds.forEach(this::refreshCostPrice);
+        customerIds.forEach(this::adjustCustomerAmount);
+
         OpLogUtil.setExtra(vo);
     }
 
@@ -1304,6 +1405,29 @@ public class SaleOutSheetServiceImpl extends
         }
 
         return actualPaidAmount;
+    }
+
+    private void validateBatchUpdatePriceDetail(SaleOutSheetDetail detail) {
+
+        if (detail == null) {
+            throw new DefaultClientException("销售出库明细不存在，请刷新后重试！");
+        }
+
+        if (Boolean.TRUE.equals(detail.getIsGift())) {
+            throw new DefaultClientException("商品明细为赠品，不允许调整售价！");
+        }
+
+        if (detail.getSettleStatus() != SettleStatus.UN_SETTLE) {
+            throw new DefaultClientException("仅支持调整未结算的商品明细售价！");
+        }
+    }
+
+    private BigDecimal calcSheetTotalAmount(String sheetId) {
+
+        List<SaleOutSheetDetail> sheetDetails = saleOutSheetDetailService.getBySheetId(sheetId);
+        return sheetDetails.stream()
+                .map(item -> item.getTaxAmount() == null ? BigDecimal.ZERO : item.getTaxAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private void adjustCustomerAmount(String customerId) {

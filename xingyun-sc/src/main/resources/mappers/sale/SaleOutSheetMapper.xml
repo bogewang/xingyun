@@ -216,6 +216,100 @@
         LEFT JOIN sys_user AS au ON au.id = s.approve_by
     </sql>
 
+    <sql id="SaleOutSheetDetailWhere_sql">
+        <where>
+            <if test="vo != null">
+                <if test="vo.code != null and vo.code != ''">
+                    AND s.code = #{vo.code}
+                </if>
+                <if test="vo.productName != null and vo.productName != ''">
+                    AND g.name LIKE CONCAT('%', #{vo.productName}, '%')
+                </if>
+                <if test="vo.productSpec != null and vo.productSpec != ''">
+                    AND g.spec LIKE CONCAT('%', #{vo.productSpec}, '%')
+                </if>
+                <if test="vo.customerId != null and vo.customerId != ''">
+                    AND s.customer_id = #{vo.customerId}
+                </if>
+                <if test="vo.scId != null and vo.scId != ''">
+                    AND s.sc_id = #{vo.scId}
+                </if>
+                <if test="vo.salerId != null and vo.salerId != ''">
+                    AND s.saler_id = #{vo.salerId}
+                </if>
+                <if test="vo.status != null">
+                    AND s.status = #{vo.status}
+                </if>
+                <if test="vo.createBy != null and vo.createBy != ''">
+                    AND s.create_by_id = #{vo.createBy}
+                </if>
+                <if test="vo.approveBy != null and vo.approveBy != ''">
+                    AND s.approve_by = #{vo.approveBy}
+                </if>
+                <if test="vo.orderDateStart != null">
+                    AND s.order_date >= #{vo.orderDateStart}
+                </if>
+                <if test="vo.orderDateEnd != null">
+                    <![CDATA[
+                    AND s.order_date <= #{vo.orderDateEnd}
+                    ]]>
+                </if>
+                <if test="vo.approveStartTime != null">
+                    AND s.approve_time >= #{vo.approveStartTime}
+                </if>
+                <if test="vo.approveEndTime != null">
+                    <![CDATA[
+                    AND s.approve_time <= #{vo.approveEndTime}
+                    ]]>
+                </if>
+                <if test="vo.saleOrderCode != null and vo.saleOrderCode != ''">
+                    AND o.code = #{vo.saleOrderCode}
+                </if>
+                <if test="vo.settleStatus != null">
+                    AND s.settle_status = #{vo.settleStatus}
+                </if>
+                <if test="vo.fullyPaid != null">
+                    <choose>
+                        <when test="vo.fullyPaid">
+                            AND IFNULL(s.total_amount, 0) &lt;= IFNULL(s.paid_amount, 0)
+                        </when>
+                        <otherwise>
+                            AND IFNULL(s.total_amount, 0) &gt; IFNULL(s.paid_amount, 0)
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="vo.hasCostPrice != null">
+                    <choose>
+                        <when test="vo.hasCostPrice">
+                            AND (d.manual_input_cost = 1 OR IFNULL(d.cost_price, 0) &gt; 0)
+                        </when>
+                        <otherwise>
+                            AND IFNULL(d.manual_input_cost, 0) = 0 AND IFNULL(d.cost_price, 0) &lt;= 0
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="vo.fillAllCost != null">
+                    AND s.fill_all_cost = #{vo.fillAllCost}
+                </if>
+                <if test="vo.paidAmountStart != null">
+                    AND IFNULL(s.paid_amount, 0) &gt;= #{vo.paidAmountStart}
+                </if>
+                <if test="vo.paidAmountEnd != null">
+                    AND IFNULL(s.paid_amount, 0) &lt;= #{vo.paidAmountEnd}
+                </if>
+                <if test="vo.unpaidAmountStart != null">
+                    AND (IFNULL(s.total_amount, 0) - IFNULL(s.paid_amount, 0)) &gt;= #{vo.unpaidAmountStart}
+                </if>
+                <if test="vo.unpaidAmountEnd != null">
+                    AND (IFNULL(s.total_amount, 0) - IFNULL(s.paid_amount, 0)) &lt;= #{vo.unpaidAmountEnd}
+                </if>
+                <if test="vo.idList != null and vo.idList.size() > 0">
+                    AND s.id IN <foreach collection="vo.idList" open="(" separator="," close=")" item="item">#{item}</foreach>
+                </if>
+            </if>
+        </where>
+    </sql>
+
     <select id="query" resultMap="SaleOutSheet">
         <include refid="SaleOutSheetDto_sql"/>
         <where>
@@ -787,7 +881,111 @@
     </select>
     <select id="queryDetail" resultType="com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto">
         <include refid="SaleOutSheetDetailDto_sql"/>
+        <include refid="SaleOutSheetDetailWhere_sql"/>
+        ORDER BY s.order_date DESC, g.name ASC, s.code DESC, d.order_no ASC
+    </select>
+    <select id="queryPriceCheckDetail" resultType="com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto">
+        <include refid="SaleOutSheetDetailDto_sql"/>
         <where>
+            EXISTS (
+                SELECT 1
+                FROM tbl_sale_out_sheet AS s1
+                INNER JOIN tbl_sale_out_sheet_detail AS d1 ON d1.sheet_id = s1.id
+                LEFT JOIN tbl_sale_order AS o1 ON o1.id = s1.sale_order_id
+                LEFT JOIN base_data_product AS g1 ON g1.id = d1.product_id
+                WHERE d1.product_id = d.product_id
+                  AND d1.id != d.id
+                  AND IFNULL(d1.tax_price, 0) != IFNULL(d.tax_price, 0)
+                  <if test="vo != null">
+                      <if test="vo.code != null and vo.code != ''">
+                          AND s1.code = #{vo.code}
+                      </if>
+                      <if test="vo.productName != null and vo.productName != ''">
+                          AND g1.name LIKE CONCAT('%', #{vo.productName}, '%')
+                      </if>
+                      <if test="vo.productSpec != null and vo.productSpec != ''">
+                          AND g1.spec LIKE CONCAT('%', #{vo.productSpec}, '%')
+                      </if>
+                      <if test="vo.customerId != null and vo.customerId != ''">
+                          AND s1.customer_id = #{vo.customerId}
+                      </if>
+                      <if test="vo.scId != null and vo.scId != ''">
+                          AND s1.sc_id = #{vo.scId}
+                      </if>
+                      <if test="vo.salerId != null and vo.salerId != ''">
+                          AND s1.saler_id = #{vo.salerId}
+                      </if>
+                      <if test="vo.status != null">
+                          AND s1.status = #{vo.status}
+                      </if>
+                      <if test="vo.createBy != null and vo.createBy != ''">
+                          AND s1.create_by_id = #{vo.createBy}
+                      </if>
+                      <if test="vo.approveBy != null and vo.approveBy != ''">
+                          AND s1.approve_by = #{vo.approveBy}
+                      </if>
+                      <if test="vo.orderDateStart != null">
+                          AND s1.order_date >= #{vo.orderDateStart}
+                      </if>
+                      <if test="vo.orderDateEnd != null">
+                          <![CDATA[
+                          AND s1.order_date <= #{vo.orderDateEnd}
+                          ]]>
+                      </if>
+                      <if test="vo.approveStartTime != null">
+                          AND s1.approve_time >= #{vo.approveStartTime}
+                      </if>
+                      <if test="vo.approveEndTime != null">
+                          <![CDATA[
+                          AND s1.approve_time <= #{vo.approveEndTime}
+                          ]]>
+                      </if>
+                      <if test="vo.saleOrderCode != null and vo.saleOrderCode != ''">
+                          AND o1.code = #{vo.saleOrderCode}
+                      </if>
+                      <if test="vo.settleStatus != null">
+                          AND s1.settle_status = #{vo.settleStatus}
+                      </if>
+                      <if test="vo.fullyPaid != null">
+                          <choose>
+                              <when test="vo.fullyPaid">
+                                  AND IFNULL(s1.total_amount, 0) &lt;= IFNULL(s1.paid_amount, 0)
+                              </when>
+                              <otherwise>
+                                  AND IFNULL(s1.total_amount, 0) &gt; IFNULL(s1.paid_amount, 0)
+                              </otherwise>
+                          </choose>
+                      </if>
+                      <if test="vo.hasCostPrice != null">
+                          <choose>
+                              <when test="vo.hasCostPrice">
+                                  AND (d1.manual_input_cost = 1 OR IFNULL(d1.cost_price, 0) &gt; 0)
+                              </when>
+                              <otherwise>
+                                  AND IFNULL(d1.manual_input_cost, 0) = 0 AND IFNULL(d1.cost_price, 0) &lt;= 0
+                              </otherwise>
+                          </choose>
+                      </if>
+                      <if test="vo.fillAllCost != null">
+                          AND s1.fill_all_cost = #{vo.fillAllCost}
+                      </if>
+                      <if test="vo.paidAmountStart != null">
+                          AND IFNULL(s1.paid_amount, 0) &gt;= #{vo.paidAmountStart}
+                      </if>
+                      <if test="vo.paidAmountEnd != null">
+                          AND IFNULL(s1.paid_amount, 0) &lt;= #{vo.paidAmountEnd}
+                      </if>
+                      <if test="vo.unpaidAmountStart != null">
+                          AND (IFNULL(s1.total_amount, 0) - IFNULL(s1.paid_amount, 0)) &gt;= #{vo.unpaidAmountStart}
+                      </if>
+                      <if test="vo.unpaidAmountEnd != null">
+                          AND (IFNULL(s1.total_amount, 0) - IFNULL(s1.paid_amount, 0)) &lt;= #{vo.unpaidAmountEnd}
+                      </if>
+                      <if test="vo.idList != null and vo.idList.size() > 0">
+                          AND s1.id IN <foreach collection="vo.idList" open="(" separator="," close=")" item="item">#{item}</foreach>
+                      </if>
+                  </if>
+            )
             <if test="vo != null">
                 <if test="vo.code != null and vo.code != ''">
                     AND s.code = #{vo.code}
@@ -878,7 +1076,7 @@
                 </if>
             </if>
         </where>
-        ORDER BY s.order_date DESC, s.code DESC, d.order_no ASC
+        ORDER BY g.name ASC, s.order_date DESC, s.code DESC, d.order_no ASC
     </select>
     <select id="selector" resultMap="SaleOutSheet">
         <include refid="SaleOutSheetDto_sql"/>

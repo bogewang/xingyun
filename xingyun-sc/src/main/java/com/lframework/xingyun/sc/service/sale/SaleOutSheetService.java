@@ -62,6 +62,17 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   PageResult<QuerySaleOutSheetDetailDto> queryDetail(Integer pageIndex, Integer pageSize,
       QuerySaleOutSheetVo vo);
 
+  /**
+   * 查询产品询价不唯一的销售明细
+   *
+   * @param pageIndex
+   * @param pageSize
+   * @param vo
+   * @return
+   */
+  PageResult<QuerySaleOutSheetDetailDto> queryPriceCheckDetail(Integer pageIndex, Integer pageSize,
+      QuerySaleOutSheetVo vo);
+
   PageResult<SaleOutSheetProductProfitDto> queryProductProfit(Integer pageIndex, Integer pageSize,
       QuerySaleOutSheetVo vo);
 
@@ -127,6 +138,13 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
    * @param vo
    */
   void update(UpdateSaleOutSheetVo vo);
+
+  /**
+   * 批量调整销售出库明细售价
+   *
+   * @param vo
+   */
+  void batchUpdatePrice(BatchUpdateSaleOutSheetPriceVo vo);
 
   /**
    * 审核通过
@@ -195,6 +213,13 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   List<SaleOutProductVo> checkImport(List<SaleOutSheetImportModel> list);
 
   List<PrintSaleTagBo> tagPrint(QuerySaleOutSheetVo vo);
+
+  /**
+   * 是否开启产品询价唯一性检查
+   *
+   * @return
+   */
+  Boolean getPriceUniqueConfig();
 
   void marketBuySummary(QuerySaleOutSheetVo vo);
 

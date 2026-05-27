@@ -130,6 +130,40 @@ public class SaleOutSheetController extends DefaultBaseController {
         return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
     }
 
+    @ApiOperation("查询产品询价不唯一的销售明细")
+    @HasPermission({ "sale:out:query" })
+    @GetMapping("/query/priceCheck")
+    public InvokeResult<PageResult<QuerySaleOutSheetDetailBo>> queryPriceCheckDetail(@Valid QuerySaleOutSheetVo vo) {
+        try {
+            PageResult<QuerySaleOutSheetDetailDto> pageResult = saleOutSheetService.queryPriceCheckDetail(
+                    getPageIndex(vo), getPageSize(vo), vo);
+
+            if (CollectionUtil.isEmpty(pageResult.getDatas())) {
+                return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, null));
+            }
+
+            List<QuerySaleOutSheetDetailBo> results = pageResult.getDatas().stream().map(QuerySaleOutSheetDetailBo::new)
+                        .collect(Collectors.toList());
+            return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    @ApiOperation("是否开启产品询价唯一性检查")
+    @HasPermission({ "sale:out:query" })
+    @GetMapping("/price/unique/config")
+    public InvokeResult<Boolean> getPriceUniqueConfig() {
+
+        try {
+            return InvokeResultBuilder.success(saleOutSheetService.getPriceUniqueConfig());
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
     @ApiOperation("销售利润列表")
     @HasPermission({ "report:sale-profit:query" })
     @GetMapping("/profit/query")
@@ -470,6 +504,20 @@ public class SaleOutSheetController extends DefaultBaseController {
         vo.validate();
 
         saleOutSheetService.update(vo);
+
+        return InvokeResultBuilder.success();
+    }
+
+    /**
+     * 批量调整售价
+     */
+    @ApiOperation("批量调整售价")
+    @HasPermission({ "sale:out:modify" })
+    @PatchMapping("/price")
+    public InvokeResult<Void> batchUpdatePrice(
+            @RequestBody @Valid BatchUpdateSaleOutSheetPriceVo vo) {
+
+        saleOutSheetService.batchUpdatePrice(vo);
 
         return InvokeResultBuilder.success();
     }

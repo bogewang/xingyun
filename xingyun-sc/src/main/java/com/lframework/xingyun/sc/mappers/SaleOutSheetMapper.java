@@ -104,6 +104,17 @@ public interface SaleOutSheetMapper extends BaseMapper<SaleOutSheet> {
   })
   List<QuerySaleOutSheetDetailDto> queryDetail(@Param("vo") QuerySaleOutSheetVo vo);
 
+  @Sorts({
+      @Sort(value = "code", alias = "s", autoParse = true),
+      @Sort(value = "orderDate", alias = "s", autoParse = true),
+      @Sort(value = "createTime", alias = "s", autoParse = true),
+      @Sort(value = "approveTime", alias = "s", autoParse = true),
+  })
+  @DataPermissions(type = OrderDataPermissionDataPermissionType.class, value = {
+      @DataPermission(template = "order", alias = "s")
+  })
+  List<QuerySaleOutSheetDetailDto> queryPriceCheckDetail(@Param("vo") QuerySaleOutSheetVo vo);
+
   /**
    * 选择器
    *

@@ -18,6 +18,7 @@ import { CreateSaleOutSheetVo } from '@/api/sc/sale/out/model/createSaleOutSheet
 import { UpdateSaleOutSheetVo } from '@/api/sc/sale/out/model/updateSaleOutSheetVo';
 import { ApprovePassSaleOutSheetVo } from '@/api/sc/sale/out/model/approvePassSaleOutSheetVo';
 import { ApproveRefuseSaleOutSheetVo } from '@/api/sc/sale/out/model/approveRefuseSaleOutSheetVo';
+import { BatchUpdateSaleOutSheetPriceVo } from '@/api/sc/sale/out/model/batchUpdateSaleOutSheetPriceVo';
 import { PrintSaleOrderBo } from '@/api/sc/sale/order/model/printSaleOrderBo';
 import { PrintSaleTagBo } from '@/api/sc/sale/order/model/PrintSaleTagBo';
 
@@ -67,6 +68,31 @@ export function queryDetail(
     {
       url: baseUrl + '/query/detail',
       params,
+    },
+    {
+      region,
+    },
+  );
+}
+
+export function queryPriceCheckDetail(
+  params: QuerySaleOutSheetVo,
+): Promise<PageResult<QuerySaleOutSheetDetailBo>> {
+  return defHttp.get<PageResult<QuerySaleOutSheetDetailBo>>(
+    {
+      url: baseUrl + '/query/priceCheck',
+      params,
+    },
+    {
+      region,
+    },
+  );
+}
+
+export function getPriceUniqueConfig(): Promise<boolean> {
+  return defHttp.get<boolean>(
+    {
+      url: baseUrl + '/price/unique/config',
     },
     {
       region,
@@ -450,6 +476,22 @@ export function update(data: UpdateSaleOutSheetVo): Promise<void> {
   return defHttp.put<void>(
     {
       url: baseUrl,
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/**
+ * 批量调整售价
+ */
+export function batchUpdatePrice(data: BatchUpdateSaleOutSheetPriceVo): Promise<void> {
+  return defHttp.patch<void>(
+    {
+      url: baseUrl + '/price',
       data,
     },
     {

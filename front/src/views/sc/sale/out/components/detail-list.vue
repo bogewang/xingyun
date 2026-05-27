@@ -138,6 +138,13 @@
             <a-button @click="resetSearchForm">清空</a-button>
             <a-button type="primary" :icon="h(SearchOutlined)" @click="search">查询</a-button>
             <a-button
+              v-if="showPriceUniqueCheck"
+              :icon="h(EditOutlined)"
+              @click="openPriceCheckDialog"
+            >
+              检查产品询价是否唯一
+            </a-button>
+            <a-button
               v-permission="['sale:out:export']"
               :icon="h(DownloadOutlined)"
               @click="exportDetails"
@@ -155,17 +162,79 @@
 
     <detail :id="id" ref="viewDialog" />
     <sale-order-detail :id="saleOrderId" ref="viewSaleOrderDetailDialog" />
+
+    <a-modal
+      v-model:open="priceCheckVisible"
+      title="产品询价不唯一明细"
+      width="92%"
+      :mask-closable="false"
+      destroy-on-close
+      :footer="null"
+      :style="{ top: '8px' }"
+      :body-style="{ height: priceCheckModalBodyHeight, overflow: 'hidden', padding: '12px 16px' }"
+    >
+      <div style="margin-bottom: 12px">
+        <a-space>
+          <a-input
+            v-model:value="priceCheckSearchForm.productName"
+            allow-clear
+            placeholder="请输入商品名称"
+            style="width: 220px"
+            @keyup.enter="searchPriceCheck"
+          />
+          <a-button type="primary" :icon="h(SearchOutlined)" @click="searchPriceCheck">
+            查询
+          </a-button>
+          <a-button @click="resetPriceCheckSearch">清空</a-button>
+        </a-space>
+      </div>
+      <vxe-grid
+        v-if="priceCheckVisible"
+        ref="priceCheckGrid"
+        auto-resize
+        resizable
+        show-overflow
+        highlight-hover-row
+        row-id="detailId"
+        :proxy-config="priceCheckProxyConfig"
+        :columns="visiblePriceCheckTableColumn"
+        :checkbox-config="priceCheckCheckboxConfig"
+        :toolbar-config="priceCheckToolbarConfig"
+        :pager-config="pagerConfig"
+        :loading="priceCheckLoading"
+        @checkbox-change="onPriceCheckCheckboxChange"
+        :height="priceCheckGridHeight"
+      >
+        <template #toolbar_buttons>
+          <a-space>
+            <a-button
+              v-permission="['sale:out:modify']"
+              :icon="h(EditOutlined)"
+              @click="batchUpdatePriceInDialog"
+            >
+              批量调整价格
+            </a-button>
+          </a-space>
+        </template>
+        <template #profitRate_default="{ row }">
+          {{ calcProfitRate(row.totalProfit, row.taxAmount) }}
+        </template>
+        <template #costAmount_default="{ row }">
+          {{ formatAmount(calcCostAmount(row)) }}
+        </template>
+      </vxe-grid>
+    </a-modal>
   </div>
 </template>
 
 <script>
   import { defineComponent, h } from 'vue';
   import moment from 'moment';
-  import { DownloadOutlined, SearchOutlined } from '@ant-design/icons-vue';
+  import { DownloadOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons-vue';
   import Detail from '../detail.vue';
   import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
   import * as api from '@/api/sc/sale/out';
-  import { buildSortPageVo, isEmpty } from '@/utils/utils';
+  import { buildSortPageVo, isEmpty, PATTERN_IS_PRICE } from '@/utils/utils';
   import {
     buildVisibleSelectOptions,
     filterSelectOption,
@@ -175,8 +244,23 @@
   import { requestCustomerSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
-  import { createSuccess } from '@/hooks/web/msg';
+  import { createError, createPrompt, createSuccess } from '@/hooks/web/msg';
   import { usePermission } from '/@/hooks/web/usePermission';
+
+  const createDefaultSearchFormData = () => ({
+    code: '',
+    productName: '',
+    scId: '',
+    customerId: undefined,
+    createBy: undefined,
+    approveBy: undefined,
+    status: undefined,
+    saler: '',
+    saleOrderCode: '',
+    settleStatus: undefined,
+    fullyPaid: undefined,
+    hasCostPrice: undefined,
+  });
 
   export default defineComponent({
     name: 'SaleOutSheetDetailList',
@@ -191,6 +275,7 @@
         isEmpty,
         hasPermission,
         SearchOutlined,
+        EditOutlined,
         DownloadOutlined,
         SETTLE_STATUS,
         SALE_OUT_SHEET_STATUS,
@@ -198,23 +283,20 @@
     },
     data() {
       return {
+        viewportHeight: window.innerHeight,
         loading: false,
+        priceCheckLoading: false,
         id: '',
         saleOrderId: '',
-        searchFormData: {
-          code: '',
+        showPriceUniqueCheck: false,
+        priceCheckVisible: false,
+        priceCheckQueryParams: null,
+        selectedPriceCheckProductId: '',
+        syncingPriceCheckSelection: false,
+        priceCheckSearchForm: {
           productName: '',
-          scId: '',
-          customerId: undefined,
-          createBy: undefined,
-          approveBy: undefined,
-          status: undefined,
-          saler: '',
-          saleOrderCode: '',
-          settleStatus: undefined,
-          fullyPaid: undefined,
-          hasCostPrice: undefined,
         },
+        searchFormData: createDefaultSearchFormData(),
         orderDateRange: [],
         approveDateRange: [],
         customerOptions: [],
@@ -224,6 +306,11 @@
         approveByOptions: [],
         approveByOptionMap: {},
         toolbarConfig: {
+          slots: {
+            buttons: 'toolbar_buttons',
+          },
+        },
+        priceCheckToolbarConfig: {
           slots: {
             buttons: 'toolbar_buttons',
           },
@@ -278,9 +365,73 @@
             },
           },
         },
+        priceCheckTableColumn: [
+          { type: 'checkbox', width: 45 },
+          { type: 'seq', width: 50, title: '序号' },
+          { field: 'code', title: '单据编号', width: 150 },
+          { field: 'productName', title: '商品名称', width: 140 },
+          { field: 'orderDate', title: '单据日期', width: 100, sortable: true },
+          { field: 'unit', title: '单位', width: 70 },
+          { field: 'orderNum', title: '数量', align: 'right', width: 80 },
+          { field: 'taxPrice', title: '售价', align: 'right', width: 80 },
+          { field: 'costPrice', title: '进价', align: 'right', width: 80 },
+          {
+            field: 'costAmount',
+            title: '成本',
+            align: 'right',
+            width: 80,
+            slots: { default: 'costAmount_default' },
+          },
+          { field: 'taxAmount', title: '销售金额', align: 'right', width: 80 },
+          { field: 'totalProfit', title: '毛利', align: 'right', width: 80 },
+          {
+            field: 'profitRate',
+            title: '毛利率',
+            align: 'right',
+            width: 100,
+            slots: { default: 'profitRate_default' },
+          },
+          { field: 'customerName', title: '客户', width: 160 },
+        ],
+        priceCheckProxyConfig: {
+          props: {
+            result: 'datas',
+            total: 'totalCount',
+          },
+          ajax: {
+            query: ({ page, sorts }) => {
+              this.priceCheckLoading = true;
+              this.selectedPriceCheckProductId = '';
+              return api
+                .queryPriceCheckDetail({
+                  ...buildSortPageVo(page, sorts),
+                  ...this.buildPriceCheckQueryParams(),
+                })
+                .finally(() => {
+                  this.priceCheckLoading = false;
+                });
+            },
+          },
+          toolbar: true,
+        },
+        priceCheckCheckboxConfig: {
+          showHeader: false,
+          checkMethod: ({ row }) => {
+            return (
+              !this.selectedPriceCheckProductId ||
+              row.productId === this.selectedPriceCheckProductId
+            );
+          },
+        },
       };
     },
     computed: {
+      priceCheckModalBodyHeight() {
+        return `${Math.max(this.viewportHeight - 88, 520)}px`;
+      },
+      priceCheckGridHeight() {
+        return Math.max(this.viewportHeight - 156, 420);
+      },
       visibleTableColumn() {
         return this.tableColumn.filter((column) => {
           if (column.field === 'totalProfit') {
@@ -292,11 +443,36 @@
       canViewProfit() {
         return this.hasPermission('sale:out:profit', false);
       },
+      visiblePriceCheckTableColumn() {
+        return this.priceCheckTableColumn.filter((column) => {
+          if (['costAmount', 'totalProfit', 'profitRate'].includes(column.field)) {
+            return this.canViewProfit;
+          }
+          return true;
+        });
+      },
     },
     created() {
       this.orderDateRange = this.getDefaultOrderDateRange();
+      this.loadPriceUniqueConfig();
+    },
+    mounted() {
+      window.addEventListener('resize', this.handleViewportResize);
+    },
+    beforeUnmount() {
+      window.removeEventListener('resize', this.handleViewportResize);
     },
     methods: {
+      handleViewportResize() {
+        this.viewportHeight = window.innerHeight;
+      },
+      async loadPriceUniqueConfig() {
+        try {
+          this.showPriceUniqueCheck = await api.getPriceUniqueConfig();
+        } catch (e) {
+          this.showPriceUniqueCheck = false;
+        }
+      },
       footerMethod({ columns, data }) {
         const orderNum = this.sumByField(data, 'orderNum');
         const taxAmount = this.sumByField(data, 'taxAmount');
@@ -334,27 +510,82 @@
           .toFixed(2)
           .replace(/\.?0+$/, '');
       },
+      calcCostAmount(row) {
+        return Number(row?.taxAmount || 0) - Number(row?.totalProfit || 0);
+      },
+      calcProfitRate(profit, amount) {
+        const totalAmount = Number(amount || 0);
+        if (!totalAmount) {
+          return '0.00%';
+        }
+        return `${((Number(profit || 0) / totalAmount) * 100).toFixed(2)}%`;
+      },
       search() {
         this.$refs.grid.commitProxy('reload');
+      },
+      openPriceCheckDialog() {
+        this.priceCheckQueryParams = this.buildSearchFormData();
+        this.priceCheckSearchForm.productName = this.priceCheckQueryParams.productName || '';
+        this.resetPriceCheckSelection();
+        this.priceCheckVisible = true;
+        this.reloadPriceCheckGrid();
+      },
+      onPriceCheckCheckboxChange({ checked, row }) {
+        if (this.syncingPriceCheckSelection) {
+          return;
+        }
+
+        const grid = this.$refs.priceCheckGrid;
+        if (!grid) {
+          return;
+        }
+
+        this.syncingPriceCheckSelection = true;
+        try {
+          const allRows = grid.getTableData().fullData || [];
+          const sameProductRows = allRows.filter((item) => item.productId === row.productId);
+
+          if (checked) {
+            this.selectedPriceCheckProductId = row.productId;
+            grid.setCheckboxRow(sameProductRows, true);
+          } else {
+            if (this.selectedPriceCheckProductId === row.productId) {
+              this.resetPriceCheckSelection(grid, allRows);
+            }
+          }
+        } finally {
+          this.syncingPriceCheckSelection = false;
+        }
+      },
+      resetPriceCheckSelection(grid, rows) {
+        this.selectedPriceCheckProductId = '';
+        if (grid && rows) {
+          grid.setCheckboxRow(rows, false);
+        }
+      },
+      reloadPriceCheckGrid() {
+        this.$nextTick(() => {
+          this.$refs.priceCheckGrid?.commitProxy('reload');
+        });
+      },
+      buildPriceCheckQueryParams() {
+        return Object.assign({}, this.priceCheckQueryParams || this.buildSearchFormData(), {
+          productName: this.priceCheckSearchForm.productName,
+        });
+      },
+      searchPriceCheck() {
+        this.resetPriceCheckSelection();
+        this.reloadPriceCheckGrid();
+      },
+      resetPriceCheckSearch() {
+        this.priceCheckSearchForm.productName = '';
+        this.searchPriceCheck();
       },
       getDefaultOrderDateRange() {
         return [moment().startOf('month').format('YYYY-MM-DD'), moment().format('YYYY-MM-DD')];
       },
       resetSearchForm() {
-        this.searchFormData = {
-          code: '',
-          productName: '',
-          scId: '',
-          customerId: undefined,
-          createBy: undefined,
-          approveBy: undefined,
-          status: undefined,
-          saler: '',
-          saleOrderCode: '',
-          settleStatus: undefined,
-          fullyPaid: undefined,
-          hasCostPrice: undefined,
-        };
+        this.searchFormData = createDefaultSearchFormData();
         this.orderDateRange = this.getDefaultOrderDateRange();
         this.approveDateRange = [];
         this.search();
@@ -441,6 +672,37 @@
       exportDetails() {
         api.exportDetail(this.buildSearchFormData()).then(() => {
           createSuccess('已加入导出任务，请到导出中心查看！');
+        });
+      },
+      batchUpdatePriceInDialog() {
+        const records = this.$refs.priceCheckGrid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择需要调整售价的商品明细！');
+          return;
+        }
+
+        const productIds = Array.from(new Set(records.map((item) => item.productId)));
+        if (productIds.length > 1) {
+          createError('一次只能修改同一种产品的售价！');
+          return;
+        }
+
+        createPrompt('请输入价格（元）', {
+          inputPattern: PATTERN_IS_PRICE,
+          inputErrorMessage: '价格（元）必须是数字并且不小于0，最多允许6位小数',
+          title: '批量调整售价',
+          required: true,
+        }).then(({ value }) => {
+          api
+            .batchUpdatePrice({
+              detailIds: records.map((item) => item.detailId),
+              taxPrice: Number(value),
+            })
+            .then(() => {
+              createSuccess('批量调整售价成功！');
+              this.$refs.priceCheckGrid.commitProxy('reload');
+              this.search();
+            });
         });
       },
       viewDetail(id) {
