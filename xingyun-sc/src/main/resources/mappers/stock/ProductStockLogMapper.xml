@@ -43,7 +43,6 @@
     </sql>
     <select id="query" resultMap="ProductStockLog">
         <include refid="ProductStockLogDto_sql"/>
-        INNER JOIN base_data_store_center AS sc ON sc.id = gsl.sc_id
         LEFT JOIN recursion_mapping AS rm ON rm.node_id = g.category_id and rm.node_type = 2
         <where>
             <if test="vo != null">
@@ -77,6 +76,6 @@
                 </if>
             </if>
         </where>
-        ORDER BY gsl.create_time DESC, sc.code, g.code
+        ORDER BY gsl.create_time DESC, g.code
     </select>
 </mapper>
