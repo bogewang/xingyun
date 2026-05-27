@@ -1,6 +1,6 @@
 <template>
   <div>
-    <page-wrapper content-full-height fixed-height>
+    <page-wrapper content-full-height fixed-height dense>
       <vxe-grid
         id="ReceiveSheetDetailList"
         ref="grid"
@@ -18,11 +18,11 @@
         :pager-config="pagerConfig"
         :footer-method="footerMethod"
         :loading="loading"
-        height="auto"
+        :height="gridHeight || 'auto'"
       >
         <template #form>
           <j-border>
-            <j-form bordered @collapse="$refs.grid.refreshColumn()" @keyup.enter="search">
+            <j-form bordered @collapse="handleFormCollapse" @keyup.enter="search">
               <j-form-item label="订单日期">
                 <a-range-picker
                   v-model:value="orderDateRange"
@@ -157,6 +157,7 @@
   import PurchaseOrderDetail from '@/views/sc/purchase/order/detail.vue';
   import * as api from '@/api/sc/purchase/receive';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
   import { buildSortPageVo, isEmpty } from '@/utils/utils';
   import {
     buildVisibleSelectOptions,
@@ -177,7 +178,7 @@
       PurchaseOrderDetail,
       SupplierSelector,
     },
-    mixins: [multiplePageMix],
+    mixins: [multiplePageMix, gridCollapseHeightMix],
     setup() {
       return {
         h,

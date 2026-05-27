@@ -1,6 +1,6 @@
 <template>
   <div>
-    <page-wrapper content-full-height fixed-height>
+    <page-wrapper content-full-height fixed-height dense>
       <vxe-grid
         id="SaleOutSheetDetailList"
         ref="grid"
@@ -18,11 +18,11 @@
         :pager-config="pagerConfig"
         :footer-method="footerMethod"
         :loading="loading"
-        height="auto"
+        :height="gridHeight || 'auto'"
       >
         <template #form>
           <j-border>
-            <j-form bordered @collapse="$refs.grid.refreshColumn()" @keyup.enter="search">
+            <j-form bordered @collapse="handleFormCollapse" @keyup.enter="search">
               <j-form-item label="订单日期">
                 <a-range-picker
                   v-model:value="orderDateRange"
@@ -234,6 +234,7 @@
   import Detail from '../detail.vue';
   import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
   import * as api from '@/api/sc/sale/out';
+  import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
   import { buildSortPageVo, isEmpty, PATTERN_IS_PRICE } from '@/utils/utils';
   import {
     buildVisibleSelectOptions,
@@ -268,6 +269,7 @@
       Detail,
       SaleOrderDetail,
     },
+    mixins: [gridCollapseHeightMix],
     setup() {
       const { hasPermission } = usePermission();
       return {

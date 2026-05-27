@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-permission="['purchase:receive:query']">
-      <page-wrapper content-full-height fixed-height>
+      <page-wrapper content-full-height fixed-height dense>
         <!-- 数据列表 -->
         <vxe-grid
           id="ReceiveSheet"
@@ -20,11 +20,11 @@
           :pager-config="pagerConfig"
           :footer-method="footerMethod"
           :loading="loading"
-          height="auto"
+          :height="gridHeight || 'auto'"
         >
           <template #form>
             <j-border>
-              <j-form bordered @collapse="$refs.grid.refreshColumn()" @keyup.enter="search">
+              <j-form bordered @collapse="handleFormCollapse" @keyup.enter="search">
                 <j-form-item label="订单日期">
                   <a-range-picker
                     v-model:value="orderDateRange"
@@ -310,6 +310,7 @@
   import * as api from '@/api/sc/purchase/receive';
   import * as configApi from '@/api/sc/purchase/config';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
   import { isEmpty, buildSortPageVo } from '@/utils/utils';
   import {
     buildVisibleSelectOptions,
@@ -338,7 +339,7 @@
       BatchHandler,
       SupplierSelector,
     },
-    mixins: [multiplePageMix],
+    mixins: [multiplePageMix, gridCollapseHeightMix],
     setup() {
       return {
         h,

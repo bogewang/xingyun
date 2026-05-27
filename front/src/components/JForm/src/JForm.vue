@@ -80,7 +80,7 @@
     methods: {
       toggleCollapse() {
         this.collapseStatus = !this.collapseStatus;
-        this.$emit('collapse');
+        this.$emit('collapse', this.collapseStatus);
       },
       validate() {
         const model = toValue(this.model);
