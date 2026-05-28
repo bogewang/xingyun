@@ -6,6 +6,8 @@ logging:
     com.lframework: INFO
     io.lettuce.core.protocol: OFF
     org.dromara.warm.flow: INFO
+    org.mybatis.spring: INFO
+    org.apache.ibatis: INFO
 
 spring:
   servlet:
