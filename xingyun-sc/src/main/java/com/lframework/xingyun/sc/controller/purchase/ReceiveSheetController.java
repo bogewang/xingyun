@@ -261,6 +261,23 @@ public class ReceiveSheetController extends DefaultBaseController {
     }
 
     /**
+     * 修改备注
+     */
+    @ApiOperation("修改备注")
+    @HasPermission({"purchase:receive:modify"})
+    @PatchMapping("/description")
+    public InvokeResult<Void> updateDescription(@RequestBody @Valid UpdateReceiveSheetDescriptionVo vo) {
+
+        try {
+            receiveSheetService.updateDescription(vo);
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
+    }
+
+    /**
      * 审核通过
      */
     @ApiOperation("审核通过")
