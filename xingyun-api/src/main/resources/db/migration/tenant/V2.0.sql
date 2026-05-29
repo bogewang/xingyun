@@ -117,3 +117,13 @@ ALTER TABLE tbl_product_stock_log modify `sc_id` varchar(32) NULL COMMENT '仓�
 -- 0526 销售订单商品价格唯一配置
 delete from sys_parameter where pm_key = 'product_sale_price_unique';
 INSERT INTO `sys_parameter` (`id`, `pm_key`, `pm_value`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES (null, 'product_sale_price_unique', 'false', '销售订单商品价格唯一配置', '系统管理员', '1', now(), '系统管理员', '1', now());
+
+-- 0528
+update sys_menu set title = '结算汇总' where id = '4000006';
+
+-- 对账结算
+alter table settle_check_sheet add column receive_sheet_ids varchar(5000) null comment '收货单ID（逗号分隔）';
+ALTER TABLE `settle_check_sheet` ADD COLUMN `receive_total_amount` decimal(32,2) NOT NULL DEFAULT 0.00 COMMENT '收货单汇总金额';
+
+-- 收货单
+alter table tbl_receive_sheet add column settle_check_sheet_detail_id varchar(32) null comment '对账明细单ID';
