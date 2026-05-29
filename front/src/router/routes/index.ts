@@ -603,11 +603,11 @@ export const SettleRoute: AppRouteRecordRaw = {
       component: () => import('/@/views/settle/check-sheet/approve.vue'),
     },
     {
-      path: 'supplier/sheet/add',
+      path: 'supplier/sheet/settle',
       name: 'AddSupplierSettleSheet',
-      component: () => import('/@/views/settle/sheet/add.vue'),
+      component: () => import('/@/views/settle/sheet/settle.vue'),
       meta: {
-        title: '新增供应商结算单',
+        title: '供应商结算',
       },
     },
     {
