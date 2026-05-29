@@ -13,6 +13,7 @@ import { QueryReceiveSheetWithReturnVo } from '@/api/sc/purchase/receive/model/q
 import { QueryReceiveSheetWithReturnBo } from '@/api/sc/purchase/receive/model/queryReceiveSheetWithReturnBo';
 import { CreateReceiveSheetVo } from '@/api/sc/purchase/receive/model/createReceiveSheetVo';
 import { UpdateReceiveSheetVo } from '@/api/sc/purchase/receive/model/updateReceiveSheetVo';
+import { UpdateReceiveSheetDescriptionVo } from '@/api/sc/purchase/receive/model/updateReceiveSheetDescriptionVo';
 import { ApprovePassReceiveSheetVo } from '@/api/sc/purchase/receive/model/approvePassReceiveSheetVo';
 import { ApproveRefuseReceiveSheetVo } from '@/api/sc/purchase/receive/model/approveRefuseReceiveSheetVo';
 import { PrintReceiveSheetBo } from '@/api/sc/purchase/receive/model/printReceiveSheetBo';
@@ -233,6 +234,22 @@ export function update(data: UpdateReceiveSheetVo): Promise<void> {
   return defHttp.put<void>(
     {
       url: baseUrl,
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/**
+ * 修改备注
+ */
+export function updateDescription(data: UpdateReceiveSheetDescriptionVo): Promise<void> {
+  return defHttp.patch<void>(
+    {
+      url: baseUrl + '/description',
       data,
     },
     {
