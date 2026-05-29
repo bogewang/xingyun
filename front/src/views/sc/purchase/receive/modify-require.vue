@@ -110,8 +110,18 @@
         <!-- 工具栏 -->
         <template #toolbar_buttons>
           <a-space>
-            <a-button type="primary" :icon="h(PlusOutlined)" @click="addProduct">新增</a-button>
-            <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
+            <a-button
+              type="primary"
+              :icon="h(PlusOutlined)"
+              @click="addProduct"
+              >新增</a-button
+            >
+            <a-button
+              danger
+              :icon="h(DeleteOutlined)"
+              @click="delProduct"
+              >删除</a-button
+            >
             <a-button :icon="h(PlusOutlined)" @click="openBatchAddProductDialog"
               >批量添加商品</a-button
             >
@@ -135,7 +145,7 @@
               @click="insertProduct(rowIndex)"
             />
             <a-button
-              v-if="!row.isFixed"
+              v-show="!row.isFixed"
               type="link"
               size="small"
               danger
@@ -357,6 +367,7 @@
   import { requestUserSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
+  import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
 
   export default defineComponent({
@@ -384,6 +395,7 @@
         mul,
         sub,
         RECEIVE_SHEET_STATUS,
+        SETTLE_STATUS,
       };
     },
     data() {
@@ -533,6 +545,7 @@
           totalNum: 0,
           totalAmount: 0,
           paidAmount: 0,
+          settleStatus: '',
           description: '',
         };
 
@@ -550,6 +563,11 @@
               !RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(res.status)
             ) {
               createError('采购收货单已审核通过，无法修改！');
+              this.closeDialog();
+              return;
+            }
+            if (!SETTLE_STATUS.UN_CHECK_BILL.equalsCode(res.settleStatus)) {
+              createError('采购收货单已进入对账/结算流程，无法修改！');
               this.closeDialog();
               return;
             }
@@ -572,6 +590,7 @@
               description: res.description,
               paidAmount: res.paidAmount,
               status: res.status,
+              settleStatus: res.settleStatus,
               createBy: res.createBy,
               createTime: res.createTime,
               approveBy: res.approveBy,
