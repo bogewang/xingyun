@@ -4,12 +4,14 @@ import com.lframework.starter.common.exceptions.impl.InputErrorException;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.vo.BaseVo;
 import io.swagger.annotations.ApiModelProperty;
-import java.io.Serializable;
-import java.time.LocalDate;
-import java.util.List;
+import lombok.Data;
+
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import lombok.Data;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class CreateSettleCheckSheetVo implements BaseVo, Serializable {
@@ -29,6 +31,13 @@ public class CreateSettleCheckSheetVo implements BaseVo, Serializable {
   @ApiModelProperty(value = "项目", required = true)
   @NotEmpty(message = "项目不能为空！")
   private List<SettleCheckSheetItemVo> items;
+
+  /**
+   * 对账金额
+   */
+  @ApiModelProperty(value = "对账金额", required = true)
+  @NotNull(message = "对账金额不能为空！")
+  private BigDecimal totalPayAmount;
 
   /**
    * 起始日期
@@ -62,9 +71,9 @@ public class CreateSettleCheckSheetVo implements BaseVo, Serializable {
         throw new InputErrorException("第" + orderNo + "行业务类型不能为空！");
       }
 
-      if (item.getPayAmount() == null) {
-        throw new InputErrorException("第" + orderNo + "行应付金额不能为空！");
-      }
+      // if (item.getPayAmount() == null && this.totalPayAmount == null) {
+      //   throw new InputErrorException("第" + orderNo + "行应付金额不能为空！");
+      // }
 
       orderNo++;
     }
