@@ -1,44 +1,39 @@
 package com.lframework.xingyun.settle.controller;
 
 import com.lframework.starter.common.utils.CollectionUtil;
+import com.lframework.starter.mq.core.utils.ExportTaskUtil;
 import com.lframework.starter.web.core.annotations.security.HasPermission;
-import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.components.resp.PageResult;
+import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.utils.PageResultUtil;
-import com.lframework.starter.mq.core.utils.ExportTaskUtil;
+import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
+import com.lframework.xingyun.sc.vo.purchase.receive.ConfirmReceiveSheetCheckVo;
 import com.lframework.xingyun.settle.bo.sheet.GetSettleSheetBo;
 import com.lframework.xingyun.settle.bo.sheet.QuerySettleSheetBo;
+import com.lframework.xingyun.settle.bo.sheet.ReceiveSheetSettleInfoBo;
 import com.lframework.xingyun.settle.bo.sheet.SettleBizItemBo;
+import com.lframework.xingyun.settle.bo.sheet.SettleSheetSummaryBo;
 import com.lframework.xingyun.settle.dto.sheet.SettleBizItemDto;
 import com.lframework.xingyun.settle.dto.sheet.SettleSheetFullDto;
 import com.lframework.xingyun.settle.entity.SettleSheet;
 import com.lframework.xingyun.settle.excel.sheet.SettleSheetExportTaskWorker;
 import com.lframework.xingyun.settle.service.SettleSheetService;
-import com.lframework.xingyun.settle.vo.sheet.ApprovePassSettleSheetVo;
-import com.lframework.xingyun.settle.vo.sheet.ApproveRefuseSettleSheetVo;
-import com.lframework.xingyun.settle.vo.sheet.CreateSettleSheetVo;
-import com.lframework.xingyun.settle.vo.sheet.QuerySettleSheetVo;
-import com.lframework.xingyun.settle.vo.sheet.QueryUnSettleBizItemVo;
-import com.lframework.xingyun.settle.vo.sheet.UpdateSettleSheetVo;
+import com.lframework.xingyun.settle.service.SettleSheetSummaryService;
+import com.lframework.xingyun.settle.vo.sheet.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 供应商结算单
@@ -49,10 +44,17 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RestController
 @RequestMapping("/settle/sheet")
+@Slf4j
 public class SettleSheetController extends DefaultBaseController {
 
   @Autowired
   private SettleSheetService settleSheetService;
+
+  @Autowired
+  private SettleSheetSummaryService settleSheetSummaryService;
+
+  @Autowired
+  private ReceiveSheetService receiveSheetService;
 
   /**
    * 供应商结算单列表
@@ -73,6 +75,30 @@ public class SettleSheetController extends DefaultBaseController {
     }
 
     return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
+  }
+
+  /**
+   * 供应商结算汇总
+   */
+  @ApiOperation("供应商结算汇总")
+  @HasPermission({"settle:sheet:query"})
+  @GetMapping("/summary")
+  public InvokeResult<List<SettleSheetSummaryBo>> summary(@Valid QuerySettleSheetSummaryVo vo) {
+
+      try {
+          return InvokeResultBuilder.success(settleSheetSummaryService.query(vo));
+      } catch (Exception e) {
+          log.error("请求出错", e);
+          return InvokeResultBuilder.fail(e.getMessage(), null);
+      }
+  }
+
+  @ApiOperation("查询收货单对账结算扩展信息")
+  @HasPermission({"settle:sheet:query"})
+  @PostMapping("/receive-sheet-settle-infos")
+  public InvokeResult<List<ReceiveSheetSettleInfoBo>> queryReceiveSheetSettleInfos(@RequestBody @Valid QueryReceiveSheetSettleInfoVo vo) {
+
+    return InvokeResultBuilder.success(settleSheetService.queryReceiveSheetSettleInfos(vo.getIds()));
   }
 
   /**
@@ -205,5 +231,18 @@ public class SettleSheetController extends DefaultBaseController {
     }
 
     return InvokeResultBuilder.success(datas);
+  }
+
+  /**
+   * 确认对账
+   */
+  @ApiOperation("确认对账")
+  @HasPermission({"settle:sheet:add"})
+  @PatchMapping("/confirm/check")
+  public InvokeResult<Void> confirmCheck(@RequestBody @Valid ConfirmReceiveSheetCheckVo vo) {
+
+    receiveSheetService.confirmCheck(vo.getIds(), vo.getDescription());
+
+    return InvokeResultBuilder.success();
   }
 }

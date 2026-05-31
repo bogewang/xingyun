@@ -3,10 +3,11 @@ package com.lframework.xingyun.settle.dto.check;
 import com.lframework.starter.web.core.dto.BaseDto;
 import com.lframework.xingyun.settle.enums.SettleCheckSheetBizType;
 import com.lframework.xingyun.settle.enums.SettleCheckSheetCalcType;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 @Data
 public class SettleCheckBizItemDto implements BaseDto, Serializable {
@@ -34,9 +35,18 @@ public class SettleCheckBizItemDto implements BaseDto, Serializable {
   private SettleCheckSheetCalcType calcType;
 
   /**
-   * 对账金额
+   * 单据金额
    */
   private BigDecimal totalAmount;
+
+  /**
+   * 已支付金额
+   */
+  private BigDecimal paidAmount;
+  /**
+   * 应付金额（对账金额）
+   */
+  private BigDecimal payAmount;
 
   /**
    * 审核时间

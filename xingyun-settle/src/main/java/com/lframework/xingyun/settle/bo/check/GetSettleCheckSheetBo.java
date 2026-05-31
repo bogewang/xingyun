@@ -8,18 +8,19 @@ import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
+import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.settle.dto.check.SettleCheckBizItemDto;
 import com.lframework.xingyun.settle.dto.check.SettleCheckSheetFullDto;
 import com.lframework.xingyun.settle.service.SettleCheckSheetService;
-import com.lframework.starter.web.inner.service.system.SysUserService;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.Data;
 
 @Data
 public class GetSettleCheckSheetBo extends BaseBo<SettleCheckSheetFullDto> {
@@ -77,6 +78,18 @@ public class GetSettleCheckSheetBo extends BaseBo<SettleCheckSheetFullDto> {
    */
   @ApiModelProperty("优惠金额")
   private BigDecimal totalDiscountAmount;
+
+  /**
+   * 收货单ID（逗号分隔）
+   */
+  @ApiModelProperty("收货单ID（逗号分隔）")
+  private String bizSheetIds;
+
+  /**
+   * 收货单汇总总金额
+   */
+  @ApiModelProperty("收货单汇总总金额")
+  private BigDecimal bizTotalAmount;
 
   /**
    * 未付金额

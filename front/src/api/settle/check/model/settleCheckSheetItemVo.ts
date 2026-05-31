@@ -12,7 +12,7 @@ export interface SettleCheckSheetItemVo {
   /**
    * 应付金额
    */
-  payAmount: number;
+  payAmount?: number;
 
   /**
    * 备注

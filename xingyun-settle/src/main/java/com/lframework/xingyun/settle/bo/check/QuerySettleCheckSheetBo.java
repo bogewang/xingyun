@@ -7,14 +7,15 @@ import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
+import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.settle.entity.SettleCheckSheet;
-import com.lframework.starter.web.inner.service.system.SysUserService;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 @Data
 public class QuerySettleCheckSheetBo extends BaseBo<SettleCheckSheet> {
@@ -72,6 +73,12 @@ public class QuerySettleCheckSheetBo extends BaseBo<SettleCheckSheet> {
    */
   @ApiModelProperty("优惠金额")
   private BigDecimal totalDiscountAmount;
+
+  /**
+   * 收货单汇总总金额
+   */
+  @ApiModelProperty("收货单汇总总金额")
+  private BigDecimal bizSheetTotalAmount;
 
   /**
    * 未付金额

@@ -9,6 +9,8 @@
         <result column="total_pay_amount" property="totalPayAmount"/>
         <result column="total_payed_amount" property="totalPayedAmount"/>
         <result column="total_discount_amount" property="totalDiscountAmount"/>
+        <result column="receive_sheet_ids" property="bizSheetIds"/>
+        <result column="receive_total_amount" property="bizSheetTotalAmount"/>
         <result column="start_date" property="startDate"/>
         <result column="end_date" property="endDate"/>
         <result column="description" property="description"/>
@@ -31,6 +33,8 @@
         <result column="total_pay_amount" property="totalPayAmount"/>
         <result column="total_payed_amount" property="totalPayedAmount"/>
         <result column="total_discount_amount" property="totalDiscountAmount"/>
+        <result column="biz_sheet_ids" property="receiveSheetIds"/>
+        <result column="biz_total_amount" property="receiveTotalAmount"/>
         <result column="start_date" property="startDate"/>
         <result column="end_date" property="endDate"/>
         <result column="description" property="description"/>
@@ -64,6 +68,8 @@
             s.total_pay_amount,
             s.total_payed_amount,
             s.total_discount_amount,
+            s.biz_sheet_ids,
+            s.biz_total_amount,
             s.start_date,
             s.end_date,
             s.description,
@@ -88,6 +94,8 @@
             s.total_pay_amount,
             s.total_payed_amount,
             s.total_discount_amount,
+            s.biz_sheet_ids,
+            s.biz_total_amount,
             s.start_date,
             s.end_date,
             s.description,

@@ -122,8 +122,8 @@ INSERT INTO `sys_parameter` (`id`, `pm_key`, `pm_value`, `description`, `create_
 update sys_menu set title = '结算汇总' where id = '4000006';
 
 -- 对账结算
-alter table settle_check_sheet add column receive_sheet_ids varchar(5000) null comment '收货单ID（逗号分隔）';
-ALTER TABLE `settle_check_sheet` ADD COLUMN `receive_total_amount` decimal(32,2) NOT NULL DEFAULT 0.00 COMMENT '收货单汇总金额';
-
+alter table settle_check_sheet add column biz_sheet_ids varchar(5000) null comment '业务单ID（逗号分隔）';
+ALTER TABLE `settle_check_sheet` ADD COLUMN `biz_total_amount` decimal(32,2) NOT NULL DEFAULT 0.00 COMMENT '业务单汇总金额';
+alter table settle_check_sheet add column check_amount decimal(32,2) NOT NULL DEFAULT 0.00 COMMENT '对账金额';
 -- 收货单
 alter table tbl_receive_sheet add column settle_check_sheet_detail_id varchar(32) null comment '对账明细单ID';

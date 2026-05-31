@@ -92,9 +92,6 @@
                       >
                     </a-select>
                   </j-form-item>
-                  <j-form-item label="采购订单号">
-                    <a-input v-model:value="searchFormData.purchaseOrderCode" allow-clear />
-                  </j-form-item>
 
                   <j-form-item label="结算状态">
                     <a-select
@@ -213,10 +210,13 @@
 
           <!-- 单据号 列自定义内容 -->
           <template #code_default="{ row }">
-            <a v-permission="['purchase:receive:modify']" @click="openModifyDialog(row)">{{
-              row.code
-            }}</a>
-            <span v-no-permission="['purchase:receive:modify']">{{ row.code }}</span>
+            <template v-if="canModifySheet(row)">
+              <a v-permission="['purchase:receive:modify']" @click="openModifyDialog(row)">{{
+                row.code
+              }}</a>
+              <span v-no-permission="['purchase:receive:modify']">{{ row.code }}</span>
+            </template>
+            <span v-else>{{ row.code }}</span>
           </template>
 
           <!-- 采购订单号 列自定义内容 -->
@@ -249,6 +249,20 @@
       <purchase-order-detail :id="purchaseOrderId" ref="viewPurchaseOrderDetailDialog" />
     </div>
     <receive-sheet-pay-type-importer ref="importer2" />
+    <a-modal
+      v-model:open="descriptionModal.visible"
+      title="修改备注"
+      :confirm-loading="descriptionModal.loading"
+      @ok="submitDescription"
+      @cancel="closeDescriptionDialog"
+    >
+      <a-textarea
+        v-model:value.trim="descriptionModal.description"
+        maxlength="200"
+        :rows="4"
+        allow-clear
+      />
+    </a-modal>
     <!-- 批量操作 -->
     <batch-handler
       ref="batchApprovePassHandlerDialog"
@@ -416,16 +430,16 @@
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
-          {
-            field: 'status',
-            title: '状态',
-            width: 100,
-            formatter: ({ cellValue }) => {
-              return RECEIVE_SHEET_STATUS.getDesc(cellValue);
-            },
-          },
-          { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
-          { field: 'approveBy', title: '审核人', width: 100 },
+          // {
+          //   field: 'status',
+          //   title: '状态',
+          //   width: 100,
+          //   formatter: ({ cellValue }) => {
+          //     return RECEIVE_SHEET_STATUS.getDesc(cellValue);
+          //   },
+          // },
+          // { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
+          // { field: 'approveBy', title: '审核人', width: 100 },
           {
             field: 'settleStatus',
             title: '结算状态',
@@ -435,13 +449,7 @@
             },
           },
           { field: 'description', title: '备注', width: 200 },
-          {
-            field: 'purchaseOrderCode',
-            title: '采购订单号',
-            width: 180,
-            slots: { default: 'purchaseOrderCode_default' },
-          },
-          { title: '操作', width: 300, fixed: 'right', slots: { default: 'action_default' } },
+          { title: '操作', width: 350, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -460,6 +468,12 @@
         },
         batchHandleDatas: [],
         batchRefuseReason: '',
+        descriptionModal: {
+          visible: false,
+          loading: false,
+          id: '',
+          description: '',
+        },
       };
     },
     created() {},
@@ -646,6 +660,41 @@
           this.openChildPage('/purchase/receive/modify/un-require/' + row.id);
         }
       },
+      canModifySheet(row) {
+        return (
+          (RECEIVE_SHEET_STATUS.CREATED.equalsCode(row.status) ||
+            RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(row.status)) &&
+          SETTLE_STATUS.UN_CHECK_BILL.equalsCode(row.settleStatus)
+        );
+      },
+      openDescriptionDialog(row) {
+        this.descriptionModal = {
+          visible: true,
+          loading: false,
+          id: row.id,
+          description: row.description || '',
+        };
+      },
+      closeDescriptionDialog() {
+        this.descriptionModal.visible = false;
+        this.descriptionModal.loading = false;
+      },
+      submitDescription() {
+        this.descriptionModal.loading = true;
+        api
+          .updateDescription({
+            id: this.descriptionModal.id,
+            description: this.descriptionModal.description,
+          })
+          .then(() => {
+            createSuccess('保存成功！');
+            this.closeDescriptionDialog();
+            this.search();
+          })
+          .finally(() => {
+            this.descriptionModal.loading = false;
+          });
+      },
       // 删除订单
       deleteOrder(row) {
         createConfirm('对选中的采购收货单执行删除操作？').then(() => {
@@ -812,14 +861,16 @@
           {
             permission: ['purchase:receive:modify'],
             label: '修改',
-            ifShow: () => {
-              return (
-                PURCHASE_ORDER_STATUS.CREATED.equalsCode(row.status) ||
-                PURCHASE_ORDER_STATUS.APPROVE_REFUSE.equalsCode(row.status)
-              );
-            },
+            ifShow: () => this.canModifySheet(row),
             onClick: () => {
               this.openModifyDialog(row);
+            },
+          },
+          {
+            permission: ['purchase:receive:modify'],
+            label: '修改备注',
+            onClick: () => {
+              this.openDescriptionDialog(row);
             },
           },
           {

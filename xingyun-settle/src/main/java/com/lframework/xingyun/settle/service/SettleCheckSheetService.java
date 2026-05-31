@@ -105,8 +105,9 @@ public interface SettleCheckSheetService extends BaseMpService<SettleCheckSheet>
      *
      * @param id
      * @param bizType
+     * @param detailId
      */
-    void setBizItemPartSettle(String id, SettleCheckSheetBizType bizType);
+    void setBizItemPartSettle(String id, SettleCheckSheetBizType bizType, String detailId);
 
     /**
      * 更新业务单据已结算
@@ -130,7 +131,7 @@ public interface SettleCheckSheetService extends BaseMpService<SettleCheckSheet>
      * @param id
      * @return
      */
-    int setUnSettle(String id);
+    // int setUnSettle(String id);
 
     /**
      * 更新结算状态-结算中
