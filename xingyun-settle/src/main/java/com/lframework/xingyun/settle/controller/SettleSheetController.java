@@ -8,7 +8,9 @@ import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
+import com.lframework.xingyun.sc.vo.purchase.receive.QueryReceiveSheetVo;
 import com.lframework.xingyun.settle.bo.sheet.GetSettleSheetBo;
 import com.lframework.xingyun.settle.bo.sheet.QuerySettleSheetBo;
 import com.lframework.xingyun.settle.bo.sheet.ReceiveSheetSettleInfoBo;
@@ -93,9 +95,17 @@ public class SettleSheetController extends DefaultBaseController {
   @ApiOperation("查询收货单对账结算扩展信息")
   @HasPermission({"settle:sheet:query"})
   @PostMapping("/receive-sheet-settle-infos")
-  public InvokeResult<List<ReceiveSheetSettleInfoBo>> queryReceiveSheetSettleInfos(@RequestBody @Valid QueryReceiveSheetSettleInfoVo vo) {
+  public InvokeResult<List<ReceiveSheetSettleInfoBo>> queryReceiveSheetSettleInfos(@RequestBody @Valid QueryReceiveSheetVo vo) {
+    try {
+      PageResult<ReceiveSheet> pageResult = receiveSheetService.query(getPageIndex(vo), getPageSize(vo), vo);
+      List<String> sheetIds = pageResult.getDatas().stream().map(ReceiveSheet::getId).collect(Collectors.toList());
 
-    return InvokeResultBuilder.success(settleSheetService.queryReceiveSheetSettleInfos(vo.getIds()));
+      List<ReceiveSheetSettleInfoBo> data = settleSheetService.queryReceiveSheetSettleInfos(sheetIds);
+      return InvokeResultBuilder.success(data);
+    } catch (Exception e) {
+      log.error("请求出错", e);
+      return InvokeResultBuilder.fail(e.getMessage(), null);
+    }
   }
 
   /**

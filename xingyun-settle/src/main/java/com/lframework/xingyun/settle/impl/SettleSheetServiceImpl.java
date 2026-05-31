@@ -3,6 +3,7 @@ package com.lframework.xingyun.settle.impl;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Lists;
 import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.exceptions.impl.InputErrorException;
@@ -31,6 +32,7 @@ import com.lframework.xingyun.settle.bo.sheet.ReceiveSheetSettleInfoBo;
 import com.lframework.xingyun.settle.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.settle.dto.sheet.SettleBizItemDto;
 import com.lframework.xingyun.settle.dto.sheet.SettleSheetFullDto;
+import com.lframework.xingyun.settle.entity.SettleCheckSheet;
 import com.lframework.xingyun.settle.entity.SettleCheckSheetDetail;
 import com.lframework.xingyun.settle.entity.SettleSheet;
 import com.lframework.xingyun.settle.entity.SettleSheetDetail;
@@ -38,6 +40,7 @@ import com.lframework.xingyun.settle.enums.SettleOpLogType;
 import com.lframework.xingyun.settle.enums.SettleSheetStatus;
 import com.lframework.xingyun.settle.mappers.SettleSheetMapper;
 import com.lframework.xingyun.settle.service.SettleCheckSheetDetailService;
+import com.lframework.xingyun.settle.service.SettleCheckSheetService;
 import com.lframework.xingyun.settle.service.SettleSheetDetailService;
 import com.lframework.xingyun.settle.service.SettleSheetService;
 import com.lframework.xingyun.settle.vo.sheet.*;
@@ -67,6 +70,10 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
   @Autowired
   private ReceiveSheetService receiveSheetService;
 
+  @Autowired
+  private SettleCheckSheetService SettleCheckSheetService;
+
+
   @Override
   public PageResult<SettleSheet> query(Integer pageIndex, Integer pageSize, QuerySettleSheetVo vo) {
 
@@ -92,38 +99,42 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
       return CollectionUtil.emptyList();
     }
 
-    List<ReceiveSheet> receiveSheets = queryReceiveSheets(ids);
+    // 收货单；
+    List<ReceiveSheet> receiveSheets = receiveSheetService.listByIds(ids);
     if (CollectionUtil.isEmpty(receiveSheets)) {
       return CollectionUtil.emptyList();
     }
 
-    Map<String, ReceiveSheet> receiveSheetMap = toReceiveSheetMap(receiveSheets);
+    // 对账单详情；
     Map<String, SettleCheckSheetDetail> checkDetailMap = queryCheckDetailMap(receiveSheets);
+    Map<String, SettleCheckSheet> checkSheetMap = queryCheckMap(Lists.newArrayList(checkDetailMap.values()));
+
+    // 结算单详情；
     Map<String, List<SettleSheetDetail>> settleDetailMap = querySettleDetailMap(ids);
 
-    List<ReceiveSheetSettleInfoBo> results = new ArrayList<>();
-    for (String id : ids) {
-      ReceiveSheetSettleInfoBo result = buildReceiveSheetSettleInfo(id, receiveSheetMap, checkDetailMap,
-          settleDetailMap);
-      if (result != null) {
-        results.add(result);
-      }
+    return receiveSheets.stream()
+            .map(item -> buildReceiveSheetSettleInfo(item, checkDetailMap, checkSheetMap, settleDetailMap))
+            .collect(Collectors.toList());
+  }
+
+  private Map<String, SettleCheckSheet> queryCheckMap(List<SettleCheckSheetDetail> details) {
+    if (CollectionUtil.isEmpty(details)) {
+      return CollectionUtil.emptyMap();
     }
 
-    return results;
+    List<String> sheetIds = details.stream().map(SettleCheckSheetDetail::getSheetId).collect(Collectors.toList());
+
+    List<SettleCheckSheet> checkSheets = SettleCheckSheetService.selectBatchIds(sheetIds);
+
+    return checkSheets.stream()
+            .collect(Collectors.toMap(SettleCheckSheet::getId, Function.identity(), (a, b) -> a));
   }
 
-  private List<ReceiveSheet> queryReceiveSheets(List<String> ids) {
-
-    return receiveSheetService.listByIds(ids);
-  }
-
-  private Map<String, ReceiveSheet> toReceiveSheetMap(List<ReceiveSheet> receiveSheets) {
-
-    return receiveSheets.stream()
-        .collect(Collectors.toMap(ReceiveSheet::getId, Function.identity(), (a, b) -> a));
-  }
-
+  /**
+   * 查询对账单详情映射
+   * @param receiveSheets
+   * @return
+   */
   private Map<String, SettleCheckSheetDetail> queryCheckDetailMap(List<ReceiveSheet> receiveSheets) {
 
     List<String> checkDetailIds = receiveSheets.stream()
@@ -136,7 +147,7 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
     }
 
     return settleCheckSheetDetailService.listByIds(checkDetailIds).stream()
-        .collect(Collectors.toMap(SettleCheckSheetDetail::getId, Function.identity(), (a, b) -> a));
+            .collect(Collectors.toMap(SettleCheckSheetDetail::getId, Function.identity(), (a, b) -> a));
   }
 
   private Map<String, List<SettleSheetDetail>> querySettleDetailMap(List<String> ids) {
@@ -148,27 +159,41 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
         .collect(Collectors.groupingBy(SettleSheetDetail::getBizId));
   }
 
-  private ReceiveSheetSettleInfoBo buildReceiveSheetSettleInfo(String id,
-      Map<String, ReceiveSheet> receiveSheetMap,
-      Map<String, SettleCheckSheetDetail> checkDetailMap,
-      Map<String, List<SettleSheetDetail>> settleDetailMap) {
-
-    ReceiveSheet receiveSheet = receiveSheetMap.get(id);
-    if (receiveSheet == null) {
-      return null;
-    }
+  /**
+   * 构建收货单结算信息
+   *
+   * @param receiveSheet
+   * @param checkDetailMap
+   * @param checkSheetMap
+   * @param settleDetailMap
+   * @return
+   */
+  private ReceiveSheetSettleInfoBo buildReceiveSheetSettleInfo(ReceiveSheet receiveSheet,
+                                                               Map<String, SettleCheckSheetDetail> checkDetailMap,
+                                                               Map<String, SettleCheckSheet> checkSheetMap,
+                                                               Map<String, List<SettleSheetDetail>> settleDetailMap) {
 
     ReceiveSheetSettleInfoBo result = new ReceiveSheetSettleInfoBo();
-    result.setBizSheetId(id);
+    result.setBizSheetId(receiveSheet.getId());
 
-    fillCheckInfo(result, receiveSheet, checkDetailMap);
-    fillSettleInfo(result, settleDetailMap.get(id));
+    fillCheckInfo(result, receiveSheet, checkDetailMap, checkSheetMap);
+    fillSettleInfo(result, settleDetailMap.get(receiveSheet.getId()));
 
     return result;
   }
 
-  private void fillCheckInfo(ReceiveSheetSettleInfoBo result, ReceiveSheet receiveSheet,
-      Map<String, SettleCheckSheetDetail> checkDetailMap) {
+  /**
+   * 填充对账信息
+   *
+   * @param result
+   * @param receiveSheet
+   * @param checkDetailMap
+   * @param checkSheetMap
+   */
+  private void fillCheckInfo(ReceiveSheetSettleInfoBo result,
+                             ReceiveSheet receiveSheet,
+                             Map<String, SettleCheckSheetDetail> checkDetailMap,
+                             Map<String, SettleCheckSheet> checkSheetMap) {
 
     if (StringUtil.isBlank(receiveSheet.getSettleCheckSheetDetailId())) {
       return;
@@ -179,10 +204,18 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
       return;
     }
 
+    SettleCheckSheet checkSheet = checkSheetMap.get(checkDetail.getSheetId());
     result.setCheckAmount(checkDetail.getPayAmount());
-    result.setCheckDescription(checkDetail.getDescription());
+    if (StringUtil.isNotBlank(checkSheet.getDescription())) {
+      result.setCheckDescription(checkSheet.getDescription());
+    }
   }
 
+  /**
+   * 填充结算信息
+   * @param result
+   * @param settleDetails
+   */
   private void fillSettleInfo(ReceiveSheetSettleInfoBo result, List<SettleSheetDetail> settleDetails) {
 
     if (CollectionUtil.isEmpty(settleDetails)) {

@@ -78,7 +78,7 @@ public class QuerySettleCheckSheetBo extends BaseBo<SettleCheckSheet> {
    * 收货单汇总总金额
    */
   @ApiModelProperty("收货单汇总总金额")
-  private BigDecimal bizSheetTotalAmount;
+  private BigDecimal bizTotalAmount;
 
   /**
    * 未付金额

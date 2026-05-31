@@ -167,4 +167,11 @@ public interface SettleCheckSheetService extends BaseMpService<SettleCheckSheet>
      * @param totalDiscountAmount
      */
     void setSettleAmount(String id, BigDecimal totalPayedAmount, BigDecimal totalDiscountAmount);
+
+    /**
+     * 根据ID列表查询
+     * @param sheetIds
+     * @return
+     */
+    List<SettleCheckSheet> selectBatchIds(List<String> sheetIds);
 }

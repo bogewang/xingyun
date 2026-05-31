@@ -82,7 +82,7 @@ public class SettleCheckSheet extends BaseEntity implements BaseDto {
     /**
      * 收货单汇总总金额
      */
-    private BigDecimal bizSheetTotalAmount;
+    private BigDecimal bizTotalAmount;
 
     /**
      * 创建人ID 新增时赋值

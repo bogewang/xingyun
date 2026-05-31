@@ -756,7 +756,7 @@ public class SettleCheckSheetServiceImpl extends
   private void create(SettleCheckSheet sheet, CreateSettleCheckSheetVo vo) {
 
     BigDecimal totalPayedAmount = BigDecimal.ZERO;
-    BigDecimal bizSheetTotalAmount = BigDecimal.ZERO;
+    BigDecimal bizTotalAmount = BigDecimal.ZERO;
     List<String> receiveSheetIds = new ArrayList<>();
     List<SettleCheckBizItemDto> allocatedList = this.allocatePayAmount(vo);
 
@@ -768,28 +768,28 @@ public class SettleCheckSheetServiceImpl extends
 
       // 对账单中包含的收货单，需要更新收货单的结算状态
       totalPayedAmount = NumberUtil.add(totalPayedAmount, item.getPaidAmount());
-      bizSheetTotalAmount = NumberUtil.add(bizSheetTotalAmount, item.getTotalAmount());
+      bizTotalAmount = NumberUtil.add(bizTotalAmount, item.getTotalAmount());
       receiveSheetIds.add(detail.getBizId());
 
       //将所有的单据的结算状态更新
       this.setBizItemPartSettle(detail.getBizId(), detail.getBizType(), detail.getId());
     }
 
-    buildSettleSheet(sheet, vo, totalPayedAmount, receiveSheetIds, bizSheetTotalAmount);
+    buildSettleSheet(sheet, vo, totalPayedAmount, receiveSheetIds, bizTotalAmount);
   }
 
   private static void buildSettleSheet(SettleCheckSheet sheet,
                                        CreateSettleCheckSheetVo vo,
                                        BigDecimal totalPayedAmount,
                                        List<String> receiveSheetIds,
-                                       BigDecimal bizSheetTotalAmount) {
+                                       BigDecimal bizTotalAmount) {
     sheet.setSupplierId(vo.getSupplierId());
     sheet.setTotalPayAmount(vo.getTotalPayAmount());
     sheet.setTotalPayedAmount(totalPayedAmount);
     sheet.setTotalAmount(NumberUtil.add(vo.getTotalPayAmount(), totalPayedAmount));
     sheet.setTotalDiscountAmount(BigDecimal.ZERO);
     sheet.setBizSheetIds(String.join(StringPool.STR_SPLIT, receiveSheetIds));
-    sheet.setBizSheetTotalAmount(bizSheetTotalAmount);
+    sheet.setBizTotalAmount(bizTotalAmount);
     sheet.setDescription(vo.getDescription());
     sheet.setRefuseReason(StringPool.EMPTY_STR);
     sheet.setSettleStatus(SettleStatus.UN_SETTLE);
@@ -817,7 +817,8 @@ public class SettleCheckSheetServiceImpl extends
     detail.setBizType(item.getBizType());
     detail.setCalcType(item.getCalcType());
     detail.setPayAmount(item.getPayAmount());
-    detail.setDescription(vo.getDescription());
+    // 主单存了备注了，明细单就不存了
+    // detail.setDescription(vo.getDescription());
     detail.setOrderNo(orderNo);
     return detail;
   }
@@ -859,5 +860,10 @@ public class SettleCheckSheetServiceImpl extends
     }
 
     return res;
+  }
+
+  @Override
+  public List<SettleCheckSheet> selectBatchIds(List<String> sheetIds) {
+    return getBaseMapper().selectBatchIds(sheetIds);
   }
 }
