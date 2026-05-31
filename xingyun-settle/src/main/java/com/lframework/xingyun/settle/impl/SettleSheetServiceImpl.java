@@ -7,10 +7,7 @@ import com.google.common.collect.Lists;
 import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.exceptions.impl.InputErrorException;
-import com.lframework.starter.common.utils.Assert;
-import com.lframework.starter.common.utils.CollectionUtil;
-import com.lframework.starter.common.utils.NumberUtil;
-import com.lframework.starter.common.utils.StringUtil;
+import com.lframework.starter.common.utils.*;
 import com.lframework.starter.web.core.annotations.oplog.OpLog;
 import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
 import com.lframework.starter.web.core.components.resp.PageResult;
@@ -26,6 +23,7 @@ import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTi
 import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineBizType;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
+import com.lframework.xingyun.sc.bo.purchase.receive.QueryReceiveSheetBo;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
 import com.lframework.xingyun.settle.bo.sheet.ReceiveSheetSettleInfoBo;
@@ -93,26 +91,22 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
   }
 
   @Override
-  public List<ReceiveSheetSettleInfoBo> queryReceiveSheetSettleInfos(List<String> ids) {
+  public List<ReceiveSheetSettleInfoBo> queryReceiveSheetSettleInfos(List<ReceiveSheet> sheets) {
 
-    if (CollectionUtil.isEmpty(ids)) {
+    if (CollectionUtil.isEmpty(sheets)) {
       return CollectionUtil.emptyList();
     }
 
-    // 收货单；
-    List<ReceiveSheet> receiveSheets = receiveSheetService.listByIds(ids);
-    if (CollectionUtil.isEmpty(receiveSheets)) {
-      return CollectionUtil.emptyList();
-    }
-
+    List<QueryReceiveSheetBo> sheetBoList = sheets.stream().map(QueryReceiveSheetBo::new).collect(Collectors.toList());
+    List<String> ids = sheetBoList.stream().map(QueryReceiveSheetBo::getId).collect(Collectors.toList());
     // 对账单详情；
-    Map<String, SettleCheckSheetDetail> checkDetailMap = queryCheckDetailMap(receiveSheets);
+    Map<String, SettleCheckSheetDetail> checkDetailMap = queryCheckDetailMap(sheetBoList);
     Map<String, SettleCheckSheet> checkSheetMap = queryCheckMap(Lists.newArrayList(checkDetailMap.values()));
 
     // 结算单详情；
     Map<String, List<SettleSheetDetail>> settleDetailMap = querySettleDetailMap(ids);
 
-    return receiveSheets.stream()
+    return sheetBoList.stream()
             .map(item -> buildReceiveSheetSettleInfo(item, checkDetailMap, checkSheetMap, settleDetailMap))
             .collect(Collectors.toList());
   }
@@ -135,10 +129,10 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
    * @param receiveSheets
    * @return
    */
-  private Map<String, SettleCheckSheetDetail> queryCheckDetailMap(List<ReceiveSheet> receiveSheets) {
+  private Map<String, SettleCheckSheetDetail> queryCheckDetailMap(List<QueryReceiveSheetBo> receiveSheets) {
 
     List<String> checkDetailIds = receiveSheets.stream()
-        .map(ReceiveSheet::getSettleCheckSheetDetailId)
+        .map(QueryReceiveSheetBo::getSettleCheckSheetDetailId)
         .filter(StringUtil::isNotBlank)
         .distinct()
         .collect(Collectors.toList());
@@ -168,12 +162,12 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
    * @param settleDetailMap
    * @return
    */
-  private ReceiveSheetSettleInfoBo buildReceiveSheetSettleInfo(ReceiveSheet receiveSheet,
+  private ReceiveSheetSettleInfoBo buildReceiveSheetSettleInfo(QueryReceiveSheetBo receiveSheet,
                                                                Map<String, SettleCheckSheetDetail> checkDetailMap,
                                                                Map<String, SettleCheckSheet> checkSheetMap,
                                                                Map<String, List<SettleSheetDetail>> settleDetailMap) {
 
-    ReceiveSheetSettleInfoBo result = new ReceiveSheetSettleInfoBo();
+    ReceiveSheetSettleInfoBo result = BeanUtil.copyProperties(receiveSheet, ReceiveSheetSettleInfoBo.class);
     result.setBizSheetId(receiveSheet.getId());
 
     fillCheckInfo(result, receiveSheet, checkDetailMap, checkSheetMap);
@@ -191,7 +185,7 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
    * @param checkSheetMap
    */
   private void fillCheckInfo(ReceiveSheetSettleInfoBo result,
-                             ReceiveSheet receiveSheet,
+                             QueryReceiveSheetBo receiveSheet,
                              Map<String, SettleCheckSheetDetail> checkDetailMap,
                              Map<String, SettleCheckSheet> checkSheetMap) {
 

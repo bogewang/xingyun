@@ -1,5 +1,6 @@
 package com.lframework.xingyun.settle.bo.sheet;
 
+import com.lframework.xingyun.sc.bo.purchase.receive.QueryReceiveSheetBo;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -7,7 +8,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Data
-public class ReceiveSheetSettleInfoBo implements Serializable {
+public class ReceiveSheetSettleInfoBo extends QueryReceiveSheetBo implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

@@ -6,6 +6,7 @@ import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
+import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.xingyun.basedata.entity.StoreCenter;
 import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
@@ -13,14 +14,16 @@ import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.sc.entity.PurchaseOrder;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.service.purchase.PurchaseOrderService;
-import com.lframework.starter.web.inner.service.system.SysUserService;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 @Data
+@NoArgsConstructor
 public class QueryReceiveSheetBo extends BaseBo<ReceiveSheet> {
 
     /**
@@ -170,6 +173,14 @@ public class QueryReceiveSheetBo extends BaseBo<ReceiveSheet> {
      */
     @ApiModelProperty("结算状态")
     private Integer settleStatus;
+
+    /**
+     * 对账明细单ID
+     */
+    @ApiModelProperty("对账明细单ID")
+    private String settleCheckSheetDetailId;
+
+
 
     public QueryReceiveSheetBo(ReceiveSheet dto) {
 

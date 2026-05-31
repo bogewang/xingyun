@@ -98,9 +98,8 @@ public class SettleSheetController extends DefaultBaseController {
   public InvokeResult<List<ReceiveSheetSettleInfoBo>> queryReceiveSheetSettleInfos(@RequestBody @Valid QueryReceiveSheetVo vo) {
     try {
       PageResult<ReceiveSheet> pageResult = receiveSheetService.query(getPageIndex(vo), getPageSize(vo), vo);
-      List<String> sheetIds = pageResult.getDatas().stream().map(ReceiveSheet::getId).collect(Collectors.toList());
 
-      List<ReceiveSheetSettleInfoBo> data = settleSheetService.queryReceiveSheetSettleInfos(sheetIds);
+      List<ReceiveSheetSettleInfoBo> data = settleSheetService.queryReceiveSheetSettleInfos(pageResult.getDatas());
       return InvokeResultBuilder.success(data);
     } catch (Exception e) {
       log.error("请求出错", e);

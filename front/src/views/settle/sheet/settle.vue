@@ -413,35 +413,21 @@
         try {
           const keyword = this.searchFormData.keyword || '';
           this.keywordField = 'code';
-          let res = await receiveApi.query(this.buildQueryParams());
+          let queryParams = this.buildQueryParams();
+          let res = await settleApi.queryReceiveSheetSettleInfos(queryParams);
 
-          if (keyword && (!res?.datas || res.datas.length === 0)) {
+          if (keyword && (!res || res.length === 0)) {
             this.keywordField = 'purchaseOrderCode';
-            res = await receiveApi.query(this.buildQueryParams());
+            queryParams = this.buildQueryParams();
+            res = await settleApi.queryReceiveSheetSettleInfos(queryParams);
           }
 
-          const rows = res?.datas || [];
-          const settleInfos = isEmpty(rows)
-            ? []
-            : await settleApi.queryReceiveSheetSettleInfos({
-                ids: rows.map((item) => item.id),
-              });
-          const settleInfoMap = (settleInfos || []).reduce((map, item) => {
-            map[item.bizSheetId] = item;
-            return map;
-          }, {});
-
-          this.tableData = rows.map((item) => {
-            const settleInfo = settleInfoMap[item.id] || {};
-            return {
-              ...item,
-              checkAmount: settleInfo.checkAmount,
-              checkDescription: settleInfo.checkDescription || '',
-              settleAmount: settleInfo.settleAmount,
-              settleDescription: settleInfo.settleDescription || '',
-            };
-          });
-          this.pagerConfig.total = res?.totalCount || 0;
+          this.tableData = (res || []).map((item) => ({
+            ...item,
+            checkDescription: item.checkDescription || '',
+            settleDescription: item.settleDescription || '',
+          }));
+          this.pagerConfig.total = this.tableData.length;
           this.$nextTick(() => {
             this.syncSelection();
           });

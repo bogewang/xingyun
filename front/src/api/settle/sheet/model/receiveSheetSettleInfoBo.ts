@@ -1,6 +1,6 @@
-export interface ReceiveSheetSettleInfoBo {
-  bizSheetId: string;
+import { QueryReceiveSheetBo } from '@/api/sc/purchase/receive/model/queryReceiveSheetBo';
 
+export interface ReceiveSheetSettleInfoBo extends QueryReceiveSheetBo {
   checkAmount?: number;
 
   checkDescription?: string;

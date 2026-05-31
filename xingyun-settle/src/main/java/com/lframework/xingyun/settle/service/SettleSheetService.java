@@ -2,6 +2,7 @@ package com.lframework.xingyun.settle.service;
 
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.service.BaseMpService;
+import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.settle.bo.sheet.ReceiveSheetSettleInfoBo;
 import com.lframework.xingyun.settle.dto.sheet.SettleBizItemDto;
 import com.lframework.xingyun.settle.dto.sheet.SettleSheetFullDto;
@@ -114,9 +115,9 @@ public interface SettleSheetService extends BaseMpService<SettleSheet> {
     /**
      * 查询收货单的对账/结算扩展信息
      *
-     * @param ids 收货单ID
+     * @param vo) 收货单ID
      * @return 扩展信息
      */
-    List<ReceiveSheetSettleInfoBo> queryReceiveSheetSettleInfos(List<String> ids);
+    List<ReceiveSheetSettleInfoBo> queryReceiveSheetSettleInfos(List<ReceiveSheet> sheetIds);
 
 }
