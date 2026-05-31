@@ -9,13 +9,10 @@ import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
-import com.lframework.xingyun.sc.vo.purchase.receive.ConfirmReceiveSheetCheckVo;
 import com.lframework.xingyun.settle.bo.sheet.GetSettleSheetBo;
 import com.lframework.xingyun.settle.bo.sheet.QuerySettleSheetBo;
 import com.lframework.xingyun.settle.bo.sheet.ReceiveSheetSettleInfoBo;
-import com.lframework.xingyun.settle.bo.sheet.SettleBizItemBo;
 import com.lframework.xingyun.settle.bo.sheet.SettleSheetSummaryBo;
-import com.lframework.xingyun.settle.dto.sheet.SettleBizItemDto;
 import com.lframework.xingyun.settle.dto.sheet.SettleSheetFullDto;
 import com.lframework.xingyun.settle.entity.SettleSheet;
 import com.lframework.xingyun.settle.excel.sheet.SettleSheetExportTaskWorker;
@@ -216,33 +213,4 @@ public class SettleSheetController extends DefaultBaseController {
     return InvokeResultBuilder.success();
   }
 
-  /**
-   * 查询未结算的业务单据
-   */
-  @ApiOperation("查询未结算的业务单据")
-  @HasPermission({"settle:sheet:add", "settle:sheet:modify"})
-  @GetMapping("/unsettle-items")
-  public InvokeResult<List<SettleBizItemBo>> getUnCheckItems(@Valid QueryUnSettleBizItemVo vo) {
-
-    List<SettleBizItemDto> results = settleSheetService.getUnSettleBizItems(vo);
-    List<SettleBizItemBo> datas = CollectionUtil.emptyList();
-    if (!CollectionUtil.isEmpty(results)) {
-      datas = results.stream().map(SettleBizItemBo::new).collect(Collectors.toList());
-    }
-
-    return InvokeResultBuilder.success(datas);
-  }
-
-  /**
-   * 确认对账
-   */
-  @ApiOperation("确认对账")
-  @HasPermission({"settle:sheet:add"})
-  @PatchMapping("/confirm/check")
-  public InvokeResult<Void> confirmCheck(@RequestBody @Valid ConfirmReceiveSheetCheckVo vo) {
-
-    receiveSheetService.confirmCheck(vo.getIds(), vo.getDescription());
-
-    return InvokeResultBuilder.success();
-  }
 }

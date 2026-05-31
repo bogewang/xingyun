@@ -142,7 +142,7 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
   int setUnCheckBill(String id);
 
   /**
-   * 设置成未结算
+   * 待结算
    *
    * @param id
    * @param settleCheckSheetDetailId
@@ -181,14 +181,6 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
    * @param discountAmount 优惠金额
    */
   void settle(String id, BigDecimal payAmount, BigDecimal discountAmount);
-
-  /**
-   * 批量确认对账
-   *
-   * @param ids 单据ID
-   * @param description 备注
-   */
-  void confirmCheck(List<String> ids, String description);
 
   /**
    * 查询已审核列表

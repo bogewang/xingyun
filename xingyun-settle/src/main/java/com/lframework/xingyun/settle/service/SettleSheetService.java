@@ -51,6 +51,7 @@ public interface SettleSheetService extends BaseMpService<SettleSheet> {
      *
      * @param vo
      */
+    @Deprecated
     void update(UpdateSettleSheetVo vo);
 
     /**
@@ -109,14 +110,6 @@ public interface SettleSheetService extends BaseMpService<SettleSheet> {
      * @param id
      */
     void setBizItemSettled(String id);
-
-    /**
-     * 查询未结算单据
-     *
-     * @param vo
-     * @return
-     */
-    List<SettleBizItemDto> getUnSettleBizItems(QueryUnSettleBizItemVo vo);
 
     /**
      * 查询收货单的对账/结算扩展信息

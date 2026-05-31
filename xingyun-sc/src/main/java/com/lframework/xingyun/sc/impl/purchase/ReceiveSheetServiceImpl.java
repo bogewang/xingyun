@@ -284,13 +284,16 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new InputErrorException("采购收货单不存在！");
         }
 
+        if (sheet.getStatus() == ReceiveSheetStatus.APPROVE_PASS) {
+            throw new DefaultClientException("采购收货单已审核通过，无法修改！");
+        }
+
+        if (sheet.getSettleStatus() != SettleStatus.UN_CHECK_BILL) {
+            throw new DefaultClientException("采购收货单已进入对账/结算流程，无法修改！");
+        }
+
         if (sheet.getStatus() != ReceiveSheetStatus.CREATED
                 && sheet.getStatus() != ReceiveSheetStatus.APPROVE_REFUSE) {
-
-            if (sheet.getStatus() == ReceiveSheetStatus.APPROVE_PASS) {
-                throw new DefaultClientException("采购收货单已审核通过，无法修改！");
-            }
-
             throw new DefaultClientException("采购收货单无法修改！");
         }
 
@@ -340,6 +343,27 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         saleOutSheetService.refreshCostPrice(vo.getOrderDate());
         productHotnessService.increment(
                 vo.getProducts().stream().map(ReceiveProductVo::getProductId).collect(Collectors.toList()));
+
+        OpLogUtil.setVariable("code", sheet.getCode());
+        OpLogUtil.setExtra(vo);
+    }
+
+    @OpLog(type = PurchaseOpLogType.class, name = "修改采购收货单备注，单号：{}", params = "#code")
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void updateDescription(UpdateReceiveSheetDescriptionVo vo) {
+
+        ReceiveSheet sheet = getBaseMapper().selectById(vo.getId());
+        if (sheet == null) {
+            throw new InputErrorException("采购收货单不存在！");
+        }
+
+        Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
+                .set(ReceiveSheet::getDescription, vo.getDescription())
+                .eq(ReceiveSheet::getId, sheet.getId());
+        if (getBaseMapper().update(updateWrapper) != 1) {
+            throw new DefaultClientException("采购收货单信息已过期，请刷新重试！");
+        }
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
@@ -597,11 +621,22 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public int setUnSettle(String id) {
+    public int setUnCheckBill(String id) {
 
         Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
-                .set(ReceiveSheet::getSettleStatus, SettleStatus.UN_SETTLE).eq(ReceiveSheet::getId, id)
-                .eq(ReceiveSheet::getSettleStatus, SettleStatus.PART_SETTLE);
+                .set(ReceiveSheet::getSettleStatus, SettleStatus.UN_CHECK_BILL)
+                .eq(ReceiveSheet::getId, id);
+        return getBaseMapper().update(updateWrapper);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int setUnSettle(String id, String settleCheckSheetDetailId) {
+
+        Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
+                .set(ReceiveSheet::getSettleStatus, SettleStatus.UN_SETTLE)
+                .set(ReceiveSheet::getSettleCheckSheetDetailId, settleCheckSheetDetailId)
+                .eq(ReceiveSheet::getId, id);
         int count = getBaseMapper().update(updateWrapper);
 
         return count;
@@ -629,6 +664,67 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         int count = getBaseMapper().update(updateWrapper);
 
         return count;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void clearSettleSheetDetailId(String id) {
+
+        Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
+                .set(ReceiveSheet::getSettleCheckSheetDetailId, null)
+                .eq(ReceiveSheet::getId, id);
+        getBaseMapper().update(updateWrapper);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    // todo 采购入库单结算
+    public void settle(String id, BigDecimal payAmount, BigDecimal discountAmount) {
+
+        ReceiveSheet sheet = getById(id);
+        if (sheet == null) {
+            throw new DefaultClientException("采购入库单不存在！");
+        }
+
+        BigDecimal totalAmount =
+                sheet.getTotalAmount() == null ? BigDecimal.ZERO : sheet.getTotalAmount();
+        BigDecimal currentPaidAmount = sheet.getPaidAmount() == null ? BigDecimal.ZERO : sheet.getPaidAmount();
+        BigDecimal actualPayAmount = payAmount == null ? BigDecimal.ZERO : payAmount;
+        BigDecimal actualDiscountAmount = discountAmount == null ? BigDecimal.ZERO : discountAmount;
+        BigDecimal settleAmount = NumberUtil.add(actualPayAmount, actualDiscountAmount);
+
+        if (NumberUtil.lt(actualPayAmount, BigDecimal.ZERO)) {
+            throw new DefaultClientException("采购入库单结算时，实付金额不允许小于0！");
+        }
+        if (NumberUtil.lt(actualDiscountAmount, BigDecimal.ZERO)) {
+            throw new DefaultClientException("采购入库单结算时，优惠金额不允许小于0！");
+        }
+        if (NumberUtil.equal(settleAmount, BigDecimal.ZERO)) {
+            throw new DefaultClientException("采购入库单结算时，实付金额和优惠金额不能同时为0！");
+        }
+
+        BigDecimal remainAmount = NumberUtil.sub(totalAmount, currentPaidAmount);
+        if (NumberUtil.lt(remainAmount, settleAmount)) {
+            throw new DefaultClientException(
+                    "采购入库单：" + sheet.getCode() + "，剩余付款金额为" + remainAmount + "元，本次结算金额为"
+                            + settleAmount + "元，不允许超额结算！");
+        }
+
+        BigDecimal settledPaidAmount = NumberUtil.add(currentPaidAmount, settleAmount);
+        SettleStatus settleStatus =
+                NumberUtil.equal(settledPaidAmount, totalAmount) ? SettleStatus.SETTLED : SettleStatus.PART_SETTLE;
+
+        Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
+                .set(ReceiveSheet::getPaidAmount, settledPaidAmount)
+                .set(ReceiveSheet::getSettleStatus, settleStatus)
+                .eq(ReceiveSheet::getId, id)
+                .eq(ReceiveSheet::getStatus, ReceiveSheetStatus.APPROVE_PASS)
+                .in(ReceiveSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
+        if (getBaseMapper().update(updateWrapper) != 1) {
+            throw new DefaultClientException("采购入库单信息已过期，请刷新重试！");
+        }
+
+        this.adjustSupplierAmount(sheet.getSupplierId());
     }
 
     @Override
@@ -851,7 +947,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     private SettleStatus getInitSettleStatus(Supplier supplier) {
 
         if (supplier.getManageType() == ManageType.DISTRIBUTION) {
-            return SettleStatus.UN_SETTLE;
+            return SettleStatus.UN_CHECK_BILL;
         } else {
             return SettleStatus.UN_REQUIRE;
         }

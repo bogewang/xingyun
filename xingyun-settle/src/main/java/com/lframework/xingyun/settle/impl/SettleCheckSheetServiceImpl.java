@@ -3,6 +3,7 @@ package com.lframework.xingyun.settle.impl;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Lists;
 import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.exceptions.impl.DefaultSysException;
@@ -11,22 +12,17 @@ import com.lframework.starter.common.utils.Assert;
 import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
-import com.lframework.starter.web.core.components.security.AbstractUserDetails;
-import com.lframework.starter.web.core.components.security.SecurityUtil;
-import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
-import com.lframework.starter.web.core.components.resp.PageResult;
-import com.lframework.starter.web.core.utils.EnumUtil;
-import com.lframework.starter.web.core.utils.IdUtil;
-import com.lframework.starter.web.core.utils.PageHelperUtil;
-import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.starter.web.core.annotations.oplog.OpLog;
 import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
+import com.lframework.starter.web.core.components.resp.PageResult;
+import com.lframework.starter.web.core.components.security.SecurityUtil;
+import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
+import com.lframework.starter.web.core.utils.*;
 import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineBizType;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
-import com.lframework.starter.web.core.utils.OpLogUtil;
 import com.lframework.xingyun.sc.entity.PurchaseReturn;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.enums.SettleStatus;
@@ -39,30 +35,22 @@ import com.lframework.xingyun.settle.entity.SettleCheckSheet;
 import com.lframework.xingyun.settle.entity.SettleCheckSheetDetail;
 import com.lframework.xingyun.settle.entity.SettleFeeSheet;
 import com.lframework.xingyun.settle.entity.SettlePreSheet;
-import com.lframework.xingyun.settle.enums.SettleCheckSheetBizType;
-import com.lframework.xingyun.settle.enums.SettleCheckSheetCalcType;
-import com.lframework.xingyun.settle.enums.SettleCheckSheetStatus;
-import com.lframework.xingyun.settle.enums.SettleFeeSheetType;
-import com.lframework.xingyun.settle.enums.SettleOpLogType;
+import com.lframework.xingyun.settle.enums.*;
 import com.lframework.xingyun.settle.mappers.SettleCheckSheetMapper;
 import com.lframework.xingyun.settle.service.SettleCheckSheetDetailService;
 import com.lframework.xingyun.settle.service.SettleCheckSheetService;
 import com.lframework.xingyun.settle.service.SettleFeeSheetService;
 import com.lframework.xingyun.settle.service.SettlePreSheetService;
-import com.lframework.xingyun.settle.vo.check.ApprovePassSettleCheckSheetVo;
-import com.lframework.xingyun.settle.vo.check.ApproveRefuseSettleCheckSheetVo;
-import com.lframework.xingyun.settle.vo.check.CreateSettleCheckSheetVo;
-import com.lframework.xingyun.settle.vo.check.QuerySettleCheckSheetVo;
-import com.lframework.xingyun.settle.vo.check.QueryUnCheckBizItemVo;
-import com.lframework.xingyun.settle.vo.check.SettleCheckSheetItemVo;
-import com.lframework.xingyun.settle.vo.check.UpdateSettleCheckSheetVo;
+import com.lframework.xingyun.settle.vo.check.*;
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SettleCheckSheetServiceImpl extends
@@ -112,6 +100,18 @@ public class SettleCheckSheetServiceImpl extends
     return getBaseMapper().getDetail(id);
   }
 
+  private String generateCode() {
+    while (true) {
+      String code = generateCodeService.generate(GenerateCodeTypePool.SETTLE_CHECK_SHEET);
+      QuerySettleCheckSheetVo vo = new QuerySettleCheckSheetVo();
+      vo.setCode(code);
+      List<SettleCheckSheet> list = query(vo);
+      if (CollectionUtils.isEmpty(list)) {
+        return code;
+      }
+    }
+  }
+
   @OpLog(type = SettleOpLogType.class, name = "创建供应商对账单，单号：{}", params = "#code")
   @OrderTimeLineLog(type = CreateOrderTimeLineBizType.class, orderId = "#_result", name = "创建对账单")
   @Transactional(rollbackFor = Exception.class)
@@ -121,7 +121,7 @@ public class SettleCheckSheetServiceImpl extends
     SettleCheckSheet sheet = new SettleCheckSheet();
 
     sheet.setId(IdUtil.getId());
-    sheet.setCode(generateCodeService.generate(GenerateCodeTypePool.SETTLE_CHECK_SHEET));
+    sheet.setCode(generateCode());
 
     this.create(sheet, vo);
 
@@ -353,6 +353,7 @@ public class SettleCheckSheetServiceImpl extends
         result.setId(receiveSheet.getId());
         result.setCode(receiveSheet.getCode());
         result.setTotalAmount(receiveSheet.getTotalAmount());
+        result.setPaidAmount(receiveSheet.getPaidAmount());
         result.setApproveTime(receiveSheet.getApproveTime());
         result.setCalcType(SettleCheckSheetCalcType.ADD);
         break;
@@ -363,6 +364,7 @@ public class SettleCheckSheetServiceImpl extends
         result.setId(purchaseReturn.getId());
         result.setCode(purchaseReturn.getCode());
         result.setTotalAmount(purchaseReturn.getTotalAmount());
+        // result.setPaidAmount(purchaseReturn.getPaidAmount());
         result.setApproveTime(purchaseReturn.getApproveTime());
         result.setCalcType(SettleCheckSheetCalcType.SUB);
         break;
@@ -410,11 +412,12 @@ public class SettleCheckSheetServiceImpl extends
 
     switch (bizType) {
       case RECEIVE_SHEET: {
-        int count = receiveSheetService.setUnSettle(id);
+        int count = receiveSheetService.setUnCheckBill(id);
         if (count != 1) {
           throw new DefaultClientException(
               "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，业务无法进行！");
         }
+        receiveSheetService.clearSettleSheetDetailId(id);
         break;
       }
       case PURCHASE_RETURN: {
@@ -449,13 +452,13 @@ public class SettleCheckSheetServiceImpl extends
 
   @Transactional(rollbackFor = Exception.class)
   @Override
-  public void setBizItemPartSettle(String id, SettleCheckSheetBizType bizType) {
+  public void setBizItemPartSettle(String id, SettleCheckSheetBizType bizType, String settleCheckSheetDetailId) {
 
     SettleCheckBizItemDto item = this.getBizItem(id, bizType);
 
     switch (bizType) {
       case RECEIVE_SHEET: {
-        int count = receiveSheetService.setPartSettle(id);
+        int count = receiveSheetService.setUnSettle(id, settleCheckSheetDetailId);
         if (count != 1) {
           throw new DefaultClientException(
               "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，业务无法进行！");
@@ -622,18 +625,31 @@ public class SettleCheckSheetServiceImpl extends
     return results;
   }
 
-  @Transactional(rollbackFor = Exception.class)
-  @Override
-  public int setUnSettle(String id) {
-
-    Wrapper<SettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(SettleCheckSheet.class)
-        .set(SettleCheckSheet::getSettleStatus, SettleStatus.UN_SETTLE)
-        .eq(SettleCheckSheet::getId, id)
-        .eq(SettleCheckSheet::getSettleStatus, SettleStatus.PART_SETTLE);
-    int count = getBaseMapper().update(updateWrapper);
-
-    return count;
-  }
+  // @Transactional(rollbackFor = Exception.class)
+  // @Override
+  // public int setUnSettle(String id) {
+  //
+  //     Wrapper<SettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(SettleCheckSheet.class)
+  //             .set(SettleCheckSheet::getSettleStatus, SettleStatus.UN_SETTLE)
+  //             .eq(SettleCheckSheet::getId, id)
+  //             .eq(SettleCheckSheet::getSettleStatus, SettleStatus.PART_SETTLE);
+  //     int count = getBaseMapper().update(updateWrapper);
+  //
+  //     if (count == 1) {
+  //         Wrapper<SettleCheckSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
+  //                         SettleCheckSheetDetail.class)
+  //                 .eq(SettleCheckSheetDetail::getSheetId, id).orderByAsc(SettleCheckSheetDetail::getOrderNo);
+  //         List<SettleCheckSheetDetail> sheetDetails = settleCheckSheetDetailService.list(
+  //                 queryDetailWrapper);
+  //         for (SettleCheckSheetDetail sheetDetail : sheetDetails) {
+  //             if (sheetDetail.getBizType() == SettleCheckSheetBizType.RECEIVE_SHEET) {
+  //                 receiveSheetService.setUnSettle(sheetDetail.getBizId(), settleCheckSheetDetailId);
+  //             }
+  //         }
+  //     }
+  //
+  //     return count;
+  // }
 
   @Transactional(rollbackFor = Exception.class)
   @Override
@@ -644,6 +660,19 @@ public class SettleCheckSheetServiceImpl extends
         .eq(SettleCheckSheet::getId, id)
         .in(SettleCheckSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
     int count = getBaseMapper().update(updateWrapper);
+
+    if (count == 1) {
+      Wrapper<SettleCheckSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
+                      SettleCheckSheetDetail.class)
+              .eq(SettleCheckSheetDetail::getSheetId, id).orderByAsc(SettleCheckSheetDetail::getOrderNo);
+      List<SettleCheckSheetDetail> sheetDetails = settleCheckSheetDetailService.list(
+              queryDetailWrapper);
+      for (SettleCheckSheetDetail sheetDetail : sheetDetails) {
+        if (sheetDetail.getBizType() == SettleCheckSheetBizType.RECEIVE_SHEET) {
+          receiveSheetService.setPartSettle(sheetDetail.getBizId());
+        }
+      }
+    }
 
     return count;
   }
@@ -726,58 +755,109 @@ public class SettleCheckSheetServiceImpl extends
 
   private void create(SettleCheckSheet sheet, CreateSettleCheckSheetVo vo) {
 
-    BigDecimal totalAmount = BigDecimal.ZERO;
-    BigDecimal totalPayAmount = BigDecimal.ZERO;
+    BigDecimal totalPayedAmount = BigDecimal.ZERO;
+    BigDecimal bizSheetTotalAmount = BigDecimal.ZERO;
+    List<String> receiveSheetIds = new ArrayList<>();
+    List<SettleCheckBizItemDto> allocatedList = this.allocatePayAmount(vo);
 
     int orderNo = 0;
-    for (SettleCheckSheetItemVo itemVo : vo.getItems()) {
+    for (SettleCheckBizItemDto item : allocatedList) {
       orderNo++;
-      SettleCheckBizItemDto item = this.getBizItem(itemVo.getId(),
-          EnumUtil.getByCode(SettleCheckSheetBizType.class, itemVo.getBizType()));
-      if (item == null) {
-        throw new DefaultClientException("第" + orderNo + "行业务单据不存在！");
-      }
-      SettleCheckSheetDetail detail = new SettleCheckSheetDetail();
-
-      detail.setId(IdUtil.getId());
-      detail.setSheetId(sheet.getId());
-      detail.setBizId(itemVo.getId());
-      detail.setBizType(EnumUtil.getByCode(SettleCheckSheetBizType.class, itemVo.getBizType()));
-      detail.setCalcType(item.getCalcType());
-      if (item.getCalcType() == SettleCheckSheetCalcType.ADD) {
-        if (NumberUtil.lt(itemVo.getPayAmount(), BigDecimal.ZERO)) {
-          throw new DefaultClientException("第" + orderNo + "行业务单据应付金额不允许小于0！");
-        }
-      } else {
-        if (NumberUtil.gt(itemVo.getPayAmount(), BigDecimal.ZERO)) {
-          throw new DefaultClientException("第" + orderNo + "行业务单据应付金额不允许大于0！");
-        }
-      }
-      detail.setPayAmount(itemVo.getPayAmount());
-      detail.setDescription(itemVo.getDescription());
-      detail.setOrderNo(orderNo);
-
+      SettleCheckSheetDetail detail = buildDetail(sheet, item, orderNo, vo);
       settleCheckSheetDetailService.save(detail);
 
-      totalAmount = NumberUtil.add(totalAmount, item.getTotalAmount());
-      totalPayAmount = NumberUtil.add(totalPayAmount, itemVo.getPayAmount());
+      // 对账单中包含的收货单，需要更新收货单的结算状态
+      totalPayedAmount = NumberUtil.add(totalPayedAmount, item.getPaidAmount());
+      bizSheetTotalAmount = NumberUtil.add(bizSheetTotalAmount, item.getTotalAmount());
+      receiveSheetIds.add(detail.getBizId());
 
       //将所有的单据的结算状态更新
-      this.setBizItemPartSettle(detail.getBizId(), detail.getBizType());
+      this.setBizItemPartSettle(detail.getBizId(), detail.getBizType(), detail.getId());
     }
 
-    AbstractUserDetails currentUser = SecurityUtil.getCurrentUser();
+    buildSettleSheet(sheet, vo, totalPayedAmount, receiveSheetIds, bizSheetTotalAmount);
+  }
 
+  private static void buildSettleSheet(SettleCheckSheet sheet,
+                                       CreateSettleCheckSheetVo vo,
+                                       BigDecimal totalPayedAmount,
+                                       List<String> receiveSheetIds,
+                                       BigDecimal bizSheetTotalAmount) {
     sheet.setSupplierId(vo.getSupplierId());
-    sheet.setTotalAmount(totalAmount);
-    sheet.setTotalPayAmount(totalPayAmount);
-    sheet.setTotalPayedAmount(BigDecimal.ZERO);
+    sheet.setTotalPayAmount(vo.getTotalPayAmount());
+    sheet.setTotalPayedAmount(totalPayedAmount);
+    sheet.setTotalAmount(NumberUtil.add(vo.getTotalPayAmount(), totalPayedAmount));
     sheet.setTotalDiscountAmount(BigDecimal.ZERO);
-    sheet.setDescription(
-        StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
+    sheet.setBizSheetIds(String.join(StringPool.STR_SPLIT, receiveSheetIds));
+    sheet.setBizSheetTotalAmount(bizSheetTotalAmount);
+    sheet.setDescription(vo.getDescription());
     sheet.setRefuseReason(StringPool.EMPTY_STR);
     sheet.setSettleStatus(SettleStatus.UN_SETTLE);
     sheet.setStartDate(vo.getStartDate());
     sheet.setEndDate(vo.getEndDate());
+  }
+
+  /**
+   * 构建对账单详情
+   * @param sheet
+   * @param item
+   * @param orderNo
+   * @param vo
+   * @return
+   */
+  private static SettleCheckSheetDetail buildDetail(SettleCheckSheet sheet,
+                                                    SettleCheckBizItemDto item,
+                                                    int orderNo,
+                                                    CreateSettleCheckSheetVo vo) {
+    SettleCheckSheetDetail detail = new SettleCheckSheetDetail();
+
+    detail.setId(IdUtil.getId());
+    detail.setSheetId(sheet.getId());
+    detail.setBizId(item.getId());
+    detail.setBizType(item.getBizType());
+    detail.setCalcType(item.getCalcType());
+    detail.setPayAmount(item.getPayAmount());
+    detail.setDescription(vo.getDescription());
+    detail.setOrderNo(orderNo);
+    return detail;
+  }
+
+  /**
+   * 将对账金额进行分摊，分配给每个业务单据
+   *
+   * @param vo
+   * @return
+   */
+  private List<SettleCheckBizItemDto> allocatePayAmount(CreateSettleCheckSheetVo vo) {
+
+    if (vo.getTotalPayAmount() == null || CollectionUtil.isEmpty(vo.getItems())) {
+      return Lists.newArrayList();
+    }
+
+    // 收货单汇总金额
+    BigDecimal receiveTotalAmount = BigDecimal.ZERO;
+    List<SettleCheckBizItemDto> res = new ArrayList<>();
+    for (SettleCheckSheetItemVo itemVo : vo.getItems()) {
+      SettleCheckBizItemDto item = this.getBizItem(itemVo.getId(), EnumUtil.getByCode(SettleCheckSheetBizType.class, itemVo.getBizType()));
+      res.add(item);
+      receiveTotalAmount = NumberUtil.add(receiveTotalAmount, item.getTotalAmount());
+    }
+
+    // 对账金额差额
+    BigDecimal totalDiffAmount = NumberUtil.sub(vo.getTotalPayAmount(), receiveTotalAmount);
+    BigDecimal avgDiffAmount = NumberUtil.div(totalDiffAmount, BigDecimal.valueOf(vo.getItems().size()));
+
+    for (int i = 0; i < vo.getItems().size(); i++) {
+      SettleCheckBizItemDto checkBizItemDto = res.get(i);
+      BigDecimal payAmount = NumberUtil.add(
+              NumberUtil.sub(checkBizItemDto.getTotalAmount(), checkBizItemDto.getPaidAmount()),
+              avgDiffAmount);
+      if (NumberUtil.lt(payAmount, BigDecimal.ZERO)) {
+        throw new DefaultClientException("对账金额过小，分摊后会出现负数单据，请调整对账金额！");
+      }
+      checkBizItemDto.setPayAmount(payAmount);
+    }
+
+    return res;
   }
 }
