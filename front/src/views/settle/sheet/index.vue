@@ -46,9 +46,9 @@
 
           <template #toolbar_buttons>
             <a-space>
+              <a-button type="primary" @click="search">查询</a-button>
               <a-button type="primary" @click="handleToolbarSettle">结算</a-button>
               <a-button @click="exportExcel">导出Excel</a-button>
-              <a-button type="primary" @click="search">查询</a-button>
             </a-space>
           </template>
 
@@ -70,9 +70,7 @@
     formatDateTime,
     getDateTimeWithMaxTime,
     getDateTimeWithMinTime,
-    isEmpty,
   } from '@/utils/utils';
-  import { createError } from '@/hooks/web/msg';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
 
   export default defineComponent({
@@ -204,27 +202,23 @@
           });
       },
       handleToolbarSettle() {
-        if (isEmpty(this.searchFormData.supplierId)) {
-          createError('请先选择供应商！');
-          return;
-        }
-
-        const target = this.tableData.find((item) => item.supplierId === this.searchFormData.supplierId);
-        if (!target) {
-          createError('当前条件下未查询到该供应商的结算数据！');
-          return;
-        }
-
-        this.handleSettle(target);
+        this.openChildPage({
+          path: '/settle/supplier/sheet/settle',
+          query: {
+            startTime: this.searchFormData.orderStartTime || '',
+            endTime: this.searchFormData.orderEndTime || '',
+          },
+        });
       },
       handleSettle(row) {
-        const params = new URLSearchParams({
-          supplierId: row.supplierId,
-          startTime: this.searchFormData.orderStartTime || '',
-          endTime: this.searchFormData.orderEndTime || '',
-        }).toString();
-
-        this.openChildPage(`/settle/supplier/sheet/settle?${params}`);
+        this.openChildPage({
+          path: '/settle/supplier/sheet/settle',
+          query: {
+            supplierId: row.supplierId,
+            startTime: this.searchFormData.orderStartTime || '',
+            endTime: this.searchFormData.orderEndTime || '',
+          },
+        });
       },
       exportExcel() {
         this.$refs.grid.exportData({

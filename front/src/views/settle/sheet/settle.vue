@@ -67,6 +67,7 @@
 
         <template #toolbar_buttons>
           <a-space>
+            <a-button type="primary" :icon="h(SearchOutlined)" @click="search">查询</a-button>
             <a-button type="primary" @click="openRecordPage">结算记录</a-button>
             <a-button :icon="h(DownloadOutlined)" @click="exportList">导出</a-button>
             <a-button
@@ -84,7 +85,6 @@
             >
               确认结算
             </a-button>
-            <a-button type="primary" :icon="h(SearchOutlined)" @click="search">查询</a-button>
           </a-space>
         </template>
 
@@ -210,7 +210,7 @@
       const routeQuery = this.$route.query || {};
       const startTime = routeQuery.startTime
         ? moment(String(routeQuery.startTime)).format('YYYY-MM-DD')
-        : moment(getDateTimeWithMinTime(moment().subtract(1, 'M'))).format('YYYY-MM-DD');
+        : moment(getDateTimeWithMinTime(moment().subtract(3, 'M'))).format('YYYY-MM-DD');
       const endTime = routeQuery.endTime
         ? moment(String(routeQuery.endTime)).format('YYYY-MM-DD')
         : moment(getDateTimeWithMaxTime(moment())).format('YYYY-MM-DD');
