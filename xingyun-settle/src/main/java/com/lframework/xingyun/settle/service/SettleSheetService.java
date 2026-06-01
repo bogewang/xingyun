@@ -115,7 +115,7 @@ public interface SettleSheetService extends BaseMpService<SettleSheet> {
     /**
      * 查询收货单的对账/结算扩展信息
      *
-     * @param vo) 收货单ID
+     * @param sheetIds 收货单ID
      * @return 扩展信息
      */
     List<ReceiveSheetSettleInfoBo> queryReceiveSheetSettleInfos(List<ReceiveSheet> sheetIds);

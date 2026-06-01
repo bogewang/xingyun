@@ -118,6 +118,6 @@ jugg:
   web:
     #    filter-url: /**
     filter-url: /selector/list/tenant
-mybatis:
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#mybatis:
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

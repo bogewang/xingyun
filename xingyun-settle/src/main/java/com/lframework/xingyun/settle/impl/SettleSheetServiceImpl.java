@@ -105,9 +105,11 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
 
     // 结算单详情；
     Map<String, List<SettleSheetDetail>> settleDetailMap = querySettleDetailMap(ids);
+    Map<String, SettleSheet> settleSheetMap = querySettleSheetMap(Lists.newArrayList(settleDetailMap.values())
+        .stream().flatMap(Collection::stream).collect(Collectors.toList()));
 
     return sheetBoList.stream()
-            .map(item -> buildReceiveSheetSettleInfo(item, checkDetailMap, checkSheetMap, settleDetailMap))
+            .map(item -> buildReceiveSheetSettleInfo(item, checkDetailMap, checkSheetMap, settleDetailMap, settleSheetMap))
             .collect(Collectors.toList());
   }
 
@@ -153,6 +155,17 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
         .collect(Collectors.groupingBy(SettleSheetDetail::getBizId));
   }
 
+  private Map<String, SettleSheet> querySettleSheetMap(List<SettleSheetDetail> details) {
+
+    if (CollectionUtil.isEmpty(details)) {
+      return CollectionUtil.emptyMap();
+    }
+
+    List<String> sheetIds = details.stream().map(SettleSheetDetail::getSheetId).distinct().collect(Collectors.toList());
+    return this.listByIds(sheetIds).stream()
+        .collect(Collectors.toMap(SettleSheet::getId, Function.identity(), (a, b) -> a));
+  }
+
   /**
    * 构建收货单结算信息
    *
@@ -165,13 +178,14 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
   private ReceiveSheetSettleInfoBo buildReceiveSheetSettleInfo(QueryReceiveSheetBo receiveSheet,
                                                                Map<String, SettleCheckSheetDetail> checkDetailMap,
                                                                Map<String, SettleCheckSheet> checkSheetMap,
-                                                               Map<String, List<SettleSheetDetail>> settleDetailMap) {
+                                                               Map<String, List<SettleSheetDetail>> settleDetailMap,
+                                                               Map<String, SettleSheet> settleSheetMap) {
 
     ReceiveSheetSettleInfoBo result = BeanUtil.copyProperties(receiveSheet, ReceiveSheetSettleInfoBo.class);
     result.setBizSheetId(receiveSheet.getId());
 
     fillCheckInfo(result, receiveSheet, checkDetailMap, checkSheetMap);
-    fillSettleInfo(result, settleDetailMap.get(receiveSheet.getId()));
+    fillSettleInfo(result, settleDetailMap.get(receiveSheet.getId()), settleSheetMap);
 
     return result;
   }
@@ -200,7 +214,10 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
 
     SettleCheckSheet checkSheet = checkSheetMap.get(checkDetail.getSheetId());
     result.setCheckAmount(checkDetail.getPayAmount());
-    if (StringUtil.isNotBlank(checkSheet.getDescription())) {
+    if (checkSheet != null) {
+      result.setCheckTime(checkSheet.getApproveTime() != null ? checkSheet.getApproveTime() : checkSheet.getCreateTime());
+    }
+    if (checkSheet != null && StringUtil.isNotBlank(checkSheet.getDescription())) {
       result.setCheckDescription(checkSheet.getDescription());
     }
   }
@@ -210,7 +227,9 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
    * @param result
    * @param settleDetails
    */
-  private void fillSettleInfo(ReceiveSheetSettleInfoBo result, List<SettleSheetDetail> settleDetails) {
+  private void fillSettleInfo(ReceiveSheetSettleInfoBo result,
+                              List<SettleSheetDetail> settleDetails,
+                              Map<String, SettleSheet> settleSheetMap) {
 
     if (CollectionUtil.isEmpty(settleDetails)) {
       return;
@@ -222,6 +241,10 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
       // 结算金额需要累计实付金额和优惠金额，才能还原该收货单的实际结算总额。
       settleAmount = NumberUtil.add(settleAmount,
           NumberUtil.add(detail.getPayAmount(), detail.getDiscountAmount()));
+      SettleSheet settleSheet = settleSheetMap.get(detail.getSheetId());
+      if (settleSheet != null) {
+        result.setSettleTime(settleSheet.getApproveTime() != null ? settleSheet.getApproveTime() : settleSheet.getCreateTime());
+      }
       if (StringUtil.isNotBlank(detail.getDescription())) {
         // 使用有序去重集合，避免重复备注，同时尽量保持用户录入时的展示顺序。
         descriptions.add(detail.getDescription());
