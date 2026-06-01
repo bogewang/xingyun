@@ -1697,13 +1697,14 @@ public class SaleOutSheetServiceImpl extends
      * @return
      */
     private Map<String, BigDecimal> getCostPriceMap(LocalDate orderDate) {
-        List<ReceiveSheetDetail> latestCostPrices = receiveSheetDetailMapper.getLatestCostPriceList(orderDate);
+        LocalDate beginDate = orderDate.plusMonths(-1);
+        List<ReceiveSheetDetail> latestCostPrices = receiveSheetDetailMapper.getLatestCostPriceList(beginDate, orderDate);
         if (CollectionUtils.isEmpty(latestCostPrices)) {
             return new HashMap<>();
         }
 
         return latestCostPrices.stream().collect(Collectors.toMap(ReceiveSheetDetail::getProductId,
                 item -> item.getTaxPrice() == null ? BigDecimal.ZERO : item.getTaxPrice(),
-                (v1, v2) -> v1, HashMap::new));
+                (v1, v2) -> v1));
     }
 }

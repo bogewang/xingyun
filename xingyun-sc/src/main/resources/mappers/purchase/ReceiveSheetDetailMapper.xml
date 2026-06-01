@@ -64,6 +64,7 @@
                  FROM tbl_receive_sheet_detail AS d
                           INNER JOIN tbl_receive_sheet AS s ON d.sheet_id = s.id
                  WHERE d.is_gift = 0
+                   AND s.order_date <![CDATA[ >= ]]> #{beginDate}
                    AND s.order_date <![CDATA[ <= ]]> #{orderDate}
              ) AS t
         WHERE t.rn = 1

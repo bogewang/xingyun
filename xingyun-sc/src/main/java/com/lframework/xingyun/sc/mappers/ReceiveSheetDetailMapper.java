@@ -44,6 +44,6 @@ public interface ReceiveSheetDetailMapper extends BaseMapper<ReceiveSheetDetail>
    */
   int subReturnNum(@Param("id") String id, @Param("num") BigDecimal num);
 
-  List<ReceiveSheetDetail> getLatestCostPriceList(@Param("orderDate") LocalDate orderDate);
+  List<ReceiveSheetDetail> getLatestCostPriceList(@Param("beginDate") LocalDate beginDate, @Param("orderDate") LocalDate orderDate);
 
 }
