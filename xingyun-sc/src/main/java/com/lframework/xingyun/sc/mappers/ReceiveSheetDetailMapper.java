@@ -2,9 +2,11 @@ package com.lframework.xingyun.sc.mappers;
 
 import com.lframework.starter.web.core.mapper.BaseMapper;
 import com.lframework.xingyun.sc.entity.ReceiveSheetDetail;
-import java.math.BigDecimal;
-import java.util.List;
 import org.apache.ibatis.annotations.Param;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 
 /**
  * <p>
@@ -41,4 +43,7 @@ public interface ReceiveSheetDetailMapper extends BaseMapper<ReceiveSheetDetail>
    * @return
    */
   int subReturnNum(@Param("id") String id, @Param("num") BigDecimal num);
+
+  List<ReceiveSheetDetail> getLatestCostPriceList(@Param("orderDate") LocalDate orderDate);
+
 }

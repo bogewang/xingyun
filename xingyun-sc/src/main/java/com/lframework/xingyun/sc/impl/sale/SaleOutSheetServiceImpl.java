@@ -52,11 +52,10 @@ import com.lframework.xingyun.sc.enums.*;
 import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetSalesExportHelper;
+import com.lframework.xingyun.sc.mappers.ReceiveSheetDetailMapper;
 import com.lframework.xingyun.sc.mappers.SaleOutSheetMapper;
 import com.lframework.xingyun.sc.service.ProductHotnessService;
 import com.lframework.xingyun.sc.service.logistics.LogisticsSheetDetailService;
-import com.lframework.xingyun.sc.service.purchase.ReceiveSheetDetailService;
-import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
 import com.lframework.xingyun.sc.service.sale.*;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import com.lframework.xingyun.sc.vo.sale.out.*;
@@ -137,10 +136,7 @@ public class SaleOutSheetServiceImpl extends
     private LogisticsSheetDetailService logisticsSheetDetailService;
 
     @Autowired
-    private ReceiveSheetService receiveSheetService;
-
-    @Autowired
-    private ReceiveSheetDetailService receiveSheetDetailService;
+    private ReceiveSheetDetailMapper receiveSheetDetailMapper;
 
     @Override
     public PageResult<SaleOutSheet> query(Integer pageIndex, Integer pageSize,
@@ -1701,35 +1697,13 @@ public class SaleOutSheetServiceImpl extends
      * @return
      */
     private Map<String, BigDecimal> getCostPriceMap(LocalDate orderDate) {
-        Map<String, BigDecimal> res = new HashMap<>();
-        LambdaQueryWrapper<ReceiveSheet> receiveSheetQuery = Wrappers.lambdaQuery(ReceiveSheet.class)
-                .eq(ReceiveSheet::getOrderDate, orderDate);
-        List<ReceiveSheet> receiveSheets = receiveSheetService.list(receiveSheetQuery);
-        if (CollectionUtils.isEmpty(receiveSheets)) {
-            return res;
+        List<ReceiveSheetDetail> latestCostPrices = receiveSheetDetailMapper.getLatestCostPriceList(orderDate);
+        if (CollectionUtils.isEmpty(latestCostPrices)) {
+            return new HashMap<>();
         }
-        List<String> receiveSheetIds = receiveSheets.stream().map(ReceiveSheet::getId).collect(Collectors.toList());
-        LambdaQueryWrapper<ReceiveSheetDetail> receiveDetailQuery = Wrappers.lambdaQuery(ReceiveSheetDetail.class)
-                .in(ReceiveSheetDetail::getSheetId, receiveSheetIds);
 
-        List<ReceiveSheetDetail> receiveDetails = receiveSheetDetailService.list(receiveDetailQuery);
-        if (CollectionUtils.isEmpty(receiveDetails)) {
-            return res;
-        }
-        Map<String, BigDecimal> receiveTotalNumMap = new HashMap<>();
-        Map<String, BigDecimal> receiveTotalAmountMap = new HashMap<>();
-        for (ReceiveSheetDetail receiveDetail : receiveDetails) {
-            receiveTotalNumMap.merge(receiveDetail.getProductId(), receiveDetail.getOrderNum(), NumberUtil::add);
-            receiveTotalAmountMap.merge(receiveDetail.getProductId(), receiveDetail.getTaxAmount(), NumberUtil::add);
-        }
-        receiveTotalNumMap.forEach((productId, totalNum) -> {
-            BigDecimal totalAmount = receiveTotalAmountMap.get(productId);
-            BigDecimal costPrice = BigDecimal.ZERO;
-            if (NumberUtil.gt(totalNum, BigDecimal.ZERO)) {
-                costPrice = NumberUtil.getNumber(NumberUtil.div(totalAmount, totalNum), 6);
-            }
-            res.put(productId, costPrice);
-        });
-        return res;
+        return latestCostPrices.stream().collect(Collectors.toMap(ReceiveSheetDetail::getProductId,
+                item -> item.getTaxPrice() == null ? BigDecimal.ZERO : item.getTaxPrice(),
+                (v1, v2) -> v1, HashMap::new));
     }
 }
