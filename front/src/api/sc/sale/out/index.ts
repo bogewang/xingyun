@@ -264,6 +264,20 @@ export function exportDetail(data: QuerySaleOutSheetVo): Promise<void> {
   );
 }
 
+export function exportDetailDailySummary(data: QuerySaleOutSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/exportDetail/dailySummary',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+      responseType: ResponseEnum.BLOB,
+    },
+  );
+}
+
 /**
  * 销售利润（按单据）导出
  */

@@ -151,6 +151,13 @@
             >
               导出
             </a-button>
+            <a-button
+              v-permission="['sale:out:export']"
+              :icon="h(DownloadOutlined)"
+              @click="exportDetailDailySummary"
+            >
+              按天汇总导出
+            </a-button>
           </a-space>
         </template>
 
@@ -675,6 +682,9 @@
         api.exportDetail(this.buildSearchFormData()).then(() => {
           createSuccess('已加入导出任务，请到导出中心查看！');
         });
+      },
+      exportDetailDailySummary() {
+        api.exportDetailDailySummary(this.buildSearchFormData());
       },
       batchUpdatePriceInDialog() {
         const records = this.$refs.priceCheckGrid.getCheckboxRecords();

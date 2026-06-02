@@ -223,6 +223,8 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
 
   void marketBuySummary(QuerySaleOutSheetVo vo);
 
+  void exportDetailDailySummary(QuerySaleOutSheetVo vo);
+
   void exportSales(QuerySaleOutSheetVo vo, HttpServletResponse response);
 
   /**
