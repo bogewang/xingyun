@@ -84,7 +84,7 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
 
     this.setProductCode(dto.getProductCode());
     this.setProductName(dto.getProductName());
-    this.setShortName(dto.getProductName());
+    // this.setShortName(dto.gets);
     this.setSpec(dto.getSpec());
     this.setUnit(dto.getUnit());
     this.setCategoryName(dto.getCategoryName());

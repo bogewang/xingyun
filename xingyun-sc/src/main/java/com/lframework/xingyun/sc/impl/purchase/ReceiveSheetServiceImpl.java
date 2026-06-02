@@ -1074,9 +1074,10 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     private ReceiveSheetDetailExportModel buildDetailExportModel(QueryReceiveSheetDetailDto detail) {
         ReceiveSheetDetailExportModel model = new ReceiveSheetDetailExportModel();
+        model.setSupplierName(detail.getSupplierName());
         model.setProductCode(detail.getProductCode());
         model.setProductName(detail.getProductName());
-        model.setShortName(detail.getProductName());
+        // model.setShortName();
         model.setSpec(detail.getSpec());
         model.setUnit(detail.getUnit());
         model.setCategoryName(detail.getCategoryName());
