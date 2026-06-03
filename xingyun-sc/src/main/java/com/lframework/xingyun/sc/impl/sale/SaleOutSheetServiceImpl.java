@@ -881,6 +881,7 @@ public class SaleOutSheetServiceImpl extends
                     NumberUtil.getNumber(NumberUtil.mul(vo.getTaxPrice(), detail.getOrderNum()), 2));
             saleOutSheetDetailService.updateById(detail);
 
+            productLatestPriceCacheService.updateLatestPrice(detail.getProductId(), vo.getTaxPrice(), null);
             sheetIds.add(detail.getSheetId());
         }
 
