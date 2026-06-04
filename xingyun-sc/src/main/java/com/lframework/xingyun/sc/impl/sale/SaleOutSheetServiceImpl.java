@@ -1685,7 +1685,8 @@ public class SaleOutSheetServiceImpl extends
      * @return
      */
     private Map<String, ReceiveSheetDetail> getCostPriceMap(LocalDate orderDate) {
-        List<ReceiveSheetDetail> latestCostPrices = receiveSheetDetailMapper.getLatestCostPriceList(orderDate);
+        LocalDate beginDate = orderDate.plusMonths(-1);
+        List<ReceiveSheetDetail> latestCostPrices = receiveSheetDetailMapper.getLatestCostPriceList(beginDate, orderDate);
         if (CollectionUtils.isEmpty(latestCostPrices)) {
             return new HashMap<>();
         }
