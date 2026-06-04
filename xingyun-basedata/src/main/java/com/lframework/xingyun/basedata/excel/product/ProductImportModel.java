@@ -35,6 +35,7 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
      * 简称
      */
     @ExcelProperty("简称")
+    // @ExcelIgnore
     private String shortName;
 
 
@@ -83,7 +84,8 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
     /**
      * 零售价
      */
-    @ExcelProperty("零售价（元）")
+    // @ExcelProperty("零售价（元）")
+    @ExcelIgnore
     private BigDecimal retailPrice;
 
     /**
@@ -112,7 +114,7 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
     /**
      * 备注二
      */
-    @ExcelProperty("备注2")
+    @ExcelProperty("备注二")
     private String remark2;
 
     /**
@@ -139,7 +141,8 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
     /**
      * SKU编号
      */
-    @ExcelProperty("SKU编号")
+    // @ExcelProperty("SKU编号")
+    @ExcelIgnore
     private String skuCode;
     /**
      * 简码
@@ -150,19 +153,22 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
     /**
      * 品牌编号
      */
-    @ExcelProperty("品牌编号")
+    // @ExcelProperty("品牌编号")
+    @ExcelIgnore
     private String brandCode;
 
     /**
      * 进项税率（%）
      */
-    @ExcelProperty("进项税率（%）")
+    // @ExcelProperty("进项税率（%）")
+    @ExcelIgnore
     private BigDecimal taxRate;
 
     /**
      * 销项税率（%）
      */
-    @ExcelProperty("销项税率（%）")
+    // @ExcelProperty("销项税率（%）")
+    @ExcelIgnore
     private BigDecimal saleTaxRate;
 
     /**
