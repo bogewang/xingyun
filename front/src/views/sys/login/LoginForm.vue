@@ -9,11 +9,7 @@
       v-show="getShow"
       @keypress.enter="handleLogin"
     >
-      <a-form-item
-        name="tenantName"
-        class="enter-x"
-        v-if="requireTenant.enable && isEmpty(requireTenant.tenantId)"
-      >
+      <a-form-item name="tenantName" class="enter-x">
         <a-select
           size="large"
           ref="tenantInput"
@@ -68,7 +64,7 @@
   import { useUserStore } from '/@/store/modules/user';
   import { LoginStateEnum, useFormRules, useFormValid, useLoginState } from './useLogin';
   import { createSuccessTip } from '@/hooks/web/msg';
-  import { welcomeMsg, isEmpty } from '@/utils/utils';
+  import { welcomeMsg } from '@/utils/utils';
   import { TenantRequireBo } from '@/api/sys/model/tenantRequireBo';
   import { getTenantListApi } from '@/api/sys/user';
 
@@ -89,15 +85,10 @@
   const { validForm } = useFormValid(formRef);
 
   const loginCaptchaDialog = ref();
-  const usernameInput = ref();
   const tenantInput = ref();
 
   const focusInput = () => {
-    if (requireTenant.value.enable && isEmpty(requireTenant.value.tenantId)) {
-      tenantInput.value?.focus?.();
-      return;
-    }
-    usernameInput.value?.focus?.();
+    tenantInput.value?.focus?.();
   };
 
   const filterTenantOption = (inputValue, option) => {
@@ -124,9 +115,7 @@
 
   onMounted(async () => {
     requireTenant.value = await userStore.getTenantRequire();
-    if (requireTenant.value.enable && isEmpty(requireTenant.value.tenantId)) {
-      await loadTenantOptions();
-    }
+    await loadTenantOptions();
 
     focusInput();
   });
