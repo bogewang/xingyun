@@ -49,7 +49,7 @@ import com.lframework.xingyun.sc.enums.ProductStockBizType;
 import com.lframework.xingyun.sc.enums.PurchaseOpLogType;
 import com.lframework.xingyun.sc.enums.ReceiveSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
-import com.lframework.xingyun.sc.excel.purchase.ReceiveSheetQueryImportModel;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetDetailExportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import com.lframework.xingyun.sc.mappers.ReceiveSheetMapper;

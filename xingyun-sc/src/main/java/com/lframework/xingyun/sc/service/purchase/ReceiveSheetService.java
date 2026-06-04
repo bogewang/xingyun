@@ -8,7 +8,7 @@ import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.enums.SettleStatus;
-import com.lframework.xingyun.sc.excel.purchase.ReceiveSheetQueryImportModel;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import com.lframework.xingyun.sc.vo.purchase.receive.*;
 
