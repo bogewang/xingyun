@@ -636,8 +636,7 @@ public class SaleOutSheetController extends DefaultBaseController {
     @PostMapping("/import/query")
     public InvokeResult<List<String>> importByQuery(@NotNull(message = "请上传文件") MultipartFile file) {
         try {
-            List<SaleOutSheetQueryImportModel> list = EasyExcelUtils.syncReadModel(
-                    file.getInputStream(), SaleOutSheetQueryImportModel.class);
+            List<SaleOutSheetQueryImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(), SaleOutSheetQueryImportModel.class);
             List<String> data = saleOutSheetService.importByQuery(list);
 
             return InvokeResultBuilder.success(data);

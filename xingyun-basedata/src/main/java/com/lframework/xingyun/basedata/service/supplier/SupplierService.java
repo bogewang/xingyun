@@ -77,4 +77,6 @@ public interface SupplierService extends BaseMpService<Supplier> {
      * @return
      */
     PageResult<Supplier> selector(Integer pageIndex, Integer pageSize, QuerySupplierSelectorVo vo);
+
+    List<Supplier> selectByIds(List<String> ids);
 }

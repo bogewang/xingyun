@@ -1,11 +1,11 @@
 package com.lframework.xingyun.sc.dto.sale.out;
 
 import com.lframework.starter.web.core.dto.BaseDto;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 @Data
 public class QuerySaleOutSheetDetailDto implements BaseDto, Serializable {
@@ -73,4 +73,6 @@ public class QuerySaleOutSheetDetailDto implements BaseDto, Serializable {
   private LocalDateTime approveTime;
 
   private Integer status;
+
+  private String supplierId;
 }

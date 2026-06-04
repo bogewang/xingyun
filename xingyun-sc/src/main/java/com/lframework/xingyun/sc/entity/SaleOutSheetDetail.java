@@ -122,4 +122,8 @@ public class SaleOutSheetDetail extends BaseEntity implements BaseDto {
    * 实际日期
    */
   private LocalDate actualDate;
+  /**
+   * 供应商ID
+   */
+  private String supplierId;
 }

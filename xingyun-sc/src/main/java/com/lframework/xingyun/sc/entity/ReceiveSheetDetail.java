@@ -87,4 +87,6 @@ public class ReceiveSheetDetail extends BaseEntity implements BaseDto {
    */
   private LocalDate actualDate;
 
+  private String supplierId;
+
 }
