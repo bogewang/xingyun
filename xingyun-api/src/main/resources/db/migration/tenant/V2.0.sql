@@ -116,3 +116,8 @@ ALTER TABLE tbl_product_stock_log modify `sc_id` varchar(32) NULL COMMENT '仓�
 -- 0526 销售订单商品价格唯一配置
 delete from sys_parameter where pm_key = 'product_sale_price_unique';
 INSERT INTO `sys_parameter` (`id`, `pm_key`, `pm_value`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES (null, 'product_sale_price_unique', 'false', '销售订单商品价格唯一配置', '系统管理员', '1', now(), '系统管理员', '1', now());
+
+
+-- 实际日期
+ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `actual_date` date COMMENT '实际日期';
+ALTER TABLE `tbl_receive_sheet_detail` ADD COLUMN `actual_date` date COMMENT '实际日期';
