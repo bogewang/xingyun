@@ -10,7 +10,7 @@ import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProfitTrendDto;
-import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
@@ -222,6 +222,8 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   Boolean getPriceUniqueConfig();
 
   void marketBuySummary(QuerySaleOutSheetVo vo);
+
+  void exportDetailDailySummary(QuerySaleOutSheetVo vo);
 
   void exportSales(QuerySaleOutSheetVo vo, HttpServletResponse response);
 

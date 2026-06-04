@@ -127,6 +127,20 @@ export function exportDetail(data: QueryReceiveSheetVo): Promise<void> {
   );
 }
 
+export function exportDetailDailySummary(data: QueryReceiveSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/exportDetail/dailySummary',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+      responseType: ResponseEnum.BLOB,
+    },
+  );
+}
+
 /**
  * 查询详情
  */

@@ -1,9 +1,8 @@
-package com.lframework.xingyun.sc.excel.purchase;
+package com.lframework.xingyun.sc.excel.purchase.receive;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.lframework.starter.web.core.annotations.excel.ExcelRequired;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
-import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import lombok.Data;
 
 @Data

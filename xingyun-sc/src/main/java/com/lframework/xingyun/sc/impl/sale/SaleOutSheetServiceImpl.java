@@ -27,10 +27,7 @@ import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.starter.web.inner.service.system.SysParameterService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.starter.web.inner.vo.system.parameter.QuerySysParameterVo;
-import com.lframework.xingyun.basedata.entity.Customer;
-import com.lframework.xingyun.basedata.entity.Product;
-import com.lframework.xingyun.basedata.entity.ProductCategory;
-import com.lframework.xingyun.basedata.entity.StoreCenter;
+import com.lframework.xingyun.basedata.entity.*;
 import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.enums.SettleType;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
@@ -38,6 +35,7 @@ import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
+import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.basedata.vo.customer.QueryCustomerVo;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
 import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
@@ -49,8 +47,9 @@ import com.lframework.xingyun.sc.dto.sale.out.*;
 import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
 import com.lframework.xingyun.sc.entity.*;
 import com.lframework.xingyun.sc.enums.*;
-import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetDetailExportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetSalesExportHelper;
 import com.lframework.xingyun.sc.mappers.ReceiveSheetDetailMapper;
 import com.lframework.xingyun.sc.mappers.SaleOutSheetMapper;
@@ -137,6 +136,8 @@ public class SaleOutSheetServiceImpl extends
 
     @Autowired
     private ReceiveSheetDetailMapper receiveSheetDetailMapper;
+    @Autowired
+    private SupplierService supplierService;
 
     @Override
     public PageResult<SaleOutSheet> query(Integer pageIndex, Integer pageSize,
@@ -340,6 +341,37 @@ public class SaleOutSheetServiceImpl extends
     }
 
     @Override
+    public void exportDetailDailySummary(QuerySaleOutSheetVo vo) {
+        List<QuerySaleOutSheetDetailDto> details = getBaseMapper().queryDetail(vo);
+        if (CollectionUtils.isEmpty(details)) {
+            MultiSheetsData<SaleOutSheetDetailExportModel> sheetData = new MultiSheetsData<>();
+            sheetData.setSheetName("明细");
+            sheetData.setHeadClazz(SaleOutSheetDetailExportModel.class);
+            sheetData.setData(new ArrayList<>());
+            ExcelUtil.writeWithSheets("销售出库单明细按天汇总", Collections.singletonList(sheetData));
+            return;
+        }
+
+        Map<String, List<QuerySaleOutSheetDetailDto>> detailGroup = details.stream()
+                .collect(Collectors.groupingBy(QuerySaleOutSheetDetailDto::getOrderDate,
+                        LinkedHashMap::new, Collectors.toList()));
+
+        List<MultiSheetsData<SaleOutSheetDetailExportModel>> sheetDatas = new ArrayList<>(detailGroup.size());
+        detailGroup.forEach((orderDate, dayDetails) -> {
+            MultiSheetsData<SaleOutSheetDetailExportModel> sheetData = new MultiSheetsData<>();
+            sheetData.setSheetName(orderDate);
+            sheetData.setHeadClazz(SaleOutSheetDetailExportModel.class);
+            sheetData.setData(buildDailySummaryExportModels(dayDetails));
+            sheetDatas.add(sheetData);
+        });
+        List<MultiSheetsData<SaleOutSheetDetailExportModel>> sortedDatas = sheetDatas.stream()
+                .sorted(Comparator.comparing(MultiSheetsData::getSheetName))
+                .collect(Collectors.toList());
+
+        ExcelUtil.writeWithSheets("销售出库单明细按天汇总", sortedDatas);
+    }
+
+    @Override
     public void exportSales(QuerySaleOutSheetVo vo, HttpServletResponse response) {
         List<SaleOutSheet> sheets = this.query(vo);
         if (CollectionUtils.isEmpty(sheets)) {
@@ -381,6 +413,40 @@ public class SaleOutSheetServiceImpl extends
         return data;
     }
 
+    private List<SaleOutSheetDetailExportModel> buildDailySummaryExportModels(
+            List<QuerySaleOutSheetDetailDto> details) {
+        if (CollectionUtils.isEmpty(details)) {
+            return new ArrayList<>();
+        }
+
+        List<String> supplierIds = details.stream().map(QuerySaleOutSheetDetailDto::getSupplierId).collect(Collectors.toList());
+        List<Supplier> suppliers = supplierService.selectByIds(supplierIds);
+        Map<String, String> supplierMap = suppliers.stream().collect(Collectors.toMap(Supplier::getId, Supplier::getName));
+
+        Map<String, SaleOutSheetDetailExportModel> summaryMap = new LinkedHashMap<>();
+        for (QuerySaleOutSheetDetailDto detail : details) {
+            String productKey = StringUtil.isBlank(detail.getProductId()) ? detail.getProductCode()
+                    : detail.getProductId();
+            SaleOutSheetDetailExportModel current = new SaleOutSheetDetailExportModel(detail);
+            SaleOutSheetDetailExportModel summary = summaryMap.get(productKey);
+            if (summary == null) {
+                summaryMap.put(productKey, current);
+                continue;
+            }
+
+            summary.setOrderNum(NumberUtil.add(defaultValue(summary.getOrderNum()),
+                    defaultValue(current.getOrderNum())));
+            summary.setCostAmount(NumberUtil.add(defaultValue(summary.getCostAmount()),
+                    defaultValue(current.getCostAmount())));
+            summary.setTaxAmount(NumberUtil.add(defaultValue(summary.getTaxAmount()),
+                    defaultValue(current.getTaxAmount())));
+            summary.setProfitRate(buildProfitRate(summary.getTaxAmount(), summary.getCostAmount()));
+            summary.setSupplierName(supplierMap.get(detail.getSupplierId()));
+        }
+
+        return new ArrayList<>(summaryMap.values());
+    }
+
     private SaleOutSheetSalesExportHelper.DetailData buildSalesExportDetailData(
             GetSaleOutSheetBo.OrderDetailBo detail) {
         SaleOutSheetSalesExportHelper.DetailData data =
@@ -396,6 +462,19 @@ public class SaleOutSheetServiceImpl extends
         }
         data.setRemark(detail.getDescription());
         return data;
+    }
+
+    private BigDecimal defaultValue(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private String buildProfitRate(BigDecimal taxAmount, BigDecimal costAmount) {
+        if (taxAmount == null || BigDecimal.ZERO.compareTo(taxAmount) == 0) {
+            return "0.00%";
+        }
+        BigDecimal totalProfit = defaultValue(taxAmount).subtract(defaultValue(costAmount));
+        return totalProfit.multiply(new BigDecimal("100"))
+                .divide(taxAmount, 2, RoundingMode.HALF_UP) + "%";
     }
 
     /**
@@ -669,9 +748,7 @@ public class SaleOutSheetServiceImpl extends
         sheet.setId(IdUtil.getId());
         sheet.setCode(generateCode());
 
-        SaleConfig saleConfig = saleConfigService.get();
-
-        this.create(sheet, vo, saleConfig.getOutStockRequireSale());
+        this.create(sheet, vo);
 
         sheet.setStatus(SaleOutSheetStatus.CREATED);
 
@@ -711,21 +788,6 @@ public class SaleOutSheetServiceImpl extends
 
         String oldCustomerId = sheet.getCustomerId();
 
-        boolean requireSale = !StringUtil.isBlank(sheet.getSaleOrderId());
-
-        if (requireSale) {
-            // 查询出库单明细
-            Wrapper<SaleOutSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
-                    SaleOutSheetDetail.class).eq(SaleOutSheetDetail::getSheetId, sheet.getId());
-            List<SaleOutSheetDetail> details = saleOutSheetDetailService.list(queryDetailWrapper);
-            for (SaleOutSheetDetail detail : details) {
-                if (!StringUtil.isBlank(detail.getSaleOrderDetailId())) {
-                    // 先恢复已出库数量
-                    saleOrderDetailService.subOutNum(detail.getSaleOrderDetailId(), detail.getOrderNum());
-                }
-            }
-        }
-
         // 删除出库单明细
         Wrapper<SaleOutSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(SaleOutSheetDetail.class)
                 .eq(SaleOutSheetDetail::getSheetId, sheet.getId());
@@ -736,7 +798,7 @@ public class SaleOutSheetServiceImpl extends
                 SaleOutSheetDetailBundle.class).eq(SaleOutSheetDetailBundle::getSheetId, sheet.getId());
         saleOutSheetDetailBundleService.remove(deleteDetailBundleWrapper);
 
-        this.create(sheet, vo, requireSale);
+        this.create(sheet, vo);
 
         sheet.setStatus(SaleOutSheetStatus.CREATED);
 
@@ -807,6 +869,7 @@ public class SaleOutSheetServiceImpl extends
                     NumberUtil.getNumber(NumberUtil.mul(vo.getTaxPrice(), detail.getOrderNum()), 2));
             saleOutSheetDetailService.updateById(detail);
 
+            productLatestPriceCacheService.updateLatestPrice(detail.getProductId(), vo.getTaxPrice(), null);
             sheetIds.add(detail.getSheetId());
         }
 
@@ -1193,7 +1256,7 @@ public class SaleOutSheetServiceImpl extends
         return getBaseMapper().getApprovedList(customerId, startTime, endTime, settleStatus);
     }
 
-    private void create(SaleOutSheet sheet, CreateSaleOutSheetVo vo, boolean requireSale) {
+    private void create(SaleOutSheet sheet, CreateSaleOutSheetVo vo) {
 
         if (!StringUtil.isBlank(vo.getScId())) {
             StoreCenter sc = storeCenterService.findById(vo.getScId());
@@ -1219,52 +1282,13 @@ public class SaleOutSheetServiceImpl extends
             sheet.setSalerId(vo.getSalerId());
         }
 
-        SaleConfig saleConfig = saleConfigService.get();
-
-        GetPaymentDateDto paymentDate = this.getPaymentDate(customer.getId());
-
-        sheet.setPaymentDate(
-                vo.getAllowModifyPaymentDate() || paymentDate.getAllowModify() ? vo.getPaymentDate()
-                        : paymentDate.getPaymentDate());
         sheet.setOrderDate(vo.getOrderDate());
-
-        if (requireSale) {
-            handleRequireSale(sheet, vo, saleConfig);
-        }
 
         BigDecimal purchaseNum = BigDecimal.ZERO;
         BigDecimal giftNum = BigDecimal.ZERO;
         BigDecimal totalAmount = BigDecimal.ZERO;
-        int orderNo = 1;
         for (SaleOutProductVo productVo : vo.getProducts()) {
-            if (requireSale) {
-                if (!StringUtil.isBlank(productVo.getSaleOrderDetailId())) {
-                    SaleOrderDetail orderDetail = saleOrderDetailService.getById(
-                            productVo.getSaleOrderDetailId());
-                    productVo.setOriPrice(orderDetail.getOriPrice());
-                    productVo.setTaxPrice(orderDetail.getTaxPrice());
-                    productVo.setDiscountRate(orderDetail.getDiscountRate());
-                } else {
-                    productVo.setTaxPrice(BigDecimal.ZERO);
-                    productVo.setDiscountRate(BigDecimal.valueOf(100));
-                }
-            }
-
-            boolean isGift = productVo.getTaxPrice().doubleValue() == 0D;
-
-            if (requireSale) {
-                if (StringUtil.isBlank(productVo.getSaleOrderDetailId())) {
-                    if (!isGift) {
-                        throw new InputErrorException("第" + orderNo + "行商品必须为“赠品”！");
-                    }
-                }
-            }
-
-            if (isGift) {
-                giftNum = NumberUtil.add(giftNum, productVo.getOrderNum());
-            } else {
-                purchaseNum = NumberUtil.add(purchaseNum, productVo.getOrderNum());
-            }
+            purchaseNum = NumberUtil.add(purchaseNum, productVo.getOrderNum());
 
             totalAmount = NumberUtil.add(totalAmount,
                     NumberUtil.getNumber(NumberUtil.mul(productVo.getTaxPrice(), productVo.getOrderNum()),
@@ -1276,7 +1300,7 @@ public class SaleOutSheetServiceImpl extends
 
             Product product = productService.findById(productVo.getProductId());
             if (product == null) {
-                throw new InputErrorException("第" + orderNo + "行商品不存在！");
+                throw new InputErrorException("第" + productVo.getSeq() + "行商品不存在！");
             }
 
             detail.setProductId(productVo.getProductId());
@@ -1284,11 +1308,10 @@ public class SaleOutSheetServiceImpl extends
             detail.setOriPrice(productVo.getOriPrice());
             detail.setTaxPrice(productVo.getTaxPrice());
             detail.setDiscountRate(productVo.getDiscountRate());
-            detail.setIsGift(isGift);
             detail.setTaxRate(product.getSaleTaxRate());
             detail.setDescription(StringUtil.isBlank(productVo.getDescription()) ? StringPool.EMPTY_STR
                     : productVo.getDescription());
-            detail.setOrderNo(orderNo);
+            detail.setOrderNo(productVo.getSeq());
             detail.setSettleStatus(this.getInitSettleStatus(customer));
             detail.setTaxAmount(
                     NumberUtil.getNumber(NumberUtil.mul(detail.getTaxPrice(), detail.getOrderNum()), 2));
@@ -1303,19 +1326,11 @@ public class SaleOutSheetServiceImpl extends
             } else {
                 detail.setTotalProfit(null);
             }
-            if (requireSale && !StringUtil.isBlank(productVo.getSaleOrderDetailId())) {
-                detail.setSaleOrderDetailId(productVo.getSaleOrderDetailId());
-                saleOrderDetailService.addOutNum(productVo.getSaleOrderDetailId(), detail.getOrderNum());
-            }
 
             saleOutSheetDetailService.save(detail);
-            if (!requireSale) {
-                updateProductPrice(product, detail);
-                productLatestPriceCacheService.updateLatestPrice(product.getId(), detail.getTaxPrice(),
-                        null);
-            }
-
-            orderNo++;
+            updateProductPrice(product, detail);
+            productLatestPriceCacheService.updateLatestPrice(product.getId(), detail.getTaxPrice(),
+                    null);
         }
         sheet.setTotalNum(purchaseNum);
         sheet.setTotalGiftNum(giftNum);
@@ -1344,33 +1359,6 @@ public class SaleOutSheetServiceImpl extends
         boolean override = BooleanUtil.toBoolean(list.get(0).getPmValue());
         if (override) {
             productService.updatePrice(product.getId(), detail.getTaxPrice(), null);
-        }
-    }
-
-    /**
-     * 处理关联销售订单
-     * @param sheet
-     * @param vo
-     * @param saleConfig
-     */
-    private void handleRequireSale(SaleOutSheet sheet, CreateSaleOutSheetVo vo, SaleConfig saleConfig) {
-        SaleOrder saleOrder = saleOrderService.getById(vo.getSaleOrderId());
-        if (saleOrder == null) {
-            throw new DefaultClientException("销售订单不存在！");
-        }
-
-        sheet.setScId(saleOrder.getScId());
-        sheet.setCustomerId(saleOrder.getCustomerId());
-        sheet.setSaleOrderId(saleOrder.getId());
-
-        if (!saleConfig.getOutStockMultipleRelateSale()) {
-            Wrapper<SaleOutSheet> checkWrapper = Wrappers.lambdaQuery(SaleOutSheet.class)
-                    .eq(SaleOutSheet::getSaleOrderId, saleOrder.getId())
-                    .ne(SaleOutSheet::getId, sheet.getId());
-            if (getBaseMapper().selectCount(checkWrapper) > 0) {
-                throw new DefaultClientException("销售订单号：" + saleOrder.getCode()
-                        + "，已关联其他销售出库单，不允许关联多个销售出库单！");
-            }
         }
     }
 
@@ -1487,10 +1475,6 @@ public class SaleOutSheetServiceImpl extends
 
         SaleOutSheetService thisService = getThis(this.getClass());
 
-        SaleConfig saleConfig = saleConfigService.get();
-        if (Boolean.TRUE.equals(saleConfig.getOutStockRequireSale())) {
-            throw new DefaultClientException("“销售出库单是否关联销售订单”必须设置为“否”才可以导入！");
-        }
         for (int i = 0; i < list.size(); i++) {
             list.get(i).setSeq(i+2);
         }
@@ -1629,7 +1613,7 @@ public class SaleOutSheetServiceImpl extends
         // 2. 获取销售明细，补齐cost_price,total_profit
         // 3. 汇总单据明细，补齐单据cost_price,total_profit
         // 4. 如果所有的商品采购成本都已经录入，则标记单据fill_all_cost=true, 单据查询页面也展示该字段
-        Map<String, BigDecimal> receiveCostPriceMap = getCostPriceMap(orderDate);
+        Map<String, ReceiveSheetDetail> receiveCostPriceMap = getCostPriceMap(orderDate);
 
         List<SaleOutSheetDetail> saleDetails = saleOutSheetDetailService.getBySheetId(orderId);
 
@@ -1653,8 +1637,8 @@ public class SaleOutSheetServiceImpl extends
                 continue;
             }
 
-            BigDecimal productCostPrice = receiveCostPriceMap.get(saleDetail.getProductId());
-            if (productCostPrice == null) {
+            ReceiveSheetDetail detail = receiveCostPriceMap.get(saleDetail.getProductId());
+            if (detail == null) {
                 fillAllCost = false;
                 saleDetail.setCostPrice(null);
                 saleDetail.setTotalProfit(null);
@@ -1662,11 +1646,15 @@ public class SaleOutSheetServiceImpl extends
                 continue;
             }
 
-            BigDecimal detailCostAmount = NumberUtil.getNumber(NumberUtil.mul(productCostPrice, saleDetail.getOrderNum()), 6);
+            BigDecimal detailCostAmount = NumberUtil.getNumber(NumberUtil.mul(
+                    detail.getTaxPrice() == null ? BigDecimal.ZERO : detail.getTaxPrice(),
+                    saleDetail.getOrderNum()),
+                    6);
             BigDecimal detailTotalProfit = NumberUtil.getNumber(NumberUtil.sub(saleDetail.getTaxAmount(), detailCostAmount), 6);
 
-            saleDetail.setCostPrice(productCostPrice);
+            saleDetail.setCostPrice(detail.getTaxPrice());
             saleDetail.setTotalProfit(detailTotalProfit);
+            saleDetail.setSupplierId(detail.getSupplierId());
             saleOutSheetDetailService.saveOrUpdateAllColumn(saleDetail);
 
         }
@@ -1696,15 +1684,13 @@ public class SaleOutSheetServiceImpl extends
      * @param orderDate
      * @return
      */
-    private Map<String, BigDecimal> getCostPriceMap(LocalDate orderDate) {
-        LocalDate beginDate = orderDate.plusMonths(-1);
-        List<ReceiveSheetDetail> latestCostPrices = receiveSheetDetailMapper.getLatestCostPriceList(beginDate, orderDate);
+    private Map<String, ReceiveSheetDetail> getCostPriceMap(LocalDate orderDate) {
+        List<ReceiveSheetDetail> latestCostPrices = receiveSheetDetailMapper.getLatestCostPriceList(orderDate);
         if (CollectionUtils.isEmpty(latestCostPrices)) {
             return new HashMap<>();
         }
 
         return latestCostPrices.stream().collect(Collectors.toMap(ReceiveSheetDetail::getProductId,
-                item -> item.getTaxPrice() == null ? BigDecimal.ZERO : item.getTaxPrice(),
-                (v1, v2) -> v1));
+                item -> item, (v1, v2) -> v1, HashMap::new));
     }
 }

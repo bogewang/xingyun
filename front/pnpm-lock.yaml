@@ -132,8 +132,8 @@ importers:
         specifier: ^3.9.4
         version: 3.10.5
       vg-print:
-        specifier: ^1.1.219
-        version: 1.1.219(vue@3.4.38(typescript@5.5.4))
+        specifier: ^1.1.302
+        version: 1.1.302(vue@3.4.38(typescript@5.5.4))
       vue:
         specifier: ^3.3.4
         version: 3.4.38(typescript@5.5.4)
@@ -6419,8 +6419,8 @@ packages:
   vditor@3.10.5:
     resolution: {integrity: sha512-TEhuErdRCdtpeNntbU+SA0/aGuUSEVBbPkNkH0oov2ZKyis20PqtG+az2EmIomCefKlCXcpcKMM/jglv3fKkig==}
 
-  vg-print@1.1.219:
-    resolution: {integrity: sha512-KkOFbcx3okDbnIO8DfHp+MDc12aSez6Db8Bx1JPf/oIIC67HBUeG9etVZ9n9mSbHkUrGjsHSErgAIvga4uiU9g==}
+  vg-print@1.1.302:
+    resolution: {integrity: sha512-PQ5j+7AAWYXKPQqcZg1fQ+Kodgp4mT2mcd2rTolRNygKqzuCIaNL677pyf85+HWm8PFPaFbffH7bImui5TbhpA==}
     engines: {node: '>=18.18.0'}
     peerDependencies:
       vue: '>=3.2.0 <4'
@@ -13626,7 +13626,7 @@ snapshots:
     dependencies:
       diff-match-patch: 1.0.5
 
-  vg-print@1.1.219(vue@3.4.38(typescript@5.5.4)):
+  vg-print@1.1.302(vue@3.4.38(typescript@5.5.4)):
     dependencies:
       '@claviska/jquery-minicolors': 2.3.6(jquery@3.7.1)
       '@wtto00/html2canvas': 1.4.3

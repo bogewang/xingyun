@@ -276,4 +276,9 @@ public class SupplierServiceImpl extends BaseMpServiceImpl<SupplierMapper, Suppl
   public void cleanCacheByKey(Serializable key) {
 
   }
+
+  @Override
+  public List<Supplier> selectByIds(List<String> ids) {
+    return getBaseMapper().selectBatchIds(ids);
+  }
 }

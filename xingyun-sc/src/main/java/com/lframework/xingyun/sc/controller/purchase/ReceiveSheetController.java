@@ -18,7 +18,7 @@ import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.PurchaseConfig;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
-import com.lframework.xingyun.sc.excel.purchase.ReceiveSheetQueryImportModel;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.*;
 import com.lframework.xingyun.sc.service.purchase.PurchaseConfigService;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
@@ -140,6 +140,23 @@ public class ReceiveSheetController extends DefaultBaseController {
         ExportTaskUtil.exportTask("采购收货单明细", ReceiveSheetDetailExportTaskWorker.class, vo);
 
         return InvokeResultBuilder.success();
+    }
+
+    /**
+     * 按天汇总导出明细
+     */
+    @ApiOperation("按天汇总导出明细")
+    @HasPermission({"purchase:receive:export"})
+    @PostMapping("/exportDetail/dailySummary")
+    public void exportDetailDailySummary(@RequestBody @Valid QueryReceiveSheetVo vo) {
+        try {
+            receiveSheetService.exportDetailDailySummary(vo);
+        } catch (DefaultClientException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("按天汇总导出采购收货单明细失败", e);
+            throw new DefaultClientException(e.getMessage());
+        }
     }
 
     /**

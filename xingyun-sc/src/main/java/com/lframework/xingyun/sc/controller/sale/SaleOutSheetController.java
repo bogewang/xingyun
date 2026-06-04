@@ -33,7 +33,7 @@ import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
-import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetDetailExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
@@ -343,6 +343,23 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
+     * 按天汇总导出明细
+     */
+    @ApiOperation("按天汇总导出明细")
+    @HasPermission({ "sale:out:export" })
+    @PostMapping("/exportDetail/dailySummary")
+    public void exportDetailDailySummary(@RequestBody @Valid QuerySaleOutSheetVo vo) {
+        try {
+            saleOutSheetService.exportDetailDailySummary(vo);
+        } catch (DefaultClientException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("按天汇总导出销售出库明细失败", e);
+            throw new DefaultClientException(e.getMessage());
+        }
+    }
+
+    /**
      * 销售利润（按单据）导出
      */
     @ApiOperation("销售利润（按单据）导出")
@@ -619,8 +636,7 @@ public class SaleOutSheetController extends DefaultBaseController {
     @PostMapping("/import/query")
     public InvokeResult<List<String>> importByQuery(@NotNull(message = "请上传文件") MultipartFile file) {
         try {
-            List<SaleOutSheetQueryImportModel> list = EasyExcelUtils.syncReadModel(
-                    file.getInputStream(), SaleOutSheetQueryImportModel.class);
+            List<SaleOutSheetQueryImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(), SaleOutSheetQueryImportModel.class);
             List<String> data = saleOutSheetService.importByQuery(list);
 
             return InvokeResultBuilder.success(data);

@@ -12,6 +12,7 @@
         <result column="description" property="description"/>
         <result column="order_no" property="orderNo"/>
         <result column="return_num" property="returnNum"/>
+        <result column="supplier_id" property="supplierId"/>
     </resultMap>
 
     <sql id="ReceiveSheetDetailDto_sql">
@@ -50,21 +51,21 @@
     <select id="getLatestCostPriceList" resultMap="ReceiveSheetDetail">
         SELECT
             t.product_id,
-            t.tax_price
+            t.tax_price,
+            t.supplier_id
         FROM (
                  SELECT
                      d.product_id,
                      d.tax_price,
                      s.order_date,
-                     s.code,
+                     s.supplier_id,
                      ROW_NUMBER() OVER (
                          PARTITION BY d.product_id
                          ORDER BY s.order_date DESC, s.create_time DESC
                          ) AS rn
                  FROM tbl_receive_sheet_detail AS d
                           INNER JOIN tbl_receive_sheet AS s ON d.sheet_id = s.id
-                 WHERE d.is_gift = 0
-                   AND s.order_date <![CDATA[ >= ]]> #{beginDate}
+                 WHERE s.order_date <![CDATA[ >= ]]> #{beginDate}
                    AND s.order_date <![CDATA[ <= ]]> #{orderDate}
              ) AS t
         WHERE t.rn = 1

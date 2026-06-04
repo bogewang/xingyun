@@ -1,9 +1,8 @@
-package com.lframework.xingyun.sc.excel.sale;
+package com.lframework.xingyun.sc.excel.sale.out;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.lframework.starter.web.core.annotations.excel.ExcelRequired;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
-import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import lombok.Data;
 
 @Data

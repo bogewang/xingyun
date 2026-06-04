@@ -27,7 +27,6 @@ ALTER TABLE `tbl_receive_sheet` ADD COLUMN `order_date` date NULL DEFAULT NULL C
 ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `cost_price` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '成本单价';
 ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `total_profit` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '总利润';
 ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `total_cost` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '成本单价';
-ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `total_profit` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '总利润';
 ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `total_profit` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '总利润';
 
 -- 仓库非必填
@@ -88,6 +87,7 @@ INSERT INTO `base_data_product_category` (`id`, `code`, `name`, `parent_id`, `av
 INSERT INTO `base_data_product_category` (`id`, `code`, `name`, `parent_id`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('2055257698437566464', 'SPFL1023', '猪肉', '2055106271056629777', 1, '', '王波', '2055100001188712448', '2026-05-15 20:03:15', '王波', '2055100001188712448', '2026-05-15 20:03:15');
 INSERT INTO `base_data_product_category` (`id`, `code`, `name`, `parent_id`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('2055257804960305152', 'SPFL1024', '牛肉', '2055106271056629777', 1, '', '王波', '2055100001188712448', '2026-05-15 20:03:40', '王波', '2055100001188712448', '2026-05-15 20:03:40');
 INSERT INTO `base_data_product_category` (`id`, `code`, `name`, `parent_id`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('2055258065732767744', 'SPFL1025', '鸡鸭肉', '2055106271056629777', 1, '', '王波', '2055100001188712448', '2026-05-15 20:04:42', '王波', '2055100001188712448', '2026-05-15 20:04:42');
+INSERT INTO `base_data_product_category` (`id`, `code`, `name`, `parent_id`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('2055258065732767745', 'SPFL1026', '冻品', null, 1, '', '王波', '2055100001188712448', now(), '王波', '2055100001188712448', now());
 
 -- 0519 销售利润（按单据）
 delete from sys_menu where id in ('6000', '6000001', '6000001001');
@@ -127,3 +127,9 @@ ALTER TABLE `settle_check_sheet` ADD COLUMN `biz_total_amount` decimal(32,2) NOT
 alter table settle_check_sheet add column check_amount decimal(32,2) NOT NULL DEFAULT 0.00 COMMENT '对账金额';
 -- 收货单
 alter table tbl_receive_sheet add column settle_check_sheet_detail_id varchar(32) null comment '对账明细单ID';
+
+
+-- 实际日期
+ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `actual_date` date COMMENT '实际日期';
+ALTER TABLE `tbl_receive_sheet_detail` ADD COLUMN `actual_date` date COMMENT '实际日期';
+ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `supplier_id` varchar(32) NULL COMMENT '供应商ID';
