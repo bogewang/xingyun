@@ -143,6 +143,23 @@ public class ReceiveSheetController extends DefaultBaseController {
     }
 
     /**
+     * 按天汇总导出明细
+     */
+    @ApiOperation("按天汇总导出明细")
+    @HasPermission({"purchase:receive:export"})
+    @PostMapping("/exportDetail/dailySummary")
+    public void exportDetailDailySummary(@RequestBody @Valid QueryReceiveSheetVo vo) {
+        try {
+            receiveSheetService.exportDetailDailySummary(vo);
+        } catch (DefaultClientException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("按天汇总导出采购收货单明细失败", e);
+            throw new DefaultClientException(e.getMessage());
+        }
+    }
+
+    /**
      * 根据ID查询
      */
     @ApiOperation("根据ID查询")

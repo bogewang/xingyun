@@ -27,7 +27,6 @@ ALTER TABLE `tbl_receive_sheet` ADD COLUMN `order_date` date NULL DEFAULT NULL C
 ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `cost_price` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '成本单价';
 ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `total_profit` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '总利润';
 ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `total_cost` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '成本单价';
-ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `total_profit` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '总利润';
 ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `total_profit` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '总利润';
 
 -- 仓库非必填

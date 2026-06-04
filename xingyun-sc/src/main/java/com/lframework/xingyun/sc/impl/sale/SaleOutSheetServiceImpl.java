@@ -50,6 +50,7 @@ import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
 import com.lframework.xingyun.sc.entity.*;
 import com.lframework.xingyun.sc.enums.*;
 import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetDetailExportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetSalesExportHelper;
 import com.lframework.xingyun.sc.mappers.ReceiveSheetDetailMapper;
@@ -340,6 +341,37 @@ public class SaleOutSheetServiceImpl extends
     }
 
     @Override
+    public void exportDetailDailySummary(QuerySaleOutSheetVo vo) {
+        List<QuerySaleOutSheetDetailDto> details = getBaseMapper().queryDetail(vo);
+        if (CollectionUtils.isEmpty(details)) {
+            MultiSheetsData<SaleOutSheetDetailExportModel> sheetData = new MultiSheetsData<>();
+            sheetData.setSheetName("明细");
+            sheetData.setHeadClazz(SaleOutSheetDetailExportModel.class);
+            sheetData.setData(new ArrayList<>());
+            ExcelUtil.writeWithSheets("销售出库单明细按天汇总", Collections.singletonList(sheetData));
+            return;
+        }
+
+        Map<String, List<QuerySaleOutSheetDetailDto>> detailGroup = details.stream()
+                .collect(Collectors.groupingBy(QuerySaleOutSheetDetailDto::getOrderDate,
+                        LinkedHashMap::new, Collectors.toList()));
+
+        List<MultiSheetsData<SaleOutSheetDetailExportModel>> sheetDatas = new ArrayList<>(detailGroup.size());
+        detailGroup.forEach((orderDate, dayDetails) -> {
+            MultiSheetsData<SaleOutSheetDetailExportModel> sheetData = new MultiSheetsData<>();
+            sheetData.setSheetName(orderDate);
+            sheetData.setHeadClazz(SaleOutSheetDetailExportModel.class);
+            sheetData.setData(buildDailySummaryExportModels(dayDetails));
+            sheetDatas.add(sheetData);
+        });
+        List<MultiSheetsData<SaleOutSheetDetailExportModel>> sortedDatas = sheetDatas.stream()
+                .sorted(Comparator.comparing(MultiSheetsData::getSheetName))
+                .collect(Collectors.toList());
+
+        ExcelUtil.writeWithSheets("销售出库单明细按天汇总", sortedDatas);
+    }
+
+    @Override
     public void exportSales(QuerySaleOutSheetVo vo, HttpServletResponse response) {
         List<SaleOutSheet> sheets = this.query(vo);
         if (CollectionUtils.isEmpty(sheets)) {
@@ -381,6 +413,35 @@ public class SaleOutSheetServiceImpl extends
         return data;
     }
 
+    private List<SaleOutSheetDetailExportModel> buildDailySummaryExportModels(
+            List<QuerySaleOutSheetDetailDto> details) {
+        if (CollectionUtils.isEmpty(details)) {
+            return new ArrayList<>();
+        }
+
+        Map<String, SaleOutSheetDetailExportModel> summaryMap = new LinkedHashMap<>();
+        for (QuerySaleOutSheetDetailDto detail : details) {
+            String productKey = StringUtil.isBlank(detail.getProductId()) ? detail.getProductCode()
+                    : detail.getProductId();
+            SaleOutSheetDetailExportModel current = new SaleOutSheetDetailExportModel(detail);
+            SaleOutSheetDetailExportModel summary = summaryMap.get(productKey);
+            if (summary == null) {
+                summaryMap.put(productKey, current);
+                continue;
+            }
+
+            summary.setOrderNum(NumberUtil.add(defaultValue(summary.getOrderNum()),
+                    defaultValue(current.getOrderNum())));
+            summary.setCostAmount(NumberUtil.add(defaultValue(summary.getCostAmount()),
+                    defaultValue(current.getCostAmount())));
+            summary.setTaxAmount(NumberUtil.add(defaultValue(summary.getTaxAmount()),
+                    defaultValue(current.getTaxAmount())));
+            summary.setProfitRate(buildProfitRate(summary.getTaxAmount(), summary.getCostAmount()));
+        }
+
+        return new ArrayList<>(summaryMap.values());
+    }
+
     private SaleOutSheetSalesExportHelper.DetailData buildSalesExportDetailData(
             GetSaleOutSheetBo.OrderDetailBo detail) {
         SaleOutSheetSalesExportHelper.DetailData data =
@@ -396,6 +457,19 @@ public class SaleOutSheetServiceImpl extends
         }
         data.setRemark(detail.getDescription());
         return data;
+    }
+
+    private BigDecimal defaultValue(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private String buildProfitRate(BigDecimal taxAmount, BigDecimal costAmount) {
+        if (taxAmount == null || BigDecimal.ZERO.compareTo(taxAmount) == 0) {
+            return "0.00%";
+        }
+        BigDecimal totalProfit = defaultValue(taxAmount).subtract(defaultValue(costAmount));
+        return totalProfit.multiply(new BigDecimal("100"))
+                .divide(taxAmount, 2, RoundingMode.HALF_UP) + "%";
     }
 
     /**
@@ -807,6 +881,7 @@ public class SaleOutSheetServiceImpl extends
                     NumberUtil.getNumber(NumberUtil.mul(vo.getTaxPrice(), detail.getOrderNum()), 2));
             saleOutSheetDetailService.updateById(detail);
 
+            productLatestPriceCacheService.updateLatestPrice(detail.getProductId(), vo.getTaxPrice(), null);
             sheetIds.add(detail.getSheetId());
         }
 

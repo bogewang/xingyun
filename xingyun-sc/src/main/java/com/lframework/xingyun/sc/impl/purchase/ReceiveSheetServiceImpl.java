@@ -15,10 +15,7 @@ import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.components.security.SecurityUtil;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
-import com.lframework.starter.web.core.utils.IdUtil;
-import com.lframework.starter.web.core.utils.OpLogUtil;
-import com.lframework.starter.web.core.utils.PageHelperUtil;
-import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.starter.web.core.utils.*;
 import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
@@ -53,6 +50,7 @@ import com.lframework.xingyun.sc.enums.PurchaseOpLogType;
 import com.lframework.xingyun.sc.enums.ReceiveSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.excel.purchase.ReceiveSheetQueryImportModel;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetDetailExportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import com.lframework.xingyun.sc.mappers.ReceiveSheetMapper;
 import com.lframework.xingyun.sc.service.ProductHotnessService;
@@ -70,10 +68,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -638,6 +633,37 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         return getBaseMapper().getApprovedList(supplierId, startTime, endTime, settleStatus);
     }
 
+    @Override
+    public void exportDetailDailySummary(QueryReceiveSheetVo vo) {
+        List<QueryReceiveSheetDetailDto> details = getBaseMapper().queryDetail(vo);
+        if (CollectionUtils.isEmpty(details)) {
+            MultiSheetsData<ReceiveSheetDetailExportModel> sheetData = new MultiSheetsData<>();
+            sheetData.setSheetName("明细");
+            sheetData.setHeadClazz(ReceiveSheetDetailExportModel.class);
+            sheetData.setData(new ArrayList<>());
+            ExcelUtil.writeWithSheets("采购收货单明细按天汇总", Lists.newArrayList(sheetData));
+            return;
+        }
+
+        Map<String, List<QueryReceiveSheetDetailDto>> detailGroup = details.stream()
+                .collect(Collectors.groupingBy(QueryReceiveSheetDetailDto::getOrderDate,
+                        LinkedHashMap::new, Collectors.toList()));
+
+        List<MultiSheetsData<ReceiveSheetDetailExportModel>> sheetDatas = new ArrayList<>(detailGroup.size());
+        detailGroup.forEach((orderDate, dayDetails) -> {
+            MultiSheetsData<ReceiveSheetDetailExportModel> sheetData = new MultiSheetsData<>();
+            sheetData.setSheetName(orderDate);
+            sheetData.setHeadClazz(ReceiveSheetDetailExportModel.class);
+            sheetData.setData(buildDailySummaryExportModels(dayDetails));
+            sheetDatas.add(sheetData);
+        });
+
+        List<MultiSheetsData<ReceiveSheetDetailExportModel>> sortedDatas = sheetDatas.stream()
+                .sorted(Comparator.comparing(MultiSheetsData::getSheetName))
+                .collect(Collectors.toList());
+        ExcelUtil.writeWithSheets("采购收货单明细按天汇总", sortedDatas);
+    }
+
     private void create(ReceiveSheet sheet, CreateReceiveSheetVo vo, boolean receiveRequirePurchase) {
 
         if (!StringUtil.isBlank(vo.getScId())) {
@@ -1018,5 +1044,51 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         return checked.stream().map(item
                 -> BeanUtil.copyProperties(item, ReceiveProductVo.class)).collect(Collectors.toList());
+    }
+
+    private List<ReceiveSheetDetailExportModel> buildDailySummaryExportModels(
+            List<QueryReceiveSheetDetailDto> details) {
+        if (CollectionUtils.isEmpty(details)) {
+            return new ArrayList<>();
+        }
+
+        Map<String, ReceiveSheetDetailExportModel> summaryMap = new LinkedHashMap<>();
+        for (QueryReceiveSheetDetailDto detail : details) {
+            String productKey = StringUtil.isBlank(detail.getProductId()) ? detail.getProductCode()
+                    : detail.getProductId();
+            ReceiveSheetDetailExportModel current = buildDetailExportModel(detail);
+            ReceiveSheetDetailExportModel summary = summaryMap.get(productKey);
+            if (summary == null) {
+                summaryMap.put(productKey, current);
+                continue;
+            }
+
+            summary.setOrderNum(NumberUtil.add(defaultValue(summary.getOrderNum()),
+                    defaultValue(current.getOrderNum())));
+            summary.setTaxAmount(NumberUtil.add(defaultValue(summary.getTaxAmount()),
+                    defaultValue(current.getTaxAmount())));
+        }
+
+        return new ArrayList<>(summaryMap.values());
+    }
+
+    private ReceiveSheetDetailExportModel buildDetailExportModel(QueryReceiveSheetDetailDto detail) {
+        ReceiveSheetDetailExportModel model = new ReceiveSheetDetailExportModel();
+        model.setSupplierName(detail.getSupplierName());
+        model.setProductCode(detail.getProductCode());
+        model.setProductName(detail.getProductName());
+        // model.setShortName();
+        model.setSpec(detail.getSpec());
+        model.setUnit(detail.getUnit());
+        model.setCategoryName(detail.getCategoryName());
+        model.setTaxPrice(detail.getTaxPrice());
+        model.setOrderNum(detail.getOrderNum());
+        model.setTaxAmount(detail.getTaxAmount());
+        model.setDescription(detail.getDescription());
+        return model;
+    }
+
+    private BigDecimal defaultValue(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 }

@@ -161,6 +161,8 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
       LocalDateTime endTime,
       SettleStatus settleStatus);
 
+  void exportDetailDailySummary(QueryReceiveSheetVo vo);
+
   List<ReceiveProductVo> checkImport(List<ReceiveSheetImportModel> list);
   /**
    * 从采购查询页面导入并创建订单

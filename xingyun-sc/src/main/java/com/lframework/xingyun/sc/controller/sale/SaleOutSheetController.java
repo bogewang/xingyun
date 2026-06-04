@@ -343,6 +343,23 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
+     * 按天汇总导出明细
+     */
+    @ApiOperation("按天汇总导出明细")
+    @HasPermission({ "sale:out:export" })
+    @PostMapping("/exportDetail/dailySummary")
+    public void exportDetailDailySummary(@RequestBody @Valid QuerySaleOutSheetVo vo) {
+        try {
+            saleOutSheetService.exportDetailDailySummary(vo);
+        } catch (DefaultClientException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("按天汇总导出销售出库明细失败", e);
+            throw new DefaultClientException(e.getMessage());
+        }
+    }
+
+    /**
      * 销售利润（按单据）导出
      */
     @ApiOperation("销售利润（按单据）导出")
