@@ -118,46 +118,6 @@
                       <a-select-option :value="false">未结清</a-select-option>
                     </a-select>
                   </j-form-item>
-
-                  <j-form-item label="已结算金额">
-                    <a-space>
-                      <a-input-number
-                        v-model:value="searchFormData.paidAmountStart"
-                        :min="0"
-                        :precision="2"
-                        placeholder="最小值"
-                        style="width: 120px"
-                      />
-                      <span>至</span>
-                      <a-input-number
-                        v-model:value="searchFormData.paidAmountEnd"
-                        :min="0"
-                        :precision="2"
-                        placeholder="最大值"
-                        style="width: 120px"
-                      />
-                    </a-space>
-                  </j-form-item>
-
-                  <j-form-item label="未结算金额">
-                    <a-space>
-                      <a-input-number
-                        v-model:value="searchFormData.unpaidAmountStart"
-                        :min="0"
-                        :precision="2"
-                        placeholder="最小值"
-                        style="width: 120px"
-                      />
-                      <span>至</span>
-                      <a-input-number
-                        v-model:value="searchFormData.unpaidAmountEnd"
-                        :min="0"
-                        :precision="2"
-                        placeholder="最大值"
-                        style="width: 120px"
-                      />
-                    </a-space>
-                  </j-form-item>
                 </template>
               </j-form>
             </j-border>
@@ -386,10 +346,6 @@
           purchaseOrderCode: '',
           settleStatus: undefined,
           fullyPaid: undefined,
-          paidAmountStart: undefined,
-          paidAmountEnd: undefined,
-          unpaidAmountStart: undefined,
-          unpaidAmountEnd: undefined,
         },
         orderDateRange: this.getDefaultOrderDateRange(),
         approveDateRange: [],
@@ -426,8 +382,6 @@
           { field: 'orderDate', title: '订单日期', width: 120 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
-          { field: 'paidAmount', title: '已结算金额', align: 'right', width: 100 },
-          { field: 'unpaidAmount', title: '未结算金额', align: 'right', width: 100 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
           // {
@@ -482,8 +436,6 @@
       footerMethod({ columns, data }) {
         const totalAmount = this.sumByField(data, 'totalAmount');
         const totalNum = this.sumByField(data, 'totalNum');
-        const paidAmount = this.sumByField(data, 'paidAmount');
-        const unpaidAmount = this.sumByField(data, 'unpaidAmount');
 
         return [
           columns.map((column) => {
@@ -497,17 +449,6 @@
 
             if (column.field === 'totalNum') {
               return this.formatQuantity(totalNum);
-            }
-
-            if (column.field === 'totalNum') {
-              return this.formatAmount(paidAmount);
-            }
-
-            if (column.field === 'unpaidAmount') {
-              return this.formatAmount(unpaidAmount);
-            }
-            if (column.field === 'paidAmount') {
-              return this.formatAmount(paidAmount);
             }
 
             return '';
@@ -552,10 +493,6 @@
           purchaseOrderCode: '',
           settleStatus: undefined,
           fullyPaid: undefined,
-          paidAmountStart: undefined,
-          paidAmountEnd: undefined,
-          unpaidAmountStart: undefined,
-          unpaidAmountEnd: undefined,
         };
         this.orderDateRange = this.getDefaultOrderDateRange();
         this.approveDateRange = [];

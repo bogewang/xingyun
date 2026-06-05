@@ -188,16 +188,6 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
         fillCheckInfo(result, receiveSheet, checkDetailMap, checkSheetMap);
         fillSettleInfo(result, settleDetailMap.get(receiveSheet.getId()), settleSheetMap);
 
-        BigDecimal settleAmount = result.getSettleAmount() == null ? BigDecimal.ZERO : result.getSettleAmount();
-        BigDecimal totalAmount = result.getTotalAmount() == null ? BigDecimal.ZERO : result.getTotalAmount();
-        BigDecimal checkAmount = NumberUtil.sub(totalAmount, settleAmount);
-        if (NumberUtil.lt(checkAmount, BigDecimal.ZERO)) {
-            checkAmount = BigDecimal.ZERO;
-        }
-        result.setCheckAmount(checkAmount);
-        result.setPaidAmount(settleAmount);
-        result.setUnpaidAmount(checkAmount);
-
         return result;
     }
 
