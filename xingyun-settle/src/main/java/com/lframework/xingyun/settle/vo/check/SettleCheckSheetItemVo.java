@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @Data
 public class SettleCheckSheetItemVo implements BaseVo, Serializable {
@@ -29,12 +30,17 @@ public class SettleCheckSheetItemVo implements BaseVo, Serializable {
   /**
    * 应付金额
    */
-  // @ApiModelProperty("应付金额")
-  // private BigDecimal payAmount;
+  @ApiModelProperty("货流金额")
+  private BigDecimal bizAmount;
 
   /**
    * 备注
    */
   @ApiModelProperty("备注")
   private String description;
+
+  /**
+   * 对账金额
+   */
+  private BigDecimal checkAmt;
 }

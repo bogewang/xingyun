@@ -14,7 +14,7 @@ export interface CreateSettleCheckSheetVo {
   /**
    * 对账金额
    */
-  totalPayAmount?: number;
+  checkAmt?: number;
 
   /**
    * 起始日期

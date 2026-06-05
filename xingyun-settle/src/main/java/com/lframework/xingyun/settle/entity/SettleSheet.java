@@ -120,4 +120,14 @@ public class SettleSheet extends BaseEntity implements BaseDto {
      * 拒绝原因
      */
     private String refuseReason;
+
+    /**
+     * 业务单ID（逗号分隔）
+     */
+    private String bizSheetIds;
+
+    /**
+     * 收货单汇总总金额
+     */
+    private BigDecimal checkTotalAmount;
 }

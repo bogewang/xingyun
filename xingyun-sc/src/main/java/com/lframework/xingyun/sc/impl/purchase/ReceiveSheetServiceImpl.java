@@ -110,9 +110,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     private ProductStockService productStockService;
 
     @Autowired
-    private ProductBundleService productBundleService;
-
-    @Autowired
     private ReceiveSheetDetailBundleService receiveSheetDetailBundleService;
     @Autowired
     private SaleOutSheetService saleOutSheetService;
@@ -253,7 +250,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         sheet.setStatus(ReceiveSheetStatus.CREATED);
 
         getBaseMapper().insert(sheet);
-        this.adjustSupplierAmount(sheet.getSupplierId());
         saleOutSheetService.refreshCostPrice(vo.getOrderDate());
         productHotnessService.increment(
                 vo.getProducts().stream().map(ReceiveProductVo::getProductId).collect(Collectors.toList()));
@@ -311,10 +307,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new DefaultClientException("采购收货单信息已过期，请刷新重试！");
         }
 
-        this.adjustSupplierAmount(oldSupplierId);
-        if (!StringUtil.equals(oldSupplierId, sheet.getSupplierId())) {
-            this.adjustSupplierAmount(sheet.getSupplierId());
-        }
         saleOutSheetService.refreshCostPrice(vo.getOrderDate());
         productHotnessService.increment(
                 vo.getProducts().stream().map(ReceiveProductVo::getProductId).collect(Collectors.toList()));
@@ -589,8 +581,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new DefaultClientException("采购收货单信息已过期，请刷新重试！");
         }
 
-        this.adjustSupplierAmount(sheet.getSupplierId());
-
         OpLogUtil.setVariable("code", sheet.getCode());
     }
 
@@ -606,11 +596,10 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public int setUnSettle(String id, String settleCheckSheetDetailId) {
+    public int setUnSettle(String id) {
 
         Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
                 .set(ReceiveSheet::getSettleStatus, SettleStatus.UN_SETTLE)
-                .set(ReceiveSheet::getSettleCheckSheetDetailId, settleCheckSheetDetailId)
                 .eq(ReceiveSheet::getId, id);
         int count = getBaseMapper().update(updateWrapper);
 
@@ -634,73 +623,53 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     public int setSettled(String id) {
 
         Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
-                .set(ReceiveSheet::getSettleStatus, SettleStatus.SETTLED).eq(ReceiveSheet::getId, id)
+                .set(ReceiveSheet::getSettleStatus, SettleStatus.SETTLED)
+                .eq(ReceiveSheet::getId, id)
                 .in(ReceiveSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
         int count = getBaseMapper().update(updateWrapper);
 
         return count;
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public void clearSettleSheetDetailId(String id) {
+    // @Transactional(rollbackFor = Exception.class)
+    // @Override
+    // public void clearSettleSheetDetailId(String id) {
+    //
+    //     Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
+    //             .set(ReceiveSheet::getSettleCheckSheetDetailId, null)
+    //             .eq(ReceiveSheet::getId, id);
+    //     getBaseMapper().update(updateWrapper);
+    // }
 
-        Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
-                .set(ReceiveSheet::getSettleCheckSheetDetailId, null)
-                .eq(ReceiveSheet::getId, id);
-        getBaseMapper().update(updateWrapper);
-    }
+    // @Transactional(rollbackFor = Exception.class)
+    // @Override
+    // public void settle(String id, BigDecimal payAmount, BigDecimal checkAmt) {
+    //
+    //     ReceiveSheet sheet = getById(id);
+    //     if (sheet == null) {
+    //         throw new DefaultClientException("采购入库单不存在！");
+    //     }
 
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    // todo 采购入库单结算
-    public void settle(String id, BigDecimal payAmount, BigDecimal discountAmount) {
+        // todo 校验对账金额是否大于等于本次结算金额
+        // if (NumberUtil.lt(checkAmt, payAmount)) {
+        //     throw new DefaultClientException(
+        //             "采购入库单：" + sheet.getCode() + "，对账金额为" + checkAmt + "元，本次结算金额为"
+        //                     + payAmount + "元，不允许超额结算！");
+        // }
 
-        ReceiveSheet sheet = getById(id);
-        if (sheet == null) {
-            throw new DefaultClientException("采购入库单不存在！");
-        }
+        // BigDecimal settledPaidAmount = NumberUtil.add(currentPaidAmount, settleAmount);
+        // SettleStatus settleStatus =
+        //         NumberUtil.equal(settledPaidAmount, totalAmount) ? SettleStatus.SETTLED : SettleStatus.PART_SETTLE;
 
-        BigDecimal totalAmount =
-                sheet.getTotalAmount() == null ? BigDecimal.ZERO : sheet.getTotalAmount();
-        BigDecimal currentPaidAmount = sheet.getPaidAmount() == null ? BigDecimal.ZERO : sheet.getPaidAmount();
-        BigDecimal actualPayAmount = payAmount == null ? BigDecimal.ZERO : payAmount;
-        BigDecimal actualDiscountAmount = discountAmount == null ? BigDecimal.ZERO : discountAmount;
-        BigDecimal settleAmount = NumberUtil.add(actualPayAmount, actualDiscountAmount);
-
-        if (NumberUtil.lt(actualPayAmount, BigDecimal.ZERO)) {
-            throw new DefaultClientException("采购入库单结算时，实付金额不允许小于0！");
-        }
-        if (NumberUtil.lt(actualDiscountAmount, BigDecimal.ZERO)) {
-            throw new DefaultClientException("采购入库单结算时，优惠金额不允许小于0！");
-        }
-        if (NumberUtil.equal(settleAmount, BigDecimal.ZERO)) {
-            throw new DefaultClientException("采购入库单结算时，实付金额和优惠金额不能同时为0！");
-        }
-
-        BigDecimal remainAmount = NumberUtil.sub(totalAmount, currentPaidAmount);
-        if (NumberUtil.lt(remainAmount, settleAmount)) {
-            throw new DefaultClientException(
-                    "采购入库单：" + sheet.getCode() + "，剩余付款金额为" + remainAmount + "元，本次结算金额为"
-                            + settleAmount + "元，不允许超额结算！");
-        }
-
-        BigDecimal settledPaidAmount = NumberUtil.add(currentPaidAmount, settleAmount);
-        SettleStatus settleStatus =
-                NumberUtil.equal(settledPaidAmount, totalAmount) ? SettleStatus.SETTLED : SettleStatus.PART_SETTLE;
-
-        Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
-                .set(ReceiveSheet::getPaidAmount, settledPaidAmount)
-                .set(ReceiveSheet::getSettleStatus, settleStatus)
-                .eq(ReceiveSheet::getId, id)
-                .eq(ReceiveSheet::getStatus, ReceiveSheetStatus.APPROVE_PASS)
-                .in(ReceiveSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
-        if (getBaseMapper().update(updateWrapper) != 1) {
-            throw new DefaultClientException("采购入库单信息已过期，请刷新重试！");
-        }
-
-        this.adjustSupplierAmount(sheet.getSupplierId());
-    }
+    //     Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
+    //             .set(ReceiveSheet::getSettleStatus, SettleStatus.SETTLED)
+    //             .eq(ReceiveSheet::getId, id)
+    //             // .eq(ReceiveSheet::getStatus, ReceiveSheetStatus.APPROVE_PASS)
+    //             .in(ReceiveSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
+    //     if (getBaseMapper().update(updateWrapper) != 1) {
+    //         throw new DefaultClientException("采购入库单信息已过期，请刷新重试！");
+    //     }
+    // }
 
     @Override
     public List<ReceiveSheet> getApprovedList(String supplierId, LocalDateTime startTime,

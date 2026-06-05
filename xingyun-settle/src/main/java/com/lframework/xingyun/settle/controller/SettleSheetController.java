@@ -187,12 +187,16 @@ public class SettleSheetController extends DefaultBaseController {
     @HasPermission({"settle:sheet:approve"})
     @PostMapping("/approve/pass/direct")
     public InvokeResult<Void> directApprovePass(@RequestBody @Valid CreateSettleSheetVo vo) {
+        try {
+            vo.validate();
 
-        vo.validate();
+            settleSheetService.directApprovePass(vo);
 
-        settleSheetService.directApprovePass(vo);
-
-        return InvokeResultBuilder.success();
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
     }
 
     /**

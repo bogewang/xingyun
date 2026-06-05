@@ -1,10 +1,12 @@
 package com.lframework.xingyun.settle.vo.check;
 
 import com.lframework.starter.common.exceptions.impl.InputErrorException;
+import com.lframework.starter.common.utils.Assert;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.vo.BaseVo;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.apache.commons.collections4.CollectionUtils;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -37,7 +39,7 @@ public class CreateSettleCheckSheetVo implements BaseVo, Serializable {
    */
   @ApiModelProperty(value = "对账金额", required = true)
   @NotNull(message = "对账金额不能为空！")
-  private BigDecimal totalPayAmount;
+  private BigDecimal checkAmt;
 
   /**
    * 起始日期
@@ -60,6 +62,9 @@ public class CreateSettleCheckSheetVo implements BaseVo, Serializable {
   private String description;
 
   public void validate() {
+
+    Assert.notNull(checkAmt, "对账金额不能为空！");
+    Assert.isTrue(CollectionUtils.isNotEmpty(items), "请选择单据！");
 
     int orderNo = 1;
     for (SettleCheckSheetItemVo item : this.items) {

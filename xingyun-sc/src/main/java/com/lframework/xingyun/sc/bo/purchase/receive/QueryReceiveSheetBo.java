@@ -63,6 +63,12 @@ public class QueryReceiveSheetBo extends BaseBo<ReceiveSheet> {
     private String supplierName;
 
     /**
+     * 供应商名称
+     */
+    @ApiModelProperty("供应商ID")
+    private String supplierId;
+
+    /**
      * 采购员姓名
      */
     @ApiModelProperty("采购员姓名")
@@ -207,6 +213,7 @@ public class QueryReceiveSheetBo extends BaseBo<ReceiveSheet> {
 
         SupplierService supplierService = ApplicationUtil.getBean(SupplierService.class);
         Supplier supplier = supplierService.findById(dto.getSupplierId());
+        this.supplierId = supplier.getId();
         this.supplierCode = supplier.getCode();
         this.supplierName = supplier.getName();
 

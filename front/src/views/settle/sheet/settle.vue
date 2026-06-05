@@ -161,13 +161,13 @@
       @ok="submitSettle"
     >
       <a-form layout="vertical">
-        <a-form-item label="对账金额">
+        <a-form-item label="结算金额">
           <a-input-number
             v-model:value="settleDialog.amount"
             :min="0"
             :precision="2"
             style="width: 100%"
-            placeholder="请输入对账金额"
+            placeholder="请输入结算金额"
           />
           <div class="amount-tip">选中单据未结算总额：{{ formatAmount(selectedTotalCheckAmount) }}</div>
         </a-form-item>
@@ -556,12 +556,13 @@
             id: item.id,
             bizType: SETTLE_CHECK_SHEET_BIZ_TYPE.RECEIVE_SHEET.code,
             description: item.description || '',
+            bizAmount: item.totalAmount || 0,
           });
         });
 
         return items;
       },
-      submitCheck() {
+      async submitCheck() {
         const amount = Number(this.checkDialog.amount || 0);
         const items = this.buildCheckItems(this.selectedRows);
         if (isEmpty(items)) {
@@ -570,23 +571,25 @@
         }
 
         this.checkDialog.loading = true;
-        settleCheckApi
-          .directApprovePass({
-            supplierId: this.searchFormData.supplierId,
+        const supplierId = this.selectedRows[0].supplierId;
+        try {
+          await settleCheckApi.directApprovePass({
+            supplierId,
             startDate: dateTimeToDate(`${this.orderDateRange[0]} 00:00:00`),
             endDate: dateTimeToDate(`${this.orderDateRange[1]} 23:59:59`),
-            totalPayAmount: amount,
+            checkAmt: amount,
             description: this.checkDialog.description || '',
             items,
-          })
-          .then(() => {
-            createSuccess('确认对账成功！');
-            this.checkDialog.visible = false;
-            this.loadList();
-          })
-          .finally(() => {
-            this.checkDialog.loading = false;
           });
+          createSuccess('确认对账成功！');
+          this.checkDialog.visible = false;
+          this.loadList();
+        } catch (err) {
+          createError(err?.message || '确认对账失败，请稍后重试！');
+          throw err;
+        } finally {
+          this.checkDialog.loading = false;
+        }
       },
       openSettleDialog() {
         if (!this.validateCheckedRows()) {
@@ -602,45 +605,25 @@
         this.settleDialog.description = '';
         this.settleDialog.visible = true;
       },
-      buildSettleItems(records, amount) {
+      buildSettleItems(records) {
         const orderedRecords = this.tableData.filter((item) =>
           records.some((row) => row.id === item.id),
         );
         const items = [];
-        let remainAmount = Number(amount);
 
         orderedRecords.forEach((item) => {
-          if (remainAmount <= 0) {
-            return;
-          }
-
-          const checkAmount = Number(item.checkAmount || 0);
-          if (checkAmount <= 0) {
-            return;
-          }
-
-          const payAmount = Math.min(checkAmount, remainAmount);
-          if (payAmount > 0) {
-            items.push({
-              id: item.id,
-              payAmount: Number(payAmount.toFixed(2)),
-              discountAmount: 0,
-              description: item.description || '',
-            });
-            remainAmount = Number((remainAmount - payAmount).toFixed(2));
-          }
+          items.push({
+            id: item.id,
+            bizType: SETTLE_CHECK_SHEET_BIZ_TYPE.RECEIVE_SHEET.code,
+            checkAmt: item.checkAmount || 0,
+          });
         });
 
         return items;
       },
-      submitSettle() {
+      async submitSettle() {
         const amount = Number(this.settleDialog.amount || 0);
-        if (amount > Number(this.selectedTotalCheckAmount.toFixed(2))) {
-          createError('对账金额不能大于选中单据未结算总额！');
-          return;
-        }
-
-        const items = this.buildSettleItems(this.selectedRows, amount);
+        const items = this.buildSettleItems(this.selectedRows);
         if (isEmpty(items)) {
           createError('未生成有效的结算明细，请检查选择的单据！');
           return;
@@ -648,22 +631,24 @@
 
         const supplierId = this.selectedRows[0].supplierId;
         this.settleDialog.loading = true;
-        settleApi
-          .directApprovePass({
+        try {
+          await settleApi.directApprovePass({
             supplierId,
             startDate: dateTimeToDate(`${this.orderDateRange[0]} 00:00:00`),
             endDate: dateTimeToDate(`${this.orderDateRange[1]} 23:59:59`),
             description: this.settleDialog.description || '',
             items,
-          })
-          .then(() => {
-            createSuccess('结算完成！');
-            this.settleDialog.visible = false;
-            this.loadList();
-          })
-          .finally(() => {
-            this.settleDialog.loading = false;
+            settleAmount: amount,
           });
+          createSuccess('结算完成！');
+          this.settleDialog.visible = false;
+          this.loadList();
+        } catch (err) {
+          createError(err?.message || '确认结算失败，请稍后重试！');
+          throw err;
+        } finally {
+          this.settleDialog.loading = false;
+        }
       },
       onRefreshPage() {
         this.loadList();

@@ -11,13 +11,9 @@ import com.lframework.starter.common.utils.*;
 import com.lframework.starter.web.core.annotations.oplog.OpLog;
 import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
 import com.lframework.starter.web.core.components.resp.PageResult;
-import com.lframework.starter.web.core.components.security.AbstractUserDetails;
 import com.lframework.starter.web.core.components.security.SecurityUtil;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
-import com.lframework.starter.web.core.utils.IdUtil;
-import com.lframework.starter.web.core.utils.OpLogUtil;
-import com.lframework.starter.web.core.utils.PageHelperUtil;
-import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.starter.web.core.utils.*;
 import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
@@ -42,6 +38,7 @@ import com.lframework.xingyun.settle.service.SettleCheckSheetService;
 import com.lframework.xingyun.settle.service.SettleSheetDetailService;
 import com.lframework.xingyun.settle.service.SettleSheetService;
 import com.lframework.xingyun.settle.vo.sheet.*;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,7 +66,7 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
     private ReceiveSheetService receiveSheetService;
 
     @Autowired
-    private SettleCheckSheetService SettleCheckSheetService;
+    private SettleCheckSheetService settleCheckSheetService;
 
 
     @Override
@@ -120,7 +117,7 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
 
         List<String> sheetIds = details.stream().map(SettleCheckSheetDetail::getSheetId).collect(Collectors.toList());
 
-        List<SettleCheckSheet> checkSheets = SettleCheckSheetService.selectBatchIds(sheetIds);
+        List<SettleCheckSheet> checkSheets = settleCheckSheetService.selectBatchIds(sheetIds);
 
         return checkSheets.stream()
                 .collect(Collectors.toMap(SettleCheckSheet::getId, Function.identity(), (a, b) -> a));
@@ -379,10 +376,11 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
         }
 
         Wrapper<SettleSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(SettleSheetDetail.class)
-                .eq(SettleSheetDetail::getSheetId, sheet.getId()).orderByAsc(SettleSheetDetail::getOrderNo);
+                .eq(SettleSheetDetail::getSheetId, sheet.getId())
+                .orderByAsc(SettleSheetDetail::getOrderNo);
         List<SettleSheetDetail> details = settleSheetDetailService.list(queryDetailWrapper);
         for (SettleSheetDetail detail : details) {
-            receiveSheetService.settle(detail.getBizId(), detail.getPayAmount(), detail.getDiscountAmount());
+            this.setBizItemSettled(detail.getBizId());
         }
 
         OpLogUtil.setVariable("code", sheet.getCode());
@@ -532,124 +530,116 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void setBizItemUnSettle(String id) {
-
-        ReceiveSheet item = receiveSheetService.getById(id);
-        // todo
-        // int count = receiveSheetService.setUnSettle(id, settleCheckSheetDetailId);
-        // if (count != 1) {
-        //   throw new DefaultClientException("单号：" + item.getCode() + "已结算，业务无法进行！");
-        // }
+    public void setBizItemUnSettle(String bizId) {
+        List<SettleCheckSheetDetail> list = settleCheckSheetDetailService.listByBizIds(Lists.newArrayList(bizId));
+        if (CollectionUtils.isEmpty(list)) {
+            throw new InputErrorException("单据不存在！");
+        }
+        settleCheckSheetService.setBizItemUnSettle(bizId, list.get(0).getBizType());
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void setBizItemPartSettle(String id) {
-
-        ReceiveSheet item = receiveSheetService.getById(id);
-        int count = receiveSheetService.setPartSettle(id);
-        if (count != 1) {
-            throw new DefaultClientException("单号：" + item.getCode() + "已结算，业务无法进行！");
+    public void setBizItemPartSettle(String bizId) {
+        List<SettleCheckSheetDetail> list = settleCheckSheetDetailService.listByBizIds(Lists.newArrayList(bizId));
+        if (CollectionUtils.isEmpty(list)) {
+            throw new InputErrorException("单据不存在！");
         }
+        settleCheckSheetService.setBizItemPartSettle(bizId, list.get(0).getBizType());
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void setBizItemSettled(String id) {
-
-        ReceiveSheet item = receiveSheetService.getById(id);
-        int count = receiveSheetService.setSettled(id);
-        if (count != 1) {
-            throw new DefaultClientException("单号：" + item.getCode() + "已结算，无法重复结算！");
+    public void setBizItemSettled(String bizId) {
+        List<SettleCheckSheetDetail> list = settleCheckSheetDetailService.listByBizIds(Lists.newArrayList(bizId));
+        if (CollectionUtils.isEmpty(list)) {
+            throw new InputErrorException("单据不存在！");
         }
+        settleCheckSheetService.setBizItemSettled(bizId, list.get(0).getBizType());
     }
 
     private void create(SettleSheet sheet, CreateSettleSheetVo vo) {
+        // 收货单ID列表
+        List<String> receiveSheetIds = vo.getItems().stream().map(SettleSheetItemVo::getId).collect(Collectors.toList());
 
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        BigDecimal totalDiscountAmount = BigDecimal.ZERO;
+        // 分配结算金额
+        this.allocateSettleAmount(vo);
+        BigDecimal totalCheckAmt = vo.getItems().stream()
+                .map(item -> item.getCheckAmt() == null ? BigDecimal.ZERO : item.getCheckAmt())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         int orderNo = 1;
         for (SettleSheetItemVo itemVo : vo.getItems()) {
-            SettleBizItemDto item = this.getBizItem(itemVo.getId());
-            if (item == null) {
-                throw new DefaultClientException("第" + orderNo + "行业务单据不存在！");
-            }
-
-            if (NumberUtil.lt(item.getTotalPayAmount(), 0)) {
-                if (NumberUtil.gt(itemVo.getPayAmount(), 0)) {
-                    throw new DefaultClientException("第" + orderNo + "行实付金额不允许大于0！");
-                }
-
-                if (NumberUtil.gt(itemVo.getDiscountAmount(), 0)) {
-                    throw new DefaultClientException("第" + orderNo + "行优惠金额不允许大于0！");
-                }
-
-                if (NumberUtil.equal(itemVo.getPayAmount(), 0) && NumberUtil.equal(
-                        itemVo.getDiscountAmount(), 0)) {
-                    throw new DefaultClientException("第" + orderNo + "行实付金额、优惠金额不能同时等于0！");
-                }
-
-                if (NumberUtil.gt(item.getTotalUnPayAmount(),
-                        NumberUtil.add(itemVo.getPayAmount(), itemVo.getDiscountAmount()))) {
-                    throw new DefaultClientException(
-                            "第" + orderNo + "行实付金额与优惠金额相加不允许小于未付款金额！");
-                }
-            } else if (NumberUtil.gt(item.getTotalPayAmount(), 0)) {
-                if (NumberUtil.lt(itemVo.getPayAmount(), 0)) {
-                    throw new DefaultClientException("第" + orderNo + "行实付金额不允许小于0！");
-                }
-
-                if (NumberUtil.lt(itemVo.getDiscountAmount(), 0)) {
-                    throw new DefaultClientException("第" + orderNo + "行优惠金额不允许小于0！");
-                }
-
-                if (NumberUtil.equal(itemVo.getPayAmount(), 0) && NumberUtil.equal(
-                        itemVo.getDiscountAmount(), 0)) {
-                    throw new DefaultClientException("第" + orderNo + "行实付金额、优惠金额不能同时等于0！");
-                }
-                if (NumberUtil.lt(item.getTotalUnPayAmount(),
-                        NumberUtil.add(itemVo.getPayAmount(), itemVo.getDiscountAmount()))) {
-                    throw new DefaultClientException(
-                            "第" + orderNo + "行实付金额与优惠金额相加不允许大于未付款金额！");
-                }
-            } else {
-                // 单据应付款等于0
-                if (!NumberUtil.equal(itemVo.getPayAmount(), 0) || !NumberUtil.equal(
-                        itemVo.getDiscountAmount(), 0)) {
-                    throw new DefaultClientException("第" + orderNo + "行实付金额、优惠金额必须同时等于0！");
-                }
-            }
-
-            SettleSheetDetail detail = new SettleSheetDetail();
-            detail.setId(IdUtil.getId());
-            detail.setSheetId(sheet.getId());
-            detail.setBizId(itemVo.getId());
-            detail.setPayAmount(itemVo.getPayAmount());
-            detail.setDiscountAmount(itemVo.getDiscountAmount());
-            detail.setDescription(itemVo.getDescription());
-            detail.setOrderNo(orderNo);
-
+            SettleSheetDetail detail = this.buildDetail(sheet, itemVo, orderNo);
             settleSheetDetailService.save(detail);
-
-            totalAmount = NumberUtil.add(totalAmount, itemVo.getPayAmount());
-            totalDiscountAmount = NumberUtil.add(totalDiscountAmount, itemVo.getDiscountAmount());
-
-            // 将所有的单据的结算状态更新
-            this.setBizItemPartSettle(detail.getBizId());
 
             orderNo++;
         }
 
-        AbstractUserDetails currentUser = SecurityUtil.getCurrentUser();
+        this.buildSettleSheet(sheet, vo, receiveSheetIds, totalCheckAmt);
+    }
 
+    /**
+     * 对账金额分配
+     * @param vo
+     * @return
+     */
+    private void allocateSettleAmount(CreateSettleSheetVo vo) {
+        if (vo.getSettleAmount() == null || CollectionUtil.isEmpty(vo.getItems())) {
+            return;
+        }
+
+        // 对账单汇总金额
+        BigDecimal checkAmount = vo.getItems().stream()
+                .map(item -> item.getCheckAmt() == null ? BigDecimal.ZERO : item.getCheckAmt())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 对账金额差额合计
+        BigDecimal totalDiffAmount = NumberUtil.sub(vo.getSettleAmount(), checkAmount);
+        // 将对账金额差额平均分摊给每个业务单据
+        BigDecimal avgDiffAmount = NumberUtil.div(totalDiffAmount, BigDecimal.valueOf(vo.getItems().size()));
+
+        vo.getItems().forEach(item -> {
+            BigDecimal settleAmt = NumberUtil.add(item.getCheckAmt(), avgDiffAmount);
+            if (NumberUtil.lt(settleAmt, BigDecimal.ZERO)) {
+                throw new DefaultClientException("结算金额过小，分摊后会出现负数单据，请调整结算金额！");
+            }
+            item.setSettleAmount(settleAmt);
+        });
+    }
+
+    /**
+     * 构建结算单
+     * @param sheet
+     * @param vo
+     * @param receiveSheetIds
+     * @param checkTotalAmount
+     */
+    private void buildSettleSheet(SettleSheet sheet, CreateSettleSheetVo vo, List<String> receiveSheetIds, BigDecimal checkTotalAmount) {
         sheet.setSupplierId(vo.getSupplierId());
-        sheet.setTotalAmount(totalAmount);
-        sheet.setTotalDiscountAmount(totalDiscountAmount);
-        sheet.setDescription(
-                StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
+        sheet.setTotalAmount(vo.getSettleAmount());
+        sheet.setCheckTotalAmount(checkTotalAmount);
+        sheet.setTotalDiscountAmount(BigDecimal.ZERO);
+        sheet.setBizSheetIds(String.join(StringPool.STR_SPLIT, receiveSheetIds));
+        sheet.setDescription(vo.getDescription());
         sheet.setRefuseReason(StringPool.EMPTY_STR);
         sheet.setStartDate(vo.getStartDate());
         sheet.setEndDate(vo.getEndDate());
+    }
+
+    /**
+     * 构建结算单详情
+     * @param sheet
+     * @param orderNo
+     * @return
+     */
+    private SettleSheetDetail buildDetail(SettleSheet sheet, SettleSheetItemVo itemVo, int orderNo) {
+        SettleSheetDetail res = new SettleSheetDetail();
+        res.setSheetId(sheet.getId());
+        res.setBizId(itemVo.getId());
+        res.setPayAmount(itemVo.getSettleAmount());
+        res.setDiscountAmount(BigDecimal.ZERO);
+        res.setOrderNo(orderNo);
+        return res;
     }
 }

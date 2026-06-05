@@ -157,8 +157,4 @@ public class ReceiveSheet extends BaseEntity implements BaseDto {
    */
   private SettleStatus settleStatus;
 
-  /**
-   * 对账明细单ID
-   */
-  private String settleCheckSheetDetailId;
 }

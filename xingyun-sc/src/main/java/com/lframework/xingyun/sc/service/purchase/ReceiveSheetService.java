@@ -145,10 +145,9 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
    * 待结算
    *
    * @param id
-   * @param settleCheckSheetDetailId
    * @return
    */
-  int setUnSettle(String id, String settleCheckSheetDetailId);
+  int setUnSettle(String id);
 
   /**
    * 设置成结算中
@@ -171,16 +170,16 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
    *
    * @param id 单据ID
    */
-  void clearSettleSheetDetailId(String id);
+  // void clearSettleSheetDetailId(String id);
 
   /**
    * 执行结算
    *
    * @param id 单据ID
    * @param payAmount 实付金额
-   * @param discountAmount 优惠金额
+   * @param checkAmt 对账金额
    */
-  void settle(String id, BigDecimal payAmount, BigDecimal discountAmount);
+  // void settle(String id, BigDecimal payAmount, BigDecimal checkAmt);
 
   /**
    * 查询已审核列表

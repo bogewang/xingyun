@@ -3,7 +3,6 @@ package com.lframework.xingyun.settle.impl;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.pagehelper.PageInfo;
-import com.google.common.collect.Lists;
 import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.exceptions.impl.DefaultSysException;
@@ -27,22 +26,15 @@ import com.lframework.xingyun.sc.entity.PurchaseReturn;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.service.purchase.PurchaseReturnService;
+import com.lframework.xingyun.sc.service.purchase.ReceiveSheetDetailService;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
 import com.lframework.xingyun.settle.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.settle.dto.check.SettleCheckBizItemDto;
 import com.lframework.xingyun.settle.dto.check.SettleCheckSheetFullDto;
-import com.lframework.xingyun.settle.entity.SettleCheckSheet;
-import com.lframework.xingyun.settle.entity.SettleCheckSheetDetail;
-import com.lframework.xingyun.settle.entity.SettleFeeSheet;
-import com.lframework.xingyun.settle.entity.SettlePreSheet;
-import com.lframework.xingyun.settle.entity.SettleSheetDetail;
+import com.lframework.xingyun.settle.entity.*;
 import com.lframework.xingyun.settle.enums.*;
 import com.lframework.xingyun.settle.mappers.SettleCheckSheetMapper;
-import com.lframework.xingyun.settle.service.SettleCheckSheetDetailService;
-import com.lframework.xingyun.settle.service.SettleCheckSheetService;
-import com.lframework.xingyun.settle.service.SettleFeeSheetService;
-import com.lframework.xingyun.settle.service.SettlePreSheetService;
-import com.lframework.xingyun.settle.service.SettleSheetDetailService;
+import com.lframework.xingyun.settle.service.*;
 import com.lframework.xingyun.settle.vo.check.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +45,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SettleCheckSheetServiceImpl extends
@@ -82,7 +75,7 @@ public class SettleCheckSheetServiceImpl extends
 
     @Override
     public PageResult<SettleCheckSheet> query(Integer pageIndex, Integer pageSize,
-            QuerySettleCheckSheetVo vo) {
+                                              QuerySettleCheckSheetVo vo) {
 
         Assert.greaterThanZero(pageIndex);
         Assert.greaterThanZero(pageSize);
@@ -162,7 +155,7 @@ public class SettleCheckSheetServiceImpl extends
 
         // 将所有的单据的结算状态更新
         Wrapper<SettleCheckSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
-                SettleCheckSheetDetail.class)
+                        SettleCheckSheetDetail.class)
                 .eq(SettleCheckSheetDetail::getSheetId, sheet.getId())
                 .orderByAsc(SettleCheckSheetDetail::getOrderNo);
         List<SettleCheckSheetDetail> sheetDetails = settleCheckSheetDetailService.list(
@@ -173,7 +166,7 @@ public class SettleCheckSheetServiceImpl extends
 
         // 删除明细
         Wrapper<SettleCheckSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(
-                SettleCheckSheetDetail.class)
+                        SettleCheckSheetDetail.class)
                 .eq(SettleCheckSheetDetail::getSheetId, sheet.getId());
         settleCheckSheetDetailService.remove(deleteDetailWrapper);
 
@@ -319,7 +312,7 @@ public class SettleCheckSheetServiceImpl extends
 
         // 将所有的单据的结算状态更新
         Wrapper<SettleCheckSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
-                SettleCheckSheetDetail.class)
+                        SettleCheckSheetDetail.class)
                 .eq(SettleCheckSheetDetail::getSheetId, sheet.getId())
                 .orderByAsc(SettleCheckSheetDetail::getOrderNo);
         List<SettleCheckSheetDetail> sheetDetails = settleCheckSheetDetailService.list(
@@ -330,7 +323,7 @@ public class SettleCheckSheetServiceImpl extends
 
         // 删除明细
         Wrapper<SettleCheckSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(
-                SettleCheckSheetDetail.class)
+                        SettleCheckSheetDetail.class)
                 .eq(SettleCheckSheetDetail::getSheetId, sheet.getId());
         settleCheckSheetDetailService.remove(deleteDetailWrapper);
 
@@ -416,12 +409,11 @@ public class SettleCheckSheetServiceImpl extends
 
         switch (bizType) {
             case RECEIVE_SHEET: {
-                int count = receiveSheetService.setUnCheckBill(id);
+                int count = receiveSheetService.setUnSettle(id);
                 if (count != 1) {
                     throw new DefaultClientException(
                             "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，业务无法进行！");
                 }
-                receiveSheetService.clearSettleSheetDetailId(id);
                 break;
             }
             case PURCHASE_RETURN: {
@@ -456,13 +448,13 @@ public class SettleCheckSheetServiceImpl extends
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void setBizItemPartSettle(String id, SettleCheckSheetBizType bizType, String settleCheckSheetDetailId) {
+    public void setBizItemPartSettle(String id, SettleCheckSheetBizType bizType) {
 
         SettleCheckBizItemDto item = this.getBizItem(id, bizType);
 
         switch (bizType) {
             case RECEIVE_SHEET: {
-                int count = receiveSheetService.setUnSettle(id, settleCheckSheetDetailId);
+                int count = receiveSheetService.setPartSettle(id);
                 if (count != 1) {
                     throw new DefaultClientException(
                             "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，业务无法进行！");
@@ -658,144 +650,149 @@ public class SettleCheckSheetServiceImpl extends
     // return count;
     // }
 
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public int setPartSettle(String id) {
+    // @Transactional(rollbackFor = Exception.class)
+    // @Override
+    // public int setPartSettle(String id) {
+    //
+    //     Wrapper<SettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(SettleCheckSheet.class)
+    //             .set(SettleCheckSheet::getSettleStatus, SettleStatus.PART_SETTLE)
+    //             .eq(SettleCheckSheet::getId, id)
+    //             .in(SettleCheckSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
+    //     int count = getBaseMapper().update(updateWrapper);
+    //
+    //     if (count == 1) {
+    //         Wrapper<SettleCheckSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
+    //                         SettleCheckSheetDetail.class)
+    //                 .eq(SettleCheckSheetDetail::getSheetId, id).orderByAsc(SettleCheckSheetDetail::getOrderNo);
+    //         List<SettleCheckSheetDetail> sheetDetails = settleCheckSheetDetailService.list(
+    //                 queryDetailWrapper);
+    //         for (SettleCheckSheetDetail sheetDetail : sheetDetails) {
+    //             if (sheetDetail.getBizType() == SettleCheckSheetBizType.RECEIVE_SHEET) {
+    //                 receiveSheetService.setPartSettle(sheetDetail.getBizId());
+    //             }
+    //         }
+    //     }
+    //
+    //     return count;
+    // }
 
-        Wrapper<SettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(SettleCheckSheet.class)
-                .set(SettleCheckSheet::getSettleStatus, SettleStatus.PART_SETTLE)
-                .eq(SettleCheckSheet::getId, id)
-                .in(SettleCheckSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
-        int count = getBaseMapper().update(updateWrapper);
-
-        if (count == 1) {
-            Wrapper<SettleCheckSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
-                    SettleCheckSheetDetail.class)
-                    .eq(SettleCheckSheetDetail::getSheetId, id).orderByAsc(SettleCheckSheetDetail::getOrderNo);
-            List<SettleCheckSheetDetail> sheetDetails = settleCheckSheetDetailService.list(
-                    queryDetailWrapper);
-            for (SettleCheckSheetDetail sheetDetail : sheetDetails) {
-                if (sheetDetail.getBizType() == SettleCheckSheetBizType.RECEIVE_SHEET) {
-                    receiveSheetService.setPartSettle(sheetDetail.getBizId());
-                }
-            }
-        }
-
-        return count;
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public int setSettled(String id) {
-
-        Wrapper<SettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(SettleCheckSheet.class)
-                .set(SettleCheckSheet::getSettleStatus, SettleStatus.SETTLED)
-                .eq(SettleCheckSheet::getId, id)
-                .in(SettleCheckSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
-        int count = getBaseMapper().update(updateWrapper);
-
-        // 将所有的单据的结算状态更新
-        Wrapper<SettleCheckSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
-                SettleCheckSheetDetail.class)
-                .eq(SettleCheckSheetDetail::getSheetId, id).orderByAsc(SettleCheckSheetDetail::getOrderNo);
-        List<SettleCheckSheetDetail> sheetDetails = settleCheckSheetDetailService.list(
-                queryDetailWrapper);
-        for (SettleCheckSheetDetail sheetDetail : sheetDetails) {
-            this.setBizItemSettled(sheetDetail.getBizId(), sheetDetail.getBizType());
-        }
-
-        return count;
-    }
+    // @Transactional(rollbackFor = Exception.class)
+    // @Override
+    // public int setSettled(String id) {
+    //
+    //     Wrapper<SettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(SettleCheckSheet.class)
+    //             .set(SettleCheckSheet::getSettleStatus, SettleStatus.SETTLED)
+    //             .eq(SettleCheckSheet::getId, id)
+    //             .in(SettleCheckSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
+    //     int count = getBaseMapper().update(updateWrapper);
+    //
+    //     // 将所有的单据的结算状态更新
+    //     Wrapper<SettleCheckSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
+    //                     SettleCheckSheetDetail.class)
+    //             .eq(SettleCheckSheetDetail::getSheetId, id).orderByAsc(SettleCheckSheetDetail::getOrderNo);
+    //     List<SettleCheckSheetDetail> sheetDetails = settleCheckSheetDetailService.list(
+    //             queryDetailWrapper);
+    //     for (SettleCheckSheetDetail sheetDetail : sheetDetails) {
+    //         this.setBizItemSettled(sheetDetail.getBizId(), sheetDetail.getBizType());
+    //     }
+    //
+    //     return count;
+    // }
 
     @Override
     public List<SettleCheckSheet> getApprovedList(String supplierId, LocalDateTime startTime,
-            LocalDateTime endTime) {
+                                                  LocalDateTime endTime) {
 
         return getBaseMapper().getApprovedList(supplierId, startTime, endTime);
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public void setSettleAmount(String id, BigDecimal totalPayedAmount,
-            BigDecimal totalDiscountAmount) {
-
-        SettleCheckSheet checkSheet = getBaseMapper().selectById(id);
-        BigDecimal remainTotalPayAmount = NumberUtil.sub(checkSheet.getTotalPayAmount(),
-                checkSheet.getTotalPayedAmount(), checkSheet.getTotalDiscountAmount(), totalPayedAmount,
-                totalDiscountAmount);
-        BigDecimal totalPayAmount = NumberUtil.sub(checkSheet.getTotalPayAmount(),
-                checkSheet.getTotalPayedAmount(),
-                checkSheet.getTotalDiscountAmount());
-        if (NumberUtil.lt(checkSheet.getTotalPayAmount(), 0)) {
-            if (NumberUtil.gt(remainTotalPayAmount, 0)) {
-                throw new DefaultClientException(
-                        "对账单：" + checkSheet.getCode() + "，剩余付款金额为" + totalPayAmount + "元，本次付款金额为"
-                                + NumberUtil.add(
-                                        totalPayedAmount, totalDiscountAmount)
-                                + "元，无法结算！");
-            }
-        }
-        if (NumberUtil.gt(checkSheet.getTotalPayAmount(), 0)) {
-            if (NumberUtil.lt(remainTotalPayAmount, 0)) {
-                throw new DefaultClientException(
-                        "对账单：" + checkSheet.getCode() + "，剩余付款金额为" + totalPayAmount + "元，本次付款金额为"
-                                + NumberUtil.add(
-                                        totalPayedAmount, totalDiscountAmount)
-                                + "元，无法结算！");
-            }
-        }
-        Wrapper<SettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(SettleCheckSheet.class)
-                .set(SettleCheckSheet::getTotalPayedAmount,
-                        NumberUtil.add(totalPayedAmount, checkSheet.getTotalPayedAmount()))
-                .set(SettleCheckSheet::getTotalDiscountAmount,
-                        NumberUtil.add(totalDiscountAmount, checkSheet.getTotalDiscountAmount()))
-                .eq(SettleCheckSheet::getId, id)
-                .eq(SettleCheckSheet::getTotalPayedAmount, checkSheet.getTotalPayedAmount())
-                .eq(SettleCheckSheet::getTotalDiscountAmount, checkSheet.getTotalDiscountAmount());
-        if (getBaseMapper().update(updateWrapper) != 1) {
-            throw new DefaultClientException(
-                    "结账单：" + checkSheet.getCode() + "，信息已过期，请刷新重试！");
-        }
-
-        if (NumberUtil.equal(remainTotalPayAmount, 0)) {
-            this.setSettled(id);
-        }
-    }
+    // @Transactional(rollbackFor = Exception.class)
+    // @Override
+    // public void setSettleAmount(String id, BigDecimal totalPayedAmount,
+    //                             BigDecimal totalDiscountAmount) {
+    //
+    //     SettleCheckSheet checkSheet = getBaseMapper().selectById(id);
+    //     BigDecimal remainTotalPayAmount = NumberUtil.sub(checkSheet.getTotalPayAmount(),
+    //             checkSheet.getTotalPayedAmount(), checkSheet.getTotalDiscountAmount(), totalPayedAmount,
+    //             totalDiscountAmount);
+    //     BigDecimal totalPayAmount = NumberUtil.sub(checkSheet.getTotalPayAmount(),
+    //             checkSheet.getTotalPayedAmount(),
+    //             checkSheet.getTotalDiscountAmount());
+    //     if (NumberUtil.lt(checkSheet.getTotalPayAmount(), 0)) {
+    //         if (NumberUtil.gt(remainTotalPayAmount, 0)) {
+    //             throw new DefaultClientException(
+    //                     "对账单：" + checkSheet.getCode() + "，剩余付款金额为" + totalPayAmount + "元，本次付款金额为"
+    //                             + NumberUtil.add(
+    //                             totalPayedAmount, totalDiscountAmount)
+    //                             + "元，无法结算！");
+    //         }
+    //     }
+    //     if (NumberUtil.gt(checkSheet.getTotalPayAmount(), 0)) {
+    //         if (NumberUtil.lt(remainTotalPayAmount, 0)) {
+    //             throw new DefaultClientException(
+    //                     "对账单：" + checkSheet.getCode() + "，剩余付款金额为" + totalPayAmount + "元，本次付款金额为"
+    //                             + NumberUtil.add(
+    //                             totalPayedAmount, totalDiscountAmount)
+    //                             + "元，无法结算！");
+    //         }
+    //     }
+    //     Wrapper<SettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(SettleCheckSheet.class)
+    //             .set(SettleCheckSheet::getTotalPayedAmount,
+    //                     NumberUtil.add(totalPayedAmount, checkSheet.getTotalPayedAmount()))
+    //             .set(SettleCheckSheet::getTotalDiscountAmount,
+    //                     NumberUtil.add(totalDiscountAmount, checkSheet.getTotalDiscountAmount()))
+    //             .eq(SettleCheckSheet::getId, id)
+    //             .eq(SettleCheckSheet::getTotalPayedAmount, checkSheet.getTotalPayedAmount())
+    //             .eq(SettleCheckSheet::getTotalDiscountAmount, checkSheet.getTotalDiscountAmount());
+    //     if (getBaseMapper().update(updateWrapper) != 1) {
+    //         throw new DefaultClientException(
+    //                 "结账单：" + checkSheet.getCode() + "，信息已过期，请刷新重试！");
+    //     }
+    //
+    //     if (NumberUtil.equal(remainTotalPayAmount, 0)) {
+    //         this.setSettled(id);
+    //     }
+    // }
 
     private void create(SettleCheckSheet sheet, CreateSettleCheckSheetVo vo) {
+        // 收货单ID列表
+        List<String> receiveSheetIds = vo.getItems().stream().map(SettleCheckSheetItemVo::getId).collect(Collectors.toList());
 
-        BigDecimal totalPayedAmount = BigDecimal.ZERO;
-        BigDecimal bizTotalAmount = BigDecimal.ZERO;
-        List<String> receiveSheetIds = new ArrayList<>();
-        List<SettleCheckBizItemDto> allocatedList = this.allocatePayAmount(vo);
+        // 对账单中包含的收货单，需要更新收货单的结算状态
+        this.allocateCheckAmount(vo);
+        BigDecimal bizTotalAmount = vo.getItems().stream()
+                .map(item -> item.getBizAmount() == null ? BigDecimal.ZERO : item.getBizAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        int orderNo = 0;
-        for (SettleCheckBizItemDto item : allocatedList) {
-            orderNo++;
-            SettleCheckSheetDetail detail = buildDetail(sheet, item, orderNo, vo);
+        int orderNo = 1;
+        for (SettleCheckSheetItemVo item : vo.getItems()) {
+            SettleCheckSheetDetail detail = buildDetail(sheet, item, orderNo);
             settleCheckSheetDetailService.save(detail);
 
-            // 对账单中包含的收货单，需要更新收货单的结算状态
-            totalPayedAmount = NumberUtil.add(totalPayedAmount, item.getPaidAmount());
-            bizTotalAmount = NumberUtil.add(bizTotalAmount, item.getTotalAmount());
-            receiveSheetIds.add(detail.getBizId());
+            // 收货单的结算状态更新
+            this.setBizItemUnSettle(detail.getBizId(), detail.getBizType());
 
-            // 将所有的单据的结算状态更新
-            this.setBizItemPartSettle(detail.getBizId(), detail.getBizType(), detail.getId());
+            orderNo++;
         }
 
-        buildSettleSheet(sheet, vo, totalPayedAmount, receiveSheetIds, bizTotalAmount);
+        buildSettleCheckSheet(sheet, vo, receiveSheetIds, bizTotalAmount);
     }
 
-    private static void buildSettleSheet(SettleCheckSheet sheet,
-            CreateSettleCheckSheetVo vo,
-            BigDecimal totalPayedAmount,
-            List<String> receiveSheetIds,
-            BigDecimal bizTotalAmount) {
+    /**
+     * 构建对账单
+     * @param sheet
+     * @param vo
+     * @param receiveSheetIds
+     * @param bizTotalAmount
+     */
+    private void buildSettleCheckSheet(SettleCheckSheet sheet,
+                                              CreateSettleCheckSheetVo vo,
+                                              List<String> receiveSheetIds,
+                                              BigDecimal bizTotalAmount) {
         sheet.setSupplierId(vo.getSupplierId());
-        sheet.setTotalPayAmount(vo.getTotalPayAmount());
-        sheet.setTotalPayedAmount(totalPayedAmount);
-        sheet.setTotalAmount(NumberUtil.add(vo.getTotalPayAmount(), totalPayedAmount));
+        sheet.setTotalPayAmount(vo.getCheckAmt());
+        sheet.setTotalPayedAmount(BigDecimal.ZERO);
+        sheet.setTotalAmount(NumberUtil.add(vo.getCheckAmt(), sheet.getTotalPayedAmount()));
         sheet.setTotalDiscountAmount(BigDecimal.ZERO);
         sheet.setBizSheetIds(String.join(StringPool.STR_SPLIT, receiveSheetIds));
         sheet.setBizTotalAmount(bizTotalAmount);
@@ -808,25 +805,24 @@ public class SettleCheckSheetServiceImpl extends
 
     /**
      * 构建对账单详情
-     * 
+     *
      * @param sheet
      * @param item
      * @param orderNo
-     * @param vo
      * @return
      */
     private static SettleCheckSheetDetail buildDetail(SettleCheckSheet sheet,
-            SettleCheckBizItemDto item,
-            int orderNo,
-            CreateSettleCheckSheetVo vo) {
+                                                      SettleCheckSheetItemVo item,
+                                                      int orderNo) {
         SettleCheckSheetDetail detail = new SettleCheckSheetDetail();
 
         detail.setId(IdUtil.getId());
         detail.setSheetId(sheet.getId());
         detail.setBizId(item.getId());
-        detail.setBizType(item.getBizType());
-        detail.setCalcType(item.getCalcType());
-        detail.setPayAmount(item.getPayAmount());
+        detail.setBizType(SettleCheckSheetBizType.fromCode(item.getBizType()));
+        // todo 计算方式默认加法
+        detail.setCalcType(SettleCheckSheetCalcType.ADD);
+        detail.setPayAmount(item.getCheckAmt());
         // 主单存了备注了，明细单就不存了
         // detail.setDescription(vo.getDescription());
         detail.setOrderNo(orderNo);
@@ -839,38 +835,28 @@ public class SettleCheckSheetServiceImpl extends
      * @param vo
      * @return
      */
-    private List<SettleCheckBizItemDto> allocatePayAmount(CreateSettleCheckSheetVo vo) {
-
-        if (vo.getTotalPayAmount() == null || CollectionUtil.isEmpty(vo.getItems())) {
-            return Lists.newArrayList();
+    private void allocateCheckAmount(CreateSettleCheckSheetVo vo) {
+        if (vo.getCheckAmt() == null || CollectionUtil.isEmpty(vo.getItems())) {
+            return;
         }
 
         // 收货单汇总金额
-        BigDecimal receiveTotalAmount = BigDecimal.ZERO;
-        List<SettleCheckBizItemDto> res = new ArrayList<>();
-        for (SettleCheckSheetItemVo itemVo : vo.getItems()) {
-            SettleCheckBizItemDto item = this.getBizItem(itemVo.getId(),
-                    EnumUtil.getByCode(SettleCheckSheetBizType.class, itemVo.getBizType()));
-            res.add(item);
-            receiveTotalAmount = NumberUtil.add(receiveTotalAmount, item.getTotalAmount());
-        }
+        BigDecimal totalBizAmt = vo.getItems().stream()
+                .map(item -> item.getBizAmount() == null ? BigDecimal.ZERO : item.getBizAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 对账金额差额
-        BigDecimal totalDiffAmount = NumberUtil.sub(vo.getTotalPayAmount(), receiveTotalAmount);
+        // 对账金额差额合计
+        BigDecimal totalDiffAmount = NumberUtil.sub(vo.getCheckAmt(), totalBizAmt);
+        // 将对账金额差额平均分摊给每个业务单据
         BigDecimal avgDiffAmount = NumberUtil.div(totalDiffAmount, BigDecimal.valueOf(vo.getItems().size()));
 
-        for (int i = 0; i < vo.getItems().size(); i++) {
-            SettleCheckBizItemDto checkBizItemDto = res.get(i);
-            BigDecimal payAmount = NumberUtil.add(
-                    NumberUtil.sub(checkBizItemDto.getTotalAmount(), checkBizItemDto.getPaidAmount()),
-                    avgDiffAmount);
-            if (NumberUtil.lt(payAmount, BigDecimal.ZERO)) {
+        vo.getItems().forEach(item -> {
+            BigDecimal bizAmt = NumberUtil.add(item.getBizAmount(), avgDiffAmount);
+            if (NumberUtil.lt(bizAmt, BigDecimal.ZERO)) {
                 throw new DefaultClientException("对账金额过小，分摊后会出现负数单据，请调整对账金额！");
             }
-            checkBizItemDto.setPayAmount(payAmount);
-        }
-
-        return res;
+            item.setCheckAmt(bizAmt);
+        });
     }
 
     private BigDecimal getReceiveSheetSettledAmount(String bizId) {

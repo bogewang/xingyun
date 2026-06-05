@@ -94,23 +94,23 @@ public interface SettleSheetService extends BaseMpService<SettleSheet> {
     /**
      * 更新业务单据未结算
      *
-     * @param id
+     * @param bizId 业务单据ID
      */
-    void setBizItemUnSettle(String id);
+    void setBizItemUnSettle(String bizId);
 
     /**
      * 更新业务单据结算中
      *
-     * @param id
+     * @param bizId 业务单据ID
      */
-    void setBizItemPartSettle(String id);
+    void setBizItemPartSettle(String bizId);
 
     /**
      * 更新业务单据已结算
      *
-     * @param id
+     * @param bizId 业务单据ID
      */
-    void setBizItemSettled(String id);
+    void setBizItemSettled(String bizId);
 
     /**
      * 查询收货单的对账/结算扩展信息
