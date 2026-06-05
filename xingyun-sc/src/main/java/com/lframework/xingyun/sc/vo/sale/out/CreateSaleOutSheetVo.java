@@ -7,9 +7,7 @@ import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.starter.web.core.vo.BaseVo;
 import com.lframework.xingyun.sc.entity.SaleConfig;
-import com.lframework.xingyun.sc.entity.SaleOrderDetail;
 import com.lframework.xingyun.sc.service.sale.SaleConfigService;
-import com.lframework.xingyun.sc.service.sale.SaleOrderDetailService;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -23,188 +21,155 @@ import java.util.List;
 @Data
 public class CreateSaleOutSheetVo implements BaseVo, Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  /**
-   * 仓库ID
-   */
-  @ApiModelProperty("仓库ID")
-  private String scId;
+    /**
+     * 仓库ID
+     */
+    @ApiModelProperty("仓库ID")
+    private String scId;
 
-  /**
-   * 客户ID
-   */
-  @ApiModelProperty(value = "客户ID", required = true)
-  private String customerId;
+    /**
+     * 客户ID
+     */
+    @ApiModelProperty(value = "客户ID", required = true)
+    private String customerId;
 
-  /**
-   * 销售员ID
-   */
-  @ApiModelProperty("销售员ID")
-  private String salerId;
+    /**
+     * 销售员ID
+     */
+    @ApiModelProperty("销售员ID")
+    private String salerId;
 
-  /**
-   * 订单日期
-   */
-  @ApiModelProperty("订单日期")
-  private LocalDate orderDate;
+    /**
+     * 订单日期
+     */
+    @ApiModelProperty("订单日期")
+    private LocalDate orderDate;
 
-  /**
-   * 付款日期
-   */
-  @ApiModelProperty("付款日期")
-  private LocalDate paymentDate;
+    /**
+     * 付款日期
+     */
+    @ApiModelProperty("付款日期")
+    private LocalDate paymentDate;
 
-  /**
-   * 付款金额
-   */
-  @ApiModelProperty("付款金额")
-  private BigDecimal paidAmount;
+    /**
+     * 付款金额
+     */
+    @ApiModelProperty("付款金额")
+    private BigDecimal paidAmount;
 
-  /**
-   * 是否允许修改付款日期
-   */
-  @ApiModelProperty("是否允许修改付款日期")
-  private Boolean allowModifyPaymentDate = Boolean.FALSE;
+    /**
+     * 是否允许修改付款日期
+     */
+    @ApiModelProperty("是否允许修改付款日期")
+    private Boolean allowModifyPaymentDate = Boolean.FALSE;
 
-  /**
-   * 商品信息
-   */
-  @ApiModelProperty(value = "商品信息", required = true)
-  @Valid
-  @NotEmpty(message = "商品不能为空！")
-  private List<SaleOutProductVo> products;
+    /**
+     * 商品信息
+     */
+    @ApiModelProperty(value = "商品信息", required = true)
+    @Valid
+    @NotEmpty(message = "商品不能为空！")
+    private List<SaleOutProductVo> products;
 
-  /**
-   * 备注
-   */
-  @ApiModelProperty("备注")
-  private String description;
+    /**
+     * 备注
+     */
+    @ApiModelProperty("备注")
+    private String description;
 
-  /**
-   * 销售订单ID
-   */
-  @ApiModelProperty("销售订单ID")
-  private String saleOrderId;
+    /**
+     * 销售订单ID
+     */
+    @ApiModelProperty("销售订单ID")
+    private String saleOrderId;
 
-  /**
-   * 是否关联销售订单
-   */
-  @ApiModelProperty("是否关联销售订单")
-  private Boolean required;
+    /**
+     * 是否关联销售订单
+     */
+    @ApiModelProperty("是否关联销售订单")
+    private Boolean required;
 
-  /**
-   * 是否录完所有成本
-   */
-  @ApiModelProperty("是否录完所有成本")
-  private Boolean fillAllCost;
+    /**
+     * 是否录完所有成本
+     */
+    @ApiModelProperty("是否录完所有成本")
+    private Boolean fillAllCost;
 
-  /**
-   * 是否手动修改成本状态
-   */
-  @ApiModelProperty("是否手动修改成本状态")
-  private Boolean fillAllCostModified;
+    /**
+     * 是否手动修改成本状态
+     */
+    @ApiModelProperty("是否手动修改成本状态")
+    private Boolean fillAllCostModified;
 
-  public void validate() {
+    public void validate() {
 
-    SaleConfigService saleConfigService = ApplicationUtil.getBean(SaleConfigService.class);
-    SaleConfig saleConfig = saleConfigService.get();
+        SaleConfigService saleConfigService = ApplicationUtil.getBean(SaleConfigService.class);
+        SaleConfig saleConfig = saleConfigService.get();
 
-    if (!saleConfig.getOutStockRequireSale().equals(this.required)) {
-      throw new DefaultClientException("系统参数发生改变，请刷新页面后重试！");
+        if (!saleConfig.getOutStockRequireSale().equals(this.required)) {
+            throw new DefaultClientException("系统参数发生改变，请刷新页面后重试！");
+        }
+
+        this.validate(saleConfig.getOutStockRequireSale());
     }
 
-    this.validate(saleConfig.getOutStockRequireSale());
-  }
+    protected void validate(boolean requireSale) {
 
-  protected void validate(boolean requireSale) {
+        int orderNo = 1;
+        if (this.paidAmount != null) {
+            if (NumberUtil.lt(this.paidAmount, BigDecimal.ZERO)) {
+                throw new InputErrorException("付款金额不允许小于0！");
+            }
 
-    if (requireSale) {
-      if (StringUtil.isBlank(this.getSaleOrderId())) {
-        throw new InputErrorException("销售订单不能为空！");
-      }
+            if (!NumberUtil.isNumberPrecision(this.paidAmount, 6)) {
+                throw new InputErrorException("付款金额最多允许6位小数！");
+            }
+        }
+
+        for (SaleOutProductVo product : this.products) {
+
+            if (StringUtil.isBlank(product.getProductId())) {
+                throw new InputErrorException("第" + orderNo + "行商品不能为空！");
+            }
+
+            if (product.getOrderNum() == null) {
+                throw new InputErrorException("第" + orderNo + "行商品销售数量不能为空！");
+            }
+
+            if (NumberUtil.le(product.getOrderNum(), BigDecimal.ZERO)) {
+                throw new InputErrorException("第" + orderNo + "行商品销售数量必须大于0！");
+            }
+
+            if (!NumberUtil.isNumberPrecision(product.getOrderNum(), 8)) {
+                throw new InputErrorException("第" + orderNo + "行商品销售数量最多允许8位小数！");
+            }
+
+            if (product.getTaxPrice() == null) {
+                throw new InputErrorException("第" + orderNo + "行商品价格不能为空！");
+            }
+
+            if (NumberUtil.lt(product.getTaxPrice(), 0D)) {
+                throw new InputErrorException("第" + orderNo + "行商品价格不允许小于0！");
+            }
+
+            if (!NumberUtil.isNumberPrecision(product.getTaxPrice(), 6)) {
+                throw new InputErrorException("第" + orderNo + "行商品价格最多允许6位小数！");
+            }
+
+            if (product.getCostPrice() != null) {
+                if (NumberUtil.lt(product.getCostPrice(), BigDecimal.ZERO)) {
+                    throw new InputErrorException("第" + orderNo + "行商品成本单价不允许小于0！");
+                }
+
+                if (!NumberUtil.isNumberPrecision(product.getCostPrice(), 6)) {
+                    throw new InputErrorException("第" + orderNo + "行商品成本单价最多允许6位小数！");
+                }
+            }
+
+            product.setSeq(orderNo);
+            orderNo++;
+        }
     }
-
-    SaleOrderDetailService saleOrderDetailService = ApplicationUtil.getBean(
-        SaleOrderDetailService.class);
-
-    int orderNo = 1;
-    if (this.paidAmount != null) {
-      if (NumberUtil.lt(this.paidAmount, BigDecimal.ZERO)) {
-        throw new InputErrorException("付款金额不允许小于0！");
-      }
-
-      if (!NumberUtil.isNumberPrecision(this.paidAmount, 6)) {
-        throw new InputErrorException("付款金额最多允许6位小数！");
-      }
-    }
-
-    for (SaleOutProductVo product : this.products) {
-
-      if (StringUtil.isBlank(product.getProductId())) {
-        throw new InputErrorException("第" + orderNo + "行商品不能为空！");
-      }
-
-      if (product.getOrderNum() == null) {
-        throw new InputErrorException("第" + orderNo + "行商品销售数量不能为空！");
-      }
-
-      if (NumberUtil.le(product.getOrderNum(), BigDecimal.ZERO)) {
-        throw new InputErrorException("第" + orderNo + "行商品销售数量必须大于0！");
-      }
-
-      if (!NumberUtil.isNumberPrecision(product.getOrderNum(), 8)) {
-        throw new InputErrorException("第" + orderNo + "行商品销售数量最多允许8位小数！");
-      }
-
-      if (!requireSale) {
-
-        // if (product.getOriPrice() == null) {
-        //   throw new InputErrorException("第" + orderNo + "行商品参考销售价不能为空！");
-        // }
-
-        if (product.getTaxPrice() == null) {
-          throw new InputErrorException("第" + orderNo + "行商品价格不能为空！");
-        }
-
-        if (NumberUtil.lt(product.getTaxPrice(), 0D)) {
-          throw new InputErrorException("第" + orderNo + "行商品价格不允许小于0！");
-        }
-
-        if (!NumberUtil.isNumberPrecision(product.getTaxPrice(), 6)) {
-          throw new InputErrorException("第" + orderNo + "行商品价格最多允许6位小数！");
-        }
-
-        /* if (!NumberUtil.equal(product.getOriPrice(), 0D)) {
-          // 由 根据原价和折扣率校验现价 更改为 根据原价、现价计算折扣率，即：不以传入的折扣率为准
-          BigDecimal discountRate = NumberUtil.getNumber(
-              NumberUtil.mul(NumberUtil.div(product.getTaxPrice(), product.getOriPrice()), 100), 2);
-          product.setDiscountRate(discountRate);
-        } else {
-          //如果原价为0，折扣率固定为100
-          product.setDiscountRate(BigDecimal.valueOf(100));
-        } */
-      } else {
-        if (StringUtil.isNotBlank(product.getSaleOrderDetailId())) {
-          SaleOrderDetail orderDetail = saleOrderDetailService.getById(
-              product.getSaleOrderDetailId());
-          product.setTaxPrice(orderDetail.getTaxPrice());
-        } else {
-          product.setTaxPrice(BigDecimal.ZERO);
-        }
-      }
-
-      if (product.getCostPrice() != null) {
-        if (NumberUtil.lt(product.getCostPrice(), BigDecimal.ZERO)) {
-          throw new InputErrorException("第" + orderNo + "行商品成本单价不允许小于0！");
-        }
-
-        if (!NumberUtil.isNumberPrecision(product.getCostPrice(), 6)) {
-          throw new InputErrorException("第" + orderNo + "行商品成本单价最多允许6位小数！");
-        }
-      }
-
-      orderNo++;
-    }
-  }
 }
