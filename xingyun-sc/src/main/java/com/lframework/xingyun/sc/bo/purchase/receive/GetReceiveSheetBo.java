@@ -134,9 +134,9 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
   private BigDecimal totalAmount;
 
   /**
-   * 已支付金额
+   * 已结算金额
    */
-  @ApiModelProperty("已支付金额")
+  @ApiModelProperty("已结算金额")
   private BigDecimal paidAmount;
 
   /**

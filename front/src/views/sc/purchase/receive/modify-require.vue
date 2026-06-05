@@ -277,15 +277,8 @@
           <j-form-item label="含税总金额" :span="8">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="付款金额" :span="8">
-            <a-space>
-              <a-input
-                v-model:value="formData.paidAmount"
-                class="number-input"
-                @input="(e) => paidAmountInput(e.target.value)"
-              />
-              <a-button @click="setPaid">已付款</a-button>
-            </a-space>
+          <j-form-item label="已结算金额" :span="8">
+            <a-input v-model:value="formData.paidAmount" class="number-input" readonly />
           </j-form-item>
         </j-form>
       </j-border>
@@ -405,7 +398,6 @@
         loading: false,
         // 表单数据
         formData: {},
-        paidAmountDirty: false,
         purchaserOptions: [],
         purchaserOptionMap: {},
         // 工具栏配置
@@ -549,7 +541,6 @@
           description: '',
         };
 
-        this.paidAmountDirty = false;
         this.tableData = [];
       },
       // 加载数据
@@ -563,6 +554,15 @@
               !RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(res.status)
             ) {
               createError('采购收货单已审核通过，无法修改！');
+              this.closeDialog();
+              return;
+            }
+            if (
+              Number(res.paidAmount || 0) > 0 ||
+              SETTLE_STATUS.PART_SETTLE.equalsCode(res.settleStatus) ||
+              SETTLE_STATUS.SETTLED.equalsCode(res.settleStatus)
+            ) {
+              createError('采购收货单已有结算金额，无法修改！');
               this.closeDialog();
               return;
             }
@@ -612,9 +612,7 @@
               return item;
             });
             this.tableData = tableData.map((item) => Object.assign(this.emptyProduct(), item));
-
             this.calcSum();
-            this.paidAmountDirty = true;
           })
           .finally(() => {
             this.loading = false;
@@ -794,10 +792,6 @@
       purchasePriceInput(_row, _value) {
         this.calcSum();
       },
-      paidAmountInput(value) {
-        this.formData.paidAmount = value;
-        this.paidAmountDirty = true;
-      },
       receiveNumInput(_value) {
         this.calcSum();
       },
@@ -817,10 +811,6 @@
 
         this.formData.totalNum = totalNum;
         this.formData.totalAmount = totalAmount;
-      },
-      setPaid() {
-        this.formData.paidAmount = this.formData.totalAmount || 0;
-        this.paidAmountDirty = true;
       },
       // 批量录入数量
       batchInputReceiveNum() {
@@ -876,31 +866,6 @@
 
         if (isEmpty(this.formData.purchaseOrder.id)) {
           createError('采购订单不允许为空！');
-          return false;
-        }
-
-        if (isEmpty(this.formData.paidAmount)) {
-          createError('付款金额不允许为空！');
-          return false;
-        }
-
-        if (!isFloat(this.formData.paidAmount)) {
-          createError('付款金额必须是数字！');
-          return false;
-        }
-
-        if (!isFloatGeZero(this.formData.paidAmount)) {
-          createError('付款金额不允许小于0！');
-          return false;
-        }
-
-        if (!isNumberPrecision(this.formData.paidAmount, 6)) {
-          createError('付款金额最多允许6位小数！');
-          return false;
-        }
-
-        if (parseFloat(this.formData.paidAmount) > parseFloat(this.formData.totalAmount || 0)) {
-          createError('付款金额不允许大于含税总金额！');
           return false;
         }
 
@@ -1020,7 +985,7 @@
           purchaserId: this.formData.purchaserId || '',
           orderDate: this.formData.orderDate || '',
           receiveDate: this.formData.receiveDate,
-          paidAmount: this.formData.paidAmount,
+          paidAmount: 0,
           purchaseOrderId: this.formData.purchaseOrder.id,
           description: this.formData.description,
           products: validTableData

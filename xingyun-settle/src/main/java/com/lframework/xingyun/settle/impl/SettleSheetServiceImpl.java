@@ -187,6 +187,16 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
     fillCheckInfo(result, receiveSheet, checkDetailMap, checkSheetMap);
     fillSettleInfo(result, settleDetailMap.get(receiveSheet.getId()), settleSheetMap);
 
+    BigDecimal settleAmount = result.getSettleAmount() == null ? BigDecimal.ZERO : result.getSettleAmount();
+    BigDecimal totalAmount = result.getTotalAmount() == null ? BigDecimal.ZERO : result.getTotalAmount();
+    BigDecimal checkAmount = NumberUtil.sub(totalAmount, settleAmount);
+    if (NumberUtil.lt(checkAmount, BigDecimal.ZERO)) {
+      checkAmount = BigDecimal.ZERO;
+    }
+    result.setCheckAmount(checkAmount);
+    result.setPaidAmount(settleAmount);
+    result.setUnpaidAmount(checkAmount);
+
     return result;
   }
 
@@ -500,7 +510,7 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
 
     SettleBizItemDto result = new SettleBizItemDto();
     BigDecimal totalPayAmount = receiveSheet.getTotalAmount();
-    BigDecimal paidAmount = receiveSheet.getPaidAmount() == null ? BigDecimal.ZERO : receiveSheet.getPaidAmount();
+    BigDecimal paidAmount = getReceiveSheetSettledAmount(id);
     result.setId(receiveSheet.getId());
     result.setCode(receiveSheet.getCode());
     result.setTotalPayAmount(totalPayAmount);
@@ -510,6 +520,22 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
     result.setApproveTime(receiveSheet.getApproveTime());
 
     return result;
+  }
+
+  private BigDecimal getReceiveSheetSettledAmount(String bizId) {
+
+    List<SettleSheetDetail> details = settleSheetDetailService.list(Wrappers.lambdaQuery(SettleSheetDetail.class)
+        .eq(SettleSheetDetail::getBizId, bizId));
+    if (CollectionUtil.isEmpty(details)) {
+      return BigDecimal.ZERO;
+    }
+
+    BigDecimal settleAmount = BigDecimal.ZERO;
+    for (SettleSheetDetail detail : details) {
+      settleAmount = NumberUtil.add(settleAmount,
+          NumberUtil.add(detail.getPayAmount(), detail.getDiscountAmount()));
+    }
+    return settleAmount;
   }
 
   @Transactional(rollbackFor = Exception.class)

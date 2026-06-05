@@ -35,12 +35,14 @@ import com.lframework.xingyun.settle.entity.SettleCheckSheet;
 import com.lframework.xingyun.settle.entity.SettleCheckSheetDetail;
 import com.lframework.xingyun.settle.entity.SettleFeeSheet;
 import com.lframework.xingyun.settle.entity.SettlePreSheet;
+import com.lframework.xingyun.settle.entity.SettleSheetDetail;
 import com.lframework.xingyun.settle.enums.*;
 import com.lframework.xingyun.settle.mappers.SettleCheckSheetMapper;
 import com.lframework.xingyun.settle.service.SettleCheckSheetDetailService;
 import com.lframework.xingyun.settle.service.SettleCheckSheetService;
 import com.lframework.xingyun.settle.service.SettleFeeSheetService;
 import com.lframework.xingyun.settle.service.SettlePreSheetService;
+import com.lframework.xingyun.settle.service.SettleSheetDetailService;
 import com.lframework.xingyun.settle.vo.check.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +61,9 @@ public class SettleCheckSheetServiceImpl extends
 
     @Autowired
     private SettleCheckSheetDetailService settleCheckSheetDetailService;
+
+    @Autowired
+    private SettleSheetDetailService settleSheetDetailService;
 
     @Autowired
     private GenerateCodeService generateCodeService;
@@ -353,7 +358,7 @@ public class SettleCheckSheetServiceImpl extends
                 result.setId(receiveSheet.getId());
                 result.setCode(receiveSheet.getCode());
                 result.setTotalAmount(receiveSheet.getTotalAmount());
-                result.setPaidAmount(receiveSheet.getPaidAmount());
+                result.setPaidAmount(this.getReceiveSheetSettledAmount(receiveSheet.getId()));
                 result.setApproveTime(receiveSheet.getApproveTime());
                 result.setCalcType(SettleCheckSheetCalcType.ADD);
                 break;
@@ -866,6 +871,22 @@ public class SettleCheckSheetServiceImpl extends
         }
 
         return res;
+    }
+
+    private BigDecimal getReceiveSheetSettledAmount(String bizId) {
+
+        List<SettleSheetDetail> details = settleSheetDetailService.list(Wrappers.lambdaQuery(SettleSheetDetail.class)
+                .eq(SettleSheetDetail::getBizId, bizId));
+        if (CollectionUtil.isEmpty(details)) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal settleAmount = BigDecimal.ZERO;
+        for (SettleSheetDetail detail : details) {
+            settleAmount = NumberUtil.add(settleAmount,
+                    NumberUtil.add(detail.getPayAmount(), detail.getDiscountAmount()));
+        }
+        return settleAmount;
     }
 
     @Override

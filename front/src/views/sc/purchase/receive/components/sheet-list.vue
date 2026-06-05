@@ -108,18 +108,18 @@
                     </a-select>
                   </j-form-item>
 
-                  <j-form-item label="是否已付完">
+                  <j-form-item label="是否已结清">
                     <a-select
                       v-model:value="searchFormData.fullyPaid"
                       placeholder="全部"
                       allow-clear
                     >
-                      <a-select-option :value="true">已付完</a-select-option>
-                      <a-select-option :value="false">未付完</a-select-option>
+                      <a-select-option :value="true">已结清</a-select-option>
+                      <a-select-option :value="false">未结清</a-select-option>
                     </a-select>
                   </j-form-item>
 
-                  <j-form-item label="已付金额">
+                  <j-form-item label="已结算金额">
                     <a-space>
                       <a-input-number
                         v-model:value="searchFormData.paidAmountStart"
@@ -139,7 +139,7 @@
                     </a-space>
                   </j-form-item>
 
-                  <j-form-item label="未付金额">
+                  <j-form-item label="未结算金额">
                     <a-space>
                       <a-input-number
                         v-model:value="searchFormData.unpaidAmountStart"
@@ -426,8 +426,8 @@
           { field: 'orderDate', title: '订单日期', width: 120 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
-          { field: 'paidAmount', title: '已付金额', align: 'right', width: 100 },
-          { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 100 },
+          { field: 'paidAmount', title: '已结算金额', align: 'right', width: 100 },
+          { field: 'unpaidAmount', title: '未结算金额', align: 'right', width: 100 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
           // {

@@ -140,9 +140,7 @@
             placeholder="请输入对账金额"
           />
           <div class="amount-tip">
-            选中货流单总金额：{{ formatAmount(selectedTotalAmount) }}，已付金额：{{
-              formatAmount(selectedTotalPaidAmount)
-            }}
+            选中货流单总金额：{{ formatAmount(selectedTotalAmount) }}
           </div>
         </a-form-item>
         <a-form-item label="备注">
@@ -171,9 +169,7 @@
             style="width: 100%"
             placeholder="请输入对账金额"
           />
-          <div class="amount-tip">
-            选中单据未结算总额：{{ formatAmount(selectedTotalUnpaidAmount) }}
-          </div>
+          <div class="amount-tip">选中单据未结算总额：{{ formatAmount(selectedTotalCheckAmount) }}</div>
         </a-form-item>
         <a-form-item label="备注">
           <a-textarea
@@ -274,7 +270,6 @@
           },
           { field: 'totalNum', title: '商品数量', width: 90, align: 'right' },
           { field: 'totalAmount', title: '货流单金额', width: 120, align: 'right' },
-          { field: 'paidAmount', title: '已付金额', width: 110, align: 'right' },
           {
             field: 'checkAmount',
             title: '对账金额',
@@ -335,14 +330,11 @@
       selectedStatusList() {
         return [...new Set(this.selectedRows.map((item) => item.settleStatus))];
       },
-      selectedTotalUnpaidAmount() {
-        return this.selectedRows.reduce((total, item) => total + Number(item.unpaidAmount || 0), 0);
+      selectedTotalCheckAmount() {
+        return this.selectedRows.reduce((total, item) => total + Number(item.checkAmount || 0), 0);
       },
       selectedTotalAmount() {
         return this.selectedRows.reduce((total, item) => total + Number(item.totalAmount || 0), 0);
-      },
-      selectedTotalPaidAmount() {
-        return this.selectedRows.reduce((total, item) => total + Number(item.paidAmount || 0), 0);
       },
       canConfirmCheck() {
         return (
@@ -423,7 +415,6 @@
           totalNum: this.formatQuantity(this.sumByField(data, 'totalNum')),
           totalGiftNum: this.formatQuantity(this.sumByField(data, 'totalGiftNum')),
           totalAmount: this.formatAmount(this.sumByField(data, 'totalAmount')),
-          paidAmount: this.formatAmount(this.sumByField(data, 'paidAmount')),
           checkAmount: this.formatAmount(this.sumByField(data, 'checkAmount')),
           settleAmount: this.formatAmount(this.sumByField(data, 'settleAmount')),
         };
@@ -546,9 +537,7 @@
           return;
         }
 
-        this.checkDialog.amount = Number(
-          (this.selectedTotalAmount - this.selectedTotalPaidAmount).toFixed(2),
-        );
+        this.checkDialog.amount = Number((this.selectedTotalAmount).toFixed(2));
         this.checkDialog.description = '';
         this.checkDialog.visible = true;
       },
@@ -609,7 +598,7 @@
           return;
         }
 
-        this.settleDialog.amount = Number(this.selectedTotalUnpaidAmount.toFixed(2));
+        this.settleDialog.amount = Number(this.selectedTotalCheckAmount.toFixed(2));
         this.settleDialog.description = '';
         this.settleDialog.visible = true;
       },
@@ -625,12 +614,12 @@
             return;
           }
 
-          const unpaidAmount = Number(item.unpaidAmount || 0);
-          if (unpaidAmount <= 0) {
+          const checkAmount = Number(item.checkAmount || 0);
+          if (checkAmount <= 0) {
             return;
           }
 
-          const payAmount = Math.min(unpaidAmount, remainAmount);
+          const payAmount = Math.min(checkAmount, remainAmount);
           if (payAmount > 0) {
             items.push({
               id: item.id,
@@ -646,7 +635,7 @@
       },
       submitSettle() {
         const amount = Number(this.settleDialog.amount || 0);
-        if (amount > Number(this.selectedTotalUnpaidAmount.toFixed(2))) {
+        if (amount > Number(this.selectedTotalCheckAmount.toFixed(2))) {
           createError('对账金额不能大于选中单据未结算总额！');
           return;
         }

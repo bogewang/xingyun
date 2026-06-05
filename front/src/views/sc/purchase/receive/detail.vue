@@ -119,7 +119,7 @@
                   <j-form-item label="含税总金额" :span="8">
                     <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
                   </j-form-item>
-                  <j-form-item label="已付金额" :span="8">
+                  <j-form-item label="已结算金额" :span="8">
                     <a-input v-model:value="formData.paidAmount" class="number-input" readonly />
                   </j-form-item>
                   <j-form-item label="备注" :span="24" :content-nest="false">

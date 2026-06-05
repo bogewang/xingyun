@@ -113,15 +113,15 @@ public class QueryReceiveSheetBo extends BaseBo<ReceiveSheet> {
     private BigDecimal totalAmount;
 
     /**
-     * 已付金额
+     * 已结算金额
      */
-    @ApiModelProperty("已付金额")
+    @ApiModelProperty("已结算金额")
     private BigDecimal paidAmount;
 
     /**
-     * 未付金额
+     * 未结算金额
      */
-    @ApiModelProperty("未付金额")
+    @ApiModelProperty("未结算金额")
     private BigDecimal unpaidAmount;
 
     /**

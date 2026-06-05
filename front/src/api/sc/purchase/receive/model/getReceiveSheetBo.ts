@@ -82,7 +82,7 @@ export interface GetReceiveSheetBo {
   totalAmount: number;
 
   /**
-   * 已支付金额
+   * 已结算金额
    */
   paidAmount: number;
 
