@@ -629,6 +629,7 @@
             id: item.id,
             bizType: SETTLE_CHECK_SHEET_BIZ_TYPE.RECEIVE_SHEET.code,
             unSettleAmount: item.unSettleAmount || 0,
+            checkAmount: item.checkAmount || 0,
           });
         });
 

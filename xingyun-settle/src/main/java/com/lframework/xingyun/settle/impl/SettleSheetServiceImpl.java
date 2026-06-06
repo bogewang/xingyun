@@ -555,6 +555,9 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
         BigDecimal totalUnSettleAmt = vo.getItems().stream()
                 .map(item -> item.getUnSettleAmount() == null ? BigDecimal.ZERO : item.getUnSettleAmount())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalCheckAmt = vo.getItems().stream()
+                .map(item -> item.getCheckAmount() == null ? BigDecimal.ZERO : item.getCheckAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         int orderNo = 1;
         for (SettleSheetItemVo itemVo : vo.getItems()) {
@@ -564,7 +567,7 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
             orderNo++;
         }
 
-        this.buildSettleSheet(sheet, vo, receiveSheetIds, totalUnSettleAmt);
+        this.buildSettleSheet(sheet, vo, receiveSheetIds, totalUnSettleAmt, totalCheckAmt);
     }
 
     /**
@@ -604,11 +607,13 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
      * @param vo
      * @param receiveSheetIds
      * @param totalUnSettleAmt
+     * @param totalCheckAmt
      */
-    private void buildSettleSheet(SettleSheet sheet, CreateSettleSheetVo vo, List<String> receiveSheetIds, BigDecimal totalUnSettleAmt) {
+    private void buildSettleSheet(SettleSheet sheet, CreateSettleSheetVo vo, List<String> receiveSheetIds, BigDecimal totalUnSettleAmt, BigDecimal totalCheckAmt) {
         sheet.setSupplierId(vo.getSupplierId());
         sheet.setTotalAmount(vo.getSettleAmount());
         sheet.setTotalUnSettleAmt(totalUnSettleAmt);
+        sheet.setTotalCheckAmt(totalCheckAmt);
         sheet.setTotalDiscountAmount(BigDecimal.ZERO);
         sheet.setBizSheetIds(String.join(StringPool.STR_SPLIT, receiveSheetIds));
         sheet.setDescription(vo.getDescription());

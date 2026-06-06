@@ -10,6 +10,11 @@ export interface SettleSheetItemVo {
   unSettleAmount: number;
 
   /**
+   * 对账金额
+   */
+  checkAmount: number;
+
+  /**
    * 优惠金额
    */
   discountAmount: number;

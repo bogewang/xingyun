@@ -35,6 +35,20 @@ export interface QuerySettleSheetBo {
   totalDiscountAmount: number;
 
   /**
+   * 未结算汇总金额
+   */
+  totalUnSettleAmt: number;
+
+  /**
+   * 累计已付
+   */
+  totalPaidAmt: number;
+  /**
+   * 对账金额
+   */
+  totalCheckAmt: number;
+
+  /**
    * 起始时间
    */
   startTime: string;
@@ -73,4 +87,13 @@ export interface QuerySettleSheetBo {
    * 状态
    */
   status: number;
+
+  /**
+   * 业务单ID（逗号分隔）
+   */
+  bizSheetIds: string;
+  /**
+   * 业务单Code（逗号分隔）
+   */
+  bizSheetIdCodes: string;
 }

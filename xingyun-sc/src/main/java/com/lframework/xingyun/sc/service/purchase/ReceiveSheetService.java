@@ -203,4 +203,6 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
    * @return 创建的订单ID列表
    */
   List<String> importByQuery(List<ReceiveSheetQueryImportModel> list);
+
+  List<ReceiveSheet> selectByIds(List<String> ids);
 }

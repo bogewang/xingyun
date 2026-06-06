@@ -136,11 +136,13 @@
         tableData: [],
         tableColumn: [
           { field: 'seqNo', title: '序号', width: 70, fixed: 'left', slots: { default: 'seq_default' } },
+          { field: 'code', title: '结算单号', width: 180, fixed: 'left' },
           { field: 'recordTime', title: '结算时间', width: 180, fixed: 'left' },
-          { field: 'supplierName', title: '供应商名称', minWidth: 220, fixed: 'left' },
-          { field: 'bizCodeText', title: '货单号', width: 140, slots: { default: 'bizCode_default' } },
-          { field: 'bizTotalAmount', title: '货流总价', width: 140, align: 'right' },
-          { field: 'actualSettleAmount', title: '实付金额', width: 120, align: 'right' },
+          { field: 'supplierName', title: '供应商名称', minWidth: 100, fixed: 'left' },
+          { field: 'bizCodeText', title: '货单号', width: 160, slots: { default: 'bizCode_default' } },
+          { field: 'totalCheckAmt', title: '对账金额', width: 140, align: 'right' },
+          { field: 'totalPaidAmt', title: '累计已付', width: 140, align: 'right' },
+          { field: 'actualSettleAmount', title: '结算金额', width: 120, align: 'right' },
           { field: 'description', title: '备注', minWidth: 240, slots: { default: 'description_default' } },
         ],
       };
@@ -154,7 +156,7 @@
       },
       footerMethod({ columns, data }) {
         const fieldMap = {
-          bizTotalAmount: this.formatAmount(this.sumByField(data, 'bizTotalAmount')),
+          totalCheckAmt: this.formatAmount(this.sumByField(data, 'totalCheckAmt')),
           actualSettleAmount: this.formatAmount(this.sumByField(data, 'actualSettleAmount')),
         };
 
@@ -181,12 +183,12 @@
               recordTime: '',
               supplierName: '',
               bizCodeText: '',
-              bizTotalAmount: '',
+              totalCheckAmt: '',
               actualSettleAmount: '',
               description: '',
-              detailLinks: (row.detailInfo?.details || []).map((item) => ({
-                bizId: item.bizId,
-                bizCode: item.bizCode,
+              detailLinks: row.bizCodes.map((item) => ({
+                bizId: item,
+                bizCode: item,
               })),
             });
           }
@@ -214,45 +216,24 @@
           createEndTime: this.dateRange?.[1] ? `${this.dateRange[1]} 23:59:59` : undefined,
         };
       },
-      async hydrateRows(records) {
-        const detailRows = await Promise.all(
-          (records || []).map(async (item) => {
-            try {
-              const detail = await settleApi.get(item.id);
-              return {
-                ...item,
-                detailInfo: detail,
-              };
-            } catch (e) {
-              return {
-                ...item,
-                detailInfo: null,
-              };
-            }
-          }),
-        );
-
-        return detailRows.map((item) => {
-          const details = item.detailInfo?.details || [];
-          const bizTotalAmount = details.reduce(
-            (total, detail) => total + Number(detail.totalPayAmount || 0),
-            0,
-          );
-          const actualSettleAmount =
-            item.totalAmount === null || item.totalAmount === undefined
-              ? details.reduce((total, detail) => total + Number(detail.payAmount || 0), 0)
-              : Number(item.totalAmount || 0);
+      hydrateRows(records) {
+        return (records || []).map((item) => {
+          const bizCodes = String(item.bizSheetIdCodes || '')
+            .split(',')
+            .map((code) => String(code).trim())
+            .filter((code) => !!code);
 
           return {
             ...item,
             isDetailRow: false,
             seqNo: 0,
             recordTime: item.createTime || '',
-            detailCount: details.length,
-            bizCode: details[0]?.bizCode || '',
-            bizCodeText: details.length > 1 ? `共${details.length}单` : details[0]?.bizCode || '-',
-            bizTotalAmount,
-            actualSettleAmount,
+            detailCount: bizCodes.length,
+            bizCodes,
+            bizCode: bizCodes[0] || '',
+            bizCodeText: bizCodes.length > 1 ? `共${bizCodes.length}单` : bizCodes[0] || '-',
+            totalCheckAmt: Number(item.totalCheckAmt || 0),
+            actualSettleAmount: Number(item.totalAmount || 0),
             description: item.description || '',
           };
         });
@@ -263,7 +244,7 @@
           const keyword = this.searchFormData.keyword || '';
           if (!keyword) {
             const res = await settleApi.query(this.buildSettleQueryParams());
-            const rows = await this.hydrateRows(res?.datas || []);
+            const rows = this.hydrateRows(res?.datas || []);
             this.rawTableData = rows.map((item, index) => ({ ...item, seqNo: index + 1 }));
             this.tableData = this.buildDisplayRows(this.rawTableData);
             this.pagerConfig.total = res?.totalCount || 0;
@@ -271,12 +252,9 @@
           }
 
           const res = await settleApi.query(this.buildSettleQueryParams(1, 200));
-          const rows = await this.hydrateRows(res?.datas || []);
+          const rows = this.hydrateRows(res?.datas || []);
           const filteredRows = rows.filter((item) => {
-            const details = item.detailInfo?.details || [];
-            return details.some(
-              (detail) => String(detail.bizCode || '').includes(keyword),
-            );
+            return (item.bizCodes || []).some((code) => String(code || '').includes(keyword));
           });
 
           this.pagerConfig.total = filteredRows.length;

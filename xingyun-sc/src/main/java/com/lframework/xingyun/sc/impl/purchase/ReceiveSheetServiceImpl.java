@@ -1045,4 +1045,9 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     private BigDecimal defaultValue(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
     }
+
+    @Override
+    public List<ReceiveSheet> selectByIds(List<String> ids) {
+        return getBaseMapper().selectBatchIds(ids);
+    }
 }

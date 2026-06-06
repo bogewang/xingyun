@@ -133,3 +133,4 @@ ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `supplier_id` varchar(32) NUL
 -- 对账结算
 alter table settle_sheet add column biz_sheet_ids varchar(5000) null comment '业务单ID（逗号分隔）';
 ALTER TABLE `settle_sheet` ADD COLUMN `total_un_settle_amt` decimal(32,2) COMMENT '未结算汇总金额';
+ALTER TABLE `settle_sheet` ADD COLUMN `total_check_amt` decimal(32,2) COMMENT '对账金额';

@@ -130,4 +130,8 @@ public class SettleSheet extends BaseEntity implements BaseDto {
      * 未结算汇总金额
      */
     private BigDecimal totalUnSettleAmt;
+    /**
+     * 对账金额
+     */
+    private BigDecimal totalCheckAmt;
 }

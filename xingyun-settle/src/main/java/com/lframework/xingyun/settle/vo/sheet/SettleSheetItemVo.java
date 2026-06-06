@@ -24,6 +24,12 @@ public class SettleSheetItemVo implements BaseVo, Serializable {
   private BigDecimal unSettleAmount;
 
   /**
+   * 对账金额
+   */
+  @ApiModelProperty("对账金额")
+  private BigDecimal checkAmount;
+
+  /**
    * 优惠金额
    */
   @ApiModelProperty("优惠金额")
