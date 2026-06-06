@@ -52,40 +52,39 @@
 
         <template #toolbar_buttons>
           <a-space>
-            <a-button @click="closeCurrentPage">返回</a-button>
             <a-button type="primary" @click="search">查询</a-button>
           </a-space>
         </template>
 
+        <template #seq_default="{ row }">
+          <span v-if="!row.isDetailRow">{{ row.seqNo }}</span>
+        </template>
+
         <template #bizCode_default="{ row }">
-          <span v-if="row.detailCount > 1" class="sheet-record-page__link-text"
-            @click="openDetailDialog(row)"
+          <span
+            v-if="!row.isDetailRow && row.detailCount > 1"
+            class="sheet-record-page__link-text"
+            @click="toggleDetailRow(row)"
             >共{{ row.detailCount }}单</span
           >
-          <a v-else @click="openReceiveSheet(row.bizCode)">{{ row.bizCode || '-' }}</a>
+          <a v-else-if="!row.isDetailRow" @click="openReceiveSheet(row.bizCode)">{{
+            row.bizCode || '-'
+          }}</a>
+        </template>
+
+        <template #description_default="{ row }">
+          <template v-if="row.isDetailRow">
+            <div class="sheet-record-page__detail-inline">
+              <span class="sheet-record-page__detail-label">货单号：</span>
+              <template v-for="(item, index) in row.detailLinks" :key="item.bizId">
+                <a @click="openReceiveSheet(item.bizCode)">{{ item.bizCode }}</a>
+                <span v-if="index < row.detailLinks.length - 1">，</span>
+              </template>
+            </div>
+          </template>
+          <span v-else>{{ row.description || '' }}</span>
         </template>
       </vxe-grid>
-
-      <a-modal
-        v-model:open="detailDialog.visible"
-        title="货流单明细"
-        width="900px"
-        :footer="null"
-      >
-        <vxe-grid
-          size="mini"
-          resizable
-          show-overflow
-          row-id="bizId"
-          :data="detailDialog.tableData"
-          :columns="detailDialog.columns"
-          max-height="480"
-        >
-          <template #bizCode_detail="{ row }">
-            <a @click="openReceiveSheet(row.bizCode)">{{ row.bizCode }}</a>
-          </template>
-        </vxe-grid>
-      </a-modal>
     </page-wrapper>
   </div>
 </template>
@@ -126,33 +125,23 @@
             buttons: 'toolbar_buttons',
           },
         },
+        expandedRowIds: [],
         pagerConfig: {
           currentPage: 1,
           pageSize: 20,
           total: 0,
           layouts: ['PrevPage', 'JumpNumber', 'NextPage', 'Sizes', 'Total'],
         },
-        detailDialog: {
-          visible: false,
-          tableData: [],
-          columns: [
-            { type: 'seq', title: '序号', width: 70 },
-            { field: 'bizCode', title: '货流单号', minWidth: 180, slots: { default: 'bizCode_detail' } },
-            { field: 'totalPayAmount', title: '货流总价', width: 120, align: 'right' },
-            { field: 'payAmount', title: '实付金额', width: 120, align: 'right' },
-            { field: 'totalUnPayAmount', title: '未付金额', width: 120, align: 'right' },
-            { field: 'description', title: '备注', minWidth: 220 },
-          ],
-        },
+        rawTableData: [],
         tableData: [],
         tableColumn: [
-          { type: 'seq', title: '序号', width: 70, fixed: 'left' },
+          { field: 'seqNo', title: '序号', width: 70, fixed: 'left', slots: { default: 'seq_default' } },
           { field: 'recordTime', title: '结算时间', width: 180, fixed: 'left' },
           { field: 'supplierName', title: '供应商名称', minWidth: 220, fixed: 'left' },
           { field: 'bizCodeText', title: '货单号', width: 140, slots: { default: 'bizCode_default' } },
           { field: 'bizTotalAmount', title: '货流总价', width: 140, align: 'right' },
           { field: 'actualSettleAmount', title: '实付金额', width: 120, align: 'right' },
-          { field: 'description', title: '备注', minWidth: 240 },
+          { field: 'description', title: '备注', minWidth: 240, slots: { default: 'description_default' } },
         ],
       };
     },
@@ -178,6 +167,32 @@
             return fieldMap[column.field] || '';
           }),
         ];
+      },
+      buildDisplayRows(rows) {
+        const displayRows = [];
+        (rows || []).forEach((row) => {
+          displayRows.push(row);
+          if (this.expandedRowIds.includes(row.id) && row.detailCount > 1) {
+            displayRows.push({
+              id: `${row.id}__detail`,
+              parentId: row.id,
+              isDetailRow: true,
+              seqNo: '',
+              recordTime: '',
+              supplierName: '',
+              bizCodeText: '',
+              bizTotalAmount: '',
+              actualSettleAmount: '',
+              description: '',
+              detailLinks: (row.detailInfo?.details || []).map((item) => ({
+                bizId: item.bizId,
+                bizCode: item.bizCode,
+              })),
+            });
+          }
+        });
+
+        return displayRows;
       },
       sumByField(data, field) {
         return (data || []).reduce((total, item) => {
@@ -230,6 +245,8 @@
 
           return {
             ...item,
+            isDetailRow: false,
+            seqNo: 0,
             recordTime: item.createTime || '',
             detailCount: details.length,
             bizCode: details[0]?.bizCode || '',
@@ -247,7 +264,8 @@
           if (!keyword) {
             const res = await settleApi.query(this.buildSettleQueryParams());
             const rows = await this.hydrateRows(res?.datas || []);
-            this.tableData = rows;
+            this.rawTableData = rows.map((item, index) => ({ ...item, seqNo: index + 1 }));
+            this.tableData = this.buildDisplayRows(this.rawTableData);
             this.pagerConfig.total = res?.totalCount || 0;
             return;
           }
@@ -264,8 +282,12 @@
           this.pagerConfig.total = filteredRows.length;
           const start = (this.pagerConfig.currentPage - 1) * this.pagerConfig.pageSize;
           const end = start + this.pagerConfig.pageSize;
-          this.tableData = filteredRows.slice(start, end);
+          this.rawTableData = filteredRows
+            .slice(start, end)
+            .map((item, index) => ({ ...item, seqNo: start + index + 1 }));
+          this.tableData = this.buildDisplayRows(this.rawTableData);
         } catch (err) {
+          this.rawTableData = [];
           this.tableData = [];
           this.pagerConfig.total = 0;
           createError(err?.message || '查询结算记录失败，请稍后重试！');
@@ -275,18 +297,21 @@
       },
       search() {
         this.pagerConfig.currentPage = 1;
+        this.expandedRowIds = [];
         this.loadList();
       },
-      openDetailDialog(row) {
-        const details = row?.detailInfo?.details || [];
-        this.detailDialog.tableData = details.map((item) => ({
-          ...item,
-          totalPayAmount: this.formatAmount(item.totalPayAmount),
-          payAmount: this.formatAmount(item.payAmount),
-          totalUnPayAmount: this.formatAmount(item.totalUnPayAmount),
-          description: item.description || '',
-        }));
-        this.detailDialog.visible = true;
+      toggleDetailRow(row) {
+        if (!row || row.isDetailRow || row.detailCount <= 1) {
+          return;
+        }
+
+        if (this.expandedRowIds.includes(row.id)) {
+          this.expandedRowIds = this.expandedRowIds.filter((item) => item !== row.id);
+        } else {
+          this.expandedRowIds = [...this.expandedRowIds, row.id];
+        }
+
+        this.tableData = this.buildDisplayRows(this.rawTableData);
       },
       openReceiveSheet(code) {
         if (!code) {
@@ -315,5 +340,15 @@
 <style scoped lang="less">
   .sheet-record-page__link-text {
     color: #1677ff;
+    cursor: pointer;
+  }
+
+  .sheet-record-page__detail-inline {
+    white-space: normal;
+    line-height: 1.8;
+  }
+
+  .sheet-record-page__detail-label {
+    color: #595959;
   }
 </style>
