@@ -789,6 +789,21 @@
             },
           },
           {
+            permission: ['settle:sheet:query'],
+            label: '结算',
+            onClick: () => {
+              this.openChildPage({
+                path: '/settle/supplier/sheet/settle',
+                query: {
+                  supplierId: row.supplierId || '',
+                  code: row.code || '',
+                  startTime: this.orderDateRange?.[0] ? `${this.orderDateRange[0]} 00:00:00` : '',
+                  endTime: this.orderDateRange?.[1] ? `${this.orderDateRange[1]} 23:59:59` : '',
+                },
+              });
+            },
+          },
+          {
             label: '导出明细',
             onClick: () => {
               this.exportDetails(row);

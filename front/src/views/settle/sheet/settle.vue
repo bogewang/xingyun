@@ -201,6 +201,11 @@
     },
     data() {
       const routeQuery = this.$route.query || {};
+      const keyword = routeQuery.code
+        ? String(routeQuery.code).trim()
+        : routeQuery.keyword
+          ? String(routeQuery.keyword).trim()
+          : '';
       const startTime = routeQuery.startTime
         ? moment(String(routeQuery.startTime)).format('YYYY-MM-DD')
         : moment(getDateTimeWithMinTime(moment().subtract(3, 'M'))).format('YYYY-MM-DD');
@@ -215,9 +220,9 @@
         searchFormData: {
           supplierId: routeQuery.supplierId ? String(routeQuery.supplierId) : '',
           settleStatus: undefined,
-          keyword: '',
+          keyword,
         },
-        orderDateRange: [startTime, endTime],
+        orderDateRange: keyword ? [] : [startTime, endTime],
         toolbarConfig: {
           refresh: {
             queryMethod: () => this.loadList(),
@@ -352,9 +357,31 @@
       },
     },
     created() {
+      this.applyRouteQuery();
       this.search();
     },
     methods: {
+      applyRouteQuery() {
+        const routeQuery = this.$route.query || {};
+        const keyword = routeQuery.code
+          ? String(routeQuery.code).trim()
+          : routeQuery.keyword
+            ? String(routeQuery.keyword).trim()
+            : '';
+
+        this.searchFormData.supplierId = routeQuery.supplierId ? String(routeQuery.supplierId) : '';
+        this.searchFormData.keyword = keyword;
+        this.orderDateRange = keyword
+          ? []
+          : [
+              routeQuery.startTime
+                ? moment(String(routeQuery.startTime)).format('YYYY-MM-DD')
+                : moment(getDateTimeWithMinTime(moment().subtract(3, 'M'))).format('YYYY-MM-DD'),
+              routeQuery.endTime
+                ? moment(String(routeQuery.endTime)).format('YYYY-MM-DD')
+                : moment(getDateTimeWithMaxTime(moment())).format('YYYY-MM-DD'),
+            ];
+      },
       formatAmount(value) {
         return Number(value || 0).toFixed(2);
       },
@@ -567,8 +594,6 @@
         try {
           await settleCheckApi.directApprovePass({
             supplierId,
-            startDate: dateTimeToDate(`${this.orderDateRange[0]} 00:00:00`),
-            endDate: dateTimeToDate(`${this.orderDateRange[1]} 23:59:59`),
             checkAmt: amount,
             description: this.checkDialog.description || '',
             items,
@@ -627,8 +652,6 @@
         try {
           await settleApi.directApprovePass({
             supplierId,
-            startDate: dateTimeToDate(`${this.orderDateRange[0]} 00:00:00`),
-            endDate: dateTimeToDate(`${this.orderDateRange[1]} 23:59:59`),
             description: this.settleDialog.description || '',
             items,
             settleAmount: amount,
@@ -644,6 +667,7 @@
         }
       },
       onRefreshPage() {
+        this.applyRouteQuery();
         this.loadList();
       },
     },

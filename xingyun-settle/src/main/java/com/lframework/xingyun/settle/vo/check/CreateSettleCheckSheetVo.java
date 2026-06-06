@@ -44,15 +44,15 @@ public class CreateSettleCheckSheetVo implements BaseVo, Serializable {
   /**
    * 起始日期
    */
-  @ApiModelProperty(value = "起始日期", required = true)
-  @NotNull(message = "起始日期不能为空！")
+  @ApiModelProperty(value = "起始日期")
+  // @NotNull(message = "起始日期不能为空！")
   private LocalDate startDate;
 
   /**
    * 截止日期
    */
-  @ApiModelProperty(value = "截止日期", required = true)
-  @NotNull(message = "截止日期不能为空！")
+  @ApiModelProperty(value = "截止日期")
+  // @NotNull(message = "截止日期不能为空！")
   private LocalDate endDate;
 
   /**
