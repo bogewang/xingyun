@@ -89,8 +89,10 @@
           </a-space>
         </template>
 
-        <template #action_default="{ row }">
-          <a-button type="link" size="small" @click="openDetail(row.id)">详情</a-button>
+        <template #code_default="{ row }">
+          <a-button type="link" size="small" @click="openDetail(row.id)">
+            {{ row.code || '-' }}
+          </a-button>
         </template>
 
         <template #opHistory_default="{ row }">
@@ -258,9 +260,8 @@
         tableColumn: [
           { type: 'checkbox', width: 45, fixed: 'left' },
           { type: 'seq', title: '序号', width: 60, fixed: 'left' },
-          { title: '操作', width: 90, fixed: 'left', slots: { default: 'action_default' } },
           { field: 'supplierName', title: '供应商', minWidth: 140 },
-          { field: 'code', title: '货流单号', width: 170 },
+          { field: 'code', title: '货流单号', width: 170, slots: { default: 'code_default' } },
           { field: 'orderDate', title: '下单时间', width: 120, sortable: true },
           {
             field: 'bizType',
