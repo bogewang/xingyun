@@ -8,6 +8,10 @@ export interface ReceiveSheetSettleInfoBo extends QueryReceiveSheetBo {
   checkTime?: string;
 
   settleAmount?: number;
+  /**
+   * 未结算金额
+   */
+  unSettleAmount?: number;
 
   settleDescription?: string;
 

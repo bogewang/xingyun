@@ -31,6 +31,10 @@ public class ReceiveSheetSettleInfoBo extends QueryReceiveSheetBo implements Ser
   @ApiModelProperty("结算金额")
   private BigDecimal settleAmount;
 
+  @ApiModelProperty("未结算金额")
+  private BigDecimal unSettleAmount;
+
+
   @ApiModelProperty("结算备注")
   private String settleDescription;
 

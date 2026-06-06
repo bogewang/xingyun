@@ -181,8 +181,8 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
         ReceiveSheetSettleInfoBo result = BeanUtil.copyProperties(receiveSheet, ReceiveSheetSettleInfoBo.class);
         result.setBizSheetId(receiveSheet.getId());
 
-        fillCheckInfo(result, receiveSheet, checkDetailMap, checkSheetMap);
-        fillSettleInfo(result, settleDetailMap.get(receiveSheet.getId()), settleSheetMap);
+        fillCheckInfo(result, checkDetailMap.get(receiveSheet.getId()), checkSheetMap);
+        fillSettleInfo(result, settleDetailMap.get(receiveSheet.getId()), settleSheetMap, checkDetailMap.get(receiveSheet.getId()));
 
         return result;
     }
@@ -191,15 +191,12 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
      * 填充对账信息
      *
      * @param result
-     * @param receiveSheet
-     * @param checkDetailMap
+     * @param checkDetail
      * @param checkSheetMap
      */
     private void fillCheckInfo(ReceiveSheetSettleInfoBo result,
-                               QueryReceiveSheetBo receiveSheet,
-                               Map<String, SettleCheckSheetDetail> checkDetailMap,
+                               SettleCheckSheetDetail checkDetail,
                                Map<String, SettleCheckSheet> checkSheetMap) {
-        SettleCheckSheetDetail checkDetail = checkDetailMap.get(receiveSheet.getId());
         if (checkDetail == null) {
             return;
         }
@@ -219,28 +216,32 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
      *
      * @param result
      * @param settleDetails
+     * @param settleCheckSheetDetail
      */
     private void fillSettleInfo(ReceiveSheetSettleInfoBo result,
                                 List<SettleSheetDetail> settleDetails,
-                                Map<String, SettleSheet> settleSheetMap) {
-
-        if (CollectionUtil.isEmpty(settleDetails)) {
-            return;
-        }
-
+                                Map<String, SettleSheet> settleSheetMap,
+                                SettleCheckSheetDetail settleCheckSheetDetail) {
+        // 如果已对账已对账金额作为总金额
+        BigDecimal totalAmount = settleCheckSheetDetail == null ? result.getTotalAmount() : settleCheckSheetDetail.getPayAmount();
         BigDecimal settleAmount = BigDecimal.ZERO;
-        for (SettleSheetDetail detail : settleDetails) {
-            // 结算金额需要累计实付金额和优惠金额，才能还原该收货单的实际结算总额。
-            settleAmount = NumberUtil.add(settleAmount, detail.getPayAmount());
-            SettleSheet settleSheet = settleSheetMap.get(detail.getSheetId());
-            // todo 多次结算
-            if (settleSheet != null) {
-                result.setSettleTime(settleSheet.getApproveTime() != null ? settleSheet.getApproveTime() : settleSheet.getCreateTime());
-                result.setSettleDescription(settleSheet.getDescription());
+        if (CollectionUtil.isNotEmpty(settleDetails)) {
+            for (SettleSheetDetail detail : settleDetails) {
+                // 结算金额需要累计实付金额和优惠金额，才能还原该收货单的实际结算总额。
+                settleAmount = NumberUtil.add(settleAmount, detail.getPayAmount());
+                SettleSheet settleSheet = settleSheetMap.get(detail.getSheetId());
+                // todo 多次结算
+                if (settleSheet != null) {
+                    result.setSettleTime(settleSheet.getApproveTime() != null ? settleSheet.getApproveTime() : settleSheet.getCreateTime());
+                    result.setSettleDescription(settleSheet.getDescription());
+                }
             }
+            result.setSettleAmount(settleAmount);
         }
 
-        result.setSettleAmount(settleAmount);
+        // 计算未结算金额
+        BigDecimal unSettleAmt = NumberUtil.sub(NumberUtil.sub(totalAmount, result.getPaidAmount()), settleAmount);
+        result.setUnSettleAmount(unSettleAmt.compareTo(BigDecimal.ZERO) >= 0 ? unSettleAmt : BigDecimal.ZERO);
     }
 
     @Override
@@ -551,8 +552,8 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
 
         // 分配结算金额
         this.allocateSettleAmount(vo);
-        BigDecimal totalCheckAmt = vo.getItems().stream()
-                .map(item -> item.getCheckAmt() == null ? BigDecimal.ZERO : item.getCheckAmt())
+        BigDecimal totalUnSettleAmt = vo.getItems().stream()
+                .map(item -> item.getUnSettleAmount() == null ? BigDecimal.ZERO : item.getUnSettleAmount())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         int orderNo = 1;
@@ -563,11 +564,12 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
             orderNo++;
         }
 
-        this.buildSettleSheet(sheet, vo, receiveSheetIds, totalCheckAmt);
+        this.buildSettleSheet(sheet, vo, receiveSheetIds, totalUnSettleAmt);
     }
 
     /**
      * 对账金额分配
+     *
      * @param vo
      * @return
      */
@@ -576,9 +578,9 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
             return;
         }
 
-        // 对账单汇总金额
+        // 未结算金额
         BigDecimal checkAmount = vo.getItems().stream()
-                .map(item -> item.getCheckAmt() == null ? BigDecimal.ZERO : item.getCheckAmt())
+                .map(item -> item.getUnSettleAmount() == null ? BigDecimal.ZERO : item.getUnSettleAmount())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // 对账金额差额合计
@@ -587,7 +589,7 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
         BigDecimal avgDiffAmount = NumberUtil.div(totalDiffAmount, BigDecimal.valueOf(vo.getItems().size()));
 
         vo.getItems().forEach(item -> {
-            BigDecimal settleAmt = NumberUtil.add(item.getCheckAmt(), avgDiffAmount);
+            BigDecimal settleAmt = NumberUtil.add(item.getUnSettleAmount(), avgDiffAmount);
             if (NumberUtil.lt(settleAmt, BigDecimal.ZERO)) {
                 throw new DefaultClientException("结算金额过小，分摊后会出现负数单据，请调整结算金额！");
             }
@@ -597,15 +599,16 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
 
     /**
      * 构建结算单
+     *
      * @param sheet
      * @param vo
      * @param receiveSheetIds
-     * @param checkTotalAmount
+     * @param totalUnSettleAmt
      */
-    private void buildSettleSheet(SettleSheet sheet, CreateSettleSheetVo vo, List<String> receiveSheetIds, BigDecimal checkTotalAmount) {
+    private void buildSettleSheet(SettleSheet sheet, CreateSettleSheetVo vo, List<String> receiveSheetIds, BigDecimal totalUnSettleAmt) {
         sheet.setSupplierId(vo.getSupplierId());
         sheet.setTotalAmount(vo.getSettleAmount());
-        sheet.setCheckTotalAmount(checkTotalAmount);
+        sheet.setTotalUnSettleAmt(totalUnSettleAmt);
         sheet.setTotalDiscountAmount(BigDecimal.ZERO);
         sheet.setBizSheetIds(String.join(StringPool.STR_SPLIT, receiveSheetIds));
         sheet.setDescription(vo.getDescription());
@@ -616,6 +619,7 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
 
     /**
      * 构建结算单详情
+     *
      * @param sheet
      * @param orderNo
      * @return

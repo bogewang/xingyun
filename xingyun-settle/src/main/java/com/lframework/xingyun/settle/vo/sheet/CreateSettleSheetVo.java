@@ -71,8 +71,8 @@ public class CreateSettleSheetVo implements BaseVo, Serializable {
         throw new InputErrorException("第" + orderNo + "行结算单不能为空！");
       }
 
-      if (item.getCheckAmt() == null) {
-        throw new InputErrorException("第" + orderNo + "行对账金额不能为空！");
+      if (item.getUnSettleAmount() == null) {
+        throw new InputErrorException("第" + orderNo + "行未结算不能为空！");
       }
 
       // if (item.getDiscountAmount() == null) {

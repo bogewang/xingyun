@@ -18,10 +18,10 @@ public class SettleSheetItemVo implements BaseVo, Serializable {
   private String id;
 
   /**
-   * 对账金额
+   * 未结算金额
    */
-  @ApiModelProperty("对账金额")
-  private BigDecimal checkAmt;
+  @ApiModelProperty("未结算金额")
+  private BigDecimal unSettleAmount;
 
   /**
    * 优惠金额

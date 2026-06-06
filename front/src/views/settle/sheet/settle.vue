@@ -169,7 +169,7 @@
             style="width: 100%"
             placeholder="请输入结算金额"
           />
-          <div class="amount-tip">选中单据未结算总额：{{ formatAmount(selectedTotalCheckAmount) }}</div>
+          <div class="amount-tip">选中单据未结算总额：{{ formatAmount(selectedTotalUnSettleAmount) }}</div>
         </a-form-item>
         <a-form-item label="备注">
           <a-textarea
@@ -269,7 +269,8 @@
             formatter: () => '进货单',
           },
           { field: 'totalNum', title: '商品数量', width: 90, align: 'right' },
-          { field: 'totalAmount', title: '货流单金额', width: 120, align: 'right' },
+          { field: 'totalAmount', title: '货流单金额', width: 100, align: 'right' },
+          { field: 'unSettleAmount', title: '本单未结算', width: 100, align: 'right' },
           {
             field: 'checkAmount',
             title: '对账金额',
@@ -330,8 +331,8 @@
       selectedStatusList() {
         return [...new Set(this.selectedRows.map((item) => item.settleStatus))];
       },
-      selectedTotalCheckAmount() {
-        return this.selectedRows.reduce((total, item) => total + Number(item.checkAmount || 0), 0);
+      selectedTotalUnSettleAmount() {
+        return this.selectedRows.reduce((total, item) => total + Number(item.unSettleAmount || 0), 0);
       },
       selectedTotalAmount() {
         return this.selectedRows.reduce((total, item) => total + Number(item.totalAmount || 0), 0);
@@ -606,7 +607,7 @@
           return;
         }
 
-        this.settleDialog.amount = Number(this.selectedTotalCheckAmount.toFixed(2));
+        this.settleDialog.amount = Number(this.selectedTotalUnSettleAmount.toFixed(2));
         this.settleDialog.description = '';
         this.settleDialog.visible = true;
       },
@@ -620,7 +621,7 @@
           items.push({
             id: item.id,
             bizType: SETTLE_CHECK_SHEET_BIZ_TYPE.RECEIVE_SHEET.code,
-            checkAmt: item.checkAmount || 0,
+            unSettleAmount: item.unSettleAmount || 0,
           });
         });
 

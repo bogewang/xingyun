@@ -127,7 +127,7 @@ public class SettleSheet extends BaseEntity implements BaseDto {
     private String bizSheetIds;
 
     /**
-     * 收货单汇总总金额
+     * 未结算汇总金额
      */
-    private BigDecimal checkTotalAmount;
+    private BigDecimal totalUnSettleAmt;
 }
