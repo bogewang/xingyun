@@ -611,6 +611,14 @@ export const SettleRoute: AppRouteRecordRaw = {
       },
     },
     {
+      path: 'supplier/sheet-record',
+      name: 'SupplierSettleSheetRecord',
+      component: () => import('/@/views/settle/sheet/record.vue'),
+      meta: {
+        title: '结算记录',
+      },
+    },
+    {
       path: 'supplier/sheet/modify/:id',
       name: 'ModifySupplierSettleSheet',
       meta: {

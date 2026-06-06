@@ -432,8 +432,18 @@
         },
       };
     },
-    created() {},
+    created() {
+      this.applyRouteQuery();
+    },
     methods: {
+      applyRouteQuery() {
+        const routeQuery = this.$route?.query || {};
+        const code = routeQuery.code ? String(routeQuery.code).trim() : '';
+        if (code) {
+          this.searchFormData.code = code;
+          this.orderDateRange = [];
+        }
+      },
       CloudUploadOutlined,
       footerMethod({ columns, data }) {
         const totalAmount = this.sumByField(data, 'totalAmount');
@@ -829,6 +839,7 @@
         ];
       },
       onRefreshPage() {
+        this.applyRouteQuery();
         this.search();
       },
     },

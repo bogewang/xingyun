@@ -506,7 +506,14 @@
         this.$nextTick(() => this.$refs.detailDialog.openDialog());
       },
       openRecordPage() {
-        this.openChildPage('/settle/supplier/check-sheet');
+        this.openChildPage({
+          path: '/settle/supplier/sheet-record',
+          query: {
+            supplierId: this.searchFormData.supplierId || '',
+            startTime: this.orderDateRange?.[0] ? `${this.orderDateRange[0]} 00:00:00` : '',
+            endTime: this.orderDateRange?.[1] ? `${this.orderDateRange[1]} 23:59:59` : '',
+          },
+        });
       },
       exportList() {
         this.loading = true;
