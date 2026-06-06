@@ -121,6 +121,9 @@
         },
         dateRange: [startTime, endTime],
         toolbarConfig: {
+          refresh: {
+            queryMethod: () => this.loadList(),
+          },
           slots: {
             buttons: 'toolbar_buttons',
           },
