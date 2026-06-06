@@ -208,7 +208,7 @@
   } from '@/utils/utils';
 
   export default defineComponent({
-    name: 'SettleSheetWorkbench',
+    name: 'AddSupplierSettleSheet',
     components: {
       Detail,
       SupplierSelector,
