@@ -72,14 +72,14 @@
             <a-button type="primary" @click="openRecordPage">结算记录</a-button>
             <a-button :icon="h(DownloadOutlined)" @click="exportList">导出</a-button>
             <a-button
-              v-permission="['settle:check-sheet:approve']"
+              v-permission="['settle:sheet:query']"
               :disabled="!canConfirmCheck"
               @click="openCheckDialog"
             >
               确认对账
             </a-button>
             <a-button
-              v-permission="['settle:sheet:approve']"
+              v-permission="['settle:sheet:query']"
               type="primary"
               :disabled="!canConfirmSettle"
               @click="openSettleDialog"

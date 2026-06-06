@@ -636,7 +636,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     // public void clearSettleSheetDetailId(String id) {
     //
     //     Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
-    //             .set(ReceiveSheet::getSettleCheckSheetDetailId, null)
     //             .eq(ReceiveSheet::getId, id);
     //     getBaseMapper().update(updateWrapper);
     // }

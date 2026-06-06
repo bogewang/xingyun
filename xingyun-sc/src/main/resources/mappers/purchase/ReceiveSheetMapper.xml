@@ -49,7 +49,6 @@
         <result column="status" property="status"/>
         <result column="refuse_reason" property="refuseReason"/>
         <result column="settle_status" property="settleStatus"/>
-        <result column="settle_check_sheet_detail_id" property="settleCheckSheetDetailId"/>
         <collection property="details" javaType="java.util.ArrayList" ofType="com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto$OrderDetailDto">
             <id column="detail_id" property="id"/>
             <result column="detail_product_id" property="productId"/>

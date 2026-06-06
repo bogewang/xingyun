@@ -180,14 +180,6 @@ public class QueryReceiveSheetBo extends BaseBo<ReceiveSheet> {
     @ApiModelProperty("结算状态")
     private Integer settleStatus;
 
-    /**
-     * 对账明细单ID
-     */
-    @ApiModelProperty("对账明细单ID")
-    private String settleCheckSheetDetailId;
-
-
-
     public QueryReceiveSheetBo(ReceiveSheet dto) {
 
         super(dto);

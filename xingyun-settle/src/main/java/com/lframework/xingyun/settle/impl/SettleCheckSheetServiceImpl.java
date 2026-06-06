@@ -642,7 +642,6 @@ public class SettleCheckSheetServiceImpl extends
     // for (SettleCheckSheetDetail sheetDetail : sheetDetails) {
     // if (sheetDetail.getBizType() == SettleCheckSheetBizType.RECEIVE_SHEET) {
     // receiveSheetService.setUnSettle(sheetDetail.getBizId(),
-    // settleCheckSheetDetailId);
     // }
     // }
     // }

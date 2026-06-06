@@ -132,11 +132,6 @@ public class ReceiveSheetFullDto implements BaseDto, Serializable {
   private SettleStatus settleStatus;
 
   /**
-   * 对账明细单ID
-   */
-  private String settleCheckSheetDetailId;
-
-  /**
    * 订单明细
    */
   private List<OrderDetailDto> details;

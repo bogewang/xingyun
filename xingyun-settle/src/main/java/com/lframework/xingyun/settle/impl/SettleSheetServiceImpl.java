@@ -127,21 +127,20 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
      * 查询对账单详情映射
      *
      * @param receiveSheets
-     * @return
+     * @return bizId => 对账单详情
      */
     private Map<String, SettleCheckSheetDetail> queryCheckDetailMap(List<QueryReceiveSheetBo> receiveSheets) {
 
-        List<String> checkDetailIds = receiveSheets.stream()
-                .map(QueryReceiveSheetBo::getSettleCheckSheetDetailId)
-                .filter(StringUtil::isNotBlank)
+        List<String> receiveSheetIds = receiveSheets.stream()
+                .map(QueryReceiveSheetBo::getId)
                 .distinct()
                 .collect(Collectors.toList());
-        if (CollectionUtil.isEmpty(checkDetailIds)) {
+        if (CollectionUtil.isEmpty(receiveSheetIds)) {
             return new HashMap<>();
         }
 
-        return settleCheckSheetDetailService.listByIds(checkDetailIds).stream()
-                .collect(Collectors.toMap(SettleCheckSheetDetail::getId, Function.identity(), (a, b) -> a));
+        return settleCheckSheetDetailService.listByBizIds(receiveSheetIds).stream()
+                .collect(Collectors.toMap(SettleCheckSheetDetail::getBizId, Function.identity(), (a, b) -> a));
     }
 
     private Map<String, List<SettleSheetDetail>> querySettleDetailMap(List<String> ids) {
@@ -200,12 +199,7 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
                                QueryReceiveSheetBo receiveSheet,
                                Map<String, SettleCheckSheetDetail> checkDetailMap,
                                Map<String, SettleCheckSheet> checkSheetMap) {
-
-        if (StringUtil.isBlank(receiveSheet.getSettleCheckSheetDetailId())) {
-            return;
-        }
-
-        SettleCheckSheetDetail checkDetail = checkDetailMap.get(receiveSheet.getSettleCheckSheetDetailId());
+        SettleCheckSheetDetail checkDetail = checkDetailMap.get(receiveSheet.getId());
         if (checkDetail == null) {
             return;
         }
