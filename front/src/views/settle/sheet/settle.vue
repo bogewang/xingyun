@@ -237,7 +237,7 @@
         tableColumn: [
           { type: 'checkbox', width: 45, fixed: 'left' },
           { type: 'seq', title: '序号', width: 60, fixed: 'left' },
-          { field: 'supplierName', title: '供应商', minWidth: 80 },
+          { field: 'supplierName', title: '供应商', minWidth: 120 },
           { field: 'code', title: '货流单号', width: 170, slots: { default: 'code_default' } },
           { field: 'orderDate', title: '下单时间', width: 120, sortable: true },
           {
@@ -423,19 +423,27 @@
 
         return params;
       },
+      async resolveQueryResult() {
+        const keyword = this.searchFormData.keyword || '';
+        this.keywordField = 'code';
+        let queryParams = this.buildQueryParams();
+        let res = await settleApi.queryReceiveSheetSettleInfos(queryParams);
+
+        if (keyword && (!res || res.length === 0)) {
+          this.keywordField = 'purchaseOrderCode';
+          queryParams = this.buildQueryParams();
+          res = await settleApi.queryReceiveSheetSettleInfos(queryParams);
+        }
+
+        return {
+          queryParams,
+          res,
+        };
+      },
       async loadList() {
         this.loading = true;
         try {
-          const keyword = this.searchFormData.keyword || '';
-          this.keywordField = 'code';
-          let queryParams = this.buildQueryParams();
-          let res = await settleApi.queryReceiveSheetSettleInfos(queryParams);
-
-          if (keyword && (!res || res.length === 0)) {
-            this.keywordField = 'purchaseOrderCode';
-            queryParams = this.buildQueryParams();
-            res = await settleApi.queryReceiveSheetSettleInfos(queryParams);
-          }
+          const { res } = await this.resolveQueryResult();
 
           this.tableData = (res || []).map((item) => ({
             ...item,
@@ -483,10 +491,15 @@
       },
       exportList() {
         this.loading = true;
-        settleApi
-          .exportReceiveSheetSettleInfos(this.buildQueryParams())
+        this.resolveQueryResult()
+          .then(({ queryParams }) =>
+            settleApi.exportReceiveSheetSettleInfos(queryParams),
+          )
           .then(() => {
             createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .catch((err) => {
+            createError(err?.message || '创建导出任务失败，请稍后重试！');
           })
           .finally(() => {
             this.loading = false;

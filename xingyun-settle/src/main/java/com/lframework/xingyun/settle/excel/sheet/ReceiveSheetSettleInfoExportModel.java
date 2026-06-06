@@ -19,6 +19,9 @@ public class ReceiveSheetSettleInfoExportModel implements ExcelModel {
   @ExcelProperty("供应商名称")
   private String supplierName;
 
+  @ExcelProperty("采购单号")
+  private String purchaseOrderCode;
+
   @ExcelProperty("货流单号")
   private String code;
 
@@ -28,6 +31,9 @@ public class ReceiveSheetSettleInfoExportModel implements ExcelModel {
 
   @ExcelProperty("货单类型")
   private String bizType;
+
+  @ExcelProperty("操作人")
+  private String createBy;
 
   @ExcelProperty("商品数量")
   private BigDecimal totalNum;
@@ -69,11 +75,13 @@ public class ReceiveSheetSettleInfoExportModel implements ExcelModel {
 
   public ReceiveSheetSettleInfoExportModel(ReceiveSheetSettleInfoBo dto) {
     this.setSupplierName(dto.getSupplierName());
+    this.setPurchaseOrderCode(dto.getPurchaseOrderCode());
     this.setCode(dto.getCode());
     if (dto.getOrderDate() != null) {
       this.setOrderDate(DateUtil.toDate(dto.getOrderDate()));
     }
     this.setBizType("进货单");
+    this.setCreateBy(dto.getCreateBy());
     this.setTotalNum(dto.getTotalNum());
     this.setTotalAmount(dto.getTotalAmount());
     this.setUnSettleAmount(dto.getUnSettleAmount());
