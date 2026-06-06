@@ -1451,7 +1451,8 @@ public class SaleOutSheetServiceImpl extends
         handleSeq(list);
 
         // 匹配编号
-        checkImportData(list);
+        List<String> errors = checkImportData(list);
+        Assert.isTrue(CollectionUtils.isEmpty(errors), StringUtils.join(errors, ";\r\n"));
 
         return list.stream()
                 .map(item -> BeanUtil.copyProperties(item, SaleOutProductVo.class))
@@ -1533,7 +1534,7 @@ public class SaleOutSheetServiceImpl extends
                 .collect(Collectors.toList());
     }
 
-    private void checkImportData(List<SaleOutSheetImportModel> list) {
+    private List<String> checkImportData(List<SaleOutSheetImportModel> list) {
         List<String> productNames = list.stream().map(SaleOutSheetImportModel::getProductName).collect(Collectors.toList());
         List<Product> products = productService.selectByProductName(productNames);
         Map<String, Product> nameSpecUnitMap = products.stream()
@@ -1541,24 +1542,25 @@ public class SaleOutSheetServiceImpl extends
         Map<String, Product> nameUnitMap = products.stream()
                 .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item, (oldValue, newValue) -> oldValue));
 
+        List<String> errors = Lists.newArrayList();
         for (int i = 0; i < list.size(); i++) {
             SaleOutSheetImportModel data = list.get(i);
             int rowIndex = data.getSeq();
 
             if (StringUtils.isEmpty(data.getProductName())) {
-                throw new DefaultClientException("第" + rowIndex + "行“商品名称”不能为空");
+                errors.add("第" + rowIndex + "行“商品名称”不能为空");
             }
             if (StringUtils.isEmpty(data.getUnit())) {
-                throw new DefaultClientException("第" + rowIndex + "行“单位”不能为空");
+                errors.add("第" + rowIndex + "行“单位”不能为空");
             }
             if (data.getOrderNum() == null) {
-                throw new DefaultClientException("第" + rowIndex + "行“数量”不能为空");
+                errors.add("第" + rowIndex + "行“数量”不能为空");
             }
             if (NumberUtil.le(data.getOrderNum(), BigDecimal.ZERO)) {
-                throw new DefaultClientException("第" + rowIndex + "行“数量”必须大于0");
+                errors.add("第" + rowIndex + "行“数量”必须大于0");
             }
             if (!NumberUtil.isNumberPrecision(data.getOrderNum(), 8)) {
-                throw new DefaultClientException("第" + rowIndex + "行“数量”最多允许8位小数");
+                errors.add("第" + rowIndex + "行“数量”最多允许8位小数");
             }
 
             // 匹配商品,设置商品编号
@@ -1568,21 +1570,21 @@ public class SaleOutSheetServiceImpl extends
             if (product == null) {
                 product = nameUnitMap.get(nameSpecUnit);
                 if (product == null) {
-                    throw new DefaultClientException("第" + rowIndex + "行“商品名称”、“规格”、“单位”组合不存在");
+                    errors.add("第" + rowIndex + "行“商品名称”、“规格”、“单位”组合不存在");
                 }
             }
-            data.setProductCode(product.getCode());
-            data.setProductId(product.getId());
-            BigDecimal defaultSalePrice = productLatestPriceCacheService.getLatestSalePrice(product.getId());
-            data.setSalePrice(defaultSalePrice);
+            if (product != null) {
+                data.setProductCode(product.getCode());
+                data.setProductId(product.getId());
+                BigDecimal defaultSalePrice = productLatestPriceCacheService.getLatestSalePrice(product.getId());
+                data.setSalePrice(defaultSalePrice);
 
-            if (data.getTaxPrice() == null) {
-                data.setTaxPrice(defaultSalePrice == null ? BigDecimal.ZERO : defaultSalePrice);
+                if (data.getTaxPrice() == null) {
+                    data.setTaxPrice(defaultSalePrice == null ? BigDecimal.ZERO : defaultSalePrice);
+                }
             }
-            // if (data.getTaxPrice() == null) {
-            //     throw new DefaultClientException("第" + rowIndex + "行商品未设置销售价，请填写“单价”或先维护商品销售价");
-            // }
         }
+        return errors;
     }
 
     @Override

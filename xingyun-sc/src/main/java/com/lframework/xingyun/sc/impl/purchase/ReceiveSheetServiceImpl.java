@@ -32,7 +32,6 @@ import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.enums.ManageType;
 import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.enums.SettleType;
-import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
@@ -889,7 +888,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
         handleSeq(list);
         // 匹配编号
-        checkImportData(list);
+        List<String> errors = checkImportData(list);
+        Assert.isTrue(CollectionUtils.isEmpty(errors), StringUtils.join(errors, "；\r\n"));
 
         return list.stream()
                 .map(item -> BeanUtil.copyProperties(item, ReceiveProductVo.class))
@@ -905,7 +905,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
     }
 
-    private void checkImportData(List<ReceiveSheetImportModel> list) {
+    private List<String> checkImportData(List<ReceiveSheetImportModel> list) {
         List<String> productNames = list.stream().map(ReceiveSheetImportModel::getProductName)
                 .collect(Collectors.toList());
         List<Product> products = productService.selectByProductName(productNames);
@@ -914,24 +914,25 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         Map<String, Product> nameUnitMap = products.stream()
                 .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item, (oldValue, newValue) -> oldValue));
 
+        List<String> errors = Lists.newArrayList();
         for (int i = 0; i < list.size(); i++) {
             ReceiveSheetImportModel data = list.get(i);
             int rowIndex = data.getSeq();
 
             if (StringUtils.isEmpty(data.getProductName())) {
-                throw new DefaultClientException("第" + rowIndex + "行“商品名称”不能为空");
+                errors.add("第" + rowIndex + "行“商品名称”不能为空");
             }
             if (StringUtils.isEmpty(data.getUnit())) {
-                throw new DefaultClientException("第" + rowIndex + "行“单位”不能为空");
+                errors.add("第" + rowIndex + "行“单位”不能为空");
             }
             if (data.getReceiveNum() == null) {
-                throw new DefaultClientException("第" + rowIndex + "行“数量”不能为空");
+                errors.add("第" + rowIndex + "行“数量”不能为空");
             }
             if (NumberUtil.le(data.getReceiveNum(), BigDecimal.ZERO)) {
-                throw new DefaultClientException("第" + rowIndex + "行“数量”必须大于0");
+                errors.add("第" + rowIndex + "行“数量”必须大于0");
             }
             if (!NumberUtil.isNumberPrecision(data.getReceiveNum(), 8)) {
-                throw new DefaultClientException("第" + rowIndex + "行“数量”最多允许8位小数");
+                errors.add("第" + rowIndex + "行“数量”最多允许8位小数");
             }
 
             // 匹配商品,设置商品编号
@@ -941,20 +942,21 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             if (product == null) {
                 product = nameUnitMap.get(nameSpecUnit);
                 if (product == null) {
-                    throw new DefaultClientException("第" + rowIndex + "行“商品名称”、“规格”、“单位”组合不存在");
+                    errors.add("第" + rowIndex + "行“商品名称”、“规格”、“单位”组合不存在");
                 }
             }
-            data.setProductCode(product.getCode());
-            data.setProductId(product.getId());
-            BigDecimal defaultPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(product.getId());
-            data.setLatestPurchasePrice(defaultPurchasePrice);
-            if (data.getPurchasePrice() == null) {
-                data.setPurchasePrice(defaultPurchasePrice == null ? BigDecimal.ZERO : defaultPurchasePrice);
+            if (product != null) {
+                data.setProductCode(product.getCode());
+                data.setProductId(product.getId());
+                BigDecimal defaultPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(product.getId());
+                data.setLatestPurchasePrice(defaultPurchasePrice);
+                if (data.getPurchasePrice() == null) {
+                    data.setPurchasePrice(defaultPurchasePrice == null ? BigDecimal.ZERO : defaultPurchasePrice);
+                }
             }
-            // if (data.getPurchasePrice() == null) {
-            //     throw new DefaultClientException("第" + rowIndex + "行商品未设置采购价，请填写“单价”或先维护商品采购价");
-            // }
+
         }
+        return errors;
     }
 
     @Transactional(rollbackFor = Exception.class)
