@@ -12,6 +12,11 @@
         <result column="description" property="description"/>
         <result column="order_no" property="orderNo"/>
         <result column="return_num" property="returnNum"/>
+    </resultMap>
+    <resultMap id="QueryReceiveSheetDetailDto" type="com.lframework.xingyun.sc.dto.purchase.receive.QueryReceiveSheetDetailDto">
+        <id column="id" property="id"/>
+        <result column="product_id" property="productId"/>
+        <result column="tax_price" property="taxPrice"/>
         <result column="supplier_id" property="supplierId"/>
     </resultMap>
 
@@ -48,7 +53,7 @@
         ORDER BY d.order_no
     </select>
 
-    <select id="getLatestCostPriceList" resultMap="ReceiveSheetDetail">
+    <select id="getLatestCostPriceList" resultMap="QueryReceiveSheetDetailDto">
         SELECT
             t.product_id,
             t.tax_price,

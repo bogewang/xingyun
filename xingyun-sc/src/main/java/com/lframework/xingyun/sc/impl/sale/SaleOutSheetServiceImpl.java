@@ -43,6 +43,7 @@ import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitSummaryBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
+import com.lframework.xingyun.sc.dto.purchase.receive.QueryReceiveSheetDetailDto;
 import com.lframework.xingyun.sc.dto.sale.out.*;
 import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
 import com.lframework.xingyun.sc.entity.*;
@@ -1613,7 +1614,7 @@ public class SaleOutSheetServiceImpl extends
         // 2. 获取销售明细，补齐cost_price,total_profit
         // 3. 汇总单据明细，补齐单据cost_price,total_profit
         // 4. 如果所有的商品采购成本都已经录入，则标记单据fill_all_cost=true, 单据查询页面也展示该字段
-        Map<String, ReceiveSheetDetail> receiveCostPriceMap = getCostPriceMap(orderDate);
+        Map<String, QueryReceiveSheetDetailDto> receiveCostPriceMap = getCostPriceMap(orderDate);
 
         List<SaleOutSheetDetail> saleDetails = saleOutSheetDetailService.getBySheetId(orderId);
 
@@ -1637,7 +1638,7 @@ public class SaleOutSheetServiceImpl extends
                 continue;
             }
 
-            ReceiveSheetDetail detail = receiveCostPriceMap.get(saleDetail.getProductId());
+            QueryReceiveSheetDetailDto detail = receiveCostPriceMap.get(saleDetail.getProductId());
             if (detail == null) {
                 fillAllCost = false;
                 saleDetail.setCostPrice(null);
@@ -1684,14 +1685,14 @@ public class SaleOutSheetServiceImpl extends
      * @param orderDate
      * @return
      */
-    private Map<String, ReceiveSheetDetail> getCostPriceMap(LocalDate orderDate) {
+    private Map<String, QueryReceiveSheetDetailDto> getCostPriceMap(LocalDate orderDate) {
         LocalDate beginDate = orderDate.plusMonths(-1);
-        List<ReceiveSheetDetail> latestCostPrices = receiveSheetDetailMapper.getLatestCostPriceList(beginDate, orderDate);
+        List<QueryReceiveSheetDetailDto> latestCostPrices = receiveSheetDetailMapper.getLatestCostPriceList(beginDate, orderDate);
         if (CollectionUtils.isEmpty(latestCostPrices)) {
             return new HashMap<>();
         }
 
-        return latestCostPrices.stream().collect(Collectors.toMap(ReceiveSheetDetail::getProductId,
+        return latestCostPrices.stream().collect(Collectors.toMap(QueryReceiveSheetDetailDto::getProductId,
                 item -> item, (v1, v2) -> v1, HashMap::new));
     }
 }

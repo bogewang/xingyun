@@ -1,6 +1,7 @@
 package com.lframework.xingyun.sc.mappers;
 
 import com.lframework.starter.web.core.mapper.BaseMapper;
+import com.lframework.xingyun.sc.dto.purchase.receive.QueryReceiveSheetDetailDto;
 import com.lframework.xingyun.sc.entity.ReceiveSheetDetail;
 import org.apache.ibatis.annotations.Param;
 
@@ -44,6 +45,6 @@ public interface ReceiveSheetDetailMapper extends BaseMapper<ReceiveSheetDetail>
    */
   int subReturnNum(@Param("id") String id, @Param("num") BigDecimal num);
 
-  List<ReceiveSheetDetail> getLatestCostPriceList(@Param("beginDate") LocalDate beginDate, @Param("orderDate") LocalDate orderDate);
+  List<QueryReceiveSheetDetailDto> getLatestCostPriceList(@Param("beginDate") LocalDate beginDate, @Param("orderDate") LocalDate orderDate);
 
 }
