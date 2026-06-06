@@ -66,7 +66,7 @@
   import moment from 'moment';
   import * as api from '@/api/settle/sheet';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import { createError } from '@/hooks/web/msg';
+  import { createError, createSuccess } from '@/hooks/web/msg';
   import {
     formatDateTime,
     getDateTimeWithMaxTime,
@@ -226,12 +226,18 @@
         });
       },
       exportExcel() {
-        this.$refs.grid.exportData({
-          filename: '供应商结算汇总',
-          type: 'xlsx',
-          isFooter: false,
-          original: true,
-        });
+        this.loading = true;
+        api
+          .exportSummary(this.buildQueryParams())
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .catch((err) => {
+            createError(err?.message || '创建导出任务失败，请稍后重试！');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
       },
       onRefreshPage() {
         this.search();

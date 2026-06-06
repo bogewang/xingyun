@@ -49,6 +49,22 @@ export function summary(params: QuerySettleSheetSummaryVo): Promise<SettleSheetS
 }
 
 /**
+ * 导出供应商结算汇总
+ */
+export function exportSummary(data: QuerySettleSheetSummaryVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/summary/export',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.FORM_URLENCODED,
+    },
+  );
+}
+
+/**
  * 查询收货单对账结算扩展信息
  */
 export function queryReceiveSheetSettleInfos(
