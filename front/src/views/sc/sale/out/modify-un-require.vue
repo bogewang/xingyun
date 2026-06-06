@@ -218,14 +218,11 @@
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
           <j-form-item label="付款金额" :span="8">
-            <a-space>
-              <a-input
-                v-model:value="formData.paidAmount"
-                class="number-input"
-                @input="(e) => paidAmountInput(e.target.value)"
-              />
-              <a-button type="primary" @click="setPaid">已付款</a-button>
-            </a-space>
+            <a-input
+              v-model:value="formData.paidAmount"
+              class="number-input"
+              @input="(e) => paidAmountInput(e.target.value)"
+            />
           </j-form-item>
         </j-form>
       </j-border>
@@ -738,10 +735,6 @@
 
         this.formData.totalNum = totalNum;
         this.formData.totalAmount = totalAmount;
-      },
-      setPaid() {
-        this.formData.paidAmount = this.formData.totalAmount || 0;
-        this.paidAmountDirty = true;
       },
       // 批量录入数量
       batchInputOutNum() {

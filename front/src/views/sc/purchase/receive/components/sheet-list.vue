@@ -382,6 +382,8 @@
           { field: 'orderDate', title: '订单日期', width: 120 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
+          { field: 'paidAmount', title: '已付金额', align: 'right', width: 100 },
+          { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 100 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
           // {

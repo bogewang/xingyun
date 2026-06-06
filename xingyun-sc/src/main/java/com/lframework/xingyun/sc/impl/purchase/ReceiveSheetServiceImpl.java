@@ -777,12 +777,12 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             productLatestPriceCacheService.updateLatestPrice(product.getId(), null,
                     detail.getTaxPrice());
         }
+        BigDecimal actualTotalAmount = this.normalizeTotalAmount(vo.getTotalAmount(), totalAmount);
         sheet.setTotalNum(purchaseNum);
         sheet.setTotalGiftNum(giftNum);
-        sheet.setTotalAmount(totalAmount);
-        sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), totalAmount));
-        sheet.setDescription(
-                StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
+        sheet.setTotalAmount(actualTotalAmount);
+        sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), actualTotalAmount));
+        sheet.setDescription(StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(supplier));
     }
 
@@ -818,6 +818,23 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         } else {
             return SettleStatus.UN_REQUIRE;
         }
+    }
+
+    private BigDecimal normalizeTotalAmount(BigDecimal totalAmount, BigDecimal detailTotalAmount) {
+        BigDecimal actualTotalAmount = totalAmount == null ? detailTotalAmount : totalAmount;
+        if (NumberUtil.lt(actualTotalAmount, BigDecimal.ZERO)) {
+            throw new InputErrorException("折后金额不允许小于0！");
+        }
+
+        if (!NumberUtil.isNumberPrecision(actualTotalAmount, 2)) {
+            throw new InputErrorException("折后金额最多允许2位小数！");
+        }
+
+        if (NumberUtil.gt(actualTotalAmount, detailTotalAmount)) {
+            throw new InputErrorException("折后金额不允许大于明细金额！");
+        }
+
+        return actualTotalAmount;
     }
 
     private BigDecimal normalizePaidAmount(BigDecimal paidAmount, BigDecimal totalAmount) {

@@ -187,11 +187,19 @@
           <j-form-item label="收货数量" :span="8">
             <a-input v-model:value="formData.totalNum" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="含税总金额" :span="8">
-            <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
+          <j-form-item label="折后金额" :span="8">
+            <a-input
+              v-model:value="formData.totalAmount"
+              class="number-input"
+              @input="(e) => totalAmountInput(e.target.value)"
+            />
           </j-form-item>
-          <j-form-item label="已结算金额" :span="8">
-            <a-input v-model:value="formData.paidAmount" class="number-input" readonly />
+          <j-form-item label="本次付款" :span="8">
+            <a-input
+              v-model:value="formData.paidAmount"
+              class="number-input"
+              @input="(e) => paidAmountInput(e.target.value)"
+            />
           </j-form-item>
         </j-form>
       </j-border>
@@ -311,6 +319,8 @@
         loading: false,
         // 表单数据
         formData: {},
+        paidAmountDirty: false,
+        totalAmountDirty: false,
         supplierOptions: [],
         supplierOptionMap: {},
         // 工具栏配置
@@ -437,6 +447,8 @@
           description: '',
         };
 
+        this.paidAmountDirty = false;
+        this.totalAmountDirty = false;
         this.tableData = [];
       },
       // 加载数据
@@ -486,6 +498,8 @@
               totalNum: 0,
               totalAmount: 0,
             });
+            this.paidAmountDirty = false;
+            this.totalAmountDirty = false;
 
             if (!isEmpty(res.supplierId) && !isEmpty(res.supplierName)) {
               const selectedSupplierOptions = [
@@ -667,6 +681,14 @@
           options,
         );
       },
+      totalAmountInput(value) {
+        this.formData.totalAmount = value;
+        this.totalAmountDirty = true;
+      },
+      paidAmountInput(value) {
+        this.formData.paidAmount = value;
+        this.paidAmountDirty = true;
+      },
       purchasePriceInput(_row, _value) {
         this.calcSum();
       },
@@ -688,7 +710,9 @@
           });
 
         this.formData.totalNum = totalNum;
-        this.formData.totalAmount = totalAmount;
+        if (!this.totalAmountDirty) {
+          this.formData.totalAmount = totalAmount;
+        }
       },
       // 批量录入数量
       batchInputReceiveNum() {
@@ -743,6 +767,51 @@
       validData() {
         if (isEmpty(this.formData.supplierId)) {
           createError('供应商不允许为空！');
+          return false;
+        }
+
+        if (isEmpty(this.formData.totalAmount)) {
+          createError('折后金额不允许为空！');
+          return false;
+        }
+
+        if (!isFloat(this.formData.totalAmount)) {
+          createError('折后金额必须是数字！');
+          return false;
+        }
+
+        if (!isFloatGeZero(this.formData.totalAmount)) {
+          createError('折后金额不允许小于0！');
+          return false;
+        }
+
+        if (!isNumberPrecision(this.formData.totalAmount, 2)) {
+          createError('折后金额最多允许2位小数！');
+          return false;
+        }
+
+        if (isEmpty(this.formData.paidAmount)) {
+          createError('本次付款不允许为空！');
+          return false;
+        }
+
+        if (!isFloat(this.formData.paidAmount)) {
+          createError('本次付款必须是数字！');
+          return false;
+        }
+
+        if (!isFloatGeZero(this.formData.paidAmount)) {
+          createError('本次付款不允许小于0！');
+          return false;
+        }
+
+        if (!isNumberPrecision(this.formData.paidAmount, 6)) {
+          createError('本次付款最多允许6位小数！');
+          return false;
+        }
+
+        if (parseFloat(this.formData.paidAmount) > parseFloat(this.formData.totalAmount || 0)) {
+          createError('本次付款不允许大于折后金额！');
           return false;
         }
 
@@ -831,7 +900,8 @@
           purchaserId: this.formData.purchaserId || '',
           orderDate: this.formData.orderDate || '',
           receiveDate: this.formData.receiveDate,
-          paidAmount: 0,
+          totalAmount: this.formData.totalAmount,
+          paidAmount: this.formData.paidAmount,
           description: this.formData.description,
           products: validTableData
             .filter((t) => isFloatGtZero(t.receiveNum))

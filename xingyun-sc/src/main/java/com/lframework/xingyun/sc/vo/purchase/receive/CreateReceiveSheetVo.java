@@ -58,6 +58,12 @@ public class CreateReceiveSheetVo implements BaseVo, Serializable {
     private LocalDate paymentDate;
 
     /**
+     * 折后金额
+     */
+    @ApiModelProperty("折后金额")
+    private BigDecimal totalAmount;
+
+    /**
      * 付款金额
      */
     @ApiModelProperty("付款金额")
@@ -116,6 +122,16 @@ public class CreateReceiveSheetVo implements BaseVo, Serializable {
 
     protected void validate(boolean requirePurchase) {
         int orderNo = 1;
+        if (this.totalAmount != null) {
+            if (NumberUtil.lt(this.totalAmount, BigDecimal.ZERO)) {
+                throw new InputErrorException("折后金额不允许小于0！");
+            }
+
+            if (!NumberUtil.isNumberPrecision(this.totalAmount, 2)) {
+                throw new InputErrorException("折后金额最多允许2位小数！");
+            }
+        }
+
         if (this.paidAmount != null) {
             if (NumberUtil.lt(this.paidAmount, BigDecimal.ZERO)) {
                 throw new InputErrorException("付款金额不允许小于0！");
