@@ -66,6 +66,7 @@
   import moment from 'moment';
   import * as api from '@/api/settle/sheet';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { createError } from '@/hooks/web/msg';
   import {
     formatDateTime,
     getDateTimeWithMaxTime,
@@ -196,6 +197,10 @@
           .summary(this.buildQueryParams())
           .then((res) => {
             this.tableData = res || [];
+          })
+          .catch((err) => {
+            this.tableData = [];
+            createError(err?.message || '查询供应商结算汇总失败，请稍后重试！');
           })
           .finally(() => {
             this.loading = false;

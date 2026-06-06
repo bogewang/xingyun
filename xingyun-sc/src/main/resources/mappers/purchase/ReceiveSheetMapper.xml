@@ -23,7 +23,6 @@
         <result column="approve_time" property="approveTime"/>
         <result column="status" property="status"/>
         <result column="settle_status" property="settleStatus"/>
-        <result column="settle_check_sheet_detail_id" property="settleCheckSheetDetailId"/>
     </resultMap>
 
     <resultMap id="ReceiveSheetFullDto" type="com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto">
@@ -108,8 +107,7 @@
             r.approve_by,
             r.approve_time,
             r.status,
-            r.settle_status,
-            r.settle_check_sheet_detail_id
+            r.settle_status
         FROM tbl_receive_sheet AS r
         LEFT JOIN tbl_purchase_order AS o ON o.id = r.purchase_order_id
     </sql>
@@ -139,7 +137,6 @@
             r.status,
             r.refuse_reason,
             r.settle_status,
-            r.settle_check_sheet_detail_id,
             d.id AS detail_id,
             d.product_id AS detail_product_id,
             d.order_num AS detail_order_num,
@@ -474,7 +471,6 @@
         </if>
         AND r.status = 3
         AND r.settle_status = #{settleStatus}
-        AND r.settle_check_sheet_detail_id IS NULL
         ORDER BY r.approve_time DESC
     </select>
 </mapper>

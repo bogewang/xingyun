@@ -479,6 +479,11 @@
           this.$nextTick(() => {
             this.syncSelection();
           });
+        } catch (err) {
+          this.tableData = [];
+          this.pagerConfig.total = 0;
+          this.selectedRows = [];
+          createError(err?.message || '查询结算单据失败，请稍后重试！');
         } finally {
           this.loading = false;
         }
