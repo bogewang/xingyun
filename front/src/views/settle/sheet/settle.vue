@@ -14,7 +14,6 @@
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
         :custom-config="{}"
-        :row-config="{ isHover: true, height: 80 }"
         :pager-config="pagerConfig"
         :footer-method="footerMethod"
         :loading="loading"
@@ -93,30 +92,6 @@
           <a-button type="link" size="small" @click="openDetail(row.id)">
             {{ row.code || '-' }}
           </a-button>
-        </template>
-
-        <template #opHistory_default="{ row }">
-          <div v-if="getOpHistoryList(row).length" class="op-history">
-            <div
-              v-for="item in getOpHistoryList(row)"
-              :key="item.label"
-              class="op-history__item"
-            >
-              <span class="op-history__label">{{ item.label }}</span>
-              <span class="op-history__value">{{ item.value }}</span>
-            </div>
-          </div>
-          <span v-else>-</span>
-        </template>
-
-        <template #remark_default="{ row }">
-          <div v-if="getRemarkList(row).length" class="remark-list">
-            <div v-for="item in getRemarkList(row)" :key="item.label" class="remark-list__item">
-              <span class="remark-list__label">{{ item.label }}</span>
-              <span class="remark-list__value">{{ item.value }}</span>
-            </div>
-          </div>
-          <span v-else>-</span>
         </template>
 
         <template #settleStatus_default="{ row }">
@@ -302,16 +277,33 @@
             slots: { default: 'settleStatus_default' },
           },
           {
-            field: 'opHistory',
-            title: '操作历史',
-            minWidth: 230,
-            slots: { default: 'opHistory_default' },
+            field: 'checkTime',
+            title: '对账时间',
+            width: 170,
+            formatter: ({ cellValue }) =>
+              cellValue ? moment(cellValue).format('YYYY-MM-DD HH:mm:ss') : '-',
           },
           {
-            field: 'remark',
-            title: '备注',
-            minWidth: 320,
-            slots: { default: 'remark_default' },
+            field: 'settleTime',
+            title: '结算时间',
+            width: 170,
+            formatter: ({ cellValue }) =>
+              cellValue ? moment(cellValue).format('YYYY-MM-DD HH:mm:ss') : '-',
+          },
+          {
+            field: 'description',
+            title: '货流备注',
+            minWidth: 180,
+          },
+          {
+            field: 'checkDescription',
+            title: '对账备注',
+            minWidth: 180,
+          },
+          {
+            field: 'settleDescription',
+            title: '结算备注',
+            minWidth: 180,
           },
         ],
         checkDialog: {
@@ -370,35 +362,6 @@
       formatQuantity(value) {
         const text = Number(value || 0).toFixed(2);
         return text.replace(/\.?0+$/, '');
-      },
-      getOpHistoryList(row) {
-        const histories = [];
-        if (row?.checkTime) {
-          histories.push({
-            label: '对账',
-            value: moment(row.checkTime).format('YYYY-MM-DD HH:mm:ss'),
-          });
-        }
-        if (row?.settleTime) {
-          histories.push({
-            label: '结算',
-            value: moment(row.settleTime).format('YYYY-MM-DD HH:mm:ss'),
-          });
-        }
-        return histories;
-      },
-      getRemarkList(row) {
-        const remarks = [];
-        if (row?.description) {
-          remarks.push({ label: '货流备注', value: row.description });
-        }
-        if (row?.checkDescription) {
-          remarks.push({ label: '对账备注', value: row.checkDescription });
-        }
-        if (row?.settleDescription) {
-          remarks.push({ label: '结算备注', value: row.settleDescription });
-        }
-        return remarks;
       },
       getStatusClass(status) {
         if (SETTLE_STATUS.UN_CHECK_BILL.equalsCode(status)) {
@@ -678,45 +641,6 @@
 <style scoped lang="less">
   .status-text {
     font-weight: 500;
-  }
-
-  .op-history {
-    white-space: normal;
-    line-height: 1.8;
-    min-height: 68px;
-  }
-
-  .op-history__item,
-  .remark-list__item {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .op-history__item + .op-history__item,
-  .remark-list__item + .remark-list__item {
-    margin-top: 4px;
-  }
-
-  .op-history__label,
-  .remark-list__label {
-    flex: 0 0 auto;
-    color: #8c8c8c;
-    white-space: nowrap;
-  }
-
-  .op-history__value,
-  .remark-list__value {
-    flex: 1;
-    min-width: 0;
-    white-space: normal;
-    word-break: break-all;
-  }
-
-  .remark-list {
-    white-space: normal;
-    line-height: 1.8;
-    min-height: 68px;
   }
 
   .status-text--warning {
