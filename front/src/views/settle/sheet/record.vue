@@ -53,6 +53,7 @@
         <template #toolbar_buttons>
           <a-space>
             <a-button type="primary" @click="search">查询</a-button>
+            <a-button @click="exportList">导出</a-button>
           </a-space>
         </template>
 
@@ -94,7 +95,7 @@
   import moment from 'moment';
   import * as settleApi from '@/api/settle/sheet';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import { createError } from '@/hooks/web/msg';
+  import { createError, createSuccess } from '@/hooks/web/msg';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
   import { buildSortPageVo, getDateTimeWithMaxTime, getDateTimeWithMinTime } from '@/utils/utils';
 
@@ -141,6 +142,7 @@
           { field: 'seqNo', title: '序号', width: 70, fixed: 'left', slots: { default: 'seq_default' } },
           { field: 'code', title: '结算单号', width: 180, fixed: 'left' },
           { field: 'recordTime', title: '结算时间', width: 180, fixed: 'left' },
+          { field: 'createBy', title: '操作人', width: 120, fixed: 'left' },
           { field: 'supplierName', title: '供应商名称', minWidth: 100, fixed: 'left' },
           { field: 'bizCodeText', title: '货单号', width: 160, slots: { default: 'bizCode_default' } },
           { field: 'totalCheckAmt', title: '对账金额', width: 140, align: 'right' },
@@ -214,6 +216,7 @@
             },
             [],
           ),
+          bizCode: this.searchFormData.keyword || undefined,
           supplierId: this.searchFormData.supplierId || undefined,
           createStartTime: this.dateRange?.[0] ? `${this.dateRange[0]} 00:00:00` : undefined,
           createEndTime: this.dateRange?.[1] ? `${this.dateRange[1]} 23:59:59` : undefined,
@@ -244,29 +247,12 @@
       async loadList() {
         this.loading = true;
         try {
-          const keyword = this.searchFormData.keyword || '';
-          if (!keyword) {
-            const res = await settleApi.query(this.buildSettleQueryParams());
-            const rows = this.hydrateRows(res?.datas || []);
-            this.rawTableData = rows.map((item, index) => ({ ...item, seqNo: index + 1 }));
-            this.tableData = this.buildDisplayRows(this.rawTableData);
-            this.pagerConfig.total = res?.totalCount || 0;
-            return;
-          }
-
-          const res = await settleApi.query(this.buildSettleQueryParams(1, 200));
+          const res = await settleApi.query(this.buildSettleQueryParams());
           const rows = this.hydrateRows(res?.datas || []);
-          const filteredRows = rows.filter((item) => {
-            return (item.bizCodes || []).some((code) => String(code || '').includes(keyword));
-          });
-
-          this.pagerConfig.total = filteredRows.length;
           const start = (this.pagerConfig.currentPage - 1) * this.pagerConfig.pageSize;
-          const end = start + this.pagerConfig.pageSize;
-          this.rawTableData = filteredRows
-            .slice(start, end)
-            .map((item, index) => ({ ...item, seqNo: start + index + 1 }));
+          this.rawTableData = rows.map((item, index) => ({ ...item, seqNo: start + index + 1 }));
           this.tableData = this.buildDisplayRows(this.rawTableData);
+          this.pagerConfig.total = res?.totalCount || 0;
         } catch (err) {
           this.rawTableData = [];
           this.tableData = [];
@@ -310,6 +296,17 @@
         this.pagerConfig.currentPage = currentPage;
         this.pagerConfig.pageSize = pageSize;
         this.loadList();
+      },
+      exportList() {
+        this.loading = true;
+        settleApi
+          .exportRecord(this.buildSettleQueryParams())
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
       },
       onRefreshPage() {
         this.loadList();

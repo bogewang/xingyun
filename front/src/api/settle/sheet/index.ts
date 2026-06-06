@@ -99,6 +99,22 @@ export function exportReceiveSheetSettleInfos(data: QueryReceiveSheetSettleInfoV
 }
 
 /**
+ * 导出结算记录
+ */
+export function exportRecord(data: QuerySettleSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/export-record',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.FORM_URLENCODED,
+    },
+  );
+}
+
+/**
  * 查询详情
  */
 export function get(id: string): Promise<GetSettleSheetBo> {

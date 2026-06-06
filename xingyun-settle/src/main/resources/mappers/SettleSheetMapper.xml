@@ -108,6 +108,14 @@
                 <if test="vo.code != null and vo.code != ''">
                     AND s.code = #{vo.code}
                 </if>
+                <if test="vo.bizCode != null and vo.bizCode != ''">
+                    AND EXISTS (
+                        SELECT 1
+                        FROM receive_sheet rs
+                        WHERE FIND_IN_SET(rs.id, s.biz_sheet_ids)
+                          AND rs.code LIKE CONCAT('%', #{vo.bizCode}, '%')
+                    )
+                </if>
                 <if test="vo.supplierId != null and vo.supplierId != ''">
                     AND s.supplier_id = #{vo.supplierId}
                 </if>
