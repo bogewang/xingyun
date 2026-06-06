@@ -229,25 +229,18 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
         }
 
         BigDecimal settleAmount = BigDecimal.ZERO;
-        LinkedHashSet<String> descriptions = new LinkedHashSet<>();
         for (SettleSheetDetail detail : settleDetails) {
             // 结算金额需要累计实付金额和优惠金额，才能还原该收货单的实际结算总额。
-            settleAmount = NumberUtil.add(settleAmount,
-                    NumberUtil.add(detail.getPayAmount(), detail.getDiscountAmount()));
+            settleAmount = NumberUtil.add(settleAmount, detail.getPayAmount());
             SettleSheet settleSheet = settleSheetMap.get(detail.getSheetId());
+            // todo 多次结算
             if (settleSheet != null) {
                 result.setSettleTime(settleSheet.getApproveTime() != null ? settleSheet.getApproveTime() : settleSheet.getCreateTime());
-            }
-            if (StringUtil.isNotBlank(detail.getDescription())) {
-                // 使用有序去重集合，避免重复备注，同时尽量保持用户录入时的展示顺序。
-                descriptions.add(detail.getDescription());
+                result.setSettleDescription(settleSheet.getDescription());
             }
         }
 
         result.setSettleAmount(settleAmount);
-        if (!descriptions.isEmpty()) {
-            result.setSettleDescription(String.join("；", descriptions));
-        }
     }
 
     @Override
