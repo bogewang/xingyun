@@ -15,6 +15,7 @@ import com.lframework.xingyun.settle.bo.sheet.GetSettleSheetBo;
 import com.lframework.xingyun.settle.bo.sheet.QuerySettleSheetBo;
 import com.lframework.xingyun.settle.bo.sheet.ReceiveSheetSettleInfoBo;
 import com.lframework.xingyun.settle.bo.sheet.SettleSheetSummaryBo;
+import com.lframework.xingyun.settle.excel.sheet.ReceiveSheetSettleInfoExportTaskWorker;
 import com.lframework.xingyun.settle.dto.sheet.SettleSheetFullDto;
 import com.lframework.xingyun.settle.entity.SettleSheet;
 import com.lframework.xingyun.settle.excel.sheet.SettleSheetExportTaskWorker;
@@ -105,6 +106,19 @@ public class SettleSheetController extends DefaultBaseController {
             log.error("请求出错", e);
             return InvokeResultBuilder.fail(e.getMessage(), null);
         }
+    }
+
+    /**
+     * 导出收货单对账结算扩展信息
+     */
+    @ApiOperation("导出收货单对账结算扩展信息")
+    @HasPermission({"settle:sheet:export"})
+    @PostMapping("/export-receive-sheet-settle-infos")
+    public InvokeResult<Void> exportReceiveSheetSettleInfos(@Valid QueryReceiveSheetVo vo) {
+
+        ExportTaskUtil.exportTask("供应商结算工作台", ReceiveSheetSettleInfoExportTaskWorker.class, vo);
+
+        return InvokeResultBuilder.success();
     }
 
     /**

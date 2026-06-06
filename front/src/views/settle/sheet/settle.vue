@@ -167,7 +167,6 @@
   import { defineComponent, h } from 'vue';
   import moment from 'moment';
   import { DownloadOutlined, SearchOutlined } from '@ant-design/icons-vue';
-  import * as receiveApi from '@/api/sc/purchase/receive';
   import * as settleCheckApi from '@/api/settle/check';
   import * as settleApi from '@/api/settle/sheet';
   import Detail from '@/views/sc/purchase/receive/detail.vue';
@@ -484,8 +483,8 @@
       },
       exportList() {
         this.loading = true;
-        receiveApi
-          .exportList(this.buildQueryParams())
+        settleApi
+          .exportReceiveSheetSettleInfos(this.buildQueryParams())
           .then(() => {
             createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
           })

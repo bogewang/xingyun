@@ -83,6 +83,22 @@ export function exportList(data: QuerySettleSheetVo): Promise<void> {
 }
 
 /**
+ * 导出供应商结算工作台
+ */
+export function exportReceiveSheetSettleInfos(data: QueryReceiveSheetSettleInfoVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/export-receive-sheet-settle-infos',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.FORM_URLENCODED,
+    },
+  );
+}
+
+/**
  * 查询详情
  */
 export function get(id: string): Promise<GetSettleSheetBo> {
