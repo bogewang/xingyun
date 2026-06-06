@@ -89,6 +89,9 @@
           orderEndTime: formatDateTime(getDateTimeWithMaxTime(moment())),
         },
         toolbarConfig: {
+          refresh: {
+            queryMethod: () => this.search(),
+          },
           slots: {
             buttons: 'toolbar_buttons',
           },
