@@ -21,7 +21,10 @@ import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTime
 import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineBizType;
+import com.lframework.starter.web.inner.entity.OrderTimeLine;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
+import com.lframework.starter.web.inner.service.OrderTimeLineService;
+import com.lframework.xingyun.core.components.timeline.ReceiveOrderTimeLineBizType;
 import com.lframework.xingyun.sc.entity.PurchaseReturn;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.enums.SettleStatus;
@@ -72,6 +75,12 @@ public class SettleCheckSheetServiceImpl extends
 
     @Autowired
     private SettlePreSheetService settlePreSheetService;
+
+    @Autowired
+    private OrderTimeLineService orderTimeLineService;
+
+    @Autowired
+    private ReceiveOrderTimeLineBizType receiveOrderTimeLineBizType;
 
     @Override
     public PageResult<SettleCheckSheet> query(Integer pageIndex, Integer pageSize,
@@ -187,6 +196,8 @@ public class SettleCheckSheetServiceImpl extends
             throw new DefaultClientException("供应商对账单信息已过期，请刷新重试！");
         }
 
+        this.recordReceiveSheetCheckTimeLine(sheet);
+
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
     }
@@ -226,6 +237,8 @@ public class SettleCheckSheetServiceImpl extends
         if (getBaseMapper().updateAllColumn(sheet, updateWrapper) != 1) {
             throw new DefaultClientException("供应商对账单信息已过期，请刷新重试！");
         }
+
+        this.recordReceiveSheetCheckTimeLine(sheet);
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
@@ -703,6 +716,42 @@ public class SettleCheckSheetServiceImpl extends
                                                   LocalDateTime endTime) {
 
         return getBaseMapper().getApprovedList(supplierId, startTime, endTime);
+    }
+
+    private void recordReceiveSheetCheckTimeLine(SettleCheckSheet sheet) {
+
+        List<SettleCheckSheetDetail> details = settleCheckSheetDetailService.list(
+                Wrappers.lambdaQuery(SettleCheckSheetDetail.class)
+                        .eq(SettleCheckSheetDetail::getSheetId, sheet.getId())
+                        .orderByAsc(SettleCheckSheetDetail::getOrderNo));
+        if (CollectionUtil.isEmpty(details)) {
+            return;
+        }
+
+        String description = StringUtil.isBlank(sheet.getDescription()) ? "无" : sheet.getDescription();
+        String createById = SecurityUtil.getCurrentUser().getId();
+        String createBy = SecurityUtil.getCurrentUser().getName();
+        LocalDateTime createTime = sheet.getApproveTime() != null ? sheet.getApproveTime() : LocalDateTime.now();
+
+        details.stream()
+                .filter(detail -> SettleCheckSheetBizType.RECEIVE_SHEET == detail.getBizType())
+                .forEach(detail -> {
+                    OrderTimeLine orderTimeLine = new OrderTimeLine();
+                    orderTimeLine.setId(IdUtil.getId());
+                    orderTimeLine.setOrderId(detail.getBizId());
+                    orderTimeLine.setBizType(receiveOrderTimeLineBizType.getCode());
+                    orderTimeLine.setContent(String.format("确认对账，对账金额：%s，备注：%s",
+                            formatAmount(detail.getPayAmount()), description));
+                    orderTimeLine.setCreateById(createById);
+                    orderTimeLine.setCreateBy(createBy);
+                    orderTimeLine.setCreateTime(createTime);
+                    orderTimeLineService.save(orderTimeLine);
+                });
+    }
+
+    private String formatAmount(BigDecimal amount) {
+
+        return amount == null ? "0" : amount.stripTrailingZeros().toPlainString();
     }
 
     // @Transactional(rollbackFor = Exception.class)

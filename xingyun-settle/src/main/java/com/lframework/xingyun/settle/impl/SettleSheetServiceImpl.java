@@ -18,7 +18,10 @@ import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTime
 import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineBizType;
+import com.lframework.starter.web.inner.entity.OrderTimeLine;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
+import com.lframework.starter.web.inner.service.OrderTimeLineService;
+import com.lframework.xingyun.core.components.timeline.ReceiveOrderTimeLineBizType;
 import com.lframework.xingyun.sc.bo.purchase.receive.QueryReceiveSheetBo;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
@@ -67,6 +70,12 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
 
     @Autowired
     private SettleCheckSheetService settleCheckSheetService;
+
+    @Autowired
+    private OrderTimeLineService orderTimeLineService;
+
+    @Autowired
+    private ReceiveOrderTimeLineBizType receiveOrderTimeLineBizType;
 
 
     @Override
@@ -371,6 +380,8 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
             this.setBizItemSettled(detail.getBizId());
         }
 
+        this.recordReceiveSheetSettleTimeLine(sheet, details);
+
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
     }
@@ -637,5 +648,34 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
         res.setDiscountAmount(BigDecimal.ZERO);
         res.setOrderNo(orderNo);
         return res;
+    }
+
+    private void recordReceiveSheetSettleTimeLine(SettleSheet sheet, List<SettleSheetDetail> details) {
+        if (CollectionUtil.isEmpty(details)) {
+            return;
+        }
+
+        String description = StringUtil.isBlank(sheet.getDescription()) ? "无" : sheet.getDescription();
+        String createById = SecurityUtil.getCurrentUser().getId();
+        String createBy = SecurityUtil.getCurrentUser().getName();
+        LocalDateTime createTime = sheet.getApproveTime() != null ? sheet.getApproveTime() : LocalDateTime.now();
+
+        details.forEach(detail -> {
+            OrderTimeLine orderTimeLine = new OrderTimeLine();
+            orderTimeLine.setId(IdUtil.getId());
+            orderTimeLine.setOrderId(detail.getBizId());
+            orderTimeLine.setBizType(receiveOrderTimeLineBizType.getCode());
+            orderTimeLine.setContent(String.format("确认结算，结算金额：%s，备注：%s",
+                    formatAmount(NumberUtil.add(detail.getPayAmount(), detail.getDiscountAmount())),
+                    description));
+            orderTimeLine.setCreateById(createById);
+            orderTimeLine.setCreateBy(createBy);
+            orderTimeLine.setCreateTime(createTime);
+            orderTimeLineService.save(orderTimeLine);
+        });
+    }
+
+    private String formatAmount(BigDecimal amount) {
+        return amount == null ? "0" : amount.stripTrailingZeros().toPlainString();
     }
 }
