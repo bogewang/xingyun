@@ -251,7 +251,7 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
 
         // 计算未结算金额
         BigDecimal unSettleAmt = NumberUtil.sub(NumberUtil.sub(totalAmount, result.getPaidAmount()), settleAmount);
-        result.setUnSettleAmount(unSettleAmt.compareTo(BigDecimal.ZERO) >= 0 ? unSettleAmt : BigDecimal.ZERO);
+        result.setUnSettleAmount(unSettleAmt);
     }
 
     private String generateCode() {

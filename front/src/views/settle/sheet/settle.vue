@@ -577,6 +577,7 @@
             bizType: SETTLE_CHECK_SHEET_BIZ_TYPE.RECEIVE_SHEET.code,
             description: item.description || '',
             bizAmount: item.totalAmount || 0,
+            paidAmount: item.paidAmount || 0,
           });
         });
 

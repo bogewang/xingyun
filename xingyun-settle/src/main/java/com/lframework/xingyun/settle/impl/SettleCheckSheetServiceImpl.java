@@ -888,9 +888,10 @@ public class SettleCheckSheetServiceImpl extends
             return;
         }
 
-        // 收货单汇总金额
+        // 收货单汇总金额, todo 部分结算
         BigDecimal totalBizAmt = vo.getItems().stream()
-                .map(item -> item.getBizAmount() == null ? BigDecimal.ZERO : item.getBizAmount())
+                .map(item -> item.getPaidAmount() != null ? item.getPaidAmount() : (
+                    item.getBizAmount() == null ? BigDecimal.ZERO : item.getBizAmount()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // 对账金额差额合计
@@ -899,7 +900,7 @@ public class SettleCheckSheetServiceImpl extends
         BigDecimal avgDiffAmount = NumberUtil.div(totalDiffAmount, BigDecimal.valueOf(vo.getItems().size()));
 
         vo.getItems().forEach(item -> {
-            BigDecimal bizAmt = NumberUtil.add(item.getBizAmount(), avgDiffAmount);
+            BigDecimal bizAmt = NumberUtil.add(item.getPaidAmount() != null ? item.getPaidAmount() : item.getBizAmount(), avgDiffAmount);
             if (NumberUtil.lt(bizAmt, BigDecimal.ZERO)) {
                 throw new DefaultClientException("对账金额过小，分摊后会出现负数单据，请调整对账金额！");
             }

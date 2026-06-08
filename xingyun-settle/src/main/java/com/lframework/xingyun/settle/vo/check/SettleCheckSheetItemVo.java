@@ -34,6 +34,12 @@ public class SettleCheckSheetItemVo implements BaseVo, Serializable {
   private BigDecimal bizAmount;
 
   /**
+   *
+   */
+  @ApiModelProperty("已付金额")
+  private BigDecimal paidAmount;
+
+  /**
    * 备注
    */
   @ApiModelProperty("备注")
