@@ -618,22 +618,22 @@ export const SettleRoute: AppRouteRecordRaw = {
         title: '结算记录',
       },
     },
-    {
-      path: 'supplier/sheet/modify/:id',
-      name: 'ModifySupplierSettleSheet',
-      meta: {
-        title: '修改供应商结算单',
-      },
-      component: () => import('/@/views/settle/sheet/modify.vue'),
-    },
-    {
-      path: 'supplier/sheet/approve/:id',
-      name: 'ApproveSupplierSettleSheet',
-      meta: {
-        title: '审核供应商结算单',
-      },
-      component: () => import('/@/views/settle/sheet/approve.vue'),
-    },
+    // {
+    //   path: 'supplier/sheet/modify/:id',
+    //   name: 'ModifySupplierSettleSheet',
+    //   meta: {
+    //     title: '修改供应商结算单',
+    //   },
+    //   component: () => import('/@/views/settle/sheet/modify.vue'),
+    // },
+    // {
+    //   path: 'supplier/sheet/approve/:id',
+    //   name: 'ApproveSupplierSettleSheet',
+    //   meta: {
+    //     title: '审核供应商结算单',
+    //   },
+    //   component: () => import('/@/views/settle/sheet/approve.vue'),
+    // },
   ],
 };
 
