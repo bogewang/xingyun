@@ -25,6 +25,7 @@ import com.lframework.xingyun.core.components.timeline.ReceiveOrderTimeLineBizTy
 import com.lframework.xingyun.sc.bo.purchase.receive.QueryReceiveSheetBo;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
+import com.lframework.xingyun.sc.vo.purchase.receive.QueryReceiveSheetVo;
 import com.lframework.xingyun.settle.bo.sheet.ReceiveSheetSettleInfoBo;
 import com.lframework.xingyun.settle.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.settle.dto.sheet.SettleBizItemDto;
@@ -253,6 +254,18 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
         result.setUnSettleAmount(unSettleAmt.compareTo(BigDecimal.ZERO) >= 0 ? unSettleAmt : BigDecimal.ZERO);
     }
 
+    private String generateCode() {
+        while (true) {
+            String code = generateCodeService.generate(GenerateCodeTypePool.SETTLE_SHEET);
+            QuerySettleSheetVo vo = new QuerySettleSheetVo();
+            vo.setCode(code);
+            List<SettleSheet> list = query(vo);
+            if (CollectionUtils.isEmpty(list)) {
+                return code;
+            }
+        }
+    }
+
     @Override
     public SettleSheetFullDto getDetail(String id) {
 
@@ -268,7 +281,7 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
         SettleSheet sheet = new SettleSheet();
 
         sheet.setId(IdUtil.getId());
-        sheet.setCode(generateCodeService.generate(GenerateCodeTypePool.SETTLE_SHEET));
+        sheet.setCode(generateCode());
 
         this.create(sheet, vo);
 
@@ -605,7 +618,7 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
         vo.getItems().forEach(item -> {
             BigDecimal settleAmt = NumberUtil.add(item.getUnSettleAmount(), avgDiffAmount);
             if (NumberUtil.lt(settleAmt, BigDecimal.ZERO)) {
-                throw new DefaultClientException("结算金额过小，分摊后会出现负数单据，请调整结算金额！");
+                settleAmt = BigDecimal.ZERO;
             }
             item.setSettleAmount(settleAmt);
         });
