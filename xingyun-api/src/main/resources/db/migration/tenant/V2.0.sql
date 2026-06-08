@@ -142,3 +142,6 @@ ALTER TABLE settle_sheet modify end_date date COMMENT '截止日期';
 
 ALTER TABLE settle_check_sheet modify start_date date COMMENT '起始日期';
 ALTER TABLE settle_check_sheet modify end_date date COMMENT '截止日期';
+
+
+-- 0604
