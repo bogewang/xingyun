@@ -409,6 +409,7 @@
           totalNum: this.formatQuantity(this.sumByField(data, 'totalNum')),
           totalGiftNum: this.formatQuantity(this.sumByField(data, 'totalGiftNum')),
           totalAmount: this.formatAmount(this.sumByField(data, 'totalAmount')),
+          unSettleAmount: this.formatAmount(this.sumByField(data, 'unSettleAmount')),
           checkAmount: this.formatAmount(this.sumByField(data, 'checkAmount')),
           settleAmount: this.formatAmount(this.sumByField(data, 'settleAmount')),
         };
