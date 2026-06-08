@@ -173,8 +173,8 @@ public class QuerySettleSheetBo extends BaseBo<SettleSheet> {
       this.approveBy = userService.findById(dto.getApproveBy()).getName();
     }
 
-    this.startTime = DateUtil.toLocalDateTime(dto.getStartDate());
-    this.endTime = DateUtil.toLocalDateTimeMax(dto.getEndDate());
+    this.startTime = dto.getStartDate() != null ? DateUtil.toLocalDateTime(dto.getStartDate()) : null;
+    this.endTime = dto.getEndDate() != null ? DateUtil.toLocalDateTimeMax(dto.getEndDate()) : null;
 
     this.totalPaidAmt = NumberUtil.sub(dto.getTotalCheckAmt() == null ? BigDecimal.ZERO : dto.getTotalCheckAmt(),
             dto.getTotalUnSettleAmt() == null ? BigDecimal.ZERO : dto.getTotalUnSettleAmt());
