@@ -54,26 +54,24 @@
     </select>
 
     <select id="getLatestCostPriceList" resultMap="QueryReceiveSheetDetailDto">
-        SELECT
-            t.product_id,
-            t.tax_price,
-            t.supplier_id
-        FROM (
-                 SELECT
-                     d.product_id,
-                     d.tax_price,
-                     s.order_date,
-                     s.supplier_id,
-                     ROW_NUMBER() OVER (
-                         PARTITION BY d.product_id
-                         ORDER BY s.order_date DESC, s.create_time DESC
-                         ) AS rn
-                 FROM tbl_receive_sheet_detail AS d
-                          INNER JOIN tbl_receive_sheet AS s ON d.sheet_id = s.id
-                 WHERE s.order_date <![CDATA[ >= ]]> #{beginDate}
-                   AND s.order_date <![CDATA[ <= ]]> #{orderDate}
-             ) AS t
-        WHERE t.rn = 1
-        ORDER BY t.order_date DESC, t.product_id
+        SELECT d.product_id,
+               d.tax_price,
+               s.supplier_id
+        FROM tbl_receive_sheet_detail d
+                 INNER JOIN tbl_receive_sheet s ON d.sheet_id = s.id
+        WHERE s.order_date <![CDATA[ >= ]]> #{beginDate}
+          AND s.order_date <![CDATA[ <= ]]> #{orderDate}
+          AND (d.product_id, s.order_date, s.create_time) IN (
+            -- 每个商品 取 最大order_date + 最大create_time 的组合
+            SELECT product_id,
+                   MAX(order_date)  AS order_date,
+                   MAX(create_time) AS create_time
+            FROM tbl_receive_sheet_detail d2
+                     INNER JOIN tbl_receive_sheet s2 ON d2.sheet_id = s2.id
+            WHERE s2.order_date <![CDATA[ >= ]]> #{beginDate}
+              AND s2.order_date <![CDATA[ <= ]]> #{orderDate}
+            GROUP BY d2.product_id)
+        ORDER BY s.order_date DESC, d.product_id
+
     </select>
 </mapper>
