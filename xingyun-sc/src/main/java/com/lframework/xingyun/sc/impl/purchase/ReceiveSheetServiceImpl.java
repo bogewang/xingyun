@@ -62,6 +62,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -783,6 +785,32 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), actualTotalAmount));
         sheet.setDescription(StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(supplier));
+
+        // 更新商品最新供应商
+        updateProductSupplier(vo.getSupplierId(), vo.getProducts());
+
+    }
+
+    /**
+     * 更新商品最新供应商
+     * @param supplierId
+     * @param products
+     */
+    private void updateProductSupplier(String supplierId, List<ReceiveProductVo> products) {
+        if (StringUtil.isBlank(supplierId) || CollectionUtil.isEmpty(products)) {
+            return;
+        }
+
+        List<String> productIds = products.stream().map(ReceiveProductVo::getProductId)
+                .filter(StringUtil::isNotBlank).distinct().collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(productIds)) {
+            return;
+        }
+
+        LambdaUpdateWrapper<Product> updateWrapper = Wrappers.lambdaUpdate(Product.class)
+                .set(Product::getDefaultSupplier, supplierId)
+                .in(Product::getId, productIds);
+        productService.update(updateWrapper);
     }
 
     /**
