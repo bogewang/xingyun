@@ -6,6 +6,8 @@ logging:
     com.lframework: INFO
     io.lettuce.core.protocol: OFF
     org.dromara.warm.flow: INFO
+    org.mybatis.spring: INFO
+    org.apache.ibatis: INFO
 
 spring:
   servlet:
@@ -116,6 +118,6 @@ jugg:
   web:
     #    filter-url: /**
     filter-url: /selector/list/tenant
-mybatis:
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#mybatis:
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

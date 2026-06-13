@@ -2,6 +2,8 @@ package com.lframework.xingyun.settle.service;
 
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.service.BaseMpService;
+import com.lframework.xingyun.sc.entity.ReceiveSheet;
+import com.lframework.xingyun.settle.bo.sheet.ReceiveSheetSettleInfoBo;
 import com.lframework.xingyun.settle.dto.sheet.SettleBizItemDto;
 import com.lframework.xingyun.settle.dto.sheet.SettleSheetFullDto;
 import com.lframework.xingyun.settle.entity.SettleSheet;
@@ -50,6 +52,7 @@ public interface SettleSheetService extends BaseMpService<SettleSheet> {
      *
      * @param vo
      */
+    @Deprecated
     void update(UpdateSettleSheetVo vo);
 
     /**
@@ -91,29 +94,30 @@ public interface SettleSheetService extends BaseMpService<SettleSheet> {
     /**
      * 更新业务单据未结算
      *
-     * @param id
+     * @param bizId 业务单据ID
      */
-    void setBizItemUnSettle(String id);
+    void setBizItemUnSettle(String bizId);
 
     /**
      * 更新业务单据结算中
      *
-     * @param id
+     * @param bizId 业务单据ID
      */
-    void setBizItemPartSettle(String id);
+    void setBizItemPartSettle(String bizId);
 
     /**
      * 更新业务单据已结算
      *
-     * @param id
+     * @param bizId 业务单据ID
      */
-    void setBizItemSettled(String id);
+    void setBizItemSettled(String bizId);
 
     /**
-     * 查询未结算单据
+     * 查询收货单的对账/结算扩展信息
      *
-     * @param vo
-     * @return
+     * @param sheetIds 收货单ID
+     * @return 扩展信息
      */
-    List<SettleBizItemDto> getUnSettleBizItems(QueryUnSettleBizItemVo vo);
+    List<ReceiveSheetSettleInfoBo> queryReceiveSheetSettleInfos(List<ReceiveSheet> sheetIds);
+
 }

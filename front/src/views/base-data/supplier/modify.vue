@@ -130,23 +130,6 @@
           </a-col>
         </a-row>
         <a-row :gutter="16">
-          <a-col :span="8">
-            <a-form-item label="累计已付金额">
-              <a-input :value="formData.paidAmount" disabled />
-            </a-form-item>
-          </a-col>
-          <a-col :span="8">
-            <a-form-item label="累计未付金额">
-              <a-input :value="formData.unpaidAmount" disabled />
-            </a-form-item>
-          </a-col>
-          <a-col :span="8">
-            <a-form-item label="金额合计">
-              <a-input :value="amountTotal" disabled />
-            </a-form-item>
-          </a-col>
-        </a-row>
-        <a-row :gutter="16">
           <a-col :span="24">
             <a-form-item label="备注" name="description">
               <a-textarea v-model:value.trim="formData.description" />
@@ -238,13 +221,7 @@
         },
       };
     },
-    computed: {
-      amountTotal() {
-        return (
-          Number(this.formData?.paidAmount || 0) + Number(this.formData?.unpaidAmount || 0)
-        ).toFixed(2);
-      },
-    },
+    computed: {},
     created() {
       this.initFormData();
     },
@@ -283,8 +260,6 @@
           bankName: '',
           accountName: '',
           accountNo: '',
-          paidAmount: 0,
-          unpaidAmount: 0,
           description: '',
         };
       },

@@ -33,8 +33,18 @@
         <!-- 工具栏 -->
         <template #toolbar_buttons>
           <a-space>
-            <a-button type="primary" :icon="h(PlusOutlined)" @click="addProduct">新增</a-button>
-            <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
+            <a-button
+              type="primary"
+              :icon="h(PlusOutlined)"
+              @click="addProduct"
+              >新增</a-button
+            >
+            <a-button
+              danger
+              :icon="h(DeleteOutlined)"
+              @click="delProduct"
+              >删除</a-button
+            >
             <a-button :icon="h(PlusOutlined)" @click="openBatchAddProductDialog"
               >批量添加商品</a-button
             >
@@ -177,18 +187,19 @@
           <j-form-item label="收货数量" :span="8">
             <a-input v-model:value="formData.totalNum" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="含税总金额" :span="8">
-            <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
+          <j-form-item label="折后金额" :span="8">
+            <a-input
+              v-model:value="formData.totalAmount"
+              class="number-input"
+              @input="(e) => totalAmountInput(e.target.value)"
+            />
           </j-form-item>
-          <j-form-item label="付款金额" :span="8">
-            <a-space>
-              <a-input
-                v-model:value="formData.paidAmount"
-                class="number-input"
-                @input="(e) => paidAmountInput(e.target.value)"
-              />
-              <a-button type="primary" @click="setPaid">已付款</a-button>
-            </a-space>
+          <j-form-item label="本次付款" :span="8">
+            <a-input
+              v-model:value="formData.paidAmount"
+              class="number-input"
+              @input="(e) => paidAmountInput(e.target.value)"
+            />
           </j-form-item>
         </j-form>
       </j-border>
@@ -268,6 +279,7 @@
   import { requestSupplierSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
+  import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
   import JFormItem from '@/components/JFormItem';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
@@ -297,6 +309,7 @@
         getNumber,
         mul,
         RECEIVE_SHEET_STATUS,
+        SETTLE_STATUS,
       };
     },
     data() {
@@ -307,6 +320,7 @@
         // 表单数据
         formData: {},
         paidAmountDirty: false,
+        totalAmountDirty: false,
         supplierOptions: [],
         supplierOptionMap: {},
         // 工具栏配置
@@ -429,10 +443,12 @@
           totalNum: 0,
           totalAmount: 0,
           paidAmount: 0,
+          settleStatus: '',
           description: '',
         };
 
         this.paidAmountDirty = false;
+        this.totalAmountDirty = false;
         this.tableData = [];
       },
       // 加载数据
@@ -449,6 +465,20 @@
               this.closeDialog();
               return;
             }
+            if (
+              Number(res.paidAmount || 0) > 0 ||
+              SETTLE_STATUS.PART_SETTLE.equalsCode(res.settleStatus) ||
+              SETTLE_STATUS.SETTLED.equalsCode(res.settleStatus)
+            ) {
+              createError('采购收货单已有结算金额，无法修改！');
+              this.closeDialog();
+              return;
+            }
+            if (!SETTLE_STATUS.UN_CHECK_BILL.equalsCode(res.settleStatus)) {
+              createError('采购收货单已进入对账/结算流程，无法修改！');
+              this.closeDialog();
+              return;
+            }
             this.formData = Object.assign(this.formData, {
               scId: res.scId,
               supplierId: res.supplierId,
@@ -459,6 +489,7 @@
               description: res.description,
               paidAmount: res.paidAmount,
               status: res.status,
+              settleStatus: res.settleStatus,
               createBy: res.createBy,
               createTime: res.createTime,
               approveBy: res.approveBy,
@@ -467,6 +498,8 @@
               totalNum: 0,
               totalAmount: 0,
             });
+            this.paidAmountDirty = false;
+            this.totalAmountDirty = false;
 
             if (!isEmpty(res.supplierId) && !isEmpty(res.supplierName)) {
               const selectedSupplierOptions = [
@@ -495,9 +528,7 @@
             });
 
             this.tableData = tableData.map((item) => Object.assign(this.emptyProduct(), item));
-
             this.calcSum();
-            this.paidAmountDirty = true;
           })
           .finally(() => {
             this.loading = false;
@@ -650,12 +681,16 @@
           options,
         );
       },
-      purchasePriceInput(_row, _value) {
-        this.calcSum();
+      totalAmountInput(value) {
+        this.formData.totalAmount = value;
+        this.totalAmountDirty = true;
       },
       paidAmountInput(value) {
         this.formData.paidAmount = value;
         this.paidAmountDirty = true;
+      },
+      purchasePriceInput(_row, _value) {
+        this.calcSum();
       },
       receiveNumInput(_value) {
         this.calcSum();
@@ -675,11 +710,9 @@
           });
 
         this.formData.totalNum = totalNum;
-        this.formData.totalAmount = totalAmount;
-      },
-      setPaid() {
-        this.formData.paidAmount = this.formData.totalAmount || 0;
-        this.paidAmountDirty = true;
+        if (!this.totalAmountDirty) {
+          this.formData.totalAmount = totalAmount;
+        }
       },
       // 批量录入数量
       batchInputReceiveNum() {
@@ -737,28 +770,48 @@
           return false;
         }
 
+        if (isEmpty(this.formData.totalAmount)) {
+          createError('折后金额不允许为空！');
+          return false;
+        }
+
+        if (!isFloat(this.formData.totalAmount)) {
+          createError('折后金额必须是数字！');
+          return false;
+        }
+
+        if (!isFloatGeZero(this.formData.totalAmount)) {
+          createError('折后金额不允许小于0！');
+          return false;
+        }
+
+        if (!isNumberPrecision(this.formData.totalAmount, 2)) {
+          createError('折后金额最多允许2位小数！');
+          return false;
+        }
+
         if (isEmpty(this.formData.paidAmount)) {
-          createError('付款金额不允许为空！');
+          createError('本次付款不允许为空！');
           return false;
         }
 
         if (!isFloat(this.formData.paidAmount)) {
-          createError('付款金额必须是数字！');
+          createError('本次付款必须是数字！');
           return false;
         }
 
         if (!isFloatGeZero(this.formData.paidAmount)) {
-          createError('付款金额不允许小于0！');
+          createError('本次付款不允许小于0！');
           return false;
         }
 
         if (!isNumberPrecision(this.formData.paidAmount, 6)) {
-          createError('付款金额最多允许6位小数！');
+          createError('本次付款最多允许6位小数！');
           return false;
         }
 
         if (parseFloat(this.formData.paidAmount) > parseFloat(this.formData.totalAmount || 0)) {
-          createError('付款金额不允许大于含税总金额！');
+          createError('本次付款不允许大于折后金额！');
           return false;
         }
 
@@ -847,6 +900,7 @@
           purchaserId: this.formData.purchaserId || '',
           orderDate: this.formData.orderDate || '',
           receiveDate: this.formData.receiveDate,
+          totalAmount: this.formData.totalAmount,
           paidAmount: this.formData.paidAmount,
           description: this.formData.description,
           products: validTableData

@@ -12,6 +12,11 @@ export interface CreateSettleCheckSheetVo {
   items: SettleCheckSheetItemVo[];
 
   /**
+   * 对账金额
+   */
+  checkAmt?: number;
+
+  /**
    * 起始日期
    */
   startDate: string;

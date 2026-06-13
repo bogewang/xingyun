@@ -3,14 +3,15 @@ package com.lframework.xingyun.settle.entity;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.lframework.starter.web.core.entity.BaseEntity;
 import com.lframework.starter.web.core.dto.BaseDto;
+import com.lframework.starter.web.core.entity.BaseEntity;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.settle.enums.SettleCheckSheetStatus;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 /**
  * <p>
@@ -72,6 +73,16 @@ public class SettleCheckSheet extends BaseEntity implements BaseDto {
      * 备注
      */
     private String description;
+
+    /**
+     * 业务单ID（逗号分隔）
+     */
+    private String bizSheetIds;
+
+    /**
+     * 收货单汇总总金额
+     */
+    private BigDecimal bizTotalAmount;
 
     /**
      * 创建人ID 新增时赋值

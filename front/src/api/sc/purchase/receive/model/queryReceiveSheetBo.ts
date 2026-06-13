@@ -24,6 +24,13 @@ export interface QueryReceiveSheetBo {
    */
   supplierCode: string;
 
+
+
+  /**
+   * 供应商ID
+   */
+  supplierId: string;
+
   /**
    * 供应商名称
    */
@@ -70,12 +77,12 @@ export interface QueryReceiveSheetBo {
   totalAmount: number;
 
   /**
-   * 已付金额
+   * 已结算金额
    */
   paidAmount: number;
 
   /**
-   * 未付金额
+   * 未结算金额
    */
   unpaidAmount: number;
 

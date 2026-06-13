@@ -603,29 +603,37 @@ export const SettleRoute: AppRouteRecordRaw = {
       component: () => import('/@/views/settle/check-sheet/approve.vue'),
     },
     {
-      path: 'supplier/sheet/add',
+      path: 'supplier/sheet/settle',
       name: 'AddSupplierSettleSheet',
-      component: () => import('/@/views/settle/sheet/add.vue'),
+      component: () => import('/@/views/settle/sheet/settle.vue'),
       meta: {
-        title: '新增供应商结算单',
+        title: '供应商结算',
       },
     },
     {
-      path: 'supplier/sheet/modify/:id',
-      name: 'ModifySupplierSettleSheet',
+      path: 'supplier/sheet-record',
+      name: 'SupplierSettleSheetRecord',
+      component: () => import('/@/views/settle/sheet/record.vue'),
       meta: {
-        title: '修改供应商结算单',
+        title: '结算记录',
       },
-      component: () => import('/@/views/settle/sheet/modify.vue'),
     },
-    {
-      path: 'supplier/sheet/approve/:id',
-      name: 'ApproveSupplierSettleSheet',
-      meta: {
-        title: '审核供应商结算单',
-      },
-      component: () => import('/@/views/settle/sheet/approve.vue'),
-    },
+    // {
+    //   path: 'supplier/sheet/modify/:id',
+    //   name: 'ModifySupplierSettleSheet',
+    //   meta: {
+    //     title: '修改供应商结算单',
+    //   },
+    //   component: () => import('/@/views/settle/sheet/modify.vue'),
+    // },
+    // {
+    //   path: 'supplier/sheet/approve/:id',
+    //   name: 'ApproveSupplierSettleSheet',
+    //   meta: {
+    //     title: '审核供应商结算单',
+    //   },
+    //   component: () => import('/@/views/settle/sheet/approve.vue'),
+    // },
   ],
 };
 

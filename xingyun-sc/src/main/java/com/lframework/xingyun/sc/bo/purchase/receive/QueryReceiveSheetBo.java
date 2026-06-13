@@ -6,6 +6,7 @@ import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
+import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.xingyun.basedata.entity.StoreCenter;
 import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
@@ -13,14 +14,16 @@ import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.sc.entity.PurchaseOrder;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.service.purchase.PurchaseOrderService;
-import com.lframework.starter.web.inner.service.system.SysUserService;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 @Data
+@NoArgsConstructor
 public class QueryReceiveSheetBo extends BaseBo<ReceiveSheet> {
 
     /**
@@ -58,6 +61,12 @@ public class QueryReceiveSheetBo extends BaseBo<ReceiveSheet> {
      */
     @ApiModelProperty("供应商名称")
     private String supplierName;
+
+    /**
+     * 供应商名称
+     */
+    @ApiModelProperty("供应商ID")
+    private String supplierId;
 
     /**
      * 采购员姓名
@@ -110,9 +119,9 @@ public class QueryReceiveSheetBo extends BaseBo<ReceiveSheet> {
     private BigDecimal totalAmount;
 
     /**
-     * 已付金额
+     * 本次付款
      */
-    @ApiModelProperty("已付金额")
+    @ApiModelProperty("本次付款")
     private BigDecimal paidAmount;
 
     /**
@@ -196,6 +205,7 @@ public class QueryReceiveSheetBo extends BaseBo<ReceiveSheet> {
 
         SupplierService supplierService = ApplicationUtil.getBean(SupplierService.class);
         Supplier supplier = supplierService.findById(dto.getSupplierId());
+        this.supplierId = supplier.getId();
         this.supplierCode = supplier.getCode();
         this.supplierName = supplier.getName();
 

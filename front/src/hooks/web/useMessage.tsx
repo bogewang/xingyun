@@ -40,7 +40,15 @@ function getIcon(iconType: string) {
 
 function renderContent({ content }: Pick<ModalOptionsEx, 'content'>) {
   if (isString(content)) {
-    return <div innerHTML={`<div>${content as string}</div>`}></div>;
+    return (
+      <div
+        style={{
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+        }}
+        innerHTML={`<div>${content as string}</div>`}
+      ></div>
+    );
   } else {
     return content;
   }

@@ -3,14 +3,26 @@ import { message as Message, Modal, Input } from 'ant-design-vue';
 import { ExclamationCircleOutlined } from '@ant-design/icons-vue';
 import * as utils from '@/utils/utils';
 
+const renderMultilineContent = (message: string) =>
+  createVNode(
+    'div',
+    {
+      style: {
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
+      },
+    },
+    message,
+  );
+
 export const createError = function (message: string): void {
-  Message.error(message);
+  Message.error(renderMultilineContent(message));
 };
 
 export const createErrorDialog = function (message: string, title: string = '错误提示'): void {
   Modal.error({
     title: title,
-    content: message,
+    content: renderMultilineContent(message),
   });
 };
 
@@ -21,7 +33,7 @@ export const createWarning = function (message: string): void {
 export const createWarningDialog = function (message: string, title: string = '提示信息'): void {
   Modal.warning({
     title: title,
-    content: message,
+    content: renderMultilineContent(message),
   });
 };
 
@@ -43,7 +55,7 @@ export const createConfirm = function (
     const finalOptions = { ...defaultOptions, ...options };
     Modal.confirm({
       title: title,
-      content: message,
+      content: renderMultilineContent(message),
       onOk: () => resolve(),
       onCancel: () => reject(),
       okText: finalOptions.okText,
@@ -55,7 +67,7 @@ export const createConfirm = function (
 export const createSuccess = function (message: string): void {
   Modal.success({
     title: '提示信息',
-    content: message,
+    content: renderMultilineContent(message),
   });
 };
 

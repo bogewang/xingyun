@@ -10,9 +10,13 @@ export interface SettleCheckSheetItemVo {
   bizType: number;
 
   /**
-   * 应付金额
+   * 货流金额
    */
-  payAmount: number;
+  bizAmount?: number;
+  /**
+   * 已付金额
+   */
+  paidAmount?: number;
 
   /**
    * 备注

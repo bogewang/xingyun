@@ -32,7 +32,7 @@ export function useGo(_router?: Router) {
  */
 export const useRedo = (_router?: Router) => {
   const { replace, currentRoute } = _router || useRouter();
-  const { query, params = {}, name, fullPath } = unref(currentRoute.value);
+  const { query, params = {}, name, path } = unref(currentRoute.value);
   function redo(): Promise<boolean> {
     return new Promise((resolve) => {
       if (name === REDIRECT_NAME) {
@@ -45,7 +45,8 @@ export const useRedo = (_router?: Router) => {
         params['path'] = String(name);
       } else {
         params['_redirect_type'] = 'path';
-        params['path'] = fullPath;
+        // Keep query separate so refresh won't generate a different fullPath and duplicate tabs.
+        params['path'] = path;
       }
       replace({ name: REDIRECT_NAME, params, query }).then(() => resolve(true));
     });

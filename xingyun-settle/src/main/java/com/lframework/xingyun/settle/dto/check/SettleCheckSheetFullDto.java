@@ -5,12 +5,13 @@ import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.settle.enums.SettleCheckSheetBizType;
 import com.lframework.xingyun.settle.enums.SettleCheckSheetCalcType;
 import com.lframework.xingyun.settle.enums.SettleCheckSheetStatus;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import lombok.Data;
 
 @Data
 public class SettleCheckSheetFullDto implements BaseDto, Serializable {
@@ -51,6 +52,16 @@ public class SettleCheckSheetFullDto implements BaseDto, Serializable {
    * 已优惠金额
    */
   private BigDecimal totalDiscountAmount;
+
+  /**
+   * 收货单ID（逗号分隔）
+   */
+  private String bizSheetIds;
+
+  /**
+   * 收货单汇总总金额
+   */
+  private BigDecimal bizTotalAmount;
 
   /**
    * 起始日期

@@ -8,10 +8,11 @@ import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.enums.SettleStatus;
-import com.lframework.xingyun.sc.excel.purchase.ReceiveSheetQueryImportModel;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import com.lframework.xingyun.sc.vo.purchase.receive.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -98,6 +99,13 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
   void update(UpdateReceiveSheetVo vo);
 
   /**
+   * 修改备注
+   *
+   * @param vo
+   */
+  void updateDescription(UpdateReceiveSheetDescriptionVo vo);
+
+  /**
    * 审核通过
    *
    * @param vo
@@ -126,7 +134,15 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
   void deleteById(String id);
 
   /**
-   * 设置成未结算
+   * 设置成待对账
+   *
+   * @param id
+   * @return
+   */
+  int setUnCheckBill(String id);
+
+  /**
+   * 待结算
    *
    * @param id
    * @return
@@ -150,6 +166,22 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
   int setSettled(String id);
 
   /**
+   * 清除对账单关联
+   *
+   * @param id 单据ID
+   */
+  // void clearSettleSheetDetailId(String id);
+
+  /**
+   * 执行结算
+   *
+   * @param id 单据ID
+   * @param payAmount 实付金额
+   * @param checkAmt 对账金额
+   */
+  // void settle(String id, BigDecimal payAmount, BigDecimal checkAmt);
+
+  /**
    * 查询已审核列表
    *
    * @param supplierId
@@ -171,4 +203,6 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
    * @return 创建的订单ID列表
    */
   List<String> importByQuery(List<ReceiveSheetQueryImportModel> list);
+
+  List<ReceiveSheet> selectByIds(List<String> ids);
 }

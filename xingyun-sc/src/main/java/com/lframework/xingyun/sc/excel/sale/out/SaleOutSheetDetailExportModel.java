@@ -5,6 +5,8 @@ import com.alibaba.excel.annotation.ExcelProperty;
 import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
+import com.lframework.starter.web.core.utils.ApplicationUtil;
+import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import lombok.Data;
 
@@ -52,7 +54,10 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
   @ExcelProperty("成本")
   private BigDecimal costAmount;
 
-  @ExcelProperty("含税金额")
+  @ExcelProperty("供应商名称")
+  private String supplierName;
+
+  @ExcelProperty("销售额")
   private BigDecimal taxAmount;
 
   @ExcelProperty("毛利率")
@@ -96,6 +101,7 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
     this.setCostAmount(NumberUtil.sub(this.taxAmount, totalProfit));
     this.setProfitRate(this.buildProfitRate(this.taxAmount, totalProfit));
     this.setDescription(dto.getDescription());
+    this.setSupplierName(ApplicationUtil.getBean(SupplierService.class).findById(dto.getSupplierId()).getName());
   }
 
   private BigDecimal defaultValue(BigDecimal value) {

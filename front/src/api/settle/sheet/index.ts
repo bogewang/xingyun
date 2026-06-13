@@ -10,6 +10,10 @@ import { ApprovePassSettleSheetVo } from '@/api/settle/sheet/model/approvePassSe
 import { ApproveRefuseSettleSheetVo } from '@/api/settle/sheet/model/approveRefuseSettleSheetVo';
 import { SettleBizItemBo } from '@/api/settle/sheet/model/settleBizItemBo';
 import { QueryUnSettleBizItemVo } from '@/api/settle/sheet/model/queryUnSettleBizItemVo';
+import { QuerySettleSheetSummaryVo } from '@/api/settle/sheet/model/querySettleSheetSummaryVo';
+import { SettleSheetSummaryBo } from '@/api/settle/sheet/model/settleSheetSummaryBo';
+import { QueryReceiveSheetSettleInfoVo } from '@/api/settle/sheet/model/queryReceiveSheetSettleInfoVo';
+import { ReceiveSheetSettleInfoBo } from '@/api/settle/sheet/model/receiveSheetSettleInfoBo';
 
 const baseUrl = '/settle/sheet';
 const region = 'cloud-api';
@@ -30,12 +34,93 @@ export function query(params: QuerySettleSheetVo): Promise<PageResult<QuerySettl
 }
 
 /**
+ * 供应商结算汇总
+ */
+export function summary(params: QuerySettleSheetSummaryVo): Promise<SettleSheetSummaryBo[]> {
+  return defHttp.get<SettleSheetSummaryBo[]>(
+    {
+      url: baseUrl + '/summary',
+      params,
+    },
+    {
+      region,
+    },
+  );
+}
+
+/**
+ * 导出供应商结算汇总
+ */
+export function exportSummary(data: QuerySettleSheetSummaryVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/summary/export',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.FORM_URLENCODED,
+    },
+  );
+}
+
+/**
+ * 查询收货单对账结算扩展信息
+ */
+export function queryReceiveSheetSettleInfos(
+  data: QueryReceiveSheetSettleInfoVo,
+): Promise<ReceiveSheetSettleInfoBo[]> {
+  return defHttp.post<ReceiveSheetSettleInfoBo[]>(
+    {
+      url: baseUrl + '/receive-sheet-settle-infos',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/**
  * 导出
  */
 export function exportList(data: QuerySettleSheetVo): Promise<void> {
   return defHttp.post<void>(
     {
       url: baseUrl + '/export',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.FORM_URLENCODED,
+    },
+  );
+}
+
+/**
+ * 导出供应商结算工作台
+ */
+export function exportReceiveSheetSettleInfos(data: QueryReceiveSheetSettleInfoVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/export-receive-sheet-settle-infos',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.FORM_URLENCODED,
+    },
+  );
+}
+
+/**
+ * 导出结算记录
+ */
+export function exportRecord(data: QuerySettleSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/export-record',
       data,
     },
     {

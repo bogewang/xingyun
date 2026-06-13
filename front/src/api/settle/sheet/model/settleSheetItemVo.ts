@@ -7,7 +7,12 @@ export interface SettleSheetItemVo {
   /**
    * 实付金额
    */
-  payAmount: number;
+  unSettleAmount: number;
+
+  /**
+   * 对账金额
+   */
+  checkAmount: number;
 
   /**
    * 优惠金额

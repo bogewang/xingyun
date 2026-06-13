@@ -27,18 +27,15 @@ import com.lframework.starter.web.inner.service.system.SysParameterService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.starter.web.inner.vo.system.parameter.QuerySysParameterVo;
 import com.lframework.xingyun.basedata.entity.Product;
-import com.lframework.xingyun.basedata.entity.ProductBundle;
 import com.lframework.xingyun.basedata.entity.StoreCenter;
 import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.enums.ManageType;
 import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.enums.SettleType;
-import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
-import com.lframework.xingyun.core.utils.SplitNumberUtil;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.QueryReceiveSheetDetailDto;
@@ -49,9 +46,9 @@ import com.lframework.xingyun.sc.enums.ProductStockBizType;
 import com.lframework.xingyun.sc.enums.PurchaseOpLogType;
 import com.lframework.xingyun.sc.enums.ReceiveSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
-import com.lframework.xingyun.sc.excel.purchase.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetDetailExportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.mappers.ReceiveSheetMapper;
 import com.lframework.xingyun.sc.service.ProductHotnessService;
 import com.lframework.xingyun.sc.service.purchase.*;
@@ -110,9 +107,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     @Autowired
     private ProductStockService productStockService;
-
-    @Autowired
-    private ProductBundleService productBundleService;
 
     @Autowired
     private ReceiveSheetDetailBundleService receiveSheetDetailBundleService;
@@ -250,14 +244,11 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         sheet.setId(IdUtil.getId());
         sheet.setCode(generateCode());
 
-        PurchaseConfig purchaseConfig = purchaseConfigService.get();
-
-        this.create(sheet, vo, purchaseConfig.getReceiveRequirePurchase());
+        this.create(sheet, vo);
 
         sheet.setStatus(ReceiveSheetStatus.CREATED);
 
         getBaseMapper().insert(sheet);
-        this.adjustSupplierAmount(sheet.getSupplierId());
         saleOutSheetService.refreshCostPrice(vo.getOrderDate());
         productHotnessService.increment(
                 vo.getProducts().stream().map(ReceiveProductVo::getProductId).collect(Collectors.toList()));
@@ -279,40 +270,27 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new InputErrorException("采购收货单不存在！");
         }
 
+        if (sheet.getStatus() == ReceiveSheetStatus.APPROVE_PASS) {
+            throw new DefaultClientException("采购收货单已审核通过，无法修改！");
+        }
+
+        if (sheet.getSettleStatus() != SettleStatus.UN_CHECK_BILL) {
+            throw new DefaultClientException("采购收货单已进入对账/结算流程，无法修改！");
+        }
+
         if (sheet.getStatus() != ReceiveSheetStatus.CREATED
                 && sheet.getStatus() != ReceiveSheetStatus.APPROVE_REFUSE) {
-
-            if (sheet.getStatus() == ReceiveSheetStatus.APPROVE_PASS) {
-                throw new DefaultClientException("采购收货单已审核通过，无法修改！");
-            }
-
             throw new DefaultClientException("采购收货单无法修改！");
         }
 
         String oldSupplierId = sheet.getSupplierId();
-
-        boolean requirePurchase = !StringUtil.isBlank(sheet.getPurchaseOrderId());
-
-        if (requirePurchase) {
-            // 查询采购收货单明细
-            Wrapper<ReceiveSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
-                    ReceiveSheetDetail.class).eq(ReceiveSheetDetail::getSheetId, sheet.getId());
-            List<ReceiveSheetDetail> details = receiveSheetDetailService.list(queryDetailWrapper);
-            for (ReceiveSheetDetail detail : details) {
-                if (!StringUtil.isBlank(detail.getPurchaseOrderDetailId())) {
-                    // 先恢复已收货数量
-                    purchaseOrderDetailService.subReceiveNum(detail.getPurchaseOrderDetailId(),
-                            detail.getOrderNum());
-                }
-            }
-        }
 
         // 删除采购收货单明细
         Wrapper<ReceiveSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(ReceiveSheetDetail.class)
                 .eq(ReceiveSheetDetail::getSheetId, sheet.getId());
         receiveSheetDetailService.remove(deleteDetailWrapper);
 
-        this.create(sheet, vo, requirePurchase);
+        this.create(sheet, vo);
 
         sheet.setStatus(ReceiveSheetStatus.CREATED);
 
@@ -328,13 +306,30 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new DefaultClientException("采购收货单信息已过期，请刷新重试！");
         }
 
-        this.adjustSupplierAmount(oldSupplierId);
-        if (!StringUtil.equals(oldSupplierId, sheet.getSupplierId())) {
-            this.adjustSupplierAmount(sheet.getSupplierId());
-        }
         saleOutSheetService.refreshCostPrice(vo.getOrderDate());
         productHotnessService.increment(
                 vo.getProducts().stream().map(ReceiveProductVo::getProductId).collect(Collectors.toList()));
+
+        OpLogUtil.setVariable("code", sheet.getCode());
+        OpLogUtil.setExtra(vo);
+    }
+
+    @OpLog(type = PurchaseOpLogType.class, name = "修改采购收货单备注，单号：{}", params = "#code")
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void updateDescription(UpdateReceiveSheetDescriptionVo vo) {
+
+        ReceiveSheet sheet = getBaseMapper().selectById(vo.getId());
+        if (sheet == null) {
+            throw new InputErrorException("采购收货单不存在！");
+        }
+
+        Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
+                .set(ReceiveSheet::getDescription, vo.getDescription())
+                .eq(ReceiveSheet::getId, sheet.getId());
+        if (getBaseMapper().update(updateWrapper) != 1) {
+            throw new DefaultClientException("采购收货单信息已过期，请刷新重试！");
+        }
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
@@ -585,9 +580,17 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new DefaultClientException("采购收货单信息已过期，请刷新重试！");
         }
 
-        this.adjustSupplierAmount(sheet.getSupplierId());
-
         OpLogUtil.setVariable("code", sheet.getCode());
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int setUnCheckBill(String id) {
+
+        Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
+                .set(ReceiveSheet::getSettleStatus, SettleStatus.UN_CHECK_BILL)
+                .eq(ReceiveSheet::getId, id);
+        return getBaseMapper().update(updateWrapper);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -595,8 +598,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     public int setUnSettle(String id) {
 
         Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
-                .set(ReceiveSheet::getSettleStatus, SettleStatus.UN_SETTLE).eq(ReceiveSheet::getId, id)
-                .eq(ReceiveSheet::getSettleStatus, SettleStatus.PART_SETTLE);
+                .set(ReceiveSheet::getSettleStatus, SettleStatus.UN_SETTLE)
+                .eq(ReceiveSheet::getId, id);
         int count = getBaseMapper().update(updateWrapper);
 
         return count;
@@ -619,12 +622,52 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     public int setSettled(String id) {
 
         Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
-                .set(ReceiveSheet::getSettleStatus, SettleStatus.SETTLED).eq(ReceiveSheet::getId, id)
+                .set(ReceiveSheet::getSettleStatus, SettleStatus.SETTLED)
+                .eq(ReceiveSheet::getId, id)
                 .in(ReceiveSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
         int count = getBaseMapper().update(updateWrapper);
 
         return count;
     }
+
+    // @Transactional(rollbackFor = Exception.class)
+    // @Override
+    // public void clearSettleSheetDetailId(String id) {
+    //
+    //     Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
+    //             .eq(ReceiveSheet::getId, id);
+    //     getBaseMapper().update(updateWrapper);
+    // }
+
+    // @Transactional(rollbackFor = Exception.class)
+    // @Override
+    // public void settle(String id, BigDecimal payAmount, BigDecimal checkAmt) {
+    //
+    //     ReceiveSheet sheet = getById(id);
+    //     if (sheet == null) {
+    //         throw new DefaultClientException("采购入库单不存在！");
+    //     }
+
+        // todo 校验对账金额是否大于等于本次结算金额
+        // if (NumberUtil.lt(checkAmt, payAmount)) {
+        //     throw new DefaultClientException(
+        //             "采购入库单：" + sheet.getCode() + "，对账金额为" + checkAmt + "元，本次结算金额为"
+        //                     + payAmount + "元，不允许超额结算！");
+        // }
+
+        // BigDecimal settledPaidAmount = NumberUtil.add(currentPaidAmount, settleAmount);
+        // SettleStatus settleStatus =
+        //         NumberUtil.equal(settledPaidAmount, totalAmount) ? SettleStatus.SETTLED : SettleStatus.PART_SETTLE;
+
+    //     Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
+    //             .set(ReceiveSheet::getSettleStatus, SettleStatus.SETTLED)
+    //             .eq(ReceiveSheet::getId, id)
+    //             // .eq(ReceiveSheet::getStatus, ReceiveSheetStatus.APPROVE_PASS)
+    //             .in(ReceiveSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
+    //     if (getBaseMapper().update(updateWrapper) != 1) {
+    //         throw new DefaultClientException("采购入库单信息已过期，请刷新重试！");
+    //     }
+    // }
 
     @Override
     public List<ReceiveSheet> getApprovedList(String supplierId, LocalDateTime startTime,
@@ -664,7 +707,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         ExcelUtil.writeWithSheets("采购收货单明细按天汇总", sortedDatas);
     }
 
-    private void create(ReceiveSheet sheet, CreateReceiveSheetVo vo, boolean receiveRequirePurchase) {
+    private void create(ReceiveSheet sheet, CreateReceiveSheetVo vo) {
 
         if (!StringUtil.isBlank(vo.getScId())) {
             StoreCenter sc = storeCenterService.findById(vo.getScId());
@@ -690,68 +733,14 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             sheet.setPurchaserId(vo.getPurchaserId());
         }
 
-        PurchaseConfig purchaseConfig = purchaseConfigService.get();
-
-        GetPaymentDateDto paymentDate = this.getPaymentDate(supplier.getId());
-
-        sheet.setPaymentDate(
-                vo.getAllowModifyPaymentDate() || paymentDate.getAllowModify() ? vo.getPaymentDate()
-                        : paymentDate.getPaymentDate());
         sheet.setOrderDate(vo.getOrderDate());
         sheet.setReceiveDate(vo.getReceiveDate());
-
-        if (receiveRequirePurchase) {
-
-            PurchaseOrder purchaseOrder = purchaseOrderService.getById(vo.getPurchaseOrderId());
-            if (purchaseOrder == null) {
-                throw new DefaultClientException("采购订单不存在！");
-            }
-
-            sheet.setScId(purchaseOrder.getScId());
-            sheet.setSupplierId(purchaseOrder.getSupplierId());
-            sheet.setPurchaseOrderId(purchaseOrder.getId());
-
-            if (!purchaseConfig.getReceiveMultipleRelatePurchase()) {
-                Wrapper<ReceiveSheet> checkWrapper = Wrappers.lambdaQuery(ReceiveSheet.class)
-                        .eq(ReceiveSheet::getPurchaseOrderId, purchaseOrder.getId())
-                        .ne(ReceiveSheet::getId, sheet.getId());
-                if (getBaseMapper().selectCount(checkWrapper) > 0) {
-                    throw new DefaultClientException("采购订单号：" + purchaseOrder.getCode()
-                            + "，已关联其他采购收货单，不允许关联多个采购收货单！");
-                }
-            }
-        }
 
         BigDecimal purchaseNum = BigDecimal.ZERO;
         BigDecimal giftNum = BigDecimal.ZERO;
         BigDecimal totalAmount = BigDecimal.ZERO;
-        int orderNo = 1;
         for (ReceiveProductVo productVo : vo.getProducts()) {
-            if (receiveRequirePurchase) {
-                if (!StringUtil.isBlank(productVo.getPurchaseOrderDetailId())) {
-                    PurchaseOrderDetail orderDetail = purchaseOrderDetailService.getById(
-                            productVo.getPurchaseOrderDetailId());
-                    productVo.setPurchasePrice(orderDetail.getTaxPrice());
-                } else {
-                    productVo.setPurchasePrice(BigDecimal.ZERO);
-                }
-            }
-
-            boolean isGift = NumberUtil.equal(productVo.getPurchasePrice(), BigDecimal.ZERO);
-
-            if (receiveRequirePurchase) {
-                if (StringUtil.isBlank(productVo.getPurchaseOrderDetailId())) {
-                    if (!isGift) {
-                        throw new InputErrorException("第" + orderNo + "行商品必须为“赠品”！");
-                    }
-                }
-            }
-
-            if (isGift) {
-                giftNum = NumberUtil.add(giftNum, productVo.getReceiveNum());
-            } else {
-                purchaseNum = NumberUtil.add(purchaseNum, productVo.getReceiveNum());
-            }
+            purchaseNum = NumberUtil.add(purchaseNum, productVo.getReceiveNum());
 
             BigDecimal taxAmount = NumberUtil.getNumber(
                     NumberUtil.mul(productVo.getReceiveNum(), productVo.getPurchasePrice()), 2);
@@ -763,89 +752,36 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
             Product product = productService.findById(productVo.getProductId());
             if (product == null) {
-                throw new InputErrorException("第" + orderNo + "行商品不存在！");
+                throw new InputErrorException("第" + productVo.getSeq() + "行商品不存在！");
             }
 
             if (!NumberUtil.isNumberPrecision(productVo.getPurchasePrice(), 6)) {
-                throw new InputErrorException("第" + orderNo + "行商品采购价最多允许6位小数！");
+                throw new InputErrorException("第" + productVo.getSeq() + "行商品采购价最多允许6位小数！");
             }
 
             if (!NumberUtil.isNumberPrecision(productVo.getReceiveNum(), 8)) {
-                throw new InputErrorException("第" + orderNo + "行商品收货数量最多允许8位小数！");
+                throw new InputErrorException("第" + productVo.getSeq() + "行商品收货数量最多允许8位小数！");
             }
 
             detail.setProductId(productVo.getProductId());
             detail.setOrderNum(productVo.getReceiveNum());
             detail.setTaxPrice(productVo.getPurchasePrice());
             detail.setTaxAmount(taxAmount);
-            detail.setIsGift(isGift);
             detail.setTaxRate(product.getTaxRate());
             detail.setDescription(StringUtil.isBlank(productVo.getDescription()) ? StringPool.EMPTY_STR
                     : productVo.getDescription());
-            detail.setOrderNo(orderNo);
-            if (receiveRequirePurchase && !StringUtil.isBlank(productVo.getPurchaseOrderDetailId())) {
-                detail.setPurchaseOrderDetailId(productVo.getPurchaseOrderDetailId());
-                purchaseOrderDetailService.addReceiveNum(productVo.getPurchaseOrderDetailId(),
-                        detail.getOrderNum());
-            }
-
+            detail.setOrderNo(productVo.getSeq());
             receiveSheetDetailService.save(detail);
-            if (!receiveRequirePurchase) {
-                updateProductPrice(product, detail);
-                productLatestPriceCacheService.updateLatestPrice(product.getId(), null,
-                        detail.getTaxPrice());
-            }
-
-            // 这里处理组合商品
-            if (product.getProductType() == ProductType.BUNDLE) {
-                if (!NumberUtil.isInteger(productVo.getReceiveNum())) {
-                    throw new InputErrorException("第" + orderNo + "行商品收货数量必须是整数！");
-                }
-                List<ProductBundle> productBundles = productBundleService.getByMainProductId(
-                        product.getId());
-                // 构建指标项
-                Map<Object, Number> bundleWeight = new HashMap<>(productBundles.size());
-                for (ProductBundle productBundle : productBundles) {
-                    bundleWeight.put(productBundle.getProductId(),
-                            NumberUtil.mul(productBundle.getPurchasePrice(), productBundle.getBundleNum()));
-                }
-                Map<Object, Number> splitPriceMap = SplitNumberUtil.split(detail.getTaxAmount(),
-                        bundleWeight, 2);
-                List<ReceiveSheetDetailBundle> receiveSheetDetailBundles = productBundles.stream()
-                        .map(productBundle -> {
-                            Product bundle = productService.findById(productBundle.getProductId());
-                            ReceiveSheetDetailBundle receiveSheetDetailBundle = new ReceiveSheetDetailBundle();
-                            receiveSheetDetailBundle.setId(IdUtil.getId());
-                            receiveSheetDetailBundle.setSheetId(sheet.getId());
-                            receiveSheetDetailBundle.setDetailId(detail.getId());
-                            receiveSheetDetailBundle.setMainProductId(product.getId());
-                            receiveSheetDetailBundle.setOrderNum(detail.getOrderNum());
-                            receiveSheetDetailBundle.setProductId(productBundle.getProductId());
-                            receiveSheetDetailBundle.setProductOrderNum(
-                                    NumberUtil.mul(detail.getOrderNum(), productBundle.getBundleNum()));
-                            receiveSheetDetailBundle.setProductOriPrice(productBundle.getPurchasePrice());
-                            receiveSheetDetailBundle.setProductTaxAmount(BigDecimal.valueOf(
-                                    splitPriceMap.get(productBundle.getProductId()).doubleValue()));
-                            // 这里会有尾差
-                            receiveSheetDetailBundle.setProductTaxPrice(NumberUtil.getNumber(
-                                    NumberUtil.div(receiveSheetDetailBundle.getProductTaxAmount(),
-                                            receiveSheetDetailBundle.getProductOrderNum()),
-                                    6));
-                            receiveSheetDetailBundle.setProductTaxRate(bundle.getTaxRate());
-
-                            return receiveSheetDetailBundle;
-                        }).collect(Collectors.toList());
-
-                receiveSheetDetailBundleService.saveBatch(receiveSheetDetailBundles);
-            }
-            orderNo++;
+            updateProductPrice(product, detail);
+            productLatestPriceCacheService.updateLatestPrice(product.getId(), null,
+                    detail.getTaxPrice());
         }
+        BigDecimal actualTotalAmount = this.normalizeTotalAmount(vo.getTotalAmount(), totalAmount);
         sheet.setTotalNum(purchaseNum);
         sheet.setTotalGiftNum(giftNum);
-        sheet.setTotalAmount(totalAmount);
-        sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), totalAmount));
-        sheet.setDescription(
-                StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
+        sheet.setTotalAmount(actualTotalAmount);
+        sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), actualTotalAmount));
+        sheet.setDescription(StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(supplier));
     }
 
@@ -877,10 +813,27 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     private SettleStatus getInitSettleStatus(Supplier supplier) {
 
         if (supplier.getManageType() == ManageType.DISTRIBUTION) {
-            return SettleStatus.UN_SETTLE;
+            return SettleStatus.UN_CHECK_BILL;
         } else {
             return SettleStatus.UN_REQUIRE;
         }
+    }
+
+    private BigDecimal normalizeTotalAmount(BigDecimal totalAmount, BigDecimal detailTotalAmount) {
+        BigDecimal actualTotalAmount = totalAmount == null ? detailTotalAmount : totalAmount;
+        if (NumberUtil.lt(actualTotalAmount, BigDecimal.ZERO)) {
+            throw new InputErrorException("折后金额不允许小于0！");
+        }
+
+        if (!NumberUtil.isNumberPrecision(actualTotalAmount, 2)) {
+            throw new InputErrorException("折后金额最多允许2位小数！");
+        }
+
+        if (NumberUtil.gt(actualTotalAmount, detailTotalAmount)) {
+            throw new InputErrorException("折后金额不允许大于明细金额！");
+        }
+
+        return actualTotalAmount;
     }
 
     private BigDecimal normalizePaidAmount(BigDecimal paidAmount, BigDecimal totalAmount) {
@@ -935,7 +888,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
         handleSeq(list);
         // 匹配编号
-        checkImportData(list);
+        List<String> errors = checkImportData(list);
+        Assert.isTrue(CollectionUtils.isEmpty(errors), StringUtils.join(errors, "；\r\n"));
 
         return list.stream()
                 .map(item -> BeanUtil.copyProperties(item, ReceiveProductVo.class))
@@ -951,7 +905,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
     }
 
-    private void checkImportData(List<ReceiveSheetImportModel> list) {
+    private List<String> checkImportData(List<ReceiveSheetImportModel> list) {
         List<String> productNames = list.stream().map(ReceiveSheetImportModel::getProductName)
                 .collect(Collectors.toList());
         List<Product> products = productService.selectByProductName(productNames);
@@ -960,24 +914,25 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         Map<String, Product> nameUnitMap = products.stream()
                 .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item, (oldValue, newValue) -> oldValue));
 
+        List<String> errors = Lists.newArrayList();
         for (int i = 0; i < list.size(); i++) {
             ReceiveSheetImportModel data = list.get(i);
             int rowIndex = data.getSeq();
 
             if (StringUtils.isEmpty(data.getProductName())) {
-                throw new DefaultClientException("第" + rowIndex + "行“商品名称”不能为空");
+                errors.add("第" + rowIndex + "行“商品名称”不能为空");
             }
             if (StringUtils.isEmpty(data.getUnit())) {
-                throw new DefaultClientException("第" + rowIndex + "行“单位”不能为空");
+                errors.add("第" + rowIndex + "行“单位”不能为空");
             }
             if (data.getReceiveNum() == null) {
-                throw new DefaultClientException("第" + rowIndex + "行“数量”不能为空");
+                errors.add("第" + rowIndex + "行“数量”不能为空");
             }
             if (NumberUtil.le(data.getReceiveNum(), BigDecimal.ZERO)) {
-                throw new DefaultClientException("第" + rowIndex + "行“数量”必须大于0");
+                errors.add("第" + rowIndex + "行“数量”必须大于0");
             }
             if (!NumberUtil.isNumberPrecision(data.getReceiveNum(), 8)) {
-                throw new DefaultClientException("第" + rowIndex + "行“数量”最多允许8位小数");
+                errors.add("第" + rowIndex + "行“数量”最多允许8位小数");
             }
 
             // 匹配商品,设置商品编号
@@ -987,20 +942,21 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             if (product == null) {
                 product = nameUnitMap.get(nameSpecUnit);
                 if (product == null) {
-                    throw new DefaultClientException("第" + rowIndex + "行“商品名称”、“规格”、“单位”组合不存在");
+                    errors.add("第" + rowIndex + "行“商品名称”、“规格”、“单位”组合不存在");
                 }
             }
-            data.setProductCode(product.getCode());
-            data.setProductId(product.getId());
-            BigDecimal defaultPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(product.getId());
-            data.setLatestPurchasePrice(defaultPurchasePrice);
-            if (data.getPurchasePrice() == null) {
-                data.setPurchasePrice(defaultPurchasePrice == null ? BigDecimal.ZERO : defaultPurchasePrice);
+            if (product != null) {
+                data.setProductCode(product.getCode());
+                data.setProductId(product.getId());
+                BigDecimal defaultPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(product.getId());
+                data.setLatestPurchasePrice(defaultPurchasePrice);
+                if (data.getPurchasePrice() == null) {
+                    data.setPurchasePrice(defaultPurchasePrice == null ? BigDecimal.ZERO : defaultPurchasePrice);
+                }
             }
-            // if (data.getPurchasePrice() == null) {
-            //     throw new DefaultClientException("第" + rowIndex + "行商品未设置采购价，请填写“单价”或先维护商品采购价");
-            // }
+
         }
+        return errors;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -1090,5 +1046,10 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     private BigDecimal defaultValue(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
+    }
+
+    @Override
+    public List<ReceiveSheet> selectByIds(List<String> ids) {
+        return getBaseMapper().selectBatchIds(ids);
     }
 }

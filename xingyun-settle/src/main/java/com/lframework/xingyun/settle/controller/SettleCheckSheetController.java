@@ -58,7 +58,7 @@ public class SettleCheckSheetController extends DefaultBaseController {
    * 供应商对账单列表
    */
   @ApiOperation("供应商对账单列表")
-  @HasPermission({"settle:check-sheet:query"})
+  @HasPermission({"settle:sheet:query"})
   @GetMapping("/query")
   public InvokeResult<PageResult<QuerySettleCheckSheetBo>> query(
       @Valid QuerySettleCheckSheetVo vo) {
@@ -80,7 +80,7 @@ public class SettleCheckSheetController extends DefaultBaseController {
    * 导出
    */
   @ApiOperation("导出")
-  @HasPermission({"settle:check-sheet:export"})
+  @HasPermission({"settle:sheet:export"})
   @PostMapping("/export")
   public InvokeResult<Void> export(@Valid QuerySettleCheckSheetVo vo) {
 
@@ -94,7 +94,7 @@ public class SettleCheckSheetController extends DefaultBaseController {
    */
   @ApiOperation("根据ID查询")
   @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-  @HasPermission({"settle:check-sheet:query"})
+  @HasPermission({"settle:sheet:query"})
   @GetMapping
   public InvokeResult<GetSettleCheckSheetBo> findById(
       @NotBlank(message = "供应商对账单ID不能为空！") String id) {
@@ -110,7 +110,7 @@ public class SettleCheckSheetController extends DefaultBaseController {
    * 创建供应商对账单
    */
   @ApiOperation("创建供应商对账单")
-  @HasPermission({"settle:check-sheet:add"})
+  @HasPermission({"settle:sheet:add"})
   @PostMapping
   public InvokeResult<String> create(@RequestBody @Valid CreateSettleCheckSheetVo vo) {
 
@@ -125,7 +125,7 @@ public class SettleCheckSheetController extends DefaultBaseController {
    * 修改供应商对账单
    */
   @ApiOperation("修改供应商对账单")
-  @HasPermission({"settle:check-sheet:modify"})
+  @HasPermission({"settle:sheet:modify"})
   @PutMapping
   public InvokeResult<Void> update(@RequestBody @Valid UpdateSettleCheckSheetVo vo) {
 
@@ -140,7 +140,7 @@ public class SettleCheckSheetController extends DefaultBaseController {
    * 审核通过供应商对账单
    */
   @ApiOperation("审核通过供应商对账单")
-  @HasPermission({"settle:check-sheet:approve"})
+  @HasPermission({"settle:sheet:approve"})
   @PatchMapping("/approve/pass")
   public InvokeResult<Void> approvePass(@RequestBody @Valid ApprovePassSettleCheckSheetVo vo) {
 
@@ -153,7 +153,7 @@ public class SettleCheckSheetController extends DefaultBaseController {
    * 直接审核通过供应商对账单
    */
   @ApiOperation("直接审核通过供应商对账单")
-  @HasPermission({"settle:check-sheet:approve"})
+  @HasPermission({"settle:sheet:approve"})
   @PostMapping("/approve/pass/direct")
   public InvokeResult<Void> directApprovePass(@RequestBody @Valid CreateSettleCheckSheetVo vo) {
 
@@ -168,7 +168,7 @@ public class SettleCheckSheetController extends DefaultBaseController {
    * 审核拒绝供应商对账单
    */
   @ApiOperation("审核拒绝供应商对账单")
-  @HasPermission({"settle:check-sheet:approve"})
+  @HasPermission({"settle:sheet:approve"})
   @PatchMapping("/approve/refuse")
   public InvokeResult<Void> approveRefuse(@RequestBody @Valid ApproveRefuseSettleCheckSheetVo vo) {
 
@@ -182,7 +182,7 @@ public class SettleCheckSheetController extends DefaultBaseController {
    */
   @ApiOperation("删除供应商对账单")
   @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-  @HasPermission({"settle:check-sheet:delete"})
+  @HasPermission({"settle:sheet:delete"})
   @DeleteMapping
   public InvokeResult<Void> deleteById(@NotBlank(message = "供应商对账单ID不能为空！") String id) {
 
@@ -195,7 +195,7 @@ public class SettleCheckSheetController extends DefaultBaseController {
    * 查询未对账的业务单据
    */
   @ApiOperation("查询未对账的业务单据")
-  @HasPermission({"settle:check-sheet:add", "settle:check-sheet:modify"})
+  @HasPermission({"settle:sheet:add", "settle:sheet:modify"})
   @GetMapping("/uncheck-items")
   public InvokeResult<List<SettleCheckBizItemBo>> getUnCheckItems(@Valid QueryUnCheckBizItemVo vo) {
 

@@ -3,12 +3,13 @@ package com.lframework.xingyun.sc.dto.purchase.receive;
 import com.lframework.starter.web.core.dto.BaseDto;
 import com.lframework.xingyun.sc.enums.ReceiveSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import lombok.Data;
 
 @Data
 public class ReceiveSheetFullDto implements BaseDto, Serializable {

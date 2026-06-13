@@ -705,6 +705,7 @@
           title: '批量调整售价',
           required: true,
         }).then(({ value }) => {
+          this.priceCheckLoading = true;
           api
             .batchUpdatePrice({
               detailIds: records.map((item) => item.detailId),
@@ -714,6 +715,9 @@
               createSuccess('批量调整售价成功！');
               this.$refs.priceCheckGrid.commitProxy('reload');
               this.search();
+            })
+            .finally(() => {
+              this.priceCheckLoading = false;
             });
         });
       },

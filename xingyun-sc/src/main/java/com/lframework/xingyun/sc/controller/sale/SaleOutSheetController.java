@@ -33,7 +33,7 @@ import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
-import com.lframework.xingyun.sc.excel.sale.SaleOutSheetQueryImportModel;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetDetailExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
@@ -636,8 +636,7 @@ public class SaleOutSheetController extends DefaultBaseController {
     @PostMapping("/import/query")
     public InvokeResult<List<String>> importByQuery(@NotNull(message = "请上传文件") MultipartFile file) {
         try {
-            List<SaleOutSheetQueryImportModel> list = EasyExcelUtils.syncReadModel(
-                    file.getInputStream(), SaleOutSheetQueryImportModel.class);
+            List<SaleOutSheetQueryImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(), SaleOutSheetQueryImportModel.class);
             List<String> data = saleOutSheetService.importByQuery(list);
 
             return InvokeResultBuilder.success(data);

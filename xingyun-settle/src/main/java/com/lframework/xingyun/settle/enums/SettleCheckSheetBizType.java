@@ -1,11 +1,14 @@
 package com.lframework.xingyun.settle.enums;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.google.common.collect.Lists;
 import com.lframework.starter.web.core.enums.BaseEnum;
 
 public enum SettleCheckSheetBizType implements BaseEnum<Integer> {
-    RECEIVE_SHEET(1, "采购收货单"), PURCHASE_RETURN(2, "采购退单"), SETTLE_FEE_SHEET(3, "供应商费用单"), SETTLE_PRE_SHEET(4,
-            "供应商预付款单");
+    RECEIVE_SHEET(1, "采购收货单"),
+    PURCHASE_RETURN(2, "采购退单"),
+    SETTLE_FEE_SHEET(3, "供应商费用单"),
+    SETTLE_PRE_SHEET(4, "供应商预付款单");
 
     @EnumValue
     private final Integer code;
@@ -28,5 +31,15 @@ public enum SettleCheckSheetBizType implements BaseEnum<Integer> {
     public String getDesc() {
 
         return this.desc;
+    }
+
+    public static SettleCheckSheetBizType fromCode(Integer code) {
+        for (SettleCheckSheetBizType item : Lists.newArrayList(SettleCheckSheetBizType.values())) {
+            if (item.getCode().equals(code)) {
+                return item;
+            }
+        }
+
+        return null;
     }
 }

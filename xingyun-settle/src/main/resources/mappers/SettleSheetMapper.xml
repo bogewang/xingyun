@@ -7,6 +7,7 @@
         <result column="supplier_id" property="supplierId"/>
         <result column="total_amount" property="totalAmount"/>
         <result column="total_discount_amount" property="totalDiscountAmount"/>
+        <result column="total_un_settle_amt" property="totalUnSettleAmt"/>
         <result column="start_date" property="startDate"/>
         <result column="end_date" property="endDate"/>
         <result column="description" property="description"/>
@@ -18,6 +19,7 @@
         <result column="approve_time" property="approveTime"/>
         <result column="status" property="status"/>
         <result column="refuse_reason" property="refuseReason"/>
+        <result column="biz_sheet_ids" property="bizSheetIds"/>
     </resultMap>
 
     <resultMap id="SettleSheetFullDto" type="com.lframework.xingyun.settle.dto.sheet.SettleSheetFullDto">
@@ -55,6 +57,7 @@
             s.supplier_id,
             s.total_amount,
             s.total_discount_amount,
+            s.total_un_settle_amt,
             s.start_date,
             s.end_date,
             s.description,
@@ -65,7 +68,9 @@
             s.approve_by,
             s.approve_time,
             s.status,
-            s.refuse_reason
+            s.refuse_reason,
+            s.biz_sheet_ids,
+            s.total_check_amt
         FROM settle_sheet AS s
     </sql>
 
@@ -102,6 +107,14 @@
             <if test="vo != null">
                 <if test="vo.code != null and vo.code != ''">
                     AND s.code = #{vo.code}
+                </if>
+                <if test="vo.bizCode != null and vo.bizCode != ''">
+                    AND EXISTS (
+                        SELECT 1
+                        FROM receive_sheet rs
+                        WHERE FIND_IN_SET(rs.id, s.biz_sheet_ids)
+                          AND rs.code LIKE CONCAT('%', #{vo.bizCode}, '%')
+                    )
                 </if>
                 <if test="vo.supplierId != null and vo.supplierId != ''">
                     AND s.supplier_id = #{vo.supplierId}

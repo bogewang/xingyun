@@ -7,6 +7,11 @@ export interface QuerySettleSheetVo extends SortPageVo {
   code: string;
 
   /**
+   * 货流单号
+   */
+  bizCode: string;
+
+  /**
    * 供应商ID
    */
   supplierId: string;

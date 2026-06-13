@@ -1,15 +1,18 @@
 package com.lframework.xingyun.settle.vo.sheet;
 
 import com.lframework.starter.common.exceptions.impl.InputErrorException;
+import com.lframework.starter.common.utils.Assert;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.vo.BaseVo;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
+import org.apache.commons.collections4.CollectionUtils;
 
 @Data
 public class CreateSettleSheetVo implements BaseVo, Serializable {
@@ -33,15 +36,15 @@ public class CreateSettleSheetVo implements BaseVo, Serializable {
   /**
    * 起始日期
    */
-  @ApiModelProperty(value = "起始日期", required = true)
-  @NotNull(message = "起始日期不能为空！")
+  @ApiModelProperty(value = "起始日期")
+  // @NotNull(message = "起始日期不能为空！")
   private LocalDate startDate;
 
   /**
    * 截止日期
    */
-  @ApiModelProperty(value = "截止日期", required = true)
-  @NotNull(message = "截止日期不能为空！")
+  @ApiModelProperty(value = "截止日期")
+  // @NotNull(message = "截止日期不能为空！")
   private LocalDate endDate;
 
   /**
@@ -50,21 +53,31 @@ public class CreateSettleSheetVo implements BaseVo, Serializable {
   @ApiModelProperty("备注")
   private String description;
 
+  /**
+   * 结算金额
+   */
+  @ApiModelProperty(value = "结算金额", required = true)
+  @NotNull(message = "结算金额不能为空！")
+  private BigDecimal settleAmount;
+
   public void validate() {
+
+    Assert.notNull(settleAmount, "结算金额不能为空！");
+    Assert.isTrue(CollectionUtils.isNotEmpty(items), "请选择单据！");
 
     int orderNo = 1;
     for (SettleSheetItemVo item : this.items) {
       if (StringUtil.isBlank(item.getId())) {
-        throw new InputErrorException("第" + orderNo + "行对账单不能为空！");
+        throw new InputErrorException("第" + orderNo + "行结算单不能为空！");
       }
 
-      if (item.getPayAmount() == null) {
-        throw new InputErrorException("第" + orderNo + "行实付金额不能为空！");
+      if (item.getUnSettleAmount() == null) {
+        throw new InputErrorException("第" + orderNo + "行未结算不能为空！");
       }
 
-      if (item.getDiscountAmount() == null) {
-        throw new InputErrorException("第" + orderNo + "行优惠金额不能为空！");
-      }
+      // if (item.getDiscountAmount() == null) {
+      //   throw new InputErrorException("第" + orderNo + "行优惠金额不能为空！");
+      // }
 
       orderNo++;
     }

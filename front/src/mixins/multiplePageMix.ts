@@ -15,10 +15,12 @@ export const multiplePageMix = {
     }
   },
   methods: {
-    openChildPage(path: string) {
+    openChildPage(route: string | { path?: string; [key: string]: any }) {
       const refreshStore = useRefreshStore();
-      refreshStore.setCacheFlag(path.split('?')[0], this.$route.path);
-      this.$router.push(path);
+      const targetPath =
+        typeof route === 'string' ? route.split('?')[0] : route.path ? String(route.path) : '';
+      refreshStore.setCacheFlag(targetPath, this.$route.path);
+      this.$router.push(route);
     },
     closeCurrentPage(refreshParent: boolean = true): void {
       const refreshStore = useRefreshStore();

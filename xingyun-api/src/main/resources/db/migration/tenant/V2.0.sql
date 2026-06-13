@@ -87,6 +87,7 @@ INSERT INTO `base_data_product_category` (`id`, `code`, `name`, `parent_id`, `av
 INSERT INTO `base_data_product_category` (`id`, `code`, `name`, `parent_id`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('2055257698437566464', 'SPFL1023', '猪肉', '2055106271056629777', 1, '', '王波', '2055100001188712448', '2026-05-15 20:03:15', '王波', '2055100001188712448', '2026-05-15 20:03:15');
 INSERT INTO `base_data_product_category` (`id`, `code`, `name`, `parent_id`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('2055257804960305152', 'SPFL1024', '牛肉', '2055106271056629777', 1, '', '王波', '2055100001188712448', '2026-05-15 20:03:40', '王波', '2055100001188712448', '2026-05-15 20:03:40');
 INSERT INTO `base_data_product_category` (`id`, `code`, `name`, `parent_id`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('2055258065732767744', 'SPFL1025', '鸡鸭肉', '2055106271056629777', 1, '', '王波', '2055100001188712448', '2026-05-15 20:04:42', '王波', '2055100001188712448', '2026-05-15 20:04:42');
+INSERT INTO `base_data_product_category` (`id`, `code`, `name`, `parent_id`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('2055258065732767745', 'SPFL1026', '冻品', null, 1, '', '王波', '2055100001188712448', now(), '王波', '2055100001188712448', now());
 
 -- 0519 销售利润（按单据）
 delete from sys_menu where id in ('6000', '6000001', '6000001001');
@@ -116,3 +117,31 @@ ALTER TABLE tbl_product_stock_log modify `sc_id` varchar(32) NULL COMMENT '仓�
 -- 0526 销售订单商品价格唯一配置
 delete from sys_parameter where pm_key = 'product_sale_price_unique';
 INSERT INTO `sys_parameter` (`id`, `pm_key`, `pm_value`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES (null, 'product_sale_price_unique', 'false', '销售订单商品价格唯一配置', '系统管理员', '1', now(), '系统管理员', '1', now());
+
+-- 0528
+update sys_menu set title = '结算汇总' where id = '4000006';
+
+-- 对账结算
+alter table settle_check_sheet add column biz_sheet_ids varchar(5000) null comment '业务单ID（逗号分隔）';
+ALTER TABLE `settle_check_sheet` ADD COLUMN `biz_total_amount` decimal(32,2) NOT NULL DEFAULT 0.00 COMMENT '业务单汇总金额';
+
+-- 实际日期
+ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `actual_date` date COMMENT '实际日期';
+ALTER TABLE `tbl_receive_sheet_detail` ADD COLUMN `actual_date` date COMMENT '实际日期';
+ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `supplier_id` varchar(32) NULL COMMENT '供应商ID';
+
+-- 对账结算
+alter table settle_sheet add column biz_sheet_ids varchar(5000) null comment '业务单ID（逗号分隔）';
+ALTER TABLE `settle_sheet` ADD COLUMN `total_un_settle_amt` decimal(32,2) COMMENT '未结算汇总金额';
+ALTER TABLE `settle_sheet` ADD COLUMN `total_check_amt` decimal(32,2) COMMENT '对账金额';
+
+
+--
+ALTER TABLE settle_sheet modify start_date date COMMENT '起始日期';
+ALTER TABLE settle_sheet modify end_date date COMMENT '截止日期';
+
+ALTER TABLE settle_check_sheet modify start_date date COMMENT '起始日期';
+ALTER TABLE settle_check_sheet modify end_date date COMMENT '截止日期';
+
+
+-- 0604

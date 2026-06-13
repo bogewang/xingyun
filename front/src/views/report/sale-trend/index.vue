@@ -130,6 +130,7 @@
   import moment from 'moment';
   import { SearchOutlined } from '@ant-design/icons-vue';
   import * as echarts from 'echarts';
+  import { debounce } from '@/utils';
   import * as api from '@/api/sc/sale/out';
   import {
     buildVisibleSelectOptions,
@@ -233,11 +234,19 @@
       this._profitPieChart = null;
       this._positiveProfitBarChart = null;
       this._negativeProfitBarChart = null;
+      this._chartResizeObserver = null;
+      this._chartResizeHandler = debounce(() => {
+        this.resizeAllCharts();
+      }, 100);
     },
     mounted() {
+      window.addEventListener('resize', this._chartResizeHandler);
+      this.initChartResizeObserver();
       this.loadTrendDatas();
     },
     beforeUnmount() {
+      window.removeEventListener('resize', this._chartResizeHandler);
+      this.destroyChartResizeObserver();
       this.disposeTrendChart();
       this.disposeSalesPieChart();
       this.disposeProfitPieChart();
@@ -292,6 +301,30 @@
           .finally(() => {
             this.loading = false;
           });
+      },
+      initChartResizeObserver() {
+        if (typeof ResizeObserver === 'undefined' || !this.$el) {
+          return;
+        }
+
+        this.destroyChartResizeObserver();
+        this._chartResizeObserver = new ResizeObserver(() => {
+          this._chartResizeHandler?.();
+        });
+        this._chartResizeObserver.observe(this.$el);
+      },
+      destroyChartResizeObserver() {
+        if (this._chartResizeObserver) {
+          this._chartResizeObserver.disconnect();
+          this._chartResizeObserver = null;
+        }
+      },
+      resizeAllCharts() {
+        this._trendChart?.resize();
+        this._salesPieChart?.resize();
+        this._profitPieChart?.resize();
+        this._positiveProfitBarChart?.resize();
+        this._negativeProfitBarChart?.resize();
       },
       renderTrendChart() {
         this.trendEmpty = this.trendDatas.length === 0;
@@ -947,6 +980,38 @@
 
     .bar-chart-grid {
       grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 1200px) {
+    .sale-trend-page :deep(.j-form-item) {
+      width: 100% !important;
+    }
+
+    .sale-trend-page :deep(.j-form-item-content),
+    .sale-trend-page :deep(.j-form-item-content-wrapper) {
+      min-width: 0;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .summary-panel {
+      grid-template-columns: 1fr;
+      row-gap: 16px;
+    }
+
+    .summary-value {
+      font-size: 20px;
+    }
+
+    .chart-toolbar {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .chart-tip {
+      margin-left: 0;
     }
   }
 </style>

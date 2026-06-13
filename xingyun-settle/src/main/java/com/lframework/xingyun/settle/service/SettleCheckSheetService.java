@@ -10,6 +10,7 @@ import com.lframework.xingyun.settle.vo.check.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public interface SettleCheckSheetService extends BaseMpService<SettleCheckSheet> {
@@ -53,6 +54,7 @@ public interface SettleCheckSheetService extends BaseMpService<SettleCheckSheet>
      *
      * @param vo
      */
+    @Deprecated
     void update(UpdateSettleCheckSheetVo vo);
 
     /**
@@ -81,6 +83,7 @@ public interface SettleCheckSheetService extends BaseMpService<SettleCheckSheet>
      *
      * @param id
      */
+    @Deprecated
     void deleteById(String id);
 
     /**
@@ -130,7 +133,7 @@ public interface SettleCheckSheetService extends BaseMpService<SettleCheckSheet>
      * @param id
      * @return
      */
-    int setUnSettle(String id);
+    // int setUnSettle(String id);
 
     /**
      * 更新结算状态-结算中
@@ -138,7 +141,7 @@ public interface SettleCheckSheetService extends BaseMpService<SettleCheckSheet>
      * @param id
      * @return
      */
-    int setPartSettle(String id);
+    // int setPartSettle(String id);
 
     /**
      * 更新结算状态-已结算
@@ -146,7 +149,7 @@ public interface SettleCheckSheetService extends BaseMpService<SettleCheckSheet>
      * @param id
      * @return
      */
-    int setSettled(String id);
+    // int setSettled(String id);
 
     /**
      * 查询已审核列表
@@ -165,5 +168,12 @@ public interface SettleCheckSheetService extends BaseMpService<SettleCheckSheet>
      * @param totalPayedAmount
      * @param totalDiscountAmount
      */
-    void setSettleAmount(String id, BigDecimal totalPayedAmount, BigDecimal totalDiscountAmount);
+    // void setSettleAmount(String id, BigDecimal totalPayedAmount, BigDecimal totalDiscountAmount);
+
+    /**
+     * 根据ID列表查询
+     * @param sheetIds
+     * @return
+     */
+    List<SettleCheckSheet> selectBatchIds(List<String> sheetIds);
 }

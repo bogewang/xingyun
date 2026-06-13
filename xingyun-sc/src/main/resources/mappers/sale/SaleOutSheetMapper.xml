@@ -205,7 +205,8 @@
             s.create_time,
             au.name AS approve_by,
             s.approve_time,
-            s.status
+            s.status,
+            d.supplier_id
         FROM tbl_sale_out_sheet AS s
         INNER JOIN tbl_sale_out_sheet_detail AS d ON d.sheet_id = s.id
         LEFT JOIN tbl_sale_order AS o ON o.id = s.sale_order_id

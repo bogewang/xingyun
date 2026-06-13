@@ -19,6 +19,12 @@ public class QuerySettleSheetVo extends PageVo {
   private String code;
 
   /**
+   * 货流单号
+   */
+  @ApiModelProperty("货流单号")
+  private String bizCode;
+
+  /**
    * 供应商ID
    */
   @ApiModelProperty("供应商ID")

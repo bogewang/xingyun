@@ -125,24 +125,6 @@ public class SupplierExportModel implements ExcelModel {
   private String accountNo;
 
   /**
-   * 累计已付金额
-   */
-  @ExcelProperty("累计已付金额")
-  private BigDecimal paidAmount;
-
-  /**
-   * 累计未付金额
-   */
-  @ExcelProperty("累计未付金额")
-  private BigDecimal unpaidAmount;
-
-  /**
-   * 金额合计
-   */
-  @ExcelProperty("金额合计")
-  private BigDecimal amountTotal;
-
-  /**
    * 备注
    */
   @ExcelProperty("备注")
@@ -171,9 +153,9 @@ public class SupplierExportModel implements ExcelModel {
     this.bankName = dto.getBankName();
     this.accountName = dto.getAccountName();
     this.accountNo = dto.getAccountNo();
-    this.paidAmount = dto.getPaidAmount();
-    this.unpaidAmount = dto.getUnpaidAmount();
-    this.amountTotal = getAmountOrZero(this.paidAmount).add(getAmountOrZero(this.unpaidAmount));
+    // this.paidAmount = dto.getPaidAmount();
+    // this.unpaidAmount = dto.getUnpaidAmount();
+    // this.amountTotal = getAmountOrZero(this.paidAmount).add(getAmountOrZero(this.unpaidAmount));
     this.description = dto.getDescription();
 
     if (!StringUtil.isBlank(dto.getCityId())) {

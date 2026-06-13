@@ -18,7 +18,7 @@ import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.PurchaseConfig;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
-import com.lframework.xingyun.sc.excel.purchase.ReceiveSheetQueryImportModel;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.*;
 import com.lframework.xingyun.sc.service.purchase.PurchaseConfigService;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
@@ -275,6 +275,23 @@ public class ReceiveSheetController extends DefaultBaseController {
 
         receiveSheetService.update(vo);
         return InvokeResultBuilder.success();
+    }
+
+    /**
+     * 修改备注
+     */
+    @ApiOperation("修改备注")
+    @HasPermission({"purchase:receive:modify"})
+    @PatchMapping("/description")
+    public InvokeResult<Void> updateDescription(@RequestBody @Valid UpdateReceiveSheetDescriptionVo vo) {
+
+        try {
+            receiveSheetService.updateDescription(vo);
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
     }
 
     /**

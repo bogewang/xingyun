@@ -7,6 +7,7 @@ import com.lframework.xingyun.sc.enums.SettleStatus;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * <p>
@@ -116,4 +117,13 @@ public class SaleOutSheetDetail extends BaseEntity implements BaseDto {
    * 总利润
    */
   private BigDecimal totalProfit;
+
+  /**
+   * 实际日期
+   */
+  private LocalDate actualDate;
+  /**
+   * 供应商ID
+   */
+  private String supplierId;
 }

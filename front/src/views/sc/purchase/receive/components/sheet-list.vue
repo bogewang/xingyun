@@ -92,9 +92,6 @@
                       >
                     </a-select>
                   </j-form-item>
-                  <j-form-item label="采购订单号">
-                    <a-input v-model:value="searchFormData.purchaseOrderCode" allow-clear />
-                  </j-form-item>
 
                   <j-form-item label="结算状态">
                     <a-select
@@ -111,55 +108,15 @@
                     </a-select>
                   </j-form-item>
 
-                  <j-form-item label="是否已付完">
+                  <j-form-item label="是否已结清">
                     <a-select
                       v-model:value="searchFormData.fullyPaid"
                       placeholder="全部"
                       allow-clear
                     >
-                      <a-select-option :value="true">已付完</a-select-option>
-                      <a-select-option :value="false">未付完</a-select-option>
+                      <a-select-option :value="true">已结清</a-select-option>
+                      <a-select-option :value="false">未结清</a-select-option>
                     </a-select>
-                  </j-form-item>
-
-                  <j-form-item label="已付金额">
-                    <a-space>
-                      <a-input-number
-                        v-model:value="searchFormData.paidAmountStart"
-                        :min="0"
-                        :precision="2"
-                        placeholder="最小值"
-                        style="width: 120px"
-                      />
-                      <span>至</span>
-                      <a-input-number
-                        v-model:value="searchFormData.paidAmountEnd"
-                        :min="0"
-                        :precision="2"
-                        placeholder="最大值"
-                        style="width: 120px"
-                      />
-                    </a-space>
-                  </j-form-item>
-
-                  <j-form-item label="未付金额">
-                    <a-space>
-                      <a-input-number
-                        v-model:value="searchFormData.unpaidAmountStart"
-                        :min="0"
-                        :precision="2"
-                        placeholder="最小值"
-                        style="width: 120px"
-                      />
-                      <span>至</span>
-                      <a-input-number
-                        v-model:value="searchFormData.unpaidAmountEnd"
-                        :min="0"
-                        :precision="2"
-                        placeholder="最大值"
-                        style="width: 120px"
-                      />
-                    </a-space>
                   </j-form-item>
                 </template>
               </j-form>
@@ -213,10 +170,13 @@
 
           <!-- 单据号 列自定义内容 -->
           <template #code_default="{ row }">
-            <a v-permission="['purchase:receive:modify']" @click="openModifyDialog(row)">{{
-              row.code
-            }}</a>
-            <span v-no-permission="['purchase:receive:modify']">{{ row.code }}</span>
+            <template v-if="canModifySheet(row)">
+              <a v-permission="['purchase:receive:modify']" @click="openModifyDialog(row)">{{
+                row.code
+              }}</a>
+              <span v-no-permission="['purchase:receive:modify']">{{ row.code }}</span>
+            </template>
+            <span v-else>{{ row.code }}</span>
           </template>
 
           <!-- 采购订单号 列自定义内容 -->
@@ -249,6 +209,20 @@
       <purchase-order-detail :id="purchaseOrderId" ref="viewPurchaseOrderDetailDialog" />
     </div>
     <receive-sheet-pay-type-importer ref="importer2" />
+    <a-modal
+      v-model:open="descriptionModal.visible"
+      title="修改备注"
+      :confirm-loading="descriptionModal.loading"
+      @ok="submitDescription"
+      @cancel="closeDescriptionDialog"
+    >
+      <a-textarea
+        v-model:value.trim="descriptionModal.description"
+        maxlength="200"
+        :rows="4"
+        allow-clear
+      />
+    </a-modal>
     <!-- 批量操作 -->
     <batch-handler
       ref="batchApprovePassHandlerDialog"
@@ -372,10 +346,6 @@
           purchaseOrderCode: '',
           settleStatus: undefined,
           fullyPaid: undefined,
-          paidAmountStart: undefined,
-          paidAmountEnd: undefined,
-          unpaidAmountStart: undefined,
-          unpaidAmountEnd: undefined,
         },
         orderDateRange: this.getDefaultOrderDateRange(),
         approveDateRange: [],
@@ -410,22 +380,22 @@
           { field: 'supplierName', title: '供应商名称', width: 120 },
           { field: 'purchaserName', title: '采购员', width: 100 },
           { field: 'orderDate', title: '订单日期', width: 120 },
-          { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
-          { field: 'paidAmount', title: '已付金额', align: 'right', width: 100 },
-          { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 100 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
+          { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
+          { field: 'paidAmount', title: '本单已付', align: 'right', width: 100 },
+          { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 100 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
-          {
-            field: 'status',
-            title: '状态',
-            width: 100,
-            formatter: ({ cellValue }) => {
-              return RECEIVE_SHEET_STATUS.getDesc(cellValue);
-            },
-          },
-          { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
-          { field: 'approveBy', title: '审核人', width: 100 },
+          // {
+          //   field: 'status',
+          //   title: '状态',
+          //   width: 100,
+          //   formatter: ({ cellValue }) => {
+          //     return RECEIVE_SHEET_STATUS.getDesc(cellValue);
+          //   },
+          // },
+          // { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
+          // { field: 'approveBy', title: '审核人', width: 100 },
           {
             field: 'settleStatus',
             title: '结算状态',
@@ -435,13 +405,7 @@
             },
           },
           { field: 'description', title: '备注', width: 200 },
-          {
-            field: 'purchaseOrderCode',
-            title: '采购订单号',
-            width: 180,
-            slots: { default: 'purchaseOrderCode_default' },
-          },
-          { title: '操作', width: 300, fixed: 'right', slots: { default: 'action_default' } },
+          { title: '操作', width: 350, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -460,16 +424,30 @@
         },
         batchHandleDatas: [],
         batchRefuseReason: '',
+        descriptionModal: {
+          visible: false,
+          loading: false,
+          id: '',
+          description: '',
+        },
       };
     },
-    created() {},
+    created() {
+      this.applyRouteQuery();
+    },
     methods: {
+      applyRouteQuery() {
+        const routeQuery = this.$route?.query || {};
+        const code = routeQuery.code ? String(routeQuery.code).trim() : '';
+        if (code) {
+          this.searchFormData.code = code;
+          this.orderDateRange = [];
+        }
+      },
       CloudUploadOutlined,
       footerMethod({ columns, data }) {
         const totalAmount = this.sumByField(data, 'totalAmount');
         const totalNum = this.sumByField(data, 'totalNum');
-        const paidAmount = this.sumByField(data, 'paidAmount');
-        const unpaidAmount = this.sumByField(data, 'unpaidAmount');
 
         return [
           columns.map((column) => {
@@ -483,17 +461,6 @@
 
             if (column.field === 'totalNum') {
               return this.formatQuantity(totalNum);
-            }
-
-            if (column.field === 'totalNum') {
-              return this.formatAmount(paidAmount);
-            }
-
-            if (column.field === 'unpaidAmount') {
-              return this.formatAmount(unpaidAmount);
-            }
-            if (column.field === 'paidAmount') {
-              return this.formatAmount(paidAmount);
             }
 
             return '';
@@ -538,10 +505,6 @@
           purchaseOrderCode: '',
           settleStatus: undefined,
           fullyPaid: undefined,
-          paidAmountStart: undefined,
-          paidAmountEnd: undefined,
-          unpaidAmountStart: undefined,
-          unpaidAmountEnd: undefined,
         };
         this.orderDateRange = this.getDefaultOrderDateRange();
         this.approveDateRange = [];
@@ -645,6 +608,41 @@
         } else {
           this.openChildPage('/purchase/receive/modify/un-require/' + row.id);
         }
+      },
+      canModifySheet(row) {
+        return (
+          (RECEIVE_SHEET_STATUS.CREATED.equalsCode(row.status) ||
+            RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(row.status)) &&
+          SETTLE_STATUS.UN_CHECK_BILL.equalsCode(row.settleStatus)
+        );
+      },
+      openDescriptionDialog(row) {
+        this.descriptionModal = {
+          visible: true,
+          loading: false,
+          id: row.id,
+          description: row.description || '',
+        };
+      },
+      closeDescriptionDialog() {
+        this.descriptionModal.visible = false;
+        this.descriptionModal.loading = false;
+      },
+      submitDescription() {
+        this.descriptionModal.loading = true;
+        api
+          .updateDescription({
+            id: this.descriptionModal.id,
+            description: this.descriptionModal.description,
+          })
+          .then(() => {
+            createSuccess('保存成功！');
+            this.closeDescriptionDialog();
+            this.search();
+          })
+          .finally(() => {
+            this.descriptionModal.loading = false;
+          });
       },
       // 删除订单
       deleteOrder(row) {
@@ -791,6 +789,21 @@
             },
           },
           {
+            permission: ['settle:sheet:query'],
+            label: '结算',
+            onClick: () => {
+              this.openChildPage({
+                path: '/settle/supplier/sheet/settle',
+                query: {
+                  supplierId: row.supplierId || '',
+                  code: row.code || '',
+                  startTime: this.orderDateRange?.[0] ? `${this.orderDateRange[0]} 00:00:00` : '',
+                  endTime: this.orderDateRange?.[1] ? `${this.orderDateRange[1]} 23:59:59` : '',
+                },
+              });
+            },
+          },
+          {
             label: '导出明细',
             onClick: () => {
               this.exportDetails(row);
@@ -812,14 +825,16 @@
           {
             permission: ['purchase:receive:modify'],
             label: '修改',
-            ifShow: () => {
-              return (
-                PURCHASE_ORDER_STATUS.CREATED.equalsCode(row.status) ||
-                PURCHASE_ORDER_STATUS.APPROVE_REFUSE.equalsCode(row.status)
-              );
-            },
+            ifShow: () => this.canModifySheet(row),
             onClick: () => {
               this.openModifyDialog(row);
+            },
+          },
+          {
+            permission: ['purchase:receive:modify'],
+            label: '修改备注',
+            onClick: () => {
+              this.openDescriptionDialog(row);
             },
           },
           {
@@ -839,6 +854,7 @@
         ];
       },
       onRefreshPage() {
+        this.applyRouteQuery();
         this.search();
       },
     },
