@@ -6,8 +6,11 @@ logging:
     com.lframework: INFO
     io.lettuce.core.protocol: OFF
     org.dromara.warm.flow: INFO
-    org.mybatis.spring: INFO
-    org.apache.ibatis: INFO
+    org.mybatis: DEBUG
+    org.apache.ibatis: DEBUG
+    java.sql.PreparedStatement: DEBUG
+    java.sql.Statement: DEBUG
+    com.lframework.xingyun.**.mappers: DEBUG
 
 spring:
   servlet:
