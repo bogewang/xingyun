@@ -6,6 +6,7 @@ import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
+import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import lombok.Data;
@@ -101,7 +102,11 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
     this.setCostAmount(NumberUtil.sub(this.taxAmount, totalProfit));
     this.setProfitRate(this.buildProfitRate(this.taxAmount, totalProfit));
     this.setDescription(dto.getDescription());
-    this.setSupplierName(ApplicationUtil.getBean(SupplierService.class).findById(dto.getSupplierId()).getName());
+
+    Supplier supplier = ApplicationUtil.getBean(SupplierService.class).findById(dto.getSupplierId());
+    if (supplier != null) {
+      this.setSupplierName(supplier.getName());
+    }
   }
 
   private BigDecimal defaultValue(BigDecimal value) {
