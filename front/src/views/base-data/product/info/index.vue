@@ -36,6 +36,9 @@
                     :only-final="false"
                   />
                 </j-form-item>
+                <j-form-item label="商品品牌">
+                  <product-brand-selector v-model:value="searchFormData.brandId" />
+                </j-form-item>
               </j-form>
             </j-border>
           </template>
@@ -120,6 +123,7 @@
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { buildSortPageVo, isEmpty, isEqualWithStr } from '@/utils/utils';
   import ProductImporter from '@/components/Importor/ProductImporter.vue';
+  import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
   import { PRODUCT_TYPE } from '@/enums/biz/productType';
   import BatchHandler from '@/components/BatchHandler';
@@ -142,6 +146,7 @@
       DownOutlined,
       Detail,
       ProductImporter,
+      ProductBrandSelector,
       ProductCategorySelector,
     },
     mixins: [multiplePageMix],
@@ -185,6 +190,7 @@
           { field: 'name', title: '名称', minWidth: 160, sortable: true },
           { field: 'alias', title: '别名', minWidth: 180 },
           { field: 'defaultSupplierName', title: '默认供应商', minWidth: 160 },
+          { field: 'brandName', title: '品牌', minWidth: 120 },
           { field: 'unit', title: '单位', width: 100 },
           { field: 'spec', title: '规格', width: 120 },
           { field: 'purchasePrice', title: '采购价', width: 120 },

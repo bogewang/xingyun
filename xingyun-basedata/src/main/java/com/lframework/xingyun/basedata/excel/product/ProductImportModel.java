@@ -7,8 +7,10 @@ import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.basedata.entity.Product;
+import com.lframework.xingyun.basedata.entity.ProductBrand;
 import com.lframework.xingyun.basedata.entity.ProductCategory;
 import com.lframework.xingyun.basedata.entity.Supplier;
+import com.lframework.xingyun.basedata.service.product.ProductBrandService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
@@ -31,12 +33,7 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
     @ExcelRequired
     @ExcelProperty("名称")
     private String name;
-    /**
-     * 简称
-     */
-    @ExcelProperty("简称")
-    // @ExcelIgnore
-    private String shortName;
+
 
 
 
@@ -129,7 +126,11 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
     @ExcelProperty("默认供应商")
     private String defaultSupplier;
 
-
+    /**
+     * 品牌编号
+     */
+    @ExcelProperty("品牌")
+    private String brandName;
 
     /**
      * 编号
@@ -145,22 +146,21 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
     @ExcelIgnore
     private String skuCode;
     /**
+     * 简称
+     */
+    @ExcelProperty("简称")
+    private String shortName;
+    /**
      * 简码
      */
     @ExcelProperty("简码")
     private String externalCode;
 
-    /**
-     * 品牌编号
-     */
-    // @ExcelProperty("品牌编号")
-    @ExcelIgnore
-    private String brandCode;
+
 
     /**
      * 进项税率（%）
      */
-    // @ExcelProperty("进项税率（%）")
     @ExcelIgnore
     private BigDecimal taxRate;
 
@@ -195,6 +195,13 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
             SupplierService bean = ApplicationUtil.getBean(SupplierService.class);
             Supplier supplier = bean.findById(dto.getDefaultSupplier());
             this.defaultSupplier = supplier.getName();
+        }
+        if (dto.getBrandId() != null) {
+            ProductBrandService productBrandService = ApplicationUtil.getBean(ProductBrandService.class);
+            ProductBrand brand = productBrandService.findById(dto.getBrandId());
+            if (brand != null) {
+                this.brandName = brand.getName();
+            }
         }
 
         // 最新采购价和最新售价

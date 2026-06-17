@@ -705,9 +705,11 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         Map<String, String> categoryMap = availableCategories.stream()
                 .collect(Collectors.toMap(ProductCategory::getName, ProductCategory::getId));
         // 检查品牌编号是否重复
-        Map<String, String> brandMap = productBrandService.query(new QueryProductBrandVo())
-                .stream()
-                .collect(Collectors.toMap(ProductBrand::getCode, ProductBrand::getId));
+        List<ProductBrand> brands = productBrandService.query(new QueryProductBrandVo());
+        Map<String, String> brandCodeMap = brands.stream()
+                .collect(Collectors.toMap(ProductBrand::getCode, ProductBrand::getId, (a, b) -> a));
+        Map<String, String> brandNameMap = brands.stream()
+                .collect(Collectors.toMap(ProductBrand::getName, ProductBrand::getId, (a, b) -> a));
         // 检查分类是否是最下层
         Set<String> parentCategoryIds = new HashSet<>();
         Set<String> generatedCodePool = new HashSet<>(queryCodesByPrefix(buildTodayProductCodePrefix()));
@@ -720,7 +722,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             }
 
             checkRules(list, checkCodeSet, checkCodeRowMap, checkSkuCodeSet, checkSkuCodeRowMap, checkNameSpecUnitMap,
-                    availableCodes, availableSkuCodes, availableNameSpecUnitKeys, categoryMap, brandMap, parentCategoryIds, i);
+                    availableCodes, availableSkuCodes, availableNameSpecUnitKeys, categoryMap, brandCodeMap, brandNameMap,
+                    parentCategoryIds, i);
         }
 
         checkIsLeafCategory(list, new ArrayList<>(parentCategoryIds));
@@ -758,14 +761,16 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
      * @param availableSkuCodes
      * @param availableNameSpecUnitKeys
      * @param categoryMap
-     * @param brandMap
+     * @param brandCodeMap
+     * @param brandNameMap
      * @param parentCategoryIds
      * @param i
      */
     private void checkRules(List<ProductImportModel> list, Set<String> checkCodeSet, Map<String, Integer> checkCodeRowMap,
             Set<String> checkSkuCodeSet, Map<String, Integer> checkSkuCodeRowMap, Map<String, Integer> checkNameSpecUnitMap,
             Map<String, Product> availableCodes, Map<String, Product> availableSkuCodes, Map<String, Product> availableNameSpecUnitKeys,
-            Map<String, String> categoryMap, Map<String, String> brandMap, Set<String> parentCategoryIds, int i) {
+            Map<String, String> categoryMap, Map<String, String> brandCodeMap, Map<String, String> brandNameMap,
+            Set<String> parentCategoryIds, int i) {
         ProductImportModel data = list.get(i);
         int rowIndex = (i + 2);
         checkCode(checkCodeSet, checkCodeRowMap, availableCodes, data, rowIndex);
@@ -781,11 +786,15 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         checkNameSpecUnit(checkNameSpecUnitMap, availableNameSpecUnitKeys, data, rowIndex);
         checkCategory(categoryMap, parentCategoryIds, data, rowIndex);
 
-        if (StringUtil.isNotBlank(data.getBrandCode())) {
-            if (!brandMap.containsKey(data.getBrandCode())) {
-                throw new DefaultClientException("第" + rowIndex + "行“品牌编号”不存在，请检查");
+        if (StringUtil.isNotBlank(data.getBrandName())) {
+            String brandId = brandCodeMap.get(data.getBrandName());
+            if (brandId == null) {
+                brandId = brandNameMap.get(data.getBrandName());
             }
-            data.setBrandId(brandMap.get(data.getBrandCode()));
+            if (brandId == null) {
+                throw new DefaultClientException(String.format("第%d行品牌：%s 不存在，请检查", rowIndex, data.getBrandName()));
+            }
+            data.setBrandId(brandId);
         }
 
         if (data.getTaxRate() != null) {
