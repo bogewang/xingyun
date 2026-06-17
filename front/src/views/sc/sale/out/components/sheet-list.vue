@@ -873,17 +873,11 @@
           ...printData,
         };
 
-        const newDetails = printData.details.map((item, index) => {
+        const newDetails = printData.details.map((item, index) => ({
           // 新生成一个对象，避免修改原对象
-          const newItem = {};
-          newItem.seq = index + 1;
-          newItem.orderNum = item.orderNum;
-          newItem.unit = item.unit;
-          newItem.orderAmount = item.orderAmount;
-          newItem.taxPrice = item.taxPrice;
-          newItem.productName = item.productName;
-          return newItem;
-        });
+          ...item,
+          seq: index + 1,
+        }));
         res.details = newDetails;
 
         return res;
