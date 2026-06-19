@@ -87,7 +87,7 @@
           >
             <!-- 自定义下拉框内容 -->
             <template #dropdownRender>
-              <div v-if="!isEmpty(row.products)">
+              <div v-if="!isEmpty(row.products)" @mousedown.prevent @click.stop>
                 <vxe-table
                   :data="row.products"
                   max-height="360"
@@ -146,20 +146,30 @@
         </template>
 
         <!-- 采购价 列自定义内容 -->
-        <template #purchasePrice_default="{ row }">
+        <template #purchasePrice_default="{ row, rowIndex }">
           <a-input
+            :ref="'purchasePriceInputRef' + rowIndex"
             v-model:value="row.purchasePrice"
             class="number-input"
             @input="(e) => purchasePriceInput(e.target.value)"
+            @keydown.left.prevent="handleTableInputArrow(rowIndex, 'purchasePriceInputRef', 'left')"
+            @keydown.right.prevent="handleTableInputArrow(rowIndex, 'purchasePriceInputRef', 'right')"
+            @keydown.up.prevent="handleTableInputArrow(rowIndex, 'purchasePriceInputRef', 'up')"
+            @keydown.down.prevent="handleTableInputArrow(rowIndex, 'purchasePriceInputRef', 'down')"
           />
         </template>
 
         <!-- 收货数量 列自定义内容 -->
-        <template #receiveNum_default="{ row }">
+        <template #receiveNum_default="{ row, rowIndex }">
           <a-input
+            :ref="'receiveNumInputRef' + rowIndex"
             v-model:value="row.receiveNum"
             class="number-input"
             @input="(e) => receiveNumInput(e.target.value)"
+            @keydown.left.prevent="handleTableInputArrow(rowIndex, 'receiveNumInputRef', 'left')"
+            @keydown.right.prevent="handleTableInputArrow(rowIndex, 'receiveNumInputRef', 'right')"
+            @keydown.up.prevent="handleTableInputArrow(rowIndex, 'receiveNumInputRef', 'up')"
+            @keydown.down.prevent="handleTableInputArrow(rowIndex, 'receiveNumInputRef', 'down')"
           />
         </template>
 
@@ -171,8 +181,15 @@
         </template>
 
         <!-- 备注 列自定义内容 -->
-        <template #description_default="{ row }">
-          <a-input v-model:value="row.description" />
+        <template #description_default="{ row, rowIndex }">
+          <a-input
+            :ref="'descriptionInputRef' + rowIndex"
+            v-model:value="row.description"
+            @keydown.left.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'left')"
+            @keydown.right.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'right')"
+            @keydown.up.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'up')"
+            @keydown.down.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'down')"
+          />
         </template>
       </vxe-grid>
 
@@ -282,6 +299,7 @@
   } from '@/utils/inlineProductSelect';
   import JFormItem from '@/components/JFormItem';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
+  import { focusTableInput, moveTableInput } from '@/utils/vxeGrid';
 
   export default defineComponent({
     name: 'AddPurchaseReceiveSheetUnRequire',
@@ -519,6 +537,22 @@
           });
         });
       },
+      getTableInputRefOrder() {
+        return ['receiveNumInputRef', 'purchasePriceInputRef', 'descriptionInputRef'];
+      },
+      focusRowInput(refName, index) {
+        return focusTableInput(this, refName, index);
+      },
+      async handleTableInputArrow(rowIndex, refName, direction) {
+        await moveTableInput({
+          vm: this,
+          rowIndex,
+          refName,
+          direction,
+          refOrder: this.getTableInputRefOrder(),
+          appendRow: () => this.tableData.push(this.emptyProduct()),
+        });
+      },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
         const purchasePrice = !isEmpty(product.latestPurchasePrice)
@@ -533,6 +567,7 @@
         resetInlineProductSelect(this.tableData[index]);
 
         this.purchasePriceInput(this.tableData[index], this.tableData[index].purchasePrice);
+        this.focusRowInput('receiveNumInputRef', index);
       },
       handleProductSelectKeydown(event, row, rowIndex) {
         handleInlineProductSelectKeydown(event, row, rowIndex, this.handleSelectProduct, () =>

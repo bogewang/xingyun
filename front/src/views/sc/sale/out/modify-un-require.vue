@@ -155,11 +155,16 @@
         </template>
 
         <!-- 价格 列自定义内容 -->
-        <template #taxPrice_default="{ row }">
+        <template #taxPrice_default="{ row, rowIndex }">
           <a-input
+            :ref="'taxPriceInputRef' + rowIndex"
             v-model:value="row.taxPrice"
             class="number-input"
             @input="(e) => taxPriceInput(row, e.target.value)"
+            @keydown.left.prevent="handleTableInputArrow(rowIndex, 'taxPriceInputRef', 'left')"
+            @keydown.right.prevent="handleTableInputArrow(rowIndex, 'taxPriceInputRef', 'right')"
+            @keydown.up.prevent="handleTableInputArrow(rowIndex, 'taxPriceInputRef', 'up')"
+            @keydown.down.prevent="handleTableInputArrow(rowIndex, 'taxPriceInputRef', 'down')"
           />
         </template>
 
@@ -169,12 +174,17 @@
           <span v-else style="color: #f5222d">{{ row.stockNum }}</span>
         </template>
 
-        <!-- 出库数量 列自定义内容 -->
-        <template #outNum_default="{ row }">
+        <!-- 数量 列自定义内容 -->
+        <template #outNum_default="{ row, rowIndex }">
           <a-input
+            :ref="'outNumInputRef' + rowIndex"
             v-model:value="row.outNum"
             class="number-input"
             @input="(e) => outNumInput(e.target.value)"
+            @keydown.left.prevent="handleTableInputArrow(rowIndex, 'outNumInputRef', 'left')"
+            @keydown.right.prevent="handleTableInputArrow(rowIndex, 'outNumInputRef', 'right')"
+            @keydown.up.prevent="handleTableInputArrow(rowIndex, 'outNumInputRef', 'up')"
+            @keydown.down.prevent="handleTableInputArrow(rowIndex, 'outNumInputRef', 'down')"
           />
         </template>
 
@@ -185,12 +195,17 @@
           }}</span>
         </template>
 
-        <template #costPrice_default="{ row }">
+        <template #costPrice_default="{ row, rowIndex }">
           <a-input
             v-if="canEditCostPrice(row)"
+            :ref="'costPriceInputRef' + rowIndex"
             v-model:value="row.costPrice"
             class="number-input"
             @input="(e) => costPriceInput(row, e.target.value)"
+            @keydown.left.prevent="handleTableInputArrow(rowIndex, 'costPriceInputRef', 'left')"
+            @keydown.right.prevent="handleTableInputArrow(rowIndex, 'costPriceInputRef', 'right')"
+            @keydown.up.prevent="handleTableInputArrow(rowIndex, 'costPriceInputRef', 'up')"
+            @keydown.down.prevent="handleTableInputArrow(rowIndex, 'costPriceInputRef', 'down')"
           />
           <span v-else></span>
         </template>
@@ -202,8 +217,15 @@
         </template>
 
         <!-- 备注 列自定义内容 -->
-        <template #description_default="{ row }">
-          <a-input v-model:value="row.description" />
+        <template #description_default="{ row, rowIndex }">
+          <a-input
+            :ref="'descriptionInputRef' + rowIndex"
+            v-model:value="row.description"
+            @keydown.left.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'left')"
+            @keydown.right.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'right')"
+            @keydown.up.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'up')"
+            @keydown.down.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'down')"
+          />
         </template>
       </vxe-grid>
 
@@ -290,7 +312,7 @@
     mergeSelectOptionMap,
     normalizeSelectValue,
   } from '@/utils/searchSelect';
-  import { focusVxeGridRow } from '@/utils/vxeGrid';
+  import { focusTableInput, focusVxeGridRow, moveTableInput } from '@/utils/vxeGrid';
   import {
     getInlineProductSelectRowClass,
     handleInlineProductSelectKeydown,
@@ -389,19 +411,20 @@
             width: 80,
             slots: { default: 'stockNum_default' },
           },
+
+          {
+            field: 'outNum',
+            title: '数量',
+            align: 'right',
+            width: 80,
+            slots: { default: 'outNum_default' },
+          },
           {
             field: 'taxPrice',
             title: '价格（元）',
             align: 'right',
             width: 80,
             slots: { default: 'taxPrice_default' },
-          },
-          {
-            field: 'outNum',
-            title: '出库数量',
-            align: 'right',
-            width: 80,
-            slots: { default: 'outNum_default' },
           },
           {
             field: 'taxAmount',
@@ -638,6 +661,22 @@
           });
         });
       },
+      getTableInputRefOrder() {
+        return ['outNumInputRef', 'taxPriceInputRef', 'descriptionInputRef', 'costPriceInputRef'];
+      },
+      focusRowInput(refName, index) {
+        return focusTableInput(this, refName, index);
+      },
+      async handleTableInputArrow(rowIndex, refName, direction) {
+        await moveTableInput({
+          vm: this,
+          rowIndex,
+          refName,
+          direction,
+          refOrder: this.getTableInputRefOrder(),
+          appendRow: () => this.tableData.push(this.emptyProduct()),
+        });
+      },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
         // 将选中的商品数据赋值给当前行
@@ -650,6 +689,7 @@
         resetInlineProductSelect(this.tableData[index]);
 
         this.taxPriceInput(this.tableData[index], this.tableData[index].taxPrice);
+        this.focusRowInput('outNumInputRef', index);
       },
       handleProductSelectKeydown(event, row, rowIndex) {
         handleInlineProductSelectKeydown(event, row, rowIndex, this.handleSelectProduct, () =>
