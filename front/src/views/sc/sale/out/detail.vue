@@ -135,7 +135,7 @@
 
             <j-border title="合计">
               <j-form bordered label-width="140px">
-                <j-form-item label="出库数量" :span="6">
+                <j-form-item label="数量" :span="6">
                   <a-input v-model:value="formData.totalNum" class="number-input" readonly />
                 </j-form-item>
                 <j-form-item label="含税总金额" :span="6">
@@ -232,22 +232,22 @@
         // 列表数据配置
         tableColumn: [
           { type: 'seq', width: 50 },
-          { field: 'productCode', title: '商品编号', width: 120 },
+          // { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 150 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
-          { field: 'categoryName', title: '商品分类', width: 80 },
+          { field: 'outNum', title: '数量', align: 'right', width: 100 },
+          // { field: 'categoryName', title: '商品分类', width: 80 },
           { field: 'taxPrice', title: '价格（元）', align: 'right', width: 80 },
-          {
-            field: 'orderNum',
-            title: '销售数量',
-            align: 'right',
-            width: 80,
-            formatter: ({ cellValue }) => {
-              return isEmpty(cellValue) ? '-' : cellValue;
-            },
-          },
-          { field: 'outNum', title: '出库数量', align: 'right', width: 100 },
+          // {
+          //   field: 'orderNum',
+          //   title: '销售数量',
+          //   align: 'right',
+          //   width: 80,
+          //   formatter: ({ cellValue }) => {
+          //     return isEmpty(cellValue) ? '-' : cellValue;
+          //   },
+          // },
           {
             field: 'taxAmount',
             title: '含税金额',
@@ -282,7 +282,7 @@
             width: 100,
             slots: { default: 'costStatus_default' },
           },
-          { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
+          // { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           { field: 'description', title: '备注', width: 200 },
         ],
         tableData: [],

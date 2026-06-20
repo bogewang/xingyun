@@ -472,8 +472,8 @@
               return SALE_OUT_SHEET_STATUS.getDesc(cellValue);
             },
           },
-          { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
-          { field: 'approveBy', title: '审核人', width: 100 },
+          // { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
+          // { field: 'approveBy', title: '审核人', width: 100 },
           { field: 'description', title: '备注', width: 200 },
           { title: '操作', width: 300, fixed: 'right', slots: { default: 'action_default' } },
         ],
