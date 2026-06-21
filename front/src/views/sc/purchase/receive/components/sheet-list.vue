@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div ref="importerContainer" class="excel-importer-local-container">
     <div v-permission="['purchase:receive:query']">
       <page-wrapper content-full-height fixed-height dense>
         <!-- 数据列表 -->
@@ -203,7 +203,13 @@
       <detail :id="id" ref="viewDialog" />
 
       <approve-refuse ref="approveRefuseDialog" @confirm="doApproveRefuse" />
-      <receive-sheet-query-importer ref="importer" @confirm="handleImportSuccess" />
+      <receive-sheet-query-importer
+        ref="importer"
+        :get-container="getImporterContainer"
+        local-container
+        hide-on-deactivated
+        @confirm="handleImportSuccess"
+      />
 
       <!-- 采购订单查看窗口 -->
       <purchase-order-detail :id="purchaseOrderId" ref="viewPurchaseOrderDetailDialog" />
@@ -293,7 +299,12 @@
     normalizeSelectValue,
   } from '@/utils/searchSelect';
   import { requestSupplierSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
-  import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
+  import {
+    createSuccess,
+    createSuccessAutoClose,
+    createError,
+    createConfirm,
+  } from '@/hooks/web/msg';
   import ReceiveSheetPayTypeImporter from '@/components/Importor/ReceiveSheetPayTypeImporter.vue';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
@@ -436,6 +447,9 @@
       this.applyRouteQuery();
     },
     methods: {
+      getImporterContainer() {
+        return this.$refs.importerContainer;
+      },
       applyRouteQuery() {
         const routeQuery = this.$route?.query || {};
         const code = routeQuery.code ? String(routeQuery.code).trim() : '';
@@ -743,7 +757,7 @@
       handleImportSuccess(res) {
         const ids = res?.data || res?.datas || res || [];
         const count = Array.isArray(ids) ? ids.length : 0;
-        createSuccess('导入成功，已创建' + count + '张采购订单！');
+        createSuccessAutoClose('导入成功，已创建' + count + '张采购订单！');
         this.search();
       },
       exportList() {
@@ -860,4 +874,5 @@
     },
   });
 </script>
+
 <style scoped></style>

@@ -2,12 +2,13 @@
   <div>
     <excel-importer
       ref="importer"
-      :tip-msg="
-        '按导入文件中的“销售日期 + 客户”自动分组生成销售出库单。\n注：\n1、Excel 中其余字段都会作为出库明细导入。'
-      "
+      :tip-msg="'按导入文件中的“销售日期 + 客户”自动分组生成销售出库单。\n注：\n1、Excel 中其余字段都会作为出库明细导入。'"
       :download-template-url="downloadTemplate"
       :upload-url="upload"
       :form-data="formData"
+      :get-container="getContainer"
+      :local-container="localContainer"
+      :hide-on-deactivated="hideOnDeactivated"
       @confirm="(e) => $emit('confirm', e)"
     />
   </div>
@@ -27,6 +28,20 @@
       return {
         formData: {},
       };
+    },
+    props: {
+      getContainer: {
+        type: [Function, Boolean],
+        default: undefined,
+      },
+      localContainer: {
+        type: Boolean,
+        default: false,
+      },
+      hideOnDeactivated: {
+        type: Boolean,
+        default: false,
+      },
     },
     methods: {
       openDialog() {

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div ref="importerContainer" class="excel-importer-local-container">
     <div v-permission="['sale:out:query']">
       <page-wrapper content-full-height fixed-height dense>
         <!-- 数据列表 -->
@@ -271,7 +271,13 @@
       <detail :id="id" ref="viewDialog" />
 
       <approve-refuse ref="approveRefuseDialog" @confirm="doApproveRefuse" />
-      <sale-out-sheet-query-importer ref="importer" @confirm="handleImportSuccess" />
+      <sale-out-sheet-query-importer
+        ref="importer"
+        :get-container="getImporterContainer"
+        local-container
+        hide-on-deactivated
+        @confirm="handleImportSuccess"
+      />
 
       <!-- 销售订单查看窗口 -->
       <sale-order-detail :id="saleOrderId" ref="viewSaleOrderDetailDialog" />
@@ -344,7 +350,12 @@
     normalizeSelectValue,
   } from '@/utils/searchSelect';
   import { requestCustomerSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
-  import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
+  import {
+    createSuccess,
+    createSuccessAutoClose,
+    createError,
+    createConfirm,
+  } from '@/hooks/web/msg';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
@@ -521,6 +532,9 @@
       this.applyRouteQuery();
     },
     methods: {
+      getImporterContainer() {
+        return this.$refs.importerContainer;
+      },
       applyRouteQuery() {
         const { orderDateStart, orderDateEnd } = this.$route.query || {};
         if (orderDateStart || orderDateEnd) {
@@ -822,7 +836,7 @@
       handleImportSuccess(res) {
         const ids = res?.data || res?.datas || res || [];
         const count = Array.isArray(ids) ? ids.length : 0;
-        createSuccess('导入成功，已创建' + count + '张销售出库单！');
+        createSuccessAutoClose('导入成功，已创建' + count + '张销售出库单！');
         this.search();
       },
       exportList() {
@@ -993,4 +1007,5 @@
     },
   });
 </script>
+
 <style scoped></style>

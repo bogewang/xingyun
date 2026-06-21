@@ -4,6 +4,8 @@
     <a-modal
       v-model:open="visible"
       :mask-closable="false"
+      :get-container="getContainer"
+      :wrap-class-name="wrapClassName"
       width="40%"
       title="导入"
       :style="{ top: '20px' }"
@@ -44,12 +46,12 @@
   </div>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {InboxOutlined} from '@ant-design/icons-vue';
-import {isEmpty} from '@/utils/utils';
-import { createError } from '@/hooks/web/msg';
+  import { defineComponent } from 'vue';
+  import { InboxOutlined } from '@ant-design/icons-vue';
+  import { isEmpty } from '@/utils/utils';
+  import { createError } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'ExcelImporter',
     components: {
       InboxOutlined,
@@ -71,6 +73,18 @@ export default defineComponent({
         type: Object,
         default: () => ({}),
       },
+      getContainer: {
+        type: [Function, Boolean],
+        default: undefined,
+      },
+      localContainer: {
+        type: Boolean,
+        default: false,
+      },
+      hideOnDeactivated: {
+        type: Boolean,
+        default: false,
+      },
       closeAfterFinish: {
         type: Boolean,
         default: true,
@@ -85,7 +99,29 @@ export default defineComponent({
       return {
         visible: false,
         loading: false,
+        restoreVisibleOnActivated: false,
       };
+    },
+    computed: {
+      wrapClassName() {
+        return this.localContainer ? 'excel-importer-local-wrap' : undefined;
+      },
+    },
+    activated() {
+      if (!this.hideOnDeactivated || !this.restoreVisibleOnActivated) {
+        return;
+      }
+
+      this.visible = true;
+      this.restoreVisibleOnActivated = false;
+    },
+    deactivated() {
+      if (!this.hideOnDeactivated || !this.visible) {
+        return;
+      }
+
+      this.restoreVisibleOnActivated = true;
+      this.visible = false;
     },
     methods: {
       async resolveErrorMessage(err) {
@@ -168,5 +204,16 @@ export default defineComponent({
 <style lang="less" scoped>
   .content-wrapper {
     text-align: center;
+  }
+
+  :global(.excel-importer-local-container) {
+    position: relative;
+    overflow: hidden;
+  }
+
+  :global(.excel-importer-local-container .ant-modal-mask),
+  :global(.excel-importer-local-container .excel-importer-local-wrap) {
+    position: absolute !important;
+    inset: 0;
   }
 </style>

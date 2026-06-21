@@ -71,6 +71,17 @@ export const createSuccess = function (message: string): void {
   });
 };
 
+export const createSuccessAutoClose = function (message: string, duration = 2000): void {
+  const modal = Modal.success({
+    title: '提示信息',
+    content: renderMultilineContent(message),
+  });
+
+  setTimeout(() => {
+    modal.destroy();
+  }, duration);
+};
+
 export const createSuccessTip = function (message: string): void {
   Message.success(message);
 };

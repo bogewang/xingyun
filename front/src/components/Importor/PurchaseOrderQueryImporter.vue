@@ -2,12 +2,13 @@
   <div>
     <excel-importer
       ref="importer"
-      :tip-msg="
-        '按导入文件中的“单据日期 + 供应商”自动分组生成采购订单。\n注：\n1、Excel 中其余字段都会作为订单明细导入。'
-      "
+      :tip-msg="'按导入文件中的“单据日期 + 供应商”自动分组生成采购订单。\n注：\n1、Excel 中其余字段都会作为订单明细导入。'"
       :download-template-url="downloadTemplate"
       :upload-url="upload"
       :form-data="formData"
+      :get-container="getContainer"
+      :local-container="localContainer"
+      :hide-on-deactivated="hideOnDeactivated"
       @confirm="(e) => $emit('confirm', e)"
     >
     </excel-importer>
@@ -17,25 +18,35 @@
 <script>
   import { defineComponent } from 'vue';
   import ExcelImporter from '@/components/ExcelImporterNew';
-  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
-  import UserSelector from '@/components/Selector/UserSelector.vue';
   import * as api from '@/api/sc/purchase/receive';
 
   export default defineComponent({
     name: 'ReceiveSheetQueryImporter',
     components: {
       ExcelImporter,
-      StoreCenterSelector,
-      UserSelector,
     },
     data() {
       return {
         formData: {},
       };
     },
+    props: {
+      getContainer: {
+        type: [Function, Boolean],
+        default: undefined,
+      },
+      localContainer: {
+        type: Boolean,
+        default: false,
+      },
+      hideOnDeactivated: {
+        type: Boolean,
+        default: false,
+      },
+    },
     methods: {
       openDialog() {
-        this.formData = {}
+        this.formData = {};
         this.$refs.importer.openDialog();
       },
       downloadTemplate() {
