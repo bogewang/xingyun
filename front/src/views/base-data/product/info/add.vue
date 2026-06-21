@@ -346,7 +346,8 @@
       </a-form>
       <div class="form-modal-footer">
         <a-space>
-          <a-button type="primary" @click="submit">保存</a-button>
+          <a-button type="primary" :loading="loading" @click="submit">保存</a-button>
+          <a-button type="primary" :loading="loading" @click="submitAndAdd">保存并新增</a-button>
           <a-button @click="closeDialog">关闭</a-button>
         </a-space>
       </div>
@@ -354,7 +355,7 @@
   </div>
 </template>
 <script>
-  import { defineComponent, h } from 'vue';
+  import { defineComponent, h, nextTick } from 'vue';
   import { validCode } from '@/utils/validate';
   import * as api from '@/api/base-data/product/info';
   import * as propertyApi from '@/api/base-data/product/property';
@@ -374,7 +375,7 @@
     mul,
     uuid,
   } from '@/utils/utils';
-  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import {createConfirm, createError, createSuccess, createSuccessAutoClose} from '@/hooks/web/msg';
   import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
   import ProductSelector from '@/components/Selector/ProductSelector.vue';
@@ -569,16 +570,22 @@
         this.closeCurrentPage();
       },
       // 初始化表单数据
-      initFormData() {
+      initFormData(productType = PRODUCT_TYPE.NORMAL.code) {
         this.formData = {};
-        this.productType = PRODUCT_TYPE.NORMAL.code;
-
+        this.productType = productType;
+        this.productBundles = [];
         this.modelorList = [];
 
         this.onGenerateCode();
       },
       // 提交表单事件
       async submit() {
+        await this.doSubmit(false);
+      },
+      async submitAndAdd() {
+        await this.doSubmit(true);
+      },
+      async doSubmit(continueAdd) {
         let valid = true;
 
         await this.$refs.form.validate().then((res) => {
@@ -746,8 +753,16 @@
         api
           .create(params)
           .then(() => {
-            createSuccess('新增成功！');
+            createSuccessAutoClose('新增成功！', 500);
             this.$emit('confirm');
+            if (continueAdd) {
+              this.initFormData(this.productType);
+              nextTick(() => {
+                this.$refs.form?.clearValidate();
+              });
+              return;
+            }
+
             this.closeDialog();
           })
           .finally(() => {

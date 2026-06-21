@@ -104,7 +104,7 @@ public class QueryProductBo extends BaseBo<Product> {
     @ApiModelProperty("备注")
     private String remark;
 
-    @ApiModelProperty("备注2")
+    @ApiModelProperty("备注二")
     private String remark2;
 
     /**
