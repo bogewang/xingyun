@@ -172,6 +172,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             }
         }
 
+        checkNameSpecUnit(vo);
+
         Product data = new Product();
         data.setId(IdUtil.getId());
         data.setCode(code);
@@ -979,6 +981,13 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         return getBaseMapper().selectList(checkWrapper);
     }
 
+    private List<Product> queryAvailableProductsByName(String name) {
+        Wrapper<Product> checkWrapper = Wrappers.lambdaQuery(Product.class)
+                .apply("TRIM(name) = {0}", Objects.toString(name, "").trim())
+                .eq(Product::getAvailable, Boolean.TRUE);
+        return getBaseMapper().selectList(checkWrapper);
+    }
+
     private Set<String> queryCodesByPrefix(String prefix) {
         Wrapper<Product> checkWrapper = Wrappers.lambdaQuery(Product.class)
                 .likeRight(Product::getCode, prefix)
@@ -999,6 +1008,10 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         return buildNameSpecUnitKey(data.getName(), data.getSpec(), data.getUnit());
     }
 
+    private String buildNameSpecUnitKey(CreateProductVo data) {
+        return buildNameSpecUnitKey(data.getName(), data.getSpec(), data.getUnit());
+    }
+
     private String buildNameSpecUnitKey(Product data) {
         return buildNameSpecUnitKey(data.getName(), data.getSpec(), data.getUnit());
     }
@@ -1006,5 +1019,16 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     private String buildNameSpecUnitKey(String name, String spec, String unit) {
         return Objects.toString(name, "").trim() + "||" + Objects.toString(spec, "").trim() + "||"
                 + Objects.toString(unit, "").trim();
+    }
+
+    private void checkNameSpecUnit(CreateProductVo vo) {
+        String key = buildNameSpecUnitKey(vo);
+        List<Product> products = queryAvailableProductsByName(vo.getName());
+        boolean exists = products.stream()
+                .map(this::buildNameSpecUnitKey)
+                .anyMatch(key::equals);
+        if (exists) {
+            throw new DefaultClientException("名称+规格+单位重复，请重新输入！");
+        }
     }
 }
