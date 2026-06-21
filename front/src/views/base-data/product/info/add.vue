@@ -753,7 +753,7 @@
         api
           .create(params)
           .then(() => {
-            createSuccessAutoClose('新增成功！', 500);
+            createSuccessAutoClose('新增成功！');
             this.$emit('confirm');
             if (continueAdd) {
               this.initFormData(this.productType);
