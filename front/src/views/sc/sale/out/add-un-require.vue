@@ -1,5 +1,8 @@
 <template>
-  <div class="app-card-container sheet-editor-page">
+  <div
+    ref="importerContainer"
+    class="app-card-container sheet-editor-page excel-importer-local-container"
+  >
     <div class="sheet-editor-content" v-permission="['sale:out:add']" v-loading="loading">
       <j-border>
         <j-form bordered>
@@ -235,8 +238,17 @@
         :sc-id="formData.scId"
         @confirm="batchAddProduct"
       />
-      <sale-out-sheet-importer ref="importer" @confirm="handleImportConfirm" />
-      <div class="sheet-editor-actions" style="text-align: center; background-color: #ffffff; padding: 8px 0">
+      <sale-out-sheet-importer
+        ref="importer"
+        :get-container="getImporterContainer"
+        local-container
+        hide-on-deactivated
+        @confirm="handleImportConfirm"
+      />
+      <div
+        class="sheet-editor-actions"
+        style="text-align: center; background-color: #ffffff; padding: 8px 0"
+      >
         <a-space>
           <a-button
             v-permission="['sale:out:add']"
@@ -298,7 +310,13 @@
     normalizeSelectValue,
   } from '@/utils/searchSelect';
   import { requestCustomerSelectOptions } from '@/utils/labelSelect';
-  import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
+  import {
+    createConfirm,
+    createError,
+    createPrompt,
+    createSuccess,
+    createSuccessAutoClose,
+  } from '@/hooks/web/msg';
   import {
     getInlineProductSelectRowClass,
     handleInlineProductSelectKeydown,
@@ -416,6 +434,9 @@
       document.removeEventListener('keydown', this.handleKeyDown);
     },
     methods: {
+      getImporterContainer() {
+        return this.$refs.importerContainer;
+      },
       // 处理键盘事件
       handleKeyDown(event) {
         // 按下回车键时调用addProduct方法
@@ -715,6 +736,7 @@
         }
 
         this.calcSum();
+        createSuccessAutoClose('导入成功！');
       },
       // 校验数据
       validData() {

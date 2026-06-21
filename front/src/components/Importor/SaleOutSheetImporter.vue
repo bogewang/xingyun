@@ -4,6 +4,9 @@
       ref="importer"
       :download-template-url="downloadTemplate"
       :upload-url="upload"
+      :get-container="getContainer"
+      :local-container="localContainer"
+      :hide-on-deactivated="hideOnDeactivated"
       @confirm="(e) => $emit('confirm', e)"
     />
   </div>
@@ -19,6 +22,20 @@
     components: { ExcelImporter },
     data() {
       return {};
+    },
+    props: {
+      getContainer: {
+        type: [Function, Boolean],
+        default: undefined,
+      },
+      localContainer: {
+        type: Boolean,
+        default: false,
+      },
+      hideOnDeactivated: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {},
     methods: {
