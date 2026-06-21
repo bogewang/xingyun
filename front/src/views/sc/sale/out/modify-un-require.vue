@@ -45,6 +45,7 @@
         keep-source
         row-id="id"
         height="380"
+        :scroll-y="scrollYConfig"
         :data="tableData"
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
@@ -229,7 +230,7 @@
         </template>
       </vxe-grid>
 
-      <order-time-line :id="id" />
+      <order-time-line v-if="timelineVisible" :id="id" />
 
       <j-border title="合计">
         <j-form bordered label-width="140px">
@@ -371,6 +372,11 @@
         formData: {},
         originalFillAllCost: false,
         paidAmountDirty: false,
+        timelineVisible: false,
+        scrollYConfig: {
+          enabled: true,
+          gt: 30,
+        },
         // 工具栏配置
         toolbarConfig: {
           // 缩放
@@ -509,6 +515,7 @@
         this.paidAmountDirty = false;
         this.originalFillAllCost = false;
         this.tableData = [];
+        this.timelineVisible = false;
       },
       // 加载数据
       loadData() {
@@ -570,6 +577,11 @@
 
             this.calcSum();
             this.paidAmountDirty = true;
+            this.$nextTick(() => {
+              setTimeout(() => {
+                this.timelineVisible = true;
+              }, 0);
+            });
           })
           .finally(() => {
             this.loading = false;
