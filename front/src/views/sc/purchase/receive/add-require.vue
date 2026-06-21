@@ -1,6 +1,6 @@
 <template>
-  <div class="app-card-container">
-    <div v-permission="['purchase:receive:add']" v-loading="loading">
+  <div class="app-card-container sheet-editor-page">
+    <div class="sheet-editor-content" v-permission="['purchase:receive:add']" v-loading="loading">
       <a-alert
         description="提示：使用回车键可以快速添加商品；使用Tab键可以快速跳转至下一个输入框。"
         type="info"
@@ -49,6 +49,7 @@
       </j-border>
       <!-- 数据列表 -->
       <vxe-grid
+        class="sheet-editor-grid"
         id="ReceiveSheetAddRequire"
         ref="grid"
         resizable
@@ -56,7 +57,7 @@
         highlight-hover-row
         keep-source
         row-id="id"
-        height="500"
+        height="100%"
         :data="tableData"
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
@@ -244,7 +245,7 @@
         :sc-id="formData.scId"
         @confirm="batchAddProduct"
       />
-      <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
+      <div class="sheet-editor-actions" style="text-align: center; background-color: #ffffff; padding: 8px 0">
         <a-space>
           <a-button
             v-permission="['purchase:receive:add']"
@@ -1000,4 +1001,30 @@
     },
   });
 </script>
-<style></style>
+<style scoped>
+  .sheet-editor-page {
+    height: calc(100vh - 150px);
+    min-height: 640px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sheet-editor-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .sheet-editor-grid {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .sheet-editor-actions {
+    margin-top: auto;
+  }
+</style>

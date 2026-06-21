@@ -1,6 +1,6 @@
 <template>
-  <div class="app-card-container">
-    <div v-permission="['purchase:receive:modify']" v-loading="loading">
+  <div class="app-card-container sheet-editor-page">
+    <div class="sheet-editor-content" v-permission="['purchase:receive:modify']" v-loading="loading">
       <a-alert
         description="提示：使用回车键可以快速添加商品；使用Tab键可以快速跳转至下一个输入框。"
         type="info"
@@ -94,6 +94,7 @@
       </j-border>
       <!-- 数据列表 -->
       <vxe-grid
+        class="sheet-editor-grid"
         id="ReceiveSheetModifyRequire"
         ref="grid"
         resizable
@@ -101,7 +102,7 @@
         highlight-hover-row
         keep-source
         row-id="id"
-        height="500"
+        height="100%"
         :data="tableData"
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
@@ -267,8 +268,6 @@
         </template>
       </vxe-grid>
 
-      <order-time-line :id="id" />
-
       <j-border title="合计">
         <j-form bordered label-width="140px">
           <j-form-item label="收货数量" :span="8">
@@ -295,10 +294,20 @@
         :sc-id="formData.sc.id"
         @confirm="batchAddProduct"
       />
+      <a-modal
+        v-model:open="timelineVisible"
+        title="操作记录"
+        :footer="null"
+        :width="640"
+        destroy-on-close
+      >
+        <order-time-line v-if="timelineVisible" :id="id" :expand-all="true" />
+      </a-modal>
 
-      <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
+      <div class="sheet-editor-actions" style="text-align: center; background-color: #ffffff; padding: 8px 0">
         <a-space>
           <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
+          <a-button :loading="loading" @click="openTimeline">操作记录</a-button>
           <a-button
             v-permission="['purchase:receive:modify']"
             type="primary"
@@ -398,6 +407,7 @@
         loading: false,
         // 表单数据
         formData: {},
+        timelineVisible: false,
         purchaserOptions: [],
         purchaserOptionMap: {},
         // 工具栏配置
@@ -965,6 +975,9 @@
             this.loading = false;
           });
       },
+      openTimeline() {
+        this.timelineVisible = true;
+      },
       buildQueryParams() {
         return {
           pageIndex: 1,
@@ -1021,4 +1034,30 @@
     },
   });
 </script>
-<style></style>
+<style scoped>
+  .sheet-editor-page {
+    height: calc(100vh - 150px);
+    min-height: 640px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sheet-editor-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .sheet-editor-grid {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .sheet-editor-actions {
+    margin-top: auto;
+  }
+</style>

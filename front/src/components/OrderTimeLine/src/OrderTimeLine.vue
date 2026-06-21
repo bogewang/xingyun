@@ -65,6 +65,10 @@ export default defineComponent({
         type: String,
         required: true,
       },
+      expandAll: {
+        type: Boolean,
+        default: false,
+      },
     },
     setup() {
       return {
@@ -80,19 +84,19 @@ export default defineComponent({
     },
     data() {
       return {
-        collapseStatus: false,
+        collapseStatus: this.expandAll,
         lines: [],
       };
     },
     computed: {
       showCollapse() {
-        return !isEmpty(this.lines) && this.lines.length > 1;
+        return !this.expandAll && !isEmpty(this.lines) && this.lines.length > 1;
       },
       domLines() {
         if (isEmpty(this.lines)) {
           return [];
         }
-        return this.collapseStatus ? this.lines : [this.lines[this.lines.length - 1]];
+        return this.expandAll || this.collapseStatus ? this.lines : [this.lines[this.lines.length - 1]];
       },
     },
     created() {
