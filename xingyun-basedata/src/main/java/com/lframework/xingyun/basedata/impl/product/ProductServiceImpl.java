@@ -640,24 +640,29 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         }
 
         this.check(list);
-        List<Product> persists = this.buildProducts(list);
+        ProductImportPersistBatch persistBatch = this.buildProducts(list);
 
-        if (CollectionUtil.isNotEmpty(persists)) {
-            super.saveOrUpdateBatch(persists);
+        if (CollectionUtils.isNotEmpty(persistBatch.getInserts())) {
+            super.saveBatch(persistBatch.getInserts());
+        }
+        if (CollectionUtils.isNotEmpty(persistBatch.getUpdates())) {
+            super.updateBatchById(persistBatch.getUpdates());
         }
     }
 
-    private List<Product> buildProducts(List<ProductImportModel> list) {
+    private ProductImportPersistBatch buildProducts(List<ProductImportModel> list) {
         if (CollectionUtil.isEmpty(list)) {
-            return CollectionUtil.emptyList();
+            return new ProductImportPersistBatch(CollectionUtil.emptyList(), CollectionUtil.emptyList());
         }
         List<String> supplierNames = list.stream().map(ProductImportModel::getDefaultSupplier).collect(Collectors.toList());
         Map<String, String> map = supplierService.queryByNames(supplierNames).stream().collect(Collectors.toMap(Supplier::getName, Supplier::getId, (a, b) -> b));
 
-        List<Product> res = Lists.newArrayList();
+        List<Product> inserts = Lists.newArrayList();
+        List<Product> updates = Lists.newArrayList();
         list.forEach(data -> {
             Product record = BeanUtil.copyProperties(data, Product.class);
-            if (StringUtil.isBlank(record.getId())) {
+            boolean isNew = StringUtil.isBlank(record.getId());
+            if (isNew) {
                 record.setId(IdUtil.getId());
             }
             record.setTaxRate(data.getTaxRate() == null ? BigDecimal.ZERO : data.getTaxRate());
@@ -673,14 +678,38 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                 }
                 record.setDefaultSupplier(map.get(data.getDefaultSupplier()));
             }
-            res.add(record);
+            if (isNew) {
+                inserts.add(record);
+            } else {
+                updates.add(record);
+            }
 
             data.setId(record.getId());
 
         });
 
-        return res;
+        return new ProductImportPersistBatch(inserts, updates);
 
+    }
+
+    private static class ProductImportPersistBatch {
+
+        private final List<Product> inserts;
+
+        private final List<Product> updates;
+
+        private ProductImportPersistBatch(List<Product> inserts, List<Product> updates) {
+            this.inserts = inserts;
+            this.updates = updates;
+        }
+
+        private List<Product> getInserts() {
+            return inserts;
+        }
+
+        private List<Product> getUpdates() {
+            return updates;
+        }
     }
 
     private void check(List<ProductImportModel> list) {
