@@ -190,7 +190,7 @@
           />
         </template>
 
-        <!-- 含税金额 列自定义内容 -->
+        <!-- 金额 列自定义内容 -->
         <template #taxAmount_default="{ row }">
           <span v-if="isFloatGeZero(row.taxPrice) && isFloatGeZero(row.outNum)">{{
             getNumber(mul(row.taxPrice, row.outNum), 2)
@@ -209,7 +209,11 @@
             @keydown.up.prevent="handleTableInputArrow(rowIndex, 'costPriceInputRef', 'up')"
             @keydown.down.prevent="handleTableInputArrow(rowIndex, 'costPriceInputRef', 'down')"
           />
-          <span v-else></span>
+          <span v-else>{{ row.costPrice }}</span>
+        </template>
+
+        <template #profitRate_default="{ row }">
+          {{ calcProfitRate(row) }}
         </template>
 
         <template #costStatus_default="{ row }">
@@ -271,7 +275,10 @@
       >
         <order-time-line v-if="timelineVisible" :id="id" :expand-all="true" />
       </a-modal>
-      <div class="sheet-editor-actions" style="text-align: center; background-color: #ffffff; padding: 8px 0">
+      <div
+        class="sheet-editor-actions"
+        style="text-align: center; background-color: #ffffff; padding: 8px 0"
+      >
         <a-space>
           <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
           <a-button :loading="loading" @click="openTimeline">操作记录</a-button>
@@ -442,18 +449,25 @@
             slots: { default: 'taxPrice_default' },
           },
           {
-            field: 'taxAmount',
-            title: '含税金额',
-            align: 'right',
-            width: 80,
-            slots: { default: 'taxAmount_default' },
-          },
-          {
             field: 'costPrice',
             title: '成本单价',
             align: 'right',
             width: 100,
             slots: { default: 'costPrice_default' },
+          },
+          {
+            field: 'taxAmount',
+            title: '金额',
+            align: 'right',
+            width: 80,
+            slots: { default: 'taxAmount_default' },
+          },
+          {
+            field: 'profitRate',
+            title: '毛利率',
+            align: 'right',
+            width: 100,
+            slots: { default: 'profitRate_default' },
           },
           {
             field: 'costStatus',
@@ -790,6 +804,21 @@
 
         this.formData.totalNum = totalNum;
         this.formData.totalAmount = totalAmount;
+      },
+      calcTaxAmount(row) {
+        if (!isFloatGeZero(row?.taxPrice) || !isFloatGeZero(row?.outNum)) {
+          return 0;
+        }
+        return getNumber(mul(row.taxPrice, row.outNum), 2);
+      },
+      calcProfitRate(row) {
+        const amount = Number(this.calcTaxAmount(row));
+        if (!amount || !isFloatGeZero(row?.costPrice) || !isFloatGeZero(row?.outNum)) {
+          return '0.00%';
+        }
+
+        const costAmount = Number(getNumber(mul(row.costPrice, row.outNum), 2));
+        return `${(((amount - costAmount) / amount) * 100).toFixed(2)}%`;
       },
       // 批量录入数量
       batchInputOutNum() {
