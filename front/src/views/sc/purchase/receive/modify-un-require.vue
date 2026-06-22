@@ -1,6 +1,10 @@
 <template>
   <div class="app-card-container sheet-editor-page">
-    <div class="sheet-editor-content" v-permission="['purchase:receive:modify']" v-loading="loading">
+    <div
+      class="sheet-editor-content"
+      v-permission="['purchase:receive:modify']"
+      v-loading="loading"
+    >
       <j-border>
         <j-form bordered>
           <j-form-item label="供应商" required>
@@ -34,18 +38,8 @@
         <!-- 工具栏 -->
         <template #toolbar_buttons>
           <a-space>
-            <a-button
-              type="primary"
-              :icon="h(PlusOutlined)"
-              @click="addProduct"
-              >新增</a-button
-            >
-            <a-button
-              danger
-              :icon="h(DeleteOutlined)"
-              @click="delProduct"
-              >删除</a-button
-            >
+            <a-button type="primary" :icon="h(PlusOutlined)" @click="addProduct">新增</a-button>
+            <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
             <a-button :icon="h(PlusOutlined)" @click="openBatchAddProductDialog"
               >批量添加商品</a-button
             >
@@ -157,10 +151,6 @@
             v-model:value="row.purchasePrice"
             class="number-input"
             @input="(e) => purchasePriceInput(e.target.value)"
-            @keydown.left.prevent="handleTableInputArrow(rowIndex, 'purchasePriceInputRef', 'left')"
-            @keydown.right.prevent="handleTableInputArrow(rowIndex, 'purchasePriceInputRef', 'right')"
-            @keydown.up.prevent="handleTableInputArrow(rowIndex, 'purchasePriceInputRef', 'up')"
-            @keydown.down.prevent="handleTableInputArrow(rowIndex, 'purchasePriceInputRef', 'down')"
           />
         </template>
 
@@ -171,10 +161,6 @@
             v-model:value="row.receiveNum"
             class="number-input"
             @input="(e) => receiveNumInput(e.target.value)"
-            @keydown.left.prevent="handleTableInputArrow(rowIndex, 'receiveNumInputRef', 'left')"
-            @keydown.right.prevent="handleTableInputArrow(rowIndex, 'receiveNumInputRef', 'right')"
-            @keydown.up.prevent="handleTableInputArrow(rowIndex, 'receiveNumInputRef', 'up')"
-            @keydown.down.prevent="handleTableInputArrow(rowIndex, 'receiveNumInputRef', 'down')"
           />
         </template>
 
@@ -187,14 +173,7 @@
 
         <!-- 备注 列自定义内容 -->
         <template #description_default="{ row, rowIndex }">
-          <a-input
-            :ref="'descriptionInputRef' + rowIndex"
-            v-model:value="row.description"
-            @keydown.left.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'left')"
-            @keydown.right.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'right')"
-            @keydown.up.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'up')"
-            @keydown.down.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'down')"
-          />
+          <a-input :ref="'descriptionInputRef' + rowIndex" v-model:value="row.description" />
         </template>
       </vxe-grid>
 
@@ -243,7 +222,10 @@
         <order-time-line v-if="timelineVisible" :id="id" :expand-all="true" />
       </a-modal>
 
-      <div class="sheet-editor-actions" style="text-align: center; background-color: #ffffff; padding: 8px 0">
+      <div
+        class="sheet-editor-actions"
+        style="text-align: center; background-color: #ffffff; padding: 8px 0"
+      >
         <a-space>
           <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
           <a-button :loading="loading" @click="openTimeline">操作记录</a-button>
@@ -295,7 +277,7 @@
     mergeSelectOptionMap,
     normalizeSelectValue,
   } from '@/utils/searchSelect';
-  import { focusTableInput, focusVxeGridRow, moveTableInput } from '@/utils/vxeGrid';
+  import { focusTableInput, focusVxeGridRow } from '@/utils/vxeGrid';
   import {
     getInlineProductSelectRowClass,
     handleInlineProductSelectKeydown,
@@ -643,21 +625,8 @@
           });
         });
       },
-      getTableInputRefOrder() {
-        return ['receiveNumInputRef', 'purchasePriceInputRef', 'descriptionInputRef'];
-      },
       focusRowInput(refName, index) {
         return focusTableInput(this, refName, index);
-      },
-      async handleTableInputArrow(rowIndex, refName, direction) {
-        await moveTableInput({
-          vm: this,
-          rowIndex,
-          refName,
-          direction,
-          refOrder: this.getTableInputRefOrder(),
-          appendRow: () => this.tableData.push(this.emptyProduct()),
-        });
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {

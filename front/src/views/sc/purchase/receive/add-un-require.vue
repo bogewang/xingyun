@@ -156,12 +156,6 @@
             v-model:value="row.purchasePrice"
             class="number-input"
             @input="(e) => purchasePriceInput(e.target.value)"
-            @keydown.left.prevent="handleTableInputArrow(rowIndex, 'purchasePriceInputRef', 'left')"
-            @keydown.right.prevent="
-              handleTableInputArrow(rowIndex, 'purchasePriceInputRef', 'right')
-            "
-            @keydown.up.prevent="handleTableInputArrow(rowIndex, 'purchasePriceInputRef', 'up')"
-            @keydown.down.prevent="handleTableInputArrow(rowIndex, 'purchasePriceInputRef', 'down')"
           />
         </template>
 
@@ -172,10 +166,6 @@
             v-model:value="row.receiveNum"
             class="number-input"
             @input="(e) => receiveNumInput(e.target.value)"
-            @keydown.left.prevent="handleTableInputArrow(rowIndex, 'receiveNumInputRef', 'left')"
-            @keydown.right.prevent="handleTableInputArrow(rowIndex, 'receiveNumInputRef', 'right')"
-            @keydown.up.prevent="handleTableInputArrow(rowIndex, 'receiveNumInputRef', 'up')"
-            @keydown.down.prevent="handleTableInputArrow(rowIndex, 'receiveNumInputRef', 'down')"
           />
         </template>
 
@@ -188,14 +178,7 @@
 
         <!-- 备注 列自定义内容 -->
         <template #description_default="{ row, rowIndex }">
-          <a-input
-            :ref="'descriptionInputRef' + rowIndex"
-            v-model:value="row.description"
-            @keydown.left.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'left')"
-            @keydown.right.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'right')"
-            @keydown.up.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'up')"
-            @keydown.down.prevent="handleTableInputArrow(rowIndex, 'descriptionInputRef', 'down')"
-          />
+          <a-input :ref="'descriptionInputRef' + rowIndex" v-model:value="row.description" />
         </template>
       </vxe-grid>
 
@@ -320,7 +303,7 @@
   } from '@/utils/inlineProductSelect';
   import JFormItem from '@/components/JFormItem';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
-  import { focusTableInput, moveTableInput } from '@/utils/vxeGrid';
+  import { focusTableInput } from '@/utils/vxeGrid';
 
   export default defineComponent({
     name: 'AddPurchaseReceiveSheetUnRequire',
@@ -561,21 +544,8 @@
           });
         });
       },
-      getTableInputRefOrder() {
-        return ['receiveNumInputRef', 'purchasePriceInputRef', 'descriptionInputRef'];
-      },
       focusRowInput(refName, index) {
         return focusTableInput(this, refName, index);
-      },
-      async handleTableInputArrow(rowIndex, refName, direction) {
-        await moveTableInput({
-          vm: this,
-          rowIndex,
-          refName,
-          direction,
-          refOrder: this.getTableInputRefOrder(),
-          appendRow: () => this.tableData.push(this.emptyProduct()),
-        });
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
