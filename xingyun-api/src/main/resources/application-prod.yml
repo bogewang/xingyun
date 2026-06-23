@@ -44,7 +44,7 @@ spring:
     #地址
     host: 127.0.0.1
     #端口，默认为6379
-    port: 50536
+    port: 6379
     #数据库
     database: 0
     #密码
@@ -63,7 +63,7 @@ spring:
         max-wait: -1ms
   #RabbitMQ配置
   rabbitmq:
-    addresses: 127.0.0.1:28503             # RabbitMQ集群地址列表，多个地址用逗号分隔
+    addresses: 127.0.0.1:5672             # RabbitMQ集群地址列表，多个地址用逗号分隔
     virtual-host: /
     username: admin
     password: yRNv4vs4nXuY3PDuUAf2
@@ -104,7 +104,7 @@ jugg:
     #下载时的baseUrl，与domain的区别：会在url后面拼接/**作为静态资源的url，而domain是后端系统的具体域名，下载时的完整url例如：upload.domain + upload.url/xxx.jpg
     url: /oss
     #下载时的域名
-    domain: http://47.103.125.229:8080
+    domain: http://118.24.41.97:8080
     #上传文件的路径
     location: /www/upload/upload-data
   # 安全上传
