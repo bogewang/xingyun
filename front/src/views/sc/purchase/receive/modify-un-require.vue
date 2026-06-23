@@ -848,10 +848,10 @@
             return false;
           }
 
-          if (!isFloatGtZero(product.purchasePrice)) {
-            createError('第' + (i + 1) + '行商品采购价必须大于0！');
-            return false;
-          }
+          // if (!isFloatGtZero(product.purchasePrice)) {
+          //   createError('第' + (i + 1) + '行商品采购价必须大于0！');
+          //   return false;
+          // }
 
           if (!isNumberPrecision(product.purchasePrice, 6)) {
             createError('第' + (i + 1) + '行商品采购价最多允许6位小数！');

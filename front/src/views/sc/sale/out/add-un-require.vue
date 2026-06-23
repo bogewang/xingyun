@@ -762,10 +762,10 @@
             return false;
           }
 
-          if (!isFloatGtZero(product.taxPrice)) {
-            createError('第' + (i + 1) + '行商品价格必须大于0！');
-            return false;
-          }
+          // if (!isFloatGtZero(product.taxPrice)) {
+          //   createError('第' + (i + 1) + '行商品价格必须大于0！');
+          //   return false;
+          // }
 
           if (!isNumberPrecision(product.taxPrice, 6)) {
             createError('第' + (i + 1) + '行商品价格最多允许6位小数！');
