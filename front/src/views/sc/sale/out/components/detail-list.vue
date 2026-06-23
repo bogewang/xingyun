@@ -534,7 +534,7 @@
       },
       openPriceCheckDialog() {
         this.priceCheckQueryParams = this.buildSearchFormData();
-        this.priceCheckSearchForm.productName = this.priceCheckQueryParams.productName || '';
+        this.priceCheckSearchForm.productName = '';
         this.resetPriceCheckSelection();
         this.priceCheckVisible = true;
         this.reloadPriceCheckGrid();
