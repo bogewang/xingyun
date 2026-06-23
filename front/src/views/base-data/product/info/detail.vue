@@ -48,7 +48,7 @@
           formData.retailPrice
         }}</a-descriptions-item>
         <a-descriptions-item label="备注" :span="2">{{ formData.remark }}</a-descriptions-item>
-        <a-descriptions-item label="备注2" :span="2">{{ formData.remark2 }}</a-descriptions-item>
+        <a-descriptions-item label="备注二" :span="2">{{ formData.remark2 }}</a-descriptions-item>
         <a-descriptions-item label="商品类型" :span="4">{{
           PRODUCT_TYPE.getDesc(formData.productType)
         }}</a-descriptions-item>

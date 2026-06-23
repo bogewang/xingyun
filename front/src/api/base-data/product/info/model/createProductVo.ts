@@ -113,7 +113,7 @@ export interface CreateProductVo {
   remark: string;
 
   /**
-   * 备注2
+   * 备注二
    */
   remark2: string;
 }

@@ -125,7 +125,7 @@
             </a-form-item>
           </a-col>
           <a-col :md="8" :sm="24">
-            <a-form-item label="备注2" name="remark2">
+            <a-form-item label="备注二" name="remark2">
               <a-input v-model:value="formData.remark2" allow-clear />
             </a-form-item>
           </a-col>

@@ -198,7 +198,7 @@
           { field: 'salePrice', title: '销售价', width: 120 },
           { field: 'latestSalePrice', title: '最新售价', width: 120 },
           { field: 'remark', title: '备注', minWidth: 180 },
-          { field: 'remark2', title: '备注2', minWidth: 180 },
+          { field: 'remark2', title: '备注二', minWidth: 180 },
           { field: 'categoryName', title: '分类', width: 120 },
           { field: 'createTime', title: '创建时间', width: 170, sortable: true },
           { field: 'updateTime', title: '修改时间', width: 170, sortable: true },
