@@ -158,4 +158,10 @@ public class QuerySaleOutSheetVo extends SortPageVo {
    */
   @ApiModelProperty("未付金额截止值")
   private BigDecimal unpaidAmountEnd;
+
+  /**
+   * 是否仅查询多价格商品
+   */
+  @ApiModelProperty("是否仅查询多价格商品")
+  private Boolean onlyMultiPrice;
 }

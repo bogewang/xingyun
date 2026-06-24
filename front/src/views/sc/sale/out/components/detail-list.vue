@@ -195,6 +195,9 @@
             查询
           </a-button>
           <a-button @click="resetPriceCheckSearch">清空</a-button>
+          <a-checkbox v-model:checked="priceCheckSearchForm.onlyMultiPrice">
+            仅查询多价格商品
+          </a-checkbox>
         </a-space>
       </div>
       <vxe-grid
@@ -306,6 +309,7 @@
         syncingPriceCheckSelection: false,
         priceCheckSearchForm: {
           productName: '',
+          onlyMultiPrice: true,
         },
         searchFormData: createDefaultSearchFormData(),
         orderDateRange: [],
@@ -539,7 +543,10 @@
       },
       openPriceCheckDialog() {
         this.priceCheckQueryParams = this.buildSearchFormData();
-        this.priceCheckSearchForm.productName = '';
+        this.priceCheckSearchForm = {
+          productName: '',
+          onlyMultiPrice: true,
+        };
         this.resetPriceCheckSelection();
         this.priceCheckVisible = true;
         this.reloadPriceCheckGrid();
@@ -585,6 +592,7 @@
       buildPriceCheckQueryParams() {
         return Object.assign({}, this.priceCheckQueryParams || this.buildSearchFormData(), {
           productName: this.priceCheckSearchForm.productName,
+          onlyMultiPrice: this.priceCheckSearchForm.onlyMultiPrice,
         });
       },
       searchPriceCheck() {
@@ -592,7 +600,10 @@
         this.reloadPriceCheckGrid();
       },
       resetPriceCheckSearch() {
-        this.priceCheckSearchForm.productName = '';
+        this.priceCheckSearchForm = {
+          productName: '',
+          onlyMultiPrice: true,
+        };
         this.searchPriceCheck();
       },
       getDefaultOrderDateRange() {

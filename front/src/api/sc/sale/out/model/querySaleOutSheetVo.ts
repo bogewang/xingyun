@@ -115,4 +115,9 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
    * 未付金额截止值
    */
   unpaidAmountEnd: number;
+
+  /**
+   * 是否仅查询多价格商品
+   */
+  onlyMultiPrice: boolean;
 }
