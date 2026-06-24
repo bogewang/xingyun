@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div ref="priceCheckContainer" class="price-check-local-container">
     <page-wrapper content-full-height fixed-height dense>
       <vxe-grid
         id="SaleOutSheetDetailList"
@@ -175,6 +175,8 @@
       title="产品询价不唯一明细"
       width="92%"
       :mask-closable="false"
+      :get-container="getPriceCheckContainer"
+      wrap-class-name="price-check-local-wrap"
       destroy-on-close
       :footer="null"
       :style="{ top: '8px' }"
@@ -252,7 +254,7 @@
   import { requestCustomerSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
-  import { createError, createPrompt, createSuccess } from '@/hooks/web/msg';
+  import {createError, createPrompt, createSuccess, createSuccessAutoClose} from '@/hooks/web/msg';
   import { usePermission } from '/@/hooks/web/usePermission';
 
   const createDefaultSearchFormData = () => ({
@@ -436,10 +438,10 @@
     },
     computed: {
       priceCheckModalBodyHeight() {
-        return `${Math.max(this.viewportHeight - 88, 520)}px`;
+        return `${Math.max(this.viewportHeight - 230, 420)}px`;
       },
       priceCheckGridHeight() {
-        return Math.max(this.viewportHeight - 156, 420);
+        return Math.max(this.viewportHeight - 300, 350);
       },
       visibleTableColumn() {
         return this.tableColumn.filter((column) => {
@@ -472,6 +474,9 @@
       window.removeEventListener('resize', this.handleViewportResize);
     },
     methods: {
+      getPriceCheckContainer() {
+        return this.$refs.priceCheckContainer;
+      },
       handleViewportResize() {
         this.viewportHeight = window.innerHeight;
       },
@@ -704,6 +709,8 @@
           inputErrorMessage: '价格（元）必须是数字并且不小于0，最多允许6位小数',
           title: '批量调整售价',
           required: true,
+          confirmOnEnter: true,
+          autoFocus: true,
         }).then(({ value }) => {
           this.priceCheckLoading = true;
           api
@@ -712,7 +719,7 @@
               taxPrice: Number(value),
             })
             .then(() => {
-              createSuccess('批量调整售价成功！');
+              createSuccessAutoClose('批量调整售价成功！');
               this.$refs.priceCheckGrid.commitProxy('reload');
               this.search();
             })
@@ -732,3 +739,16 @@
     },
   });
 </script>
+
+<style lang="less" scoped>
+  .price-check-local-container {
+    position: relative;
+    overflow: hidden;
+  }
+
+  :global(.price-check-local-container .ant-modal-mask),
+  :global(.price-check-local-container .price-check-local-wrap) {
+    position: absolute !important;
+    inset: 0;
+  }
+</style>

@@ -94,12 +94,16 @@ export const createPrompt = function (
     title,
     inputValue,
     required,
+    confirmOnEnter,
+    autoFocus,
   }: {
     inputPattern: RegExp;
     inputErrorMessage: string;
     title: string;
     inputValue?: any;
     required?: boolean;
+    confirmOnEnter?: boolean;
+    autoFocus?: boolean;
   },
 ): Promise<{ value: string }> {
   return new Promise<{ value: string }>((resolve) => {
@@ -109,10 +113,25 @@ export const createPrompt = function (
     const change = (e) => {
       datas.text = e.target.value;
     };
+    const pressEnter = (e: KeyboardEvent) => {
+      if (!confirmOnEnter) {
+        return;
+      }
+
+      const input = e.currentTarget as HTMLElement;
+      input
+        .closest('.ant-modal-content')
+        ?.querySelector<HTMLButtonElement>('.ant-modal-confirm-btns .ant-btn-primary')
+        ?.click();
+    };
     Modal.confirm({
       title: title,
-      content: createVNode('div', null, [createVNode(Input, { onInput: change })]),
+      content: createVNode('div', null, [
+        createVNode(Input, { onInput: change, onPressEnter: pressEnter }),
+      ]),
       icon: createVNode(ExclamationCircleOutlined),
+      autoFocusButton: autoFocus ? null : 'ok',
+      wrapClassName: autoFocus ? 'prompt-auto-focus-wrap' : undefined,
       okText: '确定',
       cancelText: '取消',
       onOk() {
@@ -140,5 +159,12 @@ export const createPrompt = function (
         });
       },
     });
+    if (autoFocus) {
+      setTimeout(() => {
+        const dialogs = document.querySelectorAll('.prompt-auto-focus-wrap');
+        const dialog = dialogs[dialogs.length - 1];
+        dialog?.querySelector<HTMLInputElement>('input')?.focus();
+      }, 300);
+    }
   });
 };
