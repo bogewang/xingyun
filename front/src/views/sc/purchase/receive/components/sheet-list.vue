@@ -380,6 +380,7 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
+          { field: 'orderDate', title: '订单日期', width: 120 },
           {
             field: 'code',
             title: '单据号',
@@ -387,10 +388,9 @@
             sortable: true,
             slots: { default: 'code_default' },
           },
-          { field: 'supplierCode', title: '供应商编号', width: 100 },
+          // { field: 'supplierCode', title: '供应商编号', width: 100 },
           { field: 'supplierName', title: '供应商名称', width: 120 },
-          { field: 'purchaserName', title: '采购员', width: 100 },
-          { field: 'orderDate', title: '订单日期', width: 120 },
+          // { field: 'purchaserName', title: '采购员', width: 100 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
           { field: 'paidAmount', title: '本单已付', align: 'right', width: 100 },
