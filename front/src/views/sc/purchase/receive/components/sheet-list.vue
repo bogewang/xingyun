@@ -32,15 +32,15 @@
                     :placeholder="['开始日期', '结束日期']"
                   />
                 </j-form-item>
+                <j-form-item label="商品名称">
+                  <a-input v-model:value="searchFormData.productName" allow-clear />
+                </j-form-item>
                 <j-form-item label="供应商">
                   <supplier-selector
                     v-model:value="searchFormData.supplierId"
                     allow-clear
                     placeholder="请选择供应商"
                   />
-                </j-form-item>
-                <j-form-item label="商品名称">
-                  <a-input v-model:value="searchFormData.productName" allow-clear />
                 </j-form-item>
                 <template #more>
                   <j-form-item label="单据号">

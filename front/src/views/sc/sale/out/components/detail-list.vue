@@ -236,6 +236,59 @@
         </template>
       </vxe-grid>
     </a-modal>
+
+    <a-modal
+      v-model:open="batchUpdatePriceVisible"
+      title="批量调整售价"
+      width="760px"
+      :confirm-loading="batchUpdatePriceSubmitting"
+      @ok="submitBatchUpdatePrice"
+      @cancel="closeBatchUpdatePriceDialog"
+    >
+      <a-row :gutter="16">
+        <a-col :span="8">
+          <a-form-item label="总售价">
+            <a-input :value="formatAmount(batchUpdatePriceSummary.totalSaleAmount)" disabled />
+          </a-form-item>
+        </a-col>
+        <a-col :span="8">
+          <a-form-item label="总成本">
+            <a-input :value="formatAmount(batchUpdatePriceSummary.totalCostAmount)" disabled />
+          </a-form-item>
+        </a-col>
+        <a-col :span="8">
+          <a-form-item label="总数量">
+            <a-input :value="formatQuantity(batchUpdatePriceForm.totalQty)" disabled />
+          </a-form-item>
+        </a-col>
+        <a-col :span="8">
+          <a-form-item label="平均售价">
+            <a-input-number
+              v-model:value="batchUpdatePriceForm.avgTaxPrice"
+              :min="0"
+              :precision="2"
+              style="width: 100%"
+              @change="onBatchUpdateAvgTaxPriceChange"
+            />
+          </a-form-item>
+        </a-col>
+        <a-col :span="8">
+          <a-form-item label="平均进价">
+            <a-input :value="formatPrice(batchUpdatePriceForm.avgCostPrice)" disabled />
+          </a-form-item>
+        </a-col>
+        <a-col :span="8">
+          <a-form-item label="毛利率(%)">
+            <a-input-number
+              v-model:value="batchUpdatePriceForm.profitRate"
+              :precision="2"
+              style="width: 100%"
+              @change="onBatchUpdateProfitRateChange"
+            />
+          </a-form-item>
+        </a-col>
+      </a-row>
+    </a-modal>
   </div>
 </template>
 
@@ -247,7 +300,7 @@
   import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
   import * as api from '@/api/sc/sale/out';
   import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
-  import { buildSortPageVo, isEmpty, PATTERN_IS_PRICE } from '@/utils/utils';
+  import { buildSortPageVo, isEmpty } from '@/utils/utils';
   import {
     buildVisibleSelectOptions,
     filterSelectOption,
@@ -257,7 +310,7 @@
   import { requestCustomerSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
-  import {createError, createPrompt, createSuccess, createSuccessAutoClose} from '@/hooks/web/msg';
+  import { createError, createSuccess, createSuccessAutoClose } from '@/hooks/web/msg';
   import { usePermission } from '/@/hooks/web/usePermission';
 
   const createDefaultSearchFormData = () => ({
@@ -304,12 +357,22 @@
         saleOrderId: '',
         showPriceUniqueCheck: false,
         priceCheckVisible: false,
+        batchUpdatePriceVisible: false,
+        batchUpdatePriceSubmitting: false,
         priceCheckQueryParams: null,
         selectedPriceCheckProductId: '',
         syncingPriceCheckSelection: false,
         priceCheckSearchForm: {
           productName: '',
           onlyMultiPrice: true,
+        },
+        batchUpdatePriceForm: {
+          detailIds: [],
+          totalQty: 0,
+          totalCostAmount: 0,
+          avgCostPrice: 0,
+          avgTaxPrice: 0,
+          profitRate: 0,
         },
         searchFormData: createDefaultSearchFormData(),
         orderDateRange: [],
@@ -458,6 +521,22 @@
       canViewProfit() {
         return this.hasPermission('sale:out:profit', false);
       },
+      batchUpdatePriceSummary() {
+        const totalQty = Number(this.batchUpdatePriceForm.totalQty || 0);
+        const totalCostAmount = Number(this.batchUpdatePriceForm.totalCostAmount || 0);
+        const avgCostPrice = Number(this.batchUpdatePriceForm.avgCostPrice || 0);
+        const avgTaxPrice = Number(this.batchUpdatePriceForm.avgTaxPrice || 0);
+        const profitRate = Number(this.batchUpdatePriceForm.profitRate || 0);
+        const totalSaleAmount = avgTaxPrice * totalQty;
+
+        return {
+          avgTaxPrice,
+          avgCostPrice,
+          profitRate,
+          totalCostAmount,
+          totalSaleAmount,
+        };
+      },
       visiblePriceCheckTableColumn() {
         return this.priceCheckTableColumn.filter((column) => {
           if (['costAmount', 'totalProfit', 'profitRate'].includes(column.field)) {
@@ -523,6 +602,9 @@
       formatAmount(value) {
         return Number(value || 0).toFixed(2);
       },
+      formatPrice(value) {
+        return Number(value || 0).toFixed(6).replace(/\.?0+$/, '');
+      },
       formatQuantity(value) {
         return Number(value || 0)
           .toFixed(2)
@@ -530,6 +612,19 @@
       },
       calcCostAmount(row) {
         return Number(row?.taxAmount || 0) - Number(row?.totalProfit || 0);
+      },
+      calcRowCostAmount(row) {
+        const qty = Number(row?.orderNum || 0);
+        const costPrice = row?.costPrice;
+        if (costPrice !== null && costPrice !== undefined && costPrice !== '') {
+          return Number(costPrice) * qty;
+        }
+
+        if (row?.totalProfit !== null && row?.totalProfit !== undefined && row?.totalProfit !== '') {
+          return Number(row?.taxAmount || 0) - Number(row?.totalProfit || 0);
+        }
+
+        return 0;
       },
       calcProfitRate(profit, amount) {
         const totalAmount = Number(amount || 0);
@@ -598,6 +693,98 @@
       searchPriceCheck() {
         this.resetPriceCheckSelection();
         this.reloadPriceCheckGrid();
+      },
+      closeBatchUpdatePriceDialog() {
+        this.batchUpdatePriceVisible = false;
+        this.batchUpdatePriceSubmitting = false;
+      },
+      onBatchUpdateAvgTaxPriceChange(value) {
+        const avgTaxPrice = Number(value || 0);
+        const totalCostAmount = Number(this.batchUpdatePriceForm.totalCostAmount || 0);
+        const totalQty = Number(this.batchUpdatePriceForm.totalQty || 0);
+        const totalSaleAmount = avgTaxPrice * totalQty;
+
+        this.batchUpdatePriceForm.avgTaxPrice = avgTaxPrice;
+        this.batchUpdatePriceForm.profitRate =
+          totalSaleAmount > 0
+            ? Number((((totalSaleAmount - totalCostAmount) / totalSaleAmount) * 100).toFixed(2))
+            : 0;
+      },
+      onBatchUpdateProfitRateChange(value) {
+        const profitRate = Number(value || 0);
+        const avgCostPrice = Number(this.batchUpdatePriceForm.avgCostPrice || 0);
+        const divisor = 1 - profitRate / 100;
+
+        this.batchUpdatePriceForm.profitRate = profitRate;
+        this.batchUpdatePriceForm.avgTaxPrice =
+          divisor !== 0 ? Number((avgCostPrice / divisor).toFixed(2)) : 0;
+      },
+      openBatchUpdatePriceDialog(records) {
+        const totalQty = records.reduce((sum, item) => sum + Number(item?.orderNum || 0), 0);
+        const totalSaleAmount = records.reduce((sum, item) => sum + Number(item?.taxAmount || 0), 0);
+        const totalCostAmount = records.reduce((sum, item) => sum + this.calcRowCostAmount(item), 0);
+        const avgCostPrice = totalQty > 0 ? totalCostAmount / totalQty : 0;
+        const avgTaxPrice = totalQty > 0 ? totalSaleAmount / totalQty : 0;
+        const profitRate =
+          totalSaleAmount > 0 ? ((totalSaleAmount - totalCostAmount) / totalSaleAmount) * 100 : 0;
+
+        this.batchUpdatePriceForm = {
+          detailIds: records.map((item) => item.detailId),
+          totalQty,
+          totalCostAmount: Number(totalCostAmount.toFixed(2)),
+          avgCostPrice: Number(avgCostPrice.toFixed(6)),
+          avgTaxPrice: Number(avgTaxPrice.toFixed(2)),
+          profitRate: Number(profitRate.toFixed(2)),
+        };
+        this.batchUpdatePriceVisible = true;
+      },
+      submitBatchUpdatePrice() {
+        const totalQty = Number(this.batchUpdatePriceForm.totalQty || 0);
+        const avgTaxPrice = Number(this.batchUpdatePriceForm.avgTaxPrice);
+        const profitRate = Number(this.batchUpdatePriceForm.profitRate);
+
+        if (!totalQty) {
+          createError('所选商品总数量必须大于0！');
+          return;
+        }
+
+        if (Number.isNaN(avgTaxPrice) || avgTaxPrice < 0) {
+          createError('平均售价必须是数字并且不小于0！');
+          return;
+        }
+
+        if (Number.isNaN(profitRate)) {
+          createError('毛利率必须是数字！');
+          return;
+        }
+
+        if (profitRate >= 100) {
+          createError('毛利率必须小于100！');
+          return;
+        }
+
+        if (Number.isNaN(avgTaxPrice) || avgTaxPrice < 0 || !Number.isFinite(avgTaxPrice)) {
+          createError('根据当前进价和毛利率计算出的平均售价无效，请调整后重试！');
+          return;
+        }
+
+        this.batchUpdatePriceSubmitting = true;
+        this.priceCheckLoading = true;
+        api
+          .batchUpdatePrice({
+            detailIds: this.batchUpdatePriceForm.detailIds,
+            taxPrice: Number(avgTaxPrice.toFixed(2)),
+          })
+          .then(() => {
+            createSuccessAutoClose('批量调整售价成功！');
+            this.closeBatchUpdatePriceDialog();
+            this.$refs.priceCheckGrid.commitProxy('reload');
+            this.search();
+          })
+          .finally(() => {
+            this.batchUpdatePriceSubmitting = false;
+            this.priceCheckLoading = false;
+          });
       },
       resetPriceCheckSearch() {
         this.priceCheckSearchForm = {
@@ -714,30 +901,7 @@
           createError('一次只能修改同一种产品的售价！');
           return;
         }
-
-        createPrompt('请输入价格（元）', {
-          inputPattern: PATTERN_IS_PRICE,
-          inputErrorMessage: '价格（元）必须是数字并且不小于0，最多允许6位小数',
-          title: '批量调整售价',
-          required: true,
-          confirmOnEnter: true,
-          autoFocus: true,
-        }).then(({ value }) => {
-          this.priceCheckLoading = true;
-          api
-            .batchUpdatePrice({
-              detailIds: records.map((item) => item.detailId),
-              taxPrice: Number(value),
-            })
-            .then(() => {
-              createSuccessAutoClose('批量调整售价成功！');
-              this.$refs.priceCheckGrid.commitProxy('reload');
-              this.search();
-            })
-            .finally(() => {
-              this.priceCheckLoading = false;
-            });
-        });
+        this.openBatchUpdatePriceDialog(records);
       },
       viewDetail(id) {
         this.id = id;
