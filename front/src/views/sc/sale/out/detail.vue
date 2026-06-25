@@ -133,7 +133,9 @@
                   {{ formatAmount(calcCostAmount(row)) }}
                 </template>
                 <template #profitRate_default="{ row }">
-                  {{ calcProfitRate(row.totalProfit, calcTaxAmount(row)) }}
+                  <span :style="{ color: isNegativeProfit(row) ? '#f5222d' : undefined }">
+                    {{ calcProfitRate(row.totalProfit, calcTaxAmount(row)) }}
+                  </span>
                 </template>
               </vxe-grid>
             </div>
