@@ -31,10 +31,12 @@ import com.lframework.xingyun.sc.vo.stock.adjust.stock.UpdateStockAdjustSheetVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
+
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -57,218 +59,218 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/stock/adjust")
 public class StockAdjustSheetController extends DefaultBaseController {
 
-  @Autowired
-  private StockAdjustSheetService stockAdjustSheetService;
+    @Autowired
+    private StockAdjustSheetService stockAdjustSheetService;
 
-  @Autowired
-  private StoreCenterService storeCenterService;
+    @Autowired
+    private StoreCenterService storeCenterService;
 
-  /**
-   * 查询列表
-   */
-  @ApiOperation("查询列表")
-  @HasPermission({"stock:adjust:query"})
-  @GetMapping("/query")
-  public InvokeResult<PageResult<QueryStockAdjustSheetBo>> query(
-      @Valid QueryStockAdjustSheetVo vo) {
+    /**
+     * 查询列表
+     */
+    @ApiOperation("查询列表")
+    @HasPermission({"stock:adjust:query"})
+    @GetMapping("/query")
+    public InvokeResult<PageResult<QueryStockAdjustSheetBo>> query(
+            @Valid QueryStockAdjustSheetVo vo) {
 
-    PageResult<StockAdjustSheet> pageResult = stockAdjustSheetService.query(
-        getPageIndex(vo),
-        getPageSize(vo), vo);
+        PageResult<StockAdjustSheet> pageResult = stockAdjustSheetService.query(
+                getPageIndex(vo),
+                getPageSize(vo), vo);
 
-    List<StockAdjustSheet> datas = pageResult.getDatas();
-    List<QueryStockAdjustSheetBo> results = null;
+        List<StockAdjustSheet> datas = pageResult.getDatas();
+        List<QueryStockAdjustSheetBo> results = null;
 
-    if (!CollectionUtil.isEmpty(datas)) {
-      results = datas.stream().map(QueryStockAdjustSheetBo::new).collect(Collectors.toList());
+        if (!CollectionUtil.isEmpty(datas)) {
+            results = datas.stream().map(QueryStockAdjustSheetBo::new).collect(Collectors.toList());
+        }
+
+        return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
     }
 
-    return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
-  }
+    /**
+     * 根据ID查询
+     */
+    @ApiOperation("根据ID查询")
+    @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
+    @HasPermission({"stock:adjust:query"})
+    @GetMapping("/detail")
+    public InvokeResult<StockAdjustSheetFullBo> getDetail(
+            @NotBlank(message = "id不能为空！") String id) {
 
-  /**
-   * 根据ID查询
-   */
-  @ApiOperation("根据ID查询")
-  @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-  @HasPermission({"stock:adjust:query"})
-  @GetMapping("/detail")
-  public InvokeResult<StockAdjustSheetFullBo> getDetail(
-      @NotBlank(message = "id不能为空！") String id) {
+        StockAdjustSheetFullDto data = stockAdjustSheetService.getDetail(id);
+        if (data == null) {
+            throw new DefaultClientException("库存调整单不存在！");
+        }
 
-    StockAdjustSheetFullDto data = stockAdjustSheetService.getDetail(id);
-    if (data == null) {
-      throw new DefaultClientException("库存调整单不存在！");
+        StockAdjustSheetFullBo result = new StockAdjustSheetFullBo(data);
+
+        return InvokeResultBuilder.success(result);
     }
 
-    StockAdjustSheetFullBo result = new StockAdjustSheetFullBo(data);
+    /**
+     * 导出
+     */
+    @ApiOperation("导出")
+    @HasPermission({"stock:adjust:export"})
+    @PostMapping("/export")
+    public InvokeResult<Void> export(@Valid QueryStockAdjustSheetVo vo) {
 
-    return InvokeResultBuilder.success(result);
-  }
+        ExportTaskUtil.exportTask("库存调整单信息", StockAdjustSheetExportTaskWorker.class, vo);
 
-  /**
-   * 导出
-   */
-  @ApiOperation("导出")
-  @HasPermission({"stock:adjust:export"})
-  @PostMapping("/export")
-  public InvokeResult<Void> export(@Valid QueryStockAdjustSheetVo vo) {
-
-    ExportTaskUtil.exportTask("库存调整单信息", StockAdjustSheetExportTaskWorker.class, vo);
-
-    return InvokeResultBuilder.success();
-  }
-
-  /**
-   * 根据关键字查询商品列表
-   */
-  @ApiOperation("根据关键字查询商品列表")
-  @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true)
-  @HasPermission({"stock:adjust:add", "stock:adjust:modify"})
-  @GetMapping("/product/search")
-  public InvokeResult<List<StockAdjustProductBo>> searchProducts(
-      String condition) {
-
-    if (StringUtil.isBlank(condition)) {
-      return InvokeResultBuilder.success(CollectionUtil.emptyList());
-    }
-    String scId = this.getDefaultScId();
-    PageResult<StockAdjustProductDto> pageResult = stockAdjustSheetService.queryStockAdjustByCondition(
-        getPageIndex(), getPageSize(), scId, condition);
-    List<StockAdjustProductBo> results = CollectionUtil.emptyList();
-    List<StockAdjustProductDto> datas = pageResult.getDatas();
-    if (!CollectionUtil.isEmpty(datas)) {
-      results = datas.stream().map(t -> new StockAdjustProductBo(scId, t))
-          .collect(Collectors.toList());
+        return InvokeResultBuilder.success();
     }
 
-    return InvokeResultBuilder.success(results);
-  }
+    /**
+     * 根据关键字查询商品列表
+     */
+    @ApiOperation("根据关键字查询商品列表")
+    @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true)
+    @HasPermission({"stock:adjust:add", "stock:adjust:modify"})
+    @GetMapping("/product/search")
+    public InvokeResult<List<StockAdjustProductBo>> searchProducts(
+            String condition) {
 
-  /**
-   * 查询商品列表
-   */
-  @ApiOperation("查询商品列表")
-  @HasPermission({"stock:adjust:add", "stock:adjust:modify"})
-  @GetMapping("/product/list")
-  public InvokeResult<PageResult<StockAdjustProductBo>> queryProductList(
-      @Valid QueryStockAdjustProductVo vo) {
+        if (StringUtil.isBlank(condition)) {
+            return InvokeResultBuilder.success(CollectionUtil.emptyList());
+        }
+        String scId = this.getDefaultScId();
+        PageResult<StockAdjustProductDto> pageResult = stockAdjustSheetService.queryStockAdjustByCondition(
+                getPageIndex(), getPageSize(), scId, condition);
+        List<StockAdjustProductBo> results = CollectionUtil.emptyList();
+        List<StockAdjustProductDto> datas = pageResult.getDatas();
+        if (!CollectionUtil.isEmpty(datas)) {
+            results = datas.stream().map(t -> new StockAdjustProductBo(scId, t))
+                    .collect(Collectors.toList());
+        }
 
-    String scId = StringUtil.isBlank(vo.getScId()) ? this.getDefaultScId() : vo.getScId();
-    vo.setScId(scId);
-    PageResult<StockAdjustProductDto> pageResult = stockAdjustSheetService.queryStockAdjustList(
-        getPageIndex(vo),
-        getPageSize(vo), vo);
-    List<StockAdjustProductBo> results = null;
-    List<StockAdjustProductDto> datas = pageResult.getDatas();
-
-    if (!CollectionUtil.isEmpty(datas)) {
-      results = datas.stream().map(t -> new StockAdjustProductBo(vo.getScId(), t))
-          .collect(Collectors.toList());
+        return InvokeResultBuilder.success(results);
     }
 
-    return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
-  }
+    /**
+     * 查询商品列表
+     */
+    @ApiOperation("查询商品列表")
+    @HasPermission({"stock:adjust:add", "stock:adjust:modify"})
+    @GetMapping("/product/list")
+    public InvokeResult<PageResult<StockAdjustProductBo>> queryProductList(
+            @Valid QueryStockAdjustProductVo vo) {
 
-  private String getDefaultScId() {
+        String scId = StringUtil.isBlank(vo.getScId()) ? this.getDefaultScId() : vo.getScId();
+        vo.setScId(scId);
+        PageResult<StockAdjustProductDto> pageResult = stockAdjustSheetService.queryStockAdjustList(
+                getPageIndex(vo),
+                getPageSize(vo), vo);
+        List<StockAdjustProductBo> results = null;
+        List<StockAdjustProductDto> datas = pageResult.getDatas();
 
-    Wrapper<StoreCenter> queryWrapper = Wrappers.lambdaQuery(
-            StoreCenter.class)
-        .eq(StoreCenter::getAvailable, Boolean.TRUE)
-        .orderByAsc(StoreCenter::getCode)
-        .last("LIMIT 1");
-    StoreCenter storeCenter = storeCenterService.getOne(
-        queryWrapper);
-    if (storeCenter == null) {
-      throw new DefaultClientException("请先维护可用仓库信息！");
+        if (!CollectionUtil.isEmpty(datas)) {
+            results = datas.stream().map(t -> new StockAdjustProductBo(vo.getScId(), t))
+                    .collect(Collectors.toList());
+        }
+
+        return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
     }
 
-    return storeCenter.getId();
-  }
+    private String getDefaultScId() {
 
-  /**
-   * 新增
-   */
-  @ApiOperation("新增")
-  @HasPermission({"stock:adjust:add"})
-  @PostMapping
-  public InvokeResult<Void> create(@Valid @RequestBody CreateStockAdjustSheetVo vo) {
+        Wrapper<StoreCenter> queryWrapper = Wrappers.lambdaQuery(
+                        StoreCenter.class)
+                .eq(StoreCenter::getAvailable, Boolean.TRUE)
+                .orderByAsc(StoreCenter::getCode)
+                .last("LIMIT 1");
+        StoreCenter storeCenter = storeCenterService.getOne(
+                queryWrapper);
+        if (storeCenter == null) {
+            throw new DefaultClientException("请先维护可用仓库信息！");
+        }
 
-    vo.validate();
+        return storeCenter.getId();
+    }
 
-    stockAdjustSheetService.create(vo);
+    /**
+     * 新增
+     */
+    @ApiOperation("新增")
+    @HasPermission({"stock:adjust:add"})
+    @PostMapping
+    public InvokeResult<Void> create(@Valid @RequestBody CreateStockAdjustSheetVo vo) {
 
-    return InvokeResultBuilder.success();
-  }
+        vo.validate();
 
-  /**
-   * 修改
-   */
-  @ApiOperation("修改")
-  @HasPermission({"stock:adjust:modify"})
-  @PutMapping
-  public InvokeResult<Void> update(@Valid @RequestBody UpdateStockAdjustSheetVo vo) {
+        stockAdjustSheetService.create(vo);
 
-    vo.validate();
+        return InvokeResultBuilder.success();
+    }
 
-    stockAdjustSheetService.update(vo);
+    /**
+     * 修改
+     */
+    @ApiOperation("修改")
+    @HasPermission({"stock:adjust:modify"})
+    @PutMapping
+    public InvokeResult<Void> update(@Valid @RequestBody UpdateStockAdjustSheetVo vo) {
 
-    return InvokeResultBuilder.success();
-  }
+        vo.validate();
 
-  /**
-   * 根据ID删除
-   */
-  @ApiOperation("根据ID删除")
-  @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-  @HasPermission({"stock:adjust:delete"})
-  @DeleteMapping
-  public InvokeResult<Void> deleteById(@NotBlank(message = "id不能为空！") String id) {
+        stockAdjustSheetService.update(vo);
 
-    stockAdjustSheetService.deleteById(id);
+        return InvokeResultBuilder.success();
+    }
 
-    return InvokeResultBuilder.success();
-  }
+    /**
+     * 根据ID删除
+     */
+    @ApiOperation("根据ID删除")
+    @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
+    @HasPermission({"stock:adjust:delete"})
+    @DeleteMapping
+    public InvokeResult<Void> deleteById(@NotBlank(message = "id不能为空！") String id) {
 
-  /**
-   * 审核通过
-   */
-  @ApiOperation("审核通过")
-  @HasPermission({"stock:adjust:approve"})
-  @PatchMapping("/approve/pass")
-  public InvokeResult<Void> approvePass(@RequestBody @Valid ApprovePassStockAdjustSheetVo vo) {
+        stockAdjustSheetService.deleteById(id);
 
-    stockAdjustSheetService.approvePass(vo);
+        return InvokeResultBuilder.success();
+    }
 
-    return InvokeResultBuilder.success();
-  }
+    /**
+     * 审核通过
+     */
+    @ApiOperation("审核通过")
+    @HasPermission({"stock:adjust:approve"})
+    @PatchMapping("/approve/pass")
+    public InvokeResult<Void> approvePass(@RequestBody @Valid ApprovePassStockAdjustSheetVo vo) {
 
-  /**
-   * 直接审核通过
-   */
-  @ApiOperation("直接审核通过")
-  @HasPermission({"stock:adjust:approve"})
-  @PostMapping("/approve/pass/direct")
-  public InvokeResult<Void> directApprovePass(@RequestBody @Valid CreateStockAdjustSheetVo vo) {
+        stockAdjustSheetService.approvePass(vo);
 
-    vo.validate();
+        return InvokeResultBuilder.success();
+    }
 
-    stockAdjustSheetService.directApprovePass(vo);
+    /**
+     * 直接审核通过
+     */
+    @ApiOperation("直接审核通过")
+    @HasPermission({"stock:adjust:approve"})
+    @PostMapping("/approve/pass/direct")
+    public InvokeResult<Void> directApprovePass(@RequestBody @Valid CreateStockAdjustSheetVo vo) {
 
-    return InvokeResultBuilder.success();
-  }
+        vo.validate();
 
-  /**
-   * 审核拒绝
-   */
-  @ApiOperation("审核拒绝")
-  @HasPermission({"stock:adjust:approve"})
-  @PatchMapping("/approve/refuse")
-  public InvokeResult<Void> approveRefuse(
-      @RequestBody @Valid ApproveRefuseStockAdjustSheetVo vo) {
+        stockAdjustSheetService.directApprovePass(vo);
 
-    stockAdjustSheetService.approveRefuse(vo);
+        return InvokeResultBuilder.success();
+    }
 
-    return InvokeResultBuilder.success();
-  }
+    /**
+     * 审核拒绝
+     */
+    @ApiOperation("审核拒绝")
+    @HasPermission({"stock:adjust:approve"})
+    @PatchMapping("/approve/refuse")
+    public InvokeResult<Void> approveRefuse(
+            @RequestBody @Valid ApproveRefuseStockAdjustSheetVo vo) {
+
+        stockAdjustSheetService.approveRefuse(vo);
+
+        return InvokeResultBuilder.success();
+    }
 }
