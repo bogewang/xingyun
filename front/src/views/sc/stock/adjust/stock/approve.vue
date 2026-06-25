@@ -9,10 +9,6 @@
           <j-form-item label="调整原因" required>
             {{ formData.reasonName }}
           </j-form-item>
-          <j-form-item :span="16" />
-          <j-form-item label="备注" :span="24">
-            <a-textarea v-model:value.trim="formData.description" maxlength="200" />
-          </j-form-item>
           <j-form-item label="状态">
             <span
               v-if="STOCK_ADJUST_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status)"
@@ -85,6 +81,9 @@
           </j-form-item>
           <j-form-item label="库存调整数量" :span="6">
             <a-input v-model:value="formData.diffStockNum" class="number-input" readonly />
+          </j-form-item>
+          <j-form-item label="备注" :span="24">
+            <a-textarea v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>

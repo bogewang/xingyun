@@ -22,7 +22,16 @@
             </a-select>
           </j-form-item>
           <j-form-item label="调整原因" required>
-            <stock-adjust-reason-selector v-model:value="formData.reasonId" />
+            <a-select v-model:value="formData.reasonId" show-search option-filter-prop="label">
+              <a-select-option
+                v-for="item in reasonOptions"
+                :key="item.id"
+                :value="item.id"
+                :label="item.name"
+              >
+                {{ item.name }}
+              </a-select-option>
+            </a-select>
           </j-form-item>
           <j-form-item label="备注" :span="24">
             <a-textarea v-model:value.trim="formData.description" maxlength="200" />
@@ -104,6 +113,7 @@
         <!-- 商品名称 列自定义内容 -->
         <template #productName_default="{ row, rowIndex }">
           <a-auto-complete
+            :ref="(el) => setProductNameInputRef(el, row.id)"
             v-if="!row.isFixed && isEmpty(row.productId)"
             v-model:value="row.productName"
             style="width: 100%"
@@ -122,12 +132,13 @@
             v-model:value="row.stockNum"
             class="number-input"
             @input="(e) => stockNumInput(e.target.value)"
+            @pressEnter="handleRowEnter"
           />
         </template>
 
         <!-- 备注 列自定义内容 -->
         <template #description_default="{ row }">
-          <a-input v-model:value="row.description" />
+          <a-input v-model:value="row.description" @pressEnter="handleRowEnter" />
         </template>
       </vxe-grid>
 
@@ -151,13 +162,13 @@
 
       <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
         <a-space>
-          <a-button
+<!--          <a-button
             v-permission="['stock:adjust:modify']"
             type="primary"
             :loading="loading"
             @click="submit"
             >保存</a-button
-          >
+          >-->
           <a-button :loading="loading" @click="closeDialog">关闭</a-button>
         </a-space>
       </div>
@@ -165,10 +176,11 @@
   </div>
 </template>
 <script>
-  import { h, defineComponent } from 'vue';
+  import { h, defineComponent, nextTick } from 'vue';
   import BatchAddProduct from '@/views/sc/stock/adjust/stock/batch-add-product.vue';
   import { PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/stock/adjust/stock';
+  import * as reasonApi from '@/api/sc/stock/adjust/reason';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
     isEmpty,
@@ -180,7 +192,6 @@
     add,
   } from '@/utils/utils';
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
-  import StockAdjustReasonSelector from '@/components/Selector/StockAdjustReasonSelector.vue';
   import { STOCK_ADJUST_SHEET_BIZ_TYPE } from '@/enums/biz/stockAdjustSheetBizType';
   import { STOCK_ADJUST_SHEET_STATUS } from '@/enums/biz/stockAdjustSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
@@ -189,7 +200,6 @@
     name: 'ModifyStockAdjustSheet',
     components: {
       BatchAddProduct,
-      StockAdjustReasonSelector,
       OrderTimeLine,
     },
     mixins: [multiplePageMix],
@@ -233,12 +243,12 @@
             width: 260,
             slots: { default: 'productName_default' },
           },
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          { field: 'externalCode', title: '商品简码', width: 120 },
+          // { field: 'skuCode', title: '商品SKU编号', width: 120 },
+          // { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
+          // { field: 'brandName', title: '商品品牌', width: 120 },
           { field: 'curStockNum', title: '库存数量', width: 120, align: 'right' },
           {
             field: 'stockNum',
@@ -255,6 +265,8 @@
           },
         ],
         tableData: [],
+        reasonOptions: [],
+        productNameInputRefs: {},
       };
     },
     computed: {},
@@ -266,6 +278,7 @@
       openDialog() {
         // 初始化表单数据
         this.initFormData();
+        this.loadReasonOptions();
         this.loadData();
       },
       // 关闭对话框
@@ -380,6 +393,11 @@
       addProduct() {
         this.tableData.push(this.emptyProduct());
       },
+      addProductAndFocus() {
+        const row = this.emptyProduct();
+        this.tableData.push(row);
+        this.focusProductNameInput(row.id);
+      },
       // 搜索商品
       queryProduct(queryString, row) {
         if (isEmpty(queryString)) {
@@ -417,6 +435,33 @@
         }
         this.tableData[index] = Object.assign(this.tableData[index], value);
         this.calcSum();
+      },
+      setProductNameInputRef(el, rowId) {
+        if (!rowId) {
+          return;
+        }
+
+        if (el) {
+          this.productNameInputRefs[rowId] = el;
+        } else {
+          delete this.productNameInputRefs[rowId];
+        }
+      },
+      focusProductNameInput(rowId) {
+        nextTick(() => {
+          const inputRef = this.productNameInputRefs[rowId];
+          if (inputRef?.focus) {
+            inputRef.focus();
+            return;
+          }
+
+          const nativeInput = inputRef?.input || inputRef?.$el?.querySelector?.('input');
+          nativeInput?.focus?.();
+          nativeInput?.select?.();
+        });
+      },
+      handleRowEnter() {
+        this.addProductAndFocus();
       },
       // 删除商品
       delProduct() {
@@ -498,6 +543,19 @@
           })
           .finally(() => {
             this.loading = false;
+          });
+      },
+      loadReasonOptions() {
+        reasonApi
+          .selector({
+            pageIndex: 1,
+            pageSize: 500,
+            code: '',
+            name: '',
+            available: true,
+          })
+          .then((res) => {
+            this.reasonOptions = res.datas || [];
           });
       },
     },

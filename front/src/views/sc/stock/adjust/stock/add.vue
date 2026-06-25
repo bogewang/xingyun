@@ -22,7 +22,16 @@
             </a-select>
           </j-form-item>
           <j-form-item label="调整原因" required>
-            <stock-adjust-reason-selector v-model:value="formData.reasonId" />
+            <a-select v-model:value="formData.reasonId" show-search option-filter-prop="label">
+              <a-select-option
+                v-for="item in reasonOptions"
+                :key="item.id"
+                :value="item.id"
+                :label="item.name"
+              >
+                {{ item.name }}
+              </a-select-option>
+            </a-select>
           </j-form-item>
           <j-form-item label="备注" :span="24">
             <a-textarea v-model:value.trim="formData.description" maxlength="200" />
@@ -57,6 +66,7 @@
         <!-- 商品名称 列自定义内容 -->
         <template #productName_default="{ row, rowIndex }">
           <a-auto-complete
+            :ref="(el) => setProductNameInputRef(el, row.id)"
             v-if="!row.isFixed && isEmpty(row.productId)"
             v-model:value="row.productName"
             style="width: 100%"
@@ -72,15 +82,17 @@
         <!-- 调整库存数量 列自定义内容 -->
         <template #stockNum_default="{ row }">
           <a-input
+            :ref="(el) => setStockNumInputRef(el, row.id)"
             v-model:value="row.stockNum"
             class="number-input"
             @input="(e) => stockNumInput(e.target.value)"
+            @pressEnter="handleRowEnter"
           />
         </template>
 
         <!-- 备注 列自定义内容 -->
         <template #description_default="{ row }">
-          <a-input v-model:value="row.description" />
+          <a-input v-model:value="row.description" @pressEnter="handleRowEnter" />
         </template>
       </vxe-grid>
 
@@ -102,13 +114,13 @@
 
       <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
         <a-space>
-          <a-button
-            v-permission="['stock:adjust:add']"
-            type="primary"
-            :loading="loading"
-            @click="submit"
-            >保存</a-button
-          >
+<!--          <a-button-->
+<!--            v-permission="['stock:adjust:add']"-->
+<!--            type="primary"-->
+<!--            :loading="loading"-->
+<!--            @click="submit"-->
+<!--            >保存</a-button-->
+<!--          >-->
           <a-button
             v-permission="['stock:adjust:approve']"
             type="primary"
@@ -123,10 +135,11 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
+import {defineComponent, h, nextTick} from 'vue';
 import BatchAddProduct from '@/views/sc/stock/adjust/stock/batch-add-product.vue';
 import {DeleteOutlined, PlusOutlined} from '@ant-design/icons-vue';
 import * as api from '@/api/sc/stock/adjust/stock';
+import * as reasonApi from '@/api/sc/stock/adjust/reason';
 import {multiplePageMix} from '@/mixins/multiplePageMix';
 import {
   add,
@@ -138,14 +151,12 @@ import {
   uuid,
 } from '@/utils/utils';
 import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import StockAdjustReasonSelector from '@/components/Selector/StockAdjustReasonSelector.vue';
 import {STOCK_ADJUST_SHEET_BIZ_TYPE} from '@/enums/biz/stockAdjustSheetBizType';
 
 export default defineComponent({
     name: 'AddStockAdjustSheet',
     components: {
       BatchAddProduct,
-      StockAdjustReasonSelector,
     },
     mixins: [multiplePageMix],
     setup() {
@@ -154,6 +165,7 @@ export default defineComponent({
         PlusOutlined,
         DeleteOutlined,
         isEmpty,
+        nextTick,
         STOCK_ADJUST_SHEET_BIZ_TYPE,
       };
     },
@@ -186,12 +198,12 @@ export default defineComponent({
             width: 260,
             slots: { default: 'productName_default' },
           },
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          { field: 'externalCode', title: '商品简码', width: 120 },
+          // { field: 'skuCode', title: '商品SKU编号', width: 120 },
+          // { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
+          // { field: 'brandName', title: '商品品牌', width: 120 },
           { field: 'curStockNum', title: '库存数量', width: 120, align: 'right' },
           {
             field: 'stockNum',
@@ -208,6 +220,9 @@ export default defineComponent({
           },
         ],
         tableData: [],
+        reasonOptions: [],
+        productNameInputRefs: {},
+        stockNumInputRefs: {},
       };
     },
     computed: {},
@@ -219,6 +234,7 @@ export default defineComponent({
       openDialog() {
         // 初始化表单数据
         this.initFormData();
+        this.loadReasonOptions();
       },
       // 关闭对话框
       closeDialog() {
@@ -299,6 +315,9 @@ export default defineComponent({
 
                 this.closeDialog();
               })
+              .catch((e) => {
+                createError(e?.msg || e?.message || e?.error?.message || '保存失败！');
+              })
               .finally(() => {
                 this.loading = false;
               });
@@ -324,6 +343,9 @@ export default defineComponent({
 
                   this.$emit('confirm');
                   this.closeDialog();
+                })
+                .catch((e) => {
+                  createError(e?.msg || e?.message || e?.error?.message || '审核失败！');
                 })
                 .finally(() => {
                   this.loading = false;
@@ -358,6 +380,11 @@ export default defineComponent({
       // 新增商品
       addProduct() {
         this.tableData.push(this.emptyProduct());
+      },
+      addProductAndFocus() {
+        const row = this.emptyProduct();
+        this.tableData.push(row);
+        this.focusProductNameInput(row.id);
       },
       // 搜索商品
       queryProduct(queryString, row) {
@@ -396,6 +423,58 @@ export default defineComponent({
         }
         this.tableData[index] = Object.assign(this.tableData[index], value);
         this.calcSum();
+        this.focusStockNumInput(this.tableData[index].id);
+      },
+      setStockNumInputRef(el, rowId) {
+        if (!rowId) {
+          return;
+        }
+
+        if (el) {
+          this.stockNumInputRefs[rowId] = el;
+        } else {
+          delete this.stockNumInputRefs[rowId];
+        }
+      },
+      focusStockNumInput(rowId) {
+        nextTick(() => {
+          const inputRef = this.stockNumInputRefs[rowId];
+          if (inputRef?.focus) {
+            inputRef.focus();
+            return;
+          }
+
+          const nativeInput = inputRef?.input || inputRef?.$el?.querySelector?.('input');
+          nativeInput?.focus?.();
+          nativeInput?.select?.();
+        });
+      },
+      setProductNameInputRef(el, rowId) {
+        if (!rowId) {
+          return;
+        }
+
+        if (el) {
+          this.productNameInputRefs[rowId] = el;
+        } else {
+          delete this.productNameInputRefs[rowId];
+        }
+      },
+      focusProductNameInput(rowId) {
+        nextTick(() => {
+          const inputRef = this.productNameInputRefs[rowId];
+          if (inputRef?.focus) {
+            inputRef.focus();
+            return;
+          }
+
+          const nativeInput = inputRef?.input || inputRef?.$el?.querySelector?.('input');
+          nativeInput?.focus?.();
+          nativeInput?.select?.();
+        });
+      },
+      handleRowEnter() {
+        this.addProductAndFocus();
       },
       // 删除商品
       delProduct() {
@@ -451,6 +530,19 @@ export default defineComponent({
 
         this.formData.productNum = productNum;
         this.formData.diffStockNum = diffStockNum;
+      },
+      loadReasonOptions() {
+        reasonApi
+          .selector({
+            pageIndex: 1,
+            pageSize: 500,
+            code: '',
+            name: '',
+            available: true,
+          })
+          .then((res) => {
+            this.reasonOptions = res.datas || [];
+          });
       },
     },
   });

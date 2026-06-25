@@ -149,9 +149,11 @@ public class StockAdjustSheetFullBo extends BaseBo<StockAdjustSheetFullDto> {
 
     this.status = dto.getStatus().getCode();
 
-    StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
-    StoreCenter sc = storeCenterService.findById(dto.getScId());
-    this.scName = sc.getName();
+    if (StringUtil.isNotBlank(dto.getScId())) {
+      StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
+      StoreCenter sc = storeCenterService.findById(dto.getScId());
+      this.scName = sc.getName();
+    }
 
     SysUserService userService = ApplicationUtil.getBean(SysUserService.class);
     if (!StringUtil.isBlank(dto.getApproveBy())) {

@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -57,6 +58,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RestController
 @RequestMapping("/stock/adjust")
+@Slf4j
 public class StockAdjustSheetController extends DefaultBaseController {
 
     @Autowired
@@ -182,7 +184,8 @@ public class StockAdjustSheetController extends DefaultBaseController {
         StoreCenter storeCenter = storeCenterService.getOne(
                 queryWrapper);
         if (storeCenter == null) {
-            throw new DefaultClientException("请先维护可用仓库信息！");
+            return null;
+            // throw new DefaultClientException("请先维护可用仓库信息！");
         }
 
         return storeCenter.getId();
@@ -196,11 +199,16 @@ public class StockAdjustSheetController extends DefaultBaseController {
     @PostMapping
     public InvokeResult<Void> create(@Valid @RequestBody CreateStockAdjustSheetVo vo) {
 
-        vo.validate();
+        try {
+            vo.validate();
 
-        stockAdjustSheetService.create(vo);
+            stockAdjustSheetService.create(vo);
 
-        return InvokeResultBuilder.success();
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
     }
 
     /**

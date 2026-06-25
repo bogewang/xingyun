@@ -145,3 +145,6 @@ ALTER TABLE settle_check_sheet modify end_date date COMMENT '截止日期';
 
 
 -- 0604
+ALTER TABLE tbl_stock_adjust_sheet modify `sc_id` varchar(32) NULL COMMENT '仓库ID';
+INSERT INTO `base_data_store_center` (`id`, `code`, `name`, `contact`, `telephone`, `city_id`, `address`, `people_num`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('2070120206814023680', 'CK26062500001', '默认仓库', NULL, NULL, NULL, NULL, NULL, 1, '', '系统管理员', '1', '2026-06-25 20:21:33', '系统管理员', '1', '2026-06-25 20:21:33');
+

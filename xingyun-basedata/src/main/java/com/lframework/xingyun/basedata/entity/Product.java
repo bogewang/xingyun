@@ -172,4 +172,8 @@ public class Product extends BaseEntity implements BaseDto {
    */
   @TableField(fill = FieldFill.INSERT_UPDATE)
   private LocalDateTime updateTime;
+
+  public BigDecimal getPurchasePrice() {
+    return purchasePrice == null ? BigDecimal.ZERO : purchasePrice;
+  }
 }

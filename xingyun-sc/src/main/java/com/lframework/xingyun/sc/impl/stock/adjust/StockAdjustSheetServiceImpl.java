@@ -403,7 +403,8 @@ public class StockAdjustSheetServiceImpl extends
         .last("LIMIT 1");
     StoreCenter storeCenter = storeCenterService.getOne(queryWrapper);
     if (storeCenter == null) {
-      throw new DefaultClientException("请先维护可用仓库信息！");
+      return null;
+      // throw new DefaultClientException("请先维护可用仓库信息！");
     }
 
     return storeCenter.getId();
