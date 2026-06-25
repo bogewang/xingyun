@@ -944,6 +944,9 @@
             this.$emit('confirm');
             this.goQueryPage();
           })
+          .catch((e) => {
+            createError(e?.msg || e?.message || e?.error?.message || '保存失败！');
+          })
           .finally(() => {
             this.loading = false;
           });

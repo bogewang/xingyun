@@ -271,10 +271,15 @@ public class ReceiveSheetController extends DefaultBaseController {
     @PutMapping
     public InvokeResult<Void> update(@RequestBody @Valid UpdateReceiveSheetVo vo) {
 
-        vo.validate();
+        try {
+            vo.validate();
 
-        receiveSheetService.update(vo);
-        return InvokeResultBuilder.success();
+            receiveSheetService.update(vo);
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
     }
 
     /**

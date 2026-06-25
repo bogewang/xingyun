@@ -37,7 +37,6 @@
         SET stock_num = stock_num - #{stockNum}, tax_amount = tax_amount - #{taxAmount}
         <if test="reCalcCostPrice">,tax_price = CASE WHEN stock_num = 0 THEN tax_price ELSE tax_amount / stock_num END</if>
         WHERE product_id = #{productId}
-        AND sc_id = #{scId}
         AND stock_num = #{oriStockNum}
         AND tax_amount = #{oriTaxAmount}
         AND stock_num >= #{stockNum}
@@ -45,16 +44,12 @@
     <select id="getByProductIdAndScId" resultMap="ProductStock">
         <include refid="ProductStockDto_sql"/>
         WHERE gs.product_id = #{productId}
-        AND gs.sc_id = #{scId}
     </select>
     <select id="query" resultMap="ProductStock">
         <include refid="ProductStockDto_sql"/>
         LEFT JOIN recursion_mapping AS rm ON rm.node_id = g.category_id and rm.node_type = 2
         <where>
             <if test="vo != null">
-                <if test="vo.scId != null and vo.scId != ''">
-                    AND gs.sc_id = #{vo.scId}
-                </if>
                 <if test="vo.productCode != null and vo.productCode != ''">
                     AND g.code = #{vo.productCode}
                 </if>
@@ -77,6 +72,5 @@
         <if test="productType != null">
             AND g.product_type = #{productType}
         </if>
-        AND gs.sc_id = #{scId}
     </select>
 </mapper>

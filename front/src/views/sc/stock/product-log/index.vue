@@ -21,9 +21,6 @@
         <template #form>
           <j-border>
             <j-form bordered label-width="100px" @collapse="$refs.grid.refreshColumn()">
-              <j-form-item label="仓库">
-                <store-center-selector v-model:value="searchFormData.scId" />
-              </j-form-item>
               <j-form-item label="商品编号">
                 <a-input v-model:value="searchFormData.productCode" allow-clear />
               </j-form-item>
@@ -35,9 +32,6 @@
                   v-model:value="searchFormData.categoryId"
                   :only-final="false"
                 />
-              </j-form-item>
-              <j-form-item label="商品品牌">
-                <product-brand-selector v-model:value="searchFormData.brandId" />
               </j-form-item>
               <j-form-item label="操作日期" :content-nest="false">
                 <div class="date-range-container">
@@ -310,12 +304,9 @@
         // 列表数据配置
         tableColumn: [
           { type: 'seq', width: 50 },
-          { field: 'scCode', title: '仓库编号', width: 100, sortable: true },
-          { field: 'scName', title: '仓库名称', minWidth: 160 },
           { field: 'productCode', title: '商品编号', width: 120, sortable: true },
           { field: 'productName', title: '商品名称', minWidth: 180 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
           {
             field: 'oriStockNum',
             title: '变动前库存数量',

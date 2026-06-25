@@ -53,9 +53,11 @@ import com.lframework.xingyun.sc.mappers.ReceiveSheetMapper;
 import com.lframework.xingyun.sc.service.ProductHotnessService;
 import com.lframework.xingyun.sc.service.purchase.*;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
+import com.lframework.xingyun.sc.service.stock.ProductStockLogService;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import com.lframework.xingyun.sc.vo.purchase.receive.*;
 import com.lframework.xingyun.sc.vo.stock.AddProductStockVo;
+import com.lframework.xingyun.sc.vo.stock.SubProductStockVo;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,16 +99,13 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     private ProductHotnessService productHotnessService;
 
     @Autowired
-    private PurchaseOrderService purchaseOrderService;
-
-    @Autowired
     private PurchaseConfigService purchaseConfigService;
 
     @Autowired
-    private PurchaseOrderDetailService purchaseOrderDetailService;
+    private ProductStockService productStockService;
 
     @Autowired
-    private ProductStockService productStockService;
+    private ProductStockLogService productStockLogService;
 
     @Autowired
     private ReceiveSheetDetailBundleService receiveSheetDetailBundleService;
@@ -249,6 +248,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         sheet.setStatus(ReceiveSheetStatus.CREATED);
 
         getBaseMapper().insert(sheet);
+        List<ReceiveSheetDetail> details = getSheetDetails(sheet.getId());
+        addStock(sheet, details);
         saleOutSheetService.refreshCostPrice(vo.getOrderDate());
         productHotnessService.increment(
                 vo.getProducts().stream().map(ReceiveProductVo::getProductId).collect(Collectors.toList()));
@@ -283,7 +284,11 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new DefaultClientException("采购收货单无法修改！");
         }
 
-        String oldSupplierId = sheet.getSupplierId();
+        List<ReceiveSheetDetail> oldDetails = getSheetDetails(sheet.getId());
+        boolean stockSynced = hasStockSynced(sheet.getId());
+        if (stockSynced) {
+            rollbackStock(sheet, oldDetails);
+        }
 
         // 删除采购收货单明细
         Wrapper<ReceiveSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(ReceiveSheetDetail.class)
@@ -306,6 +311,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new DefaultClientException("采购收货单信息已过期，请刷新重试！");
         }
 
+        List<ReceiveSheetDetail> details = getSheetDetails(sheet.getId());
+        addStock(sheet, details);
         saleOutSheetService.refreshCostPrice(vo.getOrderDate());
         productHotnessService.increment(
                 vo.getProducts().stream().map(ReceiveProductVo::getProductId).collect(Collectors.toList()));
@@ -356,19 +363,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new DefaultClientException("采购收货单无法审核通过！");
         }
 
-        PurchaseConfig purchaseConfig = purchaseConfigService.get();
-
-        if (!purchaseConfig.getReceiveMultipleRelatePurchase()) {
-            Wrapper<ReceiveSheet> checkWrapper = Wrappers.lambdaQuery(ReceiveSheet.class)
-                    .eq(ReceiveSheet::getPurchaseOrderId, sheet.getPurchaseOrderId())
-                    .ne(ReceiveSheet::getId, sheet.getId());
-            if (getBaseMapper().selectCount(checkWrapper) > 0) {
-                PurchaseOrder purchaseOrder = purchaseOrderService.getById(sheet.getPurchaseOrderId());
-                throw new DefaultClientException("采购订单号：" + purchaseOrder.getCode()
-                        + "，已关联其他采购收货单，不允许关联多个采购收货单！");
-            }
-        }
-
         sheet.setStatus(ReceiveSheetStatus.APPROVE_PASS);
 
         List<ReceiveSheetStatus> statusList = new ArrayList<>();
@@ -384,84 +378,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
         if (getBaseMapper().updateAllColumn(sheet, updateOrderWrapper) != 1) {
             throw new DefaultClientException("采购收货单信息已过期，请刷新重试！");
-        }
-
-        Wrapper<ReceiveSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(ReceiveSheetDetail.class)
-                .eq(ReceiveSheetDetail::getSheetId, sheet.getId())
-                .orderByAsc(ReceiveSheetDetail::getOrderNo);
-        List<ReceiveSheetDetail> details = receiveSheetDetailService.list(queryDetailWrapper);
-
-        BigDecimal totalNum = BigDecimal.ZERO;
-        BigDecimal giftNum = BigDecimal.ZERO;
-        BigDecimal totalAmount = BigDecimal.ZERO;
-
-        for (ReceiveSheetDetail detail : details) {
-            boolean isGift = detail.getIsGift();
-            totalAmount = NumberUtil.add(totalAmount,
-                    NumberUtil.getNumber(NumberUtil.mul(detail.getTaxPrice(), detail.getOrderNum()), 2));
-
-            Product product = productService.findById(detail.getProductId());
-            if (product.getProductType() == ProductType.NORMAL) {
-                if (isGift) {
-                    giftNum = NumberUtil.add(giftNum, detail.getOrderNum());
-                } else {
-                    totalNum = NumberUtil.add(totalNum, detail.getOrderNum());
-                }
-            } else {
-                Wrapper<ReceiveSheetDetailBundle> queryBundleWrapper = Wrappers.lambdaQuery(
-                        ReceiveSheetDetailBundle.class).eq(ReceiveSheetDetailBundle::getSheetId, sheet.getId())
-                        .eq(ReceiveSheetDetailBundle::getDetailId, detail.getId());
-                List<ReceiveSheetDetailBundle> receiveSheetDetailBundles = receiveSheetDetailBundleService.list(
-                        queryBundleWrapper);
-                Assert.notEmpty(receiveSheetDetailBundles);
-
-                for (ReceiveSheetDetailBundle receiveSheetDetailBundle : receiveSheetDetailBundles) {
-                    ReceiveSheetDetail newDetail = new ReceiveSheetDetail();
-                    newDetail.setId(IdUtil.getId());
-                    newDetail.setSheetId(sheet.getId());
-                    newDetail.setProductId(receiveSheetDetailBundle.getProductId());
-                    newDetail.setOrderNum(receiveSheetDetailBundle.getProductOrderNum());
-                    newDetail.setTaxPrice(receiveSheetDetailBundle.getProductTaxPrice());
-                    newDetail.setIsGift(detail.getIsGift());
-                    newDetail.setTaxRate(receiveSheetDetailBundle.getProductTaxRate());
-                    newDetail.setDescription(detail.getDescription());
-                    newDetail.setOrderNo(detail.getOrderNo());
-                    newDetail.setTaxAmount(receiveSheetDetailBundle.getProductTaxAmount());
-
-                    receiveSheetDetailService.save(newDetail);
-                    receiveSheetDetailService.removeById(detail.getId());
-
-                    receiveSheetDetailBundle.setProductDetailId(newDetail.getId());
-                    receiveSheetDetailBundleService.updateById(receiveSheetDetailBundle);
-
-                    if (isGift) {
-                        giftNum = NumberUtil.add(giftNum, newDetail.getOrderNum());
-                    } else {
-                        totalNum = NumberUtil.add(totalNum, newDetail.getOrderNum());
-                    }
-                }
-            }
-        }
-
-        // 这里需要重新统计明细信息，因为明细发生变动了
-        Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
-                .set(ReceiveSheet::getTotalNum, totalNum).set(ReceiveSheet::getTotalGiftNum, giftNum)
-                .set(ReceiveSheet::getTotalAmount, totalAmount).eq(ReceiveSheet::getId, sheet.getId());
-        this.update(updateWrapper);
-
-        details = receiveSheetDetailService.list(queryDetailWrapper);
-        for (ReceiveSheetDetail detail : details) {
-            AddProductStockVo addProductStockVo = new AddProductStockVo();
-            addProductStockVo.setProductId(detail.getProductId());
-            addProductStockVo.setScId(sheet.getScId());
-            addProductStockVo.setStockNum(detail.getOrderNum());
-            addProductStockVo.setTaxAmount(detail.getTaxAmount());
-            addProductStockVo.setBizId(sheet.getId());
-            addProductStockVo.setBizDetailId(detail.getId());
-            addProductStockVo.setBizCode(sheet.getCode());
-            addProductStockVo.setBizType(ProductStockBizType.PURCHASE.getCode());
-
-            productStockService.addStock(addProductStockVo);
         }
 
         OpLogUtil.setVariable("code", sheet.getCode());
@@ -548,18 +464,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new DefaultClientException("采购收货单无法删除！");
         }
 
-        if (!StringUtil.isBlank(sheet.getPurchaseOrderId())) {
-            // 查询采购收货单明细
-            Wrapper<ReceiveSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
-                    ReceiveSheetDetail.class).eq(ReceiveSheetDetail::getSheetId, sheet.getId());
-            List<ReceiveSheetDetail> details = receiveSheetDetailService.list(queryDetailWrapper);
-            for (ReceiveSheetDetail detail : details) {
-                if (!StringUtil.isBlank(detail.getPurchaseOrderDetailId())) {
-                    // 恢复已收货数量
-                    purchaseOrderDetailService.subReceiveNum(detail.getPurchaseOrderDetailId(),
-                            detail.getOrderNum());
-                }
-            }
+        if (hasStockSynced(sheet.getId())) {
+            rollbackStock(sheet, getSheetDetails(sheet.getId()));
         }
 
         // 删除订单明细
@@ -629,45 +535,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         return count;
     }
-
-    // @Transactional(rollbackFor = Exception.class)
-    // @Override
-    // public void clearSettleSheetDetailId(String id) {
-    //
-    //     Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
-    //             .eq(ReceiveSheet::getId, id);
-    //     getBaseMapper().update(updateWrapper);
-    // }
-
-    // @Transactional(rollbackFor = Exception.class)
-    // @Override
-    // public void settle(String id, BigDecimal payAmount, BigDecimal checkAmt) {
-    //
-    //     ReceiveSheet sheet = getById(id);
-    //     if (sheet == null) {
-    //         throw new DefaultClientException("采购入库单不存在！");
-    //     }
-
-        // todo 校验对账金额是否大于等于本次结算金额
-        // if (NumberUtil.lt(checkAmt, payAmount)) {
-        //     throw new DefaultClientException(
-        //             "采购入库单：" + sheet.getCode() + "，对账金额为" + checkAmt + "元，本次结算金额为"
-        //                     + payAmount + "元，不允许超额结算！");
-        // }
-
-        // BigDecimal settledPaidAmount = NumberUtil.add(currentPaidAmount, settleAmount);
-        // SettleStatus settleStatus =
-        //         NumberUtil.equal(settledPaidAmount, totalAmount) ? SettleStatus.SETTLED : SettleStatus.PART_SETTLE;
-
-    //     Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
-    //             .set(ReceiveSheet::getSettleStatus, SettleStatus.SETTLED)
-    //             .eq(ReceiveSheet::getId, id)
-    //             // .eq(ReceiveSheet::getStatus, ReceiveSheetStatus.APPROVE_PASS)
-    //             .in(ReceiveSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
-    //     if (getBaseMapper().update(updateWrapper) != 1) {
-    //         throw new DefaultClientException("采购入库单信息已过期，请刷新重试！");
-    //     }
-    // }
 
     @Override
     public List<ReceiveSheet> getApprovedList(String supplierId, LocalDateTime startTime,
@@ -783,6 +650,80 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), actualTotalAmount));
         sheet.setDescription(StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(supplier));
+    }
+
+    /**
+     * 新增库存
+     * @param sheet
+     * @param details
+     */
+    private void addStock(ReceiveSheet sheet, List<ReceiveSheetDetail> details) {
+        if (CollectionUtil.isEmpty(details)) {
+            return;
+        }
+
+        for (ReceiveSheetDetail detail : details) {
+            AddProductStockVo addProductStockVo = new AddProductStockVo();
+            addProductStockVo.setProductId(detail.getProductId());
+            addProductStockVo.setScId(sheet.getScId());
+            addProductStockVo.setStockNum(detail.getOrderNum());
+            addProductStockVo.setTaxAmount(detail.getTaxAmount());
+            addProductStockVo.setBizId(sheet.getId());
+            addProductStockVo.setBizDetailId(detail.getId());
+            addProductStockVo.setBizCode(sheet.getCode());
+            addProductStockVo.setBizType(ProductStockBizType.PURCHASE.getCode());
+
+            productStockService.addStock(addProductStockVo);
+        }
+    }
+
+    /**
+     * 修改时，先回滚库存，然后再新增库存；
+     * @param sheet
+     * @param details
+     */
+    private void rollbackStock(ReceiveSheet sheet, List<ReceiveSheetDetail> details) {
+        if (CollectionUtil.isEmpty(details)) {
+            return;
+        }
+
+        for (ReceiveSheetDetail detail : details) {
+            SubProductStockVo subProductStockVo = new SubProductStockVo();
+            subProductStockVo.setProductId(detail.getProductId());
+            subProductStockVo.setScId(sheet.getScId());
+            subProductStockVo.setStockNum(detail.getOrderNum());
+            subProductStockVo.setTaxAmount(detail.getTaxAmount());
+            subProductStockVo.setBizId(sheet.getId());
+            subProductStockVo.setBizDetailId(detail.getId());
+            subProductStockVo.setBizCode(sheet.getCode());
+            subProductStockVo.setBizType(ProductStockBizType.PURCHASE.getCode());
+
+            productStockService.subStock(subProductStockVo);
+        }
+    }
+
+    /**
+     * 是否有库存变动记录。
+     * @param sheetId
+     * @return
+     */
+    private boolean hasStockSynced(String sheetId) {
+        Wrapper<ProductStockLog> queryWrapper = Wrappers.lambdaQuery(ProductStockLog.class)
+                .eq(ProductStockLog::getBizId, sheetId)
+                .eq(ProductStockLog::getBizType, ProductStockBizType.PURCHASE);
+        return productStockLogService.count(queryWrapper) > 0;
+    }
+
+    /**
+     * 查询采购明细；
+     * @param sheetId
+     * @return
+     */
+    private List<ReceiveSheetDetail> getSheetDetails(String sheetId) {
+        Wrapper<ReceiveSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(ReceiveSheetDetail.class)
+                .eq(ReceiveSheetDetail::getSheetId, sheetId)
+                .orderByAsc(ReceiveSheetDetail::getOrderNo);
+        return receiveSheetDetailService.list(queryDetailWrapper);
     }
 
     /**

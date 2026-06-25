@@ -665,7 +665,7 @@
           api
             .deleteById(row.id)
             .then(() => {
-              createSuccess('删除成功！');
+              createSuccessAutoClose('删除成功！');
               this.search();
             })
             .finally(() => {

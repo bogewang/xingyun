@@ -142,7 +142,7 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
     }
 
     Wrapper<ProductStock> queryWrapper = Wrappers.lambdaQuery(ProductStock.class)
-        .eq(ProductStock::getProductId, vo.getProductId()).eq(ProductStock::getScId, vo.getScId());
+        .eq(ProductStock::getProductId, vo.getProductId());
 
     ProductStock productStock = getBaseMapper().selectOne(queryWrapper);
 
@@ -240,7 +240,7 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
     }
 
     Wrapper<ProductStock> queryWrapper = Wrappers.lambdaQuery(ProductStock.class)
-        .eq(ProductStock::getProductId, vo.getProductId()).eq(ProductStock::getScId, vo.getScId());
+        .eq(ProductStock::getProductId, vo.getProductId());
 
     ProductStock productStock = getBaseMapper().selectOne(queryWrapper);
     if (productStock == null) {
