@@ -1,24 +1,17 @@
 package com.lframework.xingyun.sc.excel.purchase.receive;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.github.pagehelper.PageInfo;
 import com.lframework.starter.mq.core.components.export.ExportTaskWorker;
-import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.starter.web.core.utils.JsonUtil;
-import com.lframework.starter.web.core.utils.PageResultUtil;
-import com.lframework.xingyun.sc.entity.ReceiveSheet;
-import com.lframework.xingyun.sc.entity.ReceiveSheetDetail;
-import com.lframework.xingyun.sc.service.purchase.ReceiveSheetDetailService;
+import com.lframework.xingyun.basedata.entity.Product;
+import com.lframework.xingyun.basedata.service.product.ProductService;
+import com.lframework.xingyun.sc.dto.purchase.receive.QueryReceiveSheetDetailDto;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
 import com.lframework.xingyun.sc.vo.purchase.receive.QueryReceiveSheetVo;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 public class ReceiveSheetDetailExportTaskWorker implements
-    ExportTaskWorker<QueryReceiveSheetVo, ReceiveSheetDetail, ReceiveSheetDetailExportModel> {
+    ExportTaskWorker<QueryReceiveSheetVo, QueryReceiveSheetDetailDto, ReceiveSheetDetailExportModel> {
 
   @Override
   public QueryReceiveSheetVo parseParams(String json) {
@@ -26,26 +19,30 @@ public class ReceiveSheetDetailExportTaskWorker implements
   }
 
   @Override
-  public PageResult<ReceiveSheetDetail> getDataList(int pageIndex, int pageSize,
+  public PageResult<QueryReceiveSheetDetailDto> getDataList(int pageIndex, int pageSize,
       QueryReceiveSheetVo params) {
 
     ReceiveSheetService receiveSheetService = ApplicationUtil.getBean(ReceiveSheetService.class);
-    PageResult<ReceiveSheet> result = receiveSheetService.query(pageIndex, pageSize, params);
-    List<String> sheetIds = result.getDatas().stream().map(ReceiveSheet::getId).collect(Collectors.toList());
-    if (CollectionUtil.isEmpty(sheetIds)) {
-      return PageResultUtil.convert(new PageInfo<>());
-    }
-
-    ReceiveSheetDetailService receiveSheetDetailService = ApplicationUtil.getBean(ReceiveSheetDetailService.class);
-    List<ReceiveSheetDetail> details = receiveSheetDetailService.list(
-        Wrappers.lambdaQuery(ReceiveSheetDetail.class).in(ReceiveSheetDetail::getSheetId, sheetIds));
-
-    return PageResultUtil.convert(new PageInfo<>(details));
+    return receiveSheetService.queryDetail(pageIndex, pageSize, params);
   }
 
   @Override
-  public ReceiveSheetDetailExportModel exportData(ReceiveSheetDetail data) {
-    return new ReceiveSheetDetailExportModel(data);
+  public ReceiveSheetDetailExportModel exportData(QueryReceiveSheetDetailDto data) {
+    ProductService productService = ApplicationUtil.getBean(ProductService.class);
+    Product product = productService.findById(data.getProductId());
+    ReceiveSheetDetailExportModel model = new ReceiveSheetDetailExportModel();
+    model.setSupplierName(data.getSupplierName());
+    model.setProductCode(data.getProductCode());
+    model.setProductName(data.getProductName());
+    model.setShortName(product == null ? null : product.getShortName());
+    model.setSpec(data.getSpec());
+    model.setUnit(data.getUnit());
+    model.setCategoryName(data.getCategoryName());
+    model.setTaxPrice(data.getTaxPrice());
+    model.setOrderNum(data.getOrderNum());
+    model.setTaxAmount(data.getTaxAmount());
+    model.setDescription(data.getDescription());
+    return model;
   }
 
   @Override
