@@ -23,8 +23,7 @@ public class CreateStockAdjustSheetVo implements BaseVo, Serializable {
   /**
    * 仓库ID
    */
-  @ApiModelProperty(value = "仓库ID", required = true)
-  @NotBlank(message = "请输入仓库ID！")
+  @ApiModelProperty("仓库ID")
   private String scId;
 
   /**

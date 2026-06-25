@@ -7,7 +7,7 @@ logging:
     io.lettuce.core.protocol: OFF
     org.dromara.warm.flow: INFO
     org.mybatis: INFO
-    org.apache.ibatis: INFO
+#    org.apache.ibatis: INFO
 #    java.sql.PreparedStatement: INFO
 #    java.sql.Statement: INFO
     com.lframework.xingyun.**.mappers: INFO

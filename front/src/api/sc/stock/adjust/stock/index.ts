@@ -67,12 +67,11 @@ export function getDetail(id: string): Promise<StockAdjustSheetFullBo> {
 /**
  * 根据关键字查询商品列表
  */
-export function searchProducts(scId: string, condition: string): Promise<StockAdjustProductBo[]> {
+export function searchProducts(condition: string): Promise<StockAdjustProductBo[]> {
   return defHttp.get<StockAdjustProductBo[]>(
     {
       url: baseUrl + '/product/search',
       params: {
-        scId,
         condition,
       },
     },

@@ -85,12 +85,6 @@
       ProductBrandSelector,
       ProductCategorySelector,
     },
-    props: {
-      scId: {
-        type: String,
-        required: true,
-      },
-    },
     setup() {
       return {
         h,
@@ -168,7 +162,6 @@
           condition: this.searchFormData.condition,
           categoryId: this.searchFormData.categoryId || '',
           brandId: this.searchFormData.brandId || '',
-          scId: this.scId,
         };
       },
       // 打开对话框 由父页面触发

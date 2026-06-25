@@ -7,18 +7,10 @@
           bordered
           :model="formData"
           :rules="{
-            scId: [{ required: true, message: '请选择仓库' }],
             bizType: [{ required: true, message: '请选择业务类型' }],
             reasonId: [{ required: true, message: '请选择调整原因' }],
           }"
         >
-          <j-form-item label="仓库" required>
-            <store-center-selector
-              v-model:value="formData.scId"
-              :before-open="beforeSelectSc"
-              @update:value="afterSelectSc"
-            />
-          </j-form-item>
           <j-form-item label="业务类型" required>
             <a-select v-model:value="formData.bizType">
               <a-select-option
@@ -154,7 +146,6 @@
 
       <batch-add-product
         ref="batchAddProductDialog"
-        :sc-id="formData.scId || ''"
         @confirm="batchAddProduct"
       />
 
@@ -178,7 +169,6 @@
   import BatchAddProduct from '@/views/sc/stock/adjust/stock/batch-add-product.vue';
   import { PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/stock/adjust/stock';
-  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
     isEmpty,
@@ -200,7 +190,6 @@
     components: {
       BatchAddProduct,
       StockAdjustReasonSelector,
-      StoreCenterSelector,
       OrderTimeLine,
     },
     mixins: [multiplePageMix],
@@ -286,7 +275,6 @@
       // 初始化表单数据
       initFormData() {
         this.formData = {
-          scId: '',
           bizType: '',
           reasonId: '',
           description: '',
@@ -340,7 +328,6 @@
 
               const params = {
                 id: this.id,
-                scId: this.formData.scId,
                 bizType: this.formData.bizType,
                 reasonId: this.formData.reasonId,
                 description: this.formData.description,
@@ -391,10 +378,6 @@
       },
       // 新增商品
       addProduct() {
-        if (isEmpty(this.formData.scId)) {
-          createError('请先选择仓库！');
-          return;
-        }
         this.tableData.push(this.emptyProduct());
       },
       // 搜索商品
@@ -405,7 +388,7 @@
           return;
         }
 
-        api.searchProducts(this.formData.scId, queryString).then((res) => {
+        api.searchProducts(queryString).then((res) => {
           row.products = res;
           row.productOptions = res.map((item) => {
             return {
@@ -455,10 +438,6 @@
         });
       },
       openBatchAddProductDialog() {
-        if (isEmpty(this.formData.scId)) {
-          createError('请先选择仓库！');
-          return;
-        }
         this.$refs.batchAddProductDialog.openDialog();
       },
       // 批量新增商品
@@ -474,22 +453,6 @@
           this.tableData.push(this.emptyProduct());
           this.handleSelectProduct(this.tableData.length - 1, item);
         });
-      },
-      beforeSelectSc() {
-        let flag = false;
-        if (!isEmpty(this.formData.scId)) {
-          return createConfirm('更改仓库，会清空商品数据，是否确认更改？');
-        } else {
-          flag = true;
-        }
-
-        return flag;
-      },
-      afterSelectSc(e) {
-        if (!isEmpty(e)) {
-          this.tableData = [];
-          this.calcSum();
-        }
       },
       priceInput(e) {
         this.calcSum();
@@ -519,7 +482,6 @@
           .getDetail(this.id)
           .then((res) => {
             Object.assign(this.formData, {
-              scId: res.scId,
               bizType: res.bizType,
               reasonId: res.reasonId,
               description: res.description,

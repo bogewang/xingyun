@@ -2,11 +2,6 @@ import { StockAdjustProductVo } from '@/api/sc/stock/adjust/stock/model/stockAdj
 
 export interface CreateStockAdjustSheetVo {
   /**
-   * 仓库ID
-   */
-  scId: string;
-
-  /**
    * 业务类型
    */
   bizType: number;

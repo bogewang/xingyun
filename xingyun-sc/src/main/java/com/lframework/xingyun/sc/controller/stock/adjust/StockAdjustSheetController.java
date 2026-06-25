@@ -1,5 +1,7 @@
 package com.lframework.xingyun.sc.controller.stock.adjust;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.common.utils.StringUtil;
@@ -10,9 +12,11 @@ import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.starter.mq.core.utils.ExportTaskUtil;
+import com.lframework.xingyun.basedata.entity.StoreCenter;
 import com.lframework.xingyun.sc.bo.stock.adjust.stock.QueryStockAdjustSheetBo;
 import com.lframework.xingyun.sc.bo.stock.adjust.stock.StockAdjustProductBo;
 import com.lframework.xingyun.sc.bo.stock.adjust.stock.StockAdjustSheetFullBo;
+import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.sc.dto.stock.adjust.stock.StockAdjustProductDto;
 import com.lframework.xingyun.sc.dto.stock.adjust.stock.StockAdjustSheetFullDto;
 import com.lframework.xingyun.sc.entity.StockAdjustSheet;
@@ -26,7 +30,6 @@ import com.lframework.xingyun.sc.vo.stock.adjust.stock.QueryStockAdjustSheetVo;
 import com.lframework.xingyun.sc.vo.stock.adjust.stock.UpdateStockAdjustSheetVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -56,6 +59,9 @@ public class StockAdjustSheetController extends DefaultBaseController {
 
   @Autowired
   private StockAdjustSheetService stockAdjustSheetService;
+
+  @Autowired
+  private StoreCenterService storeCenterService;
 
   /**
    * 查询列表
@@ -117,18 +123,16 @@ public class StockAdjustSheetController extends DefaultBaseController {
    * 根据关键字查询商品列表
    */
   @ApiOperation("根据关键字查询商品列表")
-  @ApiImplicitParams({
-      @ApiImplicitParam(value = "仓库ID", name = "scId", paramType = "query", required = true),
-      @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true)})
+  @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true)
   @HasPermission({"stock:adjust:add", "stock:adjust:modify"})
   @GetMapping("/product/search")
   public InvokeResult<List<StockAdjustProductBo>> searchProducts(
-      @NotBlank(message = "仓库ID不能为空！") String scId,
       String condition) {
 
     if (StringUtil.isBlank(condition)) {
       return InvokeResultBuilder.success(CollectionUtil.emptyList());
     }
+    String scId = this.getDefaultScId();
     PageResult<StockAdjustProductDto> pageResult = stockAdjustSheetService.queryStockAdjustByCondition(
         getPageIndex(), getPageSize(), scId, condition);
     List<StockAdjustProductBo> results = CollectionUtil.emptyList();
@@ -150,6 +154,8 @@ public class StockAdjustSheetController extends DefaultBaseController {
   public InvokeResult<PageResult<StockAdjustProductBo>> queryProductList(
       @Valid QueryStockAdjustProductVo vo) {
 
+    String scId = StringUtil.isBlank(vo.getScId()) ? this.getDefaultScId() : vo.getScId();
+    vo.setScId(scId);
     PageResult<StockAdjustProductDto> pageResult = stockAdjustSheetService.queryStockAdjustList(
         getPageIndex(vo),
         getPageSize(vo), vo);
@@ -162,6 +168,22 @@ public class StockAdjustSheetController extends DefaultBaseController {
     }
 
     return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
+  }
+
+  private String getDefaultScId() {
+
+    Wrapper<StoreCenter> queryWrapper = Wrappers.lambdaQuery(
+            StoreCenter.class)
+        .eq(StoreCenter::getAvailable, Boolean.TRUE)
+        .orderByAsc(StoreCenter::getCode)
+        .last("LIMIT 1");
+    StoreCenter storeCenter = storeCenterService.getOne(
+        queryWrapper);
+    if (storeCenter == null) {
+      throw new DefaultClientException("请先维护可用仓库信息！");
+    }
+
+    return storeCenter.getId();
   }
 
   /**

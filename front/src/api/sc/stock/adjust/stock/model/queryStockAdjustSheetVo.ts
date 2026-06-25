@@ -7,11 +7,6 @@ export interface QueryStockAdjustSheetVo extends SortPageVo {
   code: string;
 
   /**
-   * 仓库ID
-   */
-  scId: string;
-
-  /**
    * 业务类型
    */
   bizType: number;

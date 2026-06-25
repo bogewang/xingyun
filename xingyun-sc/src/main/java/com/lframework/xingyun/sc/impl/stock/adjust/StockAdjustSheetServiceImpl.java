@@ -21,7 +21,9 @@ import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineB
 import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineBizType;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.xingyun.basedata.entity.Product;
+import com.lframework.xingyun.basedata.entity.StoreCenter;
 import com.lframework.xingyun.basedata.service.product.ProductService;
+import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.stock.adjust.stock.StockAdjustProductDto;
 import com.lframework.xingyun.sc.dto.stock.adjust.stock.StockAdjustSheetFullDto;
@@ -63,6 +65,9 @@ public class StockAdjustSheetServiceImpl extends
 
   @Autowired
   private ProductService productService;
+
+  @Autowired
+  private StoreCenterService storeCenterService;
 
   @Override
   public PageResult<StockAdjustSheet> query(Integer pageIndex, Integer pageSize,
@@ -359,7 +364,7 @@ public class StockAdjustSheetServiceImpl extends
 
   private void create(StockAdjustSheet data, CreateStockAdjustSheetVo vo) {
 
-    data.setScId(vo.getScId());
+    data.setScId(this.resolveScId(data.getScId(), vo.getScId()));
     data.setStatus(StockAdjustSheetStatus.CREATED);
     data.setDescription(
         StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
@@ -380,5 +385,27 @@ public class StockAdjustSheetServiceImpl extends
 
       stockAdjustSheetDetailService.save(detail);
     }
+  }
+
+  private String resolveScId(String currentScId, String inputScId) {
+
+    if (!StringUtil.isBlank(inputScId)) {
+      return inputScId;
+    }
+
+    if (!StringUtil.isBlank(currentScId)) {
+      return currentScId;
+    }
+
+    Wrapper<StoreCenter> queryWrapper = Wrappers.lambdaQuery(StoreCenter.class)
+        .eq(StoreCenter::getAvailable, Boolean.TRUE)
+        .orderByAsc(StoreCenter::getCode)
+        .last("LIMIT 1");
+    StoreCenter storeCenter = storeCenterService.getOne(queryWrapper);
+    if (storeCenter == null) {
+      throw new DefaultClientException("请先维护可用仓库信息！");
+    }
+
+    return storeCenter.getId();
   }
 }

@@ -10,9 +10,6 @@
     <div v-if="visible" v-permission="['stock:adjust:query']" v-loading="loading">
       <j-border>
         <j-form bordered>
-          <j-form-item label="仓库" required>
-            {{ formData.scName }}
-          </j-form-item>
           <j-form-item label="业务类型" required>
             {{ STOCK_ADJUST_SHEET_BIZ_TYPE.getDesc(formData.bizType) }}
           </j-form-item>
@@ -170,7 +167,6 @@
       // 初始化表单数据
       initFormData() {
         this.formData = {
-          scName: '',
           bizType: '',
           reasonName: '',
           description: '',
@@ -215,7 +211,6 @@
           .getDetail(this.id)
           .then((res) => {
             Object.assign(this.formData, {
-              scName: res.scName,
               bizType: res.bizType,
               reasonName: res.reasonName,
               description: res.description,

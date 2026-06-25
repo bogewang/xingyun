@@ -25,9 +25,6 @@
                 <j-form-item label="单据号">
                   <a-input v-model:value="searchFormData.code" allow-clear />
                 </j-form-item>
-                <j-form-item label="仓库">
-                  <store-center-selector v-model:value="searchFormData.scId" />
-                </j-form-item>
                 <j-form-item label="状态">
                   <a-select v-model:value="searchFormData.status" placeholder="全部" allow-clear>
                     <a-select-option
@@ -135,8 +132,6 @@
       :table-column="[
         { field: 'code', title: '单据号', width: 180 },
         { field: 'planCode', title: '关联盘点任务', width: 180 },
-        { field: 'scCode', title: '仓库编号', width: 100 },
-        { field: 'scName', title: '仓库名称', width: 120 },
       ]"
       title="审核通过"
       :tableData="batchHandleDatas"
@@ -148,8 +143,6 @@
       :table-column="[
         { field: 'code', title: '单据号', width: 180 },
         { field: 'planCode', title: '关联盘点任务', width: 180 },
-        { field: 'scCode', title: '仓库编号', width: 100 },
-        { field: 'scName', title: '仓库名称', width: 120 },
       ]"
       title="审核拒绝"
       :tableData="batchHandleDatas"
@@ -161,8 +154,6 @@
       :table-column="[
         { field: 'code', title: '单据号', width: 180 },
         { field: 'planCode', title: '关联盘点任务', width: 180 },
-        { field: 'scCode', title: '仓库编号', width: 100 },
-        { field: 'scName', title: '仓库名称', width: 120 },
       ]"
       title="批量删除"
       :tableData="batchHandleDatas"
@@ -177,7 +168,6 @@
   import Detail from './detail.vue';
   import ApproveRefuse from '@/components/ApproveRefuse';
   import moment from 'moment';
-  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
   import {
     SearchOutlined,
     PlusOutlined,
@@ -206,7 +196,6 @@
     components: {
       Detail,
       ApproveRefuse,
-      StoreCenterSelector,
       UserSelector,
       BatchHandler,
     },
@@ -231,7 +220,6 @@
         // 查询列表的查询条件
         searchFormData: {
           code: '',
-          scId: '',
           status: undefined,
           updateBy: '',
           updateTimeStart: formatDateTime(getDateTimeWithMinTime(moment().subtract(1, 'M'))),
@@ -251,8 +239,6 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { field: 'code', title: '单据号', width: 180, sortable: true },
-          { field: 'scCode', title: '仓库编号', width: 100 },
-          { field: 'scName', title: '仓库名称', width: 120 },
           {
             field: 'bizType',
             title: '业务类型',
