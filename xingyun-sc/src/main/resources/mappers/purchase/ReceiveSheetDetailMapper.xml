@@ -61,11 +61,10 @@
                  INNER JOIN tbl_receive_sheet s ON d.sheet_id = s.id
         WHERE s.order_date <![CDATA[ >= ]]> #{beginDate}
           AND s.order_date <![CDATA[ <= ]]> #{orderDate}
-          AND (d.product_id, s.order_date, s.create_time) IN (
-            -- 每个商品 取 最大order_date + 最大create_time 的组合
+          AND (d.product_id, s.order_date) IN (
+            -- 每个商品 取 最大order_date 的组合
             SELECT product_id,
-                   MAX(order_date)  AS order_date,
-                   MAX(create_time) AS create_time
+                   MAX(order_date)  AS order_date
             FROM tbl_receive_sheet_detail d2
                      INNER JOIN tbl_receive_sheet s2 ON d2.sheet_id = s2.id
             WHERE s2.order_date <![CDATA[ >= ]]> #{beginDate}
