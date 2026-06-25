@@ -364,6 +364,7 @@
             width: 80,
             slots: { default: 'operation_default' },
           },
+          { field: 'productCode', title: '商品编号', width: 120 },
           {
             field: 'productName',
             title: '商品名称',
@@ -848,44 +849,6 @@
       directApprovePassOrder() {
         if (!this.validData()) {
           return;
-        }
-
-        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
-        const checkStockNumArr = [];
-        validTableData
-          .filter((item) => isFloatGtZero(item.outNum))
-          .forEach((item) => {
-            if (checkStockNumArr.map((v) => v.productId).includes(item.productId)) {
-              checkStockNumArr
-                .filter((v) => v.productId === item.productId)
-                .forEach((v) => {
-                  v.outNum = add(v.outNum, item.outNum);
-                });
-            } else {
-              checkStockNumArr.push({
-                productId: item.productId,
-                productCode: item.productCode,
-                productName: item.productName,
-                stockNum: item.stockNum,
-                outNum: item.outNum,
-              });
-            }
-          });
-
-        const unValidStockNumArr = checkStockNumArr.filter((item) => item.stockNum < item.outNum);
-        if (!isEmpty(unValidStockNumArr)) {
-          createError(
-            '商品（' +
-              unValidStockNumArr[0].productCode +
-              '）' +
-              unValidStockNumArr[0].productName +
-              '当前库存为' +
-              unValidStockNumArr[0].stockNum +
-              '，总出库数量为' +
-              unValidStockNumArr[0].outNum +
-              '，无法完成销售出库！',
-          );
-          return false;
         }
 
         const params = this.buildParams();

@@ -39,7 +39,6 @@
         WHERE product_id = #{productId}
         AND stock_num = #{oriStockNum}
         AND tax_amount = #{oriTaxAmount}
-        AND stock_num >= #{stockNum}
     </update>
     <select id="getByProductIdAndScId" resultMap="ProductStock">
         <include refid="ProductStockDto_sql"/>

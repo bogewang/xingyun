@@ -397,6 +397,7 @@
             width: 80,
             slots: { default: 'operation_default' },
           },
+          { field: 'productCode', title: '商品编号', width: 120 },
           {
             field: 'productName',
             title: '商品名称',

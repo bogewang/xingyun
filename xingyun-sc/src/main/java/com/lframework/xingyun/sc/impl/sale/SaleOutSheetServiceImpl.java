@@ -1254,6 +1254,7 @@ public class SaleOutSheetServiceImpl extends
             subProductStockVo.setBizDetailId(detail.getId());
             subProductStockVo.setBizCode(sheet.getCode());
             subProductStockVo.setBizType(ProductStockBizType.SALE.getCode());
+            subProductStockVo.setTaxAmount(detail.getTaxAmount());
 
             ProductStockChangeDto stockChange = productStockService.subStock(subProductStockVo);
 

@@ -341,43 +341,6 @@
       },
       // 审核通过
       approvePassOrder() {
-        const checkStockNumArr = [];
-        this.tableData
-          .filter((item) => isFloatGtZero(item.outNum))
-          .forEach((item) => {
-            if (checkStockNumArr.map((v) => item.productId).includes(item.productId)) {
-              checkStockNumArr
-                .filter((v) => v.productId === item.productId)
-                .forEach((v) => {
-                  v.outNum = add(v.outNum, item.outNum);
-                });
-            } else {
-              checkStockNumArr.push({
-                productId: item.productId,
-                productCode: item.productCode,
-                productName: item.productName,
-                stockNum: item.stockNum,
-                outNum: item.outNum,
-              });
-            }
-          });
-
-        const unValidStockNumArr = checkStockNumArr.filter((item) => item.stockNum < item.outNum);
-        if (!isEmpty(unValidStockNumArr)) {
-          createError(
-            '商品（' +
-              unValidStockNumArr[0].productCode +
-              '）' +
-              unValidStockNumArr[0].productName +
-              '当前库存为' +
-              unValidStockNumArr[0].stockNum +
-              '，总出库数量为' +
-              unValidStockNumArr[0].outNum +
-              '，无法完成销售出库！',
-          );
-          return false;
-        }
-
         createConfirm('对销售出库单执行审核通过操作？').then(() => {
           this.loading = true;
           api
