@@ -110,6 +110,11 @@
                     getNumber(mul(row.taxPrice, row.outNum), 2)
                   }}</span>
                 </template>
+                <template #taxPrice_default="{ row }">
+                  <span :style="{ color: isNegativeProfit(row) ? '#f5222d' : undefined }">
+                    {{ row.taxPrice }}
+                  </span>
+                </template>
                 <template #costStatus_default="{ row }">
                   <span :style="{ color: hasCostPrice(row) ? '#52c41a' : '#f5222d' }">
                     {{ hasCostPrice(row) ? '已补全' : '未补全' }}
@@ -118,7 +123,7 @@
                 <template #totalProfit_default="{ row }">
                   <span
                     :style="{
-                      color: Number(row.totalProfit || 0).toFixed(2) >= 0 ? '#090909' : '#f5222d',
+                      color: isNegativeProfit(row) ? '#f5222d' : undefined,
                     }"
                   >
                     {{ Number(row.totalProfit || 0).toFixed(2) }}
@@ -238,7 +243,13 @@
           { field: 'unit', title: '单位', width: 80 },
           { field: 'outNum', title: '数量', align: 'right', width: 100 },
           // { field: 'categoryName', title: '商品分类', width: 80 },
-          { field: 'taxPrice', title: '价格（元）', align: 'right', width: 80 },
+          {
+            field: 'taxPrice',
+            title: '价格（元）',
+            align: 'right',
+            width: 80,
+            slots: { default: 'taxPrice_default' },
+          },
           // {
           //   field: 'orderNum',
           //   title: '销售数量',
@@ -413,6 +424,9 @@
           return '0.00%';
         }
         return `${((Number(profit || 0) / amountNumber) * 100).toFixed(2)}%`;
+      },
+      isNegativeProfit(row) {
+        return Number(row?.totalProfit || 0) < 0;
       },
       formatAmount(value) {
         return Number(value || 0).toFixed(2);

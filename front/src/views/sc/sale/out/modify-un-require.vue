@@ -162,6 +162,7 @@
               :ref="'taxPriceInputRef' + rowIndex"
               v-model:value="row.taxPrice"
               class="number-input"
+              :style="{ color: isNegativeProfit(row) ? '#f5222d' : undefined }"
               @input="(e) => taxPriceInput(row, e.target.value)"
             />
           </template>
@@ -201,7 +202,9 @@
           </template>
 
           <template #profitRate_default="{ row }">
-            {{ calcProfitRate(row) }}
+            <span :style="{ color: isNegativeProfit(row) ? '#f5222d' : undefined }">
+              {{ calcProfitRate(row) }}
+            </span>
           </template>
 
           <template #costStatus_default="{ row }">
@@ -784,6 +787,19 @@
 
         const costAmount = Number(getNumber(mul(row.costPrice, row.outNum), 2));
         return `${(((amount - costAmount) / amount) * 100).toFixed(2)}%`;
+      },
+      isNegativeProfit(row) {
+        if (
+          !isFloatGeZero(row?.taxPrice) ||
+          !isFloatGeZero(row?.costPrice) ||
+          !isFloatGeZero(row?.outNum)
+        ) {
+          return false;
+        }
+
+        const saleAmount = Number(this.calcTaxAmount(row));
+        const costAmount = Number(getNumber(mul(row.costPrice, row.outNum), 2));
+        return saleAmount - costAmount < 0;
       },
       // 批量录入数量
       batchInputOutNum() {
