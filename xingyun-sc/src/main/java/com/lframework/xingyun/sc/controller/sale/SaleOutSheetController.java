@@ -503,11 +503,16 @@ public class SaleOutSheetController extends DefaultBaseController {
     @PostMapping
     public InvokeResult<String> create(@RequestBody @Valid CreateSaleOutSheetVo vo) {
 
-        vo.validate();
+        try {
+            vo.validate();
 
-        String id = saleOutSheetService.create(vo);
+            String id = saleOutSheetService.create(vo);
 
-        return InvokeResultBuilder.success(id);
+            return InvokeResultBuilder.success(id);
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
     }
 
     /**
@@ -518,11 +523,16 @@ public class SaleOutSheetController extends DefaultBaseController {
     @PutMapping
     public InvokeResult<Void> update(@RequestBody @Valid UpdateSaleOutSheetVo vo) {
 
-        vo.validate();
+        try {
+            vo.validate();
 
-        saleOutSheetService.update(vo);
+            saleOutSheetService.update(vo);
 
-        return InvokeResultBuilder.success();
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
     }
 
     /**

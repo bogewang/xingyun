@@ -243,17 +243,17 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         .eq(ProductStock::getProductId, vo.getProductId());
 
     ProductStock productStock = getBaseMapper().selectOne(queryWrapper);
-    if (productStock == null) {
-      throw new DefaultClientException(
-          "商品（" + product.getCode() + "）" + product.getName() + "当前库存为0，无法出库！");
-    }
+    // if (productStock == null) {
+    //   throw new DefaultClientException(
+    //       "商品（" + product.getCode() + "）" + product.getName() + "当前库存为0，无法出库！");
+    // }
 
-    if (NumberUtil.lt(productStock.getStockNum(), vo.getStockNum())) {
-      throw new DefaultClientException(
-          "商品（" + product.getCode() + "）" + product.getName() + "当前库存为"
-              + productStock.getStockNum()
-              + "，库存不足，无法出库！");
-    }
+    // if (NumberUtil.lt(productStock.getStockNum(), vo.getStockNum())) {
+    //   throw new DefaultClientException(
+    //       "商品（" + product.getCode() + "）" + product.getName() + "当前库存为"
+    //           + productStock.getStockNum()
+    //           + "，库存不足，无法出库！");
+    // }
 
     // 如果taxAmount为null，代表不重算均价，即：按当前均价直接出库
     boolean reCalcCostPrice = vo.getTaxAmount() != null;

@@ -57,8 +57,10 @@ import com.lframework.xingyun.sc.mappers.SaleOutSheetMapper;
 import com.lframework.xingyun.sc.service.ProductHotnessService;
 import com.lframework.xingyun.sc.service.logistics.LogisticsSheetDetailService;
 import com.lframework.xingyun.sc.service.sale.*;
+import com.lframework.xingyun.sc.service.stock.ProductStockLogService;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import com.lframework.xingyun.sc.vo.sale.out.*;
+import com.lframework.xingyun.sc.vo.stock.AddProductStockVo;
 import com.lframework.xingyun.sc.vo.stock.SubProductStockVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -131,6 +133,9 @@ public class SaleOutSheetServiceImpl extends
 
     @Autowired
     private ProductStockService productStockService;
+
+    @Autowired
+    private ProductStockLogService productStockLogService;
 
     @Autowired
     private LogisticsSheetDetailService logisticsSheetDetailService;
@@ -754,6 +759,8 @@ public class SaleOutSheetServiceImpl extends
         sheet.setStatus(SaleOutSheetStatus.CREATED);
 
         getBaseMapper().insert(sheet);
+        List<SaleOutSheetDetail> details = getSheetDetails(sheet.getId());
+        subStock(sheet, details);
 
         this.adjustCustomerAmount(sheet.getCustomerId());
         refreshCostPrice(sheet.getId(), vo.getFillAllCost(), Boolean.TRUE.equals(vo.getFillAllCostModified()));
@@ -788,6 +795,11 @@ public class SaleOutSheetServiceImpl extends
         }
 
         String oldCustomerId = sheet.getCustomerId();
+        List<SaleOutSheetDetail> oldDetails = getSheetDetails(sheet.getId());
+        boolean stockSynced = hasStockSynced(sheet.getId());
+        if (stockSynced) {
+            rollbackStock(sheet, oldDetails);
+        }
 
         // 删除出库单明细
         Wrapper<SaleOutSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(SaleOutSheetDetail.class)
@@ -798,6 +810,8 @@ public class SaleOutSheetServiceImpl extends
         Wrapper<SaleOutSheetDetailBundle> deleteDetailBundleWrapper = Wrappers.lambdaQuery(
                 SaleOutSheetDetailBundle.class).eq(SaleOutSheetDetailBundle::getSheetId, sheet.getId());
         saleOutSheetDetailBundleService.remove(deleteDetailBundleWrapper);
+
+        removeDetailLots(oldDetails);
 
         this.create(sheet, vo);
 
@@ -814,6 +828,9 @@ public class SaleOutSheetServiceImpl extends
         if (getBaseMapper().updateAllColumn(sheet, updateOrderWrapper) != 1) {
             throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
         }
+
+        List<SaleOutSheetDetail> details = getSheetDetails(sheet.getId());
+        subStock(sheet, details);
 
         this.adjustCustomerAmount(oldCustomerId);
         if (!StringUtil.equals(oldCustomerId, sheet.getCustomerId())) {
@@ -962,127 +979,6 @@ public class SaleOutSheetServiceImpl extends
             throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
         }
 
-        Wrapper<SaleOutSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(SaleOutSheetDetail.class)
-                .eq(SaleOutSheetDetail::getSheetId, sheet.getId())
-                .orderByAsc(SaleOutSheetDetail::getOrderNo);
-        List<SaleOutSheetDetail> details = saleOutSheetDetailService.list(queryDetailWrapper);
-
-        BigDecimal totalNum = BigDecimal.ZERO;
-        BigDecimal giftNum = BigDecimal.ZERO;
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        BigDecimal totalCostAmount = BigDecimal.ZERO;
-
-        int orderNo = 1;
-        for (SaleOutSheetDetail detail : details) {
-            boolean isGift = detail.getIsGift();
-            totalAmount = NumberUtil.add(totalAmount,
-                    NumberUtil.mul(detail.getTaxPrice(), detail.getOrderNum()));
-
-            Product product = productService.findById(detail.getProductId());
-            if (product.getProductType() == ProductType.NORMAL) {
-                SubProductStockVo subProductStockVo = new SubProductStockVo();
-                subProductStockVo.setProductId(detail.getProductId());
-                subProductStockVo.setScId(sheet.getScId());
-                subProductStockVo.setStockNum(detail.getOrderNum());
-                subProductStockVo.setBizId(sheet.getId());
-                subProductStockVo.setBizDetailId(detail.getId());
-                subProductStockVo.setBizCode(sheet.getCode());
-                subProductStockVo.setBizType(ProductStockBizType.SALE.getCode());
-
-                ProductStockChangeDto stockChange = productStockService.subStock(subProductStockVo);
-
-                SaleOutSheetDetailLot detailLot = new SaleOutSheetDetailLot();
-
-                detailLot.setId(IdUtil.getId());
-                detailLot.setDetailId(detail.getId());
-                detailLot.setOrderNum(detail.getOrderNum());
-                detailLot.setCostTaxAmount(stockChange.getTaxAmount());
-                detailLot.setSettleStatus(detail.getSettleStatus());
-                detailLot.setOrderNo(orderNo);
-                saleOutSheetDetailLotService.save(detailLot);
-                totalCostAmount = NumberUtil.add(totalCostAmount, stockChange.getTaxAmount());
-
-                if (isGift) {
-                    giftNum = NumberUtil.add(giftNum, detail.getOrderNum());
-                } else {
-                    totalNum = NumberUtil.add(totalNum, detail.getOrderNum());
-                }
-            } else {
-                Wrapper<SaleOutSheetDetailBundle> queryBundleWrapper = Wrappers.lambdaQuery(
-                                SaleOutSheetDetailBundle.class).eq(SaleOutSheetDetailBundle::getSheetId, sheet.getId())
-                        .eq(SaleOutSheetDetailBundle::getDetailId, detail.getId());
-                List<SaleOutSheetDetailBundle> saleOutSheetDetailBundles = saleOutSheetDetailBundleService.list(
-                        queryBundleWrapper);
-                Assert.notEmpty(saleOutSheetDetailBundles);
-
-                for (SaleOutSheetDetailBundle saleOutSheetDetailBundle : saleOutSheetDetailBundles) {
-                    SaleOutSheetDetail newDetail = new SaleOutSheetDetail();
-                    newDetail.setId(IdUtil.getId());
-                    newDetail.setSheetId(sheet.getId());
-                    newDetail.setProductId(saleOutSheetDetailBundle.getProductId());
-                    newDetail.setOrderNum(saleOutSheetDetailBundle.getProductOrderNum());
-                    newDetail.setOriPrice(saleOutSheetDetailBundle.getProductOriPrice());
-                    newDetail.setTaxPrice(saleOutSheetDetailBundle.getProductTaxPrice());
-                    newDetail.setDiscountRate(detail.getDiscountRate());
-                    newDetail.setIsGift(detail.getIsGift());
-                    newDetail.setTaxRate(saleOutSheetDetailBundle.getProductTaxRate());
-                    newDetail.setDescription(detail.getDescription());
-                    newDetail.setOrderNo(orderNo++);
-                    newDetail.setSettleStatus(detail.getSettleStatus());
-                    newDetail.setSaleOrderDetailId(detail.getSaleOrderDetailId());
-                    newDetail.setOriBundleDetailId(detail.getId());
-                    newDetail.setTaxAmount(saleOutSheetDetailBundle.getProductTaxAmount());
-
-                    SubProductStockVo subProductStockVo = new SubProductStockVo();
-                    subProductStockVo.setProductId(newDetail.getProductId());
-                    subProductStockVo.setScId(sheet.getScId());
-                    subProductStockVo.setStockNum(newDetail.getOrderNum());
-                    subProductStockVo.setBizId(sheet.getId());
-                    subProductStockVo.setBizDetailId(newDetail.getId());
-                    subProductStockVo.setBizCode(sheet.getCode());
-                    subProductStockVo.setBizType(ProductStockBizType.SALE.getCode());
-
-                    ProductStockChangeDto stockChange = productStockService.subStock(subProductStockVo);
-
-                    SaleOutSheetDetailLot detailLot = new SaleOutSheetDetailLot();
-
-                    detailLot.setId(IdUtil.getId());
-                    detailLot.setDetailId(newDetail.getId());
-                    detailLot.setOrderNum(newDetail.getOrderNum());
-                    detailLot.setCostTaxAmount(stockChange.getTaxAmount());
-                    detailLot.setSettleStatus(newDetail.getSettleStatus());
-                    detailLot.setOrderNo(orderNo);
-                    saleOutSheetDetailLotService.save(detailLot);
-                    totalCostAmount = NumberUtil.add(totalCostAmount, stockChange.getTaxAmount());
-
-                    saleOutSheetDetailService.save(newDetail);
-                    saleOutSheetDetailService.removeById(detail.getId());
-
-                    saleOutSheetDetailBundle.setProductDetailId(newDetail.getId());
-                    saleOutSheetDetailBundleService.updateById(saleOutSheetDetailBundle);
-
-                    if (isGift) {
-                        giftNum = NumberUtil.add(giftNum, newDetail.getOrderNum());
-                    } else {
-                        totalNum = NumberUtil.add(totalNum, newDetail.getOrderNum());
-                    }
-                }
-            }
-            orderNo++;
-        }
-
-        // 这里需要重新统计明细信息，因为明细发生变动了
-        BigDecimal costPrice = BigDecimal.ZERO;
-        if (NumberUtil.gt(totalNum, BigDecimal.ZERO)) {
-            costPrice = NumberUtil.getNumber(NumberUtil.div(totalCostAmount, totalNum), 6);
-        }
-        BigDecimal totalProfit = NumberUtil.getNumber(NumberUtil.sub(totalAmount, totalCostAmount), 6);
-        Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
-                .set(SaleOutSheet::getTotalNum, totalNum).set(SaleOutSheet::getTotalGiftNum, giftNum)
-                .set(SaleOutSheet::getTotalAmount, totalAmount).set(SaleOutSheet::getTotalCost, costPrice)
-                .set(SaleOutSheet::getTotalProfit, totalProfit).eq(SaleOutSheet::getId, sheet.getId());
-        this.update(updateWrapper);
-
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
     }
@@ -1186,6 +1082,10 @@ public class SaleOutSheetServiceImpl extends
             }
         }
 
+        if (hasStockSynced(sheet.getId())) {
+            rollbackStock(sheet, details);
+        }
+
         // 删除订单明细
         Wrapper<SaleOutSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(SaleOutSheetDetail.class)
                 .eq(SaleOutSheetDetail::getSheetId, sheet.getId());
@@ -1195,11 +1095,6 @@ public class SaleOutSheetServiceImpl extends
         Wrapper<SaleOutSheetDetailBundle> deleteDetailBundleWrapper = Wrappers.lambdaQuery(
                 SaleOutSheetDetailBundle.class).eq(SaleOutSheetDetailBundle::getSheetId, sheet.getId());
         saleOutSheetDetailBundleService.remove(deleteDetailBundleWrapper);
-
-        Wrapper<SaleOutSheetDetailLot> deleteDetailLotWrapper = Wrappers.lambdaQuery(
-                SaleOutSheetDetailLot.class).in(SaleOutSheetDetailLot::getDetailId,
-                details.stream().map(SaleOutSheetDetail::getId).collect(Collectors.toList()));
-        saleOutSheetDetailLotService.remove(deleteDetailLotWrapper);
 
         // 删除订单
         Wrapper<SaleOutSheet> deleteWrapper = Wrappers.lambdaQuery(SaleOutSheet.class)
@@ -1342,6 +1237,105 @@ public class SaleOutSheetServiceImpl extends
         sheet.setDescription(
                 StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(customer));
+    }
+
+    private void subStock(SaleOutSheet sheet, List<SaleOutSheetDetail> details) {
+        if (CollectionUtil.isEmpty(details)) {
+            return;
+        }
+
+        int orderNo = 1;
+        for (SaleOutSheetDetail detail : details) {
+            SubProductStockVo subProductStockVo = new SubProductStockVo();
+            subProductStockVo.setProductId(detail.getProductId());
+            subProductStockVo.setScId(sheet.getScId());
+            subProductStockVo.setStockNum(detail.getOrderNum());
+            subProductStockVo.setBizId(sheet.getId());
+            subProductStockVo.setBizDetailId(detail.getId());
+            subProductStockVo.setBizCode(sheet.getCode());
+            subProductStockVo.setBizType(ProductStockBizType.SALE.getCode());
+
+            ProductStockChangeDto stockChange = productStockService.subStock(subProductStockVo);
+
+            SaleOutSheetDetailLot detailLot = new SaleOutSheetDetailLot();
+            detailLot.setId(IdUtil.getId());
+            detailLot.setDetailId(detail.getId());
+            detailLot.setOrderNum(detail.getOrderNum());
+            detailLot.setCostTaxAmount(stockChange.getTaxAmount());
+            detailLot.setSettleStatus(detail.getSettleStatus());
+            detailLot.setOrderNo(orderNo++);
+            saleOutSheetDetailLotService.save(detailLot);
+        }
+    }
+
+    private void rollbackStock(SaleOutSheet sheet, List<SaleOutSheetDetail> details) {
+        if (CollectionUtil.isEmpty(details)) {
+            return;
+        }
+
+        Map<String, BigDecimal> lotCostMap = getDetailLotCostMap(details);
+        for (SaleOutSheetDetail detail : details) {
+            Product product = productService.findById(detail.getProductId());
+
+            AddProductStockVo addProductStockVo = new AddProductStockVo();
+            addProductStockVo.setProductId(detail.getProductId());
+            addProductStockVo.setScId(sheet.getScId());
+            addProductStockVo.setStockNum(detail.getOrderNum());
+            addProductStockVo.setTaxAmount(lotCostMap.get(detail.getId()));
+            addProductStockVo.setDefaultTaxAmount(NumberUtil.getNumber(
+                    NumberUtil.mul(product.getPurchasePrice(), detail.getOrderNum()), 2));
+            addProductStockVo.setBizId(sheet.getId());
+            addProductStockVo.setBizDetailId(detail.getId());
+            addProductStockVo.setBizCode(sheet.getCode());
+            addProductStockVo.setBizType(ProductStockBizType.SALE.getCode());
+
+            productStockService.addStock(addProductStockVo);
+        }
+
+        removeDetailLots(details);
+    }
+
+    private Map<String, BigDecimal> getDetailLotCostMap(List<SaleOutSheetDetail> details) {
+        List<String> detailIds = details.stream().map(SaleOutSheetDetail::getId).collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(detailIds)) {
+            return new HashMap<>();
+        }
+
+        Wrapper<SaleOutSheetDetailLot> queryWrapper = Wrappers.lambdaQuery(SaleOutSheetDetailLot.class)
+                .in(SaleOutSheetDetailLot::getDetailId, detailIds);
+        List<SaleOutSheetDetailLot> lots = saleOutSheetDetailLotService.list(queryWrapper);
+        if (CollectionUtil.isEmpty(lots)) {
+            return new HashMap<>();
+        }
+
+        return lots.stream().collect(Collectors.groupingBy(SaleOutSheetDetailLot::getDetailId,
+                Collectors.mapping(item -> item.getCostTaxAmount() == null ? BigDecimal.ZERO : item.getCostTaxAmount(),
+                        Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
+    }
+
+    private void removeDetailLots(List<SaleOutSheetDetail> details) {
+        List<String> detailIds = details.stream().map(SaleOutSheetDetail::getId).collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(detailIds)) {
+            return;
+        }
+
+        Wrapper<SaleOutSheetDetailLot> deleteDetailLotWrapper = Wrappers.lambdaQuery(
+                SaleOutSheetDetailLot.class).in(SaleOutSheetDetailLot::getDetailId, detailIds);
+        saleOutSheetDetailLotService.remove(deleteDetailLotWrapper);
+    }
+
+    private boolean hasStockSynced(String sheetId) {
+        Wrapper<ProductStockLog> queryWrapper = Wrappers.lambdaQuery(ProductStockLog.class)
+                .eq(ProductStockLog::getBizId, sheetId)
+                .eq(ProductStockLog::getBizType, ProductStockBizType.SALE);
+        return productStockLogService.count(queryWrapper) > 0;
+    }
+
+    private List<SaleOutSheetDetail> getSheetDetails(String sheetId) {
+        Wrapper<SaleOutSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(SaleOutSheetDetail.class)
+                .eq(SaleOutSheetDetail::getSheetId, sheetId)
+                .orderByAsc(SaleOutSheetDetail::getOrderNo);
+        return saleOutSheetDetailService.list(queryDetailWrapper);
     }
 
     /**
