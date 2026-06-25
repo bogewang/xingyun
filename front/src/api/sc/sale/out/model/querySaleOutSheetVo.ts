@@ -92,6 +92,11 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
   hasCostPrice: boolean;
 
   /**
+   * 是否仅查询负毛利商品
+   */
+  onlyNegativeProfit: boolean;
+
+  /**
    * 是否录完所有成本
    */
   fillAllCost: boolean;

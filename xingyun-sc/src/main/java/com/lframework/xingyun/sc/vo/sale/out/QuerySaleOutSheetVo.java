@@ -130,6 +130,12 @@ public class QuerySaleOutSheetVo extends SortPageVo {
   private Boolean hasCostPrice;
 
   /**
+   * 是否仅查询负毛利商品
+   */
+  @ApiModelProperty("是否仅查询负毛利商品")
+  private Boolean onlyNegativeProfit;
+
+  /**
    * 是否录完所有成本
    */
   @ApiModelProperty("是否录完所有成本")

@@ -34,19 +34,23 @@
               <j-form-item label="商品名称">
                 <a-input v-model:value="searchFormData.productName" allow-clear />
               </j-form-item>
-
-              <j-form-item label="是否已录采购">
-                <a-select
-                  v-model:value="searchFormData.hasCostPrice"
-                  placeholder="全部"
-                  allow-clear
-                >
-                  <a-select-option :value="true">已录</a-select-option>
-                  <a-select-option :value="false">未录</a-select-option>
-                </a-select>
+              <j-form-item label="负毛利商品">
+                <a-checkbox v-model:checked="searchFormData.onlyNegativeProfit">
+                  仅查询负毛利商品
+                </a-checkbox>
               </j-form-item>
 
               <template #more>
+                <j-form-item label="是否已录采购">
+                  <a-select
+                    v-model:value="searchFormData.hasCostPrice"
+                    placeholder="全部"
+                    allow-clear
+                  >
+                    <a-select-option :value="true">已录</a-select-option>
+                    <a-select-option :value="false">未录</a-select-option>
+                  </a-select>
+                </j-form-item>
                 <j-form-item label="客户">
                   <a-select
                     v-model:value="searchFormData.customerId"
@@ -75,37 +79,6 @@
                     @search="loadCreateByOptions"
                     @change="onCreateByChange"
                   />
-                </j-form-item>
-                <j-form-item label="审核人">
-                  <a-select
-                    v-model:value="searchFormData.approveBy"
-                    allow-clear
-                    show-search
-                    :filter-option="filterSelectOption"
-                    :options="approveByOptions"
-                    placeholder="请选择审核人"
-                    @focus="loadApproveByOptions()"
-                    @search="loadApproveByOptions"
-                    @change="onApproveByChange"
-                  />
-                </j-form-item>
-                <j-form-item label="审核日期">
-                  <a-range-picker
-                    v-model:value="approveDateRange"
-                    value-format="YYYY-MM-DD"
-                    :placeholder="['开始日期', '结束日期']"
-                  />
-                </j-form-item>
-                <j-form-item label="状态">
-                  <a-select v-model:value="searchFormData.status" placeholder="全部" allow-clear>
-                    <a-select-option
-                      v-for="item in SALE_OUT_SHEET_STATUS.values()"
-                      :key="item.code"
-                      :value="item.code"
-                    >
-                      {{ item.desc }}
-                    </a-select-option>
-                  </a-select>
                 </j-form-item>
                 <j-form-item label="结算状态">
                   <a-select
@@ -162,7 +135,26 @@
         </template>
 
         <template #code_default="{ row }">
-          <a @click="viewDetail(row.id)">{{ row.code }}</a>
+          <a @click="openModifyPage(row)">{{ row.code }}</a>
+        </template>
+        <template #costPrice_default="{ row }">
+          {{ formatPrice(row.costPrice) }}
+        </template>
+        <template #taxAmount_default="{ row }">
+          {{ formatAmount(row.taxAmount) }}
+        </template>
+        <template #costAmount_default="{ row }">
+          {{ formatAmount(calcRowCostAmount(row)) }}
+        </template>
+        <template #totalProfit_default="{ row }">
+          <span :style="{ color: Number(row.totalProfit || 0) < 0 ? '#f5222d' : undefined }">
+            {{ formatAmount(row.totalProfit) }}
+          </span>
+        </template>
+        <template #profitRate_default="{ row }">
+          <span :style="{ color: Number(row.totalProfit || 0) < 0 ? '#f5222d' : undefined }">
+            {{ calcProfitRate(row.totalProfit, row.taxAmount) }}
+          </span>
         </template>
       </vxe-grid>
     </page-wrapper>
@@ -308,6 +300,7 @@
   import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
   import * as api from '@/api/sc/sale/out';
   import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { buildSortPageVo, isEmpty } from '@/utils/utils';
   import {
     buildVisibleSelectOptions,
@@ -334,6 +327,7 @@
     settleStatus: undefined,
     fullyPaid: undefined,
     hasCostPrice: undefined,
+    onlyNegativeProfit: false,
   });
 
   export default defineComponent({
@@ -342,7 +336,7 @@
       Detail,
       SaleOrderDetail,
     },
-    mixins: [gridCollapseHeightMix],
+    mixins: [gridCollapseHeightMix, multiplePageMix],
     setup() {
       const { hasPermission } = usePermission();
       return {
@@ -406,6 +400,7 @@
         },
         tableColumn: [
           { type: 'seq', width: 50, title: '序号' },
+          { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
           {
             field: 'code',
             title: '单据号',
@@ -414,23 +409,46 @@
             slots: { default: 'code_default' },
           },
           { field: 'customerName', title: '客户名称', width: 140 },
-          { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
-          { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 180 },
           { field: 'spec', title: '规格', width: 100 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'orderNum', title: '出库数量', align: 'right', width: 100 },
+          { field: 'orderNum', title: '数量', align: 'right', width: 100 },
           { field: 'taxPrice', title: '销售价', align: 'right', width: 100 },
-          { field: 'createTime', title: '操作时间', width: 170, sortable: true },
-          { field: 'createBy', title: '操作人', width: 100 },
-          { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
-          { field: 'approveBy', title: '审核人', width: 100 },
           {
-            field: 'status',
-            title: '状态',
+            field: 'costPrice',
+            title: '成本单价',
+            align: 'right',
             width: 100,
-            formatter: ({ cellValue }) => SALE_OUT_SHEET_STATUS.getDesc(cellValue),
+            slots: { default: 'costPrice_default' },
+          },
+          {
+            field: 'taxAmount',
+            title: '销售金额',
+            align: 'right',
+            width: 100,
+            slots: { default: 'taxAmount_default' },
+          },
+          {
+            field: 'costAmount',
+            title: '成本',
+            align: 'right',
+            width: 100,
+            slots: { default: 'costAmount_default' },
+          },
+          {
+            field: 'totalProfit',
+            title: '毛利',
+            align: 'right',
+            width: 100,
+            slots: { default: 'totalProfit_default' },
+          },
+          {
+            field: 'profitRate',
+            title: '毛利率',
+            align: 'right',
+            width: 100,
+            slots: { default: 'profitRate_default' },
           },
           {
             field: 'settleStatus',
@@ -439,6 +457,8 @@
             formatter: ({ cellValue }) => SETTLE_STATUS.getDesc(cellValue),
           },
           { field: 'description', title: '备注', width: 200 },
+          { field: 'createTime', title: '操作时间', width: 170, sortable: true },
+          { field: 'createBy', title: '操作人', width: 100 },
         ],
         proxyConfig: {
           props: {
@@ -520,7 +540,7 @@
       },
       visibleTableColumn() {
         return this.tableColumn.filter((column) => {
-          if (column.field === 'totalProfit') {
+          if (['totalProfit', 'profitRate'].includes(column.field)) {
             return this.hasPermission('sale:out:profit', false);
           }
           return true;
@@ -581,6 +601,10 @@
       footerMethod({ columns, data }) {
         const orderNum = this.sumByField(data, 'orderNum');
         const taxAmount = this.sumByField(data, 'taxAmount');
+        const costAmount = (data || []).reduce(
+          (total, item) => total + this.calcRowCostAmount(item),
+          0,
+        );
         const totalProfit = this.sumByField(data, 'totalProfit');
 
         return [
@@ -593,6 +617,9 @@
             }
             if (column.field === 'taxAmount') {
               return this.formatAmount(taxAmount);
+            }
+            if (column.field === 'costAmount') {
+              return this.formatAmount(costAmount);
             }
             if (column.field === 'totalProfit') {
               return this.canViewProfit ? this.formatAmount(totalProfit) : '';
@@ -911,9 +938,9 @@
         }
         this.openBatchUpdatePriceDialog(records);
       },
-      viewDetail(id) {
-        this.id = id;
-        this.$nextTick(() => this.$refs.viewDialog.openDialog());
+      openModifyPage(row) {
+        const modifyType = isEmpty(row.saleOrderId) ? 'un-require' : 'require';
+        this.openChildPage(`/sale/out/modify/${modifyType}/${row.id}`);
       },
       viewSaleOrderDetail(id) {
         this.saleOrderId = id;
