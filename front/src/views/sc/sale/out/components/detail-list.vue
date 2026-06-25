@@ -241,53 +241,61 @@
       v-model:open="batchUpdatePriceVisible"
       title="批量调整售价"
       width="760px"
+      :mask-closable="false"
+      :get-container="getPriceCheckContainer"
+      wrap-class-name="price-check-local-wrap"
+      destroy-on-close
+      :style="{ top: '50px' }"
+      :body-style="{ padding: '16px 16px 8px' }"
       :confirm-loading="batchUpdatePriceSubmitting"
       @ok="submitBatchUpdatePrice"
       @cancel="closeBatchUpdatePriceDialog"
     >
-      <a-row :gutter="16">
-        <a-col :span="8">
-          <a-form-item label="总售价">
-            <a-input :value="formatAmount(batchUpdatePriceSummary.totalSaleAmount)" disabled />
-          </a-form-item>
-        </a-col>
-        <a-col :span="8">
-          <a-form-item label="总成本">
-            <a-input :value="formatAmount(batchUpdatePriceSummary.totalCostAmount)" disabled />
-          </a-form-item>
-        </a-col>
-        <a-col :span="8">
-          <a-form-item label="总数量">
-            <a-input :value="formatQuantity(batchUpdatePriceForm.totalQty)" disabled />
-          </a-form-item>
-        </a-col>
-        <a-col :span="8">
-          <a-form-item label="平均售价">
-            <a-input-number
-              v-model:value="batchUpdatePriceForm.avgTaxPrice"
-              :min="0"
-              :precision="2"
-              style="width: 100%"
-              @change="onBatchUpdateAvgTaxPriceChange"
-            />
-          </a-form-item>
-        </a-col>
-        <a-col :span="8">
-          <a-form-item label="平均进价">
-            <a-input :value="formatPrice(batchUpdatePriceForm.avgCostPrice)" disabled />
-          </a-form-item>
-        </a-col>
-        <a-col :span="8">
-          <a-form-item label="毛利率(%)">
-            <a-input-number
-              v-model:value="batchUpdatePriceForm.profitRate"
-              :precision="2"
-              style="width: 100%"
-              @change="onBatchUpdateProfitRateChange"
-            />
-          </a-form-item>
-        </a-col>
-      </a-row>
+      <a-form layout="vertical">
+        <a-row :gutter="16">
+          <a-col :span="8">
+            <a-form-item label="总售价">
+              <a-input :value="formatAmount(batchUpdatePriceSummary.totalSaleAmount)" disabled />
+            </a-form-item>
+          </a-col>
+          <a-col :span="8">
+            <a-form-item label="总成本">
+              <a-input :value="formatAmount(batchUpdatePriceSummary.totalCostAmount)" disabled />
+            </a-form-item>
+          </a-col>
+          <a-col :span="8">
+            <a-form-item label="总数量">
+              <a-input :value="formatQuantity(batchUpdatePriceForm.totalQty)" disabled />
+            </a-form-item>
+          </a-col>
+          <a-col :span="8">
+            <a-form-item label="平均售价">
+              <a-input-number
+                v-model:value="batchUpdatePriceForm.avgTaxPrice"
+                :min="0"
+                :precision="2"
+                style="width: 100%"
+                @change="onBatchUpdateAvgTaxPriceChange"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="8">
+            <a-form-item label="平均进价">
+              <a-input :value="formatPrice(batchUpdatePriceForm.avgCostPrice)" disabled />
+            </a-form-item>
+          </a-col>
+          <a-col :span="8">
+            <a-form-item label="毛利率(%)">
+              <a-input-number
+                v-model:value="batchUpdatePriceForm.profitRate"
+                :precision="2"
+                style="width: 100%"
+                @change="onBatchUpdateProfitRateChange"
+              />
+            </a-form-item>
+          </a-col>
+        </a-row>
+      </a-form>
     </a-modal>
   </div>
 </template>
