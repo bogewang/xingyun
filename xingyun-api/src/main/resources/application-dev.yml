@@ -6,11 +6,16 @@ logging:
     com.lframework: INFO
     io.lettuce.core.protocol: OFF
     org.dromara.warm.flow: INFO
-    org.mybatis: INFO
+#    org.mybatis: INFO
 #    org.apache.ibatis: INFO
 #    java.sql.PreparedStatement: INFO
 #    java.sql.Statement: INFO
-    com.lframework.xingyun.**.mappers: INFO
+    com.lframework.xingyun.basedata.mappers: DEBUG
+    com.lframework.xingyun.chart.mappers: DEBUG
+    com.lframework.xingyun.comp.mappers: DEBUG
+    com.lframework.xingyun.core.mappers: DEBUG
+    com.lframework.xingyun.sc.mappers: DEBUG
+    com.lframework.xingyun.settle.mappers: DEBUG
 
 spring:
   servlet:
@@ -125,4 +130,4 @@ jugg:
     filter-url: /selector/list/tenant
 mybatis-plus:
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
