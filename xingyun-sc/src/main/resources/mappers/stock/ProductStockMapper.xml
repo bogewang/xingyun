@@ -46,12 +46,12 @@
         UPDATE tbl_product_stock
         SET stock_num = stock_num - #{stockNum},
         tax_amount = CASE
-        WHEN stock_num - #{stockNum} = 0 THEN 0
+        WHEN stock_num = 0 THEN 0
         ELSE tax_amount - #{taxAmount}
         END
         <if test="reCalcCostPrice">,tax_price = CASE
-            WHEN stock_num - #{stockNum} = 0 THEN 0
-            ELSE (tax_amount - #{taxAmount}) / (stock_num - #{stockNum})
+            WHEN stock_num = 0 THEN 0
+            ELSE tax_amount / stock_num
         END</if>
         WHERE product_id = #{productId}
         AND stock_num = #{oriStockNum}
