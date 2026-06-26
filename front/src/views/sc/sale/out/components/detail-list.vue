@@ -624,6 +624,9 @@
             if (column.field === 'totalProfit') {
               return this.canViewProfit ? this.formatAmount(totalProfit) : '';
             }
+            if (column.field === 'profitRate') {
+              return this.canViewProfit ? this.calcProfitRate(totalProfit, taxAmount) : '';
+            }
             return '';
           }),
         ];
