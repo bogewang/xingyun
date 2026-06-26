@@ -397,16 +397,6 @@ public class StockAdjustSheetServiceImpl extends
       return currentScId;
     }
 
-    Wrapper<StoreCenter> queryWrapper = Wrappers.lambdaQuery(StoreCenter.class)
-        .eq(StoreCenter::getAvailable, Boolean.TRUE)
-        .orderByAsc(StoreCenter::getCode)
-        .last("LIMIT 1");
-    StoreCenter storeCenter = storeCenterService.getOne(queryWrapper);
-    if (storeCenter == null) {
-      return null;
-      // throw new DefaultClientException("请先维护可用仓库信息！");
-    }
-
-    return storeCenter.getId();
+    return storeCenterService.getDefaultStoreId();
   }
 }

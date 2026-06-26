@@ -136,7 +136,7 @@ public class StockAdjustSheetController extends DefaultBaseController {
         if (StringUtil.isBlank(condition)) {
             return InvokeResultBuilder.success(CollectionUtil.emptyList());
         }
-        String scId = this.getDefaultScId();
+        String scId = storeCenterService.getDefaultStoreId();
         PageResult<StockAdjustProductDto> pageResult = stockAdjustSheetService.queryStockAdjustByCondition(
                 getPageIndex(), getPageSize(), scId, condition);
         List<StockAdjustProductBo> results = CollectionUtil.emptyList();
@@ -158,7 +158,7 @@ public class StockAdjustSheetController extends DefaultBaseController {
     public InvokeResult<PageResult<StockAdjustProductBo>> queryProductList(
             @Valid QueryStockAdjustProductVo vo) {
 
-        String scId = StringUtil.isBlank(vo.getScId()) ? this.getDefaultScId() : vo.getScId();
+        String scId = StringUtil.isBlank(vo.getScId()) ? storeCenterService.getDefaultStoreId() : vo.getScId();
         vo.setScId(scId);
         PageResult<StockAdjustProductDto> pageResult = stockAdjustSheetService.queryStockAdjustList(
                 getPageIndex(vo),
@@ -172,23 +172,6 @@ public class StockAdjustSheetController extends DefaultBaseController {
         }
 
         return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
-    }
-
-    private String getDefaultScId() {
-
-        Wrapper<StoreCenter> queryWrapper = Wrappers.lambdaQuery(
-                        StoreCenter.class)
-                .eq(StoreCenter::getAvailable, Boolean.TRUE)
-                .orderByAsc(StoreCenter::getCode)
-                .last("LIMIT 1");
-        StoreCenter storeCenter = storeCenterService.getOne(
-                queryWrapper);
-        if (storeCenter == null) {
-            return null;
-            // throw new DefaultClientException("请先维护可用仓库信息！");
-        }
-
-        return storeCenter.getId();
     }
 
     /**
@@ -261,11 +244,16 @@ public class StockAdjustSheetController extends DefaultBaseController {
     @PostMapping("/approve/pass/direct")
     public InvokeResult<Void> directApprovePass(@RequestBody @Valid CreateStockAdjustSheetVo vo) {
 
-        vo.validate();
+        try {
+            vo.validate();
 
-        stockAdjustSheetService.directApprovePass(vo);
+            stockAdjustSheetService.directApprovePass(vo);
 
-        return InvokeResultBuilder.success();
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
     }
 
     /**

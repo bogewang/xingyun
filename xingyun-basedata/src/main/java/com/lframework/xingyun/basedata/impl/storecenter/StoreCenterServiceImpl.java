@@ -206,4 +206,19 @@ public class StoreCenterServiceImpl extends BaseMpServiceImpl<StoreCenterMapper,
     public void cleanCacheByKey(Serializable key) {
 
     }
+
+    @Override
+    public String getDefaultStoreId() {
+        StoreCenter storeCenter = getDefaultStore();
+        return storeCenter == null ? null : storeCenter.getId();
+    }
+
+    @Override
+    public StoreCenter getDefaultStore() {
+        Wrapper<StoreCenter> queryWrapper = Wrappers.lambdaQuery(StoreCenter.class)
+                .eq(StoreCenter::getAvailable, Boolean.TRUE)
+                .orderByAsc(StoreCenter::getCode)
+                .last("LIMIT 1");
+        return this.getOne(queryWrapper);
+    }
 }

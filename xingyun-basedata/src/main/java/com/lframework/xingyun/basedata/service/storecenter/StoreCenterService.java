@@ -53,4 +53,8 @@ public interface StoreCenterService extends BaseMpService<StoreCenter> {
      * @return
      */
     PageResult<StoreCenter> selector(Integer pageIndex, Integer pageSize, QueryStoreCenterSelectorVo vo);
+
+    String getDefaultStoreId();
+
+    StoreCenter getDefaultStore();
 }

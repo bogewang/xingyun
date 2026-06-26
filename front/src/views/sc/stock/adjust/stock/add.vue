@@ -63,6 +63,24 @@
           </a-space>
         </template>
 
+        <template #operation_default="{ row, rowIndex }">
+          <a-space size="small">
+            <a-button
+              type="link"
+              size="small"
+              :icon="h(PlusCircleTwoTone)"
+              @click="insertProduct(rowIndex)"
+            />
+            <a-button
+              type="link"
+              size="small"
+              danger
+              :icon="h(MinusCircleTwoTone)"
+              @click="removeCurrentProduct(row)"
+            />
+          </a-space>
+        </template>
+
         <!-- 商品名称 列自定义内容 -->
         <template #productName_default="{ row, rowIndex }">
           <a-auto-complete
@@ -137,7 +155,12 @@
 <script>
 import {defineComponent, h, nextTick} from 'vue';
 import BatchAddProduct from '@/views/sc/stock/adjust/stock/batch-add-product.vue';
-import {DeleteOutlined, PlusOutlined} from '@ant-design/icons-vue';
+import {
+  DeleteOutlined,
+  MinusCircleTwoTone,
+  PlusCircleTwoTone,
+  PlusOutlined,
+} from '@ant-design/icons-vue';
 import * as api from '@/api/sc/stock/adjust/stock';
 import * as reasonApi from '@/api/sc/stock/adjust/reason';
 import {multiplePageMix} from '@/mixins/multiplePageMix';
@@ -163,6 +186,8 @@ export default defineComponent({
       return {
         h,
         PlusOutlined,
+        PlusCircleTwoTone,
+        MinusCircleTwoTone,
         DeleteOutlined,
         isEmpty,
         nextTick,
@@ -191,6 +216,13 @@ export default defineComponent({
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
+          { type: 'seq', width: 50, title: '序号' },
+          {
+            field: 'operation',
+            title: '操作',
+            width: 80,
+            slots: { default: 'operation_default' },
+          },
           { field: 'productCode', title: '商品编号', width: 120 },
           {
             field: 'productName',
@@ -252,17 +284,20 @@ export default defineComponent({
 
         this.tableData = [];
       },
+      getValidTableData() {
+        return this.tableData.filter((item) => !isEmpty(item.productId));
+      },
       validData() {
-        if (isEmpty(this.tableData)) {
+        const validTableData = this.getValidTableData();
+
+        if (isEmpty(validTableData)) {
           createError('请录入商品！');
           return false;
         }
-        for (let i = 0; i < this.tableData.length; i++) {
-          const data = this.tableData[i];
-          if (isEmpty(data.productId)) {
-            createError('第' + (i + 1) + '行商品不允许为空！');
-            return false;
-          }
+
+        for (let i = 0; i < validTableData.length; i++) {
+          const data = validTableData[i];
+
           if (isEmpty(data.stockNum)) {
             createError('第' + (i + 1) + '行调整库存数量不允许为空！');
             return false;
@@ -288,7 +323,7 @@ export default defineComponent({
           bizType: this.formData.bizType,
           reasonId: this.formData.reasonId,
           description: this.formData.description,
-          products: this.tableData.map((item) => {
+          products: this.getValidTableData().map((item) => {
             return {
               productId: item.productId,
               stockNum: item.stockNum,
@@ -385,6 +420,15 @@ export default defineComponent({
         const row = this.emptyProduct();
         this.tableData.push(row);
         this.focusProductNameInput(row.id);
+      },
+      insertProduct(index) {
+        const row = this.emptyProduct();
+        this.tableData.splice(index + 1, 0, row);
+        this.focusProductNameInput(row.id);
+      },
+      removeCurrentProduct(row) {
+        this.tableData = this.tableData.filter((item) => item.id !== row.id);
+        this.calcSum();
       },
       // 搜索商品
       queryProduct(queryString, row) {
