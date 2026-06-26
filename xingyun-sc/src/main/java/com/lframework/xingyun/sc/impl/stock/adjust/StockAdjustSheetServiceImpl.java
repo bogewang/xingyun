@@ -45,6 +45,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,7 +95,7 @@ public class StockAdjustSheetServiceImpl extends
     return getBaseMapper().getDetail(id);
   }
 
-  @OpLog(type = StockAdjustOpLogType.class, name = "新增库存调整单，ID：{}", params = {"#id"})
+  @OpLog(type = StockAdjustOpLogType.class, name = "新增库存调整单，ID：{}", params = { "#id" })
   @OrderTimeLineLog(type = CreateOrderTimeLineBizType.class, orderId = "#_result", name = "创建调整单")
   @Transactional(rollbackFor = Exception.class)
   @Override
@@ -114,7 +115,7 @@ public class StockAdjustSheetServiceImpl extends
     return data.getId();
   }
 
-  @OpLog(type = StockAdjustOpLogType.class, name = "修改库存调整单，ID：{}", params = {"#id"})
+  @OpLog(type = StockAdjustOpLogType.class, name = "修改库存调整单，ID：{}", params = { "#id" })
   @OrderTimeLineLog(type = UpdateOrderTimeLineBizType.class, orderId = "#vo.id", name = "修改调整单")
   @Transactional(rollbackFor = Exception.class)
   @Override
@@ -137,7 +138,7 @@ public class StockAdjustSheetServiceImpl extends
 
     // 删除出库单明细
     Wrapper<StockAdjustSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(
-            StockAdjustSheetDetail.class)
+        StockAdjustSheetDetail.class)
         .eq(StockAdjustSheetDetail::getSheetId, data.getId());
     stockAdjustSheetDetailService.remove(deleteDetailWrapper);
 
@@ -150,7 +151,7 @@ public class StockAdjustSheetServiceImpl extends
     statusList.add(StockAdjustSheetStatus.APPROVE_REFUSE);
 
     Wrapper<StockAdjustSheet> updateSheetWrapper = Wrappers.lambdaUpdate(
-            StockAdjustSheet.class)
+        StockAdjustSheet.class)
         .set(StockAdjustSheet::getApproveBy, null)
         .set(StockAdjustSheet::getApproveTime, null)
         .set(StockAdjustSheet::getRefuseReason, StringPool.EMPTY_STR)
@@ -164,7 +165,7 @@ public class StockAdjustSheetServiceImpl extends
     OpLogUtil.setExtra(vo);
   }
 
-  @OpLog(type = StockAdjustOpLogType.class, name = "删除库存调整单，ID：{}", params = {"#id"})
+  @OpLog(type = StockAdjustOpLogType.class, name = "删除库存调整单，ID：{}", params = { "#id" })
   @OrderTimeLineLog(orderId = "#id", delete = true)
   @Transactional(rollbackFor = Exception.class)
   @Override
@@ -188,12 +189,12 @@ public class StockAdjustSheetServiceImpl extends
     }
 
     Wrapper<StockAdjustSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(
-            StockAdjustSheetDetail.class)
+        StockAdjustSheetDetail.class)
         .eq(StockAdjustSheetDetail::getSheetId, id);
     stockAdjustSheetDetailService.remove(deleteDetailWrapper);
   }
 
-  @OpLog(type = StockAdjustOpLogType.class, name = "审核通过库存调整单，ID：{}", params = {"#vo.id"})
+  @OpLog(type = StockAdjustOpLogType.class, name = "审核通过库存调整单，ID：{}", params = { "#vo.id" })
   @OrderTimeLineLog(type = ApprovePassOrderTimeLineBizType.class, orderId = "#vo.id", name = "审核通过")
   @Transactional(rollbackFor = Exception.class)
   @Override
@@ -229,7 +230,7 @@ public class StockAdjustSheetServiceImpl extends
     }
 
     Wrapper<StockAdjustSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
-            StockAdjustSheetDetail.class)
+        StockAdjustSheetDetail.class)
         .eq(StockAdjustSheetDetail::getSheetId, data.getId())
         .orderByAsc(StockAdjustSheetDetail::getOrderNo);
     List<StockAdjustSheetDetail> details = stockAdjustSheetDetailService.list(
@@ -239,13 +240,14 @@ public class StockAdjustSheetServiceImpl extends
       Product product = productService.findById(detail.getProductId());
       if (data.getBizType() == StockAdjustSheetBizType.IN) {
         // 入库
+        BigDecimal taxAmount = NumberUtil.getNumber(NumberUtil.mul(product.getPurchasePrice(), detail.getStockNum()),
+            2);
         AddProductStockVo addProductStockVo = new AddProductStockVo();
         addProductStockVo.setProductId(product.getId());
         addProductStockVo.setScId(data.getScId());
         addProductStockVo.setStockNum(detail.getStockNum());
-        addProductStockVo.setDefaultTaxAmount(
-            NumberUtil.getNumber(NumberUtil.mul(product.getPurchasePrice(), detail.getStockNum()),
-                2));
+        addProductStockVo.setTaxAmount(taxAmount);
+        addProductStockVo.setDefaultTaxAmount(taxAmount);
         addProductStockVo.setCreateTime(now);
         addProductStockVo.setBizId(data.getId());
         addProductStockVo.setBizDetailId(detail.getId());
@@ -287,7 +289,7 @@ public class StockAdjustSheetServiceImpl extends
     return id;
   }
 
-  @OpLog(type = StockAdjustOpLogType.class, name = "审核拒绝库存调整单，ID：{}", params = {"#id"})
+  @OpLog(type = StockAdjustOpLogType.class, name = "审核拒绝库存调整单，ID：{}", params = { "#id" })
   @OrderTimeLineLog(type = ApproveReturnOrderTimeLineBizType.class, orderId = "#vo.id", name = "审核拒绝，拒绝理由：{}", params = "#vo.refuseReason")
   @Transactional(rollbackFor = Exception.class)
   @Override

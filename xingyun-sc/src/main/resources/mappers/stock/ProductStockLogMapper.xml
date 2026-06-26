@@ -76,6 +76,6 @@
                 </if>
             </if>
         </where>
-        ORDER BY gsl.create_time DESC, g.code
+        ORDER BY gsl.time_stamp DESC, g.code
     </select>
 </mapper>

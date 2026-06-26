@@ -22,90 +22,93 @@ import lombok.Data;
 @TableName("tbl_product_stock_log")
 public class ProductStockLog extends BaseEntity implements BaseDto {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  /**
-   * ID
-   */
-  private String id;
+    /**
+     * ID
+     */
+    private String id;
 
-  /**
-   * 仓库ID
-   */
-  private String scId;
+    /**
+     * 仓库ID
+     */
+    private String scId;
 
-  /**
-   * 商品ID
-   */
-  private String productId;
+    /**
+     * 商品ID
+     */
+    private String productId;
 
-  /**
-   * 原库存数量
-   */
-  private BigDecimal oriStockNum;
+    /**
+     * 原库存数量
+     */
+    private BigDecimal oriStockNum;
 
-  /**
-   * 现库存数量
-   */
-  private BigDecimal curStockNum;
+    /**
+     * 现库存数量
+     */
+    private BigDecimal curStockNum;
 
-  /**
-   * 原含税成本价
-   */
-  private BigDecimal oriTaxPrice;
+    /**
+     * 原含税成本价
+     */
+    private BigDecimal oriTaxPrice;
 
-  /**
-   * 现含税成本价
-   */
-  private BigDecimal curTaxPrice;
+    /**
+     * 现含税成本价
+     */
+    private BigDecimal curTaxPrice;
 
-  /**
-   * 变动库存数量
-   */
-  private BigDecimal stockNum;
+    /**
+     * 变动库存数量
+     */
+    private BigDecimal stockNum;
 
-  /**
-   * 变动含税金额
-   */
-  private BigDecimal taxAmount;
+    /**
+     * 变动含税金额
+     */
+    private BigDecimal taxAmount;
 
-  /**
-   * 创建人ID 新增时赋值
-   */
-  @TableField(fill = FieldFill.INSERT)
-  private String createById;
+    /**
+     * 创建人ID 新增时赋值
+     */
+    @TableField(fill = FieldFill.INSERT)
+    private String createById;
 
-  /**
-   * 创建人 新增时赋值
-   */
-  @TableField(fill = FieldFill.INSERT)
-  private String createBy;
+    /**
+     * 创建人 新增时赋值
+     */
+    @TableField(fill = FieldFill.INSERT)
+    private String createBy;
 
-  /**
-   * 创建时间
-   */
-  @TableField(fill = FieldFill.INSERT)
-  private LocalDateTime createTime;
+    /**
+     * 创建时间
+     */
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createTime;
 
-  /**
-   * 业务单据ID
-   */
-  private String bizId;
+    /**
+     * 业务单据ID
+     */
+    private String bizId;
 
-  /**
-   * 业务单据号
-   */
-  private String bizCode;
+    /**
+     * 业务单据号
+     */
+    private String bizCode;
 
-  /**
-   * 业务单据明细ID
-   */
-  private String bizDetailId;
+    /**
+     * 业务单据明细ID
+     */
+    private String bizDetailId;
 
-  /**
-   * 业务类型
-   */
-  private ProductStockBizType bizType;
+    /**
+     * 业务类型
+     */
+    private ProductStockBizType bizType;
 
-
+    /**
+     * 时间戳
+     */
+    private Long timeStamp;
 }

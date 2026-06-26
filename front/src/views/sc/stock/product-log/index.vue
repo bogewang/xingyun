@@ -324,19 +324,19 @@
           { field: 'stockNum', title: '变动库存数量', align: 'right', width: 140, sortable: true },
           {
             field: 'oriTaxPrice',
-            title: '变动前含税成本价',
+            title: '变动前成本价',
             align: 'right',
             width: 140,
             sortable: true,
           },
           {
             field: 'curTaxPrice',
-            title: '变动后含税成本价',
+            title: '变动后成本价',
             align: 'right',
             width: 140,
             sortable: true,
           },
-          { field: 'taxAmount', title: '变动含税金额', align: 'right', width: 140, sortable: true },
+          { field: 'taxAmount', title: '变动金额', align: 'right', width: 140, sortable: true },
           { field: 'createTime', title: '操作时间', minWidth: 170, sortable: true },
           { field: 'createBy', title: '操作人', minWidth: 100 },
           {

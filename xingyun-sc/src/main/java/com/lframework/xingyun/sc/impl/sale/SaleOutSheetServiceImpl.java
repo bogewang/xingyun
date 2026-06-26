@@ -69,6 +69,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -77,7 +78,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-
 
 @Service
 @Slf4j
@@ -142,12 +142,13 @@ public class SaleOutSheetServiceImpl extends
 
     @Autowired
     private ReceiveSheetDetailMapper receiveSheetDetailMapper;
+
     @Autowired
     private SupplierService supplierService;
 
     @Override
     public PageResult<SaleOutSheet> query(Integer pageIndex, Integer pageSize,
-                                          QuerySaleOutSheetVo vo) {
+            QuerySaleOutSheetVo vo) {
 
         Assert.greaterThanZero(pageIndex);
         Assert.greaterThanZero(pageSize);
@@ -178,7 +179,7 @@ public class SaleOutSheetServiceImpl extends
 
     @Override
     public PageResult<QuerySaleOutSheetDetailDto> queryDetail(Integer pageIndex, Integer pageSize,
-                                                              QuerySaleOutSheetVo vo) {
+            QuerySaleOutSheetVo vo) {
 
         Assert.greaterThanZero(pageIndex);
         Assert.greaterThanZero(pageSize);
@@ -191,8 +192,8 @@ public class SaleOutSheetServiceImpl extends
 
     @Override
     public PageResult<QuerySaleOutSheetDetailDto> queryPriceCheckDetail(Integer pageIndex,
-                                                                        Integer pageSize,
-                                                                        QuerySaleOutSheetVo vo) {
+            Integer pageSize,
+            QuerySaleOutSheetVo vo) {
 
         Assert.greaterThanZero(pageIndex);
         Assert.greaterThanZero(pageSize);
@@ -205,8 +206,8 @@ public class SaleOutSheetServiceImpl extends
 
     @Override
     public PageResult<SaleOutSheetProductProfitDto> queryProductProfit(Integer pageIndex,
-                                                                       Integer pageSize,
-                                                                       QuerySaleOutSheetVo vo) {
+            Integer pageSize,
+            QuerySaleOutSheetVo vo) {
 
         Assert.greaterThanZero(pageIndex);
         Assert.greaterThanZero(pageSize);
@@ -265,7 +266,8 @@ public class SaleOutSheetServiceImpl extends
             List<PrintSaleTagBo> collect = map.keySet().stream()
                     .map(productId -> {
                         PrintSaleTagBo bo = new PrintSaleTagBo();
-                        bo.setCustomerSimpleName(customer.getNickName() == null ? customer.getName() : customer.getNickName());
+                        bo.setCustomerSimpleName(
+                                customer.getNickName() == null ? customer.getName() : customer.getNickName());
                         bo.setProductName(productMap.get(productId).getName());
 
                         List<SaleOutSheetDetail> outDetails = map.get(productId);
@@ -425,9 +427,11 @@ public class SaleOutSheetServiceImpl extends
             return new ArrayList<>();
         }
 
-        List<String> supplierIds = details.stream().map(QuerySaleOutSheetDetailDto::getSupplierId).collect(Collectors.toList());
+        List<String> supplierIds = details.stream().map(QuerySaleOutSheetDetailDto::getSupplierId)
+                .collect(Collectors.toList());
         List<Supplier> suppliers = supplierService.selectByIds(supplierIds);
-        Map<String, String> supplierMap = suppliers.stream().collect(Collectors.toMap(Supplier::getId, Supplier::getName));
+        Map<String, String> supplierMap = suppliers.stream()
+                .collect(Collectors.toMap(Supplier::getId, Supplier::getName));
 
         Map<String, SaleOutSheetDetailExportModel> summaryMap = new LinkedHashMap<>();
         for (QuerySaleOutSheetDetailDto detail : details) {
@@ -455,8 +459,7 @@ public class SaleOutSheetServiceImpl extends
 
     private SaleOutSheetSalesExportHelper.DetailData buildSalesExportDetailData(
             GetSaleOutSheetBo.OrderDetailBo detail) {
-        SaleOutSheetSalesExportHelper.DetailData data =
-                new SaleOutSheetSalesExportHelper.DetailData();
+        SaleOutSheetSalesExportHelper.DetailData data = new SaleOutSheetSalesExportHelper.DetailData();
         data.setProductName(detail.getProductName());
         data.setSpec(detail.getSpec());
         data.setUnit(detail.getUnit());
@@ -490,7 +493,7 @@ public class SaleOutSheetServiceImpl extends
      * 保证“固定列 + 客户动态列 + 总计列”的展示顺序稳定。
      */
     private LinkedHashMap<String, String> buildCustomerColumnMap(List<SaleOutSheet> sheets,
-                                                                 Map<String, String> headerMap) {
+            Map<String, String> headerMap) {
         List<String> customerIds = sheets.stream().map(SaleOutSheet::getCustomerId).distinct()
                 .collect(Collectors.toList());
         Map<String, Customer> customerMap = customerService.listByIds(customerIds).stream()
@@ -556,9 +559,9 @@ public class SaleOutSheetServiceImpl extends
      * 输出前按“分类 -> 商品名称”升序排序，满足导出展示要求。
      */
     private List<SummaryRow> buildSummaryRows(List<SaleOutSheetDetail> details,
-                                              Map<String, SaleOutSheet> sheetMap,
-                                              Map<String, Product> productMap,
-                                              Map<String, ProductCategory> categoryMap) {
+            Map<String, SaleOutSheet> sheetMap,
+            Map<String, Product> productMap,
+            Map<String, ProductCategory> categoryMap) {
         Map<String, SummaryRow> summaryMap = new LinkedHashMap<>();
         for (SaleOutSheetDetail detail : details) {
             SaleOutSheet sheet = sheetMap.get(detail.getSheetId());
@@ -568,8 +571,8 @@ public class SaleOutSheetServiceImpl extends
             }
 
             // 每个商品汇总成一行，行内再按客户拆分单元格数据。
-            SummaryRow row = summaryMap.computeIfAbsent(product.getId(), key ->
-                    new SummaryRow(getCategoryName(product, categoryMap), product.getName(), product.getUnit()));
+            SummaryRow row = summaryMap.computeIfAbsent(product.getId(),
+                    key -> new SummaryRow(getCategoryName(product, categoryMap), product.getName(), product.getUnit()));
 
             // 同一客户的数量累加，备注去重并保留原始出现顺序。
             SummaryCell cell = row.cells.computeIfAbsent(sheet.getCustomerId(), key -> new SummaryCell());
@@ -664,7 +667,7 @@ public class SaleOutSheetServiceImpl extends
 
     @Override
     public PageResult<SaleOutSheet> selector(Integer pageIndex, Integer pageSize,
-                                             SaleOutSheetSelectorVo vo) {
+            SaleOutSheetSelectorVo vo) {
 
         Assert.greaterThanZero(pageIndex);
         Assert.greaterThanZero(pageSize);
@@ -679,8 +682,8 @@ public class SaleOutSheetServiceImpl extends
     public GetPaymentDateDto getPaymentDate(String customerId) {
 
         // 默认为当前日期的30天后，如当天为2021-10-01，则付款日期默认为2021-11-01
-        //（1）客户的结算方式为“任意指定”，则付款日期按照以上规则展示默认值，允许用户更改，但仅能选择当天及当天之后的日期。
-        //（2）客户的结算方式为“货到付款”（这个参数的名字后期会改，如“货销付款”），则付款日期默认为此刻，且不允许修改，即出库单的创建时间，可能会遇到跨日的问题，但付款日期，均赋值为出库单的创建日期。
+        // （1）客户的结算方式为“任意指定”，则付款日期按照以上规则展示默认值，允许用户更改，但仅能选择当天及当天之后的日期。
+        // （2）客户的结算方式为“货到付款”（这个参数的名字后期会改，如“货销付款”），则付款日期默认为此刻，且不允许修改，即出库单的创建时间，可能会遇到跨日的问题，但付款日期，均赋值为出库单的创建日期。
 
         Customer customer = customerService.findById(customerId);
 
@@ -718,7 +721,7 @@ public class SaleOutSheetServiceImpl extends
 
     @Override
     public PageResult<SaleOutSheet> queryWithReturn(Integer pageIndex, Integer pageSize,
-                                                    QuerySaleOutSheetWithReturnVo vo) {
+            QuerySaleOutSheetWithReturnVo vo) {
 
         Assert.greaterThanZero(pageIndex);
         Assert.greaterThanZero(pageSize);
@@ -1147,7 +1150,7 @@ public class SaleOutSheetServiceImpl extends
 
     @Override
     public List<SaleOutSheet> getApprovedList(String customerId, LocalDateTime startTime,
-                                              LocalDateTime endTime, SettleStatus settleStatus) {
+            LocalDateTime endTime, SettleStatus settleStatus) {
 
         return getBaseMapper().getApprovedList(customerId, startTime, endTime, settleStatus);
     }
@@ -1254,8 +1257,6 @@ public class SaleOutSheetServiceImpl extends
             subProductStockVo.setBizDetailId(detail.getId());
             subProductStockVo.setBizCode(sheet.getCode());
             subProductStockVo.setBizType(ProductStockBizType.SALE.getCode());
-            subProductStockVo.setTaxAmount(detail.getTaxAmount());
-
             ProductStockChangeDto stockChange = productStockService.subStock(subProductStockVo);
 
             SaleOutSheetDetailLot detailLot = new SaleOutSheetDetailLot();
@@ -1341,6 +1342,7 @@ public class SaleOutSheetServiceImpl extends
 
     /**
      * 更新商品价格
+     * 
      * @param product
      * @param detail
      */
@@ -1473,7 +1475,7 @@ public class SaleOutSheetServiceImpl extends
         SaleOutSheetService thisService = getThis(this.getClass());
 
         for (int i = 0; i < list.size(); i++) {
-            list.get(i).setSeq(i+2);
+            list.get(i).setSeq(i + 2);
         }
         Map<String, List<SaleOutSheetQueryImportModel>> map = list.stream().collect(
                 Collectors.groupingBy(item -> item.getOrderDate() + "|" + item.getCustomerName()));
@@ -1530,12 +1532,14 @@ public class SaleOutSheetServiceImpl extends
     }
 
     private List<String> checkImportData(List<SaleOutSheetImportModel> list) {
-        List<String> productNames = list.stream().map(SaleOutSheetImportModel::getProductName).collect(Collectors.toList());
+        List<String> productNames = list.stream().map(SaleOutSheetImportModel::getProductName)
+                .collect(Collectors.toList());
         List<Product> products = productService.selectByProductName(productNames);
         Map<String, Product> nameSpecUnitMap = products.stream()
                 .collect(Collectors.toMap(item -> item.getName() + item.getSpec() + item.getUnit(), item -> item));
         Map<String, Product> nameUnitMap = products.stream()
-                .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item, (oldValue, newValue) -> oldValue));
+                .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item,
+                        (oldValue, newValue) -> oldValue));
 
         List<String> errors = Lists.newArrayList();
         for (int i = 0; i < list.size(); i++) {
@@ -1601,7 +1605,8 @@ public class SaleOutSheetServiceImpl extends
     }
 
     private void refreshCostPrice(String orderId, Boolean manualFillAllCost, boolean overrideFillAllCost) {
-        log.info("refreshCostPrice start, orderId: {}, manualFillAllCost: {}, overrideFillAllCost: {}", orderId, manualFillAllCost, overrideFillAllCost);
+        log.info("refreshCostPrice start, orderId: {}, manualFillAllCost: {}, overrideFillAllCost: {}", orderId,
+                manualFillAllCost, overrideFillAllCost);
         SaleOutSheet saleOutSheet = getBaseMapper().selectById(orderId);
         if (saleOutSheet == null) {
             return;
@@ -1648,7 +1653,8 @@ public class SaleOutSheetServiceImpl extends
                     detail.getTaxPrice() == null ? BigDecimal.ZERO : detail.getTaxPrice(),
                     saleDetail.getOrderNum()),
                     6);
-            BigDecimal detailTotalProfit = NumberUtil.getNumber(NumberUtil.sub(saleDetail.getTaxAmount(), detailCostAmount), 6);
+            BigDecimal detailTotalProfit = NumberUtil
+                    .getNumber(NumberUtil.sub(saleDetail.getTaxAmount(), detailCostAmount), 6);
 
             saleDetail.setCostPrice(detail.getTaxPrice());
             saleDetail.setTotalProfit(detailTotalProfit);
@@ -1684,7 +1690,8 @@ public class SaleOutSheetServiceImpl extends
      */
     private Map<String, QueryReceiveSheetDetailDto> getCostPriceMap(LocalDate orderDate) {
         LocalDate beginDate = orderDate.plusMonths(-1);
-        List<QueryReceiveSheetDetailDto> latestCostPrices = receiveSheetDetailMapper.getLatestCostPriceList(beginDate, orderDate);
+        List<QueryReceiveSheetDetailDto> latestCostPrices = receiveSheetDetailMapper.getLatestCostPriceList(beginDate,
+                orderDate);
         if (CollectionUtils.isEmpty(latestCostPrices)) {
             return new HashMap<>();
         }
