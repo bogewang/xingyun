@@ -32,22 +32,22 @@ public class ReceiveSheetDetailExportModel extends BaseBo<ReceiveSheetDetail> im
     @ExcelProperty("简称")
     private String shortName;
 
+    @ExcelProperty("商品分类")
+    private String categoryName;
+
     @ExcelProperty("规格")
     private String spec;
 
     @ExcelProperty("单位")
     private String unit;
 
-    @ExcelProperty("商品分类")
-    private String categoryName;
-
-    @ExcelProperty("采购价（元）")
-    private BigDecimal taxPrice;
-
-    @ExcelProperty("收货数量")
+    @ExcelProperty("数量")
     private BigDecimal orderNum;
 
-    @ExcelProperty("含税金额")
+    @ExcelProperty("单价（元）")
+    private BigDecimal taxPrice;
+
+    @ExcelProperty("金额")
     private BigDecimal taxAmount;
 
     @ExcelProperty("备注")
