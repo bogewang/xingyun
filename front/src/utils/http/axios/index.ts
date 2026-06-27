@@ -27,6 +27,24 @@ function resolveResponseErrorMessage(data?: Result) {
   return payload.msg || payload.message || payload.error?.message || '网络请求错误，请稍后重试！';
 }
 
+function showResponseErrorMessage(message: string, options: RequestOptions) {
+  let errorMessageMode = options?.errorMessageMode || defaultErrorMessageMode;
+  if (options?.hiddenError) {
+    errorMessageMode = 'none';
+  }
+
+  if (errorMessageMode === 'none') {
+    return;
+  }
+
+  if (errorMessageMode === 'modal') {
+    createErrorDialog(message);
+    return;
+  }
+
+  createError(message);
+}
+
 /**
  * @description: 数据处理，方便区分多种处理方式
  */
@@ -85,7 +103,9 @@ const transform: AxiosTransform = {
       return data.data;
     }
 
-    throw new Error(resolveResponseErrorMessage(data));
+    const errorMessage = resolveResponseErrorMessage(data);
+    showResponseErrorMessage(errorMessage, options);
+    throw new Error(errorMessage);
   },
 
   // 请求之前处理config
