@@ -314,6 +314,7 @@
             width: 140,
             sortable: true,
           },
+          { field: 'stockNum', title: '变动库存数量', align: 'right', width: 140, sortable: true },
           {
             field: 'curStockNum',
             title: '变动后库存数量',
@@ -321,7 +322,6 @@
             width: 140,
             sortable: true,
           },
-          { field: 'stockNum', title: '变动库存数量', align: 'right', width: 140, sortable: true },
           {
             field: 'oriTaxPrice',
             title: '变动前成本价',
