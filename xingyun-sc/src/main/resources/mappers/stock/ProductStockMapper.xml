@@ -26,33 +26,16 @@
 
     <update id="addStock">
         UPDATE tbl_product_stock
-        SET
-            stock_num = stock_num + #{stockNum},
-            tax_amount = CASE
-                WHEN stock_num = 0 THEN 0
-                ELSE tax_amount + #{taxAmount}
-            END
-            <if test="reCalcCostPrice">
-                ,tax_price = CASE
-                    WHEN stock_num = 0 THEN 0
-                    ELSE tax_amount / stock_num
-                END
-            </if>
+        SET stock_num = stock_num + #{stockNum}, tax_amount = tax_amount + #{taxAmount}
+        <if test="reCalcCostPrice">,tax_price = CASE WHEN stock_num = 0 THEN 0 ELSE tax_amount / stock_num END</if>
         WHERE product_id = #{productId}
         AND stock_num = #{oriStockNum}
         AND tax_amount = #{oriTaxAmount}
     </update>
     <update id="subStock">
         UPDATE tbl_product_stock
-        SET stock_num = stock_num - #{stockNum},
-        tax_amount = CASE
-        WHEN stock_num - #{stockNum} = 0 THEN 0
-        ELSE tax_amount - #{taxAmount}
-        END
-        <if test="reCalcCostPrice">,tax_price = CASE
-            WHEN stock_num - #{stockNum} = 0 THEN 0
-            ELSE (tax_amount - #{taxAmount}) / (stock_num - #{stockNum})
-        END</if>
+        SET stock_num = stock_num - #{stockNum}, tax_amount = tax_amount - #{taxAmount}
+        <if test="reCalcCostPrice">,tax_price = CASE WHEN stock_num = 0 THEN tax_price ELSE tax_amount / stock_num END</if>
         WHERE product_id = #{productId}
         AND stock_num = #{oriStockNum}
         AND tax_amount = #{oriTaxAmount}
