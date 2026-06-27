@@ -6,10 +6,12 @@ import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.starter.web.core.vo.BaseVo;
+import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.sc.entity.PurchaseConfig;
 import com.lframework.xingyun.sc.service.purchase.PurchaseConfigService;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -115,6 +117,11 @@ public class CreateReceiveSheetVo implements BaseVo, Serializable {
 
         if (!purchaseConfig.getReceiveRequirePurchase().equals(this.required)) {
             throw new DefaultClientException("系统参数发生改变，请刷新页面后重试！");
+        }
+
+        if (StringUtils.isBlank(this.scId)) {
+            StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
+            this.scId = storeCenterService.getDefaultStoreId();
         }
 
         this.validate(purchaseConfig.getReceiveRequirePurchase());

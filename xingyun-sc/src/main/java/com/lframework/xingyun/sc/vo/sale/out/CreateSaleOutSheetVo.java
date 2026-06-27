@@ -6,10 +6,12 @@ import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.starter.web.core.vo.BaseVo;
+import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.sc.entity.SaleConfig;
 import com.lframework.xingyun.sc.service.sale.SaleConfigService;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
@@ -111,7 +113,10 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
         if (!saleConfig.getOutStockRequireSale().equals(this.required)) {
             throw new DefaultClientException("系统参数发生改变，请刷新页面后重试！");
         }
-
+        if (StringUtils.isBlank(this.scId)) {
+            StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
+            this.scId = storeCenterService.getDefaultStoreId();
+        }
         this.validate(saleConfig.getOutStockRequireSale());
     }
 

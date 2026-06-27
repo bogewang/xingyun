@@ -257,10 +257,15 @@ public class ReceiveSheetController extends DefaultBaseController {
     @PostMapping
     public InvokeResult<String> create(@RequestBody @Valid CreateReceiveSheetVo vo) {
 
-        vo.validate();
+        try {
+            vo.validate();
 
-        String id = receiveSheetService.create(vo);
-        return InvokeResultBuilder.success(id);
+            String id = receiveSheetService.create(vo);
+            return InvokeResultBuilder.success(id);
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
     }
 
     /**
