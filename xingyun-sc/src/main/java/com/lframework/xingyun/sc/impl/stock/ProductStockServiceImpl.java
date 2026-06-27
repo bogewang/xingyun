@@ -146,11 +146,6 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         Assert.greaterThanZero(vo.getStockNum());
 
         Product product = productService.findById(vo.getProductId());
-        if (product.getProductType() != ProductType.NORMAL) {
-            throw new DefaultClientException(
-                    "只有商品类型为【" + ProductType.NORMAL.getDesc() + "】的商品支持入库！");
-        }
-
         Wrapper<ProductStock> queryWrapper = Wrappers.lambdaQuery(ProductStock.class)
                 .eq(ProductStock::getProductId, vo.getProductId());
 
