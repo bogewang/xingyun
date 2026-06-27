@@ -19,168 +19,170 @@
         </j-form>
       </j-border>
       <!-- 数据列表 -->
-      <vxe-grid
-        class="sheet-editor-grid"
-        id="ReceiveSheetAddUnRequire"
-        ref="grid"
-        resizable
-        show-overflow
-        highlight-hover-row
-        keep-source
-        row-id="id"
-        height="100%"
-        :data="tableData"
-        :columns="tableColumn"
-        :toolbar-config="toolbarConfig"
-        :custom-config="{}"
-      >
-        <!-- 工具栏 -->
-        <template #toolbar_buttons>
-          <a-space>
-            <a-button type="primary" :icon="h(PlusOutlined)" @click="addProduct">新增</a-button>
-            <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
-            <a-button :icon="h(PlusOutlined)" @click="openBatchAddProductDialog"
-              >批量添加商品</a-button
-            >
-            <a-button :icon="h(NumberOutlined)" @click="batchInputReceiveNum"
-              >批量录入数量</a-button
-            >
-            <a-button :icon="h(EditOutlined)" @click="batchInputPurchasePrice"
-              >批量调整采购价</a-button
-            >
-            <a-button
-              v-permission="['purchase:receive:import']"
-              :icon="h(CloudUploadOutlined)"
-              @click="$refs.importer.openDialog()"
-              >导入Excel</a-button
-            >
-          </a-space>
-        </template>
+      <div class="sheet-editor-grid-wrapper">
+        <vxe-grid
+          class="sheet-editor-grid"
+          id="ReceiveSheetAddUnRequire"
+          ref="grid"
+          resizable
+          show-overflow
+          highlight-hover-row
+          keep-source
+          row-id="id"
+          height="100%"
+          :data="tableData"
+          :columns="tableColumn"
+          :toolbar-config="toolbarConfig"
+          :custom-config="{}"
+        >
+          <!-- 工具栏 -->
+          <template #toolbar_buttons>
+            <a-space>
+              <a-button type="primary" :icon="h(PlusOutlined)" @click="addProduct">新增</a-button>
+              <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
+              <a-button :icon="h(PlusOutlined)" @click="openBatchAddProductDialog"
+                >批量添加商品</a-button
+              >
+              <a-button :icon="h(NumberOutlined)" @click="batchInputReceiveNum"
+                >批量录入数量</a-button
+              >
+              <a-button :icon="h(EditOutlined)" @click="batchInputPurchasePrice"
+                >批量调整采购价</a-button
+              >
+              <a-button
+                v-permission="['purchase:receive:import']"
+                :icon="h(CloudUploadOutlined)"
+                @click="$refs.importer.openDialog()"
+                >导入Excel</a-button
+              >
+            </a-space>
+          </template>
 
-        <template #operation_default="{ row, rowIndex }">
-          <a-space size="small">
-            <a-button
-              type="link"
-              size="small"
-              :icon="h(PlusCircleTwoTone)"
-              @click="insertProduct(rowIndex)"
-            />
-            <a-button
-              type="link"
-              size="small"
-              danger
-              :icon="h(MinusCircleTwoTone)"
-              @click="removeCurrentProduct(row)"
-            />
-          </a-space>
-        </template>
+          <template #operation_default="{ row, rowIndex }">
+            <a-space size="small">
+              <a-button
+                type="link"
+                size="small"
+                :icon="h(PlusCircleTwoTone)"
+                @click="insertProduct(rowIndex)"
+              />
+              <a-button
+                type="link"
+                size="small"
+                danger
+                :icon="h(MinusCircleTwoTone)"
+                @click="removeCurrentProduct(row)"
+              />
+            </a-space>
+          </template>
 
-        <!-- 商品名称 列自定义内容 -->
-        <template #productName_default="{ row, rowIndex }">
-          <a-auto-complete
-            v-if="isEmpty(row.productId) || row.editingProduct"
-            :ref="'productInputRef' + rowIndex"
-            v-model:value="row.productQuery"
-            placeholder="请输入商品编号/名称/SKU编号/简码"
-            :options="row.productOptions"
-            :dropdown-match-select-width="false"
-            :dropdown-style="{ width: '890px' }"
-            placement="bottomLeft"
-            @search="(e) => queryProduct(e, row)"
-            @keydown="(e) => handleProductSelectKeydown(e, row, rowIndex)"
-          >
-            <!-- 自定义下拉框内容 -->
-            <template #dropdownRender>
-              <div v-if="!isEmpty(row.products)" @mousedown.prevent @click.stop>
-                <vxe-table
-                  :data="row.products"
-                  max-height="360"
-                  class="cursor-pointer"
-                  highlight-hover-row
-                  show-overflow
-                  :row-config="{ isHover: true }"
-                  :row-class-name="({ row: product }) => getProductSelectRowClass(row, product)"
-                  @cell-click="({ row: product }) => handleSelectProduct(rowIndex, product)"
-                >
-                  <vxe-column type="seq" title="序号" width="60" />
-                  <vxe-column field="productName" title="商品名称" min-width="200">
-                    <template #default="{ row: product }">
-                      <span>{{ product.productName }}</span>
-                      <span v-if="product.hotLevel" class="inline-product-hot-stars">
-                        <StarTwoTone
-                          v-for="star in product.hotLevel"
-                          :key="star"
-                          two-tone-color="#faad14"
-                        />
-                      </span>
-                    </template>
-                  </vxe-column>
-                  <vxe-column field="spec" title="规格" width="80" />
-                  <vxe-column field="unit" title="单位" width="80" />
-                  <vxe-column
-                    field="purchasePrice"
-                    title="参考采购价（元）"
-                    width="140"
-                    align="right"
-                  />
-                  <vxe-column
-                    field="latestPurchasePrice"
-                    title="最新采购价（元）"
-                    width="140"
-                    align="right"
-                  />
-                  <vxe-column field="stockNum" title="库存数量" width="140" align="right" />
-                </vxe-table>
-                <div
-                  class="inline-product-select-add"
-                  @mousedown.prevent
-                  @click.stop="openProductAddPage"
-                >
-                  + 新增商品
+          <!-- 商品名称 列自定义内容 -->
+          <template #productName_default="{ row, rowIndex }">
+            <a-auto-complete
+              v-if="isEmpty(row.productId) || row.editingProduct"
+              :ref="'productInputRef' + rowIndex"
+              v-model:value="row.productQuery"
+              placeholder="请输入商品编号/名称/SKU编号/简码"
+              :options="row.productOptions"
+              :dropdown-match-select-width="false"
+              :dropdown-style="{ width: '890px' }"
+              placement="bottomLeft"
+              @search="(e) => queryProduct(e, row)"
+              @keydown="(e) => handleProductSelectKeydown(e, row, rowIndex)"
+            >
+              <!-- 自定义下拉框内容 -->
+              <template #dropdownRender>
+                <div v-if="!isEmpty(row.products)" @mousedown.prevent @click.stop>
+                  <vxe-table
+                    :data="row.products"
+                    max-height="360"
+                    class="cursor-pointer"
+                    highlight-hover-row
+                    show-overflow
+                    :row-config="{ isHover: true }"
+                    :row-class-name="({ row: product }) => getProductSelectRowClass(row, product)"
+                    @cell-click="({ row: product }) => handleSelectProduct(rowIndex, product)"
+                  >
+                    <vxe-column type="seq" title="序号" width="60" />
+                    <vxe-column field="productName" title="商品名称" min-width="200">
+                      <template #default="{ row: product }">
+                        <span>{{ product.productName }}</span>
+                        <span v-if="product.hotLevel" class="inline-product-hot-stars">
+                          <StarTwoTone
+                            v-for="star in product.hotLevel"
+                            :key="star"
+                            two-tone-color="#faad14"
+                          />
+                        </span>
+                      </template>
+                    </vxe-column>
+                    <vxe-column field="spec" title="规格" width="80" />
+                    <vxe-column field="unit" title="单位" width="80" />
+                    <vxe-column
+                      field="purchasePrice"
+                      title="参考采购价（元）"
+                      width="140"
+                      align="right"
+                    />
+                    <vxe-column
+                      field="latestPurchasePrice"
+                      title="最新采购价（元）"
+                      width="140"
+                      align="right"
+                    />
+                    <vxe-column field="stockNum" title="库存数量" width="140" align="right" />
+                  </vxe-table>
+                  <div
+                    class="inline-product-select-add"
+                    @mousedown.prevent
+                    @click.stop="openProductAddPage"
+                  >
+                    + 新增商品
+                  </div>
                 </div>
-              </div>
-            </template>
-          </a-auto-complete>
-          <span
-            v-else
-            style="color: #1677ff; cursor: pointer"
-            @click="enableProductEdit(rowIndex)"
-            >{{ row.productName }}</span
-          >
-        </template>
+              </template>
+            </a-auto-complete>
+            <span
+              v-else
+              style="color: #1677ff; cursor: pointer"
+              @click="enableProductEdit(rowIndex)"
+              >{{ row.productName }}</span
+            >
+          </template>
 
-        <!-- 采购价 列自定义内容 -->
-        <template #purchasePrice_default="{ row, rowIndex }">
-          <a-input
-            :ref="'purchasePriceInputRef' + rowIndex"
-            v-model:value="row.purchasePrice"
-            class="number-input"
-            @input="(e) => purchasePriceInput(e.target.value)"
-          />
-        </template>
+          <!-- 采购价 列自定义内容 -->
+          <template #purchasePrice_default="{ row, rowIndex }">
+            <a-input
+              :ref="'purchasePriceInputRef' + rowIndex"
+              v-model:value="row.purchasePrice"
+              class="number-input"
+              @input="(e) => purchasePriceInput(e.target.value)"
+            />
+          </template>
 
-        <!-- 收货数量 列自定义内容 -->
-        <template #receiveNum_default="{ row, rowIndex }">
-          <a-input
-            :ref="'receiveNumInputRef' + rowIndex"
-            v-model:value="row.receiveNum"
-            class="number-input"
-            @input="(e) => receiveNumInput(e.target.value)"
-          />
-        </template>
+          <!-- 收货数量 列自定义内容 -->
+          <template #receiveNum_default="{ row, rowIndex }">
+            <a-input
+              :ref="'receiveNumInputRef' + rowIndex"
+              v-model:value="row.receiveNum"
+              class="number-input"
+              @input="(e) => receiveNumInput(e.target.value)"
+            />
+          </template>
 
-        <!-- 含税金额 列自定义内容 -->
-        <template #taxAmount_default="{ row }">
-          <span v-if="isFloatGeZero(row.purchasePrice) && isFloatGeZero(row.receiveNum)">{{
-            getNumber(mul(row.purchasePrice, row.receiveNum), 2)
-          }}</span>
-        </template>
+          <!-- 含税金额 列自定义内容 -->
+          <template #taxAmount_default="{ row }">
+            <span v-if="isFloatGeZero(row.purchasePrice) && isFloatGeZero(row.receiveNum)">{{
+              getNumber(mul(row.purchasePrice, row.receiveNum), 2)
+            }}</span>
+          </template>
 
-        <!-- 备注 列自定义内容 -->
-        <template #description_default="{ row, rowIndex }">
-          <a-input :ref="'descriptionInputRef' + rowIndex" v-model:value="row.description" />
-        </template>
-      </vxe-grid>
+          <!-- 备注 列自定义内容 -->
+          <template #description_default="{ row, rowIndex }">
+            <a-input :ref="'descriptionInputRef' + rowIndex" v-model:value="row.description" />
+          </template>
+        </vxe-grid>
+      </div>
 
       <j-border title="合计">
         <j-form bordered label-width="140px">
@@ -938,10 +940,14 @@
     overflow: hidden;
   }
 
-  .sheet-editor-grid {
+  .sheet-editor-grid-wrapper {
     flex: 1;
     min-height: 0;
     overflow: hidden;
+  }
+
+  .sheet-editor-grid {
+    height: 100%;
   }
 
   .sheet-editor-actions {

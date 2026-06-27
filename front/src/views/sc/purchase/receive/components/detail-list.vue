@@ -58,40 +58,6 @@
                     @change="onCreateByChange"
                   />
                 </j-form-item>
-                <j-form-item label="审核人">
-                  <a-select
-                    v-model:value="searchFormData.approveBy"
-                    allow-clear
-                    show-search
-                    :filter-option="filterSelectOption"
-                    :options="approveByOptions"
-                    placeholder="请选择审核人"
-                    @focus="loadApproveByOptions()"
-                    @search="loadApproveByOptions"
-                    @change="onApproveByChange"
-                  />
-                </j-form-item>
-                <j-form-item label="审核日期">
-                  <a-range-picker
-                    v-model:value="approveDateRange"
-                    value-format="YYYY-MM-DD"
-                    :placeholder="['开始日期', '结束日期']"
-                  />
-                </j-form-item>
-                <j-form-item label="状态">
-                  <a-select v-model:value="searchFormData.status" placeholder="全部" allow-clear>
-                    <a-select-option
-                      v-for="item in RECEIVE_SHEET_STATUS.values()"
-                      :key="item.code"
-                      :value="item.code"
-                    >
-                      {{ item.desc }}
-                    </a-select-option>
-                  </a-select>
-                </j-form-item>
-                <j-form-item label="采购订单号">
-                  <a-input v-model:value="searchFormData.purchaseOrderCode" allow-clear />
-                </j-form-item>
                 <j-form-item label="结算状态">
                   <a-select
                     v-model:value="searchFormData.settleStatus"
@@ -230,6 +196,7 @@
         },
         tableColumn: [
           { type: 'seq', width: 50, title: '序号' },
+          { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
           {
             field: 'code',
             title: '单据号',
@@ -238,25 +205,16 @@
             slots: { default: 'code_default' },
           },
           { field: 'supplierName', title: '供应商名称', width: 140 },
-          { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
           { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 180 },
           { field: 'spec', title: '规格', width: 100 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'orderNum', title: '收货数量', align: 'right', width: 100 },
+          { field: 'orderNum', title: '数量', align: 'right', width: 100 },
           { field: 'taxPrice', title: '采购价', align: 'right', width: 100 },
           { field: 'taxAmount', title: '采购金额', align: 'right', width: 100 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
-          { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
-          { field: 'approveBy', title: '审核人', width: 100 },
-          {
-            field: 'status',
-            title: '状态',
-            width: 100,
-            formatter: ({ cellValue }) => RECEIVE_SHEET_STATUS.getDesc(cellValue),
-          },
           {
             field: 'settleStatus',
             title: '结算状态',
