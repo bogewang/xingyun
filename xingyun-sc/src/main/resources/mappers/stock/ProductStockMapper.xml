@@ -75,6 +75,13 @@
             AND gs.sc_id = #{scId}
         </if>
     </select>
+    <select id="getPositiveStockListByScId" resultMap="ProductStock">
+        <include refid="ProductStockDto_sql"/>
+        WHERE gs.stock_num > 0
+        <if test="scId != null and scId != ''">
+            AND gs.sc_id = #{scId}
+        </if>
+    </select>
     <select id="query" resultMap="ProductStock">
         <include refid="ProductStockDto_sql"/>
         LEFT JOIN recursion_mapping AS rm ON rm.node_id = g.category_id and rm.node_type = 2

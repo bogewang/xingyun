@@ -52,6 +52,7 @@ import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetDetailExportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetSalesExportHelper;
+import com.lframework.xingyun.sc.mappers.ProductStockMapper;
 import com.lframework.xingyun.sc.mappers.ReceiveSheetDetailMapper;
 import com.lframework.xingyun.sc.mappers.SaleOutSheetMapper;
 import com.lframework.xingyun.sc.service.ProductHotnessService;
@@ -86,6 +87,8 @@ public class SaleOutSheetServiceImpl extends
         BaseMpServiceImpl<SaleOutSheetMapper, SaleOutSheet> implements SaleOutSheetService {
 
     private final List<String> NO_NEED_PRINT = Lists.newArrayList("调料干杂");
+    private static final String COST_PRICE_SOURCE_USE_STOCK_PRICE_PM_KEY =
+            "sale_out_cost_price_use_stock_price";
 
     @Autowired
     private SaleOutSheetDetailService saleOutSheetDetailService;
@@ -146,6 +149,9 @@ public class SaleOutSheetServiceImpl extends
 
     @Autowired
     private ReceiveSheetDetailMapper receiveSheetDetailMapper;
+
+    @Autowired
+    private ProductStockMapper productStockMapper;
 
     @Autowired
     private SupplierService supplierService;
@@ -1648,7 +1654,8 @@ public class SaleOutSheetServiceImpl extends
         // 2. 获取销售明细，补齐cost_price,total_profit
         // 3. 汇总单据明细，补齐单据cost_price,total_profit
         // 4. 如果所有的商品采购成本都已经录入，则标记单据fill_all_cost=true, 单据查询页面也展示该字段
-        Map<String, QueryReceiveSheetDetailDto> receiveCostPriceMap = getCostPriceMap(orderDate);
+        Map<String, QueryReceiveSheetDetailDto> receiveCostPriceMap = getCostPriceMap(
+                saleOutSheet.getScId(), orderDate);
 
         List<SaleOutSheetDetail> saleDetails = saleOutSheetDetailService.getBySheetId(orderId);
 
@@ -1720,15 +1727,75 @@ public class SaleOutSheetServiceImpl extends
      * @param orderDate
      * @return
      */
-    private Map<String, QueryReceiveSheetDetailDto> getCostPriceMap(LocalDate orderDate) {
+    private Map<String, QueryReceiveSheetDetailDto> getCostPriceMap(String scId, LocalDate orderDate) {
+        if (useStockPriceAsLatestCostPrice()) {
+            return getCostPriceMapFromProductStock(scId);
+        }
+
+        return getCostPriceMapFromReceiveSheet(orderDate);
+    }
+
+    /**
+     * 采用最近的采购价
+     * @param orderDate
+     * @return
+     */
+    private Map<String, QueryReceiveSheetDetailDto> getCostPriceMapFromReceiveSheet(LocalDate orderDate) {
         LocalDate beginDate = orderDate.plusMonths(-1);
         List<QueryReceiveSheetDetailDto> latestCostPrices = receiveSheetDetailMapper.getLatestCostPriceList(beginDate,
                 orderDate);
+
+        return toCostPriceMap(latestCostPrices);
+    }
+
+    /**
+     * 采用库存表成本价
+     * @param scId
+     * @return
+     */
+    private Map<String, QueryReceiveSheetDetailDto> getCostPriceMapFromProductStock(String scId) {
+        List<ProductStock> productStocks = productStockMapper.getPositiveStockListByScId(scId);
+        if (CollectionUtils.isEmpty(productStocks)) {
+            return new HashMap<>();
+        }
+
+        List<QueryReceiveSheetDetailDto> latestCostPrices = productStocks.stream().map(item -> {
+            QueryReceiveSheetDetailDto dto = new QueryReceiveSheetDetailDto();
+            dto.setProductId(item.getProductId());
+            dto.setTaxPrice(item.getTaxPrice());
+            return dto;
+        }).collect(Collectors.toList());
+
+        return toCostPriceMap(latestCostPrices);
+    }
+
+    /**
+     *
+     * @param latestCostPrices
+     * @return
+     */
+    private Map<String, QueryReceiveSheetDetailDto> toCostPriceMap(
+            List<QueryReceiveSheetDetailDto> latestCostPrices) {
         if (CollectionUtils.isEmpty(latestCostPrices)) {
             return new HashMap<>();
         }
 
         return latestCostPrices.stream().collect(Collectors.toMap(QueryReceiveSheetDetailDto::getProductId,
                 item -> item, (v1, v2) -> v1, HashMap::new));
+    }
+
+    /**
+     * 是否优先使用库存表成本价
+     * @return
+     */
+    private boolean useStockPriceAsLatestCostPrice() {
+        QuerySysParameterVo sysParameterVo = new QuerySysParameterVo();
+        sysParameterVo.setPmKey(COST_PRICE_SOURCE_USE_STOCK_PRICE_PM_KEY);
+        List<SysParameter> list = sysParameterService.query(sysParameterVo);
+        if (CollectionUtil.isEmpty(list)) {
+            return false;
+        }
+
+        return BooleanUtil.toBoolean(list.get(0).getPmValue());
     }
 }

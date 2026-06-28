@@ -63,6 +63,14 @@ public interface ProductStockMapper extends BaseMapper<ProductStock> {
                                               @Param("scId") String scId, @Param("productType") Integer productType);
 
     /**
+     * 查询指定仓库下库存数量大于 0 的商品库存
+     *
+     * @param scId 仓库ID
+     * @return 商品库存列表
+     */
+    List<ProductStock> getPositiveStockListByScId(@Param("scId") String scId);
+
+    /**
      * 入库
      *
      * @param productId
