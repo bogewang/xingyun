@@ -409,7 +409,7 @@
                 </if>
             </if>
         </where>
-        ORDER BY s.order_date DESC
+        ORDER BY s.order_date DESC, s.id DESC
     </select>
     <select id="queryProfitSummary" resultType="com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo">
         SELECT
