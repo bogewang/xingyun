@@ -1,6 +1,8 @@
 package com.lframework.xingyun.sc.bo.sale;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
@@ -9,9 +11,9 @@ import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
 import com.lframework.xingyun.sc.entity.ProductStock;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-
 import java.math.BigDecimal;
+import java.util.List;
+import lombok.Data;
 
 @Data
 public class SaleProductBo extends BaseBo<SaleProductDto> {
@@ -147,13 +149,20 @@ public class SaleProductBo extends BaseBo<SaleProductDto> {
         this.latestSalePrice = productLatestPriceCacheService.getLatestSalePrice(this.getProductId());
         this.latestPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(this.getProductId());
 
+        ProductStockService productStockService = ApplicationUtil.getBean(
+            ProductStockService.class);
         if (StringUtil.isBlank(this.getScId())) {
-            this.stockNum = BigDecimal.ZERO;
+            List<ProductStock> productStocks = productStockService.list(
+                Wrappers.lambdaQuery(ProductStock.class).eq(ProductStock::getProductId, this.getProductId()));
+            if (CollectionUtil.isEmpty(productStocks)) {
+                this.stockNum = BigDecimal.ZERO;
+            } else {
+                this.stockNum = productStocks.stream().map(ProductStock::getStockNum)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            }
             return;
         }
 
-        ProductStockService productStockService = ApplicationUtil.getBean(
-            ProductStockService.class);
         ProductStock productStock = productStockService.getByProductIdAndScId(this.getProductId(),
             this.getScId());
         this.stockNum = productStock == null ? BigDecimal.ZERO : productStock.getStockNum();

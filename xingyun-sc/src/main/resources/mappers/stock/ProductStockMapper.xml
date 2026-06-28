@@ -27,7 +27,7 @@
     <update id="addStock">
         UPDATE tbl_product_stock
         SET stock_num = stock_num + #{stockNum}, tax_amount = tax_amount + #{taxAmount}
-        <if test="reCalcCostPrice">,tax_price = CASE WHEN (stock_num + #{stockNum}) &lt;= 0 THEN 0 ELSE (tax_amount + #{taxAmount}) / (stock_num + #{stockNum}) END</if>
+        <if test="reCalcCostPrice">,tax_price = CASE WHEN (#{oriStockNum} + #{stockNum}) &lt;= 0 THEN 0 ELSE (#{oriTaxAmount} + #{taxAmount}) / (#{oriStockNum} + #{stockNum}) END</if>
         WHERE product_id = #{productId}
         AND sc_id = #{scId}
         AND stock_num = #{oriStockNum}
@@ -37,7 +37,7 @@
         UPDATE tbl_product_stock
         SET stock_num = stock_num - #{stockNum}
         <if test="taxAmount != null">, tax_amount = tax_amount - #{taxAmount}</if>
-        <if test="reCalcCostPrice">,tax_price = CASE WHEN (stock_num - #{stockNum}) &lt;= 0 THEN 0 ELSE (tax_amount - #{taxAmount}) / (stock_num - #{stockNum}) END</if>
+        <if test="reCalcCostPrice">,tax_price = CASE WHEN (#{oriStockNum} - #{stockNum}) &lt;= 0 THEN 0 ELSE (#{oriTaxAmount} - #{taxAmount}) / (#{oriStockNum} - #{stockNum}) END</if>
         WHERE product_id = #{productId}
         AND sc_id = #{scId}
         AND stock_num = #{oriStockNum}

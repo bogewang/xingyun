@@ -95,7 +95,8 @@ public interface SaleOrderMapper extends BaseMapper<SaleOrder> {
       @DataPermission(template = "category", alias = "c")
   })
   List<SaleProductDto> querySaleByCondition(
-      @Param("condition") String condition, @Param("isReturn") Boolean isReturn);
+          @Param("scId") String scId, @Param("condition") String condition,
+          @Param("isReturn") Boolean isReturn);
 
   /**
    * 查询可销售商品信息

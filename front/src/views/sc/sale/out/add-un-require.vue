@@ -124,6 +124,7 @@
                     </vxe-column>
                     <vxe-column field="spec" title="规格" width="80" />
                     <vxe-column field="unit" title="单位" width="80" />
+                    <vxe-column field="stockNum" title="库存数量" width="100" align="right" />
                     <vxe-column
                       field="salePrice"
                       title="参考销售价（元）"
@@ -379,6 +380,13 @@
           },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
+          {
+            field: 'stockNum',
+            title: '库存数量',
+            align: 'right',
+            width: 100,
+            slots: { default: 'stockNum_default' },
+          },
           {
             field: 'outNum',
             title: '数量',

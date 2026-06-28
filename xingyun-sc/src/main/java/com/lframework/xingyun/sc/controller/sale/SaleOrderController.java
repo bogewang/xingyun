@@ -314,7 +314,7 @@ public class SaleOrderController extends DefaultBaseController {
         }
 
         PageResult<SaleProductDto> pageResult = saleOrderService.querySaleByCondition(getPageIndex(),
-                getPageSize(), condition, isReturn);
+                getPageSize(), scId, condition, isReturn);
         List<SaleProductDto> datas = pageResult.getDatas();
         if (CollectionUtil.isNotEmpty(datas)) {
             return InvokeResultBuilder.success(SaleOutSheetConverter.saleOutProductDto2Bos(scId, datas));
