@@ -57,6 +57,7 @@ import com.lframework.xingyun.sc.mappers.SaleOutSheetMapper;
 import com.lframework.xingyun.sc.service.ProductHotnessService;
 import com.lframework.xingyun.sc.service.logistics.LogisticsSheetDetailService;
 import com.lframework.xingyun.sc.service.sale.*;
+import com.lframework.xingyun.sc.service.stock.ProductStockPendingCostService;
 import com.lframework.xingyun.sc.service.stock.ProductStockLogService;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import com.lframework.xingyun.sc.vo.sale.out.*;
@@ -136,6 +137,9 @@ public class SaleOutSheetServiceImpl extends
 
     @Autowired
     private ProductStockLogService productStockLogService;
+
+    @Autowired
+    private ProductStockPendingCostService productStockPendingCostService;
 
     @Autowired
     private LogisticsSheetDetailService logisticsSheetDetailService;
@@ -1258,16 +1262,44 @@ public class SaleOutSheetServiceImpl extends
             subProductStockVo.setBizCode(sheet.getCode());
             subProductStockVo.setBizType(ProductStockBizType.SALE.getCode());
             ProductStockChangeDto stockChange = productStockService.subStock(subProductStockVo);
-
-            SaleOutSheetDetailLot detailLot = new SaleOutSheetDetailLot();
-            detailLot.setId(IdUtil.getId());
-            detailLot.setDetailId(detail.getId());
-            detailLot.setOrderNum(detail.getOrderNum());
-            detailLot.setCostTaxAmount(stockChange.getTaxAmount());
-            detailLot.setSettleStatus(detail.getSettleStatus());
-            detailLot.setOrderNo(orderNo++);
-            saleOutSheetDetailLotService.save(detailLot);
+            orderNo = createSaleOutDetailLots(sheet, detail, stockChange, orderNo);
         }
+    }
+
+    private int createSaleOutDetailLots(SaleOutSheet sheet, SaleOutSheetDetail detail,
+            ProductStockChangeDto stockChange, int orderNo) {
+
+        if (NumberUtil.gt(defaultValue(stockChange.getCostNum()), BigDecimal.ZERO)) {
+            SaleOutSheetDetailLot costedLot = new SaleOutSheetDetailLot();
+            costedLot.setId(IdUtil.getId());
+            costedLot.setDetailId(detail.getId());
+            costedLot.setOrderNum(stockChange.getCostNum());
+            costedLot.setCostTaxAmount(stockChange.getTaxAmount());
+            costedLot.setSettledCostNum(stockChange.getCostNum());
+            costedLot.setCostStatus(StockCostStatus.FINAL);
+            costedLot.setSettleStatus(detail.getSettleStatus());
+            costedLot.setOrderNo(orderNo++);
+            saleOutSheetDetailLotService.save(costedLot);
+        }
+
+        if (NumberUtil.gt(defaultValue(stockChange.getPendingNum()), BigDecimal.ZERO)) {
+            SaleOutSheetDetailLot pendingLot = new SaleOutSheetDetailLot();
+            pendingLot.setId(IdUtil.getId());
+            pendingLot.setDetailId(detail.getId());
+            pendingLot.setOrderNum(stockChange.getPendingNum());
+            pendingLot.setCostTaxAmount(null);
+            pendingLot.setSettledCostNum(BigDecimal.ZERO);
+            pendingLot.setCostStatus(StockCostStatus.PENDING);
+            pendingLot.setSettleStatus(detail.getSettleStatus());
+            pendingLot.setOrderNo(orderNo++);
+            saleOutSheetDetailLotService.save(pendingLot);
+
+            productStockPendingCostService.create(sheet.getScId(), detail.getProductId(), sheet.getId(),
+                    detail.getId(), ProductStockBizType.SALE, pendingLot.getId(), stockChange.getPendingNum(),
+                    stockChange.getCreateTime());
+        }
+
+        return orderNo;
     }
 
     private void rollbackStock(SaleOutSheet sheet, List<SaleOutSheetDetail> details) {

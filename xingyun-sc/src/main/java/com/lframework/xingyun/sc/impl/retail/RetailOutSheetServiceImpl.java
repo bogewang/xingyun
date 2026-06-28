@@ -57,6 +57,7 @@ import com.lframework.xingyun.sc.enums.ProductStockBizType;
 import com.lframework.xingyun.sc.enums.RetailOpLogType;
 import com.lframework.xingyun.sc.enums.RetailOutSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
+import com.lframework.xingyun.sc.enums.StockCostStatus;
 import com.lframework.xingyun.sc.events.order.impl.ApprovePassRetailOutSheetEvent;
 import com.lframework.xingyun.sc.mappers.RetailOutSheetMapper;
 import com.lframework.xingyun.sc.service.logistics.LogisticsSheetDetailService;
@@ -66,6 +67,7 @@ import com.lframework.xingyun.sc.service.retail.RetailOutSheetDetailBundleServic
 import com.lframework.xingyun.sc.service.retail.RetailOutSheetDetailLotService;
 import com.lframework.xingyun.sc.service.retail.RetailOutSheetDetailService;
 import com.lframework.xingyun.sc.service.retail.RetailOutSheetService;
+import com.lframework.xingyun.sc.service.stock.ProductStockPendingCostService;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import com.lframework.xingyun.sc.vo.retail.out.ApprovePassRetailOutSheetVo;
 import com.lframework.xingyun.sc.vo.retail.out.ApproveRefuseRetailOutSheetVo;
@@ -125,6 +127,9 @@ public class RetailOutSheetServiceImpl extends
 
   @Autowired
   private ProductStockService productStockService;
+
+  @Autowired
+  private ProductStockPendingCostService productStockPendingCostService;
 
   @Autowired
   private OrderPayTypeService orderPayTypeService;
@@ -367,16 +372,8 @@ public class RetailOutSheetServiceImpl extends
         subProductStockVo.setBizType(ProductStockBizType.RETAIL.getCode());
 
         ProductStockChangeDto stockChange = productStockService.subStock(subProductStockVo);
-
-        RetailOutSheetDetailLot detailLot = new RetailOutSheetDetailLot();
-
-        detailLot.setId(IdUtil.getId());
-        detailLot.setDetailId(detail.getId());
-        detailLot.setOrderNum(detail.getOrderNum());
-        detailLot.setCostTaxAmount(stockChange.getTaxAmount());
-        detailLot.setSettleStatus(detail.getSettleStatus());
-        detailLot.setOrderNo(orderNo);
-        retailOutSheetDetailLotService.save(detailLot);
+        orderNo = createRetailOutDetailLots(sheet, detail.getId(), detail.getProductId(),
+            detail.getOrderNum(), detail.getSettleStatus(), stockChange, orderNo);
 
         if (isGift) {
           giftNum = NumberUtil.add(giftNum, detail.getOrderNum());
@@ -419,16 +416,8 @@ public class RetailOutSheetServiceImpl extends
           subProductStockVo.setBizType(ProductStockBizType.RETAIL.getCode());
 
           ProductStockChangeDto stockChange = productStockService.subStock(subProductStockVo);
-
-          RetailOutSheetDetailLot detailLot = new RetailOutSheetDetailLot();
-
-          detailLot.setId(IdUtil.getId());
-          detailLot.setDetailId(newDetail.getId());
-          detailLot.setOrderNum(newDetail.getOrderNum());
-          detailLot.setCostTaxAmount(stockChange.getTaxAmount());
-          detailLot.setSettleStatus(newDetail.getSettleStatus());
-          detailLot.setOrderNo(orderNo);
-          retailOutSheetDetailLotService.save(detailLot);
+          orderNo = createRetailOutDetailLots(sheet, newDetail.getId(), newDetail.getProductId(),
+              newDetail.getOrderNum(), newDetail.getSettleStatus(), stockChange, orderNo);
 
           retailOutSheetDetailService.save(newDetail);
           retailOutSheetDetailService.removeById(detail.getId());
@@ -456,6 +445,47 @@ public class RetailOutSheetServiceImpl extends
     OpLogUtil.setExtra(vo);
 
     this.sendApprovePassEvent(sheet);
+  }
+
+  private int createRetailOutDetailLots(RetailOutSheet sheet, String detailId, String productId,
+      BigDecimal orderNum, SettleStatus settleStatus, ProductStockChangeDto stockChange, int orderNo) {
+
+    if (NumberUtil.gt(defaultValue(stockChange.getCostNum()), BigDecimal.ZERO)) {
+      RetailOutSheetDetailLot costedLot = new RetailOutSheetDetailLot();
+      costedLot.setId(IdUtil.getId());
+      costedLot.setDetailId(detailId);
+      costedLot.setOrderNum(stockChange.getCostNum());
+      costedLot.setCostTaxAmount(stockChange.getTaxAmount());
+      costedLot.setSettledCostNum(stockChange.getCostNum());
+      costedLot.setCostStatus(StockCostStatus.FINAL);
+      costedLot.setSettleStatus(settleStatus);
+      costedLot.setOrderNo(orderNo++);
+      retailOutSheetDetailLotService.save(costedLot);
+    }
+
+    if (NumberUtil.gt(defaultValue(stockChange.getPendingNum()), BigDecimal.ZERO)) {
+      RetailOutSheetDetailLot pendingLot = new RetailOutSheetDetailLot();
+      pendingLot.setId(IdUtil.getId());
+      pendingLot.setDetailId(detailId);
+      pendingLot.setOrderNum(stockChange.getPendingNum());
+      pendingLot.setCostTaxAmount(null);
+      pendingLot.setSettledCostNum(BigDecimal.ZERO);
+      pendingLot.setCostStatus(StockCostStatus.PENDING);
+      pendingLot.setSettleStatus(settleStatus);
+      pendingLot.setOrderNo(orderNo++);
+      retailOutSheetDetailLotService.save(pendingLot);
+
+      productStockPendingCostService.create(sheet.getScId(), productId, sheet.getId(), detailId,
+          ProductStockBizType.RETAIL, pendingLot.getId(), stockChange.getPendingNum(),
+          stockChange.getCreateTime());
+    }
+
+    return orderNo;
+  }
+
+  private BigDecimal defaultValue(BigDecimal value) {
+
+    return value == null ? BigDecimal.ZERO : value;
   }
 
   @OrderTimeLineLog(type = ApprovePassOrderTimeLineBizType.class, orderId = "#_result", name = "直接审核通过")

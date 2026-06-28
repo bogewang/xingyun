@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.lframework.starter.web.core.dto.BaseDto;
 import com.lframework.starter.web.core.entity.BaseEntity;
 import com.lframework.xingyun.sc.enums.SettleStatus;
+import com.lframework.xingyun.sc.enums.StockCostStatus;
 import java.math.BigDecimal;
 import lombok.Data;
 
@@ -45,6 +46,16 @@ public class RetailOutSheetDetailLot extends BaseEntity implements BaseDto {
    * 含税成本金额
    */
   private BigDecimal costTaxAmount;
+
+  /**
+   * 已回算数量
+   */
+  private BigDecimal settledCostNum;
+
+  /**
+   * 成本状态
+   */
+  private StockCostStatus costStatus;
 
   /**
    * 结算状态

@@ -22,6 +22,7 @@ import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheSe
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
 import com.lframework.xingyun.sc.entity.ProductStock;
+import com.lframework.xingyun.sc.enums.ProductStockBizType;
 import com.lframework.xingyun.sc.events.stock.AddStockEvent;
 import com.lframework.xingyun.sc.events.stock.SubStockEvent;
 import com.lframework.xingyun.sc.mappers.ProductStockMapper;
@@ -34,13 +35,11 @@ import com.lframework.xingyun.sc.vo.stock.log.AddLogWithAddStockVo;
 import com.lframework.xingyun.sc.vo.stock.log.AddLogWithSubStockVo;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
-import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -147,7 +146,8 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
 
         Product product = productService.findById(vo.getProductId());
         Wrapper<ProductStock> queryWrapper = Wrappers.lambdaQuery(ProductStock.class)
-                .eq(ProductStock::getProductId, vo.getProductId());
+                .eq(ProductStock::getProductId, vo.getProductId())
+                .eq(ProductStock::getScId, vo.getScId());
 
         ProductStock productStock = getBaseMapper().selectOne(queryWrapper);
 
@@ -242,7 +242,8 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         }
 
         Wrapper<ProductStock> queryWrapper = Wrappers.lambdaQuery(ProductStock.class)
-                .eq(ProductStock::getProductId, vo.getProductId());
+                .eq(ProductStock::getProductId, vo.getProductId())
+                .eq(ProductStock::getScId, vo.getScId());
 
         ProductStock productStock = getBaseMapper().selectOne(queryWrapper);
         if (productStock == null) {
@@ -258,21 +259,33 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
             getBaseMapper().insert(productStock);
         }
 
-        // 如果taxAmount为null，代表不重算均价，即：按当前均价直接出库
-        boolean reCalcCostPrice = vo.getTaxAmount() != null;
         BigDecimal curStockNum = NumberUtil.sub(productStock.getStockNum(), vo.getStockNum());
-        if (vo.getTaxAmount() == null) {
-            vo.setTaxAmount(NumberUtil.mul(productStock.getTaxPrice(), vo.getStockNum()));
-        }
-
-        vo.setTaxAmount(NumberUtil.getNumber(vo.getTaxAmount(), 2));
-
+        BigDecimal costNum = vo.getStockNum();
+        BigDecimal pendingNum = BigDecimal.ZERO;
         BigDecimal subTaxAmount = vo.getTaxAmount();
-        if (NumberUtil.equal(curStockNum, BigDecimal.ZERO)) {
-            // 清空库存时，直接带走当前剩余全部含税金额，避免因单价保留位数导致尾差或负数
-            subTaxAmount = productStock.getTaxAmount();
-            reCalcCostPrice = true;
+
+        if (subTaxAmount == null && supportPendingCost(vo)) {
+            if (NumberUtil.le(productStock.getStockNum(), BigDecimal.ZERO)) {
+                costNum = BigDecimal.ZERO;
+                pendingNum = vo.getStockNum();
+            } else if (NumberUtil.lt(productStock.getStockNum(), vo.getStockNum())) {
+                costNum = productStock.getStockNum();
+                pendingNum = NumberUtil.sub(vo.getStockNum(), productStock.getStockNum());
+                subTaxAmount = productStock.getTaxAmount();
+            } else {
+                subTaxAmount = NumberUtil.equal(curStockNum, BigDecimal.ZERO) ? productStock.getTaxAmount()
+                        : NumberUtil.mul(productStock.getTaxPrice(), vo.getStockNum());
+            }
+        } else if (subTaxAmount == null) {
+            subTaxAmount = NumberUtil.equal(curStockNum, BigDecimal.ZERO) ? productStock.getTaxAmount()
+                    : NumberUtil.mul(productStock.getTaxPrice(), vo.getStockNum());
         }
+
+        if (subTaxAmount != null) {
+            subTaxAmount = NumberUtil.getNumber(subTaxAmount, 2);
+        }
+
+        boolean reCalcCostPrice = subTaxAmount != null && NumberUtil.gt(curStockNum, BigDecimal.ZERO);
 
         int count = getBaseMapper().subStock(vo.getProductId(), vo.getScId(), vo.getStockNum(),
                 subTaxAmount,
@@ -290,7 +303,9 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         addLogWithAddStockVo.setOriStockNum(productStock.getStockNum());
         addLogWithAddStockVo.setCurStockNum(curStockNum);
         addLogWithAddStockVo.setOriTaxPrice(productStock.getTaxPrice());
-        addLogWithAddStockVo.setCurTaxPrice(!reCalcCostPrice ? productStock.getTaxPrice()
+        addLogWithAddStockVo.setCurTaxPrice(!reCalcCostPrice
+                ? NumberUtil.le(addLogWithAddStockVo.getCurStockNum(), BigDecimal.ZERO) ? BigDecimal.ZERO
+                        : productStock.getTaxPrice()
                 : NumberUtil.equal(addLogWithAddStockVo.getCurStockNum(), BigDecimal.ZERO) ? BigDecimal.ZERO
                         : NumberUtil.getNumber(
                                 NumberUtil.div(NumberUtil.sub(productStock.getTaxAmount(), subTaxAmount),
@@ -309,6 +324,8 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         stockChange.setProductId(vo.getProductId());
         stockChange.setNum(vo.getStockNum());
         stockChange.setTaxAmount(subTaxAmount);
+        stockChange.setCostNum(costNum);
+        stockChange.setPendingNum(pendingNum);
         stockChange.setCurTaxPrice(addLogWithAddStockVo.getCurTaxPrice());
         stockChange.setCreateTime(vo.getCreateTime());
         stockChange.setCurStockNum(addLogWithAddStockVo.getCurStockNum());
@@ -317,5 +334,11 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         ApplicationUtil.publishEvent(subStockEvent);
 
         return stockChange;
+    }
+
+    private boolean supportPendingCost(SubProductStockVo vo) {
+
+        return vo.getBizType() != null && (vo.getBizType().equals(ProductStockBizType.SALE.getCode())
+                || vo.getBizType().equals(ProductStockBizType.RETAIL.getCode()));
     }
 }

@@ -99,7 +99,7 @@ public class ProductStockLogServiceImpl extends
         record.setOriTaxPrice(vo.getOriTaxPrice());
         record.setCurTaxPrice(vo.getCurTaxPrice());
         record.setStockNum(NumberUtil.abs(vo.getStockNum()).negate());
-        record.setTaxAmount(NumberUtil.abs(vo.getTaxAmount()).negate());
+        record.setTaxAmount(vo.getTaxAmount() == null ? null : NumberUtil.abs(vo.getTaxAmount()).negate());
         record.setTimeStamp(new Date().getTime());
         if (!StringUtil.isBlank(vo.getCreateBy())) {
             record.setCreateBy(vo.getCreateBy());

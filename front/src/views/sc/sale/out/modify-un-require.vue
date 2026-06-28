@@ -354,13 +354,13 @@
           row.costPrice !== undefined &&
           row.costPrice !== '' &&
           (row.manualInputCost === true || row.costPrice > 0),
-        canEditCostPrice: (row) =>
-          row &&
+        canEditCostPrice: (row) => false
+          /*row &&
           (row.manualInputCost === true ||
             row.costPrice === null ||
             row.costPrice === undefined ||
             row.costPrice === '' ||
-            row.costPrice <= 0),
+            row.costPrice <= 0)*/,
         SALE_OUT_SHEET_STATUS,
       };
     },

@@ -113,14 +113,14 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
         if (!saleConfig.getOutStockRequireSale().equals(this.required)) {
             throw new DefaultClientException("系统参数发生改变，请刷新页面后重试！");
         }
-        if (StringUtils.isBlank(this.scId)) {
-            StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
-            this.scId = storeCenterService.getDefaultStoreId();
-        }
         this.validate(saleConfig.getOutStockRequireSale());
     }
 
     protected void validate(boolean requireSale) {
+        if (StringUtils.isBlank(this.scId)) {
+            StoreCenterService storeCenterService = ApplicationUtil.getBean(StoreCenterService.class);
+            this.scId = storeCenterService.getDefaultStoreId();
+        }
 
         int orderNo = 1;
         if (this.paidAmount != null) {

@@ -32,6 +32,16 @@ public class ProductStockChangeDto implements BaseDto, Serializable {
   private BigDecimal taxAmount;
 
   /**
+   * 已计成本数量
+   */
+  private BigDecimal costNum;
+
+  /**
+   * 待回算数量
+   */
+  private BigDecimal pendingNum;
+
+  /**
    * 当前含税均价
    */
   private BigDecimal curTaxPrice;

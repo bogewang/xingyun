@@ -37,6 +37,7 @@ import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
+import com.lframework.xingyun.sc.dto.stock.ProductStockPendingCostResolveDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.QueryReceiveSheetDetailDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
@@ -53,6 +54,7 @@ import com.lframework.xingyun.sc.mappers.ReceiveSheetMapper;
 import com.lframework.xingyun.sc.service.ProductHotnessService;
 import com.lframework.xingyun.sc.service.purchase.*;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
+import com.lframework.xingyun.sc.service.stock.ProductStockPendingCostService;
 import com.lframework.xingyun.sc.service.stock.ProductStockLogService;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import com.lframework.xingyun.sc.vo.purchase.receive.*;
@@ -106,6 +108,9 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     @Autowired
     private ProductStockLogService productStockLogService;
+
+    @Autowired
+    private ProductStockPendingCostService productStockPendingCostService;
 
     @Autowired
     private ReceiveSheetDetailBundleService receiveSheetDetailBundleService;
@@ -663,11 +668,14 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
 
         for (ReceiveSheetDetail detail : details) {
+            ProductStockPendingCostResolveDto resolveDto = productStockPendingCostService.settle(
+                    sheet.getScId(), detail.getProductId(), detail.getOrderNum(), detail.getTaxAmount(),
+                    sheet.getId(), detail.getId(), ProductStockBizType.PURCHASE);
             AddProductStockVo addProductStockVo = new AddProductStockVo();
             addProductStockVo.setProductId(detail.getProductId());
             addProductStockVo.setScId(sheet.getScId());
             addProductStockVo.setStockNum(detail.getOrderNum());
-            addProductStockVo.setTaxAmount(detail.getTaxAmount());
+            addProductStockVo.setTaxAmount(resolveDto.getRemainTaxAmount());
             addProductStockVo.setBizId(sheet.getId());
             addProductStockVo.setBizDetailId(detail.getId());
             addProductStockVo.setBizCode(sheet.getCode());
@@ -688,11 +696,14 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
 
         for (ReceiveSheetDetail detail : details) {
+            BigDecimal settledTaxAmount = productStockPendingCostService.rollback(detail.getId(),
+                    ProductStockBizType.PURCHASE);
             SubProductStockVo subProductStockVo = new SubProductStockVo();
             subProductStockVo.setProductId(detail.getProductId());
             subProductStockVo.setScId(sheet.getScId());
             subProductStockVo.setStockNum(detail.getOrderNum());
-            subProductStockVo.setTaxAmount(detail.getTaxAmount());
+            subProductStockVo.setTaxAmount(NumberUtil.getNumber(
+                    NumberUtil.sub(detail.getTaxAmount(), settledTaxAmount), 2));
             subProductStockVo.setBizId(sheet.getId());
             subProductStockVo.setBizDetailId(detail.getId());
             subProductStockVo.setBizCode(sheet.getCode());

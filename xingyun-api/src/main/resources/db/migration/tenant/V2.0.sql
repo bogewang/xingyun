@@ -29,12 +29,6 @@ ALTER TABLE `tbl_sale_out_sheet_detail` ADD COLUMN `total_profit` decimal(24,6) 
 ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `total_cost` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '成本单价';
 ALTER TABLE `tbl_sale_out_sheet` ADD COLUMN `total_profit` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '总利润';
 
--- 仓库非必填
-ALTER TABLE tbl_sale_out_sheet modify `sc_id` varchar(32) NULL COMMENT '仓库ID';
-ALTER TABLE tbl_sale_order modify `sc_id` varchar(32) NULL COMMENT '仓库ID';
-ALTER TABLE tbl_purchase_order modify `sc_id` varchar(32) NULL COMMENT '仓库ID';
-ALTER TABLE tbl_receive_sheet modify `sc_id` varchar(32) NULL COMMENT '仓库ID';
-
 alter table tbl_sale_out_sheet_detail modify discount_rate decimal(16,2) NULL COMMENT '折扣率（%）';
 alter table base_data_supplier modify `mnemonic_code` varchar(20) NULL COMMENT '简码';
 
@@ -147,5 +141,73 @@ ALTER TABLE settle_check_sheet modify end_date date COMMENT '截止日期';
 -- 0604
 # ALTER TABLE tbl_stock_adjust_sheet modify `sc_id` varchar(32) NULL COMMENT '仓库ID';
 INSERT INTO `base_data_store_center` (`id`, `code`, `name`, `contact`, `telephone`, `city_id`, `address`, `people_num`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES ('2070120206814023680', 'CK26062500001', '默认仓库', NULL, NULL, NULL, NULL, NULL, 1, '', '系统管理员', '1', '2026-06-25 20:21:33', '系统管理员', '1', '2026-06-25 20:21:33');
+-- 仓库非必填
+UPDATE tbl_sale_out_sheet SET sc_id = '2070120206814023680';
+UPDATE tbl_sale_order SET sc_id = '2070120206814023680';
+UPDATE tbl_purchase_order SET sc_id = '2070120206814023680';
+UPDATE tbl_receive_sheet SET sc_id = '2070120206814023680';
 
- ALTER TABLE `tbl_product_stock_log` ADD COLUMN `time_stamp` bigint(20) DEFAULT NULL COMMENT '时间戳';
+ALTER TABLE tbl_sale_out_sheet modify `sc_id` varchar(32) NOT NULL COMMENT '仓库ID';
+ALTER TABLE tbl_sale_order modify `sc_id` varchar(32) NOT NULL COMMENT '仓库ID';
+ALTER TABLE tbl_purchase_order modify `sc_id` varchar(32) NOT NULL COMMENT '仓库ID';
+ALTER TABLE tbl_receive_sheet modify `sc_id` varchar(32) NOT NULL COMMENT '仓库ID';
+
+ALTER TABLE `tbl_product_stock_log` ADD COLUMN `time_stamp` bigint(20) DEFAULT NULL COMMENT '时间戳';
+ALTER TABLE `tbl_product_stock_log` modify `tax_amount` decimal(32,2) NULL COMMENT '含税金额';
+
+
+ALTER TABLE `tbl_sale_out_sheet_detail_lot`
+    MODIFY `cost_tax_amount` decimal(24,2) NULL DEFAULT NULL COMMENT '含税成本金额',
+    ADD COLUMN `settled_cost_num` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '已回算数量',
+    ADD COLUMN `cost_status` int NULL DEFAULT 2 COMMENT '成本状态';
+
+ALTER TABLE `tbl_retail_out_sheet_detail_lot`
+    MODIFY `cost_tax_amount` decimal(24,2) NULL DEFAULT NULL COMMENT '含税成本金额',
+    ADD COLUMN `settled_cost_num` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '已回算数量',
+    ADD COLUMN `cost_status` int NULL DEFAULT 2 COMMENT '成本状态';
+
+CREATE TABLE `tbl_product_stock_pending_cost`
+(
+    `id`                 varchar(32)   NOT NULL COMMENT 'ID',
+    `sc_id`              varchar(32)   NOT NULL COMMENT '仓库ID',
+    `product_id`         varchar(32)   NOT NULL COMMENT '商品ID',
+    `out_biz_id`         varchar(32)   DEFAULT NULL COMMENT '出库单据ID',
+    `out_biz_detail_id`  varchar(32)   DEFAULT NULL COMMENT '出库单据明细ID',
+    `out_biz_type`       int           NOT NULL COMMENT '出库业务类型',
+    `lot_id`             varchar(32)   DEFAULT NULL COMMENT 'lot ID',
+    `out_time`           datetime      NOT NULL COMMENT '出库时间',
+    `pending_num`        decimal(24,6) NOT NULL COMMENT '待回算数量',
+    `settled_num`        decimal(24,6) DEFAULT '0.000000' COMMENT '已回算数量',
+    `settled_tax_amount` decimal(24,2) DEFAULT '0.00' COMMENT '已回算金额',
+    `status`             int           NOT NULL COMMENT '状态',
+    `available`          tinyint(1)    DEFAULT '1' COMMENT '是否有效',
+    `description`        varchar(255)  DEFAULT NULL COMMENT '描述',
+    `create_by`          varchar(50)   DEFAULT NULL COMMENT '创建人',
+    `create_by_id`       varchar(32)   DEFAULT NULL COMMENT '创建人ID',
+    `create_time`        datetime      DEFAULT NULL COMMENT '创建时间',
+    `update_by`          varchar(50)   DEFAULT NULL COMMENT '修改人',
+    `update_by_id`       varchar(32)   DEFAULT NULL COMMENT '修改人ID',
+    `update_time`        datetime      DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) COMMENT ='库存待回算成本';
+
+CREATE TABLE `tbl_product_stock_pending_cost_settle`
+(
+    `id`                varchar(32)   NOT NULL COMMENT 'ID',
+    `pending_id`        varchar(32)   NOT NULL COMMENT '待回算记录ID',
+    `in_biz_id`         varchar(32)   DEFAULT NULL COMMENT '入库单据ID',
+    `in_biz_detail_id`  varchar(32)   DEFAULT NULL COMMENT '入库单据明细ID',
+    `in_biz_type`       int           NOT NULL COMMENT '入库业务类型',
+    `settle_num`        decimal(24,6) NOT NULL COMMENT '回算数量',
+    `settle_tax_amount` decimal(24,2) NOT NULL COMMENT '回算金额',
+    `available`         tinyint(1)    DEFAULT '1' COMMENT '是否有效',
+    `description`       varchar(255)  DEFAULT NULL COMMENT '描述',
+    `create_by`         varchar(50)   DEFAULT NULL COMMENT '创建人',
+    `create_by_id`      varchar(32)   DEFAULT NULL COMMENT '创建人ID',
+    `create_time`       datetime      DEFAULT NULL COMMENT '创建时间',
+    `update_by`         varchar(50)   DEFAULT NULL COMMENT '修改人',
+    `update_by_id`      varchar(32)   DEFAULT NULL COMMENT '修改人ID',
+    `update_time`       datetime      DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) COMMENT ='库存待回算成本回写明细';
+
