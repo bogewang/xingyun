@@ -304,41 +304,50 @@
         // 列表数据配置
         tableColumn: [
           { type: 'seq', width: 50 },
-          { field: 'productCode', title: '商品编号', width: 120, sortable: true },
-          { field: 'productName', title: '商品名称', minWidth: 180 },
-          { field: 'categoryName', title: '商品分类', width: 120 },
           {
-            field: 'oriStockNum',
-            title: '变动前库存数量',
-            align: 'right',
-            width: 140,
+            field: 'bizType',
+            title: '业务类型',
+            width: 100,
+            formatter: ({ cellValue }) => {
+              return PRODUCT_STOCK_BIZ_TYPE.getDesc(cellValue);
+            },
             sortable: true,
           },
-          { field: 'stockNum', title: '变动库存数量', align: 'right', width: 140, sortable: true },
+          { field: 'createTime', title: '操作时间', width: 150, sortable: true },
+          { field: 'productCode', title: '商品编号', width: 120, sortable: true },
+          { field: 'productName', title: '商品名称', width: 180 },
+          // { field: 'categoryName', title: '商品分类', width: 120 },
+          {
+            field: 'oriStockNum',
+            title: '数量(前)',
+            align: 'right',
+            width: 100,
+            sortable: true,
+          },
+          { field: 'stockNum', title: '变动数量', align: 'right', width: 100, sortable: true },
           {
             field: 'curStockNum',
-            title: '变动后库存数量',
+            title: '数量(后)',
             align: 'right',
-            width: 140,
+            width: 100,
             sortable: true,
           },
           {
             field: 'oriTaxPrice',
-            title: '变动前成本价',
+            title: '成本价(前)',
             align: 'right',
-            width: 140,
+            width: 100,
             sortable: true,
           },
           {
             field: 'curTaxPrice',
-            title: '变动后成本价',
+            title: '成本价(后)',
             align: 'right',
-            width: 140,
+            width: 100,
             sortable: true,
           },
-          { field: 'taxAmount', title: '变动金额', align: 'right', width: 140, sortable: true },
-          { field: 'createTime', title: '操作时间', minWidth: 170, sortable: true },
-          { field: 'createBy', title: '操作人', minWidth: 100 },
+          { field: 'taxAmount', title: '变动金额', align: 'right', width: 100, sortable: true },
+          { field: 'createBy', title: '操作人', minWidth: 80 },
           {
             field: 'bizCode',
             title: '单据号',
@@ -346,15 +355,7 @@
             slots: { default: 'bizCode_default' },
             sortable: true,
           },
-          {
-            field: 'bizType',
-            title: '业务类型',
-            width: 140,
-            formatter: ({ cellValue }) => {
-              return PRODUCT_STOCK_BIZ_TYPE.getDesc(cellValue);
-            },
-            sortable: true,
-          },
+
         ],
         // 请求接口配置
         proxyConfig: {
