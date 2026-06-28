@@ -128,7 +128,11 @@ public interface PurchaseOrderService extends BaseMpService<PurchaseOrder> {
    * @param isReturn
    * @return
    */
-  PageResult<PurchaseProductDto> queryPurchaseByCondition(Integer pageIndex, Integer pageSize, String condition, Boolean isReturn);
+  PageResult<PurchaseProductDto> queryPurchaseByCondition(Integer pageIndex,
+                                                          Integer pageSize,
+                                                          String sc_id,
+                                                          String condition,
+                                                          Boolean isReturn);
 
   /**
    * 查询可采购商品信息

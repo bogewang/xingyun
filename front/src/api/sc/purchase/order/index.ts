@@ -388,25 +388,25 @@ export function importExcel(data: { id?: string; file: Blob }): Promise<any[]> {
 /**
  * 根据关键字查询商品
  */
-export function searchPurchaseProducts(
-  scId: string,
-  condition: string,
-  isReturn: boolean,
-): Promise<PurchaseProductBo[]> {
-  return defHttp.get<PurchaseProductBo[]>(
-    {
-      url: baseUrl + '/product/search',
-      params: {
-        scId,
-        condition,
-        isReturn,
-      },
-    },
-    {
-      region,
-    },
-  );
-}
+// export function searchPurchaseProducts(
+//   scId: string,
+//   condition: string,
+//   isReturn: boolean,
+// ): Promise<PurchaseProductBo[]> {
+//   return defHttp.get<PurchaseProductBo[]>(
+//     {
+//       url: baseUrl + '/product/search',
+//       params: {
+//         scId,
+//         condition,
+//         isReturn,
+//       },
+//     },
+//     {
+//       region,
+//     },
+//   );
+// }
 
 /**
  * 查询可采购商品列表

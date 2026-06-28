@@ -20,14 +20,6 @@ import java.util.List;
 public interface ReceiveSheetDetailMapper extends BaseMapper<ReceiveSheetDetail> {
 
   /**
-   * 根据收货单ID查询
-   *
-   * @param sheetId
-   * @return
-   */
-  List<ReceiveSheetDetail> getBySheetId(String sheetId);
-
-  /**
    * 增加退货数量
    *
    * @param id

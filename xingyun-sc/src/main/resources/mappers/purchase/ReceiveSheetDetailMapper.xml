@@ -47,12 +47,6 @@
         AND return_num >= #{num}
     </update>
 
-    <select id="getBySheetId" resultMap="ReceiveSheetDetail">
-        <include refid="ReceiveSheetDetailDto_sql"/>
-        WHERE d.sheet_id = #{sheetId}
-        ORDER BY d.order_no
-    </select>
-
     <select id="getLatestCostPriceList" resultMap="QueryReceiveSheetDetailDto">
         SELECT d.product_id,
                d.tax_price,

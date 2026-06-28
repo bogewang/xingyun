@@ -92,4 +92,8 @@ public class AddProductStockVo implements BaseVo, Serializable {
     @NotNull(message = "业务类型不能为空！")
     @IsEnum(message = "业务类型不正确！", enumClass = ProductStockBizType.class)
     private Integer bizType;
+    /**
+     * 单价
+     */
+    private BigDecimal taxPrice;
 }

@@ -1,5 +1,7 @@
 package com.lframework.xingyun.sc.impl.purchase;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.Assert;
 import com.lframework.starter.common.utils.NumberUtil;
@@ -25,8 +27,10 @@ public class ReceiveSheetDetailServiceImpl extends
 
   @Override
   public List<ReceiveSheetDetail> getBySheetId(String sheetId) {
+    LambdaQueryWrapper<ReceiveSheetDetail> wrapper = Wrappers.lambdaQuery(ReceiveSheetDetail.class)
+            .eq(ReceiveSheetDetail::getSheetId, sheetId);
 
-    return getBaseMapper().getBySheetId(sheetId);
+    return getBaseMapper().selectList(wrapper);
   }
 
   @Transactional(rollbackFor = Exception.class)

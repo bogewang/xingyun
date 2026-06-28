@@ -12,6 +12,7 @@ import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.utils.EasyExcelUtils;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.sc.bo.sale.*;
 import com.lframework.xingyun.sc.converter.SaleOrderConverter;
 import com.lframework.xingyun.sc.converter.SaleOutSheetConverter;
@@ -30,11 +31,13 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -56,8 +59,8 @@ public class SaleOrderController extends DefaultBaseController {
     @Autowired
     private SaleOrderService saleOrderService;
 
-    @Autowired
-    private ProductHotnessService productHotnessService;
+    @Resource
+    private StoreCenterService storeCenterService;
 
     /**
      * 打印
@@ -311,6 +314,9 @@ public class SaleOrderController extends DefaultBaseController {
         }
         if (StringUtil.isBlank(condition)) {
             return InvokeResultBuilder.success(CollectionUtil.emptyList());
+        }
+        if (StringUtils.isBlank(scId)) {
+            scId = storeCenterService.getDefaultStoreId();
         }
 
         PageResult<SaleProductDto> pageResult = saleOrderService.querySaleByCondition(getPageIndex(),

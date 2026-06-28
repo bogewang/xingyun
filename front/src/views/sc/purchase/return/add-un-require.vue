@@ -233,6 +233,7 @@ import {
 } from '@/utils/utils';
 import {createConfirm, createError, createPrompt, createSuccess} from '@/hooks/web/msg';
 import UserSelector from '@/components/Selector/UserSelector.vue';
+import * as saleApi from "@/api/sc/sale/order";
 
 export default defineComponent({
     name: 'AddPurchaseReturnUnRequire',
@@ -440,7 +441,7 @@ export default defineComponent({
           return;
         }
 
-        purchaseApi.searchPurchaseProducts(this.formData.scId, queryString, true).then((res) => {
+        saleApi.searchSaleProducts(this.formData.scId, queryString, true).then((res) => {
           row.products = res;
           row.productOptions = res.map((item) => {
             return {

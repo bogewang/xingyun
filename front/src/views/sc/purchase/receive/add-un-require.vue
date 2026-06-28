@@ -118,19 +118,20 @@
                     </vxe-column>
                     <vxe-column field="spec" title="规格" width="80" />
                     <vxe-column field="unit" title="单位" width="80" />
-                    <vxe-column
-                      field="purchasePrice"
-                      title="参考采购价（元）"
-                      width="140"
-                      align="right"
-                    />
+                    <vxe-column field="stockNum" title="库存数量" width="140" align="right" />
                     <vxe-column
                       field="latestPurchasePrice"
                       title="最新采购价（元）"
                       width="140"
                       align="right"
                     />
-                    <vxe-column field="stockNum" title="库存数量" width="140" align="right" />
+                    <vxe-column
+                      field="purchasePrice"
+                      title="参考采购价（元）"
+                      width="140"
+                      align="right"
+                    />
+
                   </vxe-table>
                   <div
                     class="inline-product-select-add"
@@ -267,7 +268,7 @@
   } from '@ant-design/icons-vue';
   import ReceiveSheetImporter from '@/components/Importor/ReceiveSheetImporter.vue';
   import * as api from '@/api/sc/purchase/receive';
-  import * as purchaseApi from '@/api/sc/purchase/order';
+  import * as saleApi from '@/api/sc/sale/order';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
     add,
@@ -374,6 +375,7 @@
           },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
+          { field: 'stockNum', title: '库存数量', align: 'right', width: 140 },
           {
             field: 'receiveNum',
             title: '数量',
@@ -536,7 +538,7 @@
           return;
         }
 
-        purchaseApi.searchPurchaseProducts(this.formData.scId, queryString).then((res) => {
+        saleApi.searchSaleProducts(this.formData.scId, queryString).then((res) => {
           setInlineProductSelectProducts(row, res);
           row.productOptions = res.map((item) => {
             return {

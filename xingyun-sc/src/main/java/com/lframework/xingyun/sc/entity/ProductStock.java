@@ -52,7 +52,7 @@ public class ProductStock extends BaseEntity implements BaseDto {
      */
     private BigDecimal taxAmount;
 
-    public BigDecimal getTaxPrice() {
-        return taxPrice == null ? BigDecimal.ZERO : taxPrice;
-    }
+    // public BigDecimal getTaxPrice() {
+    //     return taxPrice == null ? BigDecimal.ZERO : taxPrice;
+    // }
 }

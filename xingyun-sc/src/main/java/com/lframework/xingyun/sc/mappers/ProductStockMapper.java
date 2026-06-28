@@ -76,7 +76,9 @@ public interface ProductStockMapper extends BaseMapper<ProductStock> {
     int addStock(@Param("productId") String productId, @Param("scId") String scId,
                  @Param("stockNum") BigDecimal stockNum,
                  @Param("taxAmount") BigDecimal taxAmount,
-                 @Param("oriStockNum") BigDecimal oriStockNum, @Param("oriTaxAmount") BigDecimal oriTaxAmount,
+                 @Param("oriStockNum") BigDecimal oriStockNum,
+                 @Param("oriTaxAmount") BigDecimal oriTaxAmount,
+                 @Param("taxPrice") BigDecimal taxPrice,
                  @Param("reCalcCostPrice") boolean reCalcCostPrice);
 
     /**

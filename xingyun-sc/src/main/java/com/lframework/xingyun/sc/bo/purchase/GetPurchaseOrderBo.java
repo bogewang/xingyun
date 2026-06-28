@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.Data;
 
+import static com.lframework.starter.common.utils.NumberUtil.getDefaultValue;
+import static com.lframework.starter.common.utils.NumberUtil.getNumber;
+
 @Data
 public class GetPurchaseOrderBo extends BaseBo<PurchaseOrderFullDto> {
 
@@ -352,7 +355,7 @@ public class GetPurchaseOrderBo extends BaseBo<PurchaseOrderFullDto> {
           this.getProductId(), this.getScId());
       this.taxCostPrice =
           productStock == null ? BigDecimal.ZERO
-              : NumberUtil.getNumber(productStock.getTaxPrice(), 6);
+              : getNumber(getDefaultValue(productStock.getTaxPrice()), 6);
       this.stockNum = productStock == null ? BigDecimal.ZERO : productStock.getStockNum();
     }
   }

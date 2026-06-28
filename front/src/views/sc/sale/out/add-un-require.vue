@@ -126,17 +126,18 @@
                     <vxe-column field="unit" title="单位" width="80" />
                     <vxe-column field="stockNum" title="库存数量" width="100" align="right" />
                     <vxe-column
-                      field="salePrice"
-                      title="参考销售价（元）"
-                      width="140"
-                      align="right"
-                    />
-                    <vxe-column
                       field="latestSalePrice"
                       title="最新销售价（元）"
                       width="140"
                       align="right"
                     />
+                    <vxe-column
+                      field="salePrice"
+                      title="参考销售价（元）"
+                      width="140"
+                      align="right"
+                    />
+
                   </vxe-table>
                   <div
                     class="inline-product-select-add"

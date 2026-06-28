@@ -12,6 +12,7 @@ import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.utils.EasyExcelUtils;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.sc.bo.purchase.*;
 import com.lframework.xingyun.sc.converter.PurchaseOrderConverter;
 import com.lframework.xingyun.sc.dto.purchase.PurchaseOrderFullDto;
@@ -29,11 +30,13 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -326,33 +329,36 @@ public class PurchaseOrderController extends DefaultBaseController {
     /**
      * 根据关键字查询商品
      */
-    @ApiOperation("根据关键字查询可采购商品")
-    @ApiImplicitParams({
-            @ApiImplicitParam(value = "仓库ID", name = "scId", paramType = "query"),
-            @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true)})
-    @HasPermission({"purchase:order:add", "purchase:order:modify", "purchase:receive:add",
-            "purchase:receive:modify", "purchase:return:add", "purchase:return:modify"})
-    @GetMapping("/product/search")
-    public InvokeResult<List<PurchaseProductBo>> searchPurchaseProducts(
-            String scId, String condition, Boolean isReturn) {
-
-        if (isReturn == null) {
-            isReturn = false;
-        }
-
-        if (StringUtil.isBlank(condition)) {
-            return InvokeResultBuilder.success(CollectionUtil.emptyList());
-        }
-
-        PageResult<PurchaseProductDto> pageResult = purchaseOrderService.queryPurchaseByCondition(
-                getPageIndex(), getPageSize(), condition, isReturn);
-        List<PurchaseProductDto> datas = pageResult.getDatas();
-        if (CollectionUtil.isNotEmpty(datas)) {
-            return InvokeResultBuilder.success(PurchaseOrderConverter.purchaseProductDto2Bos(scId, datas));
-        }
-
-        return InvokeResultBuilder.success(CollectionUtil.emptyList());
-    }
+    // @ApiOperation("根据关键字查询可采购商品")
+    // @ApiImplicitParams({
+    //         @ApiImplicitParam(value = "仓库ID", name = "scId", paramType = "query"),
+    //         @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true)})
+    // @HasPermission({"purchase:order:add", "purchase:order:modify", "purchase:receive:add",
+    //         "purchase:receive:modify", "purchase:return:add", "purchase:return:modify"})
+    // @GetMapping("/product/search")
+    // public InvokeResult<List<PurchaseProductBo>> searchPurchaseProducts(
+    //         String scId, String condition, Boolean isReturn) {
+    //
+    //     if (isReturn == null) {
+    //         isReturn = false;
+    //     }
+    //     if (StringUtils.isBlank(scId)) {
+    //         scId = storeCenterService.getDefaultStoreId();
+    //     }
+    //
+    //     if (StringUtil.isBlank(condition)) {
+    //         return InvokeResultBuilder.success(CollectionUtil.emptyList());
+    //     }
+    //
+    //     PageResult<PurchaseProductDto> pageResult = purchaseOrderService.queryPurchaseByCondition(
+    //             getPageIndex(), getPageSize(), scId, condition, isReturn);
+    //     List<PurchaseProductDto> datas = pageResult.getDatas();
+    //     if (CollectionUtil.isNotEmpty(datas)) {
+    //         return InvokeResultBuilder.success(PurchaseOrderConverter.purchaseProductDto2Bos(scId, datas));
+    //     }
+    //
+    //     return InvokeResultBuilder.success(CollectionUtil.emptyList());
+    // }
 
     /**
      * 查询商品列表

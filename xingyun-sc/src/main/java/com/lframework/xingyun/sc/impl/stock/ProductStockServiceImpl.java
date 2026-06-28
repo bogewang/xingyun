@@ -145,25 +145,13 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         Assert.greaterThanZero(vo.getStockNum());
 
         Product product = productService.findById(vo.getProductId());
-        Wrapper<ProductStock> queryWrapper = Wrappers.lambdaQuery(ProductStock.class)
-                .eq(ProductStock::getProductId, vo.getProductId())
-                .eq(ProductStock::getScId, vo.getScId());
-
-        ProductStock productStock = getBaseMapper().selectOne(queryWrapper);
+        ProductStock productStock = getProductStock(vo.getProductId(), vo.getScId());
 
         boolean isStockEmpty = false;
         if (productStock == null) {
             // 首次入库，先新增
-            productStock = new ProductStock();
-            productStock.setId(IdUtil.getId());
-            productStock.setScId(vo.getScId());
-            productStock.setProductId(vo.getProductId());
-            productStock.setStockNum(BigDecimal.ZERO);
-            productStock.setTaxPrice(BigDecimal.ZERO);
-            productStock.setTaxAmount(BigDecimal.ZERO);
-
+            productStock = generateProductStock(vo.getProductId(), vo.getScId());
             getBaseMapper().insert(productStock);
-
             isStockEmpty = true;
         }
 
@@ -187,7 +175,9 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         vo.setTaxAmount(NumberUtil.getNumber(vo.getTaxAmount(), 2));
         int count = getBaseMapper().addStock(vo.getProductId(), vo.getScId(), vo.getStockNum(),
                 vo.getTaxAmount(), productStock.getStockNum(),
-                productStock.getTaxAmount(), reCalcCostPrice);
+                productStock.getTaxAmount(),
+                vo.getTaxPrice(),
+                reCalcCostPrice);
         if (count != 1) {
             throw new DefaultClientException(
                     "商品（" + product.getCode() + "）" + product.getName() + "入库失败，请稍后重试！");
@@ -203,12 +193,12 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         addLogWithAddStockVo.setCurStockNum(
                 NumberUtil.add(productStock.getStockNum(), vo.getStockNum()));
         addLogWithAddStockVo.setOriTaxPrice(productStock.getTaxPrice());
-        addLogWithAddStockVo.setCurTaxPrice(!reCalcCostPrice ? productStock.getTaxPrice()
-                : NumberUtil.equal(addLogWithAddStockVo.getCurStockNum(), BigDecimal.ZERO) ? BigDecimal.ZERO
-                        : NumberUtil.getNumber(
-                                NumberUtil.div(NumberUtil.add(productStock.getTaxAmount(), vo.getTaxAmount()),
-                                        addLogWithAddStockVo.getCurStockNum()),
-                                6));
+        addLogWithAddStockVo.setCurTaxPrice(calcAddStockCurTaxPrice(reCalcCostPrice,
+                addLogWithAddStockVo.getCurStockNum(),
+                productStock.getTaxPrice(),
+                vo.getTaxPrice(),
+                productStock.getTaxAmount(),
+                vo.getTaxAmount()));
         addLogWithAddStockVo.setCreateTime(vo.getCreateTime());
         addLogWithAddStockVo.setBizId(vo.getBizId());
         addLogWithAddStockVo.setBizDetailId(vo.getBizDetailId());
@@ -238,20 +228,9 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
 
         Product product = productService.findById(vo.getProductId());
 
-        Wrapper<ProductStock> queryWrapper = Wrappers.lambdaQuery(ProductStock.class)
-                .eq(ProductStock::getProductId, vo.getProductId())
-                .eq(ProductStock::getScId, vo.getScId());
-
-        ProductStock productStock = getBaseMapper().selectOne(queryWrapper);
+        ProductStock productStock = getProductStock(vo.getProductId(), vo.getScId());
         if (productStock == null) {
-            productStock = new ProductStock();
-            productStock.setId(IdUtil.getId());
-            productStock.setScId(vo.getScId());
-            productStock.setProductId(vo.getProductId());
-            productStock.setStockNum(BigDecimal.ZERO);
-            productStock.setTaxPrice(null);
-            productStock.setTaxAmount(BigDecimal.ZERO);
-
+            productStock = generateProductStock(vo.getProductId(), vo.getScId());
             getBaseMapper().insert(productStock);
         }
 
@@ -299,14 +278,8 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         addLogWithAddStockVo.setOriStockNum(productStock.getStockNum());
         addLogWithAddStockVo.setCurStockNum(curStockNum);
         addLogWithAddStockVo.setOriTaxPrice(productStock.getTaxPrice());
-        addLogWithAddStockVo.setCurTaxPrice(!reCalcCostPrice
-                ? NumberUtil.le(addLogWithAddStockVo.getCurStockNum(), BigDecimal.ZERO) ? BigDecimal.ZERO
-                        : productStock.getTaxPrice()
-                : NumberUtil.equal(addLogWithAddStockVo.getCurStockNum(), BigDecimal.ZERO) ? BigDecimal.ZERO
-                        : NumberUtil.getNumber(
-                                NumberUtil.div(NumberUtil.sub(productStock.getTaxAmount(), subTaxAmount),
-                                        addLogWithAddStockVo.getCurStockNum()),
-                                6));
+        addLogWithAddStockVo.setCurTaxPrice(calcSubStockCurTaxPrice(reCalcCostPrice, curStockNum,
+                productStock.getTaxPrice(), productStock.getTaxAmount(), subTaxAmount));
         addLogWithAddStockVo.setCreateTime(vo.getCreateTime());
         addLogWithAddStockVo.setBizId(vo.getBizId());
         addLogWithAddStockVo.setBizDetailId(vo.getBizDetailId());
@@ -330,6 +303,78 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         ApplicationUtil.publishEvent(subStockEvent);
 
         return stockChange;
+    }
+
+    /**
+     * 生成产品库存
+     * @param productId
+     * @param scId
+     * @return
+     */
+    private ProductStock generateProductStock(String productId, String scId) {
+        ProductStock res = new ProductStock();
+        res.setId(IdUtil.getId());
+        res.setScId(scId);
+        res.setProductId(productId);
+        res.setStockNum(BigDecimal.ZERO);
+        res.setTaxPrice(null);
+        res.setTaxAmount(null);
+        return res;
+    }
+
+    /**
+     * 计算出库当前成本价
+     * @param reCalcCostPrice
+     * @param curStockNum
+     * @param taxPrice
+     * @param taxAmount
+     * @param subTaxAmount
+     * @return
+     */
+    private BigDecimal calcSubStockCurTaxPrice(boolean reCalcCostPrice,
+                                               BigDecimal curStockNum,
+                                               BigDecimal taxPrice,
+                                               BigDecimal taxAmount,
+                                               BigDecimal subTaxAmount) {
+
+        if (!reCalcCostPrice) {
+            return taxPrice;
+        }
+
+        return NumberUtil.equal(curStockNum, BigDecimal.ZERO)
+                ? null
+                : NumberUtil.getNumber(NumberUtil.div(NumberUtil.sub(taxAmount, subTaxAmount), curStockNum), 6);
+    }
+
+    private BigDecimal calcAddStockCurTaxPrice(boolean reCalcCostPrice,
+                                               BigDecimal curStockNum,
+                                               BigDecimal stockPrice,
+                                               BigDecimal taxPrice,
+                                               BigDecimal stockAmt,
+                                               BigDecimal addTaxAmount) {
+
+        if (!reCalcCostPrice) {
+            return stockPrice;
+        }
+
+        return NumberUtil.equal(curStockNum, BigDecimal.ZERO)
+                ? taxPrice
+                : NumberUtil.getNumber(NumberUtil.div(NumberUtil.add(NumberUtil.getDefaultValue(stockAmt), addTaxAmount), curStockNum), 6);
+    }
+
+    /**
+     * 查询产品库存
+     * @param productId
+     * @param scId
+     * @return
+     */
+    private ProductStock getProductStock(String productId, String scId) {
+        Wrapper<ProductStock> queryWrapper = Wrappers.lambdaQuery(ProductStock.class)
+                .eq(ProductStock::getProductId, productId)
+                .eq(ProductStock::getScId, scId);
+
+        ProductStock productStock = getBaseMapper().selectOne(queryWrapper);
+        return productStock;
     }
 
     /**

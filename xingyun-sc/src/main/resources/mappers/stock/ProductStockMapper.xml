@@ -26,27 +26,54 @@
 
     <update id="addStock">
         UPDATE tbl_product_stock
-        SET stock_num = stock_num + #{stockNum}, tax_amount = tax_amount + #{taxAmount}
-        <if test="reCalcCostPrice">,tax_price = CASE WHEN (#{oriStockNum} + #{stockNum}) &lt;= 0 THEN 0 ELSE (#{oriTaxAmount} + #{taxAmount}) / (#{oriStockNum} + #{stockNum}) END</if>
+        SET stock_num = stock_num + #{stockNum}, tax_amount = COALESCE(tax_amount, 0) + #{taxAmount}
+        <if test="reCalcCostPrice">,
+            tax_price = CASE WHEN
+            (#{oriStockNum} + #{stockNum}) &lt;= 0
+            THEN #{taxPrice}
+            ELSE (COALESCE(#{oriTaxAmount}, 0) + #{taxAmount}) / (#{oriStockNum} + #{stockNum})
+            END
+        </if>
         WHERE product_id = #{productId}
-        AND sc_id = #{scId}
-        AND stock_num = #{oriStockNum}
-        AND tax_amount = #{oriTaxAmount}
+        <if test="scId != null">
+            AND sc_id = #{scId}
+        </if>
+        <if test="oriStockNum != null">
+            AND stock_num = #{oriStockNum}
+        </if>
+        <if test="oriTaxAmount != null">
+            AND tax_amount = #{oriTaxAmount}
+        </if>
     </update>
     <update id="subStock">
         UPDATE tbl_product_stock
         SET stock_num = stock_num - #{stockNum}
-        <if test="taxAmount != null">, tax_amount = tax_amount - #{taxAmount}</if>
-        <if test="reCalcCostPrice">,tax_price = CASE WHEN (#{oriStockNum} - #{stockNum}) &lt;= 0 THEN 0 ELSE (#{oriTaxAmount} - #{taxAmount}) / (#{oriStockNum} - #{stockNum}) END</if>
+        <if test="taxAmount != null">,
+            tax_amount = COALESCE(tax_amount, 0) - #{taxAmount}
+          </if>
+        <if test="reCalcCostPrice">,
+            tax_price = CASE WHEN (#{oriStockNum} - #{stockNum}) &lt;= 0
+                THEN 0
+                ELSE (COALESCE(#{oriTaxAmount}, 0) - #{taxAmount}) / (#{oriStockNum} - #{stockNum})
+                END
+        </if>
         WHERE product_id = #{productId}
-        AND sc_id = #{scId}
-        AND stock_num = #{oriStockNum}
-        AND tax_amount = #{oriTaxAmount}
+        <if test="scId != null">
+            AND sc_id = #{scId}
+        </if>
+        <if test="oriStockNum != null">
+            AND stock_num = #{oriStockNum}
+        </if>
+        <if test="oriTaxAmount != null">
+            AND tax_amount = #{oriTaxAmount}
+        </if>
     </update>
     <select id="getByProductIdAndScId" resultMap="ProductStock">
         <include refid="ProductStockDto_sql"/>
         WHERE gs.product_id = #{productId}
-        AND gs.sc_id = #{scId}
+        <if test="scId != null">
+            AND gs.sc_id = #{scId}
+        </if>
     </select>
     <select id="query" resultMap="ProductStock">
         <include refid="ProductStockDto_sql"/>

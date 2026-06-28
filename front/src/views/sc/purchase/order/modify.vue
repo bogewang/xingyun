@@ -245,6 +245,7 @@
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
   import JFormItem from '@/components/JFormItem';
+  import * as saleApi from "@/api/sc/sale/order";
 
   export default defineComponent({
     name: 'ModifyPurchaseOrder',
@@ -471,7 +472,7 @@
           return;
         }
 
-        api.searchPurchaseProducts(this.formData.scId, queryString).then((res) => {
+        saleApi.searchSaleProducts(this.formData.scId, queryString).then((res) => {
           row.products = res;
           row.productOptions = res.map((item) => {
             return {

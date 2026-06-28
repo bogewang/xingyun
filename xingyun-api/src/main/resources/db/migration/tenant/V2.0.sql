@@ -154,6 +154,10 @@ ALTER TABLE tbl_receive_sheet modify `sc_id` varchar(32) NOT NULL COMMENT '仓�
 
 ALTER TABLE `tbl_product_stock_log` ADD COLUMN `time_stamp` bigint(20) DEFAULT NULL COMMENT '时间戳';
 ALTER TABLE `tbl_product_stock_log` modify `tax_amount` decimal(32,2) NULL COMMENT '含税金额';
+ALTER TABLE `tbl_product_stock_log` modify   `cur_tax_price` decimal(24,6) NULL COMMENT '现含税成本价';
+ALTER TABLE `tbl_product_stock_log` modify   `ori_tax_price` decimal(24,6) NULL COMMENT '原含税成本价';
+ALTER TABLE `tbl_product_stock` modify   `tax_price` decimal(24,6) NULL COMMENT '含税价格';
+ALTER TABLE `tbl_product_stock` modify   `tax_amount` decimal(32,2) NULL COMMENT '含税金额';
 
 
 ALTER TABLE `tbl_sale_out_sheet_detail_lot`

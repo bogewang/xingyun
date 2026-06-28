@@ -113,19 +113,20 @@
                     </vxe-column>
                     <vxe-column field="spec" title="规格" width="80" />
                     <vxe-column field="unit" title="单位" width="80" />
-                    <vxe-column
-                      field="purchasePrice"
-                      title="参考采购价（元）"
-                      width="140"
-                      align="right"
-                    />
+                    <vxe-column field="stockNum" title="库存数量" width="140" align="right" />
                     <vxe-column
                       field="latestPurchasePrice"
                       title="最新采购价（元）"
                       width="140"
                       align="right"
                     />
-                    <vxe-column field="stockNum" title="库存数量" width="140" align="right" />
+                    <vxe-column
+                      field="purchasePrice"
+                      title="参考采购价（元）"
+                      width="140"
+                      align="right"
+                    />
+
                   </vxe-table>
                   <div
                     class="inline-product-select-add"
@@ -293,6 +294,7 @@
   import OrderTimeLine from '@/components/OrderTimeLine';
   import JFormItem from '@/components/JFormItem';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
+  import * as saleApi from "@/api/sc/sale/order";
 
   export default defineComponent({
     name: 'ModifyPurchaseReceiveSheetUnRequire',
@@ -617,7 +619,7 @@
           return;
         }
 
-        purchaseApi.searchPurchaseProducts(this.formData.scId, queryString).then((res) => {
+        saleApi.searchSaleProducts(this.formData.scId, queryString).then((res) => {
           setInlineProductSelectProducts(row, res);
           row.productOptions = res.map((item) => {
             return {

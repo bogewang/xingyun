@@ -312,6 +312,7 @@
     setInlineProductSelectProducts,
   } from '@/utils/inlineProductSelect';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
+  import * as saleApi from "@/api/sc/sale/order";
 
   export default defineComponent({
     name: 'AddPurchaseReceiveSheetRequire',
@@ -573,7 +574,7 @@
           return;
         }
 
-        purchaseApi.searchPurchaseProducts(this.formData.scId, queryString).then((res) => {
+        saleApi.searchSaleProducts(this.formData.scId, queryString).then((res) => {
           setInlineProductSelectProducts(row, res);
           row.productOptions = res.map((item) => {
             return {

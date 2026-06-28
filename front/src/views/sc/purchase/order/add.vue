@@ -202,6 +202,7 @@
     PlusOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/purchase/order';
+  import * as saleApi from '@/api/sc/sale/order';
   import * as configApi from '@/api/sc/purchase/config';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
@@ -408,7 +409,7 @@
           return;
         }
 
-        api.searchPurchaseProducts(this.formData.scId, queryString).then((res) => {
+        saleApi.searchSaleProducts(this.formData.scId, queryString).then((res) => {
           row.products = res;
           row.productOptions = res.map((item) => {
             return {

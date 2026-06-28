@@ -371,6 +371,7 @@
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
+  import * as saleApi from "@/api/sc/sale/order";
 
   export default defineComponent({
     name: 'ModifyPurchaseReceiveSheetRequire',
@@ -713,7 +714,7 @@
           return;
         }
 
-        purchaseApi.searchPurchaseProducts(this.formData.sc.id, queryString).then((res) => {
+        saleApi.searchSaleProducts(this.formData.sc.id, queryString).then((res) => {
           setInlineProductSelectProducts(row, res);
           row.productOptions = res.map((item) => {
             return {
