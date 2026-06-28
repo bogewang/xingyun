@@ -38,4 +38,8 @@ public class ProductStockPendingCost extends BaseEntity implements BaseDto {
   private BigDecimal settledTaxAmount;
 
   private ProductStockPendingCostStatus status;
+
+  public BigDecimal getSettledNum() {
+    return settledNum == null ? BigDecimal.ZERO : settledNum;
+  }
 }

@@ -197,7 +197,8 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         addLogWithAddStockVo.setProductId(vo.getProductId());
         addLogWithAddStockVo.setScId(vo.getScId());
         addLogWithAddStockVo.setStockNum(vo.getStockNum());
-        addLogWithAddStockVo.setTaxAmount(vo.getTaxAmount());
+        addLogWithAddStockVo
+                .setTaxAmount(vo.getLogTaxAmount() == null ? vo.getTaxAmount() : vo.getLogTaxAmount());
         addLogWithAddStockVo.setOriStockNum(productStock.getStockNum());
         addLogWithAddStockVo.setCurStockNum(
                 NumberUtil.add(productStock.getStockNum(), vo.getStockNum()));
@@ -219,7 +220,7 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         stockChange.setScId(vo.getScId());
         stockChange.setProductId(vo.getProductId());
         stockChange.setNum(vo.getStockNum());
-        stockChange.setTaxAmount(addLogWithAddStockVo.getTaxAmount());
+        stockChange.setTaxAmount(vo.getTaxAmount());
         stockChange.setCurTaxPrice(addLogWithAddStockVo.getCurTaxPrice());
         stockChange.setCreateTime(vo.getCreateTime());
         stockChange.setCurStockNum(addLogWithAddStockVo.getCurStockNum());
@@ -236,10 +237,6 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         Assert.greaterThanZero(vo.getStockNum());
 
         Product product = productService.findById(vo.getProductId());
-        if (product.getProductType() != ProductType.NORMAL) {
-            throw new DefaultClientException(
-                    "只有商品类型为【" + ProductType.NORMAL.getDesc() + "】的商品支持出库！");
-        }
 
         Wrapper<ProductStock> queryWrapper = Wrappers.lambdaQuery(ProductStock.class)
                 .eq(ProductStock::getProductId, vo.getProductId())
@@ -252,8 +249,7 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
             productStock.setScId(vo.getScId());
             productStock.setProductId(vo.getProductId());
             productStock.setStockNum(BigDecimal.ZERO);
-            BigDecimal latestPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(vo.getProductId());
-            productStock.setTaxPrice(latestPurchasePrice);
+            productStock.setTaxPrice(null);
             productStock.setTaxAmount(BigDecimal.ZERO);
 
             getBaseMapper().insert(productStock);
@@ -336,6 +332,12 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
         return stockChange;
     }
 
+    /**
+     * 判断是否支持挂单成本
+     * 
+     * @param vo
+     * @return
+     */
     private boolean supportPendingCost(SubProductStockVo vo) {
 
         return vo.getBizType() != null && (vo.getBizType().equals(ProductStockBizType.SALE.getCode())

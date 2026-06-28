@@ -120,7 +120,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     @Autowired
     private SysParameterService sysParameterService;
 
-
     @Override
     public PageResult<ReceiveSheet> query(Integer pageIndex, Integer pageSize,
             QueryReceiveSheetVo vo) {
@@ -142,7 +141,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     @Override
     public PageResult<QueryReceiveSheetDetailDto> queryDetail(Integer pageIndex, Integer pageSize,
-                                                              QueryReceiveSheetVo vo) {
+            QueryReceiveSheetVo vo) {
 
         Assert.greaterThanZero(pageIndex);
         Assert.greaterThanZero(pageSize);
@@ -253,7 +252,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         sheet.setStatus(ReceiveSheetStatus.CREATED);
 
         getBaseMapper().insert(sheet);
-        List<ReceiveSheetDetail> details = getSheetDetails(sheet.getId());
+        List<ReceiveSheetDetail> details = receiveSheetDetailService.getBySheetId(sheet.getId());
         addStock(sheet, details);
         saleOutSheetService.refreshCostPrice(vo.getOrderDate());
         productHotnessService.increment(
@@ -289,7 +288,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new DefaultClientException("采购收货单无法修改！");
         }
 
-        List<ReceiveSheetDetail> oldDetails = getSheetDetails(sheet.getId());
+        List<ReceiveSheetDetail> oldDetails = receiveSheetDetailService.getBySheetId(sheet.getId());
         boolean stockSynced = hasStockSynced(sheet.getId());
         if (stockSynced) {
             rollbackStock(sheet, oldDetails);
@@ -316,7 +315,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new DefaultClientException("采购收货单信息已过期，请刷新重试！");
         }
 
-        List<ReceiveSheetDetail> details = getSheetDetails(sheet.getId());
+        List<ReceiveSheetDetail> details = receiveSheetDetailService.getBySheetId(sheet.getId());
         addStock(sheet, details);
         saleOutSheetService.refreshCostPrice(vo.getOrderDate());
         productHotnessService.increment(
@@ -470,7 +469,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
 
         if (hasStockSynced(sheet.getId())) {
-            rollbackStock(sheet, getSheetDetails(sheet.getId()));
+            rollbackStock(sheet, receiveSheetDetailService.getBySheetId(sheet.getId()));
         }
 
         // 删除订单明细
@@ -659,6 +658,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     /**
      * 新增库存
+     * 
      * @param sheet
      * @param details
      */
@@ -669,13 +669,14 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         for (ReceiveSheetDetail detail : details) {
             ProductStockPendingCostResolveDto resolveDto = productStockPendingCostService.settle(
-                    sheet.getScId(), detail.getProductId(), detail.getOrderNum(), detail.getTaxAmount(),
-                    sheet.getId(), detail.getId(), ProductStockBizType.PURCHASE);
+                    sheet, detail, ProductStockBizType.PURCHASE);
+
             AddProductStockVo addProductStockVo = new AddProductStockVo();
             addProductStockVo.setProductId(detail.getProductId());
             addProductStockVo.setScId(sheet.getScId());
             addProductStockVo.setStockNum(detail.getOrderNum());
             addProductStockVo.setTaxAmount(resolveDto.getRemainTaxAmount());
+            addProductStockVo.setLogTaxAmount(detail.getTaxAmount());
             addProductStockVo.setBizId(sheet.getId());
             addProductStockVo.setBizDetailId(detail.getId());
             addProductStockVo.setBizCode(sheet.getCode());
@@ -687,6 +688,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     /**
      * 修改时，先回滚库存，然后再新增库存；
+     * 
      * @param sheet
      * @param details
      */
@@ -715,6 +717,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     /**
      * 是否有库存变动记录。
+     * 
      * @param sheetId
      * @return
      */
@@ -726,19 +729,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     }
 
     /**
-     * 查询采购明细；
-     * @param sheetId
-     * @return
-     */
-    private List<ReceiveSheetDetail> getSheetDetails(String sheetId) {
-        Wrapper<ReceiveSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(ReceiveSheetDetail.class)
-                .eq(ReceiveSheetDetail::getSheetId, sheetId)
-                .orderByAsc(ReceiveSheetDetail::getOrderNo);
-        return receiveSheetDetailService.list(queryDetailWrapper);
-    }
-
-    /**
      * 更新商品价格
+     * 
      * @param product
      * @param detail
      */
@@ -864,7 +856,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         Map<String, Product> nameSpecUnitMap = products.stream()
                 .collect(Collectors.toMap(item -> item.getName() + item.getSpec() + item.getUnit(), item -> item));
         Map<String, Product> nameUnitMap = products.stream()
-                .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item, (oldValue, newValue) -> oldValue));
+                .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item,
+                        (oldValue, newValue) -> oldValue));
 
         List<String> errors = Lists.newArrayList();
         for (int i = 0; i < list.size(); i++) {
@@ -900,7 +893,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             if (product != null) {
                 data.setProductCode(product.getCode());
                 data.setProductId(product.getId());
-                BigDecimal defaultPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(product.getId());
+                BigDecimal defaultPurchasePrice = productLatestPriceCacheService
+                        .getLatestPurchasePrice(product.getId());
                 data.setLatestPurchasePrice(defaultPurchasePrice);
                 if (data.getPurchasePrice() == null) {
                     data.setPurchasePrice(defaultPurchasePrice == null ? BigDecimal.ZERO : defaultPurchasePrice);
@@ -919,13 +913,14 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
 
         for (int i = 0; i < list.size(); i++) {
-            list.get(i).setSeq(i+2);
+            list.get(i).setSeq(i + 2);
         }
         ReceiveSheetService thisService = getThis(this.getClass());
         Map<String, List<ReceiveSheetQueryImportModel>> map = list.stream().collect(
                 Collectors.groupingBy(item -> item.getOrderDate() + item.getSupplierName()));
 
-        return map.keySet().stream().map(item -> thisService.create(buildCreateVo(map.get(item)))).collect(Collectors.toList());
+        return map.keySet().stream().map(item -> thisService.create(buildCreateVo(map.get(item))))
+                .collect(Collectors.toList());
     }
 
     private CreateReceiveSheetVo buildCreateVo(List<ReceiveSheetQueryImportModel> list) {
@@ -946,12 +941,12 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             return new ArrayList<>();
         }
 
-        List<ReceiveSheetImportModel> collect = list.stream().map(item
-                -> BeanUtil.copyProperties(item, ReceiveSheetImportModel.class)).collect(Collectors.toList());
+        List<ReceiveSheetImportModel> collect = list.stream()
+                .map(item -> BeanUtil.copyProperties(item, ReceiveSheetImportModel.class)).collect(Collectors.toList());
         List<ReceiveProductVo> checked = checkImport(collect);
 
-        return checked.stream().map(item
-                -> BeanUtil.copyProperties(item, ReceiveProductVo.class)).collect(Collectors.toList());
+        return checked.stream().map(item -> BeanUtil.copyProperties(item, ReceiveProductVo.class))
+                .collect(Collectors.toList());
     }
 
     private List<ReceiveSheetDetailExportModel> buildDailySummaryExportModels(

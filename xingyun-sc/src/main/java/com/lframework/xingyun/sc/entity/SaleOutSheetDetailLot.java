@@ -67,5 +67,11 @@ public class SaleOutSheetDetailLot extends BaseEntity implements BaseDto {
    */
   private Integer orderNo;
 
+  public BigDecimal getCostTaxAmount() {
+    return costTaxAmount == null ? BigDecimal.ZERO : costTaxAmount;
+  }
 
+  public BigDecimal getSettledCostNum() {
+    return settledCostNum == null ? BigDecimal.ZERO : settledCostNum;
+  }
 }
