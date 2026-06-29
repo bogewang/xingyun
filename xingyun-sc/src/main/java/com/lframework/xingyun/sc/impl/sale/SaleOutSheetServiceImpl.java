@@ -841,14 +841,15 @@ public class SaleOutSheetServiceImpl extends
             throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
         }
 
-        List<SaleOutSheetDetail> details = getSheetDetails(sheet.getId());
-        subStock(sheet, details);
-
         this.adjustCustomerAmount(oldCustomerId);
         if (!StringUtil.equals(oldCustomerId, sheet.getCustomerId())) {
             this.adjustCustomerAmount(sheet.getCustomerId());
         }
+
         refreshCostPrice(sheet.getId(), vo.getFillAllCost(), Boolean.TRUE.equals(vo.getFillAllCostModified()));
+        List<SaleOutSheetDetail> details = getSheetDetails(sheet.getId());
+        subStock(sheet, details);
+
         productHotnessService.increment(
                 vo.getProducts().stream().map(SaleOutProductVo::getProductId).collect(Collectors.toList()));
 
@@ -1760,6 +1761,10 @@ public class SaleOutSheetServiceImpl extends
         if (CollectionUtils.isEmpty(productStocks)) {
             return new HashMap<>();
         }
+
+        List<ProductStock> jidan = productStocks.stream()
+                .filter(item -> "2062456986435457024".equals(item.getProductId()))
+                .collect(Collectors.toList());
 
         List<QueryReceiveSheetDetailDto> latestCostPrices = productStocks.stream().map(item -> {
             QueryReceiveSheetDetailDto dto = new QueryReceiveSheetDetailDto();
