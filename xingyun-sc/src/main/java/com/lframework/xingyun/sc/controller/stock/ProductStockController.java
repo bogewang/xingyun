@@ -11,6 +11,7 @@ import com.lframework.starter.mq.core.utils.ExportTaskUtil;
 import com.lframework.xingyun.sc.bo.stock.product.QueryProductStockBo;
 import com.lframework.xingyun.sc.entity.ProductStock;
 import com.lframework.xingyun.sc.excel.stock.ProductStockExportTaskWorker;
+import com.lframework.xingyun.sc.service.stock.ProductStockRebuildService;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import com.lframework.xingyun.sc.vo.stock.QueryProductStockVo;
 import io.swagger.annotations.Api;
@@ -21,6 +22,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,6 +39,9 @@ public class ProductStockController extends DefaultBaseController {
 
   @Autowired
   private ProductStockService productStockService;
+
+  @Autowired
+  private ProductStockRebuildService productStockRebuildService;
 
   /**
    * 查询商品库存
@@ -67,6 +72,19 @@ public class ProductStockController extends DefaultBaseController {
   public InvokeResult<Void> export(@Valid QueryProductStockVo vo) {
 
     ExportTaskUtil.exportTask("商品库存信息", ProductStockExportTaskWorker.class, vo);
+
+    return InvokeResultBuilder.success();
+  }
+
+  /**
+   * 基于采购收货单和销售出库单重建库存
+   */
+  @ApiOperation("基于采购收货单和销售出库单重建库存")
+  @HasPermission({"stock:product:rebuild"})
+  @PostMapping("/rebuild/receiveSale")
+  public InvokeResult<Void> rebuildByReceiveAndSaleSheets() {
+
+    productStockRebuildService.rebuildByReceiveAndSaleSheets();
 
     return InvokeResultBuilder.success();
   }
