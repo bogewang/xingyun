@@ -72,6 +72,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import javax.annotation.Resource;
+
 @Service
 public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMapper, ReceiveSheet>
         implements ReceiveSheetService {
@@ -933,6 +935,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         res.setSupplierId(suppliers.get(0).getId());
         res.setOrderDate(DateUtil.parseDate(model.getOrderDate(), "yyyyMMdd"));
         res.setProducts(buildProducts(list));
+        res.setScId(storeCenterService.getDefaultStoreId());
 
         return res;
     }

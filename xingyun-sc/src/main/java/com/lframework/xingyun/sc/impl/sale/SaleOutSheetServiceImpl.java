@@ -87,8 +87,7 @@ public class SaleOutSheetServiceImpl extends
         BaseMpServiceImpl<SaleOutSheetMapper, SaleOutSheet> implements SaleOutSheetService {
 
     private final List<String> NO_NEED_PRINT = Lists.newArrayList("调料干杂");
-    private static final String COST_PRICE_SOURCE_USE_STOCK_PRICE_PM_KEY =
-            "sale_out_cost_price_use_stock_price";
+    private static final String COST_PRICE_SOURCE_USE_STOCK_PRICE_PM_KEY = "sale_out_cost_price_use_stock_price";
 
     @Autowired
     private SaleOutSheetDetailService saleOutSheetDetailService;
@@ -1532,6 +1531,7 @@ public class SaleOutSheetServiceImpl extends
         res.setOrderDate(DateUtil.parseDate(model.getOrderDate(), "yyyyMMdd"));
         res.setRequired(Boolean.FALSE);
         res.setProducts(buildImportProducts(list));
+        res.setScId(storeCenterService.getDefaultStoreId());
 
         return res;
     }
@@ -1737,6 +1737,7 @@ public class SaleOutSheetServiceImpl extends
 
     /**
      * 采用最近的采购价
+     * 
      * @param orderDate
      * @return
      */
@@ -1750,6 +1751,7 @@ public class SaleOutSheetServiceImpl extends
 
     /**
      * 采用库存表成本价
+     * 
      * @param scId
      * @return
      */
@@ -1786,6 +1788,7 @@ public class SaleOutSheetServiceImpl extends
 
     /**
      * 是否优先使用库存表成本价
+     * 
      * @return
      */
     private boolean useStockPriceAsLatestCostPrice() {

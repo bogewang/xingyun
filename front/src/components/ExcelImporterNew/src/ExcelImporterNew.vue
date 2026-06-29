@@ -191,9 +191,6 @@
               this.closeDialog();
             }
           })
-          .catch(async (err) => {
-            createError(await this.resolveErrorMessage(err));
-          })
           .finally(() => {
             this.loading = false;
           });

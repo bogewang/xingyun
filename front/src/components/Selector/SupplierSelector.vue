@@ -122,7 +122,7 @@
         }
       },
       handleDropdownVisibleChange(open) {
-        if (open && !this.loaded) {
+        if (open && (!this.loaded || this.options.length === 0)) {
           this.loadOptions();
         }
       },
