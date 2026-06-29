@@ -35,3 +35,17 @@ export function exportList(params: QueryProductStockVo): Promise<void> {
     },
   );
 }
+
+/**
+ * 按采购收货单、销售出库单重建库存
+ */
+export function rebuildByReceiveSale(): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/rebuild/receiveSale',
+    },
+    {
+      region,
+    },
+  );
+}

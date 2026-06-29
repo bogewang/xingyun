@@ -63,6 +63,12 @@ public class QueryProductStockBo extends BaseBo<ProductStock> {
   private String productName;
 
   /**
+   * 单位
+   */
+  @ApiModelProperty("单位")
+  private String unit;
+
+  /**
    * 商品分类
    */
   @ApiModelProperty("商品分类")
@@ -126,6 +132,7 @@ public class QueryProductStockBo extends BaseBo<ProductStock> {
 
     this.productCode = product.getCode();
     this.productName = product.getName();
+    this.unit = product.getUnit();
     this.categoryName = productCategory.getName();
   }
 }

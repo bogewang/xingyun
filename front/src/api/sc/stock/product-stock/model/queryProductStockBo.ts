@@ -35,6 +35,11 @@ export interface QueryProductStockBo {
   productName: string;
 
   /**
+   * 单位
+   */
+  unit: string;
+
+  /**
    * 商品分类
    */
   categoryName: string;

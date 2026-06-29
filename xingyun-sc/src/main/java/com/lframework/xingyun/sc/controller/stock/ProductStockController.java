@@ -37,55 +37,55 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/stock/product")
 public class ProductStockController extends DefaultBaseController {
 
-  @Autowired
-  private ProductStockService productStockService;
+    @Autowired
+    private ProductStockService productStockService;
 
-  @Autowired
-  private ProductStockRebuildService productStockRebuildService;
+    @Autowired
+    private ProductStockRebuildService productStockRebuildService;
 
-  /**
-   * 查询商品库存
-   */
-  @ApiOperation("查询商品库存")
-  @HasPermission({"stock:product:query"})
-  @GetMapping("/query")
-  public InvokeResult<PageResult<QueryProductStockBo>> query(@Valid QueryProductStockVo vo) {
+    /**
+     * 查询商品库存
+     */
+    @ApiOperation("查询商品库存")
+    @HasPermission({ "stock:product:query" })
+    @GetMapping("/query")
+    public InvokeResult<PageResult<QueryProductStockBo>> query(@Valid QueryProductStockVo vo) {
 
-    PageResult<ProductStock> pageResult = productStockService.query(getPageIndex(vo),
-        getPageSize(vo), vo);
-    List<QueryProductStockBo> results = null;
+        PageResult<ProductStock> pageResult = productStockService.query(getPageIndex(vo),
+                getPageSize(vo), vo);
+        List<QueryProductStockBo> results = null;
 
-    List<ProductStock> datas = pageResult.getDatas();
-    if (!CollectionUtil.isEmpty(datas)) {
-      results = datas.stream().map(QueryProductStockBo::new).collect(Collectors.toList());
+        List<ProductStock> datas = pageResult.getDatas();
+        if (!CollectionUtil.isEmpty(datas)) {
+            results = datas.stream().map(QueryProductStockBo::new).collect(Collectors.toList());
+        }
+
+        return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
     }
 
-    return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
-  }
+    /**
+     * 导出商品库存
+     */
+    @ApiOperation("导出商品库存")
+    @HasPermission({ "stock:product:export" })
+    @GetMapping("/export")
+    public InvokeResult<Void> export(@Valid QueryProductStockVo vo) {
 
-  /**
-   * 导出商品库存
-   */
-  @ApiOperation("导出商品库存")
-  @HasPermission({"stock:product:export"})
-  @GetMapping("/export")
-  public InvokeResult<Void> export(@Valid QueryProductStockVo vo) {
+        ExportTaskUtil.exportTask("商品库存信息", ProductStockExportTaskWorker.class, vo);
 
-    ExportTaskUtil.exportTask("商品库存信息", ProductStockExportTaskWorker.class, vo);
+        return InvokeResultBuilder.success();
+    }
 
-    return InvokeResultBuilder.success();
-  }
+    /**
+     * 基于采购收货单和销售出库单重建库存
+     */
+    @ApiOperation("基于采购收货单和销售出库单重建库存")
+    @HasPermission({ "stock:product:rebuild" })
+    @PostMapping("/rebuild/receiveSale")
+    public InvokeResult<Void> rebuildByReceiveAndSaleSheets() {
 
-  /**
-   * 基于采购收货单和销售出库单重建库存
-   */
-  @ApiOperation("基于采购收货单和销售出库单重建库存")
-  @HasPermission({"stock:product:rebuild"})
-  @PostMapping("/rebuild/receiveSale")
-  public InvokeResult<Void> rebuildByReceiveAndSaleSheets() {
+        productStockRebuildService.rebuildByReceiveAndSaleSheets();
 
-    productStockRebuildService.rebuildByReceiveAndSaleSheets();
-
-    return InvokeResultBuilder.success();
-  }
+        return InvokeResultBuilder.success();
+    }
 }

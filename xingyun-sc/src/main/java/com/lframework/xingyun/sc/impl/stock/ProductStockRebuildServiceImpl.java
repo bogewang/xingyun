@@ -1,11 +1,15 @@
 package com.lframework.xingyun.sc.impl.stock;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.web.core.utils.IdUtil;
 import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
+import com.lframework.xingyun.sc.entity.ProductStock;
+import com.lframework.xingyun.sc.entity.ProductStockLog;
+import com.lframework.xingyun.sc.entity.ProductStockPendingCost;
+import com.lframework.xingyun.sc.entity.ProductStockPendingCostSettle;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
 import com.lframework.xingyun.sc.entity.ReceiveSheetDetail;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
@@ -122,11 +126,14 @@ public class ProductStockRebuildServiceImpl implements ProductStockRebuildServic
 
     private void clearDerivedStockData() {
 
-        productStockService.remove(new QueryWrapper<>());
-        productStockLogService.remove(new QueryWrapper<>());
-        productStockPendingCostService.remove(new QueryWrapper<>());
-        productStockPendingCostSettleMapper.delete(new QueryWrapper<>());
-        saleOutSheetDetailLotService.remove(new QueryWrapper<>());
+        productStockService.remove(Wrappers.lambdaQuery(ProductStock.class).isNotNull(ProductStock::getId));
+        productStockLogService.remove(Wrappers.lambdaQuery(ProductStockLog.class).isNotNull(ProductStockLog::getId));
+        productStockPendingCostService.remove(
+                Wrappers.lambdaQuery(ProductStockPendingCost.class).isNotNull(ProductStockPendingCost::getId));
+        productStockPendingCostSettleMapper.delete(Wrappers.lambdaQuery(ProductStockPendingCostSettle.class)
+                .isNotNull(ProductStockPendingCostSettle::getId));
+        saleOutSheetDetailLotService.remove(
+                Wrappers.lambdaQuery(SaleOutSheetDetailLot.class).isNotNull(SaleOutSheetDetailLot::getId));
     }
 
     private void replayReceiveAndSaleSheets() {

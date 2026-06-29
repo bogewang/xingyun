@@ -48,6 +48,13 @@
             <a-button
               v-permission="['stock:product:export']"
               type="primary"
+              :icon="h(SyncOutlined)"
+              @click="rebuildByReceiveSale"
+              >重建库存</a-button
+            >
+            <a-button
+              v-permission="['stock:product:export']"
+              type="primary"
               :icon="h(DownloadOutlined)"
               @click="exportList"
               >导出</a-button
@@ -61,10 +68,10 @@
 
 <script>
   import { h, defineComponent } from 'vue';
-  import { SearchOutlined, DownloadOutlined } from '@ant-design/icons-vue';
+  import { SearchOutlined, DownloadOutlined, SyncOutlined } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/stock/product-stock';
   import { buildSortPageVo } from '@/utils/utils';
-  import { createSuccess } from '@/hooks/web/msg';
+  import { createConfirm, createSuccess } from '@/hooks/web/msg';
   import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
   import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
@@ -81,6 +88,7 @@
         h,
         SearchOutlined,
         DownloadOutlined,
+        SyncOutlined,
       };
     },
     data() {
@@ -110,9 +118,10 @@
           { field: 'productCode', title: '商品编号', width: 120, sortable: true },
           { field: 'productName', title: '商品名称', width: 180 },
           { field: 'categoryName', title: '商品分类', width: 120 },
+          { field: 'unit', title: '单位', width: 80 },
           { field: 'stockNum', title: '库存数量', align: 'right', width: 100, sortable: true },
-          { field: 'taxPrice', title: '含税价格', align: 'right', width: 100 },
-          { field: 'taxAmount', title: '含税金额', align: 'right', width: 100 },
+          { field: 'taxPrice', title: '价格', align: 'right', width: 100 },
+          { field: 'taxAmount', title: '金额', align: 'right', width: 100 },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -164,6 +173,22 @@
           .finally(() => {
             this.loading = false;
           });
+      },
+      rebuildByReceiveSale() {
+        createConfirm('将按单据日期重放采购收货单和销售出库单，重新生成库存数据，是否继续？').then(
+          () => {
+            this.loading = true;
+            api
+              .rebuildByReceiveSale()
+              .then(() => {
+                createSuccess('库存重建成功。');
+                this.search();
+              })
+              .finally(() => {
+                this.loading = false;
+              });
+          },
+        );
       },
     },
   });
