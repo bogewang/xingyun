@@ -416,7 +416,7 @@
             },
           },
           { field: 'description', title: '备注', width: 200 },
-          { title: '操作', width: 350, fixed: 'right', slots: { default: 'action_default' } },
+          { title: '操作', minWidth: 300, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
         proxyConfig: {
