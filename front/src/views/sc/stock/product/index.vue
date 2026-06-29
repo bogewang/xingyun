@@ -38,6 +38,23 @@
                   :only-final="false"
                 />
               </j-form-item>
+              <j-form-item label="库存数量">
+                <a-space>
+                  <a-input-number
+                    v-model:value="searchFormData.stockNumStart"
+                    :precision="2"
+                    placeholder="最小值"
+                    style="width: 120px"
+                  />
+                  <span>至</span>
+                  <a-input-number
+                    v-model:value="searchFormData.stockNumEnd"
+                    :precision="2"
+                    placeholder="最大值"
+                    style="width: 120px"
+                  />
+                </a-space>
+              </j-form-item>
             </j-form>
           </j-border>
         </template>
@@ -104,6 +121,8 @@
           productName: '',
           categoryId: '',
           brandId: '',
+          stockNumStart: undefined,
+          stockNumEnd: undefined,
         },
         // 工具栏配置
         toolbarConfig: {
@@ -159,6 +178,8 @@
           scId: this.searchFormData.scId,
           categoryId: this.searchFormData.categoryId,
           brandId: this.searchFormData.brandId,
+          stockNumStart: this.searchFormData.stockNumStart,
+          stockNumEnd: this.searchFormData.stockNumEnd,
         });
 
         return params;

@@ -99,6 +99,12 @@
                 <if test="vo.categoryId != null and vo.categoryId != ''">
                     AND (g.category_id = #{vo.categoryId} OR FIND_IN_SET(#{vo.categoryId}, rm.path))
                 </if>
+                <if test="vo.stockNumStart != null">
+                    AND gs.stock_num &gt;= #{vo.stockNumStart}
+                </if>
+                <if test="vo.stockNumEnd != null">
+                    AND gs.stock_num &lt;= #{vo.stockNumEnd}
+                </if>
             </if>
         </where>
         ORDER BY g.code

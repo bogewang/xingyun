@@ -25,4 +25,14 @@ export interface QueryProductStockVo extends SortPageVo {
    * 商品品牌ID
    */
   brandId: string;
+
+  /**
+   * 库存数量最小值
+   */
+  stockNumStart: number;
+
+  /**
+   * 库存数量最大值
+   */
+  stockNumEnd: number;
 }

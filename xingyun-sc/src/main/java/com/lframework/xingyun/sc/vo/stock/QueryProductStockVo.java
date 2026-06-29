@@ -2,6 +2,7 @@ package com.lframework.xingyun.sc.vo.stock;
 
 import com.lframework.starter.web.core.vo.SortPageVo;
 import io.swagger.annotations.ApiModelProperty;
+import java.math.BigDecimal;
 import lombok.Data;
 
 @Data
@@ -36,4 +37,16 @@ public class QueryProductStockVo extends SortPageVo {
    */
   @ApiModelProperty("商品品牌ID")
   private String brandId;
+
+  /**
+   * 库存数量最小值
+   */
+  @ApiModelProperty("库存数量最小值")
+  private BigDecimal stockNumStart;
+
+  /**
+   * 库存数量最大值
+   */
+  @ApiModelProperty("库存数量最大值")
+  private BigDecimal stockNumEnd;
 }
