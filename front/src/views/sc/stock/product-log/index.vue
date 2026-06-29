@@ -20,7 +20,8 @@
       >
         <template #form>
           <j-border>
-            <j-form bordered label-width="100px" @collapse="$refs.grid.refreshColumn()">
+            <j-form bordered label-width="100px" @collapse="$refs.grid.refreshColumn()"
+                    @keyup.enter="search">
               <j-form-item label="商品编号">
                 <a-input v-model:value="searchFormData.productCode" allow-clear />
               </j-form-item>

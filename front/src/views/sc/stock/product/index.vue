@@ -20,7 +20,12 @@
       >
         <template #form>
           <j-border>
-            <j-form bordered label-width="80px" @collapse="$refs.grid.refreshColumn()">
+            <j-form
+              bordered
+              label-width="80px"
+              @collapse="$refs.grid.refreshColumn()"
+              @keyup.enter="search"
+            >
               <j-form-item label="商品编号">
                 <a-input v-model:value="searchFormData.productCode" allow-clear />
               </j-form-item>
@@ -103,7 +108,7 @@
         tableColumn: [
           { type: 'seq', width: 50 },
           { field: 'productCode', title: '商品编号', width: 120, sortable: true },
-          { field: 'productName', title: '商品名称', minWidth: 180 },
+          { field: 'productName', title: '商品名称', width: 180 },
           { field: 'categoryName', title: '商品分类', width: 120 },
           { field: 'stockNum', title: '库存数量', align: 'right', width: 100, sortable: true },
           { field: 'taxPrice', title: '含税价格', align: 'right', width: 100 },
