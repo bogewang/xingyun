@@ -169,6 +169,10 @@ ALTER TABLE `tbl_retail_out_sheet_detail_lot`
     ADD COLUMN `settled_cost_num` decimal(24,6) NULL DEFAULT '0.000000' COMMENT '已回算数量',
     ADD COLUMN `cost_status` int NULL DEFAULT 2 COMMENT '成本状态';
 
+delete from sys_parameter where pm_key = 'sale_out_cost_price_use_stock_price';
+INSERT INTO `sys_parameter` (`id`, `pm_key`, `pm_value`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES (null, 'sale_out_cost_price_use_stock_price', 'true', '销售出库刷新成本价时是否优先使用库存表成本价', '系统管理员', '1', now(), '系统管理员', '1', now());
+
+
 CREATE TABLE `tbl_product_stock_pending_cost`
 (
     `id`                 varchar(32)   NOT NULL COMMENT 'ID',
@@ -214,5 +218,3 @@ CREATE TABLE `tbl_product_stock_pending_cost_settle`
     PRIMARY KEY (`id`)
 ) COMMENT ='库存待回算成本回写明细';
 
-delete from sys_parameter where pm_key = 'sale_out_cost_price_use_stock_price';
-INSERT INTO `sys_parameter` (`id`, `pm_key`, `pm_value`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES (null, 'sale_out_cost_price_use_stock_price', 'true', '销售出库刷新成本价时是否优先使用库存表成本价', '系统管理员', '1', now(), '系统管理员', '1', now());
