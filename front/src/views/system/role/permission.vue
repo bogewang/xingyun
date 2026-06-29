@@ -28,6 +28,7 @@
           highlight: true,
         }"
         :columns="tableColumn"
+        @checkbox-change="syncSelection"
       >
         <!-- 类型 列自定义内容 -->
         <template #menuDisplay_default="{ row }">
@@ -81,6 +82,8 @@
         // 表格数据
         tableData: [],
         selectedRows: [],
+        menuRowMap: {},
+        syncingSelection: false,
         // 表格列配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
@@ -131,6 +134,7 @@
             });
 
             this.tableData = res;
+            this.buildMenuTreeIndex();
 
             const selectedMenus = [];
             eachTree(res, (item) => {
@@ -139,11 +143,89 @@
               }
             });
 
-            this.selectedRows = selectedMenus;
+            this.selectedRows = this.expandSelectedRows(selectedMenus);
           })
           .finally(() => {
             this.loading = false;
           });
+      },
+      buildMenuTreeIndex() {
+        const menuRowMap = {};
+        const walkTree = (rows, parentRowId = '') => {
+          rows.forEach((item) => {
+            item.parentRowId = parentRowId;
+            menuRowMap[item.id] = item;
+            if (!isEmpty(item.children)) {
+              walkTree(item.children, item.id);
+            }
+          });
+        };
+
+        walkTree(this.tableData);
+        this.menuRowMap = menuRowMap;
+      },
+      expandSelectedRows(selectedMenuIds) {
+        const selectedSet = new Set(selectedMenuIds);
+        selectedMenuIds.forEach((menuId) => {
+          let current = this.menuRowMap[menuId];
+          while (current && current.parentRowId) {
+            selectedSet.add(current.parentRowId);
+            current = this.menuRowMap[current.parentRowId];
+          }
+        });
+
+        return Array.from(selectedSet);
+      },
+      getAncestorRows(row) {
+        const rows = [];
+        let current = this.menuRowMap[row.id];
+        while (current && current.parentRowId) {
+          current = this.menuRowMap[current.parentRowId];
+          if (current) {
+            rows.push(current);
+          }
+        }
+
+        return rows;
+      },
+      getDescendantRows(row) {
+        const rows = [];
+        eachTree(row.children || [], (item) => {
+          rows.push(item);
+        });
+        return rows;
+      },
+      syncSelection({ checked, row }) {
+        if (this.syncingSelection) {
+          return;
+        }
+
+        const grid = this.$refs.grid;
+        if (!grid || !row) {
+          return;
+        }
+
+        this.syncingSelection = true;
+        try {
+          if (checked) {
+            const ancestorRows = this.getAncestorRows(row);
+            if (!isEmpty(ancestorRows)) {
+              grid.setCheckboxRow(ancestorRows, true);
+            }
+
+            const descendantRows = this.getDescendantRows(row);
+            if (!isEmpty(descendantRows)) {
+              grid.setCheckboxRow(descendantRows, true);
+            }
+          } else {
+            const descendantRows = this.getDescendantRows(row);
+            if (!isEmpty(descendantRows)) {
+              grid.setCheckboxRow(descendantRows, false);
+            }
+          }
+        } finally {
+          this.syncingSelection = false;
+        }
       },
       // 提交数据
       submit() {

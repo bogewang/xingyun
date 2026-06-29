@@ -63,7 +63,7 @@
           <a-space>
             <a-button type="primary" :icon="h(SearchOutlined)" @click="search">查询</a-button>
             <a-button
-              v-permission="['stock:product:export']"
+              v-permission="['stock:product:approve']"
               type="primary"
               :icon="h(SyncOutlined)"
               @click="rebuildByReceiveSale"
