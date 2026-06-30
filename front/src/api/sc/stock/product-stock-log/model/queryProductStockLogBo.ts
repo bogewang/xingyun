@@ -95,6 +95,11 @@ export interface QueryProductStockLogBo {
   bizCode: string;
 
   /**
+   * 订单日期
+   */
+  orderDate: string;
+
+  /**
    * 业务类型
    */
   bizType: number;

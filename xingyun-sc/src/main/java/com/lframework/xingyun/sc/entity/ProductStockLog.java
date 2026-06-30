@@ -108,6 +108,12 @@ public class ProductStockLog extends BaseEntity implements BaseDto {
     private ProductStockBizType bizType;
 
     /**
+     * 单据日期
+     */
+    @TableField(exist = false)
+    private String orderDate;
+
+    /**
      * 时间戳
      */
     private Long timeStamp;

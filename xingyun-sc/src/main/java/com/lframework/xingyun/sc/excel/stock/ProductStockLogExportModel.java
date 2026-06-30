@@ -117,6 +117,12 @@ public class ProductStockLogExportModel extends BaseBo<ProductStockLog> implemen
   private String bizCode;
 
   /**
+   * 订单日期
+   */
+  @ExcelProperty("订单日期")
+  private String orderDate;
+
+  /**
    * 业务类型
    */
   @ExcelProperty("业务类型")

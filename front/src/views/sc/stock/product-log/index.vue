@@ -1,7 +1,6 @@
 <template>
   <div v-permission="['stock:product-log:query']">
     <page-wrapper content-full-height fixed-height>
-      <!-- 数据列表 -->
       <vxe-grid
         id="ProductStockLog"
         ref="grid"
@@ -16,12 +15,17 @@
         :custom-config="{}"
         :pager-config="{}"
         :loading="loading"
+        :row-class-name="rowClassName"
         height="auto"
       >
         <template #form>
           <j-border>
-            <j-form bordered label-width="100px" @collapse="$refs.grid.refreshColumn()"
-                    @keyup.enter="search">
+            <j-form
+              bordered
+              label-width="100px"
+              @collapse="$refs.grid.refreshColumn()"
+              @keyup.enter="search"
+            >
               <j-form-item label="商品编号">
                 <a-input v-model:value="searchFormData.productCode" allow-clear />
               </j-form-item>
@@ -55,150 +59,78 @@
                     v-for="item in PRODUCT_STOCK_BIZ_TYPE.values()"
                     :key="item.code"
                     :value="item.code"
-                    >{{ item.desc }}</a-select-option
                   >
+                    {{ item.desc }}
+                  </a-select-option>
                 </a-select>
               </j-form-item>
             </j-form>
           </j-border>
         </template>
 
-        <!-- 单据号 列自定义内容 -->
         <template #bizCode_default="{ row }">
           <div v-if="PRODUCT_STOCK_BIZ_TYPE.PURCHASE.equalsCode(row.bizType)">
-            <a
-              v-permission="['purchase:receive:query']"
-              @click="
-                (e) => {
-                  currentRow = row;
-                  $nextTick(() => $refs.viewPurchaseRecevieSheetDetailDialog.openDialog());
-                }
-              "
-              >{{ row.bizCode }}</a
-            >
-            <span v-no-permission="['purchase:receive:query']">{{ row.bizCode }}</span>
+            <a v-permission="['purchase:receive:modify']" @click="openBizModifyPage(row)">
+              {{ row.bizCode }}
+            </a>
+            <span v-no-permission="['purchase:receive:modify']">{{ row.bizCode }}</span>
           </div>
           <div v-else-if="PRODUCT_STOCK_BIZ_TYPE.PURCHASE_RETURN.equalsCode(row.bizType)">
-            <a
-              v-permission="['purchase:return:query']"
-              @click="
-                (e) => {
-                  currentRow = row;
-                  $nextTick(() => $refs.viewPurchaseReturnDetailDialog.openDialog());
-                }
-              "
-              >{{ row.bizCode }}</a
-            >
-            <span v-no-permission="['purchase:return:query']">{{ row.bizCode }}</span>
+            <a v-permission="['purchase:return:modify']" @click="openBizModifyPage(row)">
+              {{ row.bizCode }}
+            </a>
+            <span v-no-permission="['purchase:return:modify']">{{ row.bizCode }}</span>
           </div>
           <div v-else-if="PRODUCT_STOCK_BIZ_TYPE.SALE.equalsCode(row.bizType)">
-            <a
-              v-permission="['sale:out:query']"
-              @click="
-                (e) => {
-                  currentRow = row;
-                  $nextTick(() => $refs.viewSaleOutSheetDetailDialog.openDialog());
-                }
-              "
-              >{{ row.bizCode }}</a
-            >
-            <span v-no-permission="['sale:out:query']">{{ row.bizCode }}</span>
+            <a v-permission="['sale:out:modify']" @click="openBizModifyPage(row)">
+              {{ row.bizCode }}
+            </a>
+            <span v-no-permission="['sale:out:modify']">{{ row.bizCode }}</span>
           </div>
           <div v-else-if="PRODUCT_STOCK_BIZ_TYPE.SALE_RETURN.equalsCode(row.bizType)">
-            <a
-              v-permission="['sale:return:query']"
-              @click="
-                (e) => {
-                  currentRow = row;
-                  $nextTick(() => $refs.viewSaleReturnDetailDialog.openDialog());
-                }
-              "
-              >{{ row.bizCode }}</a
-            >
-            <span v-no-permission="['sale:return:query']">{{ row.bizCode }}</span>
+            <a v-permission="['sale:return:modify']" @click="openBizModifyPage(row)">
+              {{ row.bizCode }}
+            </a>
+            <span v-no-permission="['sale:return:modify']">{{ row.bizCode }}</span>
           </div>
           <div v-else-if="PRODUCT_STOCK_BIZ_TYPE.RETAIL.equalsCode(row.bizType)">
-            <a
-              v-permission="['retail:out:query']"
-              @click="
-                (e) => {
-                  currentRow = row;
-                  $nextTick(() => $refs.viewRetailOutSheetDetailDialog.openDialog());
-                }
-              "
-              >{{ row.bizCode }}</a
-            >
-            <span v-no-permission="['retail:out:query']">{{ row.bizCode }}</span>
+            <a v-permission="['retail:out:modify']" @click="openBizModifyPage(row)">
+              {{ row.bizCode }}
+            </a>
+            <span v-no-permission="['retail:out:modify']">{{ row.bizCode }}</span>
           </div>
           <div v-else-if="PRODUCT_STOCK_BIZ_TYPE.RETAIL_RETURN.equalsCode(row.bizType)">
-            <a
-              v-permission="['retail:return:query']"
-              @click="
-                (e) => {
-                  currentRow = row;
-                  $nextTick(() => $refs.viewRetailReturnDetailDialog.openDialog());
-                }
-              "
-              >{{ row.bizCode }}</a
-            >
-            <span v-no-permission="['retail:return:query']">{{ row.bizCode }}</span>
+            <a v-permission="['retail:return:modify']" @click="openBizModifyPage(row)">
+              {{ row.bizCode }}
+            </a>
+            <span v-no-permission="['retail:return:modify']">{{ row.bizCode }}</span>
           </div>
-          <div v-else-if="PRODUCT_STOCK_BIZ_TYPE.TAKE_STOCK_IN.equalsCode(row.bizType)">
-            <a
-              v-permission="['stock:take:plan:query']"
-              @click="
-                (e) => {
-                  currentRow = row;
-                  $nextTick(() => $refs.viewTakeStockPlanDetailDialog.openDialog());
-                }
-              "
-              >{{ row.bizCode }}</a
-            >
-            <span v-no-permission="['stock:take:plan:query']">{{ row.bizCode }}</span>
-          </div>
-          <div v-else-if="PRODUCT_STOCK_BIZ_TYPE.TAKE_STOCK_OUT.equalsCode(row.bizType)">
-            <a
-              v-permission="['stock:take:plan:query']"
-              @click="
-                (e) => {
-                  currentRow = row;
-                  $nextTick(() => $refs.viewTakeStockPlanDetailDialog.openDialog());
-                }
-              "
-              >{{ row.bizCode }}</a
-            >
-            <span v-no-permission="['stock:take:plan:query']">{{ row.bizCode }}</span>
+          <div
+            v-else-if="
+              PRODUCT_STOCK_BIZ_TYPE.TAKE_STOCK_IN.equalsCode(row.bizType) ||
+              PRODUCT_STOCK_BIZ_TYPE.TAKE_STOCK_OUT.equalsCode(row.bizType)
+            "
+          >
+            <a v-permission="['stock:take:sheet:modify']" @click="openBizModifyPage(row)">
+              {{ row.bizCode }}
+            </a>
+            <span v-no-permission="['stock:take:sheet:modify']">{{ row.bizCode }}</span>
           </div>
           <div v-else-if="PRODUCT_STOCK_BIZ_TYPE.STOCK_ADJUST.equalsCode(row.bizType)">
-            <a
-              v-permission="['stock:adjust:query']"
-              @click="
-                (e) => {
-                  currentRow = row;
-                  $nextTick(() => $refs.viewStockAdjustDetailDialog.openDialog());
-                }
-              "
-              >{{ row.bizCode }}</a
-            >
-            <span v-no-permission="['stock:adjust:query']">{{ row.bizCode }}</span>
+            <a v-permission="['stock:adjust:modify']" @click="openBizModifyPage(row)">
+              {{ row.bizCode }}
+            </a>
+            <span v-no-permission="['stock:adjust:modify']">{{ row.bizCode }}</span>
           </div>
           <div v-else-if="PRODUCT_STOCK_BIZ_TYPE.SC_TRANSFER.equalsCode(row.bizType)">
-            <a
-              v-permission="['stock:sc-transfer:query']"
-              @click="
-                (e) => {
-                  currentRow = row;
-                  $nextTick(() => $refs.viewScTransferOrderDetailDialog.openDialog());
-                }
-              "
-              >{{ row.bizCode }}</a
-            >
-            <span v-no-permission="['stock:sc-transfer:query']">{{ row.bizCode }}</span>
+            <a v-permission="['stock:sc-transfer:modify']" @click="openBizModifyPage(row)">
+              {{ row.bizCode }}
+            </a>
+            <span v-no-permission="['stock:sc-transfer:modify']">{{ row.bizCode }}</span>
           </div>
           <span v-else>{{ row.bizCode }}</span>
         </template>
 
-        <!-- 工具栏 -->
         <template #toolbar_buttons>
           <a-space>
             <a-button type="primary" :icon="h(SearchOutlined)" @click="search">查询</a-button>
@@ -207,25 +139,13 @@
               type="primary"
               :icon="h(DownloadOutlined)"
               @click="exportList"
-              >导出</a-button
             >
+              导出
+            </a-button>
           </a-space>
         </template>
       </vxe-grid>
     </page-wrapper>
-
-    <purchase-receive-sheet-detail
-      :id="currentRow.bizId"
-      ref="viewPurchaseRecevieSheetDetailDialog"
-    />
-    <purchase-return-detail :id="currentRow.bizId" ref="viewPurchaseReturnDetailDialog" />
-    <sale-out-sheet-detail :id="currentRow.bizId" ref="viewSaleOutSheetDetailDialog" />
-    <sale-return-detail :id="currentRow.bizId" ref="viewSaleReturnDetailDialog" />
-    <retail-out-sheet-detail :id="currentRow.bizId" ref="viewRetailOutSheetDetailDialog" />
-    <retail-return-detail :id="currentRow.bizId" ref="viewRetailReturnDetailDialog" />
-    <take-stock-plan-detail :id="currentRow.bizId" ref="viewTakeStockPlanDetailDialog" />
-    <stock-adjust-detail :id="currentRow.bizId" ref="viewStockAdjustDetailDialog" />
-    <sc-transfer-order-detail :id="currentRow.bizId" ref="viewScTransferOrderDetailDialog" />
   </div>
 </template>
 
@@ -233,23 +153,21 @@
   import { h, defineComponent } from 'vue';
   import { SearchOutlined, DownloadOutlined } from '@ant-design/icons-vue';
   import Moment from 'moment';
-  import PurchaseReceiveSheetDetail from '@/views/sc/purchase/receive/detail.vue';
-  import PurchaseReturnDetail from '@/views/sc/purchase/return/detail.vue';
-  import SaleOutSheetDetail from '@/views/sc/sale/out/detail.vue';
-  import SaleReturnDetail from '@/views/sc/sale/return/detail.vue';
-  import RetailOutSheetDetail from '@/views/sc/retail/out/detail.vue';
-  import RetailReturnDetail from '@/views/sc/retail/return/detail.vue';
-  import TakeStockPlanDetail from '@/views/sc/stock/take/plan/detail.vue';
-  import StockAdjustDetail from '@/views/sc/stock/adjust/stock/detail.vue';
-  import ScTransferOrderDetail from '@/views/sc/stock/transfer/detail.vue';
   import * as api from '@/api/sc/stock/product-stock-log';
+  import * as purchaseReceiveApi from '@/api/sc/purchase/receive';
+  import * as purchaseReturnApi from '@/api/sc/purchase/return';
+  import * as saleOutApi from '@/api/sc/sale/out';
+  import * as saleReturnApi from '@/api/sc/sale/return';
+  import * as retailReturnApi from '@/api/sc/retail/return';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
     formatDateTime,
     getDateTimeWithMinTime,
     getDateTimeWithMaxTime,
     buildSortPageVo,
+    isEmpty,
   } from '@/utils/utils';
-  import { createSuccess } from '@/hooks/web/msg';
+  import { createError, createSuccess } from '@/hooks/web/msg';
   import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
   import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
@@ -258,19 +176,11 @@
   export default defineComponent({
     name: 'ProductStockLog',
     components: {
-      PurchaseReceiveSheetDetail,
-      PurchaseReturnDetail,
-      SaleOutSheetDetail,
-      SaleReturnDetail,
-      RetailOutSheetDetail,
-      RetailReturnDetail,
-      TakeStockPlanDetail,
-      StockAdjustDetail,
-      ScTransferOrderDetail,
       ProductBrandSelector,
       ProductCategorySelector,
       StoreCenterSelector,
     },
+    mixins: [multiplePageMix],
     setup() {
       return {
         h,
@@ -282,9 +192,6 @@
     data() {
       return {
         loading: false,
-        // 当前行数据
-        currentRow: '',
-        // 查询列表的查询条件
         searchFormData: {
           scId: '',
           productCode: '',
@@ -295,14 +202,11 @@
           createEndTime: formatDateTime(getDateTimeWithMaxTime(Moment())),
           bizType: undefined,
         },
-        // 工具栏配置
         toolbarConfig: {
-          // 自定义左侧工具栏
           slots: {
             buttons: 'toolbar_buttons',
           },
         },
-        // 列表数据配置
         tableColumn: [
           { type: 'seq', width: 50 },
           {
@@ -315,9 +219,16 @@
             sortable: true,
           },
           { field: 'createTime', title: '操作时间', width: 150, sortable: true },
-          { field: 'productCode', title: '商品编号', width: 120, sortable: true },
+          { field: 'orderDate', title: '订单日期', width: 120 },
+          {
+            field: 'bizCode',
+            title: '单据号',
+            width: 180,
+            slots: { default: 'bizCode_default' },
+            sortable: true,
+          },
+          // { field: 'productCode', title: '商品编号', width: 120, sortable: true },
           { field: 'productName', title: '商品名称', width: 180 },
-          // { field: 'categoryName', title: '商品分类', width: 120 },
           {
             field: 'oriStockNum',
             title: '数量(前)',
@@ -348,26 +259,15 @@
             sortable: true,
           },
           { field: 'taxAmount', title: '变动金额', align: 'right', width: 100, sortable: true },
-          { field: 'createBy', title: '操作人', minWidth: 80 },
-          {
-            field: 'bizCode',
-            title: '单据号',
-            width: 180,
-            slots: { default: 'bizCode_default' },
-            sortable: true,
-          },
+          { field: 'createBy', title: '操作人', width: 150 },
 
         ],
-        // 请求接口配置
         proxyConfig: {
           props: {
-            // 响应结果列表字段
             result: 'datas',
-            // 响应结果总条数字段
             total: 'totalCount',
           },
           ajax: {
-            // 查询接口
             query: ({ page, sorts }) => {
               return api.query(this.buildQueryParams(page, sorts));
             },
@@ -375,29 +275,23 @@
         },
       };
     },
-    created() {},
     methods: {
-      // 列表发生查询时的事件
       search() {
         this.$refs.grid.commitProxy('reload');
       },
-      // 查询前构建查询参数结构
       buildQueryParams(page, sorts) {
         return {
           ...buildSortPageVo(page, sorts),
           ...this.buildSearchFormData(),
         };
       },
-      // 查询前构建具体的查询参数
       buildSearchFormData() {
-        const params = Object.assign({}, this.searchFormData, {
+        return Object.assign({}, this.searchFormData, {
           scId: this.searchFormData.scId,
           categoryId: this.searchFormData.categoryId,
           brandId: this.searchFormData.brandId,
           supplierId: this.searchFormData.supplierId,
         });
-
-        return params;
       },
       exportList() {
         this.loading = true;
@@ -410,7 +304,119 @@
             this.loading = false;
           });
       },
+      rowClassName({ row }) {
+        const stockNum = Number(row.stockNum || 0);
+
+        if (stockNum > 0) {
+          return 'stock-log-row-in';
+        }
+
+        if (stockNum < 0) {
+          return 'stock-log-row-out';
+        }
+
+        return '';
+      },
+      async openBizModifyPage(row) {
+        try {
+          const bizType = row.bizType;
+
+          if (PRODUCT_STOCK_BIZ_TYPE.PURCHASE.equalsCode(bizType)) {
+            const res = await purchaseReceiveApi.get(row.bizId);
+            if (!isEmpty(res.purchaseOrderId)) {
+              this.openChildPage('/purchase/receive/modify/require/' + row.bizId);
+            } else {
+              this.openChildPage('/purchase/receive/modify/un-require/' + row.bizId);
+            }
+            return;
+          }
+
+          if (PRODUCT_STOCK_BIZ_TYPE.PURCHASE_RETURN.equalsCode(bizType)) {
+            const res = await purchaseReturnApi.get(row.bizId);
+            if (!isEmpty(res.receiveSheetId)) {
+              this.openChildPage('/purchase/return/modify/require/' + row.bizId);
+            } else {
+              this.openChildPage('/purchase/return/modify/un-require/' + row.bizId);
+            }
+            return;
+          }
+
+          if (PRODUCT_STOCK_BIZ_TYPE.SALE.equalsCode(bizType)) {
+            const res = await saleOutApi.get(row.bizId);
+            if (!isEmpty(res.saleOrderId)) {
+              this.openChildPage('/sale/out/modify/require/' + row.bizId);
+            } else {
+              this.openChildPage('/sale/out/modify/un-require/' + row.bizId);
+            }
+            return;
+          }
+
+          if (PRODUCT_STOCK_BIZ_TYPE.SALE_RETURN.equalsCode(bizType)) {
+            const res = await saleReturnApi.get(row.bizId);
+            if (!isEmpty(res.outSheetId)) {
+              this.openChildPage('/sale/return/modify/require/' + row.bizId);
+            } else {
+              this.openChildPage('/sale/return/modify/un-require/' + row.bizId);
+            }
+            return;
+          }
+
+          if (PRODUCT_STOCK_BIZ_TYPE.RETAIL.equalsCode(bizType)) {
+            this.openChildPage('/retail/out/modify/' + row.bizId);
+            return;
+          }
+
+          if (PRODUCT_STOCK_BIZ_TYPE.RETAIL_RETURN.equalsCode(bizType)) {
+            const res = await retailReturnApi.get(row.bizId);
+            if (!isEmpty(res.outSheetId)) {
+              this.openChildPage('/retail/return/modify/require/' + row.bizId);
+            } else {
+              this.openChildPage('/retail/return/modify/un-require/' + row.bizId);
+            }
+            return;
+          }
+
+          if (
+            PRODUCT_STOCK_BIZ_TYPE.TAKE_STOCK_IN.equalsCode(bizType) ||
+            PRODUCT_STOCK_BIZ_TYPE.TAKE_STOCK_OUT.equalsCode(bizType)
+          ) {
+            this.openChildPage('/stock/take/sheet/modify/' + row.bizId);
+            return;
+          }
+
+          if (PRODUCT_STOCK_BIZ_TYPE.STOCK_ADJUST.equalsCode(bizType)) {
+            this.openChildPage('/stock/stock-adjust/modify/' + row.bizId);
+            return;
+          }
+
+          if (PRODUCT_STOCK_BIZ_TYPE.SC_TRANSFER.equalsCode(bizType)) {
+            this.openChildPage('/stock/stock-transfer/modify/' + row.bizId);
+            return;
+          }
+
+          createError('当前单据暂不支持跳转修改页！');
+        } catch (e) {
+          createError('打开修改页面失败，请刷新后重试！');
+        }
+      },
     },
   });
 </script>
-<style scoped></style>
+
+<style scoped>
+  :deep(.stock-log-row-in) {
+    color: #389e0d;
+  }
+
+  :deep(.stock-log-row-in a) {
+    color: inherit;
+  }
+
+  :deep(.stock-log-row-out) {
+    color: #cf1322;
+  }
+
+  :deep(.stock-log-row-out a) {
+    color: inherit;
+  }
+</style>

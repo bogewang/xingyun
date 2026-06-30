@@ -139,6 +139,12 @@ public class QueryProductStockLogBo extends BaseBo<ProductStockLog> {
     private String bizCode;
 
     /**
+     * 订单日期
+     */
+    @ApiModelProperty("订单日期")
+    private String orderDate;
+
+    /**
      * 业务类型
      */
     @ApiModelProperty("业务类型")
