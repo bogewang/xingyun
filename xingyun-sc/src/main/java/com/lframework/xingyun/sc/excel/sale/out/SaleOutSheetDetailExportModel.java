@@ -30,9 +30,6 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
     @ExcelProperty("商品")
     private String productName;
 
-    @ExcelProperty("商品分类")
-    private String categoryName;
-
     // @ExcelProperty("简称")
     @ExcelIgnore
     private String shortName;
@@ -49,6 +46,9 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
     @ExcelProperty("售价")
     private BigDecimal taxPrice;
 
+    @ExcelProperty("备注")
+    private String description;
+
     @ExcelProperty("销售额")
     private BigDecimal taxAmount;
 
@@ -61,11 +61,13 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
     @ExcelProperty("毛利率")
     private String profitRate;
 
+    @ExcelProperty("商品分类")
+    private String categoryName;
+
     @ExcelProperty("供应商名称")
     private String supplierName;
 
-    @ExcelProperty("备注")
-    private String description;
+
 
     public SaleOutSheetDetailExportModel() {
     }
