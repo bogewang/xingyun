@@ -171,7 +171,7 @@ ALTER TABLE `tbl_retail_out_sheet_detail_lot`
     ADD COLUMN `cost_status` int NULL DEFAULT 2 COMMENT '成本状态';
 
 delete from sys_parameter where pm_key = 'sale_out_cost_price_use_stock_price';
-INSERT INTO `sys_parameter` (`id`, `pm_key`, `pm_value`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES (null, 'sale_out_cost_price_use_stock_price', 'true', '销售出库刷新成本价时是否优先使用库存表成本价', '系统管理员', '1', now(), '系统管理员', '1', now());
+INSERT INTO `sys_parameter` (`id`, `pm_key`, `pm_value`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`) VALUES (null, 'sale_out_cost_price_use_stock_price', 'false', '销售出库刷新成本价时是否优先使用库存表成本价', '系统管理员', '1', now(), '系统管理员', '1', now());
 
 DROP TABLE IF EXISTS `tbl_product_stock_pending_cost`;
 CREATE TABLE `tbl_product_stock_pending_cost`

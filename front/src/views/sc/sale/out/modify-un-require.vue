@@ -354,7 +354,7 @@
           row.costPrice !== null &&
           row.costPrice !== undefined &&
           row.costPrice !== '' &&
-          (row.manualInputCost === true || row.costPrice > 0),
+          (row.manualInputCost === true || row.costPrice >= 0),
         canEditCostPrice: (row) => false
           /*row &&
           (row.manualInputCost === true ||

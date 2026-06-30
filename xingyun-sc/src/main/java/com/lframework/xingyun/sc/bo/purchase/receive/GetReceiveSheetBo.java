@@ -450,7 +450,7 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
       }
       this.taxCostPrice =
           productStock == null ? BigDecimal.ZERO
-              : NumberUtil.getNumber(productStock.getTaxPrice(), 6);
+              : NumberUtil.getNumber(NumberUtil.getDefaultValue(productStock.getTaxPrice()), 6);
       this.stockNum = productStock == null ? BigDecimal.ZERO : productStock.getStockNum();
     }
   }
