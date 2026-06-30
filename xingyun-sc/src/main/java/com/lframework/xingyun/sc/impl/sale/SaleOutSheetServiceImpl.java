@@ -772,10 +772,11 @@ public class SaleOutSheetServiceImpl extends
 
         getBaseMapper().insert(sheet);
         List<SaleOutSheetDetail> details = getSheetDetails(sheet.getId());
-        subStock(sheet, details);
 
         this.adjustCustomerAmount(sheet.getCustomerId());
         refreshCostPrice(sheet.getId(), vo.getFillAllCost(), Boolean.TRUE.equals(vo.getFillAllCostModified()));
+
+        subStock(sheet, details);
         productHotnessService.increment(
                 vo.getProducts().stream().map(SaleOutProductVo::getProductId).collect(Collectors.toList()));
 
