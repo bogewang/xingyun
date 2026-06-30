@@ -1763,10 +1763,6 @@ public class SaleOutSheetServiceImpl extends
             return new HashMap<>();
         }
 
-        List<ProductStock> jidan = productStocks.stream()
-                .filter(item -> "2062456986435457024".equals(item.getProductId()))
-                .collect(Collectors.toList());
-
         List<QueryReceiveSheetDetailDto> latestCostPrices = productStocks.stream().map(item -> {
             QueryReceiveSheetDetailDto dto = new QueryReceiveSheetDetailDto();
             dto.setProductId(item.getProductId());
