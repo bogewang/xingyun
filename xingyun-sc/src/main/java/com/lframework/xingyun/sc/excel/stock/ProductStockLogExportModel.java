@@ -68,16 +68,16 @@ public class ProductStockLogExportModel extends BaseBo<ProductStockLog> implemen
   private BigDecimal oriStockNum;
 
   /**
-   * 现库存数量
-   */
-  @ExcelProperty("变动后库存数量")
-  private BigDecimal curStockNum;
-
-  /**
    * 库存数量
    */
   @ExcelProperty("变动库存数量")
   private BigDecimal stockNum;
+
+  /**
+   * 现库存数量
+   */
+  @ExcelProperty("变动后库存数量")
+  private BigDecimal curStockNum;
 
   /**
    * 原含税成本价
