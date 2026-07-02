@@ -2,7 +2,7 @@
   <div>
     <excel-importer
       ref="importer"
-      :tip-msg="'按导入文件中的“单据日期 + 供应商”自动分组生成采购订单。\n注：\n1、Excel 中其余字段都会作为订单明细导入。'"
+      :tip-msg="'按导入文件中的“单据日期 + 供应商”自动分组生成采购订单。\n注：\n1、Excel 中其余字段都会作为订单明细导入。\n2、“配送日期”格式为 yyyy-MM-dd。'"
       :download-template-url="downloadTemplate"
       :upload-url="upload"
       :form-data="formData"

@@ -8,11 +8,15 @@ import lombok.Data;
 @Data
 public class SaleOutSheetQueryImportModel extends SaleOutSheetImportModel implements ExcelModel {
 
-  @ExcelRequired
-  @ExcelProperty("销售日期")
-  private String orderDate;
+    @ExcelProperty("配送日期")
+    private String actualDate;
 
-  @ExcelRequired
-  @ExcelProperty("客户")
-  private String customerName;
+    @ExcelRequired
+    @ExcelProperty("销售日期")
+    private String orderDate;
+
+    @ExcelRequired
+    @ExcelProperty("客户")
+    private String customerName;
+
 }

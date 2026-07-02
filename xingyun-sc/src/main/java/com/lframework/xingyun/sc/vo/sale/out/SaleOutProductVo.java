@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Data
 public class SaleOutProductVo implements BaseVo, Serializable {
@@ -80,4 +81,10 @@ public class SaleOutProductVo implements BaseVo, Serializable {
    */
   @ApiModelProperty("销售订单明细ID")
   private String saleOrderDetailId;
+
+  /**
+   * 配送日期
+   */
+  @ApiModelProperty("配送日期")
+  private LocalDate actualDate;
 }

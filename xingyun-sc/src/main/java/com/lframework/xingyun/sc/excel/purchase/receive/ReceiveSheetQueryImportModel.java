@@ -7,12 +7,16 @@ import lombok.Data;
 
 @Data
 public class ReceiveSheetQueryImportModel extends ReceiveSheetImportModel implements ExcelModel {
-  @ExcelRequired
-  @ExcelProperty("单据日期")
-  private String orderDate;
 
-  @ExcelRequired
-  @ExcelProperty("供应商")
-  private String supplierName;
+    @ExcelProperty("配送日期")
+    private String actualDate;
+
+    @ExcelRequired
+    @ExcelProperty("单据日期")
+    private String orderDate;
+
+    @ExcelRequired
+    @ExcelProperty("供应商")
+    private String supplierName;
 
 }

@@ -69,6 +69,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -77,6 +79,9 @@ import javax.annotation.Resource;
 @Service
 public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMapper, ReceiveSheet>
         implements ReceiveSheetService {
+
+    private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Autowired
     private ReceiveSheetDetailService receiveSheetDetailService;
@@ -644,6 +649,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             detail.setDescription(StringUtil.isBlank(productVo.getDescription()) ? StringPool.EMPTY_STR
                     : productVo.getDescription());
             detail.setOrderNo(productVo.getSeq());
+            detail.setActualDate(productVo.getActualDate());
             receiveSheetDetailService.save(detail);
             updateProductPrice(product, detail);
             productLatestPriceCacheService.updateLatestPrice(product.getId(), null,
@@ -948,9 +954,37 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         List<ReceiveSheetImportModel> collect = list.stream()
                 .map(item -> BeanUtil.copyProperties(item, ReceiveSheetImportModel.class)).collect(Collectors.toList());
         List<ReceiveProductVo> checked = checkImport(collect);
-
-        return checked.stream().map(item -> BeanUtil.copyProperties(item, ReceiveProductVo.class))
+        List<ReceiveProductVo> products = checked.stream()
+                .map(item -> BeanUtil.copyProperties(item, ReceiveProductVo.class))
                 .collect(Collectors.toList());
+
+        for (int i = 0; i < products.size(); i++) {
+            products.get(i).setActualDate(parseActualDate(list.get(i).getActualDate(), list.get(i).getSeq()));
+        }
+
+        return products;
+    }
+
+    private LocalDate parseActualDate(String value, Integer rowIndex) {
+        if (StringUtil.isBlank(value)) {
+            return null;
+        }
+
+        String text = value.trim();
+        int blankIndex = text.indexOf(' ');
+        if (blankIndex > 0) {
+            text = text.substring(0, blankIndex);
+        }
+        int tIndex = text.indexOf('T');
+        if (tIndex > 0) {
+            text = text.substring(0, tIndex);
+        }
+
+        try {
+            return LocalDate.parse(text, QUERY_IMPORT_ACTUAL_DATE_FORMATTER);
+        } catch (DateTimeParseException e) {
+            throw new DefaultClientException("第" + rowIndex + "行“配送日期”格式错误，正确格式为yyyy-MM-dd");
+        }
     }
 
     private List<ReceiveSheetDetailExportModel> buildDailySummaryExportModels(

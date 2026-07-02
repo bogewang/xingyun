@@ -78,6 +78,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -88,6 +90,8 @@ public class SaleOutSheetServiceImpl extends
 
     private final List<String> NO_NEED_PRINT = Lists.newArrayList("调料干杂");
     private static final String COST_PRICE_SOURCE_USE_STOCK_PRICE_PM_KEY = "sale_out_cost_price_use_stock_price";
+    private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Autowired
     private SaleOutSheetDetailService saleOutSheetDetailService;
@@ -1222,6 +1226,7 @@ public class SaleOutSheetServiceImpl extends
             detail.setDescription(StringUtil.isBlank(productVo.getDescription()) ? StringPool.EMPTY_STR
                     : productVo.getDescription());
             detail.setOrderNo(productVo.getSeq());
+            detail.setActualDate(productVo.getActualDate());
             detail.setSettleStatus(this.getInitSettleStatus(customer));
             detail.setTaxAmount(
                     NumberUtil.getNumber(NumberUtil.mul(detail.getTaxPrice(), detail.getOrderNum()), 2));
@@ -1565,10 +1570,37 @@ public class SaleOutSheetServiceImpl extends
                 .map(item -> BeanUtil.copyProperties(item, SaleOutSheetImportModel.class))
                 .collect(Collectors.toList());
         List<SaleOutProductVo> checked = checkImport(collect);
-
-        return checked.stream()
+        List<SaleOutProductVo> products = checked.stream()
                 .map(item -> BeanUtil.copyProperties(item, SaleOutProductVo.class))
                 .collect(Collectors.toList());
+
+        for (int i = 0; i < products.size(); i++) {
+            products.get(i).setActualDate(parseActualDate(list.get(i).getActualDate(), list.get(i).getSeq()));
+        }
+
+        return products;
+    }
+
+    private LocalDate parseActualDate(String value, Integer rowIndex) {
+        if (StringUtil.isBlank(value)) {
+            return null;
+        }
+
+        String text = value.trim();
+        int blankIndex = text.indexOf(' ');
+        if (blankIndex > 0) {
+            text = text.substring(0, blankIndex);
+        }
+        int tIndex = text.indexOf('T');
+        if (tIndex > 0) {
+            text = text.substring(0, tIndex);
+        }
+
+        try {
+            return LocalDate.parse(text, QUERY_IMPORT_ACTUAL_DATE_FORMATTER);
+        } catch (DateTimeParseException e) {
+            throw new DefaultClientException("第" + rowIndex + "行“配送日期”格式错误，正确格式为yyyy-MM-dd");
+        }
     }
 
     private List<String> checkImportData(List<SaleOutSheetImportModel> list) {
