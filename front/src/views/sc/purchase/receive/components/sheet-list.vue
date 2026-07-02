@@ -258,6 +258,7 @@
     />
     <batch-handler
       ref="batchDeleteHandlerDialog"
+      :concurrency="1"
       :table-column="[
         { field: 'code', title: '单据号', width: 180 },
         { field: 'supplierCode', title: '供应商编号', width: 100 },
