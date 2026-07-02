@@ -599,9 +599,14 @@ public class SaleOutSheetController extends DefaultBaseController {
     @DeleteMapping
     public InvokeResult<Void> deleteById(@NotBlank(message = "销售出库单ID不能为空！") String id) {
 
-        saleOutSheetService.deleteById(id);
+        try {
+            saleOutSheetService.deleteById(id);
 
-        return InvokeResultBuilder.success();
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
     }
 
     @ApiOperation("下载导入模板")
