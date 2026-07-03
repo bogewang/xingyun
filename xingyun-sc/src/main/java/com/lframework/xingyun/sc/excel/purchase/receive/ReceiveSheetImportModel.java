@@ -116,12 +116,6 @@ public class ReceiveSheetImportModel implements ExcelModel {
   /**
    * 采购价
    */
-  @ExcelIgnore
-  private BigDecimal latestPurchasePrice;
-
-  /**
-   * 采购价
-   */
   @ExcelProperty("单价")
   private BigDecimal purchasePrice;
 

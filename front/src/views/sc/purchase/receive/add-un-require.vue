@@ -32,6 +32,7 @@
           height="100%"
           :data="tableData"
           :columns="tableColumn"
+          :row-class-name="getTableRowClassName"
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
         >
@@ -74,6 +75,12 @@
                 @click="removeCurrentProduct(row)"
               />
             </a-space>
+          </template>
+
+          <!-- 商品编号 列自定义内容 -->
+          <template #productCode_default="{ row }">
+            <a-tag v-if="isImportUnmatchedProduct(row)" color="error">未匹配</a-tag>
+            <span v-else>{{ row.productCode }}</span>
           </template>
 
           <!-- 商品名称 列自定义内容 -->
@@ -366,7 +373,12 @@
             width: 80,
             slots: { default: 'operation_default' },
           },
-          { field: 'productCode', title: '商品编号', width: 120 },
+          {
+            field: 'productCode',
+            title: '商品编号',
+            width: 120,
+            slots: { default: 'productCode_default' },
+          },
           {
             field: 'productName',
             title: '商品名称',
@@ -491,6 +503,7 @@
           products: [],
           productOptions: [],
           activeProductIndex: -1,
+          importUnmatched: false,
         };
       },
       // 新增商品
@@ -561,6 +574,7 @@
           purchasePrice,
           editingProduct: false,
           productQuery: '',
+          importUnmatched: false,
         });
         resetInlineProductSelect(this.tableData[index]);
 
@@ -574,6 +588,12 @@
       },
       getProductSelectRowClass(row, product) {
         return getInlineProductSelectRowClass(row, product);
+      },
+      isImportUnmatchedProduct(row) {
+        return row.importUnmatched && isEmpty(row.productId);
+      },
+      getTableRowClassName({ row }) {
+        return this.isImportUnmatchedProduct(row) ? 'receive-import-unmatched-row' : '';
       },
       openProductAddPage() {
         this.openChildPage('/product/info/add');
@@ -704,9 +724,12 @@
         const importData = res?.data || res?.datas || res || {};
         if (Array.isArray(importData) && importData.length > 0) {
           this.tableData = importData.map((item) => {
+            const importUnmatched = isEmpty(item.productId);
             return Object.assign(this.emptyProduct(), item, {
               id: uuid(),
               isFixed: false,
+              importUnmatched,
+              productQuery: importUnmatched ? item.productName : '',
             });
           });
         } else {
@@ -769,6 +792,15 @@
         }
 
         const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
+        const unmatchedIndex = this.tableData.findIndex((item) => this.isImportUnmatchedProduct(item));
+        if (unmatchedIndex >= 0) {
+          createError(
+            '第' +
+              (unmatchedIndex + 1) +
+              '行商品未匹配，请确认商品不存在或存在多条匹配后手动选择商品！',
+          );
+          return false;
+        }
 
         if (isEmpty(validTableData)) {
           createError('请录入商品！');
@@ -954,5 +986,13 @@
 
   .sheet-editor-actions {
     margin-top: auto;
+  }
+
+  :deep(.receive-import-unmatched-row) {
+    background-color: #fff1f0;
+  }
+
+  :deep(.receive-import-unmatched-row td) {
+    border-color: #ffa39e;
   }
 </style>

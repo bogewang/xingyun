@@ -1605,48 +1605,42 @@ public class SaleOutSheetServiceImpl extends
 
     private List<String> checkImportData(List<SaleOutSheetImportModel> list) {
         List<String> productNames = list.stream().map(SaleOutSheetImportModel::getProductName)
+                .filter(StringUtils::isNotBlank)
+                .map(StringUtils::trim)
+                .distinct()
                 .collect(Collectors.toList());
         List<Product> products = productService.selectByProductName(productNames);
-        Map<String, Product> nameSpecUnitMap = products.stream()
-                .collect(Collectors.toMap(item -> item.getName() + item.getSpec() + item.getUnit(), item -> item));
-        Map<String, Product> nameUnitMap = products.stream()
-                .collect(Collectors.toMap(item -> item.getName() + item.getUnit(), item -> item,
-                        (oldValue, newValue) -> oldValue));
+        Map<String, List<Product>> nameUnitMap = products.stream()
+                .collect(Collectors.groupingBy(item -> buildProductImportKey(item.getName(), item.getUnit())));
 
         List<String> errors = Lists.newArrayList();
         for (int i = 0; i < list.size(); i++) {
             SaleOutSheetImportModel data = list.get(i);
             int rowIndex = data.getSeq();
 
-            if (StringUtils.isEmpty(data.getProductName())) {
+            if (StringUtils.isBlank(data.getProductName())) {
                 errors.add("第" + rowIndex + "行“商品名称”不能为空");
             }
-            if (StringUtils.isEmpty(data.getUnit())) {
+            if (StringUtils.isBlank(data.getUnit())) {
                 errors.add("第" + rowIndex + "行“单位”不能为空");
             }
             if (data.getOrderNum() == null) {
                 errors.add("第" + rowIndex + "行“数量”不能为空");
             }
-            if (NumberUtil.le(data.getOrderNum(), BigDecimal.ZERO)) {
+            if (data.getOrderNum() != null && NumberUtil.le(data.getOrderNum(), BigDecimal.ZERO)) {
                 errors.add("第" + rowIndex + "行“数量”必须大于0");
             }
-            if (!NumberUtil.isNumberPrecision(data.getOrderNum(), 8)) {
+            if (data.getOrderNum() != null && !NumberUtil.isNumberPrecision(data.getOrderNum(), 8)) {
                 errors.add("第" + rowIndex + "行“数量”最多允许8位小数");
             }
 
-            // 匹配商品,设置商品编号
-            String spec = data.getSpec() == null ? StringPool.EMPTY_STR : data.getSpec();
-            String nameSpecUnit = data.getProductName() + spec + data.getUnit();
-            Product product = nameSpecUnitMap.get(nameSpecUnit);
-            if (product == null) {
-                product = nameUnitMap.get(nameSpecUnit);
-                if (product == null) {
-                    errors.add("第" + rowIndex + "行“商品名称”、“规格”、“单位”组合不存在");
-                }
-            }
+            Product product = matchImportProduct(data, nameUnitMap);
             if (product != null) {
                 data.setProductCode(product.getCode());
                 data.setProductId(product.getId());
+                data.setSpec(product.getSpec());
+                data.setUnit(product.getUnit());
+                data.setOriPrice(product.getSalePrice());
                 BigDecimal defaultSalePrice = productLatestPriceCacheService.getLatestSalePrice(product.getId());
                 data.setSalePrice(defaultSalePrice);
 
@@ -1656,6 +1650,34 @@ public class SaleOutSheetServiceImpl extends
             }
         }
         return errors;
+    }
+
+    private String buildProductImportKey(String productName, String unit) {
+        return StringUtils.trimToEmpty(productName) + StringPool.STR_SPLIT
+                + StringUtils.trimToEmpty(unit);
+    }
+
+    private Product matchImportProduct(SaleOutSheetImportModel data,
+                                       Map<String, List<Product>> nameUnitMap) {
+        if (StringUtils.isBlank(data.getProductName()) || StringUtils.isBlank(data.getUnit())) {
+            return null;
+        }
+
+        List<Product> candidates = nameUnitMap.get(buildProductImportKey(data.getProductName(), data.getUnit()));
+        if (CollectionUtils.isEmpty(candidates)) {
+            return null;
+        }
+
+        if (candidates.size() == 1) {
+            return candidates.get(0);
+        }
+
+        String spec = StringUtils.trimToEmpty(data.getSpec());
+        List<Product> specMatchedProducts = candidates.stream()
+                .filter(item -> StringUtils.equals(StringUtils.trimToEmpty(item.getSpec()), spec))
+                .collect(Collectors.toList());
+
+        return specMatchedProducts.size() == 1 ? specMatchedProducts.get(0) : null;
     }
 
     @Override

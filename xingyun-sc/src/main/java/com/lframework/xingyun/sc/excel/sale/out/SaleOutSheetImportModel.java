@@ -38,6 +38,12 @@ public class SaleOutSheetImportModel implements ExcelModel {
     private BigDecimal salePrice;
 
     /**
+     * 原价
+     */
+    @ExcelIgnore()
+    private BigDecimal oriPrice;
+
+    /**
      * 商品规格
      */
     // @ExcelRequired
