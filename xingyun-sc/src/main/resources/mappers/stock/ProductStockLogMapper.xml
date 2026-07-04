@@ -20,6 +20,21 @@
         <result column="order_date" property="orderDate"/>
     </resultMap>
 
+    <sql id="OrderDate_sql">
+        CASE
+            WHEN gsl.biz_type = 1 THEN rs.order_date
+            WHEN gsl.biz_type = 2 THEN DATE(IFNULL(pr.payment_date, pr.create_time))
+            WHEN gsl.biz_type = 3 THEN so.order_date
+            WHEN gsl.biz_type = 4 THEN DATE(IFNULL(sr.payment_date, sr.create_time))
+            WHEN gsl.biz_type = 5 THEN DATE(IFNULL(ro.payment_date, ro.create_time))
+            WHEN gsl.biz_type = 6 THEN DATE(IFNULL(rr.payment_date, rr.create_time))
+            WHEN gsl.biz_type IN (7, 8) THEN DATE(ts.create_time)
+            WHEN gsl.biz_type = 10 THEN DATE(sas.create_time)
+            WHEN gsl.biz_type = 11 THEN DATE(sto.create_time)
+            ELSE NULL
+        END
+    </sql>
+
     <sql id="ProductStockLogDto_sql">
         SELECT
             gsl.id,
@@ -37,18 +52,7 @@
             gsl.biz_code,
             gsl.biz_detail_id,
             gsl.biz_type,
-            CASE
-                WHEN gsl.biz_type = 1 THEN DATE_FORMAT(rs.order_date, '%Y-%m-%d')
-                WHEN gsl.biz_type = 2 THEN DATE_FORMAT(IFNULL(pr.payment_date, pr.create_time), '%Y-%m-%d')
-                WHEN gsl.biz_type = 3 THEN DATE_FORMAT(so.order_date, '%Y-%m-%d')
-                WHEN gsl.biz_type = 4 THEN DATE_FORMAT(IFNULL(sr.payment_date, sr.create_time), '%Y-%m-%d')
-                WHEN gsl.biz_type = 5 THEN DATE_FORMAT(IFNULL(ro.payment_date, ro.create_time), '%Y-%m-%d')
-                WHEN gsl.biz_type = 6 THEN DATE_FORMAT(IFNULL(rr.payment_date, rr.create_time), '%Y-%m-%d')
-                WHEN gsl.biz_type IN (7, 8) THEN DATE_FORMAT(ts.create_time, '%Y-%m-%d')
-                WHEN gsl.biz_type = 10 THEN DATE_FORMAT(sas.create_time, '%Y-%m-%d')
-                WHEN gsl.biz_type = 11 THEN DATE_FORMAT(sto.create_time, '%Y-%m-%d')
-                ELSE NULL
-            END AS order_date
+            DATE_FORMAT((<include refid="OrderDate_sql"/>), '%Y-%m-%d') AS order_date
         FROM tbl_product_stock_log AS gsl
         INNER JOIN base_data_product AS g ON g.id = gsl.product_id AND g.product_type = 1
         LEFT JOIN base_data_product_brand AS b ON b.id = g.brand_id
@@ -90,6 +94,12 @@
                     <![CDATA[
                     AND gsl.create_time <= #{vo.createEndTime}
                     ]]>
+                </if>
+                <if test="vo.orderDateStart != null">
+                    AND (<include refid="OrderDate_sql"/>) >= #{vo.orderDateStart}
+                </if>
+                <if test="vo.orderDateEnd != null">
+                    AND (<include refid="OrderDate_sql"/>) &lt;= #{vo.orderDateEnd}
                 </if>
                 <if test="vo.bizType != null">
                     <![CDATA[

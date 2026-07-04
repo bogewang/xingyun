@@ -38,20 +38,19 @@
                   :only-final="false"
                 />
               </j-form-item>
-              <j-form-item label="操作日期" :content-nest="false">
-                <div class="date-range-container">
-                  <a-date-picker
-                    v-model:value="searchFormData.createStartTime"
-                    placeholder=""
-                    value-format="YYYY-MM-DD 00:00:00"
-                  />
-                  <span class="date-split">至</span>
-                  <a-date-picker
-                    v-model:value="searchFormData.createEndTime"
-                    placeholder=""
-                    value-format="YYYY-MM-DD 23:59:59"
-                  />
-                </div>
+              <j-form-item label="操作日期">
+                <a-range-picker
+                  v-model:value="createDateRange"
+                  value-format="YYYY-MM-DD"
+                  :placeholder="['开始日期', '结束日期']"
+                />
+              </j-form-item>
+              <j-form-item label="订单日期">
+                <a-range-picker
+                  v-model:value="orderDateRange"
+                  value-format="YYYY-MM-DD"
+                  :placeholder="['开始日期', '结束日期']"
+                />
               </j-form-item>
               <j-form-item label="业务类型">
                 <a-select v-model:value="searchFormData.bizType" placeholder="全部" allow-clear>
@@ -161,9 +160,6 @@
   import * as retailReturnApi from '@/api/sc/retail/return';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
-    formatDateTime,
-    getDateTimeWithMinTime,
-    getDateTimeWithMaxTime,
     buildSortPageVo,
     isEmpty,
   } from '@/utils/utils';
@@ -198,10 +194,10 @@
           productName: '',
           categoryId: '',
           brandId: '',
-          createStartTime: formatDateTime(getDateTimeWithMinTime(Moment().subtract(1, 'M'))),
-          createEndTime: formatDateTime(getDateTimeWithMaxTime(Moment())),
           bizType: undefined,
         },
+        createDateRange: this.getDefaultCreateDateRange(),
+        orderDateRange: this.getDefaultCreateDateRange(),
         toolbarConfig: {
           slots: {
             buttons: 'toolbar_buttons',
@@ -279,6 +275,9 @@
       search() {
         this.$refs.grid.commitProxy('reload');
       },
+      getDefaultCreateDateRange() {
+        return [Moment().subtract(1, 'M').format('YYYY-MM-DD'), Moment().format('YYYY-MM-DD')];
+      },
       buildQueryParams(page, sorts) {
         return {
           ...buildSortPageVo(page, sorts),
@@ -291,6 +290,10 @@
           categoryId: this.searchFormData.categoryId,
           brandId: this.searchFormData.brandId,
           supplierId: this.searchFormData.supplierId,
+          createStartTime: this.createDateRange?.[0] ? `${this.createDateRange[0]} 00:00:00` : '',
+          createEndTime: this.createDateRange?.[1] ? `${this.createDateRange[1]} 23:59:59` : '',
+          orderDateStart: this.orderDateRange?.[0] || '',
+          orderDateEnd: this.orderDateRange?.[1] || '',
         });
       },
       exportList() {

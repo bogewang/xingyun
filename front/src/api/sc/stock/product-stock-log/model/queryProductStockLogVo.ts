@@ -37,6 +37,16 @@ export interface QueryProductStockLogVo extends SortPageVo {
   createEndTime: string;
 
   /**
+   * 订单起始日期
+   */
+  orderDateStart: string;
+
+  /**
+   * 订单截止日期
+   */
+  orderDateEnd: string;
+
+  /**
    * 业务类型
    */
   bizType: number;
