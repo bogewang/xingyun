@@ -6,6 +6,13 @@
     <div class="sheet-editor-content" v-permission="['sale:out:add']" v-loading="loading">
       <j-border>
         <j-form bordered>
+          <j-form-item label="订单日期">
+            <a-date-picker
+              v-model:value="formData.orderDate"
+              placeholder=""
+              value-format="YYYY-MM-DD"
+            />
+          </j-form-item>
           <j-form-item label="客户" required>
             <a-select
               v-model:value="formData.customerId"
@@ -17,13 +24,6 @@
               @focus="loadCustomerOptions()"
               @search="loadCustomerOptions"
               @change="(value) => handleSelectChange('customerId', value, customerOptionMap)"
-            />
-          </j-form-item>
-          <j-form-item label="订单日期">
-            <a-date-picker
-              v-model:value="formData.orderDate"
-              placeholder=""
-              value-format="YYYY-MM-DD"
             />
           </j-form-item>
         </j-form>
@@ -54,12 +54,8 @@
               <a-button :icon="h(PlusOutlined)" @click="openBatchAddProductDialog"
                 >批量添加商品
               </a-button>
-              <a-button :icon="h(NumberOutlined)" @click="batchInputOutNum"
-                >批量录入数量</a-button
-              >
-              <a-button :icon="h(EditOutlined)" @click="batchInputTaxPrice"
-                >批量调整价格</a-button
-              >
+              <a-button :icon="h(NumberOutlined)" @click="batchInputOutNum">批量录入数量</a-button>
+              <a-button :icon="h(EditOutlined)" @click="batchInputTaxPrice">批量调整价格</a-button>
               <a-button :icon="h(CloudUploadOutlined)" @click="$refs.importer.openDialog()"
                 >导入Excel</a-button
               >
@@ -144,7 +140,6 @@
                       width="140"
                       align="right"
                     />
-
                   </vxe-table>
                   <div
                     class="inline-product-select-add"
@@ -782,7 +777,9 @@
         }
 
         const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
-        const unmatchedIndex = this.tableData.findIndex((item) => this.isImportUnmatchedProduct(item));
+        const unmatchedIndex = this.tableData.findIndex((item) =>
+          this.isImportUnmatchedProduct(item),
+        );
         if (unmatchedIndex >= 0) {
           createError(
             '第' +

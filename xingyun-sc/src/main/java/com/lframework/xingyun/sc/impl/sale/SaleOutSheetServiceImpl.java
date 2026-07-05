@@ -22,13 +22,11 @@ import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTi
 import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineBizType;
 import com.lframework.starter.web.inner.entity.SysParameter;
-import com.lframework.starter.web.inner.entity.SysUser;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.starter.web.inner.service.system.SysParameterService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.starter.web.inner.vo.system.parameter.QuerySysParameterVo;
 import com.lframework.xingyun.basedata.entity.*;
-import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.enums.SettleType;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
@@ -71,7 +69,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -90,8 +87,8 @@ public class SaleOutSheetServiceImpl extends
 
     private final List<String> NO_NEED_PRINT = Lists.newArrayList("调料干杂");
     private static final String COST_PRICE_SOURCE_USE_STOCK_PRICE_PM_KEY = "sale_out_cost_price_use_stock_price";
-    private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER = DateTimeFormatter
+            .ofPattern("yyyy-MM-dd");
 
     @Autowired
     private SaleOutSheetDetailService saleOutSheetDetailService;
@@ -1187,15 +1184,6 @@ public class SaleOutSheetServiceImpl extends
         }
         sheet.setCustomerId(vo.getCustomerId());
 
-        if (!StringUtil.isBlank(vo.getSalerId())) {
-            SysUser saler = userService.findById(vo.getSalerId());
-            if (saler == null) {
-                throw new InputErrorException("销售员不存在！");
-            }
-
-            sheet.setSalerId(vo.getSalerId());
-        }
-
         sheet.setOrderDate(vo.getOrderDate());
 
         BigDecimal purchaseNum = BigDecimal.ZERO;
@@ -1204,8 +1192,12 @@ public class SaleOutSheetServiceImpl extends
         for (SaleOutProductVo productVo : vo.getProducts()) {
             purchaseNum = NumberUtil.add(purchaseNum, productVo.getOrderNum());
 
+            BigDecimal price = productVo.getTaxPrice();
+            if (price == null) {
+                price = getDefaultSalePrice(productVo.getProductId());
+            }
             totalAmount = NumberUtil.add(totalAmount,
-                    NumberUtil.getNumber(NumberUtil.mul(productVo.getTaxPrice(), productVo.getOrderNum()),
+                    NumberUtil.getNumber(NumberUtil.mul(price, productVo.getOrderNum()),
                             2));
 
             SaleOutSheetDetail detail = new SaleOutSheetDetail();
@@ -1641,12 +1633,7 @@ public class SaleOutSheetServiceImpl extends
                 data.setSpec(product.getSpec());
                 data.setUnit(product.getUnit());
                 data.setOriPrice(product.getSalePrice());
-                BigDecimal defaultSalePrice = productLatestPriceCacheService.getLatestSalePrice(product.getId());
-                data.setSalePrice(defaultSalePrice);
-
-                if (data.getTaxPrice() == null) {
-                    data.setTaxPrice(defaultSalePrice == null ? BigDecimal.ZERO : defaultSalePrice);
-                }
+                data.setSalePrice(getDefaultSalePrice(product.getId()));
             }
         }
         return errors;
@@ -1658,7 +1645,7 @@ public class SaleOutSheetServiceImpl extends
     }
 
     private Product matchImportProduct(SaleOutSheetImportModel data,
-                                       Map<String, List<Product>> nameUnitMap) {
+            Map<String, List<Product>> nameUnitMap) {
         if (StringUtils.isBlank(data.getProductName()) || StringUtils.isBlank(data.getUnit())) {
             return null;
         }
@@ -1850,6 +1837,36 @@ public class SaleOutSheetServiceImpl extends
     private boolean useStockPriceAsLatestCostPrice() {
         QuerySysParameterVo sysParameterVo = new QuerySysParameterVo();
         sysParameterVo.setPmKey(COST_PRICE_SOURCE_USE_STOCK_PRICE_PM_KEY);
+        List<SysParameter> list = sysParameterService.query(sysParameterVo);
+        if (CollectionUtil.isEmpty(list)) {
+            return false;
+        }
+
+        return BooleanUtil.toBoolean(list.get(0).getPmValue());
+    }
+
+    /**
+     * 获取商品售价
+     * @param productId
+     * @return
+     */
+    private BigDecimal getDefaultSalePrice(String productId) {
+        Product product = productService.findById(productId);
+        if (useUniquePriceAsSalePrice()) {
+            return product.getSalePrice() == null ? BigDecimal.ZERO : product.getSalePrice();
+        }
+        BigDecimal latestSalePrice = productLatestPriceCacheService.getLatestSalePrice(productId);
+        return latestSalePrice == null ? BigDecimal.ZERO : latestSalePrice;
+    }
+
+    /**
+     * 是否优先使用询价作为售价
+     * 
+     * @return
+     */
+    private boolean useUniquePriceAsSalePrice() {
+        QuerySysParameterVo sysParameterVo = new QuerySysParameterVo();
+        sysParameterVo.setPmKey("sale_out_price_use_unique_price");
         List<SysParameter> list = sysParameterService.query(sysParameterVo);
         if (CollectionUtil.isEmpty(list)) {
             return false;

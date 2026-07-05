@@ -7,15 +7,15 @@
     >
       <j-border>
         <j-form bordered>
-          <j-form-item label="供应商" required>
-            <supplier-selector v-model:value="formData.supplierId" />
-          </j-form-item>
           <j-form-item label="订单日期">
             <a-date-picker
               v-model:value="formData.orderDate"
               placeholder=""
               value-format="YYYY-MM-DD"
             />
+          </j-form-item>
+          <j-form-item label="供应商" required>
+            <supplier-selector v-model:value="formData.supplierId" />
           </j-form-item>
         </j-form>
       </j-border>
@@ -126,7 +126,6 @@
                       width="140"
                       align="right"
                     />
-
                   </vxe-table>
                   <div
                     class="inline-product-select-add"
@@ -294,7 +293,7 @@
   import OrderTimeLine from '@/components/OrderTimeLine';
   import JFormItem from '@/components/JFormItem';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
-  import * as saleApi from "@/api/sc/sale/order";
+  import * as saleApi from '@/api/sc/sale/order';
 
   export default defineComponent({
     name: 'ModifyPurchaseReceiveSheetUnRequire',

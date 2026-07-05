@@ -3,6 +3,13 @@
     <div class="sheet-editor-content" v-permission="['sale:out:modify']" v-loading="loading">
       <j-border>
         <j-form bordered>
+          <j-form-item label="订单日期">
+            <a-date-picker
+              v-model:value="formData.orderDate"
+              placeholder=""
+              value-format="YYYY-MM-DD"
+            />
+          </j-form-item>
           <j-form-item label="客户" required>
             <a-select
               v-model:value="formData.customerId"
@@ -14,13 +21,6 @@
               @focus="loadCustomerOptions()"
               @search="loadCustomerOptions"
               @change="(value) => handleSelectChange('customerId', value, customerOptionMap)"
-            />
-          </j-form-item>
-          <j-form-item label="订单日期">
-            <a-date-picker
-              v-model:value="formData.orderDate"
-              placeholder=""
-              value-format="YYYY-MM-DD"
             />
           </j-form-item>
           <j-form-item label="成本状态">
@@ -137,7 +137,6 @@
                       width="140"
                       align="right"
                     />
-
                   </vxe-table>
                   <div
                     class="inline-product-select-add"
@@ -355,14 +354,13 @@
           row.costPrice !== undefined &&
           row.costPrice !== '' &&
           (row.manualInputCost === true || row.costPrice >= 0),
-        canEditCostPrice: (row) => false
-          /*row &&
+        canEditCostPrice: (row) => false,
+        /*row &&
           (row.manualInputCost === true ||
             row.costPrice === null ||
             row.costPrice === undefined ||
             row.costPrice === '' ||
-            row.costPrice <= 0)*/,
-        SALE_OUT_SHEET_STATUS,
+            row.costPrice <= 0)*/ SALE_OUT_SHEET_STATUS,
       };
     },
     data() {

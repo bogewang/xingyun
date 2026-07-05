@@ -6,15 +6,15 @@
     <div class="sheet-editor-content" v-permission="['purchase:receive:add']" v-loading="loading">
       <j-border>
         <j-form bordered>
-          <j-form-item label="供应商" required>
-            <supplier-selector v-model:value="formData.supplierId" />
-          </j-form-item>
           <j-form-item label="订单日期">
             <a-date-picker
               v-model:value="formData.orderDate"
               placeholder=""
               value-format="YYYY-MM-DD"
             />
+          </j-form-item>
+          <j-form-item label="供应商" required>
+            <supplier-selector v-model:value="formData.supplierId" />
           </j-form-item>
         </j-form>
       </j-border>
@@ -138,7 +138,6 @@
                       width="140"
                       align="right"
                     />
-
                   </vxe-table>
                   <div
                     class="inline-product-select-add"
@@ -792,7 +791,9 @@
         }
 
         const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
-        const unmatchedIndex = this.tableData.findIndex((item) => this.isImportUnmatchedProduct(item));
+        const unmatchedIndex = this.tableData.findIndex((item) =>
+          this.isImportUnmatchedProduct(item),
+        );
         if (unmatchedIndex >= 0) {
           createError(
             '第' +
