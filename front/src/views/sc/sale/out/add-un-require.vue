@@ -97,6 +97,7 @@
               :dropdown-match-select-width="false"
               :dropdown-style="{ width: '890px' }"
               placement="bottomLeft"
+              @focus="() => handleProductInputFocus(row)"
               @search="(e) => queryProduct(e, row)"
               @keydown="(e) => handleProductSelectKeydown(e, row, rowIndex)"
             >
@@ -594,6 +595,14 @@
           });
         });
       },
+      handleProductInputFocus(row) {
+        const keyword = row.productQuery || row.productName;
+        if (isEmpty(keyword)) {
+          return;
+        }
+
+        this.queryProduct(keyword, row);
+      },
       focusRowInput(refName, index) {
         return focusTableInput(this, refName, index);
       },
@@ -623,8 +632,18 @@
       isImportUnmatchedProduct(row) {
         return row.importUnmatched && isEmpty(row.productId);
       },
+      hasWarningPrice(row) {
+        return isEmpty(row?.taxPrice) || Number(row.taxPrice) === 0;
+      },
       getTableRowClassName({ row }) {
-        return this.isImportUnmatchedProduct(row) ? 'sale-out-import-unmatched-row' : '';
+        const classNames = [];
+        if (this.isImportUnmatchedProduct(row)) {
+          classNames.push('sale-out-import-unmatched-row');
+        }
+        if (this.hasWarningPrice(row)) {
+          classNames.push('sheet-price-warning-row');
+        }
+        return classNames.join(' ');
       },
       openProductAddPage() {
         this.openChildPage('/product/info/add');
@@ -1024,5 +1043,13 @@
 
   :deep(.sale-out-import-unmatched-row td) {
     border-color: #ffa39e;
+  }
+
+  :deep(.sheet-price-warning-row) {
+    background-color: #ffd8d6;
+  }
+
+  :deep(.sheet-price-warning-row td) {
+    border-color: #ff7875;
   }
 </style>

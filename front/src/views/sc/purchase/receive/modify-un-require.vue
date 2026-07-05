@@ -33,6 +33,7 @@
           height="100%"
           :data="tableData"
           :columns="tableColumn"
+          :row-class-name="getTableRowClassName"
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
         >
@@ -82,6 +83,7 @@
               :dropdown-match-select-width="false"
               :dropdown-style="{ width: '890px' }"
               placement="bottomLeft"
+              @focus="() => handleProductInputFocus(row)"
               @search="(e) => queryProduct(e, row)"
               @keydown="(e) => handleProductSelectKeydown(e, row, rowIndex)"
             >
@@ -628,6 +630,14 @@
           });
         });
       },
+      handleProductInputFocus(row) {
+        const keyword = row.productQuery || row.productName;
+        if (isEmpty(keyword)) {
+          return;
+        }
+
+        this.queryProduct(keyword, row);
+      },
       focusRowInput(refName, index) {
         return focusTableInput(this, refName, index);
       },
@@ -707,6 +717,12 @@
       },
       purchasePriceInput(_row, _value) {
         this.calcSum();
+      },
+      hasWarningPrice(row) {
+        return isEmpty(row?.purchasePrice) || Number(row.purchasePrice) === 0;
+      },
+      getTableRowClassName({ row }) {
+        return this.hasWarningPrice(row) ? 'sheet-price-warning-row' : '';
       },
       receiveNumInput(_value) {
         this.calcSum();
@@ -981,5 +997,13 @@
 
   .sheet-editor-actions {
     margin-top: auto;
+  }
+
+  :deep(.sheet-price-warning-row) {
+    background-color: #ffd8d6;
+  }
+
+  :deep(.sheet-price-warning-row td) {
+    border-color: #ff7875;
   }
 </style>

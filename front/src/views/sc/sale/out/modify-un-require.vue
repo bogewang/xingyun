@@ -49,6 +49,7 @@
           height="100%"
           :data="tableData"
           :columns="tableColumn"
+          :row-class-name="getTableRowClassName"
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
         >
@@ -94,6 +95,7 @@
               :dropdown-match-select-width="false"
               :dropdown-style="{ width: '890px' }"
               placement="bottomLeft"
+              @focus="() => handleProductInputFocus(row)"
               @search="(e) => queryProduct(e, row)"
               @keydown="(e) => handleProductSelectKeydown(e, row, rowIndex)"
             >
@@ -162,7 +164,10 @@
               :ref="'taxPriceInputRef' + rowIndex"
               v-model:value="row.taxPrice"
               class="number-input"
-              :style="{ color: isNegativeProfit(row) ? '#f5222d' : undefined }"
+              :style="{
+                color:
+                  isNegativeProfit(row) && !hasWarningPrice(row) ? '#f5222d' : undefined,
+              }"
               @input="(e) => taxPriceInput(row, e.target.value)"
             />
           </template>
@@ -202,7 +207,12 @@
           </template>
 
           <template #profitRate_default="{ row }">
-            <span :style="{ color: isNegativeProfit(row) ? '#f5222d' : undefined }">
+            <span
+              :style="{
+                color:
+                  isNegativeProfit(row) && !hasWarningPrice(row) ? '#f5222d' : undefined,
+              }"
+            >
               {{ calcProfitRate(row) }}
             </span>
           </template>
@@ -697,6 +707,14 @@
           });
         });
       },
+      handleProductInputFocus(row) {
+        const keyword = row.productQuery || row.productName;
+        if (isEmpty(keyword)) {
+          return;
+        }
+
+        this.queryProduct(keyword, row);
+      },
       focusRowInput(refName, index) {
         return focusTableInput(this, refName, index);
       },
@@ -814,6 +832,9 @@
         const costAmount = Number(getNumber(mul(row.costPrice, row.outNum), 2));
         return `${(((amount - costAmount) / amount) * 100).toFixed(2)}%`;
       },
+      hasWarningPrice(row) {
+        return isEmpty(row?.taxPrice) || Number(row.taxPrice) === 0;
+      },
       isNegativeProfit(row) {
         if (
           !isFloatGeZero(row?.taxPrice) ||
@@ -826,6 +847,9 @@
         const saleAmount = Number(this.calcTaxAmount(row));
         const costAmount = Number(getNumber(mul(row.costPrice, row.outNum), 2));
         return saleAmount - costAmount < 0;
+      },
+      getTableRowClassName({ row }) {
+        return this.hasWarningPrice(row) ? 'sheet-price-warning-row' : '';
       },
       // 批量录入数量
       batchInputOutNum() {
@@ -1111,5 +1135,13 @@
 
   .sheet-editor-actions {
     margin-top: auto;
+  }
+
+  :deep(.sheet-price-warning-row) {
+    background-color: #ffd8d6;
+  }
+
+  :deep(.sheet-price-warning-row td) {
+    border-color: #ff7875;
   }
 </style>
