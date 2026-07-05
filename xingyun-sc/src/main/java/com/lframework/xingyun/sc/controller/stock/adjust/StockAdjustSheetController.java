@@ -130,8 +130,7 @@ public class StockAdjustSheetController extends DefaultBaseController {
     @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true)
     @HasPermission({"stock:adjust:add", "stock:adjust:modify"})
     @GetMapping("/product/search")
-    public InvokeResult<List<StockAdjustProductBo>> searchProducts(
-            String condition) {
+    public InvokeResult<List<StockAdjustProductBo>> searchProducts(String condition) {
 
         if (StringUtil.isBlank(condition)) {
             return InvokeResultBuilder.success(CollectionUtil.emptyList());

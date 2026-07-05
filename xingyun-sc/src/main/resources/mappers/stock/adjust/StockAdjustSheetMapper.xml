@@ -146,6 +146,7 @@
             OR g.external_code LIKE CONCAT('%', #{condition}, '%')
             )
             AND g.product_type = 1
+            AND g.available = 1
         </where>
         ORDER BY g.code
     </select>
