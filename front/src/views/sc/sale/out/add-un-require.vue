@@ -136,7 +136,7 @@
                     />
                     <vxe-column
                       field="salePrice"
-                      title="参考销售价（元）"
+                      title="销售价（元）"
                       width="140"
                       align="right"
                     />
@@ -282,6 +282,7 @@
   import SaleOutSheetImporter from '@/components/Importor/SaleOutSheetImporter.vue';
   import * as api from '@/api/sc/sale/out';
   import * as saleApi from '@/api/sc/sale/order';
+  import * as sysParameterApi from '@/api/system/parameter';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { focusTableInput } from '@/utils/vxeGrid';
   import {
@@ -318,6 +319,7 @@
     resetInlineProductSelect,
     setInlineProductSelectProducts,
   } from '@/utils/inlineProductSelect';
+  import { useUserStoreWithOut } from '/@/store/modules/user';
 
   export default defineComponent({
     name: 'AddSaleOutSheetUnRequire',
@@ -426,6 +428,7 @@
         tableData: [],
         customerOptions: [],
         customerOptionMap: {},
+        saleOutPriceUseUniquePrice: false,
       };
     },
     computed: {},
@@ -453,9 +456,9 @@
         }
       },
       // 打开对话框 由父页面触发
-      openDialog() {
+      async openDialog() {
         // 初始化表单数据
-        this.initFormData();
+        await this.initFormData();
       },
       // 关闭对话框
       closeDialog() {
@@ -481,6 +484,30 @@
 
         this.paidAmountDirty = false;
         this.tableData = [];
+        await this.loadSaleOutPriceUseUniquePrice();
+      },
+      async loadSaleOutPriceUseUniquePrice() {
+        const tenantId = (await useUserStoreWithOut().getTenantRequire())?.tenantId;
+        debugger;
+        if (!tenantId) {
+          this.saleOutPriceUseUniquePrice = false;
+          return;
+        }
+
+        const res = await sysParameterApi.query({
+          pageIndex: 1,
+          pageSize: 1,
+          tenantId,
+          pmKey: 'sale_out_price_use_unique_price',
+          createTimeStart: '',
+          createTimeEnd: '',
+        });
+
+        const parameter = res.datas?.[0];
+        this.saleOutPriceUseUniquePrice = parameter?.pmValue === 'true';
+      },
+      getSelectedProductPrice(product) {
+        return this.saleOutPriceUseUniquePrice ? product.salePrice : product.latestSalePrice;
       },
       emptyProduct() {
         return {
@@ -575,7 +602,7 @@
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           oriPrice: product.salePrice,
-          taxPrice: product.latestSalePrice,
+          taxPrice: this.getSelectedProductPrice(product),
           editingProduct: false,
           productQuery: '',
           importUnmatched: false,

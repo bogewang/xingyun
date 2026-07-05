@@ -133,7 +133,7 @@
                     />
                     <vxe-column
                       field="salePrice"
-                      title="参考销售价（元）"
+                      title="销售价（元）"
                       width="140"
                       align="right"
                     />
@@ -294,6 +294,7 @@
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
   import * as saleApi from '@/api/sc/sale/order';
+  import * as sysParameterApi from '@/api/system/parameter';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
     isEmpty,
@@ -325,6 +326,7 @@
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
+  import { useUserStoreWithOut } from '/@/store/modules/user';
 
   export default defineComponent({
     name: 'ModifySaleOutSheetUnRequire',
@@ -466,6 +468,7 @@
         tableData: [],
         customerOptions: [],
         customerOptionMap: {},
+        saleOutPriceUseUniquePrice: false,
       };
     },
     computed: {},
@@ -489,9 +492,9 @@
         }
       },
       // 打开对话框 由父页面触发
-      openDialog() {
+      async openDialog() {
         // 初始化表单数据
-        this.initFormData();
+        await this.initFormData();
         this.loadData();
       },
       // 关闭对话框
@@ -503,7 +506,7 @@
         this.closeCurrentPage();
       },
       // 初始化表单数据
-      initFormData() {
+      async initFormData() {
         this.formData = {
           scId: '',
           customerId: '',
@@ -519,6 +522,29 @@
         this.paidAmountDirty = false;
         this.originalFillAllCost = false;
         this.tableData = [];
+        await this.loadSaleOutPriceUseUniquePrice();
+      },
+      async loadSaleOutPriceUseUniquePrice() {
+        const tenantId = (await useUserStoreWithOut().getTenantRequire())?.tenantId;
+        if (!tenantId) {
+          this.saleOutPriceUseUniquePrice = false;
+          return;
+        }
+
+        const res = await sysParameterApi.query({
+          pageIndex: 1,
+          pageSize: 1,
+          tenantId,
+          pmKey: 'sale_out_price_use_unique_price',
+          createTimeStart: '',
+          createTimeEnd: '',
+        });
+
+        const parameter = res.datas?.[0];
+        this.saleOutPriceUseUniquePrice = parameter?.pmValue === 'true';
+      },
+      getSelectedProductPrice(product) {
+        return this.saleOutPriceUseUniquePrice ? product.salePrice : product.latestSalePrice;
       },
       // 加载数据
       loadData() {
@@ -679,7 +705,7 @@
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           oriPrice: product.salePrice,
-          taxPrice: product.latestSalePrice,
+          taxPrice: this.getSelectedProductPrice(product),
           editingProduct: false,
           productQuery: '',
         });
