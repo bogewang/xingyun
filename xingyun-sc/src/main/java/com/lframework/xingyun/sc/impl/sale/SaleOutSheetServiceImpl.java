@@ -1192,9 +1192,14 @@ public class SaleOutSheetServiceImpl extends
         for (SaleOutProductVo productVo : vo.getProducts()) {
             purchaseNum = NumberUtil.add(purchaseNum, productVo.getOrderNum());
 
+            Product product = productService.findById(productVo.getProductId());
+            if (product == null) {
+                throw new InputErrorException("第" + productVo.getSeq() + "行商品不存在！");
+            }
+
             BigDecimal price = productVo.getTaxPrice();
             if (price == null) {
-                price = getDefaultSalePrice(productVo.getProductId());
+                price = getDefaultSalePrice(product);
             }
             totalAmount = NumberUtil.add(totalAmount,
                     NumberUtil.getNumber(NumberUtil.mul(price, productVo.getOrderNum()),
@@ -1203,11 +1208,6 @@ public class SaleOutSheetServiceImpl extends
             SaleOutSheetDetail detail = new SaleOutSheetDetail();
             detail.setId(IdUtil.getId());
             detail.setSheetId(sheet.getId());
-
-            Product product = productService.findById(productVo.getProductId());
-            if (product == null) {
-                throw new InputErrorException("第" + productVo.getSeq() + "行商品不存在！");
-            }
 
             detail.setProductId(productVo.getProductId());
             detail.setOrderNum(productVo.getOrderNum());
@@ -1633,7 +1633,7 @@ public class SaleOutSheetServiceImpl extends
                 data.setSpec(product.getSpec());
                 data.setUnit(product.getUnit());
                 data.setOriPrice(product.getSalePrice());
-                data.setSalePrice(getDefaultSalePrice(product.getId()));
+                data.setTaxPrice(getDefaultSalePrice(product));
             }
         }
         return errors;
@@ -1847,15 +1847,14 @@ public class SaleOutSheetServiceImpl extends
 
     /**
      * 获取商品售价
-     * @param productId
+     * @param product
      * @return
      */
-    private BigDecimal getDefaultSalePrice(String productId) {
-        Product product = productService.findById(productId);
+    private BigDecimal getDefaultSalePrice(Product product) {
         if (useUniquePriceAsSalePrice()) {
             return product.getSalePrice() == null ? BigDecimal.ZERO : product.getSalePrice();
         }
-        BigDecimal latestSalePrice = productLatestPriceCacheService.getLatestSalePrice(productId);
+        BigDecimal latestSalePrice = productLatestPriceCacheService.getLatestSalePrice(product.getId());
         return latestSalePrice == null ? BigDecimal.ZERO : latestSalePrice;
     }
 

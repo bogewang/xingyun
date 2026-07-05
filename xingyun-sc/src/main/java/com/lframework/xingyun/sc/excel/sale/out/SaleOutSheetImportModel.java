@@ -34,8 +34,8 @@ public class SaleOutSheetImportModel implements ExcelModel {
     /**
      * 销售价
      */
-    @ExcelIgnore()
-    private BigDecimal salePrice;
+    // @ExcelIgnore()
+    // private BigDecimal salePrice;
 
     /**
      * 原价
