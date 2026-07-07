@@ -20,6 +20,9 @@ import java.math.BigDecimal;
 @Data
 public class ReceiveSheetDetailExportModel extends BaseBo<ReceiveSheetDetail> implements ExcelModel {
 
+    @ExcelProperty("订单日期")
+    private String orderDate;
+
     @ExcelProperty("商品编号")
     private String productCode;
 
@@ -79,6 +82,7 @@ public class ReceiveSheetDetailExportModel extends BaseBo<ReceiveSheetDetail> im
         ReceiveSheetFullDto sheetFullDto = ApplicationUtil.getBean(ReceiveSheetService.class).getDetail(dto.getSheetId());
         Supplier supplier = ApplicationUtil.getBean(SupplierService.class).findById(sheetFullDto.getSupplierId());
 
+        this.setOrderDate(sheetFullDto.getOrderDate() == null ? null : sheetFullDto.getOrderDate().toString());
         this.setProductCode(product.getCode());
         this.setProductName(product.getName());
         this.setShortName(product.getShortName());

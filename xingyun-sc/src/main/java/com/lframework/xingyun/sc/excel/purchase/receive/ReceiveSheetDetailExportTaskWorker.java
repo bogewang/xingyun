@@ -31,6 +31,7 @@ public class ReceiveSheetDetailExportTaskWorker implements
     ProductService productService = ApplicationUtil.getBean(ProductService.class);
     Product product = productService.findById(data.getProductId());
     ReceiveSheetDetailExportModel model = new ReceiveSheetDetailExportModel();
+    model.setOrderDate(data.getOrderDate());
     model.setSupplierName(data.getSupplierName());
     model.setProductCode(data.getProductCode());
     model.setProductName(data.getProductName());
