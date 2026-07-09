@@ -433,11 +433,24 @@
       formatAmount(value) {
         return Number(value || 0).toFixed(2);
       },
+      buildPrintData(printData) {
+        const res = {
+          ...printData,
+        };
+
+        const details = Array.isArray(printData?.details) ? printData.details : [];
+        res.details = details.map((item, index) => ({
+          ...item,
+          seq: index + 1,
+        }));
+
+        return res;
+      },
       async print() {
         this.loading = true;
         try {
           const res = await api.print(this.id);
-          await this.vgPrintPreview(PRINT_TYPE.SALE_OUT.code, res);
+          await this.vgPrintPreview(PRINT_TYPE.SALE_OUT.code, this.buildPrintData(res));
         } finally {
           this.loading = false;
         }

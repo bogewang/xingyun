@@ -9,10 +9,7 @@ import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.utils.PageResultUtil;
-import com.lframework.xingyun.basedata.bo.print.GetPrintTemplateBo;
-import com.lframework.xingyun.basedata.bo.print.GetPrintTemplateCompSettingBo;
-import com.lframework.xingyun.basedata.bo.print.GetPrintTemplateSettingBo;
-import com.lframework.xingyun.basedata.bo.print.QueryPrintTemplateBo;
+import com.lframework.xingyun.basedata.bo.print.*;
 import com.lframework.xingyun.basedata.entity.PrintTemplate;
 import com.lframework.xingyun.basedata.entity.PrintTemplateComp;
 import com.lframework.xingyun.basedata.service.print.PrintTemplateCompService;
@@ -33,6 +30,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,6 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author zmj
  */
+@Slf4j
 @Api(tags = "打印模板")
 @Validated
 @RestController
@@ -170,6 +169,18 @@ public class PrintTemplateController extends DefaultBaseController {
         GetPrintTemplateSettingBo result = new GetPrintTemplateSettingBo(data);
 
         return InvokeResultBuilder.success(result);
+    }
+
+    @ApiOperation("查询模板配置字段说明")
+    @GetMapping("/fieldDesc")
+    public InvokeResult<List<PrintTemplateColumnDescription>> getFieldDesc() {
+        try {
+            List<PrintTemplateColumnDescription> data = printTemplateService.getFieldDesc();
+            return InvokeResultBuilder.success(data);
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
     }
 
     /**

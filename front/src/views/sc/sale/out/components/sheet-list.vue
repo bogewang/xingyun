@@ -323,50 +323,45 @@
 </template>
 
 <script>
-  import { h, defineComponent } from 'vue';
-  import Detail from '../detail.vue';
-  import ApproveRefuse from '@/components/ApproveRefuse';
-  import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
-  import moment from 'moment';
-  import {
-    SearchOutlined,
-    PlusOutlined,
-    CheckOutlined,
-    CloseOutlined,
-    CloudUploadOutlined,
-    DeleteOutlined,
-    DownloadOutlined,
-    PrinterOutlined,
-  } from '@ant-design/icons-vue';
-  import * as api from '@/api/sc/sale/out';
-  import * as configApi from '@/api/sc/sale/config';
-  import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
-  import { printMix } from '@/mixins/print.ts';
-  import { isEmpty, buildSortPageVo } from '@/utils/utils';
-  import {
-    buildVisibleSelectOptions,
-    filterSelectOption,
-    mergeSelectOptionMap,
-    normalizeSelectValue,
-  } from '@/utils/searchSelect';
-  import { requestCustomerSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
-  import {
-    createSuccess,
-    createSuccessAutoClose,
-    createError,
-    createConfirm,
-  } from '@/hooks/web/msg';
-  import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
-  import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
-  import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
-  import { PRINT_TYPE } from '@/enums/biz/printType';
-  import BatchHandler from '@/components/BatchHandler';
-  import PrintDialog from '/@/components/PrintDialog';
-  import SaleOutSheetQueryImporter from '@/components/Importor/SaleOutSheetQueryImporter.vue';
-  import { usePermission } from '/@/hooks/web/usePermission';
+import {defineComponent, h} from 'vue';
+import Detail from '../detail.vue';
+import ApproveRefuse from '@/components/ApproveRefuse';
+import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
+import moment from 'moment';
+import {
+  CheckOutlined,
+  CloseOutlined,
+  CloudUploadOutlined,
+  DeleteOutlined,
+  DownloadOutlined,
+  PlusOutlined,
+  PrinterOutlined,
+  SearchOutlined,
+} from '@ant-design/icons-vue';
+import * as api from '@/api/sc/sale/out';
+import * as configApi from '@/api/sc/sale/config';
+import {multiplePageMix} from '@/mixins/multiplePageMix';
+import {gridCollapseHeightMix} from '@/mixins/gridCollapseHeightMix';
+import {printMix} from '@/mixins/print.ts';
+import {buildSortPageVo, isEmpty} from '@/utils/utils';
+import {
+  buildVisibleSelectOptions,
+  filterSelectOption,
+  mergeSelectOptionMap,
+  normalizeSelectValue,
+} from '@/utils/searchSelect';
+import {requestCustomerSelectOptions, requestUserSelectOptions} from '@/utils/labelSelect';
+import {createConfirm, createError, createSuccess, createSuccessAutoClose,} from '@/hooks/web/msg';
+import {RECEIVE_SHEET_STATUS} from '@/enums/biz/receiveSheetStatus';
+import {SETTLE_STATUS} from '@/enums/biz/settleStatus';
+import {SALE_OUT_SHEET_STATUS} from '@/enums/biz/saleOutSheetStatus';
+import {PRINT_TYPE} from '@/enums/biz/printType';
+import BatchHandler from '@/components/BatchHandler';
+import PrintDialog from '/@/components/PrintDialog';
+import SaleOutSheetQueryImporter from '@/components/Importor/SaleOutSheetQueryImporter.vue';
+import {usePermission} from '/@/hooks/web/usePermission';
 
-  export default defineComponent({
+export default defineComponent({
     name: 'SaleOutSheetSheetList',
     components: {
       Detail,
@@ -888,12 +883,12 @@
           ...printData,
         };
 
-        const newDetails = printData.details.map((item, index) => ({
+        const details = Array.isArray(printData?.details) ? printData.details : [];
+        res.details = details.map((item, index) => ({
           // 新生成一个对象，避免修改原对象
           ...item,
           seq: index + 1,
         }));
-        res.details = newDetails;
 
         return res;
       },

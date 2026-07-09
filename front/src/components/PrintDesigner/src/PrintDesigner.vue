@@ -6,13 +6,56 @@
       :initial-print-data="normalizedPrintData"
       default-lang="cn"
       @save="handleSave"
-    />
+    >
+      <template #headerLeft>
+        <div class="print-designer-header-left">
+          <a-button
+            class="print-template-field-doc-btn"
+            size="small"
+            @click="openFieldDoc"
+          >
+            模板字段说明
+          </a-button>
+        </div>
+      </template>
+    </FullDesigner>
+    <a-modal
+      v-model:open="fieldDocVisible"
+      title="模板字段说明"
+      width="960px"
+      :footer="null"
+      destroy-on-close
+    >
+      <div class="print-field-docs">
+        <div class="print-field-docs__summary">
+          当前共加载 {{ fieldDocRows.length }} 个可用字段。优先使用“字段路径”进行模板绑定；
+          如果说明列为空，仍然可以直接按路径取值。
+        </div>
+        <a-table
+          :loading="fieldDocLoading"
+          :data-source="fieldDocRows"
+          :columns="fieldDocColumns"
+          :pagination="false"
+          :scroll="{ y: 520 }"
+          row-key="path"
+          size="small"
+        >
+          <template #bodyCell="{ column, record }">
+            <span v-if="column.key === 'path'" class="print-field-docs__path">
+              {{ record.path }}
+            </span>
+          </template>
+        </a-table>
+      </div>
+    </a-modal>
   </div>
 </template>
 
 <script lang="ts">
   import { computed, defineComponent, nextTick, onMounted, ref } from 'vue';
   import { FullDesigner, hiprint } from 'vg-print';
+  import * as printTemplateApi from '@/api/base-data/print-template';
+  import type { PrintTemplateColumnDescription } from '@/api/base-data/print-template/model/printTemplateColumnDescription';
   import {
     createEmptyTemplate,
     normalizeDemoData,
@@ -38,6 +81,40 @@
     template: PrintTemplateJson;
     testData?: PrintDemoData;
   };
+
+  type FieldDocRow = {
+    path: string;
+    description: string;
+    sample: string;
+  };
+
+  const fieldDocColumns = [
+    {
+      title: '字段路径',
+      dataIndex: 'path',
+      key: 'path',
+      width: 320,
+    },
+    {
+      title: '字段说明',
+      dataIndex: 'description',
+      key: 'description',
+      width: 320,
+    },
+    {
+      title: '示例值',
+      dataIndex: 'sample',
+      key: 'sample',
+    },
+  ];
+
+  function mapFieldDocRows(data: PrintTemplateColumnDescription[] = []): FieldDocRow[] {
+    return data.map((item) => ({
+      path: item.columnName,
+      description: item.description,
+      sample: item.demo,
+    }));
+  }
 
   /**
    * 根据导入文件名生成模板列表中的显示名称。
@@ -116,6 +193,9 @@
     emits: ['save'],
     setup(props, { emit, expose }) {
       const designerRef = ref<any>(null);
+      const fieldDocVisible = ref(false);
+      const fieldDocLoading = ref(false);
+      const fieldDocRows = ref<FieldDocRow[]>([]);
       let importPatched = false;
 
       const normalizedTemplate = computed(() => normalizeTemplate(props.tempValue));
@@ -151,6 +231,22 @@
        */
       function getDesigner() {
         return designerRef.value;
+      }
+
+      async function openFieldDoc() {
+        fieldDocVisible.value = true;
+
+        if (fieldDocRows.value.length > 0 || fieldDocLoading.value) {
+          return;
+        }
+
+        fieldDocLoading.value = true;
+        try {
+          const data = await printTemplateApi.getFieldDesc();
+          fieldDocRows.value = mapFieldDocRows(data);
+        } finally {
+          fieldDocLoading.value = false;
+        }
       }
 
       /**
@@ -251,9 +347,14 @@
 
       return {
         designerRef,
+        fieldDocColumns,
+        fieldDocLoading,
+        fieldDocRows,
+        fieldDocVisible,
         handleSave,
         normalizedPrintData,
         normalizedTemplate,
+        openFieldDoc,
       };
     },
   });
@@ -263,6 +364,47 @@
   .print-designer-shell {
     width: 100%;
     height: 100%;
+  }
+
+  .print-designer-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #fff;
+  }
+
+  .print-field-docs__summary {
+    margin-bottom: 12px;
+    color: rgb(0 0 0 / 65%);
+  }
+
+  .print-field-docs :deep(.ant-table-cell) {
+    vertical-align: top;
+    word-break: break-all;
+  }
+
+  .print-field-docs__path {
+    color: #1677ff;
+    font-weight: 500;
+  }
+
+  .print-template-field-doc-btn.ant-btn {
+    height: 28px;
+    padding: 0 10px;
+    color: #fff !important;
+    font-size: 12px;
+    line-height: 26px;
+    background: transparent !important;
+    border: 1px solid rgb(255 255 255 / 75%) !important;
+    border-radius: 3px;
+    box-shadow: none;
+  }
+
+  .print-template-field-doc-btn.ant-btn:hover,
+  .print-template-field-doc-btn.ant-btn:focus {
+    color: #fff !important;
+    background: rgb(255 255 255 / 14%) !important;
+    border-color: #fff !important;
   }
 
   .print-designer-shell :deep(.designer-page) {

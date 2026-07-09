@@ -11,6 +11,7 @@ import { GetPrintTemplateSettingBo } from '@/api/base-data/print-template/model/
 import { UpdatePrintTemplateSettingVo } from '@/api/base-data/print-template/model/updatePrintTemplateSettingVo';
 import { UpdatePrintTemplateDemoDataVo } from '@/api/base-data/print-template/model/updatePrintTemplateDemoDataVo';
 import { GetPrintTemplateCompSettingBo } from '@/api/base-data/print-template/model/getPrintTemplateCompSettingBo';
+import { PrintTemplateColumnDescription } from '@/api/base-data/print-template/model/printTemplateColumnDescription';
 
 const baseUrl = '/basedata/print/template';
 const region = 'cloud-api';
@@ -162,6 +163,20 @@ export function getTemplateComp(id: string): Promise<GetPrintTemplateCompSetting
       params: {
         id: id,
       },
+    },
+    {
+      region,
+    },
+  );
+}
+
+/**
+ * 查询模板配置字段说明
+ */
+export function getFieldDesc(): Promise<PrintTemplateColumnDescription[]> {
+  return defHttp.get<PrintTemplateColumnDescription[]>(
+    {
+      url: baseUrl + '/fieldDesc',
     },
     {
       region,
