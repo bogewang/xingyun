@@ -536,6 +536,23 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
+     * 修改备注
+     */
+    @ApiOperation("修改备注")
+    @HasPermission({ "sale:out:modify" })
+    @PatchMapping("/description")
+    public InvokeResult<Void> updateDescription(@RequestBody @Valid UpdateSaleOutSheetDescriptionVo vo) {
+        try {
+            saleOutSheetService.updateDescription(vo);
+
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
+    }
+
+    /**
      * 批量调整售价
      */
     @ApiOperation("批量调整售价")

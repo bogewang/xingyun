@@ -859,6 +859,27 @@ public class SaleOutSheetServiceImpl extends
         OpLogUtil.setExtra(vo);
     }
 
+    @OpLog(type = SaleOpLogType.class, name = "修改销售出库单备注，单号：{}", params = "#code")
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void updateDescription(UpdateSaleOutSheetDescriptionVo vo) {
+
+        SaleOutSheet sheet = getBaseMapper().selectById(vo.getId());
+        if (sheet == null) {
+            throw new InputErrorException("销售出库单不存在！");
+        }
+
+        Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
+                .set(SaleOutSheet::getDescription, vo.getDescription())
+                .eq(SaleOutSheet::getId, sheet.getId());
+        if (getBaseMapper().update(updateWrapper) != 1) {
+            throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
+        }
+
+        OpLogUtil.setVariable("code", sheet.getCode());
+        OpLogUtil.setExtra(vo);
+    }
+
     @OpLog(type = SaleOpLogType.class, name = "批量调整销售出库明细售价")
     @Transactional(rollbackFor = Exception.class)
     @Override

@@ -282,6 +282,21 @@
       <!-- 销售订单查看窗口 -->
       <sale-order-detail :id="saleOrderId" ref="viewSaleOrderDetailDialog" />
 
+      <a-modal
+        v-model:open="descriptionModal.visible"
+        title="修改备注"
+        :confirm-loading="descriptionModal.loading"
+        @ok="submitDescription"
+        @cancel="closeDescriptionDialog"
+      >
+        <a-textarea
+          v-model:value.trim="descriptionModal.description"
+          maxlength="200"
+          :rows="4"
+          allow-clear
+        />
+      </a-modal>
+
       <!-- 批量操作 -->
       <batch-handler
         ref="batchApprovePassHandlerDialog"
@@ -440,37 +455,37 @@ export default defineComponent({
           {
             field: 'code',
             title: '单据号',
-            width: 180,
+            width: 150,
             sortable: true,
             slots: { default: 'code_default' },
           },
           { field: 'customerName', title: '客户名称', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
-          { field: 'paidAmount', title: '已付金额', align: 'right', width: 100 },
-          { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 100 },
+          { field: 'paidAmount', title: '已付金额', align: 'right', width: 80 },
+          { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 80 },
           {
             field: 'totalProfit',
             title: '总利润',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'total_profit' },
           },
           {
             field: 'profitRate',
             title: '毛利率',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'profit_rate' },
           },
           {
             field: 'fillAllCost',
             title: '成本状态',
-            width: 100,
+            width: 80,
             slots: { default: 'fillAllCost_default' },
           },
-          { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
-          { field: 'createTime', title: '操作时间', width: 170, sortable: true },
-          { field: 'createBy', title: '操作人', width: 100 },
+          { field: 'totalNum', title: '商品数量', align: 'right', width: 80 },
+          { field: 'createTime', title: '操作时间', width: 150, sortable: true },
+          { field: 'createBy', title: '操作人', width: 80 },
           // {
           //   field: 'status',
           //   title: '状态',
@@ -501,6 +516,12 @@ export default defineComponent({
         },
         batchHandleDatas: [],
         batchRefuseReason: '',
+        descriptionModal: {
+          visible: false,
+          loading: false,
+          id: '',
+          description: '',
+        },
       };
     },
     computed: {
@@ -733,6 +754,34 @@ export default defineComponent({
         } else {
           this.openChildPage('/sale/out/modify/un-require/' + row.id);
         }
+      },
+      openDescriptionDialog(row) {
+        this.descriptionModal = {
+          visible: true,
+          loading: false,
+          id: row.id,
+          description: row.description || '',
+        };
+      },
+      closeDescriptionDialog() {
+        this.descriptionModal.visible = false;
+        this.descriptionModal.loading = false;
+      },
+      submitDescription() {
+        this.descriptionModal.loading = true;
+        api
+          .updateDescription({
+            id: this.descriptionModal.id,
+            description: this.descriptionModal.description,
+          })
+          .then(() => {
+            createSuccess('保存成功！');
+            this.closeDescriptionDialog();
+            this.search();
+          })
+          .finally(() => {
+            this.descriptionModal.loading = false;
+          });
       },
       // 删除订单
       deleteOrder(row) {
@@ -979,6 +1028,13 @@ export default defineComponent({
             },
             onClick: () => {
               this.openModifyDialog(row);
+            },
+          },
+          {
+            permission: ['sale:out:modify'],
+            label: '修改备注',
+            onClick: () => {
+              this.openDescriptionDialog(row);
             },
           },
           {
