@@ -1654,7 +1654,10 @@ public class SaleOutSheetServiceImpl extends
                 data.setSpec(product.getSpec());
                 data.setUnit(product.getUnit());
                 data.setOriPrice(product.getSalePrice());
-                data.setTaxPrice(getDefaultSalePrice(product));
+                // 导入时，如果指定销售价，则以销售价为准
+                if (data.getTaxPrice() == null) {
+                    data.setTaxPrice(getDefaultSalePrice(product));
+                }
             }
         }
         return errors;
