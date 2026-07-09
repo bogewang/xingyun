@@ -50,7 +50,7 @@ public class SaleOutSheetConverter {
 
         PrintSaleOrderBo res = BeanUtil.copyProperties(data, PrintSaleOrderBo.class);
         res.setCustomerName(customer.getName());
-        res.setDeliveryDate(DateUtil.formatDate(data.getOrderDate(), "yyyy-MM-dd"));
+        res.setOrderDate(DateUtil.formatDate(data.getOrderDate(), "yyyy-MM-dd"));
         res.setPaidAmount(data.getPaidAmount() == null ? BigDecimal.ZERO : data.getPaidAmount());
         res.setUnpaidAmount(NumberUtil.sub(data.getTotalAmount(), res.getPaidAmount()));
         res.setDetails(orderDetailDTO2PrintDetailBOS(data.getDetails()));
@@ -68,21 +68,20 @@ public class SaleOutSheetConverter {
         List<Product> products = productService.lambdaQuery().in(Product::getId, productIds).list();
         Map<String, Product> productMap = products.stream().collect(Collectors.toMap(Product::getId, item -> item));
 
-        return details.stream().map(item -> {
-            PrintSaleOrderBo.OrderDetailBo orderDetailBo = new PrintSaleOrderBo.OrderDetailBo();
-            Product product = productMap.get(item.getProductId());
-            if (product == null) {
-                return null;
-            }
-            orderDetailBo.setProductCode(product.getCode());
-            orderDetailBo.setProductName(product.getName());
-            orderDetailBo.setSpec(product.getSpec());
-            orderDetailBo.setUnit(product.getUnit());
-            orderDetailBo.setOrderNum(item.getOrderNum());
-            orderDetailBo.setTaxPrice(item.getTaxPrice());
-            orderDetailBo.setOrderAmount(item.getTaxAmount());
+        return details.stream()
+                .map(item -> {
+                    PrintSaleOrderBo.OrderDetailBo orderDetailBo = BeanUtil.copyProperties(item, PrintSaleOrderBo.OrderDetailBo.class);
+                    orderDetailBo.setOrderAmount(item.getTaxAmount());
 
-            return orderDetailBo;
-        }).collect(Collectors.toList());
+                    Product product = productMap.get(item.getProductId());
+                    if (product != null) {
+                        orderDetailBo.setProductCode(product.getCode());
+                        orderDetailBo.setProductName(product.getName());
+                        orderDetailBo.setSpec(product.getSpec());
+                        orderDetailBo.setUnit(product.getUnit());
+                    }
+                    return orderDetailBo;
+                })
+                .collect(Collectors.toList());
     }
 }

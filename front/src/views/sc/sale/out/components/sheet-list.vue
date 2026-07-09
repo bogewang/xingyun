@@ -282,6 +282,21 @@
       <!-- 销售订单查看窗口 -->
       <sale-order-detail :id="saleOrderId" ref="viewSaleOrderDetailDialog" />
 
+      <a-modal
+        v-model:open="descriptionModal.visible"
+        title="修改备注"
+        :confirm-loading="descriptionModal.loading"
+        @ok="submitDescription"
+        @cancel="closeDescriptionDialog"
+      >
+        <a-textarea
+          v-model:value.trim="descriptionModal.description"
+          maxlength="200"
+          :rows="4"
+          allow-clear
+        />
+      </a-modal>
+
       <!-- 批量操作 -->
       <batch-handler
         ref="batchApprovePassHandlerDialog"
@@ -323,50 +338,45 @@
 </template>
 
 <script>
-  import { h, defineComponent } from 'vue';
-  import Detail from '../detail.vue';
-  import ApproveRefuse from '@/components/ApproveRefuse';
-  import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
-  import moment from 'moment';
-  import {
-    SearchOutlined,
-    PlusOutlined,
-    CheckOutlined,
-    CloseOutlined,
-    CloudUploadOutlined,
-    DeleteOutlined,
-    DownloadOutlined,
-    PrinterOutlined,
-  } from '@ant-design/icons-vue';
-  import * as api from '@/api/sc/sale/out';
-  import * as configApi from '@/api/sc/sale/config';
-  import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
-  import { printMix } from '@/mixins/print.ts';
-  import { isEmpty, buildSortPageVo } from '@/utils/utils';
-  import {
-    buildVisibleSelectOptions,
-    filterSelectOption,
-    mergeSelectOptionMap,
-    normalizeSelectValue,
-  } from '@/utils/searchSelect';
-  import { requestCustomerSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
-  import {
-    createSuccess,
-    createSuccessAutoClose,
-    createError,
-    createConfirm,
-  } from '@/hooks/web/msg';
-  import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
-  import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
-  import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
-  import { PRINT_TYPE } from '@/enums/biz/printType';
-  import BatchHandler from '@/components/BatchHandler';
-  import PrintDialog from '/@/components/PrintDialog';
-  import SaleOutSheetQueryImporter from '@/components/Importor/SaleOutSheetQueryImporter.vue';
-  import { usePermission } from '/@/hooks/web/usePermission';
+import {defineComponent, h} from 'vue';
+import Detail from '../detail.vue';
+import ApproveRefuse from '@/components/ApproveRefuse';
+import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
+import moment from 'moment';
+import {
+  CheckOutlined,
+  CloseOutlined,
+  CloudUploadOutlined,
+  DeleteOutlined,
+  DownloadOutlined,
+  PlusOutlined,
+  PrinterOutlined,
+  SearchOutlined,
+} from '@ant-design/icons-vue';
+import * as api from '@/api/sc/sale/out';
+import * as configApi from '@/api/sc/sale/config';
+import {multiplePageMix} from '@/mixins/multiplePageMix';
+import {gridCollapseHeightMix} from '@/mixins/gridCollapseHeightMix';
+import {printMix} from '@/mixins/print.ts';
+import {buildSortPageVo, isEmpty} from '@/utils/utils';
+import {
+  buildVisibleSelectOptions,
+  filterSelectOption,
+  mergeSelectOptionMap,
+  normalizeSelectValue,
+} from '@/utils/searchSelect';
+import {requestCustomerSelectOptions, requestUserSelectOptions} from '@/utils/labelSelect';
+import {createConfirm, createError, createSuccess, createSuccessAutoClose,} from '@/hooks/web/msg';
+import {RECEIVE_SHEET_STATUS} from '@/enums/biz/receiveSheetStatus';
+import {SETTLE_STATUS} from '@/enums/biz/settleStatus';
+import {SALE_OUT_SHEET_STATUS} from '@/enums/biz/saleOutSheetStatus';
+import {PRINT_TYPE} from '@/enums/biz/printType';
+import BatchHandler from '@/components/BatchHandler';
+import PrintDialog from '/@/components/PrintDialog';
+import SaleOutSheetQueryImporter from '@/components/Importor/SaleOutSheetQueryImporter.vue';
+import {usePermission} from '/@/hooks/web/usePermission';
 
-  export default defineComponent({
+export default defineComponent({
     name: 'SaleOutSheetSheetList',
     components: {
       Detail,
@@ -445,37 +455,37 @@
           {
             field: 'code',
             title: '单据号',
-            width: 180,
+            width: 150,
             sortable: true,
             slots: { default: 'code_default' },
           },
           { field: 'customerName', title: '客户名称', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
-          { field: 'paidAmount', title: '已付金额', align: 'right', width: 100 },
-          { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 100 },
+          { field: 'paidAmount', title: '已付金额', align: 'right', width: 80 },
+          { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 80 },
           {
             field: 'totalProfit',
             title: '总利润',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'total_profit' },
           },
           {
             field: 'profitRate',
             title: '毛利率',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'profit_rate' },
           },
           {
             field: 'fillAllCost',
             title: '成本状态',
-            width: 100,
+            width: 80,
             slots: { default: 'fillAllCost_default' },
           },
-          { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
-          { field: 'createTime', title: '操作时间', width: 170, sortable: true },
-          { field: 'createBy', title: '操作人', width: 100 },
+          { field: 'totalNum', title: '商品数量', align: 'right', width: 80 },
+          { field: 'createTime', title: '操作时间', width: 150, sortable: true },
+          { field: 'createBy', title: '操作人', width: 80 },
           // {
           //   field: 'status',
           //   title: '状态',
@@ -506,6 +516,12 @@
         },
         batchHandleDatas: [],
         batchRefuseReason: '',
+        descriptionModal: {
+          visible: false,
+          loading: false,
+          id: '',
+          description: '',
+        },
       };
     },
     computed: {
@@ -739,6 +755,34 @@
           this.openChildPage('/sale/out/modify/un-require/' + row.id);
         }
       },
+      openDescriptionDialog(row) {
+        this.descriptionModal = {
+          visible: true,
+          loading: false,
+          id: row.id,
+          description: row.description || '',
+        };
+      },
+      closeDescriptionDialog() {
+        this.descriptionModal.visible = false;
+        this.descriptionModal.loading = false;
+      },
+      submitDescription() {
+        this.descriptionModal.loading = true;
+        api
+          .updateDescription({
+            id: this.descriptionModal.id,
+            description: this.descriptionModal.description,
+          })
+          .then(() => {
+            createSuccess('保存成功！');
+            this.closeDescriptionDialog();
+            this.search();
+          })
+          .finally(() => {
+            this.descriptionModal.loading = false;
+          });
+      },
       // 删除订单
       deleteOrder(row) {
         createConfirm('对选中的销售出库单执行删除操作？').then(() => {
@@ -888,12 +932,12 @@
           ...printData,
         };
 
-        const newDetails = printData.details.map((item, index) => ({
+        const details = Array.isArray(printData?.details) ? printData.details : [];
+        res.details = details.map((item, index) => ({
           // 新生成一个对象，避免修改原对象
           ...item,
           seq: index + 1,
         }));
-        res.details = newDetails;
 
         return res;
       },
@@ -984,6 +1028,13 @@
             },
             onClick: () => {
               this.openModifyDialog(row);
+            },
+          },
+          {
+            permission: ['sale:out:modify'],
+            label: '修改备注',
+            onClick: () => {
+              this.openDescriptionDialog(row);
             },
           },
           {
