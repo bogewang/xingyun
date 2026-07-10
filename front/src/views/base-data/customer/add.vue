@@ -150,7 +150,7 @@
   import { isEmail, validCode } from '@/utils/validate';
   import * as api from '@/api/base-data/customer';
   import { getCamelCharsUpperCase, isEmpty } from '@/utils/utils';
-  import { createConfirm, createSuccess } from '@/hooks/web/msg';
+  import { createSuccess } from '@/hooks/web/msg';
   import CitySelector from '@/components/Selector/CitySelector.vue';
   import { SETTLE_TYPE } from '@/enums/biz/settleType';
 
@@ -236,24 +236,22 @@
       submit() {
         this.$refs.form.validate().then((valid) => {
           if (valid) {
-            createConfirm('新增后结算方式不允许修改，请仔细核对结算方式是否正确').then(() => {
-              this.loading = true;
-              const params = Object.assign({}, this.formData);
-              params.cityId = isEmpty(params.city) ? '' : params.city[params.city.length - 1];
-              delete params.city;
-              api
-                .create(params)
-                .then(() => {
-                  createSuccess('新增成功！');
-                  // 初始化表单数据
-                  this.initFormData();
-                  this.$emit('confirm');
-                  this.visible = false;
-                })
-                .finally(() => {
-                  this.loading = false;
-                });
-            });
+            this.loading = true;
+            const params = Object.assign({}, this.formData);
+            params.cityId = isEmpty(params.city) ? '' : params.city[params.city.length - 1];
+            delete params.city;
+            api
+              .create(params)
+              .then(() => {
+                createSuccess('新增成功！');
+                // 初始化表单数据
+                this.initFormData();
+                this.$emit('confirm');
+                this.visible = false;
+              })
+              .finally(() => {
+                this.loading = false;
+              });
           }
         });
       },
