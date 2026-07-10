@@ -113,7 +113,7 @@
   } from '@ant-design/icons-vue';
   import * as api from '@/api/base-data/customer';
   import { isEmpty, buildSortPageVo } from '@/utils/utils';
-  import { createError } from '@/hooks/web/msg';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
   import CustomerImporter from '@/components/Importor/CustomerImporter.vue';
   import BatchHandler from '@/components/BatchHandler';
 
@@ -214,6 +214,20 @@
       doBatchDelete(row) {
         return api.deleteById(row.id);
       },
+      deleteRow(id) {
+        createConfirm('是否确定删除该客户？').then(() => {
+          this.loading = true;
+          api
+            .deleteById(id)
+            .then(() => {
+              createSuccess('删除成功！');
+              this.search();
+            })
+            .finally(() => {
+              this.loading = false;
+            });
+        });
+      },
       // 批量删除
       batchDelete() {
         const records = this.$refs.grid.getCheckboxRecords();
@@ -242,6 +256,14 @@
             onClick: () => {
               this.id = row.id;
               this.$nextTick(() => this.$refs.updateDialog.openDialog());
+            },
+          },
+          {
+            permission: ['base-data:customer:delete'],
+            danger: true,
+            label: '删除',
+            onClick: () => {
+              this.deleteRow(row.id);
             },
           },
         ];
