@@ -7,7 +7,7 @@
         show-icon
       />
       <j-border>
-        <j-form bordered>
+        <j-form class="compact-search-form" bordered :content-nest="false">
           <j-form-item label="供应商" required>
             {{ formData.supplier.name }}
           </j-form-item>

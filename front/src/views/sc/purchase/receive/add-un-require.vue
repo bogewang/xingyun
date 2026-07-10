@@ -5,7 +5,7 @@
   >
     <div class="sheet-editor-content" v-permission="['purchase:receive:add']" v-loading="loading">
       <j-border>
-        <j-form bordered>
+        <j-form class="compact-search-form" bordered :content-nest="false">
           <j-form-item label="订单日期">
             <a-date-picker
               v-model:value="formData.orderDate"

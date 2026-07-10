@@ -19,7 +19,7 @@
           <a-tab-pane key="detail" tab="详情">
             <div class="order-detail-pane">
               <j-border>
-                <j-form bordered>
+                <j-form class="compact-search-form" bordered :content-nest="false">
                   <j-form-item label="供应商">
                     {{ formData.supplierName }}
                   </j-form-item>

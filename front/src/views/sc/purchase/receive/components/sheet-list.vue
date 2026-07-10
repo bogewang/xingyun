@@ -24,7 +24,13 @@
         >
           <template #form>
             <j-border>
-              <j-form bordered @collapse="handleFormCollapse" @keyup.enter="search">
+              <j-form
+                class="compact-search-form"
+                bordered
+                :content-nest="false"
+                @collapse="handleFormCollapse"
+                @keyup.enter="search"
+              >
                 <j-form-item label="订单日期">
                   <a-range-picker
                     v-model:value="orderDateRange"
@@ -42,7 +48,6 @@
                     placeholder="请选择供应商"
                   />
                 </j-form-item>
-                <template #more>
                   <j-form-item label="单据号">
                     <a-input v-model:value="searchFormData.code" allow-clear />
                   </j-form-item>
@@ -118,7 +123,6 @@
                       <a-select-option :value="false">未结清</a-select-option>
                     </a-select>
                   </j-form-item>
-                </template>
               </j-form>
             </j-border>
           </template>
@@ -875,5 +879,3 @@
     },
   });
 </script>
-
-<style scoped></style>
