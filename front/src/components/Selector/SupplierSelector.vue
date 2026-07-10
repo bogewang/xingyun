@@ -100,7 +100,7 @@
       async requestOptions(keyword = '') {
         const response = await api.selector({
           pageIndex: 1,
-          pageSize: 20,
+          pageSize: 100,
           ...this.requestParams,
           label: isEmpty(this.requestParams.label) ? keyword : this.requestParams.label,
         });
