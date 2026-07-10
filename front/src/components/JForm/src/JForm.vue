@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="compact-search-form">
     <div class="j-form-item-container">
       <slot></slot>
       <FadeTransition :group="true">
@@ -57,7 +57,7 @@
       },
       contentNest: {
         type: Boolean,
-        default: true,
+        default: false,
       },
       colon: {
         type: Boolean,

@@ -130,13 +130,12 @@
                   </j-form-item>
 
                   <j-form-item label="已付金额">
-                    <a-space>
+                    <a-space class="amount-range-input" :size="4">
                       <a-input-number
                         v-model:value="searchFormData.paidAmountStart"
                         :min="0"
                         :precision="2"
                         placeholder="最小值"
-                        style="width: 120px"
                       />
                       <span>至</span>
                       <a-input-number
@@ -144,19 +143,17 @@
                         :min="0"
                         :precision="2"
                         placeholder="最大值"
-                        style="width: 120px"
                       />
                     </a-space>
                   </j-form-item>
 
                   <j-form-item label="未付金额">
-                    <a-space>
+                    <a-space class="amount-range-input" :size="4">
                       <a-input-number
                         v-model:value="searchFormData.unpaidAmountStart"
                         :min="0"
                         :precision="2"
                         placeholder="最小值"
-                        style="width: 120px"
                       />
                       <span>至</span>
                       <a-input-number
@@ -164,7 +161,6 @@
                         :min="0"
                         :precision="2"
                         placeholder="最大值"
-                        style="width: 120px"
                       />
                     </a-space>
                   </j-form-item>

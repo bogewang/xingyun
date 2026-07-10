@@ -22,13 +22,7 @@
       >
         <template #form>
           <j-border>
-            <j-form
-              class="compact-search-form"
-              bordered
-              :content-nest="false"
-              @collapse="handleFormCollapse"
-              @keyup.enter="search"
-            >
+            <j-form bordered @collapse="handleFormCollapse" @keyup.enter="search">
               <j-form-item label="订单日期">
                 <a-range-picker
                   v-model:value="orderDateRange"
