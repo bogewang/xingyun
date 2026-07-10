@@ -13,7 +13,6 @@ import {
   getTenantRequireApi,
   loginApi,
 } from '/@/api/sys/user';
-import { createConfirm } from '@/hooks/web/msg';
 import { router } from '/@/router';
 import { TenantRequireBo } from '@/api/sys/model/tenantRequireBo';
 
@@ -134,12 +133,10 @@ export const useUserStore = defineStore({
     },
 
     /**
-     * @description: Confirm before logging out
+     * @description: Logout and redirect to the login page
      */
-    confirmLoginOut() {
-      createConfirm('是否确认退出登录？', '退出登录').then(async () => {
-        await this.logout(true);
-      });
+    async confirmLoginOut() {
+      await this.logout(true);
     },
     /**
      * 获取登录验证码
