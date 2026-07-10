@@ -64,11 +64,8 @@ export const createConfirm = function (
   });
 };
 
-export const createSuccess = function (message: string): void {
-  Modal.success({
-    title: '提示信息',
-    content: renderMultilineContent(message),
-  });
+export const createSuccess = function (message: string, duration = 1000): void {
+  createSuccessAutoClose(message, duration);
 };
 
 export const createSuccessAutoClose = function (message: string, duration = 1000): void {
