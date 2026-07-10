@@ -2,6 +2,7 @@
   <Preview
     ref="previewRef"
     :show-title="state.enableTemplateSwitch"
+    :show-pdf="false"
     :dialog-title="dialogTitle"
     v-model:modalShow="modalShow"
     default-lang="cn"
@@ -31,6 +32,7 @@
         </div>
       </div>
       <span v-else>{{ title }}</span>
+      <a-button @click="onToPdf">导出 PDF</a-button>
     </template>
   </Preview>
 </template>
@@ -151,6 +153,29 @@
     }
   }
 
+  function onToPdf() {
+    templateInstance.value.toPdf(currentPrintData.value, getPdfFilename(), {
+      scale: 3,
+      imageQuality: 0.92,
+      pdfCompress: true,
+      imageCompression: 'FAST'
+    });
+  }
+
+  /**
+   * vg-print 的 toPdf 第二个参数用于指定导出文件名。
+   * 打印数据会被标准化为数组，因此取第一张单据的 `description` 作为文件名，
+   * 移除操作系统不允许的文件名字符。
+   */
+  function getPdfFilename() {
+    const printData = currentPrintData.value[0] as Record<string, unknown> | undefined;
+    const filename = String(printData?.description || printData?.orderDate)
+      .trim()
+      .replace(/[\\/:*?"<>|]/g, '_');
+
+    return filename || '打印预览';
+  }
+
   /**
    * 根据当前模板与打印数据刷新预览内容。
    */
@@ -162,13 +187,6 @@
     await nextTick();
     previewRef.value?.show(templateInstance.value, currentPrintData.value, {
       width: PREVIEW_WIDTH,
-      showTitle: state.enableTemplateSwitch,
-      // pdf参数
-      pdfOptions: {
-        scale: 3,
-        pixelRatio: 3, // 图片清晰度/性能权衡（也可用 scale）
-        quality: 1, // 图片质量 0-1 默认 0.8
-      },
     });
   }
 
