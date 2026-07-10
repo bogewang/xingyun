@@ -78,7 +78,68 @@
             >
           </a-space>
         </template>
+        <template #operation_default="{ row }">
+          <a-button
+            v-permission="['stock:adjust:approve']"
+            type="link"
+            size="small"
+            @click="openStockAdjust(row)"
+            >调整库存</a-button
+          >
+        </template>
       </vxe-grid>
+
+      <a-modal
+        v-model:open="stockAdjustVisible"
+        title="调整库存"
+        :confirm-loading="stockAdjustLoading"
+        @ok="submitStockAdjust"
+      >
+        <j-form bordered label-width="100px">
+          <j-form-item label="商品">
+            <a-input :value="stockAdjustData.productName" readonly />
+          </j-form-item>
+          <j-form-item label="当前库存">
+            <a-input :value="stockAdjustData.curStockNum" readonly />
+          </j-form-item>
+          <j-form-item label="业务类型" required>
+            <a-select v-model:value="stockAdjustData.bizType">
+              <a-select-option
+                v-for="item in STOCK_ADJUST_SHEET_BIZ_TYPE.values()"
+                :key="item.code"
+                :value="item.code"
+                >{{ item.desc }}</a-select-option
+              >
+            </a-select>
+          </j-form-item>
+          <j-form-item label="调整数量" required>
+            <a-input-number
+              v-model:value="stockAdjustData.stockNum"
+              :min="0"
+              :precision="8"
+              style="width: 100%"
+            />
+          </j-form-item>
+          <j-form-item label="调整原因" required>
+            <a-select
+              v-model:value="stockAdjustData.reasonId"
+              show-search
+              option-filter-prop="label"
+            >
+              <a-select-option
+                v-for="item in reasonOptions"
+                :key="item.id"
+                :value="item.id"
+                :label="item.name"
+                >{{ item.name }}</a-select-option
+              >
+            </a-select>
+          </j-form-item>
+          <j-form-item label="备注" :span="24">
+            <a-textarea v-model:value.trim="stockAdjustData.description" :maxlength="200" />
+          </j-form-item>
+        </j-form>
+      </a-modal>
     </page-wrapper>
   </div>
 </template>
@@ -87,18 +148,23 @@
   import { h, defineComponent } from 'vue';
   import { SearchOutlined, DownloadOutlined, SyncOutlined } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/stock/product-stock';
-  import { buildSortPageVo } from '@/utils/utils';
-  import { createConfirm, createSuccess } from '@/hooks/web/msg';
-  import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
+  import * as stockAdjustApi from '@/api/sc/stock/adjust/stock';
+  import * as stockAdjustReasonApi from '@/api/sc/stock/adjust/reason';
+  import {
+    buildSortPageVo,
+    isEmpty,
+    isFloat,
+    isFloatGtZero,
+    isNumberPrecision,
+  } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import { STOCK_ADJUST_SHEET_BIZ_TYPE } from '@/enums/biz/stockAdjustSheetBizType';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
-  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
 
   export default defineComponent({
     name: 'ProductStock',
     components: {
-      ProductBrandSelector,
       ProductCategorySelector,
-      StoreCenterSelector,
     },
     setup() {
       return {
@@ -106,11 +172,16 @@
         SearchOutlined,
         DownloadOutlined,
         SyncOutlined,
+        STOCK_ADJUST_SHEET_BIZ_TYPE,
       };
     },
     data() {
       return {
         loading: false,
+        stockAdjustVisible: false,
+        stockAdjustLoading: false,
+        stockAdjustData: {},
+        reasonOptions: [],
         // 当前行数据
         id: '',
         ids: [],
@@ -141,6 +212,13 @@
           { field: 'stockNum', title: '库存数量', align: 'right', width: 100, sortable: true },
           { field: 'taxPrice', title: '价格', align: 'right', width: 100 },
           { field: 'taxAmount', title: '金额', align: 'right', width: 100 },
+          {
+            field: 'operation',
+            title: '操作',
+            width: 100,
+            fixed: 'right',
+            slots: { default: 'operation_default' },
+          },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -210,6 +288,85 @@
               });
           },
         );
+      },
+      openStockAdjust(row) {
+        this.stockAdjustData = {
+          productId: row.productId,
+          productName: `${row.productCode} ${row.productName}`,
+          curStockNum: row.stockNum,
+          bizType: '',
+          stockNum: undefined,
+          reasonId: '',
+          description: '',
+        };
+        this.stockAdjustVisible = true;
+        this.loadReasonOptions();
+      },
+      validStockAdjustData() {
+        if (isEmpty(this.stockAdjustData.bizType)) {
+          createError('请选择业务类型！');
+          return false;
+        }
+        if (isEmpty(this.stockAdjustData.reasonId)) {
+          createError('请选择调整原因！');
+          return false;
+        }
+        if (isEmpty(this.stockAdjustData.stockNum)) {
+          createError('调整数量不允许为空！');
+          return false;
+        }
+        if (
+          !isFloat(this.stockAdjustData.stockNum) ||
+          !isFloatGtZero(this.stockAdjustData.stockNum)
+        ) {
+          createError('调整数量必须大于0！');
+          return false;
+        }
+        if (!isNumberPrecision(this.stockAdjustData.stockNum, 8)) {
+          createError('调整数量最多允许8位小数！');
+          return false;
+        }
+        return true;
+      },
+      submitStockAdjust() {
+        if (!this.validStockAdjustData()) {
+          return;
+        }
+        this.stockAdjustLoading = true;
+        stockAdjustApi
+          .directApprovePass({
+            bizType: this.stockAdjustData.bizType,
+            reasonId: this.stockAdjustData.reasonId,
+            description: this.stockAdjustData.description,
+            products: [
+              {
+                productId: this.stockAdjustData.productId,
+                stockNum: this.stockAdjustData.stockNum,
+                description: '',
+              },
+            ],
+          })
+          .then(() => {
+            createSuccess('库存调整成功！');
+            this.stockAdjustVisible = false;
+            this.search();
+          })
+          .finally(() => {
+            this.stockAdjustLoading = false;
+          });
+      },
+      loadReasonOptions() {
+        stockAdjustReasonApi
+          .selector({
+            pageIndex: 1,
+            pageSize: 500,
+            code: '',
+            name: '',
+            available: true,
+          })
+          .then((res) => {
+            this.reasonOptions = res.datas || [];
+          });
       },
     },
   });
