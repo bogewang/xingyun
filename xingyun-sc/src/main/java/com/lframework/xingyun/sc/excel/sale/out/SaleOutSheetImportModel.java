@@ -25,6 +25,10 @@ public class SaleOutSheetImportModel implements ExcelModel {
     @ExcelIgnore()
     private String productId;
 
+    /** 商品单位关系ID */
+    @ExcelIgnore
+    private String unitId;
+
     /**
      * 商品编号
      */

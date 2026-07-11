@@ -10,10 +10,12 @@ import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductBrand;
 import com.lframework.xingyun.basedata.entity.ProductCategory;
 import com.lframework.xingyun.basedata.entity.Supplier;
+import com.lframework.xingyun.basedata.entity.Unit;
 import com.lframework.xingyun.basedata.service.product.ProductBrandService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
+import com.lframework.xingyun.basedata.service.UnitService;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -186,6 +188,10 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
 
     @Override
     protected void afterInit(Product dto) {
+        Unit unit = ApplicationUtil.getBean(UnitService.class).getById(dto.getUnit());
+        if (unit != null) {
+            this.unit = unit.getName();
+        }
         ProductCategoryService productCategoryService =  ApplicationUtil.getBean(ProductCategoryService.class);
         if (dto.getCategoryId() != null) {
             ProductCategory category = productCategoryService.findById(dto.getCategoryId());

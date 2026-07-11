@@ -7,6 +7,8 @@ import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductBrand;
 import com.lframework.xingyun.basedata.entity.ProductCategory;
 import com.lframework.xingyun.basedata.entity.StoreCenter;
+import com.lframework.xingyun.basedata.entity.Unit;
+import com.lframework.xingyun.basedata.service.UnitService;
 import com.lframework.xingyun.basedata.service.product.ProductBrandService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
@@ -132,7 +134,8 @@ public class QueryProductStockBo extends BaseBo<ProductStock> {
 
     this.productCode = product.getCode();
     this.productName = product.getName();
-    this.unit = product.getUnit();
+    Unit unit = ApplicationUtil.getBean(UnitService.class).getById(product.getUnit());
+    this.unit = unit == null ? product.getUnit() : unit.getName();
     this.categoryName = productCategory.getName();
   }
 }

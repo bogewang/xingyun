@@ -25,6 +25,7 @@ import com.lframework.xingyun.basedata.excel.product.ProductImportModel;
 import com.lframework.xingyun.basedata.mappers.ProductMapper;
 import com.lframework.xingyun.basedata.service.product.*;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
+import com.lframework.xingyun.basedata.service.UnitService;
 import com.lframework.xingyun.basedata.vo.product.brand.QueryProductBrandVo;
 import com.lframework.xingyun.basedata.vo.product.info.*;
 import com.lframework.xingyun.basedata.vo.product.property.realtion.CreateProductPropertyRelationVo;
@@ -67,12 +68,17 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     private ProductBundleService productBundleService;
 
     @Autowired
+    private ProductUnitService productUnitService;
+
+    @Autowired
     private ProductCategoryService productCategoryService;
 
     @Autowired
     private ProductBrandService productBrandService;
     @Autowired
     private SupplierService supplierService;
+    @Autowired
+    private UnitService unitService;
 
     @Autowired
     private GenerateCodeService generateCodeService;
@@ -228,6 +234,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         handleRetailPrice(vo, data);
 
         getBaseMapper().insert(data);
+        saveUnits(data, vo.getUnits());
 
         // 组合商品
         if (data.getProductType() == ProductType.BUNDLE) {
@@ -437,6 +444,10 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                 .eq(Product::getId, vo.getId());
 
         getBaseMapper().update(updateWrapper);
+        if (vo.getUnits() != null) {
+            data.setUnit(StringUtil.isBlank(vo.getUnit()) ? null : vo.getUnit());
+            saveUnits(data, vo.getUnits());
+        }
 
         // 组合商品
         if (data.getProductType() == ProductType.BUNDLE) {
@@ -661,6 +672,14 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         List<Product> updates = Lists.newArrayList();
         list.forEach(data -> {
             Product record = BeanUtil.copyProperties(data, Product.class);
+            if (StringUtil.isNotBlank(data.getUnit())) {
+                Unit unit = unitService.getOne(Wrappers.lambdaQuery(Unit.class)
+                        .eq(Unit::getName, data.getUnit()).eq(Unit::getAvailable, Boolean.TRUE));
+                if (unit == null) {
+                    throw new DefaultClientException(String.format("单位%s不存在或已停用", data.getUnit()));
+                }
+                record.setUnit(unit.getId());
+            }
             boolean isNew = StringUtil.isBlank(record.getId());
             if (isNew) {
                 record.setId(IdUtil.getId());
@@ -1031,6 +1050,64 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         Wrapper<Product> checkWrapper = Wrappers.lambdaQuery(Product.class).eq(Product::getCode, code)
                 .eq(Product::getAvailable, Boolean.TRUE);
         return getBaseMapper().selectCount(checkWrapper) > 0;
+    }
+
+    /**
+     * 单位配置以商品的 unit 为主单位。历史单据保存单位快照，因此这里只影响后续业务。
+     */
+    private void saveUnits(Product product, List<ProductUnitVo> unitVos) {
+        String baseUnitId = product.getUnit();
+        Unit baseUnitRecord = StringUtil.isBlank(baseUnitId) ? null : unitService.getById(baseUnitId);
+        String baseUnit = baseUnitRecord == null ? null : baseUnitRecord.getName();
+        if (CollectionUtil.isEmpty(unitVos)) {
+            if (StringUtil.isBlank(baseUnit)) {
+                return;
+            }
+            unitVos = new ArrayList<>();
+            ProductUnitVo unitVo = new ProductUnitVo();
+            unitVo.setUnitName(baseUnit);
+            unitVo.setConversionRate(BigDecimal.ONE);
+            unitVos.add(unitVo);
+        }
+        if (StringUtil.isBlank(baseUnit)) {
+            throw new DefaultClientException("主单位不存在或已停用！");
+        }
+        Set<String> unitNames = new HashSet<>();
+        boolean hasBaseUnit = false;
+        for (ProductUnitVo unitVo : unitVos) {
+            if (!unitNames.add(unitVo.getUnitName())) {
+                throw new DefaultClientException("单位名称不能重复！");
+            }
+            if (unitVo.getConversionRate() == null || NumberUtil.le(unitVo.getConversionRate(), BigDecimal.ZERO)
+                    || !NumberUtil.isNumberPrecision(unitVo.getConversionRate(), 6)) {
+                throw new DefaultClientException("单位换算率必须大于0，且最多6位小数！");
+            }
+            if (baseUnit.equals(unitVo.getUnitName())) {
+                if (!NumberUtil.equal(unitVo.getConversionRate(), BigDecimal.ONE)) {
+                    throw new DefaultClientException("主单位换算率必须为1！");
+                }
+                hasBaseUnit = true;
+            }
+        }
+        if (!hasBaseUnit) {
+            throw new DefaultClientException("多单位配置必须包含主单位！");
+        }
+        productUnitService.remove(Wrappers.lambdaQuery(ProductUnit.class)
+                .eq(ProductUnit::getProductId, product.getId()));
+        List<ProductUnit> units = new ArrayList<>();
+        for (int i = 0; i < unitVos.size(); i++) {
+            ProductUnitVo unitVo = unitVos.get(i);
+            ProductUnit unit = new ProductUnit();
+            unit.setId(IdUtil.getId());
+            unit.setProductId(product.getId());
+            unit.setUnitName(unitVo.getUnitName());
+            unit.setConversionRate(unitVo.getConversionRate());
+            unit.setBaseUnit(baseUnit.equals(unitVo.getUnitName()));
+            unit.setAvailable(!Boolean.FALSE.equals(unitVo.getAvailable()));
+            unit.setSortNo(unitVo.getSortNo() == null ? i : unitVo.getSortNo());
+            units.add(unit);
+        }
+        productUnitService.saveBatch(units);
     }
 
     private String buildNameSpecUnitKey(ProductImportModel data) {

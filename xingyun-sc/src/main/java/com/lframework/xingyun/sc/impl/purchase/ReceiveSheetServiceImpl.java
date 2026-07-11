@@ -27,6 +27,7 @@ import com.lframework.starter.web.inner.service.system.SysParameterService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.starter.web.inner.vo.system.parameter.QuerySysParameterVo;
 import com.lframework.xingyun.basedata.entity.Product;
+import com.lframework.xingyun.basedata.entity.ProductUnit;
 import com.lframework.xingyun.basedata.entity.StoreCenter;
 import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.enums.ManageType;
@@ -34,6 +35,7 @@ import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.enums.SettleType;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
+import com.lframework.xingyun.basedata.service.product.ProductUnitService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
@@ -67,6 +69,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -100,6 +103,9 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private ProductUnitService productUnitService;
 
     @Autowired
     private ProductLatestPriceCacheService productLatestPriceCacheService;
@@ -615,11 +621,18 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         sheet.setReceiveDate(vo.getReceiveDate());
 
         BigDecimal purchaseNum = BigDecimal.ZERO;
+        BigDecimal businessTotalNum = BigDecimal.ZERO;
         BigDecimal giftNum = BigDecimal.ZERO;
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (ReceiveProductVo productVo : vo.getProducts()) {
-            purchaseNum = NumberUtil.add(purchaseNum, productVo.getReceiveNum());
-
+            Product product = productService.findById(productVo.getProductId());
+            if (product == null) {
+                throw new InputErrorException("第" + productVo.getSeq() + "行商品不存在！");
+            }
+            ProductUnit unit = resolveUnit(product, productVo.getUnitId(), productVo.getUnit());
+            BigDecimal baseNum = NumberUtil.mul(productVo.getReceiveNum(), unit.getConversionRate());
+            purchaseNum = NumberUtil.add(purchaseNum, baseNum);
+            businessTotalNum = NumberUtil.add(businessTotalNum, productVo.getReceiveNum());
             BigDecimal taxAmount = NumberUtil.getNumber(
                     NumberUtil.mul(productVo.getReceiveNum(), productVo.getPurchasePrice()), 2);
             totalAmount = NumberUtil.add(totalAmount, taxAmount);
@@ -627,11 +640,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             ReceiveSheetDetail detail = new ReceiveSheetDetail();
             detail.setId(IdUtil.getId());
             detail.setSheetId(sheet.getId());
-
-            Product product = productService.findById(productVo.getProductId());
-            if (product == null) {
-                throw new InputErrorException("第" + productVo.getSeq() + "行商品不存在！");
-            }
 
             if (!NumberUtil.isNumberPrecision(productVo.getPurchasePrice(), 6)) {
                 throw new InputErrorException("第" + productVo.getSeq() + "行商品采购价最多允许6位小数！");
@@ -642,7 +650,11 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             }
 
             detail.setProductId(productVo.getProductId());
-            detail.setOrderNum(productVo.getReceiveNum());
+            detail.setOrderNum(baseNum);
+            detail.setUnitId(unit.getId());
+            detail.setUnitName(unit.getUnitName());
+            detail.setConversionRate(unit.getConversionRate());
+            detail.setBusinessNum(productVo.getReceiveNum());
             detail.setTaxPrice(productVo.getPurchasePrice());
             detail.setTaxAmount(taxAmount);
             detail.setTaxRate(product.getTaxRate());
@@ -653,15 +665,30 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             receiveSheetDetailService.save(detail);
             updateProductPrice(product, detail);
             productLatestPriceCacheService.updateLatestPrice(product.getId(), null,
-                    detail.getTaxPrice());
+                    toBasePrice(detail.getTaxPrice(), detail.getConversionRate()));
         }
         BigDecimal actualTotalAmount = this.normalizeTotalAmount(vo.getTotalAmount(), totalAmount);
-        sheet.setTotalNum(purchaseNum);
+        sheet.setTotalNum(businessTotalNum);
         sheet.setTotalGiftNum(giftNum);
         sheet.setTotalAmount(actualTotalAmount);
         sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), actualTotalAmount));
         sheet.setDescription(StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(supplier));
+    }
+
+    private ProductUnit resolveUnit(Product product, String unitId, String unitName) {
+        ProductUnit unit = StringUtil.isNotBlank(unitId)
+                ? productUnitService.getAvailableById(product.getId(), unitId) : null;
+        if (unit == null) {
+            unit = StringUtil.isBlank(unitName)
+                    ? productUnitService.getAvailableByProductId(product.getId()).stream()
+                    .filter(item -> Boolean.TRUE.equals(item.getBaseUnit())).findFirst().orElse(null)
+                    : productUnitService.getAvailableByUnitName(product.getId(), unitName);
+        }
+        if (unit == null) {
+            throw new InputErrorException("商品单位不存在或已停用！");
+        }
+        return unit;
     }
 
     /**
@@ -753,8 +780,14 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         boolean override = BooleanUtil.toBoolean(list.get(0).getPmValue());
         if (override) {
-            productService.updatePrice(product.getId(), null, detail.getTaxPrice());
+            productService.updatePrice(product.getId(), null,
+                    toBasePrice(detail.getTaxPrice(), detail.getConversionRate()));
         }
+    }
+
+    private BigDecimal toBasePrice(BigDecimal price, BigDecimal conversionRate) {
+        BigDecimal rate = conversionRate == null ? BigDecimal.ONE : conversionRate;
+        return price.divide(rate, 6, RoundingMode.HALF_UP);
     }
 
     /**
@@ -865,8 +898,13 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
                 .distinct()
                 .collect(Collectors.toList());
         List<Product> products = productService.selectByProductName(productNames);
-        Map<String, List<Product>> nameUnitMap = products.stream()
-                .collect(Collectors.groupingBy(item -> buildProductImportKey(item.getName(), item.getUnit())));
+        Map<String, List<Product>> nameUnitMap = new HashMap<>();
+        for (Product product : products) {
+            productUnitService.getAvailableByProductId(product.getId()).stream()
+                    .forEach(unit -> nameUnitMap.computeIfAbsent(
+                            buildProductImportKey(product.getName(), unit.getUnitName()), key -> new ArrayList<>())
+                            .add(product));
+        }
 
         List<String> errors = Lists.newArrayList();
         for (int i = 0; i < list.size(); i++) {
@@ -891,13 +929,20 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
             Product product = matchImportProduct(data, nameUnitMap);
             if (product != null) {
+                ProductUnit unit = productUnitService.getAvailableByUnitName(product.getId(),
+                        StringUtils.trim(data.getUnit()));
+                if (unit == null) {
+                    continue;
+                }
                 data.setProductCode(product.getCode());
                 data.setProductId(product.getId());
+                data.setUnitId(unit.getId());
                 data.setSpec(product.getSpec());
                 BigDecimal defaultPurchasePrice = productLatestPriceCacheService
                         .getLatestPurchasePrice(product.getId());
                 if (data.getPurchasePrice() == null) {
-                    data.setPurchasePrice(defaultPurchasePrice == null ? BigDecimal.ZERO : defaultPurchasePrice);
+                    data.setPurchasePrice(defaultPurchasePrice == null ? BigDecimal.ZERO
+                            : NumberUtil.mul(defaultPurchasePrice, unit.getConversionRate()));
                 }
             }
 

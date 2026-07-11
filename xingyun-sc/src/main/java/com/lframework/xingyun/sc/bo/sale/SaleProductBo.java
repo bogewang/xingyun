@@ -7,6 +7,7 @@ import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
+import com.lframework.xingyun.basedata.entity.ProductUnit;
 import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
 import com.lframework.xingyun.sc.entity.ProductStock;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
@@ -90,6 +91,10 @@ public class SaleProductBo extends BaseBo<SaleProductDto> {
     @ApiModelProperty("单位")
     private String unit;
 
+    /** 商品可选单位（含主单位）。 */
+    @ApiModelProperty("商品可选单位")
+    private List<ProductUnit> units;
+
     /**
      * 采购价
      */
@@ -145,6 +150,11 @@ public class SaleProductBo extends BaseBo<SaleProductDto> {
         this.productId = dto.getId();
         this.productCode = dto.getCode();
         this.productName = dto.getName();
+        this.units = dto.getUnits();
+        if (!CollectionUtil.isEmpty(this.units)) {
+            this.unit = this.units.stream().filter(ProductUnit::getBaseUnit)
+                .map(ProductUnit::getUnitName).findFirst().orElse(dto.getUnit());
+        }
         ProductLatestPriceCacheService productLatestPriceCacheService = ApplicationUtil.getBean(ProductLatestPriceCacheService.class);
         this.latestSalePrice = productLatestPriceCacheService.getLatestSalePrice(this.getProductId());
         this.latestPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(this.getProductId());

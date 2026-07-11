@@ -85,6 +85,11 @@ public class UpdateProductVo implements BaseVo, Serializable {
   @ApiModelProperty("单位")
   private String unit;
 
+  /** 包含主单位在内的全部可用单位；未传则保留原单位配置。 */
+  @ApiModelProperty("商品多单位")
+  @Valid
+  private List<ProductUnitVo> units;
+
   /**
    * 重量（kg）
    */

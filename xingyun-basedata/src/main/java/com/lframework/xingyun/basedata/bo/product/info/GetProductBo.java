@@ -11,6 +11,7 @@ import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductBrand;
 import com.lframework.xingyun.basedata.entity.ProductBundle;
 import com.lframework.xingyun.basedata.entity.ProductCategory;
+import com.lframework.xingyun.basedata.entity.ProductUnit;
 import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.enums.ColumnType;
 import com.lframework.xingyun.basedata.enums.ProductType;
@@ -18,6 +19,7 @@ import com.lframework.xingyun.basedata.service.product.ProductBrandService;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductPropertyRelationService;
+import com.lframework.xingyun.basedata.service.product.ProductUnitService;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -126,6 +128,9 @@ public class GetProductBo extends BaseBo<Product> {
   @ApiModelProperty("单位")
   private String unit;
 
+  @ApiModelProperty("商品多单位")
+  private List<ProductUnit> units;
+
   /**
    * 商品类型
    */
@@ -215,6 +220,8 @@ public class GetProductBo extends BaseBo<Product> {
     }
 
     this.purchasePrice = dto.getPurchasePrice();
+    ProductUnitService productUnitService = ApplicationUtil.getBean(ProductUnitService.class);
+    this.units = productUnitService.getByProductId(dto.getId());
     this.salePrice = dto.getSalePrice();
     this.retailPrice = dto.getRetailPrice();
     this.alias = dto.getAlias();

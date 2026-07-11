@@ -30,6 +30,7 @@ import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
+import com.lframework.xingyun.basedata.service.product.ProductUnitService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.core.utils.SplitNumberUtil;
@@ -95,6 +96,9 @@ public class PurchaseOrderServiceImpl extends
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private ProductUnitService productUnitService;
 
     @Autowired
     private PurchaseConfigService purchaseConfigService;
@@ -666,6 +670,7 @@ public class PurchaseOrderServiceImpl extends
         PageHelperUtil.startPage(pageIndex, pageSize);
 
         List<PurchaseProductDto> datas = getBaseMapper().queryPurchaseByCondition(sc_id, condition, isReturn);
+        datas.forEach(this::fillProductUnits);
         PageResult<PurchaseProductDto> pageResult = PageResultUtil.convert(new PageInfo<>(datas));
 
         return pageResult;
@@ -681,6 +686,7 @@ public class PurchaseOrderServiceImpl extends
         PageHelperUtil.startPage(pageIndex, pageSize);
 
         List<PurchaseProductDto> datas = getBaseMapper().queryPurchaseList(vo);
+        datas.forEach(this::fillProductUnits);
         PageResult<PurchaseProductDto> pageResult = PageResultUtil.convert(new PageInfo<>(datas));
 
         return pageResult;
@@ -690,8 +696,14 @@ public class PurchaseOrderServiceImpl extends
     public PurchaseProductDto getPurchaseById(String id) {
 
         PurchaseProductDto data = getBaseMapper().getPurchaseById(id);
-
+        fillProductUnits(data);
         return data;
+    }
+
+    private void fillProductUnits(PurchaseProductDto data) {
+        if (data != null && StringUtil.isNotBlank(data.getId())) {
+            data.setUnits(productUnitService.getByProductId(data.getId()));
+        }
     }
 
     @Override

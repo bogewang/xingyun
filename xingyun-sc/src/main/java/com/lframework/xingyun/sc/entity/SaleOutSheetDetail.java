@@ -43,6 +43,12 @@ public class SaleOutSheetDetail extends BaseEntity implements BaseDto {
    */
   private BigDecimal orderNum;
 
+  /** 交易单位ID及快照；orderNum 始终为主单位数量。 */
+  private String unitId;
+  private String unitName;
+  private BigDecimal conversionRate;
+  private BigDecimal businessNum;
+
   /**
    * 原价
    */

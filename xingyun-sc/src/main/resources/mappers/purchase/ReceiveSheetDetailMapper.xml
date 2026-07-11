@@ -49,7 +49,7 @@
 
     <select id="getLatestCostPriceList" resultMap="QueryReceiveSheetDetailDto">
         SELECT d.product_id,
-               d.tax_price,
+               d.tax_price / NULLIF(COALESCE(d.conversion_rate, 1), 0) AS tax_price,
                s.supplier_id
         FROM tbl_receive_sheet_detail d
                  INNER JOIN tbl_receive_sheet s ON d.sheet_id = s.id

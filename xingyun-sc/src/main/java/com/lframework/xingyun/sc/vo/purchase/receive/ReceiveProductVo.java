@@ -45,6 +45,9 @@ public class ReceiveProductVo implements BaseVo, Serializable {
   @ApiModelProperty("商品单位")
   private String unit;
 
+  @ApiModelProperty("商品单位ID")
+  private String unitId;
+
   /**
    * 采购价
    */

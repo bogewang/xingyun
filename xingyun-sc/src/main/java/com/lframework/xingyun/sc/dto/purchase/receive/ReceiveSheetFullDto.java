@@ -155,6 +155,10 @@ public class ReceiveSheetFullDto implements BaseDto, Serializable {
      * 收货数量
      */
     private BigDecimal orderNum;
+    private String unitId;
+    private String unitName;
+    private BigDecimal conversionRate;
+    private BigDecimal businessNum;
 
     /**
      * 采购价

@@ -9,6 +9,7 @@ import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.basedata.entity.StoreCenter;
+import com.lframework.xingyun.basedata.entity.ProductUnit;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.sc.bo.paytype.OrderPayTypeBo;
@@ -25,6 +26,7 @@ import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
 import io.swagger.annotations.ApiModelProperty;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -307,7 +309,16 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
      * 单位
      */
     @ApiModelProperty("单位")
-    private String unit;
+  private String unit;
+
+  @ApiModelProperty("单位ID")
+  private String unitId;
+
+  @ApiModelProperty("单位换算率")
+  private BigDecimal conversionRate;
+
+  @ApiModelProperty("可选交易单位")
+  private List<ProductUnit> units;
 
     /**
      * 规格
@@ -416,7 +427,7 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
     @Override
     protected void afterInit(ReceiveSheetFullDto.OrderDetailDto dto) {
 
-      this.receiveNum = dto.getOrderNum();
+      this.receiveNum = dto.getBusinessNum();
       this.purchasePrice = dto.getTaxPrice();
 
       PurchaseOrderService purchaseOrderService = ApplicationUtil.getBean(
@@ -427,7 +438,20 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
       this.productName = product.getName();
       this.skuCode = product.getSkuCode();
       this.externalCode = product.getExternalCode();
-      this.unit = product.getUnit();
+      ProductUnit baseUnit = product.getUnits() == null ? null : product.getUnits().stream()
+          .filter(item -> Boolean.TRUE.equals(item.getBaseUnit())).findFirst().orElse(null);
+      ProductUnit selectedUnit = product.getUnits() == null ? null : product.getUnits().stream()
+          .filter(item -> dto.getUnitId() != null && dto.getUnitId().equals(item.getId())).findFirst()
+          .orElse(baseUnit);
+      BigDecimal unitRate = dto.getConversionRate() == null ? BigDecimal.ONE : dto.getConversionRate();
+      this.unitId = selectedUnit == null ? null : selectedUnit.getId();
+      this.unit = StringUtil.isBlank(dto.getUnitName()) ? (selectedUnit == null ? null : selectedUnit.getUnitName()) : dto.getUnitName();
+      if (selectedUnit != null && !StringUtil.equals(dto.getUnitId(), selectedUnit.getId())) {
+        this.unit = selectedUnit.getUnitName();
+        unitRate = selectedUnit.getConversionRate();
+      }
+      this.conversionRate = unitRate;
+      this.units = product.getUnits();
       this.spec = product.getSpec();
       this.categoryName = product.getCategoryName();
       this.brandName = product.getBrandName();
@@ -451,7 +475,7 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
       this.taxCostPrice =
           productStock == null ? BigDecimal.ZERO
               : NumberUtil.getNumber(NumberUtil.getDefaultValue(productStock.getTaxPrice()), 6);
-      this.stockNum = productStock == null ? BigDecimal.ZERO : productStock.getStockNum();
+      this.stockNum = productStock == null ? BigDecimal.ZERO : productStock.getStockNum().divide(unitRate, 6, RoundingMode.HALF_UP);
     }
   }
 }

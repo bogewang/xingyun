@@ -4,7 +4,10 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.web.core.annotations.convert.EnumConvert;
 import com.lframework.starter.web.core.bo.BaseBo;
+import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.basedata.entity.Product;
+import com.lframework.xingyun.basedata.entity.Unit;
+import com.lframework.xingyun.basedata.service.UnitService;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -147,5 +150,11 @@ public class QueryProductBo extends BaseBo<Product> {
     public QueryProductBo(Product dto) {
 
         super(dto);
+    }
+
+    @Override
+    protected void afterInit(Product dto) {
+        Unit unit = ApplicationUtil.getBean(UnitService.class).getById(dto.getUnit());
+        this.unit = unit == null ? dto.getUnit() : unit.getName();
     }
 }

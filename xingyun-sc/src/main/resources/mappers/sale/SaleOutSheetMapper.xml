@@ -59,6 +59,10 @@
             <result column="detail_main_product_id" property="mainProductId"/>
             <result column="detail_product_id" property="productId"/>
             <result column="detail_order_num" property="orderNum"/>
+            <result column="detail_unit_id" property="unitId"/>
+            <result column="detail_unit_name" property="unitName"/>
+            <result column="detail_conversion_rate" property="conversionRate"/>
+            <result column="detail_business_num" property="businessNum"/>
             <result column="detail_ori_price" property="oriPrice"/>
             <result column="detail_tax_price" property="taxPrice"/>
             <result column="detail_discount_rate" property="discountRate"/>
@@ -156,6 +160,10 @@
             b.main_product_id AS detail_main_product_id,
             d.product_id AS detail_product_id,
             d.order_num AS detail_order_num,
+            d.unit_id AS detail_unit_id,
+            d.unit_name AS detail_unit_name,
+            d.conversion_rate AS detail_conversion_rate,
+            d.business_num AS detail_business_num,
             d.ori_price AS detail_ori_price,
             d.tax_price AS detail_tax_price,
             d.discount_rate AS detail_discount_rate,
@@ -194,13 +202,13 @@
             g.sku_code,
             g.external_code,
             g.spec,
-            g.unit,
+            d.unit_name AS unit,
             c.name AS category_name,
             b.name AS brand_name,
-            d.order_num,
+            d.business_num AS order_num,
             d.tax_price,
             d.tax_amount,
-            d.cost_price,
+            d.cost_price * COALESCE(d.conversion_rate, 1) AS cost_price,
             d.total_profit,
             d.is_gift,
             d.description,
@@ -216,6 +224,7 @@
         LEFT JOIN tbl_sale_order AS o ON o.id = s.sale_order_id
         LEFT JOIN base_data_customer AS cu ON cu.id = s.customer_id
         LEFT JOIN base_data_product AS g ON g.id = d.product_id
+        LEFT JOIN base_data_unit AS u ON u.id = g.unit
         LEFT JOIN base_data_product_category AS c ON c.id = g.category_id
         LEFT JOIN base_data_product_brand AS b ON b.id = g.brand_id
         LEFT JOIN sys_user AS au ON au.id = s.approve_by
@@ -608,7 +617,7 @@
             g.code AS productCode,
             g.name AS productName,
             g.spec,
-            g.unit,
+            COALESCE(u.name, g.unit) AS unit,
             c.name as productCategory,
             IFNULL(SUM(IFNULL(d.order_num, 0)), 0) AS saleNum,
             CASE
@@ -626,6 +635,7 @@
         INNER JOIN tbl_sale_out_sheet_detail AS d ON d.sheet_id = s.id
         LEFT JOIN tbl_sale_order AS o ON o.id = s.sale_order_id
         LEFT JOIN base_data_product AS g ON g.id = d.product_id
+        LEFT JOIN base_data_unit AS u ON u.id = g.unit
         LEFT JOIN base_data_product_category as c on c.id = g.category_id
         <where>
             <if test="vo != null">
@@ -696,7 +706,7 @@
                 </if>
             </if>
         </where>
-        GROUP BY d.product_id, g.code, g.name, g.spec, g.unit
+        GROUP BY d.product_id, g.code, g.name, g.spec, g.unit, u.name
         ORDER BY
             CASE
                 WHEN IFNULL(SUM(IFNULL(d.tax_amount, 0)), 0) = 0 THEN 0

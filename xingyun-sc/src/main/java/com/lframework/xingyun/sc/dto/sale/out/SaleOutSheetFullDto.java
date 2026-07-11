@@ -170,6 +170,10 @@ public class SaleOutSheetFullDto implements BaseDto, Serializable {
      * 出库数量
      */
     private BigDecimal orderNum;
+    private String unitId;
+    private String unitName;
+    private BigDecimal conversionRate;
+    private BigDecimal businessNum;
 
     /**
      * 原价
@@ -210,11 +214,6 @@ public class SaleOutSheetFullDto implements BaseDto, Serializable {
      * 结算状态
      */
     private SettleStatus settleStatus;
-
-    /**
-     * 销售订单明细ID
-     */
-    private String saleOrderDetailId;
 
     /**
      * 总金额

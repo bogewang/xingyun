@@ -29,6 +29,7 @@ import com.lframework.xingyun.basedata.service.customer.CustomerService;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
+import com.lframework.xingyun.basedata.service.product.ProductUnitService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.core.utils.SplitNumberUtil;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
@@ -95,6 +96,9 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
 
   @Autowired
   private ProductService productService;
+
+  @Autowired
+  private ProductUnitService productUnitService;
 
   @Autowired
   private SaleConfigService saleConfigService;
@@ -467,6 +471,7 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
     PageHelperUtil.startPage(pageIndex, pageSize);
 
     List<SaleProductDto> datas = getBaseMapper().querySaleByCondition(scId, condition, isReturn);
+    fillProductUnits(datas);
     PageResult<SaleProductDto> pageResult = PageResultUtil.convert(new PageInfo<>(datas));
 
     return pageResult;
@@ -482,6 +487,7 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
     PageHelperUtil.startPage(pageIndex, pageSize);
 
     List<SaleProductDto> datas = getBaseMapper().querySaleList(vo);
+    fillProductUnits(datas);
     PageResult<SaleProductDto> pageResult = PageResultUtil.convert(new PageInfo<>(datas));
 
     return pageResult;
@@ -491,8 +497,15 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
   public SaleProductDto getSaleById(String id) {
 
     SaleProductDto data = getBaseMapper().getSaleById(id);
+    if (data != null) {
+      data.setUnits(productUnitService.getByProductId(data.getId()));
+    }
 
     return data;
+  }
+
+  private void fillProductUnits(List<SaleProductDto> datas) {
+    datas.forEach(data -> data.setUnits(productUnitService.getByProductId(data.getId())));
   }
 
   private void create(SaleOrder order, CreateSaleOrderVo vo) {

@@ -1,8 +1,10 @@
 package com.lframework.xingyun.sc.dto.purchase;
 
 import com.lframework.starter.web.core.dto.BaseDto;
+import com.lframework.xingyun.basedata.entity.ProductUnit;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.List;
 import lombok.Data;
 
 @Data
@@ -69,6 +71,9 @@ public class PurchaseProductDto implements BaseDto, Serializable {
    * 单位
    */
   private String unit;
+
+  /** 可选交易单位（含主单位） */
+  private List<ProductUnit> units;
 
   /**
    * 采购价

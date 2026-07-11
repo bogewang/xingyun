@@ -32,6 +32,7 @@ import com.lframework.xingyun.basedata.service.customer.CustomerService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
+import com.lframework.xingyun.basedata.service.product.ProductUnitService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
 import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.basedata.vo.customer.QueryCustomerVo;
@@ -113,6 +114,9 @@ public class SaleOutSheetServiceImpl extends
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private ProductUnitService productUnitService;
 
     @Autowired
     private ProductLatestPriceCacheService productLatestPriceCacheService;
@@ -1208,15 +1212,18 @@ public class SaleOutSheetServiceImpl extends
         sheet.setOrderDate(vo.getOrderDate());
 
         BigDecimal purchaseNum = BigDecimal.ZERO;
+        BigDecimal businessTotalNum = BigDecimal.ZERO;
         BigDecimal giftNum = BigDecimal.ZERO;
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (SaleOutProductVo productVo : vo.getProducts()) {
-            purchaseNum = NumberUtil.add(purchaseNum, productVo.getOrderNum());
-
             Product product = productService.findById(productVo.getProductId());
             if (product == null) {
                 throw new InputErrorException("第" + productVo.getSeq() + "行商品不存在！");
             }
+            ProductUnit unit = resolveUnit(product, productVo.getUnitId(), productVo.getUnit());
+            BigDecimal baseNum = NumberUtil.mul(productVo.getOrderNum(), unit.getConversionRate());
+            purchaseNum = NumberUtil.add(purchaseNum, baseNum);
+            businessTotalNum = NumberUtil.add(businessTotalNum, productVo.getOrderNum());
 
             BigDecimal price = productVo.getTaxPrice();
             if (price == null) {
@@ -1231,7 +1238,11 @@ public class SaleOutSheetServiceImpl extends
             detail.setSheetId(sheet.getId());
 
             detail.setProductId(productVo.getProductId());
-            detail.setOrderNum(productVo.getOrderNum());
+            detail.setOrderNum(baseNum);
+            detail.setUnitId(unit.getId());
+            detail.setUnitName(unit.getUnitName());
+            detail.setConversionRate(unit.getConversionRate());
+            detail.setBusinessNum(productVo.getOrderNum());
             detail.setOriPrice(productVo.getOriPrice());
             detail.setTaxPrice(productVo.getTaxPrice());
             detail.setDiscountRate(productVo.getDiscountRate());
@@ -1242,13 +1253,14 @@ public class SaleOutSheetServiceImpl extends
             detail.setActualDate(productVo.getActualDate());
             detail.setSettleStatus(this.getInitSettleStatus(customer));
             detail.setTaxAmount(
-                    NumberUtil.getNumber(NumberUtil.mul(detail.getTaxPrice(), detail.getOrderNum()), 2));
+                    NumberUtil.getNumber(NumberUtil.mul(detail.getTaxPrice(), detail.getBusinessNum()), 2));
             boolean hasInputCost = productVo.getCostPrice() != null;
             detail.setManualInputCost(hasInputCost);
-            detail.setCostPrice(productVo.getCostPrice());
+            detail.setCostPrice(hasInputCost ? productVo.getCostPrice().divide(unit.getConversionRate(), 6,
+                    RoundingMode.HALF_UP) : null);
             if (Boolean.TRUE.equals(detail.getManualInputCost())) {
                 BigDecimal detailCostAmount = NumberUtil.getNumber(
-                        NumberUtil.mul(productVo.getCostPrice(), detail.getOrderNum()), 6);
+                        NumberUtil.mul(detail.getCostPrice(), detail.getOrderNum()), 6);
                 detail.setTotalProfit(
                         NumberUtil.getNumber(NumberUtil.sub(detail.getTaxAmount(), detailCostAmount), 6));
             } else {
@@ -1257,10 +1269,11 @@ public class SaleOutSheetServiceImpl extends
 
             saleOutSheetDetailService.save(detail);
             updateProductPrice(product, detail);
-            productLatestPriceCacheService.updateLatestPrice(product.getId(), detail.getTaxPrice(),
+            productLatestPriceCacheService.updateLatestPrice(product.getId(),
+                    toBasePrice(detail.getTaxPrice(), detail.getConversionRate()),
                     null);
         }
-        sheet.setTotalNum(purchaseNum);
+        sheet.setTotalNum(businessTotalNum);
         sheet.setTotalGiftNum(giftNum);
         sheet.setTotalAmount(totalAmount);
         sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), totalAmount));
@@ -1269,6 +1282,21 @@ public class SaleOutSheetServiceImpl extends
         sheet.setDescription(
                 StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(customer));
+    }
+
+    private ProductUnit resolveUnit(Product product, String unitId, String unitName) {
+        ProductUnit unit = StringUtil.isNotBlank(unitId)
+                ? productUnitService.getAvailableById(product.getId(), unitId) : null;
+        if (unit == null) {
+            unit = StringUtil.isBlank(unitName)
+                    ? productUnitService.getAvailableByProductId(product.getId()).stream()
+                    .filter(item -> Boolean.TRUE.equals(item.getBaseUnit())).findFirst().orElse(null)
+                    : productUnitService.getAvailableByUnitName(product.getId(), unitName);
+        }
+        if (unit == null) {
+            throw new InputErrorException("商品单位不存在或已停用！");
+        }
+        return unit;
     }
 
     private void subStock(SaleOutSheet sheet, List<SaleOutSheetDetail> details) {
@@ -1413,8 +1441,14 @@ public class SaleOutSheetServiceImpl extends
 
         boolean override = BooleanUtil.toBoolean(list.get(0).getPmValue());
         if (override) {
-            productService.updatePrice(product.getId(), detail.getTaxPrice(), null);
+            productService.updatePrice(product.getId(),
+                    toBasePrice(detail.getTaxPrice(), detail.getConversionRate()), null);
         }
+    }
+
+    private BigDecimal toBasePrice(BigDecimal price, BigDecimal conversionRate) {
+        BigDecimal rate = conversionRate == null ? BigDecimal.ONE : conversionRate;
+        return price.divide(rate, 6, RoundingMode.HALF_UP);
     }
 
     /**
@@ -1623,8 +1657,13 @@ public class SaleOutSheetServiceImpl extends
                 .distinct()
                 .collect(Collectors.toList());
         List<Product> products = productService.selectByProductName(productNames);
-        Map<String, List<Product>> nameUnitMap = products.stream()
-                .collect(Collectors.groupingBy(item -> buildProductImportKey(item.getName(), item.getUnit())));
+        Map<String, List<Product>> nameUnitMap = new HashMap<>();
+        for (Product product : products) {
+            productUnitService.getAvailableByProductId(product.getId()).stream()
+                    .forEach(unit -> nameUnitMap.computeIfAbsent(
+                            buildProductImportKey(product.getName(), unit.getUnitName()), key -> new ArrayList<>())
+                            .add(product));
+        }
 
         List<String> errors = Lists.newArrayList();
         for (int i = 0; i < list.size(); i++) {
@@ -1649,14 +1688,21 @@ public class SaleOutSheetServiceImpl extends
 
             Product product = matchImportProduct(data, nameUnitMap);
             if (product != null) {
+                ProductUnit unit = productUnitService.getAvailableByUnitName(product.getId(),
+                        StringUtils.trim(data.getUnit()));
+                if (unit == null) {
+                    continue;
+                }
                 data.setProductCode(product.getCode());
                 data.setProductId(product.getId());
+                data.setUnitId(unit.getId());
                 data.setSpec(product.getSpec());
-                data.setUnit(product.getUnit());
-                data.setOriPrice(product.getSalePrice());
+                data.setUnit(unit.getUnitName());
+                data.setOriPrice(product.getSalePrice() == null ? BigDecimal.ZERO
+                        : NumberUtil.mul(product.getSalePrice(), unit.getConversionRate()));
                 // 导入时，如果指定销售价，则以销售价为准
                 if (data.getTaxPrice() == null) {
-                    data.setTaxPrice(getDefaultSalePrice(product));
+                    data.setTaxPrice(NumberUtil.mul(getDefaultSalePrice(product), unit.getConversionRate()));
                 }
             }
         }

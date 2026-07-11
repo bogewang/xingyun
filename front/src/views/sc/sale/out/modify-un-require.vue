@@ -125,7 +125,12 @@
                       </template>
                     </vxe-column>
                     <vxe-column field="spec" title="规格" width="80" />
-                    <vxe-column field="unit" title="单位" width="80" />
+                    <vxe-column
+                      field="unit"
+                      title="单位"
+                      width="100"
+                      :slots="{ default: 'unit_default' }"
+                    />
                     <vxe-column field="stockNum" title="库存数量" width="140" align="right" />
                     <vxe-column
                       field="latestSalePrice"
@@ -133,12 +138,7 @@
                       width="140"
                       align="right"
                     />
-                    <vxe-column
-                      field="salePrice"
-                      title="销售价（元）"
-                      width="140"
-                      align="right"
-                    />
+                    <vxe-column field="salePrice" title="销售价（元）" width="140" align="right" />
                   </vxe-table>
                   <div
                     class="inline-product-select-add"
@@ -158,6 +158,20 @@
             >
           </template>
 
+          <!-- 单位列自定义内容 -->
+          <template #unit_default="{ row }">
+            <a-select
+              v-model:value="row.unitId"
+              size="small"
+              style="width: 90px"
+              @change="(value) => selectUnit(row, value)"
+            >
+              <a-select-option v-for="item in row.units || []" :key="item.id" :value="item.id">{{
+                item.unitName
+              }}</a-select-option>
+            </a-select>
+          </template>
+
           <!-- 价格 列自定义内容 -->
           <template #taxPrice_default="{ row, rowIndex }">
             <a-input
@@ -165,8 +179,7 @@
               v-model:value="row.taxPrice"
               class="number-input"
               :style="{
-                color:
-                  isNegativeProfit(row) && !hasWarningPrice(row) ? '#f5222d' : undefined,
+                color: isNegativeProfit(row) && !hasWarningPrice(row) ? '#f5222d' : undefined,
               }"
               @input="(e) => taxPriceInput(row, e.target.value)"
             />
@@ -209,8 +222,7 @@
           <template #profitRate_default="{ row }">
             <span
               :style="{
-                color:
-                  isNegativeProfit(row) && !hasWarningPrice(row) ? '#f5222d' : undefined,
+                color: isNegativeProfit(row) && !hasWarningPrice(row) ? '#f5222d' : undefined,
               }"
             >
               {{ calcProfitRate(row) }}
@@ -366,7 +378,7 @@
           row.costPrice !== undefined &&
           row.costPrice !== '' &&
           (row.manualInputCost === true || row.costPrice >= 0),
-        canEditCostPrice: (row) => false,
+        canEditCostPrice: () => false,
         /*row &&
           (row.manualInputCost === true ||
             row.costPrice === null ||
@@ -416,7 +428,7 @@
             slots: { default: 'productName_default' },
           },
           { field: 'spec', title: '规格', width: 80 },
-          { field: 'unit', title: '单位', width: 80 },
+          { field: 'unit', title: '单位', width: 100, slots: { default: 'unit_default' } },
           { field: 'categoryName', title: '商品分类', width: 80 },
           { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 140 },
           {
@@ -786,6 +798,25 @@
       taxPriceInput(_row, _value) {
         this.calcSum();
       },
+      selectUnit(row, unitId) {
+        const unit = (row.units || []).find((item) => item.id === unitId);
+        if (!unit) return;
+        const rate = Number(unit.conversionRate) || 1;
+        const oldRate = Number(row.conversionRate) || 1;
+        const baseStock = Number(row.baseStockNum ?? row.stockNum) * oldRate;
+        // baseSalePrice 已是主单位价，仅首次切换时需要从 taxPrice 折算
+        const basePrice = row.baseSalePrice != null
+          ? row.baseSalePrice
+          : Number(row.taxPrice) / (oldRate || 1);
+        row.baseStockNum = baseStock;
+        row.baseSalePrice = basePrice;
+        row.conversionRate = rate;
+        row.unit = unit.unitName;
+        row.taxPrice = basePrice * rate;
+        row.oriPrice = row.taxPrice;
+        row.stockNum = baseStock / rate;
+        this.calcSum();
+      },
       paidAmountInput(value) {
         this.formData.paidAmount = value;
         this.paidAmountDirty = true;
@@ -1053,6 +1084,8 @@
             .map((t) => {
               const product = {
                 productId: t.productId,
+                unit: t.unit,
+                unitId: t.unitId,
                 oriPrice: t.oriPrice,
                 taxPrice: t.taxPrice,
                 orderNum: t.outNum,

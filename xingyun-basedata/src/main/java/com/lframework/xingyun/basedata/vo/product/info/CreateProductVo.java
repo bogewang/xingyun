@@ -79,6 +79,11 @@ public class CreateProductVo implements BaseVo, Serializable {
   @ApiModelProperty("单位")
   private String unit;
 
+  /** 包含主单位在内的全部可用单位；未传时按 unit 自动创建主单位。 */
+  @ApiModelProperty("商品多单位")
+  @Valid
+  private List<ProductUnitVo> units;
+
   /**
    * 进项税率（%）
    */
