@@ -7,7 +7,7 @@
     </a-space>
     <a-drawer
       title="导出中心"
-      :width="860"
+      :width="1080"
       :open="open"
       :destroyOnClose="true"
       @close="closeDrawer"

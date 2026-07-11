@@ -1,6 +1,10 @@
 <template>
   <div class="app-card-container sheet-editor-page">
-    <div class="sheet-editor-content" v-permission="['purchase:receive:modify']" v-loading="loading">
+    <div
+      class="sheet-editor-content"
+      v-permission="['purchase:receive:modify']"
+      v-loading="loading"
+    >
       <a-alert
         description="提示：使用回车键可以快速添加商品；使用Tab键可以快速跳转至下一个输入框。"
         type="info"
@@ -111,18 +115,8 @@
         <!-- 工具栏 -->
         <template #toolbar_buttons>
           <a-space>
-            <a-button
-              type="primary"
-              :icon="h(PlusOutlined)"
-              @click="addProduct"
-              >新增</a-button
-            >
-            <a-button
-              danger
-              :icon="h(DeleteOutlined)"
-              @click="delProduct"
-              >删除</a-button
-            >
+            <a-button type="primary" :icon="h(PlusOutlined)" @click="addProduct">新增</a-button>
+            <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
             <a-button :icon="h(PlusOutlined)" @click="openBatchAddProductDialog"
               >批量添加商品</a-button
             >
@@ -199,7 +193,12 @@
                   </vxe-column>
                   <vxe-column field="skuCode" title="商品SKU编号" width="120" />
                   <vxe-column field="spec" title="规格" width="80" />
-                  <vxe-column field="unit" title="单位" width="80" />
+                  <vxe-column
+                    field="unit"
+                    title="单位"
+                    width="100"
+                    :slots="{ default: 'unit_default' }"
+                  />
                   <vxe-column
                     field="purchasePrice"
                     title="参考采购价（元）"
@@ -233,6 +232,19 @@
         </template>
 
         <!-- 采购价 列自定义内容 -->
+        <template #unit_default="{ row }">
+          <a-select
+            v-model:value="row.unitId"
+            size="small"
+            style="width: 90px"
+            @change="(value) => selectUnit(row, value)"
+          >
+            <a-select-option v-for="item in row.units || []" :key="item.id" :value="item.id">{{
+              item.unitName
+            }}</a-select-option>
+          </a-select>
+        </template>
+
         <template #purchasePrice_default="{ row }">
           <span>{{ row.purchasePrice }}</span>
         </template>
@@ -304,7 +316,10 @@
         <order-time-line v-if="timelineVisible" :id="id" :expand-all="true" />
       </a-modal>
 
-      <div class="sheet-editor-actions" style="text-align: center; background-color: #ffffff; padding: 8px 0">
+      <div
+        class="sheet-editor-actions"
+        style="text-align: center; background-color: #ffffff; padding: 8px 0"
+      >
         <a-space>
           <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
           <a-button :loading="loading" @click="openTimeline">操作记录</a-button>
@@ -338,7 +353,6 @@
     StarTwoTone,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/purchase/receive';
-  import * as purchaseApi from '@/api/sc/purchase/order';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
     isEmpty,
@@ -371,7 +385,7 @@
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
-  import * as saleApi from "@/api/sc/sale/order";
+  import * as saleApi from '@/api/sc/sale/order';
 
   export default defineComponent({
     name: 'ModifyPurchaseReceiveSheetRequire',
@@ -444,7 +458,7 @@
           { field: 'skuCode', title: '商品SKU编号', width: 120 },
           { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
-          { field: 'unit', title: '单位', width: 80 },
+          { field: 'unit', title: '单位', width: 100, slots: { default: 'unit_default' } },
           { field: 'categoryName', title: '商品分类', width: 120 },
           { field: 'brandName', title: '商品品牌', width: 120 },
           {
@@ -803,6 +817,22 @@
       purchasePriceInput(_row, _value) {
         this.calcSum();
       },
+      selectUnit(row, unitId) {
+        const unit = (row.units || []).find((item) => item.id === unitId);
+        if (!unit) return;
+        const rate = Number(unit.conversionRate) || 1;
+        const oldRate = Number(row.conversionRate) || 1;
+        const baseStock = Number(row.baseStockNum ?? row.stockNum) * oldRate;
+        const basePrice =
+          Number(row.basePurchasePrice ?? row.purchasePrice) / (Number(row.conversionRate) || 1);
+        row.baseStockNum = baseStock;
+        row.basePurchasePrice = basePrice;
+        row.conversionRate = rate;
+        row.unit = unit.unitName;
+        row.purchasePrice = basePrice * rate;
+        row.stockNum = baseStock / rate;
+        this.calcSum();
+      },
       receiveNumInput(_value) {
         this.calcSum();
       },
@@ -1007,6 +1037,8 @@
             .map((t) => {
               const product = {
                 productId: t.productId,
+                unit: t.unit,
+                unitId: t.unitId,
                 receiveNum: t.receiveNum,
                 description: t.description,
               };

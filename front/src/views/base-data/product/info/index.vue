@@ -127,7 +127,7 @@
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
   import { PRODUCT_TYPE } from '@/enums/biz/productType';
   import BatchHandler from '@/components/BatchHandler';
-  import { createError, createSuccess } from '@/hooks/web/msg';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
   import PageWrapper from '@/components/Page/src/PageWrapper.vue';
   import JFormItem from '@/components/JFormItem';
   import JBorder from '@/components/JBorder';
@@ -189,20 +189,20 @@
           { field: 'code', title: '编号', width: 120, sortable: true },
           { field: 'name', title: '名称', minWidth: 160, sortable: true },
           { field: 'alias', title: '别名', minWidth: 180 },
-          { field: 'defaultSupplierName', title: '默认供应商', minWidth: 160 },
-          { field: 'brandName', title: '品牌', minWidth: 120 },
-          { field: 'unit', title: '单位', width: 100 },
+          { field: 'categoryName', title: '分类', width: 120 },
           { field: 'spec', title: '规格', width: 120 },
+          { field: 'unit', title: '单位', width: 100 },
           { field: 'purchasePrice', title: '采购价', width: 120 },
           { field: 'latestPurchasePrice', title: '最新采购价', width: 120 },
           { field: 'salePrice', title: '销售价', width: 120 },
           { field: 'latestSalePrice', title: '最新售价', width: 120 },
-          { field: 'remark', title: '备注', minWidth: 180 },
-          { field: 'remark2', title: '备注二', minWidth: 180 },
-          { field: 'categoryName', title: '分类', width: 120 },
+          { field: 'remark', title: '备注', width: 180 },
+          { field: 'remark2', title: '备注二', width: 180 },
+          { field: 'defaultSupplierName', title: '默认供应商', minWidth: 160 },
+          { field: 'brandName', title: '品牌', minWidth: 120 },
           { field: 'createTime', title: '创建时间', width: 170, sortable: true },
           { field: 'updateTime', title: '修改时间', width: 170, sortable: true },
-          { title: '操作', width: 120, fixed: 'right', slots: { default: 'action_default' } },
+          { title: '操作', minWidth: 250, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -288,10 +288,28 @@
             },
           },
           {
+            permission: ['base-data:product:info:add'],
+            label: '新增',
+            onClick: () => this.openChildPage('/product/info/add'),
+          },
+          {
             permission: ['base-data:product:info:modify'],
             label: '修改',
             onClick: () => {
               this.openChildPage('/product/info/modify/' + row.id);
+            },
+          },
+          {
+            permission: ['base-data:product:info:delete'],
+            label: '删除',
+            danger: true,
+            onClick: () => {
+              createConfirm(`确认删除商品“${row.name}”？`).then(() => {
+                api.deleteById(row.id).then(() => {
+                  createSuccess('删除成功！');
+                  this.search();
+                });
+              });
             },
           },
         ];

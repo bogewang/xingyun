@@ -79,8 +79,8 @@
           { field: 'name', title: '任务名称', minWidth: 120 },
           { field: 'totalCount', title: '总条数', width: 60 },
           { field: 'fileSize', title: '文件大小', width: 80 },
-          { field: 'createTime', title: '创建时间', width: 140 },
-          { field: 'finishTime', title: '完成时间', width: 140 },
+          { field: 'createTime', title: '创建时间', width: 180 },
+          { field: 'finishTime', title: '完成时间', width: 180 },
           { title: '操作', width: 60, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置

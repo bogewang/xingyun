@@ -186,7 +186,12 @@
                   </vxe-column>
                   <vxe-column field="skuCode" title="商品SKU编号" width="120" />
                   <vxe-column field="spec" title="规格" width="80" />
-                  <vxe-column field="unit" title="单位" width="80" />
+                  <vxe-column
+                    field="unit"
+                    title="单位"
+                    width="100"
+                    :slots="{ default: 'unit_default' }"
+                  />
                   <vxe-column
                     field="salePrice"
                     title="参考销售价（元）"
@@ -217,6 +222,20 @@
             @click="enableProductEdit(rowIndex)"
             >{{ row.productName }}</span
           >
+        </template>
+
+        <!-- 单位列自定义内容 -->
+        <template #unit_default="{ row }">
+          <a-select
+            v-model:value="row.unitId"
+            size="small"
+            style="width: 90px"
+            @change="(value) => selectUnit(row, value)"
+          >
+            <a-select-option v-for="item in row.units || []" :key="item.id" :value="item.id">{{
+              item.unitName
+            }}</a-select-option>
+          </a-select>
         </template>
 
         <!-- 库存数量 列自定义内容 -->
@@ -314,7 +333,10 @@
       >
         <order-time-line v-if="timelineVisible" :id="id" :expand-all="true" />
       </a-modal>
-      <div class="sheet-editor-actions" style="text-align: center; background-color: #ffffff; padding: 8px 0">
+      <div
+        class="sheet-editor-actions"
+        style="text-align: center; background-color: #ffffff; padding: 8px 0"
+      >
         <a-space>
           <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
           <a-button :loading="loading" @click="openTimeline">操作记录</a-button>
@@ -456,7 +478,7 @@
           { field: 'skuCode', title: '商品SKU编号', width: 120 },
           { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
-          { field: 'unit', title: '单位', width: 80 },
+          { field: 'unit', title: '单位', width: 100, slots: { default: 'unit_default' } },
           { field: 'categoryName', title: '商品分类', width: 120 },
           { field: 'brandName', title: '商品品牌', width: 120 },
           { field: 'mainProductName', title: '所属组合商品', width: 120 },
@@ -813,6 +835,23 @@
       taxPriceInput(_row, _value) {
         this.calcSum();
       },
+      selectUnit(row, unitId) {
+        const unit = (row.units || []).find((item) => item.id === unitId);
+        if (!unit) return;
+        const rate = Number(unit.conversionRate) || 1;
+        const oldRate = Number(row.conversionRate) || 1;
+        const baseStock = Number(row.baseStockNum ?? row.stockNum) * oldRate;
+        const basePrice =
+          Number(row.baseSalePrice ?? row.taxPrice) / (Number(row.conversionRate) || 1);
+        row.baseStockNum = baseStock;
+        row.baseSalePrice = basePrice;
+        row.conversionRate = rate;
+        row.unit = unit.unitName;
+        row.taxPrice = basePrice * rate;
+        row.oriPrice = row.taxPrice;
+        row.stockNum = baseStock / rate;
+        this.calcSum();
+      },
       paidAmountInput(value) {
         this.formData.paidAmount = value;
         this.paidAmountDirty = true;
@@ -1075,6 +1114,8 @@
             .map((t) => {
               const product = {
                 productId: t.productId,
+                unit: t.unit,
+                unitId: t.unitId,
                 orderNum: t.outNum,
                 description: t.description,
                 oriPrice: t.oriPrice,

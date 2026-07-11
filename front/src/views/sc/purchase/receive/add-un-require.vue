@@ -159,6 +159,20 @@
           </template>
 
           <!-- 采购价 列自定义内容 -->
+          <template #unit_default="{ row }">
+            <a-select
+              v-model:value="row.unitId"
+              size="small"
+              style="width: 100%"
+              @change="(value) => selectUnit(row, value)"
+            >
+              <a-select-option v-for="item in row.units || []" :key="item.id" :value="item.id">
+                {{ item.unitName }}
+              </a-select-option>
+            </a-select>
+          </template>
+
+          <!-- 采购价 列自定义内容 -->
           <template #purchasePrice_default="{ row, rowIndex }">
             <a-input
               :ref="'purchasePriceInputRef' + rowIndex"
@@ -386,7 +400,7 @@
             slots: { default: 'productName_default' },
           },
           { field: 'spec', title: '规格', width: 80 },
-          { field: 'unit', title: '单位', width: 80 },
+          { field: 'unit', title: '单位', width: 90, slots: { default: 'unit_default' } },
           { field: 'stockNum', title: '库存数量', align: 'right', width: 140 },
           {
             field: 'receiveNum',
@@ -577,9 +591,13 @@
         const purchasePrice = !isEmpty(product.latestPurchasePrice)
           ? product.latestPurchasePrice
           : product.purchasePrice;
+        const baseUnit = product.units?.find((item) => item.baseUnit);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           purchasePrice,
+          basePurchasePrice: purchasePrice,
+          unitId: baseUnit?.id || '',
+          unit: baseUnit?.unitName || product.unit || '',
           editingProduct: false,
           productQuery: '',
           importUnmatched: false,
@@ -588,6 +606,15 @@
 
         this.purchasePriceInput(this.tableData[index], this.tableData[index].purchasePrice);
         this.focusRowInput('receiveNumInputRef', index);
+      },
+      selectUnit(row, unitId) {
+        const unit = (row.units || []).find((item) => item.id === unitId);
+        if (unit) {
+          row.unitId = unit.id;
+          row.unit = unit.unitName;
+          row.purchasePrice = mul(row.basePurchasePrice || 0, unit.conversionRate);
+          this.calcSum();
+        }
       },
       handleProductSelectKeydown(event, row, rowIndex) {
         handleInlineProductSelectKeydown(event, row, rowIndex, this.handleSelectProduct, () =>
@@ -890,6 +917,7 @@
             .map((t) => {
               const product = {
                 productId: t.productId,
+                unitId: t.unitId,
                 purchasePrice: t.purchasePrice,
                 receiveNum: t.receiveNum,
                 description: t.description,

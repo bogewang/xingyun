@@ -135,12 +135,7 @@
                       width="140"
                       align="right"
                     />
-                    <vxe-column
-                      field="salePrice"
-                      title="销售价（元）"
-                      width="140"
-                      align="right"
-                    />
+                    <vxe-column field="salePrice" title="销售价（元）" width="140" align="right" />
                   </vxe-table>
                   <div
                     class="inline-product-select-add"
@@ -158,6 +153,20 @@
               @click="enableProductEdit(rowIndex)"
               >{{ row.productName }}</span
             >
+          </template>
+
+          <!-- 价格 列自定义内容 -->
+          <template #unit_default="{ row }">
+            <a-select
+              v-model:value="row.unitId"
+              size="small"
+              style="width: 100%"
+              @change="(value) => selectUnit(row, value)"
+            >
+              <a-select-option v-for="item in row.units || []" :key="item.id" :value="item.id">
+                {{ item.unitName }}
+              </a-select-option>
+            </a-select>
           </template>
 
           <!-- 价格 列自定义内容 -->
@@ -288,6 +297,7 @@
   import { focusTableInput } from '@/utils/vxeGrid';
   import {
     add,
+    div,
     formatDate,
     getNumber,
     isEmpty,
@@ -390,7 +400,7 @@
             slots: { default: 'productName_default' },
           },
           { field: 'spec', title: '规格', width: 80 },
-          { field: 'unit', title: '单位', width: 80 },
+          { field: 'unit', title: '单位', width: 90, slots: { default: 'unit_default' } },
           {
             field: 'stockNum',
             title: '库存数量',
@@ -489,7 +499,6 @@
       },
       async loadSaleOutPriceUseUniquePrice() {
         const tenantId = (await useUserStoreWithOut().getTenantRequire())?.tenantId;
-        debugger;
         if (!tenantId) {
           this.saleOutPriceUseUniquePrice = false;
           return;
@@ -608,10 +617,15 @@
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
+        const baseUnit = product.units?.find((item) => item.baseUnit);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           oriPrice: product.salePrice,
           taxPrice: this.getSelectedProductPrice(product),
+          baseSalePrice: this.getSelectedProductPrice(product),
+          baseStockNum: product.stockNum,
+          unitId: baseUnit?.id || '',
+          unit: baseUnit?.unitName || product.unit || '',
           editingProduct: false,
           productQuery: '',
           importUnmatched: false,
@@ -620,6 +634,20 @@
 
         this.taxPriceInput(this.tableData[index], this.tableData[index].taxPrice);
         this.focusRowInput('outNumInputRef', index);
+      },
+      selectUnit(row, unitId) {
+        const unit = (row.units || []).find((item) => item.id === unitId);
+        if (unit) {
+          if (row.baseStockNum === undefined || row.baseStockNum === null) {
+            row.baseStockNum = row.stockNum;
+          }
+          row.unitId = unit.id;
+          row.unit = unit.unitName;
+          row.taxPrice = mul(row.baseSalePrice || 0, unit.conversionRate);
+          row.oriPrice = row.taxPrice;
+          row.stockNum = getNumber(div(row.baseStockNum || 0, unit.conversionRate || 1), 6);
+          this.calcSum();
+        }
       },
       handleProductSelectKeydown(event, row, rowIndex) {
         handleInlineProductSelectKeydown(event, row, rowIndex, this.handleSelectProduct, () =>
@@ -901,6 +929,7 @@
             .map((t) => {
               const product = {
                 productId: t.productId,
+                unitId: t.unitId,
                 oriPrice: t.oriPrice,
                 taxPrice: t.taxPrice,
                 orderNum: t.outNum,
@@ -992,7 +1021,12 @@
       checkStockNum(row) {
         const checkArr = this.tableData
           .filter((item) => item.productId === row.productId)
-          .map((item) => item.outNum);
+          .map((item) =>
+            mul(
+              item.outNum || 0,
+              (item.units || []).find((unit) => unit.id === item.unitId)?.conversionRate || 1,
+            ),
+          );
         if (isEmpty(checkArr)) {
           checkArr.push(0);
         }
@@ -1001,7 +1035,7 @@
           return add(total, outNum);
         }, 0);
 
-        return totalOutNum <= row.stockNum;
+        return totalOutNum <= (row.baseStockNum ?? row.stockNum);
       },
     },
   });
