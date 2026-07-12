@@ -50,12 +50,12 @@ WHERE d.unit_id IS NULL OR d.unit_name IS NULL OR d.conversion_rate IS NULL OR d
 
 -- 表头数量按交易单位数量汇总；库存仍以明细 order_num 主单位数量核算。
 UPDATE `tbl_receive_sheet` s
-    INNER JOIN (SELECT sheet_id, SUM(business_num) total_num FROM `tbl_receive_sheet_detail` GROUP BY sheet_id) d
+    INNER JOIN (SELECT sheet_id, COALESCE(SUM(business_num), 0) total_num FROM `tbl_receive_sheet_detail` GROUP BY sheet_id) d
         ON d.sheet_id = s.id
 SET s.total_num = d.total_num;
 
 UPDATE `tbl_sale_out_sheet` s
-    INNER JOIN (SELECT sheet_id, SUM(business_num) total_num FROM `tbl_sale_out_sheet_detail` GROUP BY sheet_id) d
+    INNER JOIN (SELECT sheet_id, COALESCE(SUM(business_num), 0) total_num FROM `tbl_sale_out_sheet_detail` GROUP BY sheet_id) d
         ON d.sheet_id = s.id
 SET s.total_num = d.total_num;
 
