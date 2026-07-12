@@ -26,65 +26,11 @@
                   <j-form-item label="订单日期">
                     {{ formData.orderDate }}
                   </j-form-item>
-                  <j-form-item label="采购订单">
-                    <div v-if="!isEmpty(formData.purchaseOrderCode)">
-                      <a
-                        v-permission="['purchase:order:query']"
-                        @click="(e) => $refs.viewPurchaseOrderDetailDialog.openDialog()"
-                        >{{ formData.purchaseOrderCode }}</a
-                      >
-                      <span v-no-permission="['purchase:order:query']">{{
-                        formData.purchaseOrderCode
-                      }}</span>
-                    </div>
-                  </j-form-item>
-                  <j-form-item label="状态">
-                    <span
-                      v-if="RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status)"
-                      style="color: #52c41a"
-                      >{{ RECEIVE_SHEET_STATUS.getDesc(formData.status) }}</span
-                    >
-                    <span
-                      v-else-if="RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-                      style="color: #f5222d"
-                      >{{ RECEIVE_SHEET_STATUS.getDesc(formData.status) }}</span
-                    >
-                    <span v-else style="color: #303133">{{
-                      RECEIVE_SHEET_STATUS.getDesc(formData.status)
-                    }}</span>
-                  </j-form-item>
-
                   <j-form-item label="操作人">
                     <span>{{ formData.createBy }}</span>
                   </j-form-item>
                   <j-form-item label="操作时间">
                     <span>{{ formData.createTime }}</span>
-                  </j-form-item>
-                  <j-form-item
-                    v-if="
-                      RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
-                      RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
-                    "
-                    label="审核人"
-                  >
-                    <span>{{ formData.approveBy }}</span>
-                  </j-form-item>
-                  <j-form-item
-                    v-if="
-                      RECEIVE_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
-                      RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
-                    "
-                    label="审核时间"
-                    :span="16"
-                  >
-                    <span>{{ formData.approveTime }}</span>
-                  </j-form-item>
-                  <j-form-item label="拒绝理由" :span="16" :content-nest="false">
-                    <a-input
-                      v-if="RECEIVE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-                      v-model:value="formData.refuseReason"
-                      readonly
-                    />
                   </j-form-item>
                 </j-form>
               </j-border>
@@ -123,7 +69,7 @@
                     <a-input v-model:value="formData.paidAmount" class="number-input" readonly />
                   </j-form-item>
                   <j-form-item label="备注" :span="24" :content-nest="false">
-                    <a-textarea v-model:value.trim="formData.description" maxlength="200" readonly />
+                    <a-input v-model:value.trim="formData.description" maxlength="200" readonly />
                   </j-form-item>
                 </j-form>
               </j-border>
@@ -202,16 +148,13 @@ export default defineComponent({
           { type: 'seq', width: 50 },
           { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 260 },
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          { field: 'externalCode', title: '商品简码', width: 120 },
-          { field: 'unit', title: '单位', width: 80 },
-          { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
+          { field: 'spec', title: '规格', width: 80 },
+          { field: 'unit', title: '单位', width: 80 },
           { field: 'purchasePrice', title: '采购价（元）', align: 'right', width: 120 },
           {
             field: 'orderNum',
-            title: '采购数量',
+            title: '数量',
             align: 'right',
             width: 100,
             formatter: ({ cellValue }) => {
@@ -219,23 +162,12 @@ export default defineComponent({
             },
           },
           {
-            field: 'remainNum',
-            title: '剩余收货数量',
-            align: 'right',
-            width: 120,
-            formatter: ({ cellValue }) => {
-              return isEmpty(cellValue) ? '-' : cellValue;
-            },
-          },
-          { field: 'receiveNum', title: '收货数量', align: 'right', width: 100 },
-          {
             field: 'taxAmount',
-            title: '含税金额',
+            title: '金额',
             align: 'right',
             width: 120,
             slots: { default: 'taxAmount_default' },
           },
-          { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           { field: 'description', title: '备注', width: 200 },
         ],
         tableData: [],
