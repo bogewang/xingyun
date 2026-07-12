@@ -34,7 +34,7 @@
 
 ### 前端项目源码
 
-前端项目源码：https://gitee.com/lframework/xingyun-front   <a href="https://gitee.com/lframework/xingyun-front" target="_blank">
+前端项目源码：https://gitee.com/lframework/xingyun-front   <a href="https://gitee.com/lframework/xingyun-frontend" target="_blank">
 点此进入</a>
 
 ### 后端开发的一些约定

@@ -59,7 +59,7 @@ Maven 多模块项目（根 `pom.xml` packaging=pom）。所有模块均扫描�
 
 ### 前端架构
 
-使用 pnpm workspaces + Turborepo 的 monorepo 结构。源码树位于 `front/src/`（主应用，不在当前为空的 `apps/portal-view` 下）：
+使用 pnpm workspaces + Turborepo 的 monorepo 结构。源码树位于 `frontend/src/`（主应用，不在当前为空的 `apps/portal-view` 下）：
 
 - `src/api/` — API 客户端模块，按领域划分（`base-data/`、`sc/`、`settle/`、`system/`、`sys/`、`chart/`、`development/`、`bpm/` 等）
 - `src/views/` — 页面组件，相同的领域分组
