@@ -43,11 +43,7 @@
           </a-space>
         </template>
         <template #action="{ row }">
-          <a @click="view(row)">查看</a>
-          <a-divider type="vertical" />
-          <a v-permission="['base-data:unit:modify']" @click="open(row)">修改</a>
-          <a-divider type="vertical" />
-          <a v-permission="['base-data:unit:delete']" @click="del(row)">删除</a>
+          <table-action outside :actions="createActions(row)" />
         </template>
       </vxe-grid>
     </page-wrapper>
@@ -164,6 +160,26 @@
         });
       }
 
+      function createActions(row: any) {
+        return [
+          {
+            label: '查看',
+            onClick: () => view(row),
+          },
+          {
+            permission: ['base-data:unit:modify'],
+            label: '修改',
+            onClick: () => open(row),
+          },
+          {
+            permission: ['base-data:unit:delete'],
+            danger: true,
+            label: '删除',
+            onClick: () => del(row),
+          },
+        ];
+      }
+
       onMounted(load);
 
       return {
@@ -186,6 +202,7 @@
         generateCode,
         save,
         del,
+        createActions,
         handleCommand,
       };
     },
