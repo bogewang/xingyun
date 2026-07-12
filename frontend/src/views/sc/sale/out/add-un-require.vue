@@ -1074,16 +1074,16 @@
     margin-top: auto;
   }
 
-  :deep(.sale-out-import-unmatched-row) {
-    background-color: #fff1f0;
+  :deep(.vxe-body--row.sale-out-import-unmatched-row) {
+    background-color: #fff1f0 !important;
   }
 
   :deep(.sale-out-import-unmatched-row td) {
     border-color: #ffa39e;
   }
 
-  :deep(.sheet-price-warning-row) {
-    background-color: #ffd8d6;
+  :deep(.vxe-body--row.sheet-price-warning-row) {
+    background-color: #ffd8d6 !important;
   }
 
   :deep(.sheet-price-warning-row td) {

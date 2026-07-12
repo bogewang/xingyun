@@ -1040,8 +1040,8 @@
     margin-top: auto;
   }
 
-  :deep(.sheet-price-warning-row) {
-    background-color: #ffd8d6;
+  :deep(.vxe-body--row.sheet-price-warning-row) {
+    background-color: #ffd8d6 !important;
   }
 
   :deep(.sheet-price-warning-row td) {

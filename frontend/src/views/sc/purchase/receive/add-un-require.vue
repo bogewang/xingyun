@@ -1056,16 +1056,17 @@
     margin-top: auto;
   }
 
-  :deep(.receive-import-unmatched-row) {
-    background-color: #fff1f0;
+  /* 覆盖 VXE 表格的斑马纹、当前行及悬停行背景色，确保预警状态始终可见。 */
+  :deep(.vxe-body--row.receive-import-unmatched-row) {
+    background-color: #fff1f0 !important;
   }
 
   :deep(.receive-import-unmatched-row td) {
     border-color: #ffa39e;
   }
 
-  :deep(.sheet-price-warning-row) {
-    background-color: #ffd8d6;
+  :deep(.vxe-body--row.sheet-price-warning-row) {
+    background-color: #ffd8d6 !important;
   }
 
   :deep(.sheet-price-warning-row td) {
