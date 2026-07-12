@@ -48,7 +48,7 @@ WHERE `id` IN ('base_data_unit', 'base_data_unit_add', 'base_data_unit_modify',
 INSERT INTO `sys_menu`
 (`id`, `code`, `name`, `title`, `icon`, `component_type`, `component`, `request_param`, `parent_id`, `sys_module_id`, `path`, `no_cache`, `display`, `hidden`, `permission`, `is_special`, `available`, `description`, `create_by`, `create_by_id`, `create_time`, `update_by`, `update_by_id`, `update_time`)
 VALUES
-('base_data_unit', 'BDU001', 'Unit', '单位管理', NULL, 0, '/base-data/unit/index', NULL, '2001', '4', '/base-data/unit', 0, 1, 0, 'base-data:unit:query', 1, 1, '', '系统管理员', '1', NOW(), '系统管理员', '1', NOW()),
+('base_data_unit', 'BDU001', 'Unit', '单位管理', NULL, 0, '/base-data/product/unit/index', NULL, '2001', '4', '/unit', 0, 1, 0, 'base-data:unit:query', 1, 1, '', '系统管理员', '1', NOW(), '系统管理员', '1', NOW()),
 ('base_data_unit_add', 'BDU001001', '', '新增单位', NULL, 0, '', NULL, 'base_data_unit', '4', '', 0, 2, 0, 'base-data:unit:add', 1, 1, '', '系统管理员', '1', NOW(), '系统管理员', '1', NOW()),
 ('base_data_unit_modify', 'BDU001002', '', '修改单位', NULL, 0, '', NULL, 'base_data_unit', '4', '', 0, 2, 0, 'base-data:unit:modify', 1, 1, '', '系统管理员', '1', NOW(), '系统管理员', '1', NOW()),
 ('base_data_unit_delete', 'BDU001003', '', '删除单位', NULL, 0, '', NULL, 'base_data_unit', '4', '', 0, 2, 0, 'base-data:unit:delete', 1, 1, '', '系统管理员', '1', NOW(), '系统管理员', '1', NOW()),
