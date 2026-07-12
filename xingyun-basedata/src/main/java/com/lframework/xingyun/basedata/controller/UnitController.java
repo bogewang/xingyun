@@ -39,46 +39,71 @@ public class UnitController extends DefaultBaseController {
     @HasPermission("base-data:unit:query")
     public InvokeResult<PageResult<QueryUnitBo>> query(@Valid QueryUnitVo vo) {
 
-        PageResult<Unit> pageResult = unitService.query(getPageIndex(vo), getPageSize(vo), vo);
+        try {
+            PageResult<Unit> pageResult = unitService.query(getPageIndex(vo), getPageSize(vo), vo);
 
-        List<Unit> datas = pageResult.getDatas();
-        List<QueryUnitBo> results = null;
-        if (!CollectionUtil.isEmpty(datas)) {
-            results = datas.stream().map(QueryUnitBo::new).collect(Collectors.toList());
+            List<Unit> datas = pageResult.getDatas();
+            List<QueryUnitBo> results = null;
+            if (!CollectionUtil.isEmpty(datas)) {
+                results = datas.stream().map(QueryUnitBo::new).collect(Collectors.toList());
+            }
+
+            return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
         }
-
-        return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
     }
 
     @GetMapping("/generate/code")
     @HasPermission("base-data:unit:add")
     public InvokeResult<String> generateCode() {
 
-        return InvokeResultBuilder.success(unitService.generateCode());
+        try {
+            return InvokeResultBuilder.success(unitService.generateCode());
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
     }
 
     @PostMapping
     @HasPermission("base-data:unit:add")
     public InvokeResult<Void> create(@Valid CreateUnitVo vo) {
 
-        unitService.create(vo);
-        return InvokeResultBuilder.success();
+        try {
+            unitService.create(vo);
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
     }
 
     @PutMapping
     @HasPermission("base-data:unit:modify")
     public InvokeResult<Void> update(@Valid UpdateUnitVo vo) {
 
-        unitService.update(vo);
-        return InvokeResultBuilder.success();
+        try {
+            unitService.update(vo);
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
     }
 
     @DeleteMapping
     @HasPermission("base-data:unit:delete")
     public InvokeResult<Void> delete(String id) {
 
-        unitService.removeById(id);
-        return InvokeResultBuilder.success();
+        try {
+            unitService.removeById(id);
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
     }
 
     @GetMapping("/import/template")
@@ -91,6 +116,7 @@ public class UnitController extends DefaultBaseController {
     @PostMapping("/import")
     @HasPermission("base-data:unit:import")
     public InvokeResult<Void> importExcel(@RequestParam MultipartFile file) {
+
         try {
             List<UnitImportModel> items = EasyExcelUtils.syncReadModel(file.getInputStream(),
                     UnitImportModel.class);
