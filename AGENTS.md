@@ -31,10 +31,11 @@
 - Controller 只做参数校验和响应包装，不写业务逻辑。
 - Service 承担业务编排，`@Transactional` 只放 Service 层。
 - DAO 只负责数据访问，不写业务逻辑。
-- 对外响应统一使用 `InvokeResult<T>`，不能在Controller直接throw new Exception，因为返回给前端的必须是可控的响应。应该使用：
+- 对外响应统一使用 `InvokeResult<T>`，因为返回给前端的必须是可控的响应。应该使用：
 ```
     try {
         //参数校验和响应包装
+        return InvokeResult.success(T);
     } catch (Exception e) {
         log.error("请求出错", e);
         return InvokeResultBuilder.fail(e.getMessage());
@@ -57,6 +58,12 @@
 - 不要硬编码密钥。
 - 不要使用 `Executors.newXxxThreadPool()`，使用显式 `ThreadPoolExecutor`。
 - 不要直接写 SQL，使用 MyBatis-Plus 的 QueryWrapper。
+
+## AI 响应与交互规则
+- 回答简洁：先给出核心解决方案或代码片段，后附带简短说明，拒绝废话。
+- 代码完整性：提供代码时，请给出完整的上下文（即包含所在的完整文件路径），不要只提供修改的部分（除非文件特别长）。
+- 语言：所有代码注释和解释默认使用中文。
+- 测试：Java 编写核心业务的 JUnit 测试用例。
 
 ## More Rules
 
