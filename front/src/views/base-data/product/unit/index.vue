@@ -4,24 +4,33 @@
       <j-border>
         <j-form bordered label-width="80px">
           <j-form-item label="编码">
-            <a-input v-model:value="searchForm.code" allow-clear @press-enter="load" />
+            <a-input v-model:value="searchFormData.code" allow-clear @press-enter="search" />
           </j-form-item>
           <j-form-item label="名称">
-            <a-input v-model:value="searchForm.name" allow-clear @press-enter="load" />
+            <a-input v-model:value="searchFormData.name" allow-clear @press-enter="search" />
           </j-form-item>
         </j-form>
       </j-border>
       <vxe-grid
         ref="grid"
-        :data="rows"
+        resizable
+        show-overflow
+        highlight-hover-row
+        keep-source
+        row-id="id"
+        :proxy-config="proxyConfig"
         :columns="columns"
-        :loading="loading"
         :toolbar-config="toolbarConfig"
+        :custom-config="{}"
+        :pager-config="{
+          layouts: ['Home', 'PrevPage', 'Jump', 'PageCount', 'NextPage', 'End', 'Sizes', 'Total'],
+        }"
+        :loading="loading"
         height="auto"
       >
         <template #toolbar_buttons>
           <a-space>
-            <a-button type="primary" @click="load">查询</a-button>
+            <a-button type="primary" @click="search">查询</a-button>
             <a-button v-permission="['base-data:unit:add']" type="primary" @click="open()">
               新增
             </a-button>
@@ -47,7 +56,7 @@
         </template>
       </vxe-grid>
     </page-wrapper>
-    <unit-importer ref="importer" @confirm="load" />
+    <unit-importer ref="importer" @confirm="search" />
     <a-modal
       v-model:open="visible"
       :title="readonly ? '查看单位' : form.id ? '修改单位' : '新增单位'"
@@ -77,8 +86,9 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, h, onMounted, ref } from 'vue';
+  import { defineComponent, h, onMounted, reactive, ref } from 'vue';
   import * as api from '@/api/base-data/unit';
+  import { buildSortPageVo } from '@/utils/utils';
   import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
   import UnitImporter from '@/components/Importor/UnitImporter.vue';
   import {CloudUploadOutlined, DeleteOutlined} from '@ant-design/icons-vue';
@@ -93,9 +103,8 @@
       const loading = ref(false);
       const visible = ref(false);
       const readonly = ref(false);
-      const rows = ref<any[]>([]);
       const form = ref<any>({});
-      const searchForm = ref({ code: '', name: '' });
+      const searchFormData = reactive({ code: '', name: '' });
       const toolbarConfig = { slots: { buttons: 'toolbar_buttons' } };
       const columns = [
         { type: 'checkbox', width: 45 },
@@ -105,14 +114,33 @@
         { field: 'description', title: '备注', minWidth: 200 },
         { title: '操作', width: 180, fixed: 'right', slots: { default: 'action' } },
       ];
+      const proxyConfig = {
+        props: {
+          result: 'datas',
+          total: 'totalCount',
+        },
+        ajax: {
+          query: ({ page, sorts }: any) => {
+            return api.query(buildQueryParams(page, sorts));
+          },
+        },
+      };
 
-      async function load() {
-        loading.value = true;
-        try {
-          rows.value = await api.query(searchForm.value);
-        } finally {
-          loading.value = false;
-        }
+      function search() {
+        grid.value.commitProxy('reload');
+      }
+
+      function buildQueryParams(page: any, sorts: any) {
+        return {
+          ...buildSortPageVo(page, sorts),
+          ...buildSearchFormData(),
+        };
+      }
+
+      function buildSearchFormData() {
+        return {
+          ...searchFormData,
+        };
       }
 
       function open(row?: any) {
@@ -138,14 +166,14 @@
         await (form.value.id ? api.update(form.value) : api.create(form.value));
         createSuccess('保存成功');
         visible.value = false;
-        load();
+        search();
       }
 
       function del(row: any) {
         createConfirm('确认删除该单位？').then(async () => {
           await api.remove(row.id);
           createSuccess('删除成功');
-          load();
+          search();
         });
       }
 
@@ -156,7 +184,7 @@
         createConfirm(`确认删除选中的 ${selected.length} 个单位？`).then(async () => {
           await Promise.all(selected.map((row: any) => api.remove(row.id)));
           createSuccess('删除成功');
-          load();
+          search();
         });
       }
 
@@ -180,7 +208,7 @@
         ];
       }
 
-      onMounted(load);
+      onMounted(() => search());
 
       return {
         h,
@@ -191,12 +219,12 @@
         loading,
         visible,
         readonly,
-        rows,
         form,
-        searchForm,
+        searchFormData,
         toolbarConfig,
         columns,
-        load,
+        proxyConfig,
+        search,
         open,
         view,
         generateCode,

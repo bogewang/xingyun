@@ -2,20 +2,26 @@ package com.lframework.xingyun.basedata.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.web.core.annotations.security.HasPermission;
 import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
+import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.utils.IdUtil;
 import com.lframework.starter.web.core.utils.EasyExcelUtils;
 import com.lframework.starter.web.core.utils.ExcelUtil;
+import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.basedata.entity.Unit;
 import com.lframework.xingyun.basedata.excel.unit.UnitImportModel;
 import com.lframework.xingyun.basedata.service.UnitService;
+import com.lframework.xingyun.basedata.vo.unit.QueryUnitVo;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 
 import java.util.List;
-import javax.validation.constraints.NotBlank;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -30,11 +36,14 @@ public class UnitController extends DefaultBaseController {
 
     @GetMapping("/query")
     @HasPermission("base-data:unit:query")
-    public InvokeResult<List<Unit>> query(String code, String name) {
-        return InvokeResultBuilder.success(unitService.list(Wrappers.lambdaQuery(Unit.class)
-                .like(code != null && !code.trim().isEmpty(), Unit::getCode, code)
-                .like(name != null && !name.trim().isEmpty(), Unit::getName, name).eq(Unit::getAvailable, true)
-                .orderByAsc(Unit::getCode)));
+    public InvokeResult<PageResult<Unit>> query(@Valid QueryUnitVo vo) {
+        Page<Unit> page = new Page<>(getPageIndex(vo), getPageSize(vo));
+        page = unitService.page(page, Wrappers.lambdaQuery(Unit.class)
+                .like(vo.getCode() != null && !vo.getCode().trim().isEmpty(), Unit::getCode, vo.getCode())
+                .like(vo.getName() != null && !vo.getName().trim().isEmpty(), Unit::getName, vo.getName())
+                .eq(Unit::getAvailable, true)
+                .orderByAsc(Unit::getCode));
+        return InvokeResultBuilder.success(PageResultUtil.convert(page));
     }
 
     @GetMapping("/generate/code")
