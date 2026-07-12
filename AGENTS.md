@@ -31,7 +31,7 @@
 - Controller 只做参数校验和响应包装，不写业务逻辑。
 - Service 承担业务编排，`@Transactional` 只放 Service 层。
 - DAO 只负责数据访问，不写业务逻辑。
-- 对外响应统一使用 `InvokeResult<T>`，不能在Controller直接throw new Exception，应该使用：
+- 对外响应统一使用 `InvokeResult<T>`，不能在Controller直接throw new Exception，因为返回给前端的必须是可控的响应。应该使用：
 ```
     try {
         //参数校验和响应包装
@@ -56,6 +56,7 @@
 - 不要循环调用 DB，优先批量操作。
 - 不要硬编码密钥。
 - 不要使用 `Executors.newXxxThreadPool()`，使用显式 `ThreadPoolExecutor`。
+- 不要直接写 SQL，使用 MyBatis-Plus 的 QueryWrapper。
 
 ## More Rules
 
