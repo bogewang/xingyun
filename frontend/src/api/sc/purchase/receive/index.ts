@@ -17,6 +17,7 @@ import { UpdateReceiveSheetDescriptionVo } from '@/api/sc/purchase/receive/model
 import { ApprovePassReceiveSheetVo } from '@/api/sc/purchase/receive/model/approvePassReceiveSheetVo';
 import { ApproveRefuseReceiveSheetVo } from '@/api/sc/purchase/receive/model/approveRefuseReceiveSheetVo';
 import { PrintReceiveSheetBo } from '@/api/sc/purchase/receive/model/printReceiveSheetBo';
+import { ReceiveProductVo } from '@/api/sc/purchase/receive/model/receiveProductVo';
 
 const baseUrl = '/purchase/receive/sheet';
 const selectorBaseUrl = '/selector';
@@ -416,8 +417,8 @@ export function downloadImportTemplate(): Promise<void> {
 /**
  * 导入
  */
-export function importExcel(data: { id: string; file: Blob }): Promise<void> {
-  return defHttp.post<void>(
+export function importExcel(data: { id?: string; file: Blob }): Promise<ReceiveProductVo[]> {
+  return defHttp.post<ReceiveProductVo[]>(
     {
       url: baseUrl + '/import',
       data,

@@ -772,6 +772,17 @@
             const importUnmatched = isEmpty(item.productId);
             return Object.assign(this.emptyProduct(), item, {
               id: uuid(),
+              productName: item.productName,
+              basePurchasePrice: item.purchasePrice,
+              units: isEmpty(item.unitId)
+                ? []
+                : [
+                    {
+                      id: item.unitId,
+                      unitName: item.unit,
+                      conversionRate: 1,
+                    },
+                  ],
               isFixed: false,
               importUnmatched,
               productQuery: importUnmatched ? item.productName : '',
