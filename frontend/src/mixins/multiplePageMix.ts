@@ -30,7 +30,10 @@ export const multiplePageMix = {
 
       if (!isEmpty(parentPath)) {
         this.$router.push(parentPath);
+        return;
       }
+
+      this.$router.back();
     },
   },
 };

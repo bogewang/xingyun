@@ -394,7 +394,7 @@ export default defineComponent({
   methods: {
     loadUnitOptions() {
       unitApi.query({pageSize: 50, pageIndex: 1}).then((res) => {
-        this.unitOptions = res || [];
+        this.unitOptions = res.datas || [];
       });
     },
     getBaseUnitName() {

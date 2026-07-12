@@ -376,7 +376,7 @@ export const useRefreshStore = defineStore('refresh', {
     },
     getCacheFlag(path: string) {
       const from = this.cacheMap.get(path);
-      this.cacheMap.delete(from);
+      this.cacheMap.delete(path);
       return from;
     },
     // 设置需要刷新的页签
