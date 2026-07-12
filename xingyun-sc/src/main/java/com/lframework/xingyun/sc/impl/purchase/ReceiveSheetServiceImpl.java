@@ -31,7 +31,6 @@ import com.lframework.xingyun.basedata.entity.ProductUnit;
 import com.lframework.xingyun.basedata.entity.StoreCenter;
 import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.enums.ManageType;
-import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.enums.SettleType;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.product.ProductService;

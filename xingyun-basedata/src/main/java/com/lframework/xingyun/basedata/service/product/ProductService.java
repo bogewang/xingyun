@@ -104,7 +104,7 @@ public interface ProductService extends BaseMpService<Product> {
      * @param categoryIds
      * @return
      */
-    List<Product> getByCategoryIds(List<String> categoryIds, Integer productType);
+    List<Product> getByCategoryIds(List<String> categoryIds);
 
     /**
      * 根据品牌ID查询
@@ -112,7 +112,7 @@ public interface ProductService extends BaseMpService<Product> {
      * @param brandIds
      * @return
      */
-    List<Product> getByBrandIds(List<String> brandIds, Integer productType);
+    List<Product> getByBrandIds(List<String> brandIds);
 
     void importExcel(List<ProductImportModel> list);
 

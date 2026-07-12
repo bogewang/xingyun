@@ -9,14 +9,11 @@ import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.basedata.dto.product.ProductPropertyRelationDto;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductBrand;
-import com.lframework.xingyun.basedata.entity.ProductBundle;
 import com.lframework.xingyun.basedata.entity.ProductCategory;
 import com.lframework.xingyun.basedata.entity.ProductUnit;
 import com.lframework.xingyun.basedata.entity.Supplier;
 import com.lframework.xingyun.basedata.enums.ColumnType;
-import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.service.product.ProductBrandService;
-import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductPropertyRelationService;
 import com.lframework.xingyun.basedata.service.product.ProductUnitService;
@@ -132,19 +129,6 @@ public class GetProductBo extends BaseBo<Product> {
   private List<ProductUnit> units;
 
   /**
-   * 商品类型
-   */
-  @ApiModelProperty("商品类型")
-  @EnumConvert
-  private Integer productType;
-
-  /**
-   * 单品
-   */
-  @ApiModelProperty("单品")
-  private List<ProductBundleBo> productBundles;
-
-  /**
    * 采购价
    */
   @ApiModelProperty("采购价")
@@ -210,13 +194,6 @@ public class GetProductBo extends BaseBo<Product> {
       ProductBrandService productBrandService = ApplicationUtil.getBean(ProductBrandService.class);
       ProductBrand productBrand = productBrandService.findById(dto.getBrandId());
       this.brandName = productBrand.getName();
-    }
-
-    if (dto.getProductType() == ProductType.BUNDLE) {
-      ProductBundleService productBundleService = ApplicationUtil.getBean(
-          ProductBundleService.class);
-      List<ProductBundle> bundles = productBundleService.getByMainProductId(dto.getId());
-      this.productBundles = bundles.stream().map(ProductBundleBo::new).collect(Collectors.toList());
     }
 
     this.purchasePrice = dto.getPurchasePrice();

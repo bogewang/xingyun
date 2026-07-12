@@ -15,9 +15,6 @@ import com.lframework.starter.web.core.utils.IdUtil;
 import com.lframework.starter.web.core.utils.PageHelperUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.basedata.entity.Product;
-import com.lframework.xingyun.basedata.entity.ProductBundle;
-import com.lframework.xingyun.basedata.enums.ProductType;
-import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
@@ -52,9 +49,6 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
     private ProductService productService;
 
     @Autowired
-    private ProductBundleService productBundleService;
-
-    @Autowired
     private ProductStockLogService productStockLogService;
 
     @Resource
@@ -87,55 +81,17 @@ public class ProductStockServiceImpl extends BaseMpServiceImpl<ProductStockMappe
             return null;
         }
 
-        if (product.getProductType() == ProductType.NORMAL) {
-            return getBaseMapper().getByProductIdAndScId(productId, scId);
-        } else {
-            List<ProductBundle> productBundles = productBundleService.getByMainProductId(productId);
-            if (CollectionUtil.isEmpty(productBundles)) {
-                return null;
-            }
-
-            List<String> productIds = productBundles.stream().map(ProductBundle::getProductId).collect(
-                    Collectors.toList());
-            List<ProductStock> productStocks = this.getByProductIdsAndScId(productIds, scId,
-                    ProductType.NORMAL.getCode());
-
-            BigDecimal stockNum = BigDecimal.valueOf(Integer.MAX_VALUE);
-            for (ProductBundle productBundle : productBundles) {
-                String id = productBundle.getProductId();
-                ProductStock productStock = productStocks.stream().filter(t -> t.getProductId().equals(id))
-                        .findFirst().orElse(null);
-                if (productStock == null || NumberUtil.le(productStock.getStockNum(), 0)) {
-                    // 此处说明有单品没有库存
-                    return null;
-                }
-
-                stockNum = BigDecimal.valueOf(
-                        NumberUtil.min(NumberUtil.div(productStock.getStockNum(), productBundle.getBundleNum()),
-                                stockNum).intValue());
-            }
-
-            ProductStock productStock = new ProductStock();
-            productStock.setId(IdUtil.getId());
-            productStock.setScId(scId);
-            productStock.setProductId(productId);
-            productStock.setStockNum(stockNum);
-            productStock.setTaxPrice(BigDecimal.ZERO);
-            productStock.setTaxAmount(BigDecimal.ZERO);
-
-            return productStock;
-        }
+        return getBaseMapper().getByProductIdAndScId(productId, scId);
     }
 
     @Override
-    public List<ProductStock> getByProductIdsAndScId(List<String> productIds, String scId,
-            Integer productType) {
+    public List<ProductStock> getByProductIdsAndScId(List<String> productIds, String scId) {
 
         if (CollectionUtil.isEmpty(productIds)) {
             return CollectionUtil.emptyList();
         }
 
-        return getBaseMapper().getByProductIdsAndScId(productIds, scId, productType);
+        return getBaseMapper().getByProductIdsAndScId(productIds, scId);
     }
 
     @Transactional(rollbackFor = Exception.class)

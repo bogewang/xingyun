@@ -92,8 +92,7 @@ public interface ProductMapper extends BaseMapper<Product> {
    * @param categoryIds
    * @return
    */
-  List<Product> getByCategoryIds(@Param("categoryIds") List<String> categoryIds,
-      @Param("productType") Integer productType);
+  List<Product> getByCategoryIds(@Param("categoryIds") List<String> categoryIds);
 
   /**
    * 根据品牌ID查询
@@ -101,6 +100,5 @@ public interface ProductMapper extends BaseMapper<Product> {
    * @param brandIds
    * @return
    */
-  List<Product> getByBrandIds(@Param("brandIds") List<String> brandIds,
-      @Param("productType") Integer productType);
+  List<Product> getByBrandIds(@Param("brandIds") List<String> brandIds);
 }

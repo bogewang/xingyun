@@ -9,12 +9,9 @@ import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
 import com.lframework.xingyun.basedata.entity.Product;
-import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
-import com.lframework.xingyun.sc.entity.SaleOutSheetDetailBundle;
 import com.lframework.xingyun.sc.mappers.SaleOutSheetDetailMapper;
-import com.lframework.xingyun.sc.service.sale.SaleOutSheetDetailBundleService;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,9 +27,6 @@ public class SaleOutSheetDetailServiceImpl extends
 
   @Autowired
   private ProductService productService;
-
-  @Autowired
-  private SaleOutSheetDetailBundleService saleOutSheetDetailBundleService;
 
   @Override
   public List<SaleOutSheetDetail> getBySheetId(String sheetId) {
@@ -105,29 +99,11 @@ public class SaleOutSheetDetailServiceImpl extends
     List<SaleOutSheetDetail> details = this.list(queryWrapper);
     BigDecimal sumWeight = details.stream().map(t -> {
       Product product = productService.findById(t.getProductId());
-      if (product.getProductType() == ProductType.BUNDLE) {
-        Wrapper<SaleOutSheetDetailBundle> detailBundleWrapper = Wrappers.lambdaQuery(
-            SaleOutSheetDetailBundle.class).eq(SaleOutSheetDetailBundle::getDetailId, t.getId());
-        List<SaleOutSheetDetailBundle> detailBundles = saleOutSheetDetailBundleService.list(
-            detailBundleWrapper);
-        return detailBundles.stream().map(b -> {
-          Product targetProduct = productService.findById(b.getProductId());
-          if (targetProduct.getWeight() == null) {
-            throw new DefaultClientException(
-                "商品（" + targetProduct.getCode() + "）" + targetProduct.getName()
-                    + "尚未设置重量，请检查！");
-          }
-
-          return NumberUtil.getNumber(
-              NumberUtil.mul(targetProduct.getWeight(), b.getProductOrderNum()), 2);
-        }).reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
-      } else {
-        if (product.getWeight() == null) {
-          throw new DefaultClientException(
-              "商品（" + product.getCode() + "）" + product.getName() + "尚未设置重量，请检查！");
-        }
-        return NumberUtil.getNumber(NumberUtil.mul(t.getOrderNum(), product.getWeight()), 2);
+      if (product.getWeight() == null) {
+        throw new DefaultClientException(
+            "商品（" + product.getCode() + "）" + product.getName() + "尚未设置重量，请检查！");
       }
+      return NumberUtil.getNumber(NumberUtil.mul(t.getOrderNum(), product.getWeight()), 2);
     }).reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
 
     return sumWeight;
@@ -144,29 +120,11 @@ public class SaleOutSheetDetailServiceImpl extends
     List<SaleOutSheetDetail> details = this.list(queryWrapper);
     BigDecimal sumVolume = details.stream().map(t -> {
       Product product = productService.findById(t.getProductId());
-      if (product.getProductType() == ProductType.BUNDLE) {
-        Wrapper<SaleOutSheetDetailBundle> detailBundleWrapper = Wrappers.lambdaQuery(
-            SaleOutSheetDetailBundle.class).eq(SaleOutSheetDetailBundle::getDetailId, t.getId());
-        List<SaleOutSheetDetailBundle> detailBundles = saleOutSheetDetailBundleService.list(
-            detailBundleWrapper);
-        return detailBundles.stream().map(b -> {
-          Product targetProduct = productService.findById(b.getProductId());
-          if (targetProduct.getVolume() == null) {
-            throw new DefaultClientException(
-                "商品（" + targetProduct.getCode() + "）" + targetProduct.getName()
-                    + "尚未设置体积，请检查！");
-          }
-
-          return NumberUtil.getNumber(
-              NumberUtil.mul(targetProduct.getVolume(), b.getProductOrderNum()), 2);
-        }).reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
-      } else {
-        if (product.getVolume() == null) {
-          throw new DefaultClientException(
-              "商品（" + product.getCode() + "）" + product.getName() + "尚未设置体积，请检查！");
-        }
-        return NumberUtil.getNumber(NumberUtil.mul(t.getOrderNum(), product.getVolume()), 2);
+      if (product.getVolume() == null) {
+        throw new DefaultClientException(
+            "商品（" + product.getCode() + "）" + product.getName() + "尚未设置体积，请检查！");
       }
+      return NumberUtil.getNumber(NumberUtil.mul(t.getOrderNum(), product.getVolume()), 2);
     }).reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
 
     return sumVolume;

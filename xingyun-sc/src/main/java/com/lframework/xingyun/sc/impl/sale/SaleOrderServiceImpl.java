@@ -24,7 +24,6 @@ import com.lframework.starter.web.inner.entity.SysUser;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.xingyun.basedata.entity.*;
-import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
@@ -297,54 +296,10 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
     BigDecimal totalAmount = BigDecimal.ZERO;
 
     for (SaleOrderDetail detail : details) {
-      boolean isGift = detail.getIsGift();
       totalAmount = NumberUtil.add(totalAmount,
               NumberUtil.getNumber(NumberUtil.mul(detail.getTaxPrice(), detail.getOrderNum()), 2));
 
-      Product product = productService.findById(detail.getProductId());
-      if (product.getProductType() == ProductType.NORMAL) {
-        if (isGift) {
-          giftNum = NumberUtil.add(giftNum, detail.getOrderNum());
-        } else {
-          totalNum = NumberUtil.add(totalNum, detail.getOrderNum());
-        }
-      } else {
-        Wrapper<SaleOrderDetailBundle> queryBundleWrapper = Wrappers.lambdaQuery(
-                        SaleOrderDetailBundle.class).eq(SaleOrderDetailBundle::getOrderId, order.getId())
-                .eq(SaleOrderDetailBundle::getDetailId, detail.getId());
-        List<SaleOrderDetailBundle> saleOrderDetailBundles = saleOrderDetailBundleService.list(
-                queryBundleWrapper);
-        Assert.notEmpty(saleOrderDetailBundles);
-
-        for (SaleOrderDetailBundle saleOrderDetailBundle : saleOrderDetailBundles) {
-          SaleOrderDetail newDetail = new SaleOrderDetail();
-          newDetail.setId(IdUtil.getId());
-          newDetail.setOrderId(order.getId());
-          newDetail.setProductId(saleOrderDetailBundle.getProductId());
-          newDetail.setOrderNum(saleOrderDetailBundle.getProductOrderNum());
-          newDetail.setOriPrice(saleOrderDetailBundle.getProductOriPrice());
-          newDetail.setTaxPrice(saleOrderDetailBundle.getProductTaxPrice());
-          newDetail.setDiscountRate(detail.getDiscountRate());
-          newDetail.setIsGift(detail.getIsGift());
-          newDetail.setTaxRate(saleOrderDetailBundle.getProductTaxRate());
-          newDetail.setDescription(detail.getDescription());
-          newDetail.setOrderNo(detail.getOrderNo());
-          newDetail.setOriBundleDetailId(detail.getId());
-          newDetail.setTaxAmount(saleOrderDetailBundle.getProductTaxAmount());
-
-          saleOrderDetailService.save(newDetail);
-          saleOrderDetailService.removeById(detail.getId());
-
-          saleOrderDetailBundle.setProductDetailId(newDetail.getId());
-          saleOrderDetailBundleService.updateById(saleOrderDetailBundle);
-
-          if (isGift) {
-            giftNum = NumberUtil.add(giftNum, newDetail.getOrderNum());
-          } else {
-            totalNum = NumberUtil.add(totalNum, newDetail.getOrderNum());
-          }
-        }
-      }
+      totalNum = NumberUtil.add(totalNum, detail.getOrderNum());
     }
 
     // 这里需要重新统计明细信息，因为明细发生变动了
@@ -578,47 +533,6 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
 
       saleOrderDetailService.save(orderDetail);
 
-      // 这里处理组合商品
-      if (product.getProductType() == ProductType.BUNDLE) {
-        if (!NumberUtil.isInteger(productVo.getOrderNum())) {
-          throw new InputErrorException("第" + orderNo + "行商品销售数量必须是整数！");
-        }
-        List<ProductBundle> productBundles = productBundleService.getByMainProductId(
-                product.getId());
-        // 构建指标项
-        Map<Object, Number> bundleWeight = new HashMap<>(productBundles.size());
-        for (ProductBundle productBundle : productBundles) {
-          bundleWeight.put(productBundle.getProductId(),
-                  NumberUtil.mul(productBundle.getSalePrice(), productBundle.getBundleNum()));
-        }
-        Map<Object, Number> splitPriceMap = SplitNumberUtil.split(orderDetail.getTaxAmount(),
-                bundleWeight, 2);
-        List<SaleOrderDetailBundle> saleOrderDetailBundles = productBundles.stream()
-                .map(productBundle -> {
-                  Product bundle = productService.findById(productBundle.getProductId());
-                  SaleOrderDetailBundle saleOrderDetailBundle = new SaleOrderDetailBundle();
-                  saleOrderDetailBundle.setId(IdUtil.getId());
-                  saleOrderDetailBundle.setOrderId(order.getId());
-                  saleOrderDetailBundle.setDetailId(orderDetail.getId());
-                  saleOrderDetailBundle.setMainProductId(product.getId());
-                  saleOrderDetailBundle.setOrderNum(orderDetail.getOrderNum());
-                  saleOrderDetailBundle.setProductId(productBundle.getProductId());
-                  saleOrderDetailBundle.setProductOrderNum(
-                          NumberUtil.mul(orderDetail.getOrderNum(), productBundle.getBundleNum()));
-                  saleOrderDetailBundle.setProductOriPrice(productBundle.getSalePrice());
-                  saleOrderDetailBundle.setProductTaxAmount(BigDecimal.valueOf(
-                          splitPriceMap.get(productBundle.getProductId()).doubleValue()));
-                  // 这里会有尾差
-                  saleOrderDetailBundle.setProductTaxPrice(NumberUtil.getNumber(NumberUtil.div(
-                          saleOrderDetailBundle.getProductTaxAmount(),
-                          saleOrderDetailBundle.getProductOrderNum()), 6));
-                  saleOrderDetailBundle.setProductTaxRate(bundle.getSaleTaxRate());
-
-                  return saleOrderDetailBundle;
-                }).collect(Collectors.toList());
-
-        saleOrderDetailBundleService.saveBatch(saleOrderDetailBundles);
-      }
       orderNo++;
     }
     order.setTotalNum(totalNum);

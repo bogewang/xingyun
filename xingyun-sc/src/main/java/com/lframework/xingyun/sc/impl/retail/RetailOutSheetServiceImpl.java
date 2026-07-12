@@ -33,7 +33,6 @@ import com.lframework.xingyun.basedata.entity.Member;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductBundle;
 import com.lframework.xingyun.basedata.entity.StoreCenter;
-import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.service.member.MemberService;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
@@ -360,8 +359,6 @@ public class RetailOutSheetServiceImpl extends
       totalAmount = NumberUtil.add(totalAmount,
           NumberUtil.getNumber(NumberUtil.mul(detail.getTaxPrice(), detail.getOrderNum()), 2));
 
-      Product product = productService.findById(detail.getProductId());
-      if (product.getProductType() == ProductType.NORMAL) {
         SubProductStockVo subProductStockVo = new SubProductStockVo();
         subProductStockVo.setProductId(detail.getProductId());
         subProductStockVo.setScId(sheet.getScId());
@@ -380,58 +377,6 @@ public class RetailOutSheetServiceImpl extends
         } else {
           totalNum = NumberUtil.add(totalNum, detail.getOrderNum());
         }
-      } else {
-        Wrapper<RetailOutSheetDetailBundle> queryBundleWrapper = Wrappers.lambdaQuery(
-                RetailOutSheetDetailBundle.class)
-            .eq(RetailOutSheetDetailBundle::getSheetId, sheet.getId())
-            .eq(RetailOutSheetDetailBundle::getDetailId, detail.getId());
-        List<RetailOutSheetDetailBundle> retailOutSheetDetailBundles = retailOutSheetDetailBundleService.list(
-            queryBundleWrapper);
-        Assert.notEmpty(retailOutSheetDetailBundles);
-
-        for (RetailOutSheetDetailBundle retailOutSheetDetailBundle : retailOutSheetDetailBundles) {
-          RetailOutSheetDetail newDetail = new RetailOutSheetDetail();
-          newDetail.setId(IdUtil.getId());
-          newDetail.setSheetId(sheet.getId());
-          newDetail.setProductId(retailOutSheetDetailBundle.getProductId());
-          newDetail.setOrderNum(retailOutSheetDetailBundle.getProductOrderNum());
-          newDetail.setOriPrice(retailOutSheetDetailBundle.getProductOriPrice());
-          newDetail.setTaxPrice(retailOutSheetDetailBundle.getProductTaxPrice());
-          newDetail.setDiscountRate(detail.getDiscountRate());
-          newDetail.setIsGift(detail.getIsGift());
-          newDetail.setTaxRate(retailOutSheetDetailBundle.getProductTaxRate());
-          newDetail.setDescription(detail.getDescription());
-          newDetail.setOrderNo(orderNo++);
-          newDetail.setSettleStatus(detail.getSettleStatus());
-          newDetail.setOriBundleDetailId(detail.getId());
-          newDetail.setTaxAmount(retailOutSheetDetailBundle.getProductTaxAmount());
-
-          SubProductStockVo subProductStockVo = new SubProductStockVo();
-          subProductStockVo.setProductId(newDetail.getProductId());
-          subProductStockVo.setScId(sheet.getScId());
-          subProductStockVo.setStockNum(newDetail.getOrderNum());
-          subProductStockVo.setBizId(sheet.getId());
-          subProductStockVo.setBizDetailId(newDetail.getId());
-          subProductStockVo.setBizCode(sheet.getCode());
-          subProductStockVo.setBizType(ProductStockBizType.RETAIL.getCode());
-
-          ProductStockChangeDto stockChange = productStockService.subStock(subProductStockVo);
-          orderNo = createRetailOutDetailLots(sheet, newDetail.getId(), newDetail.getProductId(),
-              newDetail.getOrderNum(), newDetail.getSettleStatus(), stockChange, orderNo);
-
-          retailOutSheetDetailService.save(newDetail);
-          retailOutSheetDetailService.removeById(detail.getId());
-
-          retailOutSheetDetailBundle.setProductDetailId(newDetail.getId());
-          retailOutSheetDetailBundleService.updateById(retailOutSheetDetailBundle);
-
-          if (isGift) {
-            giftNum = NumberUtil.add(giftNum, newDetail.getOrderNum());
-          } else {
-            totalNum = NumberUtil.add(totalNum, newDetail.getOrderNum());
-          }
-        }
-      }
       orderNo++;
     }
 
@@ -717,47 +662,6 @@ public class RetailOutSheetServiceImpl extends
 
       retailOutSheetDetailService.save(detail);
 
-      // 这里处理组合商品
-      if (product.getProductType() == ProductType.BUNDLE) {
-        if (!NumberUtil.isInteger(productVo.getOrderNum())) {
-          throw new InputErrorException("第" + orderNo + "行商品出库数量必须是整数！");
-        }
-        List<ProductBundle> productBundles = productBundleService.getByMainProductId(
-            product.getId());
-        // 构建指标项
-        Map<Object, Number> bundleWeight = new HashMap<>(productBundles.size());
-        for (ProductBundle productBundle : productBundles) {
-          bundleWeight.put(productBundle.getProductId(),
-              NumberUtil.mul(productBundle.getRetailPrice(), productBundle.getBundleNum()));
-        }
-        Map<Object, Number> splitPriceMap = SplitNumberUtil.split(detail.getTaxAmount(),
-            bundleWeight, 2);
-        List<RetailOutSheetDetailBundle> retailOutSheetDetailBundles = productBundles.stream()
-            .map(productBundle -> {
-              Product bundle = productService.findById(productBundle.getProductId());
-              RetailOutSheetDetailBundle retailOutSheetDetailBundle = new RetailOutSheetDetailBundle();
-              retailOutSheetDetailBundle.setId(IdUtil.getId());
-              retailOutSheetDetailBundle.setSheetId(sheet.getId());
-              retailOutSheetDetailBundle.setDetailId(detail.getId());
-              retailOutSheetDetailBundle.setMainProductId(product.getId());
-              retailOutSheetDetailBundle.setOrderNum(detail.getOrderNum());
-              retailOutSheetDetailBundle.setProductId(productBundle.getProductId());
-              retailOutSheetDetailBundle.setProductOrderNum(
-                  NumberUtil.mul(detail.getOrderNum(), productBundle.getBundleNum()));
-              retailOutSheetDetailBundle.setProductOriPrice(productBundle.getRetailPrice());
-              retailOutSheetDetailBundle.setProductTaxAmount(BigDecimal.valueOf(
-                  splitPriceMap.get(productBundle.getProductId()).doubleValue()));
-              // 这里会有尾差
-              retailOutSheetDetailBundle.setProductTaxPrice(NumberUtil.getNumber(
-                  NumberUtil.div(retailOutSheetDetailBundle.getProductTaxAmount(),
-                      retailOutSheetDetailBundle.getProductOrderNum()), 6));
-              retailOutSheetDetailBundle.setProductTaxRate(bundle.getSaleTaxRate());
-
-              return retailOutSheetDetailBundle;
-            }).collect(Collectors.toList());
-
-        retailOutSheetDetailBundleService.saveBatch(retailOutSheetDetailBundles);
-      }
       orderNo++;
     }
     sheet.setTotalNum(purchaseNum);

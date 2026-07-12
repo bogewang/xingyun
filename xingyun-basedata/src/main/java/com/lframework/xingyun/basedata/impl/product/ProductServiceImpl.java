@@ -19,7 +19,6 @@ import com.lframework.xingyun.basedata.entity.*;
 import com.lframework.xingyun.basedata.enums.BaseDataOpLogType;
 import com.lframework.xingyun.basedata.enums.ColumnType;
 import com.lframework.xingyun.basedata.enums.ProductCategoryNodeType;
-import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.events.DeleteProductEvent;
 import com.lframework.xingyun.basedata.excel.product.ProductImportModel;
 import com.lframework.xingyun.basedata.mappers.ProductMapper;
@@ -63,9 +62,6 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
 
     @Autowired
     private ProductPropertyRelationService productPropertyRelationService;
-
-    @Autowired
-    private ProductBundleService productBundleService;
 
     @Autowired
     private ProductUnitService productUnitService;
@@ -216,7 +212,6 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             data.setUnit(vo.getUnit());
         }
 
-        data.setProductType(EnumUtil.getByCode(ProductType.class, vo.getProductType()));
         data.setTaxRate(vo.getTaxRate() == null ? BigDecimal.ZERO : vo.getTaxRate());
         data.setSaleTaxRate(vo.getSaleTaxRate() == null ? BigDecimal.ZERO : vo.getSaleTaxRate());
         data.setWeight(vo.getWeight());
@@ -235,57 +230,6 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
 
         getBaseMapper().insert(data);
         saveUnits(data, vo.getUnits());
-
-        // 组合商品
-        if (data.getProductType() == ProductType.BUNDLE) {
-            if (CollectionUtil.isEmpty(vo.getProductBundles())) {
-                throw new DefaultClientException("单品数据不能为空！");
-            }
-
-            BigDecimal purchasePrice = vo.getProductBundles().stream()
-                    .filter(productBundleVo -> productBundleVo.getPurchasePrice() != null)
-                    .map(productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
-                            productBundleVo.getPurchasePrice()))
-                    .reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
-            if (vo.getPurchasePrice() != null && !NumberUtil.equal(vo.getPurchasePrice(), purchasePrice)) {
-                throw new DefaultClientException("单品的采购价设置错误！");
-            }
-
-            BigDecimal salePrice = vo.getProductBundles().stream()
-                    .filter(productBundleVo -> productBundleVo.getSalePrice() != null)
-                    .map(productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
-                            productBundleVo.getSalePrice()))
-                    .reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
-            if (vo.getSalePrice() != null && !NumberUtil.equal(vo.getSalePrice(), salePrice)) {
-                throw new DefaultClientException("单品的销售价设置错误！");
-            }
-
-            BigDecimal retailPrice = vo.getProductBundles().stream()
-                    .filter(productBundleVo -> productBundleVo.getRetailPrice() != null)
-                    .map(productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
-                            productBundleVo.getRetailPrice()))
-                    .reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
-            if (vo.getRetailPrice() != null && !NumberUtil.equal(vo.getRetailPrice(), retailPrice)) {
-                throw new DefaultClientException("单品的零售价设置错误！");
-            }
-
-            List<ProductBundle> productBundles = vo.getProductBundles().stream().map(productBundleVo -> {
-                ProductBundle productBundle = new ProductBundle();
-                productBundle.setId(IdUtil.getId());
-                productBundle.setMainProductId(data.getId());
-                productBundle.setProductId(productBundleVo.getProductId());
-                productBundle.setBundleNum(productBundleVo.getBundleNum());
-                productBundle.setPurchasePrice(productBundleVo.getPurchasePrice());
-                productBundle.setSalePrice(productBundleVo.getSalePrice());
-                productBundle.setRetailPrice(productBundleVo.getRetailPrice());
-
-                return productBundle;
-            }).collect(Collectors.toList());
-
-            productBundleService.saveBatch(productBundles);
-        }
-
-
 
         if (!CollectionUtil.isEmpty(vo.getProperties())) {
             // 商品和商品属性的关系
@@ -449,59 +393,6 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             saveUnits(data, vo.getUnits());
         }
 
-        // 组合商品
-        if (data.getProductType() == ProductType.BUNDLE) {
-            if (CollectionUtil.isEmpty(vo.getProductBundles())) {
-                throw new DefaultClientException("单品数据不能为空！");
-            }
-
-            BigDecimal purchasePrice = vo.getProductBundles().stream()
-                    .filter(productBundleVo -> productBundleVo.getPurchasePrice() != null)
-                    .map(productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
-                            productBundleVo.getPurchasePrice()))
-                    .reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
-            if (vo.getPurchasePrice() != null && !NumberUtil.equal(vo.getPurchasePrice(), purchasePrice)) {
-                throw new DefaultClientException("单品的采购价设置错误！");
-            }
-
-            BigDecimal salePrice = vo.getProductBundles().stream()
-                    .filter(productBundleVo -> productBundleVo.getSalePrice() != null)
-                    .map(productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
-                            productBundleVo.getSalePrice()))
-                    .reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
-            if (vo.getSalePrice() != null && !NumberUtil.equal(vo.getSalePrice(), salePrice)) {
-                throw new DefaultClientException("单品的销售价设置错误！");
-            }
-
-            BigDecimal retailPrice = vo.getProductBundles().stream()
-                    .filter(productBundleVo -> productBundleVo.getRetailPrice() != null)
-                    .map(productBundleVo -> NumberUtil.mul(productBundleVo.getBundleNum(),
-                            productBundleVo.getRetailPrice()))
-                    .reduce(NumberUtil::add).orElse(BigDecimal.ZERO);
-            if (vo.getRetailPrice() != null && !NumberUtil.equal(vo.getRetailPrice(), retailPrice)) {
-                throw new DefaultClientException("单品的零售价设置错误！");
-            }
-
-            Wrapper<ProductBundle> deleteBundleWrapper = Wrappers.lambdaQuery(ProductBundle.class)
-                    .eq(ProductBundle::getMainProductId, data.getId());
-            productBundleService.remove(deleteBundleWrapper);
-
-            List<ProductBundle> productBundles = vo.getProductBundles().stream().map(productBundleVo -> {
-                ProductBundle productBundle = new ProductBundle();
-                productBundle.setId(IdUtil.getId());
-                productBundle.setMainProductId(data.getId());
-                productBundle.setProductId(productBundleVo.getProductId());
-                productBundle.setBundleNum(productBundleVo.getBundleNum());
-                productBundle.setPurchasePrice(productBundleVo.getPurchasePrice());
-                productBundle.setSalePrice(productBundleVo.getSalePrice());
-                productBundle.setRetailPrice(productBundleVo.getRetailPrice());
-
-                return productBundle;
-            }).collect(Collectors.toList());
-
-            productBundleService.saveBatch(productBundles);
-        }
-
         productPropertyRelationService.deleteByProductId(data.getId());
         if (!CollectionUtil.isEmpty(vo.getProperties())) {
             // 商品和商品属性的关系
@@ -554,7 +445,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     }
 
     @Override
-    public List<Product> getByCategoryIds(List<String> categoryIds, Integer productType) {
+    public List<Product> getByCategoryIds(List<String> categoryIds) {
 
         if (CollectionUtil.isEmpty(categoryIds)) {
             return CollectionUtil.emptyList();
@@ -571,19 +462,19 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
 
         children = children.stream().distinct().collect(Collectors.toList());
 
-        List<Product> datas = getBaseMapper().getByCategoryIds(children, productType);
+        List<Product> datas = getBaseMapper().getByCategoryIds(children);
 
         return datas;
     }
 
     @Override
-    public List<Product> getByBrandIds(List<String> brandIds, Integer productType) {
+    public List<Product> getByBrandIds(List<String> brandIds) {
 
         if (CollectionUtil.isEmpty(brandIds)) {
             return CollectionUtil.emptyList();
         }
 
-        return getBaseMapper().getByBrandIds(brandIds, productType);
+        return getBaseMapper().getByBrandIds(brandIds);
     }
 
     @CacheEvict(value = Product.CACHE_NAME, key = "@cacheVariables.tenantId() + #key")
@@ -686,7 +577,6 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             }
             record.setTaxRate(data.getTaxRate() == null ? BigDecimal.ZERO : data.getTaxRate());
             record.setSaleTaxRate(data.getSaleTaxRate() == null ? BigDecimal.ZERO : data.getSaleTaxRate());
-            record.setProductType(ProductType.NORMAL);
             record.setAvailable(Boolean.TRUE);
             record.setSalePrice(data.getSalePrice() == null ? BigDecimal.ZERO : data.getSalePrice());
             record.setPurchasePrice(data.getPurchasePrice() == null ? BigDecimal.ZERO : data.getPurchasePrice());

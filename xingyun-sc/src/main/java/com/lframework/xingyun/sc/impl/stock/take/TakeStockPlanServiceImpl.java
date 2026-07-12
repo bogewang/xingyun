@@ -14,7 +14,6 @@ import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
 import com.lframework.starter.web.core.utils.*;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.xingyun.basedata.entity.Product;
-import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.vo.product.info.QueryProductVo;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
@@ -139,7 +138,6 @@ public class TakeStockPlanServiceImpl extends BaseMpServiceImpl<TakeStockPlanMap
                 // 全场盘点
                 // 将所有商品添加明细
                 QueryProductVo queryProductVo = new QueryProductVo();
-                queryProductVo.setProductType(ProductType.NORMAL.getCode());
                 Integer count = productService.queryCount(queryProductVo);
                 if (count > 2000) {
                     throw new DefaultClientException(
@@ -149,10 +147,10 @@ public class TakeStockPlanServiceImpl extends BaseMpServiceImpl<TakeStockPlanMap
                 products = productService.query(queryProductVo);
             } else if (data.getTakeType() == TakeStockPlanType.CATEGORY) {
                 // 分类盘点
-                products = productService.getByCategoryIds(vo.getBizIds(), ProductType.NORMAL.getCode());
+                products = productService.getByCategoryIds(vo.getBizIds());
             } else if (data.getTakeType() == TakeStockPlanType.BRAND) {
                 // 品牌盘点
-                products = productService.getByBrandIds(vo.getBizIds(), ProductType.NORMAL.getCode());
+                products = productService.getByBrandIds(vo.getBizIds());
             }
         }
 
@@ -164,7 +162,7 @@ public class TakeStockPlanServiceImpl extends BaseMpServiceImpl<TakeStockPlanMap
             List<String> productIds = products.stream().map(Product::getId)
                     .collect(Collectors.toList());
             List<ProductStock> productStocks = productStockService.getByProductIdsAndScId(productIds,
-                    vo.getScId(), ProductType.NORMAL.getCode());
+                    vo.getScId());
             int orderNo = 1;
             for (Product product : products) {
                 ProductStock productStock = productStocks.stream()

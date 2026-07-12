@@ -27,7 +27,6 @@ import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductBundle;
 import com.lframework.xingyun.basedata.entity.Supplier;
-import com.lframework.xingyun.basedata.enums.ProductType;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.product.ProductUnitService;
@@ -360,40 +359,7 @@ public class PurchaseOrderServiceImpl extends
             totalAmount = NumberUtil.add(totalAmount,
                     NumberUtil.getNumber(NumberUtil.mul(detail.getTaxPrice(), detail.getOrderNum()), 2));
 
-            Product product = productService.findById(detail.getProductId());
-            if (product.getProductType() == ProductType.NORMAL) {
-                totalNum = NumberUtil.add(totalNum, detail.getOrderNum());
-            } else {
-                Wrapper<PurchaseOrderDetailBundle> queryBundleWrapper = Wrappers.lambdaQuery(
-                                PurchaseOrderDetailBundle.class)
-                        .eq(PurchaseOrderDetailBundle::getOrderId, order.getId())
-                        .eq(PurchaseOrderDetailBundle::getDetailId, detail.getId());
-                List<PurchaseOrderDetailBundle> purchaseOrderDetailBundles = purchaseOrderDetailBundleService.list(
-                        queryBundleWrapper);
-                Assert.notEmpty(purchaseOrderDetailBundles);
-
-                for (PurchaseOrderDetailBundle purchaseOrderDetailBundle : purchaseOrderDetailBundles) {
-                    PurchaseOrderDetail newDetail = new PurchaseOrderDetail();
-                    newDetail.setId(IdUtil.getId());
-                    newDetail.setOrderId(order.getId());
-                    newDetail.setProductId(purchaseOrderDetailBundle.getProductId());
-                    newDetail.setOrderNum(purchaseOrderDetailBundle.getProductOrderNum());
-                    newDetail.setTaxPrice(purchaseOrderDetailBundle.getProductTaxPrice());
-                    newDetail.setIsGift(Boolean.FALSE);
-                    newDetail.setTaxRate(purchaseOrderDetailBundle.getProductTaxRate());
-                    newDetail.setDescription(detail.getDescription());
-                    newDetail.setOrderNo(detail.getOrderNo());
-                    newDetail.setTaxAmount(purchaseOrderDetailBundle.getProductTaxAmount());
-
-                    purchaseOrderDetailService.save(newDetail);
-                    purchaseOrderDetailService.removeById(detail.getId());
-
-                    purchaseOrderDetailBundle.setProductDetailId(newDetail.getId());
-                    purchaseOrderDetailBundleService.updateById(purchaseOrderDetailBundle);
-
-                    totalNum = NumberUtil.add(totalNum, newDetail.getOrderNum());
-                }
-            }
+            totalNum = NumberUtil.add(totalNum, detail.getOrderNum());
         }
 
         // 这里需要重新统计明细信息，因为明细发生变动了
@@ -602,50 +568,6 @@ public class PurchaseOrderServiceImpl extends
             }
 
             // 这里处理组合商品
-            if (product.getProductType() == ProductType.BUNDLE) {
-                if (!NumberUtil.isInteger(productVo.getPurchaseNum())) {
-                    throw new InputErrorException("第" + orderNo + "行商品采购数量必须是整数！");
-                }
-                List<ProductBundle> productBundles = productBundleService.getByMainProductId(
-                        product.getId());
-                // 构建指标项
-                Map<Object, Number> bundleWeight = new HashMap<>(productBundles.size());
-                for (ProductBundle productBundle : productBundles) {
-                    bundleWeight.put(productBundle.getProductId(),
-                            NumberUtil.mul(productBundle.getPurchasePrice(), productBundle.getBundleNum()));
-                }
-                Map<Object, Number> splitPriceMap = SplitNumberUtil.split(orderDetail.getTaxAmount(),
-                        bundleWeight, 2);
-                List<PurchaseOrderDetailBundle> purchaseOrderDetailBundles = productBundles.stream()
-                        .map(productBundle -> {
-                            Product bundle = productService.findById(productBundle.getProductId());
-                            PurchaseOrderDetailBundle purchaseOrderDetailBundle = newOrderDetailBundle(isForm);
-                            purchaseOrderDetailBundle.setId(IdUtil.getId());
-                            purchaseOrderDetailBundle.setOrderId(order.getId());
-                            purchaseOrderDetailBundle.setDetailId(orderDetail.getId());
-                            purchaseOrderDetailBundle.setMainProductId(product.getId());
-                            purchaseOrderDetailBundle.setOrderNum(orderDetail.getOrderNum());
-                            purchaseOrderDetailBundle.setProductId(productBundle.getProductId());
-                            purchaseOrderDetailBundle.setProductOrderNum(
-                                    NumberUtil.mul(orderDetail.getOrderNum(), productBundle.getBundleNum()));
-                            purchaseOrderDetailBundle.setProductOriPrice(productBundle.getPurchasePrice());
-                            purchaseOrderDetailBundle.setProductTaxAmount(BigDecimal.valueOf(
-                                    splitPriceMap.get(productBundle.getProductId()).doubleValue()));
-                            // 这里会有尾差
-                            purchaseOrderDetailBundle.setProductTaxPrice(NumberUtil.getNumber(
-                                    NumberUtil.div(purchaseOrderDetailBundle.getProductTaxAmount(),
-                                            purchaseOrderDetailBundle.getProductOrderNum()), 6));
-                            purchaseOrderDetailBundle.setProductTaxRate(bundle.getTaxRate());
-
-                            return purchaseOrderDetailBundle;
-                        }).collect(Collectors.toList());
-
-                if (isForm) {
-                    purchaseOrderDetailBundleFormService.saveBatch((List) purchaseOrderDetailBundles);
-                } else {
-                    purchaseOrderDetailBundleService.saveBatch(purchaseOrderDetailBundles);
-                }
-            }
             orderNo++;
         }
         order.setTotalNum(purchaseNum);

@@ -3,7 +3,6 @@ package com.lframework.xingyun.basedata.vo.product.info;
 import com.lframework.starter.web.core.components.validation.IsEnum;
 import com.lframework.starter.web.core.vo.BaseVo;
 import com.lframework.starter.web.core.vo.SortPageVo;
-import com.lframework.xingyun.basedata.enums.ProductType;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -55,13 +54,6 @@ public class QueryProductVo extends SortPageVo implements BaseVo, Serializable {
 	 */
 	@ApiModelProperty("分类ID")
 	private String categoryId;
-
-	/**
-	 * 商品类型
-	 */
-	@ApiModelProperty("商品类型")
-	@IsEnum(message = "商品类型格式错误！", enumClass = ProductType.class)
-	private Integer productType;
 
 	/**
 	 * 创建起始时间

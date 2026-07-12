@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.lframework.starter.web.core.dto.BaseDto;
 import com.lframework.starter.web.core.entity.BaseEntity;
-import com.lframework.xingyun.basedata.enums.ProductType;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -66,11 +65,6 @@ public class Product extends BaseEntity implements BaseDto {
    * 品牌ID
    */
   private String brandId;
-
-  /**
-   * 商品类型
-   */
-  private ProductType productType;
 
   /**
    * 进项税率（%）

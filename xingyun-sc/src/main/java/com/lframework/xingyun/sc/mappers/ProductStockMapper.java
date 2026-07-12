@@ -60,7 +60,7 @@ public interface ProductStockMapper extends BaseMapper<ProductStock> {
      * @return
      */
     List<ProductStock> getByProductIdsAndScId(@Param("productIds") List<String> productIds,
-                                              @Param("scId") String scId, @Param("productType") Integer productType);
+                                              @Param("scId") String scId);
 
     /**
      * 查询指定仓库下库存数量大于 0 的商品库存

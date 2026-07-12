@@ -1,9 +1,7 @@
 package com.lframework.xingyun.basedata.vo.product.info;
 
 import com.lframework.starter.web.core.components.validation.IsCode;
-import com.lframework.starter.web.core.components.validation.IsEnum;
 import com.lframework.starter.web.core.vo.BaseVo;
-import com.lframework.xingyun.basedata.enums.ProductType;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -11,7 +9,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.Digits;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
@@ -97,14 +94,6 @@ public class CreateProductVo implements BaseVo, Serializable {
   @ApiModelProperty(value = "销项税率（%）")
   @Min(value = 0, message = "销项税率（%）不允许小于0！")
   private BigDecimal saleTaxRate;
-
-  /**
-   * 商品类型
-   */
-  @ApiModelProperty(value = "商品类型", required = true)
-  @NotNull(message = "商品类型不能为空！")
-  @IsEnum(message = "商品类型格式错误！", enumClass = ProductType.class)
-  private Integer productType;
 
   /**
    * 重量（kg）

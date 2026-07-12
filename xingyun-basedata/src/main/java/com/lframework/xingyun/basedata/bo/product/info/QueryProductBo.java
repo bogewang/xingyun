@@ -123,13 +123,6 @@ public class QueryProductBo extends BaseBo<Product> {
     private String brandName;
 
     /**
-     * 商品类型
-     */
-    @ApiModelProperty("商品类型")
-    @EnumConvert
-    private Integer productType;
-
-    /**
      * 创建时间
      */
     @ApiModelProperty("创建时间")

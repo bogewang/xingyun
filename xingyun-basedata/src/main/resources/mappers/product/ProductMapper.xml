@@ -33,9 +33,6 @@
                 <if test="vo.shortName != null and vo.shortName != ''">
                     AND g.short_name LIKE CONCAT('%', #{vo.shortName}, '%')
                 </if>
-                <if test="vo.productType != null">
-                    AND g.product_type = #{vo.productType}
-                </if>
                 <if test="vo.startTime != null">
                     AND g.create_time >= #{vo.startTime}
                 </if>
@@ -64,18 +61,12 @@
     <select id="getByCategoryIds" resultType="com.lframework.xingyun.basedata.entity.Product">
         <include refid="ProductDto_sql"/>
         WHERE c.id IN <foreach collection="categoryIds" open="(" separator="," close=")" item="item">#{item}</foreach>
-        <if test="productType != null">
-            AND g.product_type = #{productType}
-        </if>
         AND g.available = TRUE
         ORDER BY g.code
     </select>
     <select id="getByBrandIds" resultType="com.lframework.xingyun.basedata.entity.Product">
         <include refid="ProductDto_sql"/>
         WHERE b.id IN <foreach collection="brandIds" open="(" separator="," close=")" item="item">#{item}</foreach>
-        <if test="productType != null">
-            AND g.product_type = #{productType}
-        </if>
         AND g.available = TRUE
         ORDER BY g.code
     </select>
@@ -99,9 +90,6 @@
                 </if>
                 <if test="vo.categoryId != null and vo.categoryId != ''">
                     AND (g.category_id = #{vo.categoryId} OR FIND_IN_SET(#{vo.categoryId}, rm.path))
-                </if>
-                <if test="vo.productType != null">
-                    AND g.product_type = #{vo.productType}
                 </if>
                 <if test="vo.startTime != null">
                     AND g.create_time >= #{vo.startTime}
@@ -150,9 +138,6 @@
               </if>
               <if test="vo.shortName != null and vo.shortName != ''">
                   AND g.short_name LIKE CONCAT('%', #{vo.shortName}, '%')
-              </if>
-              <if test="vo.productType != null">
-                  AND g.product_type = #{vo.productType}
               </if>
               <if test="vo.startTime != null">
                   AND g.create_time >= #{vo.startTime}
