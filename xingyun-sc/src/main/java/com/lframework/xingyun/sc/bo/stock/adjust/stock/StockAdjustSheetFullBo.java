@@ -8,10 +8,8 @@ import com.lframework.starter.web.core.annotations.convert.EnumConvert;
 import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.starter.web.core.utils.EnumUtil;
-import com.lframework.xingyun.basedata.entity.Product;
-import com.lframework.xingyun.basedata.entity.ProductBrand;
-import com.lframework.xingyun.basedata.entity.ProductCategory;
-import com.lframework.xingyun.basedata.entity.StoreCenter;
+import com.lframework.xingyun.basedata.entity.*;
+import com.lframework.xingyun.basedata.service.UnitService;
 import com.lframework.xingyun.basedata.service.product.ProductBrandService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
@@ -301,7 +299,8 @@ public class StockAdjustSheetFullBo extends BaseBo<StockAdjustSheetFullDto> {
       this.skuCode = product.getSkuCode();
       this.externalCode = product.getExternalCode();
       this.spec = product.getSpec();
-      this.unit = product.getUnit();
+      Unit unit = ApplicationUtil.getBean(UnitService.class).getById(product.getUnit());
+      this.unit = unit == null ? product.getUnit() : unit.getName();
 
       if (EnumUtil.getByCode(StockAdjustSheetStatus.class, this.status)
           != StockAdjustSheetStatus.APPROVE_PASS) {
