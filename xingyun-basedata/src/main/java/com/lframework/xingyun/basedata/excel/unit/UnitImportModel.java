@@ -7,6 +7,10 @@ import lombok.Data;
 
 @Data
 public class UnitImportModel implements ExcelModel {
+
+    @ExcelProperty("编码")
+    private String code;
+
     @ExcelRequired
     @ExcelProperty("名称")
     private String name;

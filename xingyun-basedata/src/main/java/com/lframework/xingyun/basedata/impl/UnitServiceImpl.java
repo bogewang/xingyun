@@ -19,6 +19,7 @@ import com.lframework.xingyun.basedata.vo.unit.UpdateUnitVo;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,7 +89,9 @@ public class UnitServiceImpl extends BaseMpServiceImpl<UnitMapper, Unit> impleme
             checkUnique(null, item.getName(), null);
             Unit unit = new Unit();
             unit.setId(IdUtil.getId());
-            unit.setCode(generateCode());
+            if (StringUtils.isBlank(item.getCode())) {
+                unit.setCode(generateCode());
+            }
             unit.setName(item.getName());
             unit.setDescription(item.getDescription());
             unit.setAvailable(true);
