@@ -17,7 +17,7 @@
             {{ formData.reasonName }}
           </j-form-item>
           <j-form-item label="备注" :span="24">
-            <a-textarea v-model:value.trim="formData.description" readonly />
+            <a-input v-model:value.trim="formData.description" readonly />
           </j-form-item>
           <j-form-item label="状态">
             <span
@@ -134,12 +134,9 @@
           { type: 'seq', width: 50 },
           { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 260 },
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
           { field: 'stockNum', title: '调整库存数量', width: 120, align: 'right' },
           { field: 'description', title: '备注', width: 200 },
         ],

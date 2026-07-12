@@ -34,7 +34,7 @@
             </a-select>
           </j-form-item>
           <j-form-item label="备注" :span="24">
-            <a-textarea v-model:value.trim="formData.description" maxlength="200" />
+            <a-input v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
           <j-form-item label="状态">
             <span
@@ -275,12 +275,9 @@
             width: 260,
             slots: { default: 'productName_default' },
           },
-          // { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          // { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          // { field: 'brandName', title: '商品品牌', width: 120 },
           { field: 'curStockNum', title: '库存数量', width: 120, align: 'right' },
           {
             field: 'stockNum',
