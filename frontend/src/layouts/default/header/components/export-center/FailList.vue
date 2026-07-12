@@ -76,7 +76,7 @@
         tableColumn: [
           { type: 'seq', width: 50 },
           { field: 'name', title: '任务名称', minWidth: 120 },
-          { field: 'createTime', title: '创建时间', width: 140 },
+          { field: 'createTime', title: '创建时间', width: 180 },
           { field: 'errorMsg', title: '错误信息', width: 200 },
         ],
         // 请求接口配置

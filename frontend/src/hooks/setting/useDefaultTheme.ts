@@ -9,6 +9,7 @@ export function useDefaultTheme() {
   const defaultTheme = {
     token: {
       ...mapToken,
+      fontSize: 14,
       // fontSizeIcon: ratio(mapToken.fontSizeIcon),
       colorPrimary: '#0960bd',
       borderRadius: 2,

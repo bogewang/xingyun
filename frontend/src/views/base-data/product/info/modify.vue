@@ -14,33 +14,17 @@
             PRODUCT_TYPE.BUNDLE.equalsCode(productType)
           "
         >
-          <a-col :md="8" :sm="24">
+          <a-col :md="6" :sm="24">
             <a-form-item label="编号" name="code">
               <a-input v-model:value="formData.code" allow-clear />
             </a-form-item>
           </a-col>
-          <a-col :md="8" :sm="24">
+          <a-col :md="6" :sm="24">
             <a-form-item label="名称" name="name">
               <a-input v-model:value="formData.name" allow-clear />
             </a-form-item>
           </a-col>
-          <a-col :md="8" :sm="24">
-            <a-form-item label="简称" name="shortName">
-              <a-input v-model:value="formData.shortName" allow-clear />
-            </a-form-item>
-          </a-col>
-          <a-col :md="8" :sm="24">
-            <a-form-item label="SKU编号" name="skuCode">
-              <a-input v-model:value="formData.skuCode" allow-clear />
-            </a-form-item>
-          </a-col>
-          <a-col :md="8" :sm="24">
-            <a-form-item label="简码" name="externalCode">
-              <a-input v-model:value="formData.externalCode" allow-clear />
-            </a-form-item>
-          </a-col>
-
-          <a-col :md="8" :sm="24">
+          <a-col :md="6" :sm="24">
             <a-form-item label="商品分类" name="categoryId">
               <product-category-selector
                 v-model:value="formData.categoryId"
@@ -48,74 +32,124 @@
               />
             </a-form-item>
           </a-col>
-          <a-col :md="8" :sm="24">
-            <a-form-item label="商品品牌" name="brandId">
-              <product-brand-selector v-model:value="formData.brandId" />
-            </a-form-item>
-          </a-col>
-          <a-col :md="8" :sm="24">
+          <a-col :md="6" :sm="24">
             <a-form-item label="规格" name="spec">
               <a-input v-model:value="formData.spec" allow-clear />
             </a-form-item>
           </a-col>
-          <a-col :md="8" :sm="24">
+        </a-row>
+        <a-row>
+          <a-col :md="6" :sm="24">
             <a-form-item label="单位" name="unit">
-              <a-input v-model:value="formData.unit" allow-clear />
+              <a-space
+                :size="6"
+                style="display: flex; flex-wrap: nowrap; align-items: center; white-space: nowrap"
+              >
+                <a-select
+                  v-model:value="formData.unit"
+                  placeholder="请选择主单位"
+                  allow-clear
+                  show-search
+                  style="width: 140px; flex: none"
+                  ><a-select-option v-for="item in unitOptions" :key="item.id" :value="item.id">{{
+                    item.name
+                  }}</a-select-option></a-select
+                >
+                <a-checkbox
+                  v-model:checked="formData.multiUnitEnabled"
+                  style="white-space: nowrap"
+                  @change="handleMultiUnitChange"
+                  >启用多单位</a-checkbox
+                >
+              </a-space>
             </a-form-item>
           </a-col>
-          <a-col v-if="PRODUCT_TYPE.NORMAL.equalsCode(productType)" :md="8" :sm="24">
-            <a-form-item label="重量（kg）" name="weight">
-              <a-input v-model:value="formData.weight" allow-clear />
-            </a-form-item>
-          </a-col>
-          <a-col v-if="PRODUCT_TYPE.NORMAL.equalsCode(productType)" :md="8" :sm="24">
-            <a-form-item label="体积（cm³）" name="volume">
-              <a-input v-model:value="formData.volume" allow-clear />
-            </a-form-item>
-          </a-col>
-          <a-col v-if="PRODUCT_TYPE.NORMAL.equalsCode(productType)" :md="8" :sm="24">
-            <a-form-item label="进项税率（%）" name="taxRate">
-              <a-input v-model:value="formData.taxRate" allow-clear />
-            </a-form-item>
-          </a-col>
-          <a-col v-if="PRODUCT_TYPE.NORMAL.equalsCode(productType)" :md="8" :sm="24">
-            <a-form-item label="销项税率（%）" name="saleTaxRate">
-              <a-input v-model:value="formData.saleTaxRate" allow-clear />
-            </a-form-item>
-          </a-col>
-          <a-col :md="8" :sm="24">
+          <a-col :md="6" :sm="24">
             <a-form-item label="采购价（元）" name="purchasePrice">
               <a-input v-model:value="formData.purchasePrice" allow-clear />
             </a-form-item>
           </a-col>
-          <a-col :md="8" :sm="24">
+
+          <a-col :md="6" :sm="24">
             <a-form-item label="销售价（元）" name="salePrice">
               <a-input v-model:value="formData.salePrice" allow-clear />
             </a-form-item>
           </a-col>
-          <a-col :md="8" :sm="24">
+          <a-col :md="6" :sm="24">
             <a-form-item label="零售价（元）" name="retailPrice">
               <a-input v-model:value="formData.retailPrice" allow-clear />
             </a-form-item>
           </a-col>
-          <a-col :md="8" :sm="24">
+        </a-row>
+        <a-row v-if="formData.multiUnitEnabled">
+          <a-col :span="24"
+            ><a-form-item label="辅单位换算" :label-col="{ span: 2 }" :wrapper-col="{ span: 22 }">
+              <a-space
+                v-for="(item, index) in formData.auxiliaryUnits"
+                :key="index"
+                style="display: flex; margin-bottom: 8px"
+                ><a-select
+                  v-model:value="item.unitName"
+                  placeholder="辅单位"
+                  style="width: 130px"
+                  show-search
+                  ><a-select-option
+                    v-for="option in unitOptions"
+                    :key="option.id"
+                    :value="option.name"
+                    >{{ option.name }}</a-select-option
+                  ></a-select
+                ><span>=</span
+                ><a-input-number
+                  v-model:value="item.conversionRate"
+                  :min="0.000001"
+                  :precision="6"
+                  style="width: 120px"
+                /><span>{{ getBaseUnitName() }}</span
+                ><a-button type="link" danger @click="removeAuxiliaryUnit(index)"
+                  >删除</a-button
+                ></a-space
+              >
+              <a-button type="dashed" style="width: 360px" @click="addAuxiliaryUnit"
+                >+ 继续添加单位</a-button
+              >
+            </a-form-item></a-col
+          >
+        </a-row>
+        <a-row>
+          <a-col :md="6" :sm="24">
+            <a-form-item label="简称" name="shortName"
+              ><a-input v-model:value="formData.shortName" allow-clear
+            /></a-form-item>
+          </a-col>
+          <a-col v-if="PRODUCT_TYPE.NORMAL.equalsCode(productType)" :md="6" :sm="24">
+            <a-form-item label="进项税率（%）" name="taxRate">
+              <a-input v-model:value="formData.taxRate" allow-clear />
+            </a-form-item>
+          </a-col>
+          <a-col v-if="PRODUCT_TYPE.NORMAL.equalsCode(productType)" :md="6" :sm="24">
+            <a-form-item label="销项税率（%）" name="saleTaxRate">
+              <a-input v-model:value="formData.saleTaxRate" allow-clear />
+            </a-form-item>
+          </a-col>
+          <a-col :md="6" :sm="24">
             <a-form-item label="备注" name="remark">
               <a-input v-model:value="formData.remark" allow-clear />
             </a-form-item>
           </a-col>
-          <a-col :md="8" :sm="24">
+          <a-col :md="6" :sm="24">
             <a-form-item label="备注二" name="remark2">
               <a-input v-model:value="formData.remark2" allow-clear />
             </a-form-item>
           </a-col>
-          <a-col :md="8" :sm="24">
-            <a-form-item label="别名" name="alias">
-              <a-textarea v-model:value="formData.alias" allow-clear :rows="2" />
-            </a-form-item>
-          </a-col>
-          <a-col :md="8" :sm="24">
+          <a-col :md="6" :sm="24">
             <a-form-item label="默认供应商" name="defaultSupplier">
               <supplier-selector v-model:value="formData.defaultSupplier" />
+            </a-form-item>
+          </a-col>
+          <a-col :md="6" :sm="24">
+            <a-form-item label="别名" name="alias">
+              <a-textarea v-model:value="formData.alias" allow-clear :rows="2" />
             </a-form-item>
           </a-col>
         </a-row>
@@ -262,7 +296,7 @@
           </a-col>
         </a-row>
         <a-row>
-          <a-col v-for="modelor in modelorList" :key="modelor.id" :md="8" :sm="24">
+          <a-col v-for="modelor in modelorList" :key="modelor.id" :md="6" :sm="24">
             <a-form-item :label="modelor.name" :required="modelor.isRequired">
               <a-select
                 v-if="COLUMN_TYPE.MULTIPLE.equalsCode(modelor.columnType)"
@@ -337,6 +371,7 @@
   import { validCode } from '@/utils/validate';
   import * as api from '@/api/base-data/product/info';
   import * as propertyApi from '@/api/base-data/product/property';
+  import * as unitApi from '@/api/base-data/unit';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue';
   import {
@@ -354,7 +389,6 @@
     uuid,
   } from '@/utils/utils';
   import { createError, createSuccess, createConfirm } from '@/hooks/web/msg';
-  import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
   import ProductSelector from '@/components/Selector/ProductSelector.vue';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
@@ -366,7 +400,6 @@
     name: 'ModifyProduct',
     // 使用组件
     components: {
-      ProductBrandSelector,
       ProductCategorySelector,
       ProductSelector,
       SupplierSelector,
@@ -390,6 +423,7 @@
         loading: false,
         // 表单数据
         formData: {},
+        unitOptions: [],
         productType: undefined,
         productBundles: [],
         modelorList: [],
@@ -401,44 +435,6 @@
           ],
           name: [{ required: true, message: '请输入名称' }],
           categoryId: [{ required: true, message: '请选择分类' }],
-          weight: [
-            {
-              validator: (rule, value) => {
-                if (!isEmpty(value)) {
-                  if (!isFloat(value)) {
-                    return Promise.reject('重量（kg）必须是数字');
-                  }
-                  if (!isFloatGeZero(value)) {
-                    return Promise.reject('重量（kg）不允许小于0');
-                  }
-                  if (!isNumberPrecision(value, 2)) {
-                    return Promise.reject('重量（kg）最多允许2位小数');
-                  }
-                }
-
-                return Promise.resolve();
-              },
-            },
-          ],
-          volume: [
-            {
-              validator: (rule, value) => {
-                if (!isEmpty(value)) {
-                  if (!isFloat(value)) {
-                    return Promise.reject('体积（cm³）必须是数字');
-                  }
-                  if (!isFloatGeZero(value)) {
-                    return Promise.reject('体积（cm³）不允许小于0');
-                  }
-                  if (!isNumberPrecision(value, 2)) {
-                    return Promise.reject('体积（cm³）最多允许2位小数');
-                  }
-                }
-
-                return Promise.resolve();
-              },
-            },
-          ],
           taxRate: [
             {
               validator: (rule, value) => {
@@ -540,19 +536,49 @@
     created() {
       // 初始化数据
       this.initFormData();
+      this.loadUnitOptions();
       // 查询数据
       this.loadFormData();
     },
     methods: {
+      loadUnitOptions() {
+        unitApi.query({}).then((res) => {
+          this.unitOptions = res || [];
+        });
+      },
+      getBaseUnitName() {
+        return this.unitOptions.find((item) => item.id === this.formData.unit)?.name || '主单位';
+      },
       // 关闭对话框
       closeDialog() {
         this.closeCurrentPage();
       },
       // 初始化表单数据
       initFormData() {
-        this.formData = {};
+        this.formData = { multiUnitEnabled: false, auxiliaryUnits: [] };
       },
       // 提交表单事件
+      buildUnits() {
+        const baseUnit = this.unitOptions.find((item) => item.id === this.formData.unit)?.name;
+        const units = baseUnit ? [{ unitName: baseUnit, conversionRate: 1, available: true }] : [];
+        if (this.formData.multiUnitEnabled) {
+          (this.formData.auxiliaryUnits || []).forEach((item) => {
+            if (item.unitName && Number(item.conversionRate) > 0)
+              units.push({ ...item, available: true });
+          });
+        }
+        return units;
+      },
+      addAuxiliaryUnit() {
+        this.formData.auxiliaryUnits.push({ unitName: '', conversionRate: null });
+      },
+      removeAuxiliaryUnit(index) {
+        this.formData.auxiliaryUnits.splice(index, 1);
+      },
+      handleMultiUnitChange() {
+        if (this.formData.multiUnitEnabled && this.formData.auxiliaryUnits.length === 0)
+          this.addAuxiliaryUnit();
+      },
       async submit() {
         let valid = true;
 
@@ -646,7 +672,10 @@
             }
           }
 
-          if (!isEmpty(this.formData.purchasePrice) && !eq(purchasePrice, this.formData.purchasePrice)) {
+          if (
+            !isEmpty(this.formData.purchasePrice) &&
+            !eq(purchasePrice, this.formData.purchasePrice)
+          ) {
             createError(
               '当前所有单品的【包含数量】乘以【采购价（元）】的总和为' +
                 purchasePrice +
@@ -709,6 +738,7 @@
         const params = Object.assign({}, this.formData, {
           properties: properties,
           productBundles: this.productBundles,
+          units: this.buildUnits(),
         });
         this.loading = true;
         api
@@ -727,7 +757,13 @@
         api
           .get(this.id)
           .then((data) => {
-            this.formData = Object.assign({}, data);
+            const auxiliaryUnits = (data.units || [])
+              .filter((item) => !item.baseUnit)
+              .map((item) => ({ unitName: item.unitName, conversionRate: item.conversionRate }));
+            this.formData = Object.assign({}, data, {
+              multiUnitEnabled: auxiliaryUnits.length > 0,
+              auxiliaryUnits,
+            });
             this.selectCategory(this.formData.categoryId, this.formData);
             this.productType = this.formData.productType;
             this.productBundles = data.productBundles;

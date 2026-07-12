@@ -44,7 +44,7 @@ export function generateModifyVars() {
     'success-color': '#52C41A', //  Success color
     'error-color': '#FF4D4F', //  False color
     'warning-color': '#FAAD14', //   Warning color
-    'font-size-base': '12px', //  Main font size
+    'font-size-base': '14px', //  Main font size
     'border-radius-base': '2px', //  Component/float fillet
     'link-color': primary, //   Link color
     'app-content-background': '#fafafa', //   Link color
