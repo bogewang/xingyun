@@ -39,3 +39,12 @@ export const importExcel = (data: { file: Blob }): Promise<void> =>
     { url: url + '/import', data },
     { contentType: ContentTypeEnum.BLOB, region: 'cloud-api' },
   );
+
+/**
+ * 导出
+ */
+export const exportList = (data: QueryUnitVo): Promise<void> =>
+  defHttp.post<void>(
+    { url: url + '/export', data },
+    { contentType: ContentTypeEnum.FORM_URLENCODED, region: 'cloud-api' },
+  );

@@ -43,6 +43,13 @@
             >
               导入Excel
             </a-button>
+            <a-button
+              v-permission="['base-data:unit:import']"
+              :icon="h(DownloadOutlined)"
+              @click="exportList"
+            >
+              导出
+            </a-button>
             <a-dropdown v-permission="['base-data:unit:delete']">
               <template #overlay>
                 <a-menu @click="handleCommand">
@@ -93,11 +100,10 @@
   import { buildSortPageVo } from '@/utils/utils';
   import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
   import UnitImporter from '@/components/Importor/UnitImporter.vue';
-  import {CloudUploadOutlined, DeleteOutlined} from '@ant-design/icons-vue';
+  import { CloudUploadOutlined, DeleteOutlined, DownloadOutlined } from '@ant-design/icons-vue';
 
   export default defineComponent({
     name: 'ProductUnit',
-    methods: {DeleteOutlined},
     components: { UnitImporter },
     setup() {
       const grid = ref<any>();
@@ -143,6 +149,16 @@
         return {
           ...searchFormData,
         };
+      }
+
+      async function exportList() {
+        loading.value = true;
+        try {
+          await api.exportList(buildQueryParams({}, {}));
+          createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+        } finally {
+          loading.value = false;
+        }
       }
 
       function open(row?: any) {
@@ -214,6 +230,7 @@
         h,
         CloudUploadOutlined,
         DeleteOutlined,
+        DownloadOutlined,
         grid,
         importer,
         loading,
@@ -225,6 +242,7 @@
         columns,
         proxyConfig,
         search,
+        exportList,
         open,
         view,
         generateCode,

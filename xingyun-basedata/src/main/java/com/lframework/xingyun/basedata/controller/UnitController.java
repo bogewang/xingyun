@@ -1,6 +1,7 @@
 package com.lframework.xingyun.basedata.controller;
 
 import com.lframework.starter.common.utils.CollectionUtil;
+import com.lframework.starter.mq.core.utils.ExportTaskUtil;
 import com.lframework.starter.web.core.annotations.security.HasPermission;
 import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
@@ -12,6 +13,7 @@ import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.basedata.bo.unit.QueryUnitBo;
 import com.lframework.xingyun.basedata.entity.Unit;
 import com.lframework.xingyun.basedata.excel.unit.UnitImportModel;
+import com.lframework.xingyun.basedata.excel.unit.UnitExportTaskWorker;
 import com.lframework.xingyun.basedata.service.UnitService;
 import com.lframework.xingyun.basedata.vo.unit.CreateUnitVo;
 import com.lframework.xingyun.basedata.vo.unit.QueryUnitVo;
@@ -99,6 +101,19 @@ public class UnitController extends DefaultBaseController {
 
         try {
             unitService.removeById(id);
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
+    }
+
+    @PostMapping("/export")
+    @HasPermission("base-data:unit:export")
+    public InvokeResult<Void> export(@Valid QueryUnitVo vo) {
+
+        try {
+            ExportTaskUtil.exportTask("单位信息", UnitExportTaskWorker.class, vo);
             return InvokeResultBuilder.success();
         } catch (Exception e) {
             log.error("请求出错", e);
