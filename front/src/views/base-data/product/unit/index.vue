@@ -1,16 +1,6 @@
 <template>
   <div v-permission="['base-data:unit:query']">
     <page-wrapper content-full-height fixed-height>
-      <j-border>
-        <j-form bordered label-width="80px">
-          <j-form-item label="编码">
-            <a-input v-model:value="searchFormData.code" allow-clear @press-enter="search" />
-          </j-form-item>
-          <j-form-item label="名称">
-            <a-input v-model:value="searchFormData.name" allow-clear @press-enter="search" />
-          </j-form-item>
-        </j-form>
-      </j-border>
       <vxe-grid
         ref="grid"
         resizable
@@ -28,6 +18,18 @@
         :loading="loading"
         height="auto"
       >
+        <template #form>
+          <j-border>
+            <j-form bordered label-width="80px" @collapse="$refs.grid.refreshColumn()">
+              <j-form-item label="编码">
+                <a-input v-model:value="searchFormData.code" allow-clear />
+              </j-form-item>
+              <j-form-item label="名称">
+                <a-input v-model:value="searchFormData.name" allow-clear />
+              </j-form-item>
+            </j-form>
+          </j-border>
+        </template>
         <template #toolbar_buttons>
           <a-space>
             <a-button type="primary" @click="search">查询</a-button>
@@ -86,7 +88,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, h, onMounted, reactive, ref } from 'vue';
+  import { defineComponent, h, reactive, ref } from 'vue';
   import * as api from '@/api/base-data/unit';
   import { buildSortPageVo } from '@/utils/utils';
   import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
@@ -207,8 +209,6 @@
           },
         ];
       }
-
-      onMounted(() => search());
 
       return {
         h,
