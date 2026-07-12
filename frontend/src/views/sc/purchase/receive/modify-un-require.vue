@@ -306,6 +306,7 @@
     resetInlineProductSelect,
     setInlineProductSelectProducts,
   } from '@/utils/inlineProductSelect';
+  import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import { requestSupplierSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
@@ -433,21 +434,23 @@
     created() {
       this.openDialog();
     },
-    mounted() {
-      // 监听键盘事件，按下回车键时调用addProduct方法
+    activated() {
+      // 仅在当前页面激活时监听回车快捷键，避免缓存页面误响应。
       document.addEventListener('keydown', this.handleKeyDown);
     },
+    deactivated() {
+      document.removeEventListener('keydown', this.handleKeyDown);
+    },
     beforeUnmount() {
-      // 移除键盘事件监听
       document.removeEventListener('keydown', this.handleKeyDown);
     },
     methods: {
-      // 处理键盘事件
       handleKeyDown(event) {
-        // 按下回车键时调用addProduct方法
-        if (event.key === 'Enter' || event.keyCode === 13) {
-          this.addProduct();
+        if (!shouldAddProductByEnter(event)) {
+          return;
         }
+
+        this.addProduct();
       },
       // 打开对话框 由父页面触发
       openDialog() {
