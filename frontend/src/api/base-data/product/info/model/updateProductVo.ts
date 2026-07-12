@@ -1,4 +1,3 @@
-import { ProductBundleVo } from '@/api/base-data/product/info/model/productBundleVo';
 import { ProductPropertyRelationVo } from '@/api/base-data/product/info/model/productPropertyRelationVo';
 
 export interface UpdateProductVo {
@@ -76,11 +75,6 @@ export interface UpdateProductVo {
    * 商品类型
    */
   productType: number;
-
-  /**
-   * 单品
-   */
-  productBundles: ProductBundleVo[];
 
   /**
    * 商品属性

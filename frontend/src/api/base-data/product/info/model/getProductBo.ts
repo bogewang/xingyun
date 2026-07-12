@@ -1,5 +1,3 @@
-import { ProductBundleBo } from '@/api/base-data/product/info/model/productBundleBo';
-
 export interface GetProductBo {
   /**
    * ID
@@ -85,11 +83,6 @@ export interface GetProductBo {
    * 商品类型
    */
   productType: number;
-
-  /**
-   * 单品
-   */
-  productBundles: ProductBundleBo[];
 
   /**
    * 采购价

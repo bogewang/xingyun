@@ -1,4 +1,3 @@
-import { ProductBundleVo } from '@/api/base-data/product/info/model/productBundleVo';
 import { ProductPropertyRelationVo } from '@/api/base-data/product/info/model/productPropertyRelationVo';
 
 export interface CreateProductVo {
@@ -71,11 +70,6 @@ export interface CreateProductVo {
    * 体积（cm3）
    */
   volume: number;
-
-  /**
-   * 单品
-   */
-  productBundles: ProductBundleVo[];
 
   /**
    * 商品属性

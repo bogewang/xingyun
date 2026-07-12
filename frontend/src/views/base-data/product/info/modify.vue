@@ -8,12 +8,7 @@
         :model="formData"
         :rules="rules"
       >
-        <a-row
-          v-if="
-            PRODUCT_TYPE.NORMAL.equalsCode(productType) ||
-            PRODUCT_TYPE.BUNDLE.equalsCode(productType)
-          "
-        >
+        <a-row>
           <a-col :md="6" :sm="24">
             <a-form-item label="编号" name="code">
               <a-input v-model:value="formData.code" allow-clear />
@@ -122,12 +117,12 @@
               ><a-input v-model:value="formData.shortName" allow-clear
             /></a-form-item>
           </a-col>
-          <a-col v-if="PRODUCT_TYPE.NORMAL.equalsCode(productType)" :md="6" :sm="24">
+          <a-col :md="6" :sm="24">
             <a-form-item label="进项税率（%）" name="taxRate">
               <a-input v-model:value="formData.taxRate" allow-clear />
             </a-form-item>
           </a-col>
-          <a-col v-if="PRODUCT_TYPE.NORMAL.equalsCode(productType)" :md="6" :sm="24">
+          <a-col :md="6" :sm="24">
             <a-form-item label="销项税率（%）" name="saleTaxRate">
               <a-input v-model:value="formData.saleTaxRate" allow-clear />
             </a-form-item>
@@ -151,148 +146,6 @@
             <a-form-item label="别名" name="alias">
               <a-textarea v-model:value="formData.alias" allow-clear :rows="2" />
             </a-form-item>
-          </a-col>
-        </a-row>
-        <a-row v-if="PRODUCT_TYPE.BUNDLE.equalsCode(productType)">
-          <a-col :span="24">
-            <vxe-grid
-              ref="grid"
-              resizable
-              show-overflow
-              highlight-hover-row
-              keep-source
-              row-id="id"
-              height="500"
-              :data="productBundles"
-              :columns="[
-                { type: 'checkbox', width: 45 },
-                {
-                  field: 'product',
-                  title: '单品',
-                  minWidth: 260,
-                  slots: { default: 'product_default' },
-                },
-                {
-                  field: 'bundle_num',
-                  title: '包含数量',
-                  width: 200,
-                  align: 'right',
-                  slots: { default: 'bundleNum_default', header: 'bundleNum_header' },
-                },
-                {
-                  field: 'purchasePrice',
-                  title: '采购价（元）',
-                  width: 200,
-                  align: 'right',
-                  slots: { default: 'purchasePrice_default', header: 'purchasePrice_header' },
-                },
-                {
-                  field: 'salePrice',
-                  title: '销售价（元）',
-                  width: 200,
-                  align: 'right',
-                  slots: { default: 'salePrice_default', header: 'salePrice_header' },
-                },
-                {
-                  field: 'retailPrice',
-                  title: '零售价（元）',
-                  width: 200,
-                  align: 'right',
-                  slots: { default: 'retailPrice_default', header: 'retailPrice_header' },
-                },
-              ]"
-              :toolbar-config="{
-                // 缩放
-                zoom: false,
-                // 自定义表头
-                custom: false,
-                // 右侧是否显示刷新按钮
-                refresh: false,
-                // 自定义左侧工具栏
-                slots: {
-                  buttons: 'toolbar_buttons',
-                },
-              }"
-            >
-              <!-- 工具栏 -->
-              <template #toolbar_buttons>
-                <a-space>
-                  <a-button type="primary" :icon="h(PlusOutlined)" @click="addRow">新增</a-button>
-                  <a-button danger :icon="h(DeleteOutlined)" @click="delRow">删除</a-button>
-                </a-space>
-              </template>
-
-              <!-- 商品 列自定义内容 -->
-              <template #product_default="{ row }">
-                <product-selector
-                  v-model:value="row.productId"
-                  :request-params="{ productType: PRODUCT_TYPE.NORMAL.code }"
-                />
-              </template>
-
-              <!-- 包含数量 列自定义表头 -->
-              <template #bundleNum_header>
-                <a-space>
-                  <span>包含数量</span
-                  ><a-tooltip title="表示一个组合商品中包含的单品数量"
-                    ><a-icon type="question-circle"
-                  /></a-tooltip>
-                </a-space>
-              </template>
-
-              <!-- 包含数量 列自定义内容 -->
-              <template #bundleNum_default="{ row }">
-                <a-input v-model:value="row.bundleNum" class="number-input" />
-              </template>
-
-              <!-- 采购价 列自定义表头 -->
-              <template #purchasePrice_header>
-                <a-space>
-                  <span>采购价（元）</span
-                  ><a-tooltip
-                    title="表示一个组合商品采购后的单品的采购价，此处的计算公式：每行单品的【包含数量】乘以【采购价】的总和 等于【组合商品的采购价】"
-                    ><a-icon type="question-circle"
-                  /></a-tooltip>
-                </a-space>
-              </template>
-
-              <!-- 采购价 列自定义内容 -->
-              <template #purchasePrice_default="{ row }">
-                <a-input v-model:value="row.purchasePrice" class="number-input" />
-              </template>
-
-              <!-- 销售价 列自定义表头 -->
-              <template #salePrice_header>
-                <a-space>
-                  <span>销售价（元）</span
-                  ><a-tooltip
-                    title="表示一个组合商品销售后的单品的销售价，此处的计算公式：每行单品的【包含数量】乘以【销售价】的总和 等于【组合商品的销售价】"
-                    ><a-icon type="question-circle"
-                  /></a-tooltip>
-                </a-space>
-              </template>
-
-              <!-- 销售价 列自定义内容 -->
-              <template #salePrice_default="{ row }">
-                <a-input v-model:value="row.salePrice" class="number-input" />
-              </template>
-
-              <!-- 零售价 列自定义表头 -->
-              <template #retailPrice_header>
-                <a-space>
-                  <span>零售价（元）</span
-                  ><a-tooltip
-                    title="表示一个组合商品零售后的单品的零售价，此处的计算公式：每行单品的【包含数量】乘以【零售价】的总和 等于【组合商品的零售价】"
-                    ><a-icon type="question-circle"
-                  /></a-tooltip>
-                </a-space>
-              </template>
-
-              <!-- 零售价 列自定义内容 -->
-              <template #retailPrice_default="{ row }">
-                <a-input v-model:value="row.retailPrice" class="number-input" />
-              </template>
-            </vxe-grid>
           </a-col>
         </a-row>
         <a-row>
@@ -367,32 +220,16 @@
   </div>
 </template>
 <script>
-  import { h, defineComponent } from 'vue';
+  import { defineComponent } from 'vue';
   import { validCode } from '@/utils/validate';
   import * as api from '@/api/base-data/product/info';
   import * as propertyApi from '@/api/base-data/product/property';
   import * as unitApi from '@/api/base-data/unit';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import { PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue';
-  import {
-    isEmpty,
-    isFloat,
-    isFloatGeZero,
-    isNumberPrecision,
-    isInteger,
-    isIntegerGtZero,
-    isFloatGtZero,
-    add,
-    mul,
-    eq,
-    isArray,
-    uuid,
-  } from '@/utils/utils';
-  import { createError, createSuccess, createConfirm } from '@/hooks/web/msg';
+  import { isEmpty, isFloat, isFloatGeZero, isNumberPrecision, isArray } from '@/utils/utils';
+  import { createError, createSuccess } from '@/hooks/web/msg';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
-  import ProductSelector from '@/components/Selector/ProductSelector.vue';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
-  import { PRODUCT_TYPE } from '@/enums/biz/productType';
   import { COLUMN_TYPE } from '@/enums/biz/columnType';
   import { COLUMN_DATA_TYPE } from '@/enums/biz/columnDataType';
 
@@ -401,17 +238,12 @@
     // 使用组件
     components: {
       ProductCategorySelector,
-      ProductSelector,
       SupplierSelector,
     },
     mixins: [multiplePageMix],
     props: {},
     setup() {
       return {
-        h,
-        PlusOutlined,
-        DeleteOutlined,
-        PRODUCT_TYPE,
         COLUMN_TYPE,
         COLUMN_DATA_TYPE,
       };
@@ -424,14 +256,12 @@
         // 表单数据
         formData: {},
         unitOptions: [],
-        productType: undefined,
-        productBundles: [],
         modelorList: [],
         // 表单校验规则
         rules: {
           code: [
             { required: true, message: '请输入编号' },
-            { validator: validCode, message: '编号必须由字母、数字、“-_.”组成，长度不能超过20位' },
+            { validator: validCode, message: '编号必须由字母、数字、"-_."组成，长度不能超过20位' },
           ],
           name: [{ required: true, message: '请输入名称' }],
           categoryId: [{ required: true, message: '请选择分类' }],
@@ -589,125 +419,6 @@
         if (!valid) {
           return;
         }
-        if (PRODUCT_TYPE.BUNDLE.equalsCode(this.productType)) {
-          // 如果是组合商品
-          if (isEmpty(this.productBundles)) {
-            createError('组合商品必须包含单品数据！');
-            return;
-          }
-
-          let purchasePrice = 0;
-          let salePrice = 0;
-          let retailPrice = 0;
-          for (let i = 0; i < this.productBundles.length; i++) {
-            const bundleProduct = this.productBundles[i];
-            if (isEmpty(bundleProduct.productId)) {
-              createError('第' + (i + 1) + '行单品不能为空！');
-              return;
-            }
-
-            if (isEmpty(bundleProduct.bundleNum)) {
-              createError('第' + (i + 1) + '行单品包含数量不能为空！');
-              return;
-            }
-            if (!isInteger(bundleProduct.bundleNum)) {
-              createError('第' + (i + 1) + '行单品包含数量必须为整数！');
-              return;
-            }
-            if (!isIntegerGtZero(bundleProduct.bundleNum)) {
-              createError('第' + (i + 1) + '行单品包含数量必须大于0！');
-              return;
-            }
-
-            if (!isEmpty(bundleProduct.purchasePrice)) {
-              if (!isFloat(bundleProduct.purchasePrice)) {
-                createError('第' + (i + 1) + '行单品采购价（元）必须是数字！');
-                return;
-              }
-              if (!isFloatGtZero(bundleProduct.purchasePrice)) {
-                createError('第' + (i + 1) + '行单品采购价（元）必须大于0！');
-                return;
-              }
-              if (!isNumberPrecision(bundleProduct.purchasePrice, 6)) {
-                createError('第' + (i + 1) + '行单品采购价（元）最多允许6位小数！');
-                return;
-              }
-              purchasePrice = add(
-                purchasePrice,
-                mul(bundleProduct.bundleNum, bundleProduct.purchasePrice),
-              );
-            }
-            if (!isEmpty(bundleProduct.salePrice)) {
-              if (!isFloat(bundleProduct.salePrice)) {
-                createError('第' + (i + 1) + '行单品销售价（元）必须是数字！');
-                return;
-              }
-              if (!isFloatGtZero(bundleProduct.salePrice)) {
-                createError('第' + (i + 1) + '行单品销售价（元）必须大于0！');
-                return;
-              }
-              if (!isNumberPrecision(bundleProduct.salePrice, 6)) {
-                createError('第' + (i + 1) + '行单品销售价（元）最多允许6位小数！');
-                return;
-              }
-              salePrice = add(salePrice, mul(bundleProduct.bundleNum, bundleProduct.salePrice));
-            }
-            if (!isEmpty(bundleProduct.retailPrice)) {
-              if (!isFloat(bundleProduct.retailPrice)) {
-                createError('第' + (i + 1) + '行单品零售价（元）必须是数字！');
-                return;
-              }
-              if (!isFloatGtZero(bundleProduct.retailPrice)) {
-                createError('第' + (i + 1) + '行单品零售价（元）必须大于0！');
-                return;
-              }
-              if (!isNumberPrecision(bundleProduct.retailPrice, 6)) {
-                createError('第' + (i + 1) + '行单品零售价（元）最多允许6位小数！');
-                return;
-              }
-              retailPrice = add(
-                retailPrice,
-                mul(bundleProduct.bundleNum, bundleProduct.retailPrice),
-              );
-            }
-          }
-
-          if (
-            !isEmpty(this.formData.purchasePrice) &&
-            !eq(purchasePrice, this.formData.purchasePrice)
-          ) {
-            createError(
-              '当前所有单品的【包含数量】乘以【采购价（元）】的总和为' +
-                purchasePrice +
-                '元，组合商品的采购价为' +
-                this.formData.purchasePrice +
-                '元，两个值不相等，请调整！',
-            );
-            return;
-          }
-
-          if (!isEmpty(this.formData.salePrice) && !eq(salePrice, this.formData.salePrice)) {
-            createError(
-              '当前所有单品的【包含数量】乘以【销售价（元）】的总和为' +
-                salePrice +
-                '元，组合商品的销售价为' +
-                this.formData.salePrice +
-                '元，两个值不相等，请调整！',
-            );
-            return;
-          }
-
-          if (!isEmpty(this.formData.retailPrice) && !eq(retailPrice, this.formData.retailPrice)) {
-            createError(
-              '当前所有单品的【包含数量】乘以【零售价（元）】的总和为' +
-                retailPrice +
-                '元，组合商品的零售价为' +
-                this.formData.retailPrice +
-                '元，两个值不相等，请调整！',
-            );
-            return;
-          }
-        }
         if (!isEmpty(this.modelorList)) {
           this.modelorList
             .filter((item) => item.isRequired)
@@ -737,7 +448,6 @@
 
         const params = Object.assign({}, this.formData, {
           properties: properties,
-          productBundles: this.productBundles,
           units: this.buildUnits(),
         });
         this.loading = true;
@@ -765,8 +475,6 @@
               auxiliaryUnits,
             });
             this.selectCategory(this.formData.categoryId, this.formData);
-            this.productType = this.formData.productType;
-            this.productBundles = data.productBundles;
           })
           .finally(() => {
             this.loading = false;
@@ -800,29 +508,6 @@
             this.modelorList = modelorList;
           });
         }
-      },
-      addRow() {
-        this.productBundles.push(this.emptyProduct());
-      },
-      emptyProduct() {
-        return {
-          id: uuid(),
-          productId: '',
-        };
-      },
-      delRow() {
-        const records = this.$refs.grid.getCheckboxRecords();
-        if (isEmpty(records)) {
-          createError('请选择要删除的商品数据！');
-          return;
-        }
-
-        createConfirm('是否确定删除选中的商品？').then(() => {
-          this.productBundles = this.productBundles.filter((t) => {
-            const tmp = records.filter((item) => item.id === t.id);
-            return isEmpty(tmp);
-          });
-        });
       },
     },
   });

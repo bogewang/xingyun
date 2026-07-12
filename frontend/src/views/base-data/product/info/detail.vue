@@ -27,16 +27,16 @@
         <a-descriptions-item label="规格" :span="2">{{ formData.spec }}</a-descriptions-item>
         <a-descriptions-item label="单位" :span="2">{{ formData.unit }}</a-descriptions-item>
         <a-descriptions-item label="重量（kg）" :span="2">{{
-          PRODUCT_TYPE.NORMAL.equalsCode(formData.productType) ? formData.weight : '-'
+          formData.weight
         }}</a-descriptions-item>
         <a-descriptions-item label="体积（cm³）" :span="2">{{
-          PRODUCT_TYPE.NORMAL.equalsCode(formData.productType) ? formData.volume : '-'
+          formData.volume
         }}</a-descriptions-item>
         <a-descriptions-item label="进项税率（%）" :span="2">{{
-          PRODUCT_TYPE.NORMAL.equalsCode(formData.productType) ? formData.taxRate : '-'
+          formData.taxRate
         }}</a-descriptions-item>
         <a-descriptions-item label="销项税率（%）" :span="2">{{
-          PRODUCT_TYPE.NORMAL.equalsCode(formData.productType) ? formData.saleTaxRate : '-'
+          formData.saleTaxRate
         }}</a-descriptions-item>
         <a-descriptions-item label="采购价（元）" :span="2">{{
           formData.purchasePrice
@@ -49,9 +49,7 @@
         }}</a-descriptions-item>
         <a-descriptions-item label="备注" :span="2">{{ formData.remark }}</a-descriptions-item>
         <a-descriptions-item label="备注二" :span="2">{{ formData.remark2 }}</a-descriptions-item>
-        <a-descriptions-item label="商品类型" :span="4">{{
-          PRODUCT_TYPE.getDesc(formData.productType)
-        }}</a-descriptions-item>
+        <a-descriptions-item label="商品类型" :span="4">普通商品</a-descriptions-item>
         <a-descriptions-item
           v-for="item in formData.properties"
           :key="item.id"
@@ -67,7 +65,6 @@
 <script>
   import { defineComponent } from 'vue';
   import * as api from '@/api/base-data/product/info';
-  import { PRODUCT_TYPE } from '@/enums/biz/productType';
 
   export default defineComponent({
     // 使用组件
@@ -77,11 +74,6 @@
         type: String,
         required: true,
       },
-    },
-    setup() {
-      return {
-        PRODUCT_TYPE,
-      };
     },
     data() {
       return {
