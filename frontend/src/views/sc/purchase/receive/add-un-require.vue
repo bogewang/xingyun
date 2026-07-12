@@ -293,6 +293,7 @@
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
     add,
+    div,
     formatDate,
     getNumber,
     isEmpty,
@@ -596,6 +597,7 @@
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           purchasePrice,
           basePurchasePrice: purchasePrice,
+          baseStockNum: product.stockNum,
           unitId: baseUnit?.id || '',
           unit: baseUnit?.unitName || product.unit || '',
           editingProduct: false,
@@ -610,9 +612,13 @@
       selectUnit(row, unitId) {
         const unit = (row.units || []).find((item) => item.id === unitId);
         if (unit) {
+          if (row.baseStockNum === undefined || row.baseStockNum === null) {
+            row.baseStockNum = row.stockNum;
+          }
           row.unitId = unit.id;
           row.unit = unit.unitName;
           row.purchasePrice = mul(row.basePurchasePrice || 0, unit.conversionRate);
+          row.stockNum = getNumber(div(row.baseStockNum || 0, unit.conversionRate || 1), 6);
           this.calcSum();
         }
       },
