@@ -25,31 +25,6 @@
                 <j-form-item label="订单日期">
                   {{ formData.orderDate }}
                 </j-form-item>
-                <j-form-item label="销售订单">
-                  <div v-if="!isEmpty(formData.saleOrderCode)">
-                    <a
-                      v-permission="['sale:order:query']"
-                      @click="(e) => $refs.viewSaleOrderDetailDialog.openDialog()"
-                      >{{ formData.saleOrderCode }}</a
-                    >
-                    <span v-no-permission="['sale:order:query']">{{ formData.saleOrderCode }}</span>
-                  </div>
-                </j-form-item>
-                <j-form-item label="状态">
-                  <span
-                    v-if="SALE_OUT_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status)"
-                    style="color: #52c41a"
-                    >{{ SALE_OUT_SHEET_STATUS.getDesc(formData.status) }}</span
-                  >
-                  <span
-                    v-else-if="SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-                    style="color: #f5222d"
-                    >{{ SALE_OUT_SHEET_STATUS.getDesc(formData.status) }}</span
-                  >
-                  <span v-else style="color: #303133">{{
-                    SALE_OUT_SHEET_STATUS.getDesc(formData.status)
-                  }}</span>
-                </j-form-item>
                 <j-form-item label="成本状态">
                   <span :style="{ color: formData.fillAllCost ? '#52c41a' : '#f5222d' }">
                     {{ formData.fillAllCost ? '已补全' : '未补全' }}
@@ -61,32 +36,6 @@
                 </j-form-item>
                 <j-form-item label="操作时间">
                   <span>{{ formData.createTime }}</span>
-                </j-form-item>
-                <j-form-item label="拒绝理由" :content-nest="false">
-                  <a-input
-                    v-if="SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)"
-                    v-model:value="formData.refuseReason"
-                    readonly
-                  />
-                </j-form-item>
-                <j-form-item
-                  v-if="
-                    SALE_OUT_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
-                    SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
-                  "
-                  label="审核人"
-                >
-                  <span>{{ formData.approveBy }}</span>
-                </j-form-item>
-                <j-form-item
-                  v-if="
-                    SALE_OUT_SHEET_STATUS.APPROVE_PASS.equalsCode(formData.status) ||
-                    SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(formData.status)
-                  "
-                  label="审核时间"
-                  :span="16"
-                >
-                  <span>{{ formData.approveTime }}</span>
                 </j-form-item>
               </j-form>
             </j-border>
@@ -239,33 +188,24 @@
         // 列表数据配置
         tableColumn: [
           { type: 'seq', width: 50 },
-          // { field: 'productCode', title: '商品编号', width: 120 },
+          { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 150 },
+          { field: 'categoryName', title: '商品分类', width: 80 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'outNum', title: '数量', align: 'right', width: 100 },
-          // { field: 'categoryName', title: '商品分类', width: 80 },
           {
             field: 'taxPrice',
             title: '价格（元）',
             align: 'right',
-            width: 80,
+            width: 120,
             slots: { default: 'taxPrice_default' },
           },
-          // {
-          //   field: 'orderNum',
-          //   title: '销售数量',
-          //   align: 'right',
-          //   width: 80,
-          //   formatter: ({ cellValue }) => {
-          //     return isEmpty(cellValue) ? '-' : cellValue;
-          //   },
-          // },
           {
             field: 'taxAmount',
             title: '含税金额',
             align: 'right',
-            width: 80,
+            width: 120,
             slots: { default: 'taxAmount_default' },
           },
           {
