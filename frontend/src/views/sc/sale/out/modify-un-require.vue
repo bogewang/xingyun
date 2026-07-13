@@ -128,7 +128,7 @@
                     <vxe-column
                       field="unit"
                       title="单位"
-                      width="100"
+                      width="80"
                       :slots="{ default: 'unit_default' }"
                     />
                     <vxe-column field="stockNum" title="库存数量" width="140" align="right" />
@@ -163,7 +163,6 @@
             <a-select
               v-model:value="row.unitId"
               size="small"
-              style="width: 90px"
               @change="(value) => selectUnit(row, value)"
             >
               <a-select-option v-for="item in row.units || []" :key="item.id" :value="item.id">{{
@@ -429,9 +428,8 @@
             slots: { default: 'productName_default' },
           },
           { field: 'spec', title: '规格', width: 80 },
-          { field: 'unit', title: '单位', width: 100, slots: { default: 'unit_default' } },
-          { field: 'categoryName', title: '商品分类', width: 80 },
-          { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 140 },
+          { field: 'unit', title: '单位', width: 50, slots: { default: 'unit_default' } },
+
           {
             field: 'stockNum',
             title: '库存数量',
@@ -451,22 +449,31 @@
             field: 'taxPrice',
             title: '价格（元）',
             align: 'right',
-            width: 80,
+            width: 100,
             slots: { default: 'taxPrice_default' },
           },
-          {
-            field: 'costPrice',
-            title: '成本单价',
-            align: 'right',
-            width: 100,
-            slots: { default: 'costPrice_default' },
-          },
+
           {
             field: 'taxAmount',
             title: '金额',
             align: 'right',
             width: 80,
             slots: { default: 'taxAmount_default' },
+          },
+          {
+            field: 'description',
+            title: '备注',
+            width: 200,
+            slots: { default: 'description_default' },
+          },
+          { field: 'categoryName', title: '商品分类', width: 80 },
+          { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 140 },
+          {
+            field: 'costPrice',
+            title: '成本单价',
+            align: 'right',
+            width: 100,
+            slots: { default: 'costPrice_default' },
           },
           {
             field: 'profitRate',
@@ -481,12 +488,7 @@
             width: 100,
             slots: { default: 'costStatus_default' },
           },
-          {
-            field: 'description',
-            title: '备注',
-            width: 200,
-            slots: { default: 'description_default' },
-          },
+
         ],
         tableData: [],
         customerOptions: [],
@@ -735,10 +737,15 @@
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
+        const baseUnit = product.units?.find((item) => item.baseUnit);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           oriPrice: product.salePrice,
           taxPrice: this.getSelectedProductPrice(product),
+          baseSalePrice: this.getSelectedProductPrice(product),
+          baseStockNum: product.stockNum,
+          unitId: baseUnit?.id || '',
+          unit: baseUnit?.unitName || product.unit || '',
           editingProduct: false,
           productQuery: '',
         });
@@ -808,9 +815,8 @@
         const oldRate = Number(row.conversionRate) || 1;
         const baseStock = Number(row.baseStockNum ?? row.stockNum) * oldRate;
         // baseSalePrice 已是主单位价，仅首次切换时需要从 taxPrice 折算
-        const basePrice = row.baseSalePrice != null
-          ? row.baseSalePrice
-          : Number(row.taxPrice) / (oldRate || 1);
+        const basePrice =
+          row.baseSalePrice != null ? row.baseSalePrice : Number(row.taxPrice) / (oldRate || 1);
         row.baseStockNum = baseStock;
         row.baseSalePrice = basePrice;
         row.conversionRate = rate;

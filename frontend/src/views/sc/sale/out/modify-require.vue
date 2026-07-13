@@ -763,10 +763,15 @@
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
+        const baseUnit = product.units?.find((item) => item.baseUnit);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           oriPrice: product.salePrice,
           taxPrice: product.latestSalePrice,
+          baseSalePrice: product.latestSalePrice,
+          baseStockNum: product.stockNum,
+          unitId: baseUnit?.id || '',
+          unit: baseUnit?.unitName || product.unit || '',
           editingProduct: false,
           productQuery: '',
         });
@@ -845,9 +850,8 @@
         const oldRate = Number(row.conversionRate) || 1;
         const baseStock = Number(row.baseStockNum ?? row.stockNum) * oldRate;
         // baseSalePrice 已是主单位价，仅首次切换时需要从 taxPrice 折算
-        const basePrice = row.baseSalePrice != null
-          ? row.baseSalePrice
-          : Number(row.taxPrice) / (oldRate || 1);
+        const basePrice =
+          row.baseSalePrice != null ? row.baseSalePrice : Number(row.taxPrice) / (oldRate || 1);
         row.baseStockNum = baseStock;
         row.baseSalePrice = basePrice;
         row.conversionRate = rate;

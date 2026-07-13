@@ -746,9 +746,14 @@
         const purchasePrice = !isEmpty(product.latestPurchasePrice)
           ? product.latestPurchasePrice
           : product.purchasePrice;
+        const baseUnit = product.units?.find((item) => item.baseUnit);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           purchasePrice,
+          basePurchasePrice: purchasePrice,
+          baseStockNum: product.stockNum,
+          unitId: baseUnit?.id || '',
+          unit: baseUnit?.unitName || product.unit || '',
           editingProduct: false,
           productQuery: '',
         });
@@ -827,9 +832,10 @@
         const oldRate = Number(row.conversionRate) || 1;
         const baseStock = Number(row.baseStockNum ?? row.stockNum) * oldRate;
         // basePurchasePrice 已是主单位价，仅首次切换时需要从 purchasePrice 折算
-        const basePrice = row.basePurchasePrice != null
-          ? row.basePurchasePrice
-          : Number(row.purchasePrice) / (oldRate || 1);
+        const basePrice =
+          row.basePurchasePrice != null
+            ? row.basePurchasePrice
+            : Number(row.purchasePrice) / (oldRate || 1);
         row.baseStockNum = baseStock;
         row.basePurchasePrice = basePrice;
         row.conversionRate = rate;
