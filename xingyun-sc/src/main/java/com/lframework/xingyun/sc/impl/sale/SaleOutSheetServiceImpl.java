@@ -28,6 +28,7 @@ import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.starter.web.inner.vo.system.parameter.QuerySysParameterVo;
 import com.lframework.xingyun.basedata.entity.*;
 import com.lframework.xingyun.basedata.enums.SettleType;
+import com.lframework.xingyun.basedata.service.UnitService;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
@@ -117,6 +118,9 @@ public class SaleOutSheetServiceImpl extends
 
     @Autowired
     private ProductUnitService productUnitService;
+
+    @Autowired
+    private UnitService unitService;
 
     @Autowired
     private ProductLatestPriceCacheService productLatestPriceCacheService;
@@ -342,7 +346,9 @@ public class SaleOutSheetServiceImpl extends
 
         Map<String, Product> productMap = buildProductMap(details);
         Map<String, ProductCategory> categoryMap = buildCategoryMap(productMap);
-        List<SummaryRow> summaryRows = buildSummaryRows(details, sheetMap, productMap, categoryMap);
+        Map<String, String> productUnitNameMap = buildProductUnitNameMap(productMap);
+        List<SummaryRow> summaryRows = buildSummaryRows(details, sheetMap, productMap, categoryMap,
+                productUnitNameMap);
 
         List<Map<String, String>> data = new ArrayList<>();
         for (SummaryRow row : summaryRows) {
@@ -563,6 +569,20 @@ public class SaleOutSheetServiceImpl extends
     }
 
     /**
+     * 批量将商品主单位 ID 转换为单位名称，供买菜汇总导出使用。
+     */
+    private Map<String, String> buildProductUnitNameMap(Map<String, Product> productMap) {
+        List<String> unitIds = productMap.values().stream().map(Product::getUnit)
+                .filter(StringUtils::isNotBlank).distinct().collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(unitIds)) {
+            return Collections.emptyMap();
+        }
+
+        return unitService.listByIds(unitIds).stream()
+                .collect(Collectors.toMap(Unit::getId, Unit::getName, (v1, v2) -> v2));
+    }
+
+    /**
      * 将原始出库明细聚合成导出行。
      * <p>
      * 聚合维度：
@@ -575,7 +595,8 @@ public class SaleOutSheetServiceImpl extends
     private List<SummaryRow> buildSummaryRows(List<SaleOutSheetDetail> details,
             Map<String, SaleOutSheet> sheetMap,
             Map<String, Product> productMap,
-            Map<String, ProductCategory> categoryMap) {
+            Map<String, ProductCategory> categoryMap,
+            Map<String, String> productUnitNameMap) {
         Map<String, SummaryRow> summaryMap = new LinkedHashMap<>();
         for (SaleOutSheetDetail detail : details) {
             SaleOutSheet sheet = sheetMap.get(detail.getSheetId());
@@ -586,7 +607,8 @@ public class SaleOutSheetServiceImpl extends
 
             // 每个商品汇总成一行，行内再按客户拆分单元格数据。
             SummaryRow row = summaryMap.computeIfAbsent(product.getId(),
-                    key -> new SummaryRow(getCategoryName(product, categoryMap), product.getName(), product.getUnit()));
+                    key -> new SummaryRow(getCategoryName(product, categoryMap), product.getName(),
+                            productUnitNameMap.getOrDefault(product.getUnit(), product.getUnit())));
 
             // 同一客户的数量累加，备注去重并保留原始出现顺序。
             SummaryCell cell = row.cells.computeIfAbsent(sheet.getCustomerId(), key -> new SummaryCell());
