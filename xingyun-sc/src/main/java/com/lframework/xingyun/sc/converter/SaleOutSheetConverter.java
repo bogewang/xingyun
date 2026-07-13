@@ -78,7 +78,7 @@ public class SaleOutSheetConverter {
                         orderDetailBo.setProductCode(product.getCode());
                         orderDetailBo.setProductName(product.getName());
                         orderDetailBo.setSpec(product.getSpec());
-                        orderDetailBo.setUnit(product.getUnit());
+                        orderDetailBo.setUnit(item.getUnitName());
                     }
                     return orderDetailBo;
                 })
