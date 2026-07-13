@@ -322,6 +322,7 @@
   } from '@/hooks/web/msg';
   import {
     getInlineProductSelectRowClass,
+    handleEmptyProductInputEnter,
     handleInlineProductSelectKeydown,
     resetInlineProductSelect,
     setInlineProductSelectProducts,
@@ -626,6 +627,10 @@
         }
       },
       handleProductSelectKeydown(event, row, rowIndex) {
+        if (handleEmptyProductInputEnter(event, row, this.addProduct)) {
+          return;
+        }
+
         handleInlineProductSelectKeydown(event, row, rowIndex, this.handleSelectProduct, () =>
           this.$nextTick(),
         );

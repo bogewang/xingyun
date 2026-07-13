@@ -376,6 +376,7 @@
   import { focusVxeGridRow } from '@/utils/vxeGrid';
   import {
     getInlineProductSelectRowClass,
+    handleEmptyProductInputEnter,
     handleInlineProductSelectKeydown,
     resetInlineProductSelect,
     setInlineProductSelectProducts,
@@ -762,6 +763,10 @@
         this.purchasePriceInput(this.tableData[index], this.tableData[index].purchasePrice);
       },
       handleProductSelectKeydown(event, row, rowIndex) {
+        if (handleEmptyProductInputEnter(event, row, this.addProduct)) {
+          return;
+        }
+
         handleInlineProductSelectKeydown(event, row, rowIndex, this.handleSelectProduct, () =>
           this.$nextTick(),
         );

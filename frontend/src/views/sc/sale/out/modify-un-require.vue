@@ -339,6 +339,7 @@
   import { focusTableInput, focusVxeGridRow } from '@/utils/vxeGrid';
   import {
     getInlineProductSelectRowClass,
+    handleEmptyProductInputEnter,
     handleInlineProductSelectKeydown,
     resetInlineProductSelect,
     setInlineProductSelectProducts,
@@ -488,7 +489,6 @@
             width: 100,
             slots: { default: 'costStatus_default' },
           },
-
         ],
         tableData: [],
         customerOptions: [],
@@ -755,6 +755,10 @@
         this.focusRowInput('outNumInputRef', index);
       },
       handleProductSelectKeydown(event, row, rowIndex) {
+        if (handleEmptyProductInputEnter(event, row, this.addProduct)) {
+          return;
+        }
+
         handleInlineProductSelectKeydown(event, row, rowIndex, this.handleSelectProduct, () =>
           this.$nextTick(),
         );

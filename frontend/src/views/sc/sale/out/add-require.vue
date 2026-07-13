@@ -314,6 +314,7 @@
   import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
   import {
     getInlineProductSelectRowClass,
+    handleEmptyProductInputEnter,
     handleInlineProductSelectKeydown,
     resetInlineProductSelect,
     setInlineProductSelectProducts,
@@ -606,6 +607,10 @@
         this.taxPriceInput(this.tableData[index], this.tableData[index].taxPrice);
       },
       handleProductSelectKeydown(event, row, rowIndex) {
+        if (handleEmptyProductInputEnter(event, row, this.addProduct)) {
+          return;
+        }
+
         handleInlineProductSelectKeydown(event, row, rowIndex, this.handleSelectProduct, () =>
           this.$nextTick(),
         );
