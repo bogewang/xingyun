@@ -79,6 +79,9 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     @Autowired
     private GenerateCodeService generateCodeService;
 
+    @Autowired
+    private List<ProductReferenceChecker> productReferenceCheckers;
+
     @Override
     public PageResult<Product> query(Integer pageIndex, Integer pageSize, QueryProductVo vo) {
 
@@ -140,6 +143,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     @Override
     public void deleteById(String id) {
 
+        assertNoProductReference(id, productReferenceCheckers);
+
         Wrapper<Product> updateWrapper = Wrappers.lambdaUpdate(Product.class)
                 .set(Product::getAvailable, Boolean.FALSE).eq(Product::getId, id);
         getBaseMapper().update(updateWrapper);
@@ -147,6 +152,18 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         Product product = this.findById(id);
 
         DataChangeEventBuilder.publishLogicDelete(this, DeleteProductEvent.class, product);
+    }
+
+    /**
+     * 校验商品未被业务数据引用。
+     *
+     * @param productId 商品 ID
+     * @param productReferenceCheckers 商品引用检查器列表
+     */
+    static void assertNoProductReference(String productId, List<ProductReferenceChecker> productReferenceCheckers) {
+        if (productReferenceCheckers.stream().anyMatch(checker -> checker.hasReference(productId))) {
+            throw new DefaultClientException("商品已被业务单据或库存数据引用，无法删除！");
+        }
     }
 
     @OpLog(type = BaseDataOpLogType.class, name = "新增商品，ID：{}, 编号：{}", params = { "#_result",

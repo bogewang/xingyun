@@ -43,6 +43,13 @@ class ProductServiceImplTest {
         Collections.<String>emptySet(), Collections.<String, String>emptyMap());
   }
 
+  @Test(expectedExceptions = DefaultClientException.class,
+      expectedExceptionsMessageRegExp = "商品已被业务单据或库存数据引用，无法删除！")
+  void shouldRejectDeleteWhenProductHasBusinessReference() {
+    ProductServiceImpl.assertNoProductReference("product-1",
+        Collections.singletonList(productId -> true));
+  }
+
   private Product product(String id, String unitId) {
     Product product = new Product();
     product.setId(id);
