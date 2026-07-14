@@ -985,24 +985,21 @@
         for (let i = 0; i < validTableData.length; i++) {
           const product = validTableData[i];
 
-          if (isEmpty(product.taxPrice)) {
-            createError('第' + (i + 1) + '行商品价格不允许为空！');
-            return false;
-          }
+          if (!isEmpty(product.taxPrice)) {
+            if (!isFloat(product.taxPrice)) {
+              createError('第' + (i + 1) + '行商品价格必须是数字！');
+              return false;
+            }
 
-          if (!isFloat(product.taxPrice)) {
-            createError('第' + (i + 1) + '行商品价格必须是数字！');
-            return false;
-          }
+            if (!isFloatGeZero(product.taxPrice)) {
+              createError('第' + (i + 1) + '行商品价格不允许小于0！');
+              return false;
+            }
 
-          // if (!isFloatGtZero(product.taxPrice)) {
-          //   createError('第' + (i + 1) + '行商品价格必须大于0！');
-          //   return false;
-          // }
-
-          if (!isNumberPrecision(product.taxPrice, 6)) {
-            createError('第' + (i + 1) + '行商品价格最多允许6位小数！');
-            return false;
+            if (!isNumberPrecision(product.taxPrice, 6)) {
+              createError('第' + (i + 1) + '行商品价格最多允许6位小数！');
+              return false;
+            }
           }
 
           if (!isEmpty(product.outNum)) {
@@ -1034,19 +1031,14 @@
                 return false;
               }
             } else {
-              if (!isFloatGtZero(product.outNum)) {
-                createError('第' + (i + 1) + '行商品出库数量必须大于0！');
+              if (!isFloatGeZero(product.outNum)) {
+                createError('第' + (i + 1) + '行商品出库数量不允许小于0！');
                 return false;
               }
             }
 
             if (!isNumberPrecision(product.outNum, 8)) {
               createError('第' + (i + 1) + '行商品出库数量最多允许8位小数！');
-              return false;
-            }
-          } else {
-            if (!product.isFixed) {
-              createError('第' + (i + 1) + '行商品出库数量不允许为空！');
               return false;
             }
           }

@@ -907,24 +907,21 @@
         for (let i = 0; i < validTableData.length; i++) {
           const product = validTableData[i];
 
-          if (isEmpty(product.purchasePrice)) {
-            createError('第' + (i + 1) + '行商品采购价不允许为空！');
-            return false;
-          }
+          if (!isEmpty(product.purchasePrice)) {
+            if (!isFloat(product.purchasePrice)) {
+              createError('第' + (i + 1) + '行商品采购价必须是数字！');
+              return false;
+            }
 
-          if (!isFloat(product.purchasePrice)) {
-            createError('第' + (i + 1) + '行商品采购价必须是数字！');
-            return false;
-          }
+            if (!isFloatGeZero(product.purchasePrice)) {
+              createError('第' + (i + 1) + '行商品采购价不允许小于0！');
+              return false;
+            }
 
-          // if (!isFloatGtZero(product.purchasePrice)) {
-          //   createError('第' + (i + 1) + '行商品采购价必须大于0！');
-          //   return false;
-          // }
-
-          if (!isNumberPrecision(product.purchasePrice, 6)) {
-            createError('第' + (i + 1) + '行商品采购价最多允许6位小数！');
-            return false;
+            if (!isNumberPrecision(product.purchasePrice, 6)) {
+              createError('第' + (i + 1) + '行商品采购价最多允许6位小数！');
+              return false;
+            }
           }
 
           if (!isEmpty(product.receiveNum)) {
@@ -933,8 +930,8 @@
               return false;
             }
 
-            if (!isFloatGtZero(product.receiveNum)) {
-              createError('第' + (i + 1) + '行商品数量必须大于0！');
+            if (!isFloatGeZero(product.receiveNum)) {
+              createError('第' + (i + 1) + '行商品数量不允许小于0！');
               return false;
             }
 
@@ -942,9 +939,6 @@
               createError('第' + (i + 1) + '行商品数量最多允许8位小数！');
               return false;
             }
-          } else {
-            createError('第' + (i + 1) + '行商品数量不允许为空！');
-            return false;
           }
         }
 
