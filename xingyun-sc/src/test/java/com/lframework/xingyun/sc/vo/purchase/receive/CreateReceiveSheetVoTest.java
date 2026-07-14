@@ -1,10 +1,12 @@
 package com.lframework.xingyun.sc.vo.purchase.receive;
 
 import com.lframework.starter.common.exceptions.impl.InputErrorException;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collections;
 
 class CreateReceiveSheetVoTest {
@@ -21,6 +23,20 @@ class CreateReceiveSheetVoTest {
     CreateReceiveSheetVo sheet = createSheet(BigDecimal.ZERO, BigDecimal.ZERO);
 
     sheet.validate(false);
+  }
+
+  @Test
+  void validateShouldDiscardProductsWithBlankProductId() {
+    ReceiveProductVo nullProduct = new ReceiveProductVo();
+    ReceiveProductVo blankProduct = new ReceiveProductVo();
+    blankProduct.setProductId(" ");
+    CreateReceiveSheetVo sheet = createSheet(BigDecimal.ZERO, BigDecimal.ZERO);
+    sheet.setProducts(Arrays.asList(nullProduct, blankProduct, sheet.getProducts().get(0)));
+
+    sheet.validate(false);
+
+    Assert.assertEquals(sheet.getProducts().size(), 1);
+    Assert.assertEquals(sheet.getProducts().get(0).getProductId(), "product-1");
   }
 
   @Test(expectedExceptions = InputErrorException.class)

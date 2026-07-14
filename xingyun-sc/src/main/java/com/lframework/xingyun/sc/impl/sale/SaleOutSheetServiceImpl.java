@@ -1388,6 +1388,9 @@ public class SaleOutSheetServiceImpl extends
 
         Map<String, BigDecimal> lotCostMap = getDetailLotCostMap(details);
         for (SaleOutSheetDetail detail : details) {
+            if (detail.getOrderNum() == null || detail.getOrderNum().compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
             Product product = productService.findById(detail.getProductId());
 
             AddProductStockVo addProductStockVo = new AddProductStockVo();

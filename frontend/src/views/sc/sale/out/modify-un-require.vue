@@ -1084,22 +1084,20 @@
           fillAllCost: this.formData.fillAllCost,
           fillAllCostModified: this.formData.fillAllCost !== this.originalFillAllCost,
           description: this.formData.description,
-          products: validTableData
-            .filter((t) => isFloatGtZero(t.outNum))
-            .map((t) => {
-              const product = {
-                productId: t.productId,
-                unit: t.unit,
-                unitId: t.unitId,
-                oriPrice: t.oriPrice,
-                taxPrice: t.taxPrice,
-                orderNum: t.outNum,
-                description: t.description,
-                costPrice: this.canEditCostPrice(t) && !isEmpty(t.costPrice) ? t.costPrice : null,
-              };
+          products: validTableData.map((t) => {
+            const product = {
+              productId: t.productId,
+              unit: t.unit,
+              unitId: t.unitId,
+              oriPrice: t.oriPrice,
+              taxPrice: t.taxPrice,
+              orderNum: t.outNum,
+              description: t.description,
+              costPrice: this.canEditCostPrice(t) && !isEmpty(t.costPrice) ? t.costPrice : null,
+            };
 
-              return product;
-            }),
+            return product;
+          }),
         };
 
         const doUpdate = () => {

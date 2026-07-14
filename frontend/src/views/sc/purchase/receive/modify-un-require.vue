@@ -287,7 +287,6 @@
     mul,
     add,
     isFloat,
-    isFloatGtZero,
     isNumberPrecision,
     uuid,
     PATTERN_IS_FLOAT_GT_ZERO,
@@ -982,20 +981,18 @@
           totalAmount: this.formData.totalAmount,
           paidAmount: this.formData.paidAmount,
           description: this.formData.description,
-          products: validTableData
-            .filter((t) => isFloatGtZero(t.receiveNum))
-            .map((t) => {
-              const product = {
-                productId: t.productId,
-                unit: t.unit,
-                unitId: t.unitId,
-                purchasePrice: t.purchasePrice,
-                receiveNum: t.receiveNum,
-                description: t.description,
-              };
+          products: validTableData.map((t) => {
+            const product = {
+              productId: t.productId,
+              unit: t.unit,
+              unitId: t.unitId,
+              purchasePrice: t.purchasePrice,
+              receiveNum: t.receiveNum,
+              description: t.description,
+            };
 
-              return product;
-            }),
+            return product;
+          }),
         };
 
         this.loading = true;

@@ -1040,23 +1040,21 @@
           paidAmount: 0,
           purchaseOrderId: this.formData.purchaseOrder.id,
           description: this.formData.description,
-          products: validTableData
-            .filter((t) => isFloatGtZero(t.receiveNum))
-            .map((t) => {
-              const product = {
-                productId: t.productId,
-                unit: t.unit,
-                unitId: t.unitId,
-                receiveNum: t.receiveNum,
-                description: t.description,
-              };
+          products: validTableData.map((t) => {
+            const product = {
+              productId: t.productId,
+              unit: t.unit,
+              unitId: t.unitId,
+              receiveNum: t.receiveNum,
+              description: t.description,
+            };
 
-              if (t.isFixed) {
-                product.purchaseOrderDetailId = t.purchaseOrderDetailId;
-              }
+            if (t.isFixed) {
+              product.purchaseOrderDetailId = t.purchaseOrderDetailId;
+            }
 
-              return product;
-            }),
+            return product;
+          }),
         };
 
         this.loading = true;

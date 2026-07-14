@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 public class CreateReceiveSheetVo implements BaseVo, Serializable {
@@ -128,6 +129,13 @@ public class CreateReceiveSheetVo implements BaseVo, Serializable {
     }
 
     protected void validate(boolean requirePurchase) {
+        this.products = this.products.stream()
+                .filter(product -> product != null && StringUtil.isNotBlank(product.getProductId()))
+                .collect(Collectors.toList());
+        if (this.products.isEmpty()) {
+            throw new InputErrorException("请录入商品！");
+        }
+
         int orderNo = 1;
         if (this.totalAmount != null) {
             if (NumberUtil.lt(this.totalAmount, BigDecimal.ZERO)) {

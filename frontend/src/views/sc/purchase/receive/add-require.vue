@@ -907,21 +907,19 @@
           purchaseOrderId: this.formData.purchaseOrderId,
           description: this.formData.description,
           required: true,
-          products: validTableData
-            .filter((t) => isFloatGtZero(t.receiveNum))
-            .map((t) => {
-              const product = {
-                productId: t.productId,
-                receiveNum: t.receiveNum,
-                description: t.description,
-              };
+          products: validTableData.map((t) => {
+            const product = {
+              productId: t.productId,
+              receiveNum: t.receiveNum,
+              description: t.description,
+            };
 
-              if (t.isFixed) {
-                product.purchaseOrderDetailId = t.id;
-              }
+            if (t.isFixed) {
+              product.purchaseOrderDetailId = t.id;
+            }
 
-              return product;
-            }),
+            return product;
+          }),
         };
       },
       // 创建订单

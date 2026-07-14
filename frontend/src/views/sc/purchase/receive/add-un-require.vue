@@ -299,7 +299,6 @@
     isEmpty,
     isFloat,
     isFloatGeZero,
-    isFloatGtZero,
     isNumberPrecision,
     mul,
     PATTERN_IS_FLOAT_GT_ZERO,
@@ -931,19 +930,17 @@
           paidAmount: this.formData.paidAmount,
           description: this.formData.description,
           required: false,
-          products: validTableData
-            .filter((t) => isFloatGtZero(t.receiveNum))
-            .map((t) => {
-              const product = {
-                productId: t.productId,
-                unitId: t.unitId,
-                purchasePrice: t.purchasePrice,
-                receiveNum: t.receiveNum,
-                description: t.description,
-              };
+          products: validTableData.map((t) => {
+            const product = {
+              productId: t.productId,
+              unitId: t.unitId,
+              purchasePrice: t.purchasePrice,
+              receiveNum: t.receiveNum,
+              description: t.description,
+            };
 
-              return product;
-            }),
+            return product;
+          }),
         };
       },
       // 创建订单

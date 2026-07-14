@@ -737,6 +737,9 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
 
         for (ReceiveSheetDetail detail : details) {
+            if (detail.getOrderNum() == null || detail.getOrderNum().compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
             BigDecimal settledTaxAmount = productStockPendingCostService.rollback(detail.getId(),
                     ProductStockBizType.PURCHASE);
             SubProductStockVo subProductStockVo = new SubProductStockVo();
