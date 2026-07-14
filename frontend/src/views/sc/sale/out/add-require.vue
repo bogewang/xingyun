@@ -320,6 +320,7 @@
     setInlineProductSelectProducts,
   } from '@/utils/inlineProductSelect';
   import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
+  import { buildRequiredSaleOutProducts } from './components/saleOutProductParams';
 
   export default defineComponent({
     name: 'AddSaleOutSheetRequire',
@@ -900,7 +901,6 @@
         return true;
       },
       buildParams() {
-        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
         return {
           scId: this.formData.scId,
           customerId: this.formData.customerId,
@@ -910,23 +910,7 @@
           saleOrderId: this.formData.saleOrderId,
           description: this.formData.description,
           required: true,
-          products: validTableData
-            .filter((t) => isFloatGtZero(t.outNum))
-            .map((t) => {
-              const product = {
-                productId: t.productId,
-                orderNum: t.outNum,
-                description: t.description,
-                oriPrice: t.oriPrice,
-                taxPrice: t.taxPrice,
-              };
-
-              if (t.isFixed) {
-                product.saleOrderDetailId = t.id;
-              }
-
-              return product;
-            }),
+          products: buildRequiredSaleOutProducts(this.tableData),
         };
       },
       // 创建订单
