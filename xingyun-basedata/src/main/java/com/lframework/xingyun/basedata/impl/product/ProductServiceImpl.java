@@ -145,13 +145,11 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
 
         assertNoProductReference(id, productReferenceCheckers);
 
-        Wrapper<Product> updateWrapper = Wrappers.lambdaUpdate(Product.class)
-                .set(Product::getAvailable, Boolean.FALSE).eq(Product::getId, id);
-        getBaseMapper().update(updateWrapper);
-
-        Product product = this.findById(id);
+        Product product = getBaseMapper().selectById(id);
+        getBaseMapper().deleteById(id);
 
         DataChangeEventBuilder.publishLogicDelete(this, DeleteProductEvent.class, product);
+        cleanCacheByKey(id);
     }
 
     /**
