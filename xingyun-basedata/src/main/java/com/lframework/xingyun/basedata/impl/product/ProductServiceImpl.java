@@ -775,7 +775,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         }
 
         if (!categoryMap.containsKey(data.getCategoryName())) {
-            throw new DefaultClientException("第" + rowIndex + "行“商品分类”不存在，请检查");
+            throw new DefaultClientException(String.format("第%s行商品分类:：“%s”不存在，请检查", rowIndex, data.getCategoryName()));
         }
 
         data.setCategoryId(categoryMap.get(data.getCategoryName()));
