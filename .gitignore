@@ -36,3 +36,4 @@ logs
 bin
 *rebel.xml
 text.json
+.worktrees/
