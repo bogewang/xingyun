@@ -60,6 +60,8 @@
         height="100%"
         :data="tableData"
         :columns="tableColumn"
+        :row-class-name="getTableRowClassName"
+        :cell-class-name="getCellClassName"
         :toolbar-config="toolbarConfig"
         :custom-config="{}"
       >
@@ -194,7 +196,7 @@
           <a-input
             v-model:value="row.receiveNum"
             class="number-input"
-            @input="(e) => receiveNumInput(e.target.value)"
+            @input="(e) => receiveNumInput(row, e.target.value)"
           />
         </template>
 
@@ -304,6 +306,8 @@
     normalizeSelectValue,
   } from '@/utils/searchSelect';
   import { requestSupplierSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
+  import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
+  import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
   import {
     getInlineProductSelectRowClass,
@@ -709,11 +713,25 @@
       purchasePriceInput(_row, _value) {
         this.calcSum();
       },
+      hasWarningAmount(row) {
+        return hasSheetAmountWarning(row, 'purchasePrice', 'receiveNum');
+      },
+      getTableRowClassName({ row }) {
+        return this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
+      },
+      getCellClassName({ row, column }) {
+        return getSheetAmountCellClass(row, column.field, 'purchasePrice', 'receiveNum');
+      },
       paidAmountInput(value) {
-        this.formData.paidAmount = value;
+        this.formData.paidAmount = sanitizeNonNegativeDecimalInput(value);
         this.paidAmountDirty = true;
       },
-      receiveNumInput(_value) {
+      receiveNumInput(row, value) {
+        if (value === undefined) {
+          this.calcSum();
+          return;
+        }
+        row.receiveNum = sanitizeNonNegativeDecimalInput(value);
         this.calcSum();
       },
       // 计算汇总数据
@@ -1025,5 +1043,18 @@
 
   .sheet-editor-actions {
     margin-top: auto;
+  }
+
+  :deep(.vxe-body--row.sheet-price-warning-row) {
+    background-color: #ffd8d6 !important;
+  }
+
+  :deep(.sheet-price-warning-row td) {
+    border-color: #ff7875;
+  }
+
+  :deep(.vxe-body--column.sheet-zero-warning-cell),
+  :deep(.sheet-zero-warning-cell .ant-input) {
+    color: #f5222d !important;
   }
 </style>

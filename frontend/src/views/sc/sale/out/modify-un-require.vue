@@ -50,6 +50,7 @@
           :data="tableData"
           :columns="tableColumn"
           :row-class-name="getTableRowClassName"
+          :cell-class-name="getCellClassName"
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
         >
@@ -177,9 +178,6 @@
               :ref="'taxPriceInputRef' + rowIndex"
               v-model:value="row.taxPrice"
               class="number-input"
-              :style="{
-                color: isNegativeProfit(row) && !hasWarningPrice(row) ? '#f5222d' : undefined,
-              }"
               @input="(e) => taxPriceInput(row, e.target.value)"
             />
           </template>
@@ -196,7 +194,7 @@
               :ref="'outNumInputRef' + rowIndex"
               v-model:value="row.outNum"
               class="number-input"
-              @input="(e) => outNumInput(e.target.value)"
+              @input="(e) => outNumInput(row, e.target.value)"
             />
           </template>
 
@@ -221,7 +219,7 @@
           <template #profitRate_default="{ row }">
             <span
               :style="{
-                color: isNegativeProfit(row) && !hasWarningPrice(row) ? '#f5222d' : undefined,
+                color: isNegativeProfit(row) && !hasWarningAmount(row) ? '#f5222d' : undefined,
               }"
             >
               {{ calcProfitRate(row) }}
@@ -337,6 +335,8 @@
     normalizeSelectValue,
   } from '@/utils/searchSelect';
   import { focusTableInput, focusVxeGridRow } from '@/utils/vxeGrid';
+  import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
+  import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import {
     getInlineProductSelectRowClass,
     handleEmptyProductInputEnter,
@@ -809,7 +809,8 @@
           options,
         );
       },
-      taxPriceInput(_row, _value) {
+      taxPriceInput(row, value) {
+        row.taxPrice = sanitizeNonNegativeDecimalInput(value);
         this.calcSum();
       },
       selectUnit(row, unitId) {
@@ -831,14 +832,20 @@
         this.calcSum();
       },
       paidAmountInput(value) {
-        this.formData.paidAmount = value;
+        this.formData.paidAmount = sanitizeNonNegativeDecimalInput(value);
         this.paidAmountDirty = true;
       },
-      costPriceInput(_row, _value) {
-        _row.manualInputCost = !isEmpty(_value);
+      costPriceInput(row, value) {
+        row.costPrice = sanitizeNonNegativeDecimalInput(value);
+        row.manualInputCost = !isEmpty(row.costPrice);
         this.calcSum();
       },
-      outNumInput(_value) {
+      outNumInput(row, value) {
+        if (value === undefined) {
+          this.calcSum();
+          return;
+        }
+        row.outNum = sanitizeNonNegativeDecimalInput(value);
         this.calcSum();
       },
       handleFillAllCostChange(value) {
@@ -876,8 +883,11 @@
         const costAmount = Number(getNumber(mul(row.costPrice, row.outNum), 2));
         return `${(((amount - costAmount) / amount) * 100).toFixed(2)}%`;
       },
-      hasWarningPrice(row) {
-        return isEmpty(row?.taxPrice) || Number(row.taxPrice) === 0;
+      hasWarningAmount(row) {
+        return hasSheetAmountWarning(row, 'taxPrice', 'outNum');
+      },
+      getCellClassName({ row, column }) {
+        return getSheetAmountCellClass(row, column.field, 'taxPrice', 'outNum');
       },
       isNegativeProfit(row) {
         if (
@@ -893,7 +903,7 @@
         return saleAmount - costAmount < 0;
       },
       getTableRowClassName({ row }) {
-        return this.hasWarningPrice(row) ? 'sheet-price-warning-row' : '';
+        return this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
       },
       // 批量录入数量
       batchInputOutNum() {
@@ -1179,5 +1189,10 @@
 
   :deep(.sheet-price-warning-row td) {
     border-color: #ff7875;
+  }
+
+  :deep(.vxe-body--column.sheet-zero-warning-cell),
+  :deep(.sheet-zero-warning-cell .ant-input) {
+    color: #f5222d !important;
   }
 </style>

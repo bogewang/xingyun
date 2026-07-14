@@ -43,6 +43,7 @@
           :data="tableData"
           :columns="tableColumn"
           :row-class-name="getTableRowClassName"
+          :cell-class-name="getCellClassName"
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
         >
@@ -185,7 +186,7 @@
               :ref="'outNumInputRef' + rowIndex"
               v-model:value="row.outNum"
               class="number-input"
-              @input="(e) => outNumInput(e.target.value)"
+              @input="(e) => outNumInput(row, e.target.value)"
             />
           </template>
 
@@ -317,6 +318,8 @@
     normalizeSelectValue,
   } from '@/utils/searchSelect';
   import { requestCustomerSelectOptions } from '@/utils/labelSelect';
+  import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
+  import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import {
     createConfirm,
     createError,
@@ -669,15 +672,18 @@
       isImportUnmatchedProduct(row) {
         return row.importUnmatched && isEmpty(row.productId);
       },
-      hasWarningPrice(row) {
-        return isEmpty(row?.taxPrice) || Number(row.taxPrice) === 0;
+      hasWarningAmount(row) {
+        return hasSheetAmountWarning(row, 'taxPrice', 'outNum');
+      },
+      getCellClassName({ row, column }) {
+        return getSheetAmountCellClass(row, column.field, 'taxPrice', 'outNum');
       },
       getTableRowClassName({ row }) {
         const classNames = [];
         if (this.isImportUnmatchedProduct(row)) {
           classNames.push('sale-out-import-unmatched-row');
         }
-        if (this.hasWarningPrice(row)) {
+        if (this.hasWarningAmount(row)) {
           classNames.push('sheet-price-warning-row');
         }
         return classNames.join(' ');
@@ -725,14 +731,20 @@
           options,
         );
       },
-      taxPriceInput(_row, _value) {
+      taxPriceInput(row, value) {
+        row.taxPrice = sanitizeNonNegativeDecimalInput(value);
         this.calcSum();
       },
       paidAmountInput(value) {
-        this.formData.paidAmount = value;
+        this.formData.paidAmount = sanitizeNonNegativeDecimalInput(value);
         this.paidAmountDirty = true;
       },
-      outNumInput(_value) {
+      outNumInput(row, value) {
+        if (value === undefined) {
+          this.calcSum();
+          return;
+        }
+        row.outNum = sanitizeNonNegativeDecimalInput(value);
         this.calcSum();
       },
       // 计算汇总数据
@@ -1083,5 +1095,10 @@
 
   :deep(.sheet-price-warning-row td) {
     border-color: #ff7875;
+  }
+
+  :deep(.vxe-body--column.sheet-zero-warning-cell),
+  :deep(.sheet-zero-warning-cell .ant-input) {
+    color: #f5222d !important;
   }
 </style>

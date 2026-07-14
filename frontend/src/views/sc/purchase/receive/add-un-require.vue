@@ -33,6 +33,7 @@
           :data="tableData"
           :columns="tableColumn"
           :row-class-name="getTableRowClassName"
+          :cell-class-name="getCellClassName"
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
         >
@@ -178,7 +179,7 @@
               :ref="'purchasePriceInputRef' + rowIndex"
               v-model:value="row.purchasePrice"
               class="number-input"
-              @input="(e) => purchasePriceInput(e.target.value)"
+              @input="(e) => purchasePriceInput(row, e.target.value)"
             />
           </template>
 
@@ -188,7 +189,7 @@
               :ref="'receiveNumInputRef' + rowIndex"
               v-model:value="row.receiveNum"
               class="number-input"
-              @input="(e) => receiveNumInput(e.target.value)"
+              @input="(e) => receiveNumInput(row, e.target.value)"
             />
           </template>
 
@@ -312,6 +313,8 @@
     normalizeSelectValue,
   } from '@/utils/searchSelect';
   import { requestSupplierSelectOptions } from '@/utils/labelSelect';
+  import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
+  import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import {
     createConfirm,
     createError,
@@ -640,15 +643,18 @@
       isImportUnmatchedProduct(row) {
         return row.importUnmatched && isEmpty(row.productId);
       },
-      hasWarningPrice(row) {
-        return isEmpty(row?.purchasePrice) || Number(row.purchasePrice) === 0;
+      hasWarningAmount(row) {
+        return hasSheetAmountWarning(row, 'purchasePrice', 'receiveNum');
+      },
+      getCellClassName({ row, column }) {
+        return getSheetAmountCellClass(row, column.field, 'purchasePrice', 'receiveNum');
       },
       getTableRowClassName({ row }) {
         const classNames = [];
         if (this.isImportUnmatchedProduct(row)) {
           classNames.push('receive-import-unmatched-row');
         }
-        if (this.hasWarningPrice(row)) {
+        if (this.hasWarningAmount(row)) {
           classNames.push('sheet-price-warning-row');
         }
         return classNames.join(' ');
@@ -697,17 +703,23 @@
         );
       },
       totalAmountInput(value) {
-        this.formData.totalAmount = value;
+        this.formData.totalAmount = sanitizeNonNegativeDecimalInput(value);
         this.totalAmountDirty = true;
       },
-      purchasePriceInput(_row, _value) {
+      purchasePriceInput(row, value) {
+        row.purchasePrice = sanitizeNonNegativeDecimalInput(value);
         this.calcSum();
       },
       paidAmountInput(value) {
-        this.formData.paidAmount = value;
+        this.formData.paidAmount = sanitizeNonNegativeDecimalInput(value);
         this.paidAmountDirty = true;
       },
-      receiveNumInput(_value) {
+      receiveNumInput(row, value) {
+        if (value === undefined) {
+          this.calcSum();
+          return;
+        }
+        row.receiveNum = sanitizeNonNegativeDecimalInput(value);
         this.calcSum();
       },
       // 计算汇总数据
@@ -1067,5 +1079,10 @@
 
   :deep(.sheet-price-warning-row td) {
     border-color: #ff7875;
+  }
+
+  :deep(.vxe-body--column.sheet-zero-warning-cell),
+  :deep(.sheet-zero-warning-cell .ant-input) {
+    color: #f5222d !important;
   }
 </style>

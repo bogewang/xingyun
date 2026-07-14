@@ -107,6 +107,8 @@
         height="100%"
         :data="tableData"
         :columns="tableColumn"
+        :row-class-name="getTableRowClassName"
+        :cell-class-name="getCellClassName"
         :toolbar-config="toolbarConfig"
         :custom-config="{}"
       >
@@ -258,7 +260,7 @@
           <a-input
             v-model:value="row.outNum"
             class="number-input"
-            @input="(e) => outNumInput(e.target.value)"
+            @input="(e) => outNumInput(row, e.target.value)"
           />
         </template>
 
@@ -388,6 +390,8 @@
     normalizeSelectValue,
   } from '@/utils/searchSelect';
   import { focusVxeGridRow } from '@/utils/vxeGrid';
+  import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
+  import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import {
     getInlineProductSelectRowClass,
     handleEmptyProductInputEnter,
@@ -848,6 +852,15 @@
       taxPriceInput(_row, _value) {
         this.calcSum();
       },
+      hasWarningAmount(row) {
+        return hasSheetAmountWarning(row, 'taxPrice', 'outNum');
+      },
+      getTableRowClassName({ row }) {
+        return this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
+      },
+      getCellClassName({ row, column }) {
+        return getSheetAmountCellClass(row, column.field, 'taxPrice', 'outNum');
+      },
       selectUnit(row, unitId) {
         const unit = (row.units || []).find((item) => item.id === unitId);
         if (!unit) return;
@@ -867,14 +880,20 @@
         this.calcSum();
       },
       paidAmountInput(value) {
-        this.formData.paidAmount = value;
+        this.formData.paidAmount = sanitizeNonNegativeDecimalInput(value);
         this.paidAmountDirty = true;
       },
-      costPriceInput(_row, _value) {
-        _row.manualInputCost = !isEmpty(_value);
+      costPriceInput(row, value) {
+        row.costPrice = sanitizeNonNegativeDecimalInput(value);
+        row.manualInputCost = !isEmpty(row.costPrice);
         this.calcSum();
       },
-      outNumInput(_value) {
+      outNumInput(row, value) {
+        if (value === undefined) {
+          this.calcSum();
+          return;
+        }
+        row.outNum = sanitizeNonNegativeDecimalInput(value);
         this.calcSum();
       },
       handleFillAllCostChange(value) {
@@ -1202,5 +1221,18 @@
 
   .sheet-editor-actions {
     margin-top: auto;
+  }
+
+  :deep(.vxe-body--row.sheet-price-warning-row) {
+    background-color: #ffd8d6 !important;
+  }
+
+  :deep(.sheet-price-warning-row td) {
+    border-color: #ff7875;
+  }
+
+  :deep(.vxe-body--column.sheet-zero-warning-cell),
+  :deep(.sheet-zero-warning-cell .ant-input) {
+    color: #f5222d !important;
   }
 </style>
