@@ -702,6 +702,10 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
 
         for (ReceiveSheetDetail detail : details) {
+            if (detail.getOrderNum() == null || detail.getOrderNum().compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+
             ProductStockPendingCostResolveDto resolveDto = productStockPendingCostService.settle(
                     sheet, detail, ProductStockBizType.PURCHASE);
 

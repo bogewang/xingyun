@@ -1328,6 +1328,10 @@ public class SaleOutSheetServiceImpl extends
 
         int orderNo = 1;
         for (SaleOutSheetDetail detail : details) {
+            if (detail.getOrderNum() == null || detail.getOrderNum().compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+
             SubProductStockVo subProductStockVo = new SubProductStockVo();
             subProductStockVo.setProductId(detail.getProductId());
             subProductStockVo.setScId(sheet.getScId());

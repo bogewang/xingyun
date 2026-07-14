@@ -77,4 +77,12 @@ public class ReceiveProductVo implements BaseVo, Serializable {
    */
   @ApiModelProperty("配送日期")
   private LocalDate actualDate;
+
+  public BigDecimal getReceiveNum() {
+    return receiveNum == null ? BigDecimal.ZERO : receiveNum;
+  }
+
+  public BigDecimal getPurchasePrice() {
+    return purchasePrice == null ? BigDecimal.ZERO : purchasePrice;
+  }
 }
