@@ -333,6 +333,7 @@
   } from '@/utils/inlineProductSelect';
   import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import { useUserStoreWithOut } from '/@/store/modules/user';
+  import { buildUnrequiredSaleOutProducts } from './components/saleOutProductParams';
 
   export default defineComponent({
     name: 'AddSaleOutSheetUnRequire',
@@ -917,7 +918,6 @@
         return true;
       },
       buildParams() {
-        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
         return {
           scId: this.formData.scId,
           customerId: this.formData.customerId,
@@ -926,20 +926,7 @@
           paidAmount: this.formData.paidAmount,
           description: this.formData.description,
           required: false,
-          products: validTableData
-            .filter((t) => isFloatGtZero(t.outNum))
-            .map((t) => {
-              const product = {
-                productId: t.productId,
-                unitId: t.unitId,
-                oriPrice: t.oriPrice,
-                taxPrice: t.taxPrice,
-                orderNum: t.outNum,
-                description: t.description,
-              };
-
-              return product;
-            }),
+          products: buildUnrequiredSaleOutProducts(this.tableData),
         };
       },
       // 创建订单
