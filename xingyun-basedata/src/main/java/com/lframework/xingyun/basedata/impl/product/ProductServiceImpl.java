@@ -550,6 +550,55 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         if (CollectionUtils.isNotEmpty(persistBatch.getUpdates())) {
             super.updateBatchById(persistBatch.getUpdates());
         }
+        saveDefaultUnits(persistBatch.getInserts(), persistBatch.getUpdates());
+    }
+
+    private void saveDefaultUnits(List<Product> inserts, List<Product> updates) {
+        List<Product> products = new ArrayList<>(inserts.size() + updates.size());
+        products.addAll(inserts);
+        products.addAll(updates);
+        if (CollectionUtil.isEmpty(products)) {
+            return;
+        }
+
+        Set<String> productIds = products.stream().map(Product::getId).collect(Collectors.toSet());
+        Set<String> configuredProductIds = productUnitService.list(Wrappers.lambdaQuery(ProductUnit.class)
+                .in(ProductUnit::getProductId, productIds)).stream().map(ProductUnit::getProductId)
+                .collect(Collectors.toSet());
+        Set<String> unitIds = products.stream().filter(product -> !configuredProductIds.contains(product.getId()))
+                .map(Product::getUnit).filter(StringUtil::isNotBlank).collect(Collectors.toSet());
+        Map<String, String> unitNames = CollectionUtil.isEmpty(unitIds) ? Collections.emptyMap()
+                : unitService.list(Wrappers.lambdaQuery(Unit.class).in(Unit::getId, unitIds)
+                        .eq(Unit::getAvailable, Boolean.TRUE)).stream()
+                        .collect(Collectors.toMap(Unit::getId, Unit::getName));
+        List<ProductUnit> defaultUnits = buildDefaultProductUnits(products, configuredProductIds, unitNames);
+        if (CollectionUtils.isNotEmpty(defaultUnits)) {
+            defaultUnits.forEach(unit -> unit.setId(IdUtil.getId()));
+            productUnitService.saveBatch(defaultUnits);
+        }
+    }
+
+    static List<ProductUnit> buildDefaultProductUnits(List<Product> products, Set<String> configuredProductIds,
+            Map<String, String> unitNames) {
+        List<ProductUnit> units = new ArrayList<>();
+        for (Product product : products) {
+            if (configuredProductIds.contains(product.getId())) {
+                continue;
+            }
+            String unitName = unitNames.get(product.getUnit());
+            if (StringUtil.isBlank(product.getUnit()) || StringUtil.isBlank(unitName)) {
+                throw new DefaultClientException("主单位不存在或已停用！");
+            }
+            ProductUnit unit = new ProductUnit();
+            unit.setProductId(product.getId());
+            unit.setUnitName(unitName);
+            unit.setConversionRate(BigDecimal.ONE);
+            unit.setBaseUnit(Boolean.TRUE);
+            unit.setAvailable(Boolean.TRUE);
+            unit.setSortNo(0);
+            units.add(unit);
+        }
+        return units;
     }
 
     private ProductImportPersistBatch buildProducts(List<ProductImportModel> list) {

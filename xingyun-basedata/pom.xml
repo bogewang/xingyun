@@ -17,5 +17,11 @@
             <groupId>com.lframework</groupId>
             <artifactId>xingyun-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.14.3</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
