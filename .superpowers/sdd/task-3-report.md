@@ -4,7 +4,7 @@
 
 - 移除收货单和销售出库单 Excel 导入模型中“数量”的 `@ExcelRequired`。
 - 将数量规则改为：允许空值和 0；负数报 `第{seq}行“数量”不允许小于0`；保留 8 位小数限制。
-- 为采购单价、销售单价增加：允许空值和 0；负数报 `第{seq}行“单价”不允许小于0`；保留 6 位小数限制。
+- 为采购单价、销售单价增加：允许空值和 0；负数报 `第{seq}行“单价”不允许小于0`；保留 6 位精度和既有空单价默认填充。
 - 将数值规则提取为同包可见纯方法，两个既有 `checkImport()` 路径继续通过 `checkImportData()` 复用该校验；空单价默认填充逻辑未改动。
 
 ## TDD 证据
@@ -36,3 +36,23 @@ BUILD SUCCESS
 
 - Maven 编译输出包含既有 `QuerySaleOrderBo.java` 的 unchecked 操作提示；本任务的聚焦测试无失败或错误。
 - `.superpowers/` 下的其他任务文件为既有未跟踪协作资料，提交时仅纳入本任务报告。
+
+## P1 修复：查询导入空数量规范化
+
+- 在采购收货单和销售出库单的 `importByQuery` 入口中，将 Excel 读取出的空数量分别规范化为 `BigDecimal.ZERO`，再进入创建与库存计算链路。
+- 普通录入导入路径未改动，仍保留空数量语义。
+- 新增两个不使用 mock 的真实转换测试，覆盖查询导入模型的空数量转换。
+
+### TDD 证据
+
+新增测试后先执行：
+
+```powershell
+mvn -pl xingyun-sc '-Dtest=ReceiveSheetServiceImplTest,SaleOutSheetServiceImplTest' test
+```
+
+结果：失败。`testCompile` 提示两个 Service 均不存在 `normalizeQueryImportNumbers(...)`。
+
+实现最小转换后重新执行相同命令，结果：`Tests run: 10, Failures: 0, Errors: 0, Skipped: 0`，`BUILD SUCCESS`。
+
+提交：`fix: normalize query import quantities`。

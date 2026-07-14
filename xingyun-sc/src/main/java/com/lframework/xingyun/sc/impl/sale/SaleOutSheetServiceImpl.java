@@ -1588,7 +1588,9 @@ public class SaleOutSheetServiceImpl extends
         SaleOutSheetService thisService = getThis(this.getClass());
 
         for (int i = 0; i < list.size(); i++) {
-            list.get(i).setSeq(i + 2);
+            SaleOutSheetQueryImportModel model = list.get(i);
+            model.setSeq(i + 2);
+            normalizeQueryImportNumbers(model);
         }
         Map<String, List<SaleOutSheetQueryImportModel>> map = list.stream().collect(
                 Collectors.groupingBy(item -> item.getOrderDate() + "|" + item.getCustomerName()));
@@ -1596,6 +1598,12 @@ public class SaleOutSheetServiceImpl extends
         return map.keySet().stream()
                 .map(item -> thisService.create(buildCreateVo(map.get(item))))
                 .collect(Collectors.toList());
+    }
+
+    static void normalizeQueryImportNumbers(SaleOutSheetQueryImportModel model) {
+        if (model.getOrderNum() == null) {
+            model.setOrderNum(BigDecimal.ZERO);
+        }
     }
 
     private CreateSaleOutSheetVo buildCreateVo(List<SaleOutSheetQueryImportModel> list) {

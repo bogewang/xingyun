@@ -1,12 +1,23 @@
 package com.lframework.xingyun.sc.impl.purchase;
 
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
+import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetQueryImportModel;
 import java.math.BigDecimal;
 import java.util.List;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 class ReceiveSheetServiceImplTest {
+
+  @Test
+  void normalizeQueryImportNumbersShouldConvertNullQuantityToZero() {
+    ReceiveSheetQueryImportModel model = new ReceiveSheetQueryImportModel();
+    model.setReceiveNum(null);
+
+    ReceiveSheetServiceImpl.normalizeQueryImportNumbers(model);
+
+    Assert.assertEquals(model.getReceiveNum(), BigDecimal.ZERO);
+  }
 
   @Test
   void validateImportNumbersShouldAllowNullValues() {

@@ -995,7 +995,9 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
 
         for (int i = 0; i < list.size(); i++) {
-            list.get(i).setSeq(i + 2);
+            ReceiveSheetQueryImportModel model = list.get(i);
+            model.setSeq(i + 2);
+            normalizeQueryImportNumbers(model);
         }
         ReceiveSheetService thisService = getThis(this.getClass());
         Map<String, List<ReceiveSheetQueryImportModel>> map = list.stream().collect(
@@ -1003,6 +1005,12 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         return map.keySet().stream().map(item -> thisService.create(buildCreateVo(map.get(item))))
                 .collect(Collectors.toList());
+    }
+
+    static void normalizeQueryImportNumbers(ReceiveSheetQueryImportModel model) {
+        if (model.getReceiveNum() == null) {
+            model.setReceiveNum(BigDecimal.ZERO);
+        }
     }
 
     private CreateReceiveSheetVo buildCreateVo(List<ReceiveSheetQueryImportModel> list) {

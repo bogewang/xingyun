@@ -1,12 +1,23 @@
 package com.lframework.xingyun.sc.impl.sale;
 
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import java.math.BigDecimal;
 import java.util.List;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 class SaleOutSheetServiceImplTest {
+
+  @Test
+  void normalizeQueryImportNumbersShouldConvertNullQuantityToZero() {
+    SaleOutSheetQueryImportModel model = new SaleOutSheetQueryImportModel();
+    model.setOrderNum(null);
+
+    SaleOutSheetServiceImpl.normalizeQueryImportNumbers(model);
+
+    Assert.assertEquals(model.getOrderNum(), BigDecimal.ZERO);
+  }
 
   @Test
   void validateImportNumbersShouldAllowNullValues() {
