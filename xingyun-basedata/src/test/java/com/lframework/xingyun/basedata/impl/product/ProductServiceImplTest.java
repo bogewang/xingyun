@@ -6,6 +6,7 @@ import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductUnit;
 import com.lframework.xingyun.basedata.mappers.ProductMapper;
 import com.lframework.xingyun.basedata.service.product.ProductReferenceChecker;
+import com.lframework.xingyun.basedata.service.product.ProductService;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
@@ -63,11 +64,27 @@ class ProductServiceImplTest {
     initializeApplicationContext();
     setProductReferenceCheckers(service, Collections.singletonList(productId -> false));
     setBaseMapper(service, recordingMapper.mapper());
+    setProductService(service, new RecordingProductService().proxy());
 
     service.deleteById("product-1");
 
     Assert.assertEquals(recordingMapper.getDeleteByIdCount(), 1);
     Assert.assertEquals(recordingMapper.getUpdateCount(), 0);
+  }
+
+  @Test
+  void shouldDelegateCacheEvictionToServiceProxyWhenDeletingProduct() throws Exception {
+    RecordingProductMapper recordingMapper = new RecordingProductMapper();
+    ProductServiceImpl service = new ProductServiceImpl();
+    RecordingProductService recordingService = new RecordingProductService();
+    initializeApplicationContext();
+    setProductReferenceCheckers(service, Collections.singletonList(productId -> false));
+    setBaseMapper(service, recordingMapper.mapper());
+    setProductService(service, recordingService.proxy());
+
+    service.deleteById("product-1");
+
+    Assert.assertEquals(recordingService.getCleanCacheByKeyCount(), 1);
   }
 
   /**
@@ -113,6 +130,19 @@ class ProductServiceImplTest {
       }
     }
     throw new IllegalStateException("未找到 BaseMapper 字段");
+  }
+
+  /**
+   * 为服务注入缓存切面代理。
+   *
+   * @param service 商品服务
+   * @param productService 商品服务代理
+   * @throws Exception 反射设置失败时抛出
+   */
+  private void setProductService(ProductServiceImpl service, ProductService productService) throws Exception {
+    Field field = ProductServiceImpl.class.getDeclaredField("productService");
+    field.setAccessible(true);
+    field.set(service, productService);
   }
 
   /**
@@ -166,6 +196,43 @@ class ProductServiceImplTest {
      */
     private int getUpdateCount() {
       return updateCount;
+    }
+  }
+
+  /**
+   * 记录缓存清理调用的商品服务代理。
+   */
+  private static class RecordingProductService {
+
+    private int cleanCacheByKeyCount;
+
+    /**
+     * 创建记录缓存清理调用的商品服务代理。
+     *
+     * @return 商品服务代理
+     */
+    private ProductService proxy() {
+      return (ProductService) Proxy.newProxyInstance(ProductService.class.getClassLoader(),
+          new Class<?>[] {ProductService.class}, (proxy, method, args) -> {
+            if ("cleanCacheByKey".equals(method.getName())) {
+              cleanCacheByKeyCount++;
+              return null;
+            }
+            if ("toString".equals(method.getName())) {
+              return "RecordingProductService";
+            }
+            throw new UnsupportedOperationException("未预期的商品服务调用：" + method.getName()
+                + Arrays.toString(args));
+          });
+    }
+
+    /**
+     * 获取缓存清理调用次数。
+     *
+     * @return 缓存清理调用次数
+     */
+    private int getCleanCacheByKeyCount() {
+      return cleanCacheByKeyCount;
     }
   }
 

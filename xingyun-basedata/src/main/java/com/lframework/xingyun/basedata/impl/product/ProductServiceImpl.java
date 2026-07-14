@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,6 +82,10 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
 
     @Autowired
     private List<ProductReferenceChecker> productReferenceCheckers;
+
+    @Autowired
+    @Lazy
+    private ProductService productService;
 
     @Override
     public PageResult<Product> query(Integer pageIndex, Integer pageSize, QueryProductVo vo) {
@@ -149,7 +154,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         getBaseMapper().deleteById(id);
 
         DataChangeEventBuilder.publishLogicDelete(this, DeleteProductEvent.class, product);
-        cleanCacheByKey(id);
+        productService.cleanCacheByKey(id);
     }
 
     /**
