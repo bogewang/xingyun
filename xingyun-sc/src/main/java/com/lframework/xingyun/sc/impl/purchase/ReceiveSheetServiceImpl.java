@@ -916,15 +916,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             if (StringUtils.isBlank(data.getUnit())) {
                 errors.add("第" + rowIndex + "行“单位”不能为空");
             }
-            if (data.getReceiveNum() == null) {
-                errors.add("第" + rowIndex + "行“数量”不能为空");
-            }
-            if (data.getReceiveNum() != null && NumberUtil.le(data.getReceiveNum(), BigDecimal.ZERO)) {
-                errors.add("第" + rowIndex + "行“数量”必须大于0");
-            }
-            if (data.getReceiveNum() != null && !NumberUtil.isNumberPrecision(data.getReceiveNum(), 8)) {
-                errors.add("第" + rowIndex + "行“数量”最多允许8位小数");
-            }
+            errors.addAll(validateImportNumbers(data));
 
             Product product = matchImportProduct(data, nameUnitMap);
             if (product != null) {
@@ -945,6 +937,24 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
                 }
             }
 
+        }
+        return errors;
+    }
+
+    static List<String> validateImportNumbers(ReceiveSheetImportModel data) {
+        List<String> errors = Lists.newArrayList();
+        int rowIndex = data.getSeq();
+        if (data.getReceiveNum() != null && NumberUtil.lt(data.getReceiveNum(), BigDecimal.ZERO)) {
+            errors.add("第" + rowIndex + "行“数量”不允许小于0");
+        }
+        if (data.getReceiveNum() != null && !NumberUtil.isNumberPrecision(data.getReceiveNum(), 8)) {
+            errors.add("第" + rowIndex + "行“数量”最多允许8位小数");
+        }
+        if (data.getPurchasePrice() != null && NumberUtil.lt(data.getPurchasePrice(), BigDecimal.ZERO)) {
+            errors.add("第" + rowIndex + "行“单价”不允许小于0");
+        }
+        if (data.getPurchasePrice() != null && !NumberUtil.isNumberPrecision(data.getPurchasePrice(), 6)) {
+            errors.add("第" + rowIndex + "行“单价”最多允许6位小数");
         }
         return errors;
     }

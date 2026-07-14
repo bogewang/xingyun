@@ -1698,15 +1698,7 @@ public class SaleOutSheetServiceImpl extends
             if (StringUtils.isBlank(data.getUnit())) {
                 errors.add("第" + rowIndex + "行“单位”不能为空");
             }
-            if (data.getOrderNum() == null) {
-                errors.add("第" + rowIndex + "行“数量”不能为空");
-            }
-            if (data.getOrderNum() != null && NumberUtil.le(data.getOrderNum(), BigDecimal.ZERO)) {
-                errors.add("第" + rowIndex + "行“数量”必须大于0");
-            }
-            if (data.getOrderNum() != null && !NumberUtil.isNumberPrecision(data.getOrderNum(), 8)) {
-                errors.add("第" + rowIndex + "行“数量”最多允许8位小数");
-            }
+            errors.addAll(validateImportNumbers(data));
 
             Product product = matchImportProduct(data, nameUnitMap);
             if (product != null) {
@@ -1727,6 +1719,24 @@ public class SaleOutSheetServiceImpl extends
                     data.setTaxPrice(NumberUtil.mul(getDefaultSalePrice(product), unit.getConversionRate()));
                 }
             }
+        }
+        return errors;
+    }
+
+    static List<String> validateImportNumbers(SaleOutSheetImportModel data) {
+        List<String> errors = Lists.newArrayList();
+        int rowIndex = data.getSeq();
+        if (data.getOrderNum() != null && NumberUtil.lt(data.getOrderNum(), BigDecimal.ZERO)) {
+            errors.add("第" + rowIndex + "行“数量”不允许小于0");
+        }
+        if (data.getOrderNum() != null && !NumberUtil.isNumberPrecision(data.getOrderNum(), 8)) {
+            errors.add("第" + rowIndex + "行“数量”最多允许8位小数");
+        }
+        if (data.getTaxPrice() != null && NumberUtil.lt(data.getTaxPrice(), BigDecimal.ZERO)) {
+            errors.add("第" + rowIndex + "行“单价”不允许小于0");
+        }
+        if (data.getTaxPrice() != null && !NumberUtil.isNumberPrecision(data.getTaxPrice(), 6)) {
+            errors.add("第" + rowIndex + "行“单价”最多允许6位小数");
         }
         return errors;
     }
