@@ -139,28 +139,24 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
                 throw new InputErrorException("第" + orderNo + "行商品不能为空！");
             }
 
-            if (product.getOrderNum() == null) {
-                throw new InputErrorException("第" + orderNo + "行商品销售数量不能为空！");
+            if (product.getOrderNum() != null) {
+                if (NumberUtil.lt(product.getOrderNum(), BigDecimal.ZERO)) {
+                    throw new InputErrorException("第" + orderNo + "行商品销售数量不允许小于0！");
+                }
+
+                if (!NumberUtil.isNumberPrecision(product.getOrderNum(), 8)) {
+                    throw new InputErrorException("第" + orderNo + "行商品销售数量最多允许8位小数！");
+                }
             }
 
-            if (NumberUtil.le(product.getOrderNum(), BigDecimal.ZERO)) {
-                throw new InputErrorException("第" + orderNo + "行商品销售数量必须大于0！");
-            }
+            if (product.getTaxPrice() != null) {
+                if (NumberUtil.lt(product.getTaxPrice(), 0D)) {
+                    throw new InputErrorException("第" + orderNo + "行商品价格不允许小于0！");
+                }
 
-            if (!NumberUtil.isNumberPrecision(product.getOrderNum(), 8)) {
-                throw new InputErrorException("第" + orderNo + "行商品销售数量最多允许8位小数！");
-            }
-
-            if (product.getTaxPrice() == null) {
-                throw new InputErrorException("第" + orderNo + "行商品价格不能为空！");
-            }
-
-            if (NumberUtil.lt(product.getTaxPrice(), 0D)) {
-                throw new InputErrorException("第" + orderNo + "行商品价格不允许小于0！");
-            }
-
-            if (!NumberUtil.isNumberPrecision(product.getTaxPrice(), 6)) {
-                throw new InputErrorException("第" + orderNo + "行商品价格最多允许6位小数！");
+                if (!NumberUtil.isNumberPrecision(product.getTaxPrice(), 6)) {
+                    throw new InputErrorException("第" + orderNo + "行商品价格最多允许6位小数！");
+                }
             }
 
             if (product.getCostPrice() != null) {
