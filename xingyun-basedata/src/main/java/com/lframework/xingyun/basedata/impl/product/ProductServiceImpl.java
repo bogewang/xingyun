@@ -170,6 +170,21 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         }
     }
 
+    /**
+     * 解析商品询价标识，新增商品默认关闭，导入更新时保留原值。
+     *
+     * @param inquiryProduct 导入或请求传入的询价标识
+     * @param existingInquiryProduct 已存在商品的询价标识
+     * @param isNew 是否为新增商品
+     * @return 最终保存的询价标识
+     */
+    static Boolean resolveInquiryProduct(Boolean inquiryProduct, Boolean existingInquiryProduct, boolean isNew) {
+        if (inquiryProduct != null) {
+            return inquiryProduct;
+        }
+        return isNew ? Boolean.FALSE : existingInquiryProduct;
+    }
+
     @OpLog(type = BaseDataOpLogType.class, name = "新增商品，ID：{}, 编号：{}", params = { "#_result",
             "#vo.code" }, autoSaveParams = true)
     @Transactional(rollbackFor = Exception.class)
@@ -242,6 +257,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                 StringUtil.isBlank(vo.getDefaultSupplier()) ? null : vo.getDefaultSupplier());
         data.setRemark(StringUtil.isBlank(vo.getRemark()) ? null : vo.getRemark());
         data.setRemark2(StringUtil.isBlank(vo.getRemark2()) ? null : vo.getRemark2());
+        data.setInquiryProduct(Boolean.TRUE.equals(vo.getInquiryProduct()));
 
         data.setAvailable(Boolean.TRUE);
 
@@ -401,6 +417,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                 .set(Product::getSalePrice, vo.getSalePrice())
                 .set(Product::getPurchasePrice, vo.getPurchasePrice())
                 .set(Product::getRetailPrice, vo.getRetailPrice())
+                .set(Product::getInquiryProduct, Boolean.TRUE.equals(vo.getInquiryProduct()))
                 .set(Product::getAlias, StringUtil.isBlank(vo.getAlias()) ? null : vo.getAlias())
                 .set(Product::getDefaultSupplier,
                         StringUtil.isBlank(vo.getDefaultSupplier()) ? null : vo.getDefaultSupplier())

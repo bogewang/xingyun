@@ -27,6 +27,16 @@ class ProductServiceImplTest {
   }
 
   @Test
+  void shouldDefaultNullInquiryProductToFalse() {
+    Assert.assertFalse(ProductServiceImpl.resolveInquiryProduct(null, null, true));
+  }
+
+  @Test
+  void shouldKeepExistingInquiryProductWhenImportValueIsBlank() {
+    Assert.assertTrue(ProductServiceImpl.resolveInquiryProduct(null, Boolean.TRUE, false));
+  }
+
+  @Test
   void shouldCreateBaseUnitForUnconfiguredProduct() {
     List<ProductUnit> units = ProductServiceImpl.buildDefaultProductUnits(
         Collections.singletonList(product("product-1", "unit-1")), Collections.<String>emptySet(),
