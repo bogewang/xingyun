@@ -12,6 +12,7 @@ import com.lframework.xingyun.core.service.ProductDeleteReferenceChecker;
 import com.lframework.xingyun.basedata.events.DeleteProductEvent;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
@@ -52,6 +53,23 @@ class ProductServiceImplTest {
   void shouldRejectMissingUnitDictionary() {
     ProductServiceImpl.buildDefaultProductUnits(Collections.singletonList(product("product-1", "unit-1")),
         Collections.<String>emptySet(), Collections.<String, String>emptyMap());
+  }
+
+  /**
+   * 验证导入或修改商品后会同步主单位名称。
+   */
+  @Test
+  void shouldSyncBaseUnitName() {
+    ProductUnit baseUnit = productUnit("product-unit-1", "product-1", "旧单位", true);
+    ProductUnit secondaryUnit = productUnit("product-unit-2", "product-1", "箱", false);
+
+    List<ProductUnit> updates = ProductServiceImpl.buildBaseUnitNameUpdates(
+        Collections.singletonList(product("product-1", "unit-1")), Arrays.asList(baseUnit, secondaryUnit),
+        Collections.singletonMap("unit-1", "瓶"));
+
+    Assert.assertEquals(updates.size(), 1);
+    Assert.assertEquals(updates.get(0).getId(), "product-unit-1");
+    Assert.assertEquals(updates.get(0).getUnitName(), "瓶");
   }
 
   /**
@@ -142,5 +160,23 @@ class ProductServiceImplTest {
     product.setId(id);
     product.setUnit(unitId);
     return product;
+  }
+
+  /**
+   * 构造商品单位配置。
+   *
+   * @param id 商品单位 ID
+   * @param productId 商品 ID
+   * @param unitName 单位名称
+   * @param baseUnit 是否为主单位
+   * @return 商品单位配置
+   */
+  private ProductUnit productUnit(String id, String productId, String unitName, boolean baseUnit) {
+    ProductUnit productUnit = new ProductUnit();
+    productUnit.setId(id);
+    productUnit.setProductId(productId);
+    productUnit.setUnitName(unitName);
+    productUnit.setBaseUnit(baseUnit);
+    return productUnit;
   }
 }

@@ -396,9 +396,11 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                 .eq(Product::getId, vo.getId());
 
         getBaseMapper().update(updateWrapper);
+        data.setUnit(StringUtil.isBlank(vo.getUnit()) ? null : vo.getUnit());
         if (vo.getUnits() != null) {
-            data.setUnit(StringUtil.isBlank(vo.getUnit()) ? null : vo.getUnit());
             saveUnits(data, vo.getUnits());
+        } else {
+            syncBaseUnitNames(Collections.singletonList(data));
         }
 
         productPropertyRelationService.deleteByProductId(data.getId());
@@ -559,6 +561,50 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             super.updateBatchById(persistBatch.getUpdates());
         }
         saveDefaultUnits(persistBatch.getInserts(), persistBatch.getUpdates());
+        syncBaseUnitNames(mergeProducts(persistBatch.getInserts(), persistBatch.getUpdates()));
+    }
+
+    /**
+     * 合并新增和更新的商品，供批量处理使用。
+     *
+     * @param inserts 新增商品
+     * @param updates 更新商品
+     * @return 合并后的商品列表
+     */
+    private List<Product> mergeProducts(List<Product> inserts, List<Product> updates) {
+        List<Product> products = new ArrayList<>(inserts.size() + updates.size());
+        products.addAll(inserts);
+        products.addAll(updates);
+        return products;
+    }
+
+    /**
+     * 将商品主单位对应的单位名称同步到商品单位配置中。
+     *
+     * @param products 发生变更的商品
+     */
+    private void syncBaseUnitNames(List<Product> products) {
+        if (CollectionUtil.isEmpty(products)) {
+            return;
+        }
+
+        Set<String> productIds = products.stream().map(Product::getId).collect(Collectors.toSet());
+        List<ProductUnit> productUnits = productUnitService.list(Wrappers.lambdaQuery(ProductUnit.class)
+                .in(ProductUnit::getProductId, productIds));
+        if (CollectionUtil.isEmpty(productUnits)) {
+            return;
+        }
+
+        Set<String> unitIds = products.stream().map(Product::getUnit).filter(StringUtil::isNotBlank)
+                .collect(Collectors.toSet());
+        Map<String, String> unitNames = CollectionUtil.isEmpty(unitIds) ? Collections.emptyMap()
+                : unitService.list(Wrappers.lambdaQuery(Unit.class).in(Unit::getId, unitIds)
+                        .eq(Unit::getAvailable, Boolean.TRUE)).stream()
+                        .collect(Collectors.toMap(Unit::getId, Unit::getName));
+        List<ProductUnit> updates = buildBaseUnitNameUpdates(products, productUnits, unitNames);
+        if (CollectionUtil.isNotEmpty(updates)) {
+            productUnitService.updateBatchById(updates);
+        }
     }
 
     private void saveDefaultUnits(List<Product> inserts, List<Product> updates) {
@@ -607,6 +653,38 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             units.add(unit);
         }
         return units;
+    }
+
+    /**
+     * 构建主单位名称需要同步的商品单位记录。
+     *
+     * @param products 商品列表
+     * @param productUnits 商品单位配置
+     * @param unitNames 单位 ID 与名称映射
+     * @return 需要更新的商品单位记录
+     */
+    static List<ProductUnit> buildBaseUnitNameUpdates(List<Product> products, List<ProductUnit> productUnits,
+            Map<String, String> unitNames) {
+        Map<String, List<ProductUnit>> productUnitMap = productUnits.stream()
+                .collect(Collectors.groupingBy(ProductUnit::getProductId));
+        List<ProductUnit> updates = new ArrayList<>();
+        for (Product product : products) {
+            String unitName = unitNames.get(product.getUnit());
+            if (StringUtil.isBlank(unitName)) {
+                continue;
+            }
+            for (ProductUnit productUnit : productUnitMap.getOrDefault(product.getId(), Collections.emptyList())) {
+                if (!Boolean.TRUE.equals(productUnit.getBaseUnit()) || StringUtils.equals(unitName,
+                        productUnit.getUnitName())) {
+                    continue;
+                }
+                ProductUnit update = new ProductUnit();
+                update.setId(productUnit.getId());
+                update.setUnitName(unitName);
+                updates.add(update);
+            }
+        }
+        return updates;
     }
 
     private ProductImportPersistBatch buildProducts(List<ProductImportModel> list) {
