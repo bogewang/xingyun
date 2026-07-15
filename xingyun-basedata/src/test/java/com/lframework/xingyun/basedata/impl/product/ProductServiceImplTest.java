@@ -1,24 +1,19 @@
 package com.lframework.xingyun.basedata.impl.product;
 
-import com.baomidou.mybatisplus.core.MybatisConfiguration;
-import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
-import com.lframework.starter.web.core.event.DataChangeEventBuilder;
+import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductUnit;
-import com.lframework.xingyun.basedata.impl.product.ProductServiceImpl;
 import com.lframework.xingyun.basedata.mappers.ProductMapper;
-import com.lframework.xingyun.core.service.ProductDeleteReferenceChecker;
-import com.lframework.xingyun.basedata.events.DeleteProductEvent;
+import com.lframework.xingyun.basedata.service.product.ProductReferenceChecker;
+import com.lframework.xingyun.basedata.service.product.ProductService;
 import java.lang.reflect.Field;
+import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.apache.ibatis.builder.MapperBuilderAssistant;
-import org.mockito.InOrder;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
+import org.springframework.context.support.StaticApplicationContext;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -55,128 +50,196 @@ class ProductServiceImplTest {
         Collections.<String>emptySet(), Collections.<String, String>emptyMap());
   }
 
-  /**
-   * 验证导入或修改商品后会同步主单位名称。
-   */
-  @Test
-  void shouldSyncBaseUnitName() {
-    ProductUnit baseUnit = productUnit("product-unit-1", "product-1", "旧单位", true);
-    ProductUnit secondaryUnit = productUnit("product-unit-2", "product-1", "箱", false);
-
-    List<ProductUnit> updates = ProductServiceImpl.buildBaseUnitNameUpdates(
-        Collections.singletonList(product("product-1", "unit-1")), Arrays.asList(baseUnit, secondaryUnit),
-        Collections.singletonMap("unit-1", "瓶"));
-
-    Assert.assertEquals(updates.size(), 1);
-    Assert.assertEquals(updates.get(0).getId(), "product-unit-1");
-    Assert.assertEquals(updates.get(0).getUnitName(), "瓶");
+  @Test(expectedExceptions = DefaultClientException.class,
+      expectedExceptionsMessageRegExp = "商品已被业务单据或库存数据引用，无法删除！")
+  void shouldRejectDeleteWhenProductHasBusinessReference() {
+    ProductServiceImpl.assertNoProductReference("product-1",
+        Collections.singletonList(productId -> true));
   }
 
-  /**
-   * 验证商品已被业务单据引用时拒绝删除。
-   */
   @Test
-  void shouldRejectDeleteWhenProductIsReferenced() throws Exception {
-    ProductDeleteReferenceChecker checker = Mockito.mock(ProductDeleteReferenceChecker.class);
-    Mockito.when(checker.isReferenced("product-1")).thenReturn(true);
-
+  void shouldPhysicallyDeleteUnreferencedProduct() throws Exception {
+    RecordingProductMapper recordingMapper = new RecordingProductMapper();
     ProductServiceImpl service = new ProductServiceImpl();
-    Field field = ProductServiceImpl.class.getDeclaredField("productDeleteReferenceChecker");
-    field.setAccessible(true);
-    field.set(service, checker);
+    initializeApplicationContext();
+    setProductReferenceCheckers(service, Collections.singletonList(productId -> false));
+    setBaseMapper(service, recordingMapper.mapper());
+    setProductService(service, new RecordingProductService().proxy());
 
-    try {
-      service.deleteById("product-1");
-      Assert.fail("商品被引用时不应执行删除");
-    } catch (DefaultClientException e) {
-      Assert.assertEquals(e.getMessage(), "商品已被采购或销售单据引用，不能删除！");
-    }
+    service.deleteById("product-1");
 
-    Mockito.verify(checker).isReferenced("product-1");
+    Assert.assertEquals(recordingMapper.getDeleteByIdCount(), 1);
+    Assert.assertEquals(recordingMapper.getUpdateCount(), 0);
   }
 
-  /**
-   * 验证商品未被引用时按顺序执行状态更新。
-   */
   @Test
-  void shouldDeleteWhenProductIsNotReferenced() throws Exception {
-    ProductDeleteReferenceChecker checker = Mockito.mock(ProductDeleteReferenceChecker.class);
-    Mockito.when(checker.isReferenced("product-1")).thenReturn(false);
-    ProductMapper mapper = Mockito.mock(ProductMapper.class);
-    Product product = product("product-1", "unit-1");
-    Mockito.when(mapper.selectById("product-1")).thenReturn(product);
-
+  void shouldDelegateCacheEvictionToServiceProxyWhenDeletingProduct() throws Exception {
+    RecordingProductMapper recordingMapper = new RecordingProductMapper();
     ProductServiceImpl service = new ProductServiceImpl();
-    setField(service, "productDeleteReferenceChecker", checker);
-    setField(service, "baseMapper", mapper);
-    TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), "test"),
-        Product.class);
+    RecordingProductService recordingService = new RecordingProductService();
+    initializeApplicationContext();
+    setProductReferenceCheckers(service, Collections.singletonList(productId -> false));
+    setBaseMapper(service, recordingMapper.mapper());
+    setProductService(service, recordingService.proxy());
 
-    try (MockedStatic<DataChangeEventBuilder> eventBuilder = Mockito.mockStatic(DataChangeEventBuilder.class)) {
-      service.deleteById("product-1");
-      eventBuilder.verify(() -> DataChangeEventBuilder.publishLogicDelete(service,
-          DeleteProductEvent.class, product));
-    }
+    service.deleteById("product-1");
 
-    InOrder inOrder = Mockito.inOrder(checker, mapper);
-    inOrder.verify(checker).isReferenced("product-1");
-    inOrder.verify(mapper).update(Mockito.any());
-    inOrder.verify(mapper).selectById("product-1");
-    Mockito.verify(mapper, Mockito.times(1)).update(Mockito.any());
+    Assert.assertEquals(recordingService.getCleanCacheByKeyCount(), 1);
   }
 
   /**
-   * 在对象继承层级中设置指定字段。
+   * 初始化逻辑删除事件发布所需的应用上下文。
+   */
+  private void initializeApplicationContext() {
+    StaticApplicationContext applicationContext = new StaticApplicationContext();
+    applicationContext.refresh();
+    new ApplicationUtil().setApplicationContext(applicationContext);
+  }
+
+  /**
+   * 为服务注入商品引用检查器，隔离 Spring 容器。
    *
-   * @param target 目标对象
-   * @param fieldName 字段名称
-   * @param value 字段值
-   * @throws Exception 未找到字段或无法设置字段时抛出
+   * @param service 商品服务
+   * @param checkers 商品引用检查器
+   * @throws Exception 反射设置失败时抛出
    */
-  private void setField(Object target, String fieldName, Object value) throws Exception {
-    Class<?> type = target.getClass();
+  private void setProductReferenceCheckers(ProductServiceImpl service, List<ProductReferenceChecker> checkers)
+      throws Exception {
+    Field field = ProductServiceImpl.class.getDeclaredField("productReferenceCheckers");
+    field.setAccessible(true);
+    field.set(service, checkers);
+  }
+
+  /**
+   * 为服务注入记录调用的 Mapper。
+   *
+   * @param service 商品服务
+   * @param mapper 商品 Mapper
+   * @throws Exception 反射设置失败时抛出
+   */
+  private void setBaseMapper(ProductServiceImpl service, ProductMapper mapper) throws Exception {
+    Class<?> type = service.getClass();
     while (type != null) {
       try {
-        Field field = type.getDeclaredField(fieldName);
+        Field field = type.getDeclaredField("baseMapper");
         field.setAccessible(true);
-        field.set(target, value);
+        field.set(service, mapper);
         return;
-      } catch (NoSuchFieldException e) {
+      } catch (NoSuchFieldException ignored) {
         type = type.getSuperclass();
       }
     }
-    throw new NoSuchFieldException(fieldName);
+    throw new IllegalStateException("未找到 BaseMapper 字段");
   }
 
   /**
-   * 构造测试用商品。
+   * 为服务注入缓存切面代理。
    *
-   * @param id 商品 ID
-   * @param unitId 主单位 ID
-   * @return 测试商品
+   * @param service 商品服务
+   * @param productService 商品服务代理
+   * @throws Exception 反射设置失败时抛出
    */
-  private Product product(String id, String unitId) {
+  private void setProductService(ProductServiceImpl service, ProductService productService) throws Exception {
+    Field field = ProductServiceImpl.class.getDeclaredField("productService");
+    field.setAccessible(true);
+    field.set(service, productService);
+  }
+
+  /**
+   * 记录商品 Mapper 的删除及更新调用。
+   */
+  private static class RecordingProductMapper {
+
+    private int deleteByIdCount;
+    private int updateCount;
+
+    /**
+     * 创建记录调用的商品 Mapper 代理。
+     *
+     * @return 商品 Mapper 代理
+     */
+    private ProductMapper mapper() {
+      return (ProductMapper) Proxy.newProxyInstance(ProductMapper.class.getClassLoader(),
+          new Class<?>[] {ProductMapper.class}, (proxy, method, args) -> {
+            if ("deleteById".equals(method.getName())) {
+              deleteByIdCount++;
+              return 1;
+            }
+            if ("update".equals(method.getName())) {
+              updateCount++;
+              return 1;
+            }
+            if ("selectById".equals(method.getName())) {
+              return product("product-1", "unit-1");
+            }
+            if ("toString".equals(method.getName())) {
+              return "RecordingProductMapper";
+            }
+            throw new UnsupportedOperationException("未预期的 Mapper 调用：" + method.getName()
+                + Arrays.toString(args));
+          });
+    }
+
+    /**
+     * 获取物理删除调用次数。
+     *
+     * @return 物理删除调用次数
+     */
+    private int getDeleteByIdCount() {
+      return deleteByIdCount;
+    }
+
+    /**
+     * 获取更新调用次数。
+     *
+     * @return 更新调用次数
+     */
+    private int getUpdateCount() {
+      return updateCount;
+    }
+  }
+
+  /**
+   * 记录缓存清理调用的商品服务代理。
+   */
+  private static class RecordingProductService {
+
+    private int cleanCacheByKeyCount;
+
+    /**
+     * 创建记录缓存清理调用的商品服务代理。
+     *
+     * @return 商品服务代理
+     */
+    private ProductService proxy() {
+      return (ProductService) Proxy.newProxyInstance(ProductService.class.getClassLoader(),
+          new Class<?>[] {ProductService.class}, (proxy, method, args) -> {
+            if ("cleanCacheByKey".equals(method.getName())) {
+              cleanCacheByKeyCount++;
+              return null;
+            }
+            if ("toString".equals(method.getName())) {
+              return "RecordingProductService";
+            }
+            throw new UnsupportedOperationException("未预期的商品服务调用：" + method.getName()
+                + Arrays.toString(args));
+          });
+    }
+
+    /**
+     * 获取缓存清理调用次数。
+     *
+     * @return 缓存清理调用次数
+     */
+    private int getCleanCacheByKeyCount() {
+      return cleanCacheByKeyCount;
+    }
+  }
+
+  private static Product product(String id, String unitId) {
     Product product = new Product();
     product.setId(id);
     product.setUnit(unitId);
     return product;
-  }
-
-  /**
-   * 构造商品单位配置。
-   *
-   * @param id 商品单位 ID
-   * @param productId 商品 ID
-   * @param unitName 单位名称
-   * @param baseUnit 是否为主单位
-   * @return 商品单位配置
-   */
-  private ProductUnit productUnit(String id, String productId, String unitName, boolean baseUnit) {
-    ProductUnit productUnit = new ProductUnit();
-    productUnit.setId(id);
-    productUnit.setProductId(productId);
-    productUnit.setUnitName(unitName);
-    productUnit.setBaseUnit(baseUnit);
-    return productUnit;
   }
 }

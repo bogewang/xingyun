@@ -34,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,7 +82,11 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     private GenerateCodeService generateCodeService;
 
     @Autowired
-    private ProductDeleteReferenceChecker productDeleteReferenceChecker;
+    private List<ProductReferenceChecker> productReferenceCheckers;
+
+    @Autowired
+    @Lazy
+    private ProductService productService;
 
     @Override
     public PageResult<Product> query(Integer pageIndex, Integer pageSize, QueryProductVo vo) {
@@ -144,17 +149,25 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     @Override
     public void deleteById(String id) {
 
-        if (productDeleteReferenceChecker.isReferenced(id)) {
-            throw new DefaultClientException("商品已被采购或销售单据引用，不能删除！");
-        }
+        assertNoProductReference(id, productReferenceCheckers);
 
-        Wrapper<Product> updateWrapper = Wrappers.lambdaUpdate(Product.class)
-                .set(Product::getAvailable, Boolean.FALSE).eq(Product::getId, id);
-        getBaseMapper().update(updateWrapper);
-
-        Product product = this.findById(id);
+        Product product = getBaseMapper().selectById(id);
+        getBaseMapper().deleteById(id);
 
         DataChangeEventBuilder.publishLogicDelete(this, DeleteProductEvent.class, product);
+        productService.cleanCacheByKey(id);
+    }
+
+    /**
+     * 校验商品未被业务数据引用。
+     *
+     * @param productId 商品 ID
+     * @param productReferenceCheckers 商品引用检查器列表
+     */
+    static void assertNoProductReference(String productId, List<ProductReferenceChecker> productReferenceCheckers) {
+        if (productReferenceCheckers.stream().anyMatch(checker -> checker.hasReference(productId))) {
+            throw new DefaultClientException("商品已被业务单据或库存数据引用，无法删除！");
+        }
     }
 
     @OpLog(type = BaseDataOpLogType.class, name = "新增商品，ID：{}, 编号：{}", params = { "#_result",
