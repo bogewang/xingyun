@@ -9,6 +9,7 @@ import com.lframework.xingyun.basedata.entity.ProductUnit;
 import com.lframework.xingyun.basedata.impl.product.ProductServiceImpl;
 import com.lframework.xingyun.basedata.mappers.ProductMapper;
 import com.lframework.xingyun.core.service.ProductDeleteReferenceChecker;
+import com.lframework.xingyun.basedata.events.DeleteProductEvent;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -93,13 +94,16 @@ class ProductServiceImplTest {
     TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), "test"),
         Product.class);
 
-    try (MockedStatic<DataChangeEventBuilder> ignored = Mockito.mockStatic(DataChangeEventBuilder.class)) {
+    try (MockedStatic<DataChangeEventBuilder> eventBuilder = Mockito.mockStatic(DataChangeEventBuilder.class)) {
       service.deleteById("product-1");
+      eventBuilder.verify(() -> DataChangeEventBuilder.publishLogicDelete(service,
+          DeleteProductEvent.class, product));
     }
 
     InOrder inOrder = Mockito.inOrder(checker, mapper);
     inOrder.verify(checker).isReferenced("product-1");
     inOrder.verify(mapper).update(Mockito.any());
+    inOrder.verify(mapper).selectById("product-1");
     Mockito.verify(mapper, Mockito.times(1)).update(Mockito.any());
   }
 
