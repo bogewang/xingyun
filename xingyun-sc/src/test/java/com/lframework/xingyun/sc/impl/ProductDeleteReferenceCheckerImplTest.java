@@ -68,7 +68,23 @@ class ProductDeleteReferenceCheckerImplTest {
         purchaseOrderMapper, receiveSheetMapper, saleOrderMapper, saleOutSheetMapper);
 
     Assert.assertFalse(checker.isReferenced("product-1"));
-    Mockito.verify(saleOutSheetMapper).selectCount(Mockito.any());
+    ArgumentCaptor<LambdaQueryWrapper<PurchaseOrderDetail>> purchaseOrderCaptor =
+        createQueryWrapperCaptor();
+    ArgumentCaptor<LambdaQueryWrapper<ReceiveSheetDetail>> receiveSheetCaptor =
+        createQueryWrapperCaptor();
+    ArgumentCaptor<LambdaQueryWrapper<SaleOrderDetail>> saleOrderCaptor = createQueryWrapperCaptor();
+    ArgumentCaptor<LambdaQueryWrapper<SaleOutSheetDetail>> saleOutSheetCaptor =
+        createQueryWrapperCaptor();
+
+    Mockito.verify(purchaseOrderMapper).selectCount(purchaseOrderCaptor.capture());
+    Mockito.verify(receiveSheetMapper).selectCount(receiveSheetCaptor.capture());
+    Mockito.verify(saleOrderMapper).selectCount(saleOrderCaptor.capture());
+    Mockito.verify(saleOutSheetMapper).selectCount(saleOutSheetCaptor.capture());
+
+    assertProductIdCondition(purchaseOrderCaptor.getValue(), PurchaseOrderDetail.class);
+    assertProductIdCondition(receiveSheetCaptor.getValue(), ReceiveSheetDetail.class);
+    assertProductIdCondition(saleOrderCaptor.getValue(), SaleOrderDetail.class);
+    assertProductIdCondition(saleOutSheetCaptor.getValue(), SaleOutSheetDetail.class);
   }
 
   /**
