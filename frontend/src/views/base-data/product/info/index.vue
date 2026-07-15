@@ -186,6 +186,7 @@
         // 列表数据配置
         tableColumn: [
           { type: 'checkbox', width: 45 },
+          { field: 'id', title: 'ID', width: 180, sortable: true },
           { field: 'code', title: '编号', width: 120, sortable: true },
           { field: 'name', title: '名称', minWidth: 160, sortable: true },
           { field: 'alias', title: '别名', minWidth: 180 },
