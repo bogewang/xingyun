@@ -9,7 +9,7 @@
 1. 在租户库的 `base_data_product` 增加 `inquiry_product TINYINT(1) NOT NULL DEFAULT 0` 字段；已有商品因默认值均为非询价商品。
 2. Java 实体、创建/修改请求以及商品查询列表、详情响应统一使用 `Boolean inquiryProduct`。MyBatis-Plus 将布尔值映射为数据库中的 `1/0`。
 3. 新增商品未传该字段时按 `false` 保存；前端新增表单默认提交 `false`。
-4. 修改商品由前端单选控件提交明确的布尔值，并覆盖原值。
+4. 修改商品由前端复选框提交明确的布尔值，并覆盖原值。
 
 ## 页面交互
 
