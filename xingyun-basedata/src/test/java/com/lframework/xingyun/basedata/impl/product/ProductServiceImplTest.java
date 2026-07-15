@@ -20,6 +20,13 @@ import org.testng.annotations.Test;
 class ProductServiceImplTest {
 
   @Test
+  void shouldKeepInquiryProductOnProductEntity() {
+    Product product = new Product();
+    product.setInquiryProduct(Boolean.TRUE);
+    Assert.assertTrue(product.getInquiryProduct());
+  }
+
+  @Test
   void shouldCreateBaseUnitForUnconfiguredProduct() {
     List<ProductUnit> units = ProductServiceImpl.buildDefaultProductUnits(
         Collections.singletonList(product("product-1", "unit-1")), Collections.<String>emptySet(),

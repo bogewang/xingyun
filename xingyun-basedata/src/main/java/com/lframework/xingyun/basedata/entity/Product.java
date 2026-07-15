@@ -89,6 +89,11 @@ public class Product extends BaseEntity implements BaseDto {
   private BigDecimal retailPrice;
 
   /**
+   * 是否询价商品
+   */
+  private Boolean inquiryProduct;
+
+  /**
    * 规格
    */
   private String spec;
