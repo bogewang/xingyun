@@ -138,15 +138,20 @@ public class ProductController extends DefaultBaseController {
     public InvokeResult<Void> deleteById(
             @ApiParam(value = "ID", required = true) @NotEmpty(message = "ID不能为空！") String id) {
 
-        productService.deleteById(id);
+        try {
+            productService.deleteById(id);
 
-        productService.cleanCacheByKey(id);
+            productService.cleanCacheByKey(id);
 
-        productPropertyRelationService.cleanCacheByKey(id);
+            productPropertyRelationService.cleanCacheByKey(id);
 
-        productBundleService.cleanCacheByKey(id);
+            productBundleService.cleanCacheByKey(id);
 
-        return InvokeResultBuilder.success();
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
     }
 
     @ApiOperation("导出")
