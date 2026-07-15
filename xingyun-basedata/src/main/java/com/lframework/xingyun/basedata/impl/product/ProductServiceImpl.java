@@ -28,6 +28,7 @@ import com.lframework.xingyun.basedata.service.UnitService;
 import com.lframework.xingyun.basedata.vo.product.brand.QueryProductBrandVo;
 import com.lframework.xingyun.basedata.vo.product.info.*;
 import com.lframework.xingyun.basedata.vo.product.property.realtion.CreateProductPropertyRelationVo;
+import com.lframework.xingyun.core.service.ProductDeleteReferenceChecker;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,6 +79,9 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
 
     @Autowired
     private GenerateCodeService generateCodeService;
+
+    @Autowired
+    private ProductDeleteReferenceChecker productDeleteReferenceChecker;
 
     @Override
     public PageResult<Product> query(Integer pageIndex, Integer pageSize, QueryProductVo vo) {
@@ -139,6 +143,10 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void deleteById(String id) {
+
+        if (productDeleteReferenceChecker.isReferenced(id)) {
+            throw new DefaultClientException("商品已被采购或销售单据引用，不能删除！");
+        }
 
         Wrapper<Product> updateWrapper = Wrappers.lambdaUpdate(Product.class)
                 .set(Product::getAvailable, Boolean.FALSE).eq(Product::getId, id);

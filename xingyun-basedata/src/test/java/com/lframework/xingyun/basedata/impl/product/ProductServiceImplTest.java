@@ -1,12 +1,15 @@
 package com.lframework.xingyun.basedata.impl.product;
 
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
+import com.lframework.xingyun.core.service.ProductDeleteReferenceChecker;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductUnit;
 import com.lframework.xingyun.basedata.impl.product.ProductServiceImpl;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -41,6 +44,26 @@ class ProductServiceImplTest {
   void shouldRejectMissingUnitDictionary() {
     ProductServiceImpl.buildDefaultProductUnits(Collections.singletonList(product("product-1", "unit-1")),
         Collections.<String>emptySet(), Collections.<String, String>emptyMap());
+  }
+
+  @Test
+  void shouldRejectDeleteWhenProductIsReferenced() throws Exception {
+    ProductDeleteReferenceChecker checker = Mockito.mock(ProductDeleteReferenceChecker.class);
+    Mockito.when(checker.isReferenced("product-1")).thenReturn(true);
+
+    ProductServiceImpl service = new ProductServiceImpl();
+    Field field = ProductServiceImpl.class.getDeclaredField("productDeleteReferenceChecker");
+    field.setAccessible(true);
+    field.set(service, checker);
+
+    try {
+      service.deleteById("product-1");
+      Assert.fail("商品被引用时不应执行删除");
+    } catch (DefaultClientException e) {
+      Assert.assertEquals(e.getMessage(), "商品已被采购或销售单据引用，不能删除！");
+    }
+
+    Mockito.verify(checker).isReferenced("product-1");
   }
 
   private Product product(String id, String unitId) {
