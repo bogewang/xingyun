@@ -22,5 +22,12 @@
             <groupId>com.lframework</groupId>
             <artifactId>xingyun-basedata</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>3.9.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
