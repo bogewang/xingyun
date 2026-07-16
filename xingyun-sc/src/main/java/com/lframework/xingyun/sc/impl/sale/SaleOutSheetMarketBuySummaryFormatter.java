@@ -84,6 +84,21 @@ final class SaleOutSheetMarketBuySummaryFormatter {
   }
 
   /**
+   * 格式化总重量，将数量和单位拼接为“数量单位”。
+   *
+   * @param total 数量
+   * @param unit 单位
+   * @return 总重量文本
+   */
+  static String formatTotalWithUnit(BigDecimal total, String unit) {
+    if (total == null) {
+      return "";
+    }
+
+    return formatNumber(total) + (StringUtils.isBlank(unit) ? "" : unit);
+  }
+
+  /**
    * 对备注去空、去重并保持首次出现顺序。
    *
    * @param descriptions 原始备注

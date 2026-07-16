@@ -351,9 +351,9 @@ public class SaleOutSheetServiceImpl extends
             Map<String, String> map = new LinkedHashMap<>();
             map.put("category", row.categoryName);
             map.put("productName", row.productName);
-            map.put("unit", row.unit);
+            map.put("total", SaleOutSheetMarketBuySummaryFormatter.formatTotalWithUnit(
+                    row.total, row.unit));
             map.put("detail", buildMarketBuySummaryDetail(row, customerNameMap));
-            map.put("total", formatNumber(row.total));
             data.add(map);
         }
 
@@ -507,9 +507,8 @@ public class SaleOutSheetServiceImpl extends
         Map<String, String> headerMap = new LinkedHashMap<>();
         headerMap.put("category", "分类");
         headerMap.put("productName", "商品名称");
-        headerMap.put("unit", "单位");
+        headerMap.put("total", "总重量");
         headerMap.put("detail", "明细数量");
-        headerMap.put("total", "总计");
         return headerMap;
     }
 

@@ -85,12 +85,24 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
     Map<String, String> expectedHeaders = new LinkedHashMap<>();
     expectedHeaders.put("category", "分类");
     expectedHeaders.put("productName", "商品名称");
-    expectedHeaders.put("unit", "单位");
+    expectedHeaders.put("total", "总重量");
     expectedHeaders.put("detail", "明细数量");
-    expectedHeaders.put("total", "总计");
 
     Assert.assertEquals(headers, expectedHeaders);
     Assert.assertEquals(new ArrayList<>(headers.keySet()), Arrays.asList(
-        "category", "productName", "unit", "detail", "total"));
+        "category", "productName", "total", "detail"));
+  }
+
+  /**
+   * 验证总重量将数量和单位拼接为“数量单位”。
+   */
+  @Test
+  void formatTotalWithUnitShouldAppendUnitAfterQuantity() {
+    Assert.assertEquals(
+        SaleOutSheetMarketBuySummaryFormatter.formatTotalWithUnit(
+            new BigDecimal("6.00"), "公斤"), "6公斤");
+    Assert.assertEquals(
+        SaleOutSheetMarketBuySummaryFormatter.formatTotalWithUnit(
+            new BigDecimal("6.00"), ""), "6");
   }
 }

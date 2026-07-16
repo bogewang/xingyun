@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 将 `/sale/out` 买菜汇总导出中的客户动态列合并为一个“明细数量”列，并按昵称优先、名称回退展示客户。
+**Goal:** 将 `/sale/out` 买菜汇总导出中的客户动态列合并为一个“明细数量”列，并将单位与总计合并为“总重量”列，按昵称优先、名称回退展示客户。
 
-**Architecture:** 保留 `SaleOutSheetServiceImpl` 现有的出库单查询、商品批量加载、商品聚合和总计逻辑。新增同包纯格式化器负责客户名称回退和客户明细字符串拼接，服务层只负责按客户首次出现顺序组装格式化器输入并生成固定表头。
+**Architecture:** 保留 `SaleOutSheetServiceImpl` 现有的出库单查询、商品批量加载、商品聚合和总计逻辑。新增同包纯格式化器负责客户名称回退、客户明细字符串拼接和总重量格式化，服务层只负责按客户首次出现顺序组装格式化器输入并生成固定表头。
 
 **Tech Stack:** Java 8、Spring Boot 2.2.2、MyBatis-Plus 3.4.2、TestNG、Maven。
 
@@ -26,7 +26,7 @@
 - Create later: `xingyun-sc/src/main/java/com/lframework/xingyun/sc/impl/sale/SaleOutSheetMarketBuySummaryFormatter.java`
 
 **Interfaces:**
-- Consumes: 待实现的 `SaleOutSheetMarketBuySummaryFormatter.resolveCustomerName(Customer)`、`formatCustomerDetail(String, String, BigDecimal, Collection<String>)`、`mergeCustomerDetails(List<CustomerDetail>)`。
+- Consumes: 待实现的 `SaleOutSheetMarketBuySummaryFormatter.resolveCustomerName(Customer)`、`formatCustomerDetail(String, String, BigDecimal, Collection<String>)`、`mergeCustomerDetails(List<CustomerDetail>)`、`formatTotalWithUnit(BigDecimal, String)`。
 - Produces: 明确的名称回退、数量/单位/备注格式和多客户顺序行为。
 
 - [ ] **Step 1: Write the failing tests**
@@ -93,9 +93,10 @@ static String resolveCustomerName(Customer customer)
 static String formatCustomerDetail(String customerName, String unit,
     BigDecimal orderNum, Collection<String> descriptions)
 static String mergeCustomerDetails(List<CustomerDetail> details)
+static String formatTotalWithUnit(BigDecimal total, String unit)
 ```
 
-规则：昵称使用 `StringUtils.isNotBlank` 判断；数量去除无意义尾零；备注使用 `LinkedHashSet` 去重并以 `；` 连接；数量非零时输出 `数量/单位`；数量为零但存在备注时仅输出客户和备注；客户明细为空时不参与连接。
+规则：昵称使用 `StringUtils.isNotBlank` 判断；数量去除无意义尾零；备注使用 `LinkedHashSet` 去重并以 `；` 连接；数量非零时输出 `数量/单位`；数量为零但存在备注时仅输出客户和备注；客户明细为空时不参与连接；总重量输出 `数量单位`，单位为空时仅输出数量。
 
 - [ ] **Step 2: Run the focused test to verify it passes**
 
@@ -115,17 +116,17 @@ Expected: PASS，新增测试全部通过。
 
 **Interfaces:**
 - Consumes: 当前 `marketBuySummary(QuerySaleOutSheetVo)` 查询结果、`SummaryRow` 的客户聚合数据和格式化器接口。
-- Produces: 固定表头 `分类、商品名称、单位、明细数量、总计`，单行内按客户首次出现顺序输出客户明细。
+- Produces: 固定表头 `分类、商品名称、总重量、明细数量`，单行内按客户首次出现顺序输出客户明细。
 
 - [ ] **Step 1: Write/extend a failing regression assertion for the fixed header shape**
 
-将表头构造抽成包可见静态方法 `buildMarketBuySummaryHeaders()`，先在测试中断言返回键顺序为 `category、productName、unit、detail、total`，运行测试确认当前代码不存在该方法或行为不满足。
+将表头构造抽成包可见静态方法 `buildMarketBuySummaryHeaders()`，先在测试中断言返回键顺序为 `category、productName、total、detail`，运行测试确认当前代码不存在该方法或行为不满足。
 
 - [ ] **Step 2: Implement the minimal service integration**
 
-在 `marketBuySummary` 开始处构造固定表头，不再调用 `buildCustomerColumnMap`；新增 `detail` 表头“明细数量”和 `total` 表头“总计”。将客户映射改为 `LinkedHashMap<String, String>`，键为客户 ID，值为 `SaleOutSheetMarketBuySummaryFormatter.resolveCustomerName(customer)`，保持单据查询顺序。
+在 `marketBuySummary` 开始处构造固定表头，不再调用 `buildCustomerColumnMap`；使用 `total` 表头“总重量”和 `detail` 表头“明细数量”。将客户映射改为 `LinkedHashMap<String, String>`，键为客户 ID，值为 `SaleOutSheetMarketBuySummaryFormatter.resolveCustomerName(customer)`，保持单据查询顺序。
 
-将每个 `SummaryRow` 的客户单元格转换为格式化器的 `CustomerDetail`，把结果写入 `detail`，删除按客户循环写列的逻辑；`SummaryRow.cells` 仍按客户 ID 聚合数量和去重备注。空单据或空明细也输出固定五列表头。
+将每个 `SummaryRow` 的客户单元格转换为格式化器的 `CustomerDetail`，把结果写入 `detail`；使用 `formatTotalWithUnit(row.total, row.unit)` 把数量 `6` 和单位 `公斤` 输出为 `6公斤`，删除按客户循环写列和独立单位列的逻辑；`SummaryRow.cells` 仍按客户 ID 聚合数量和去重备注。空单据或空明细也输出固定四列表头。
 
 - [ ] **Step 3: Run focused and existing service tests**
 
