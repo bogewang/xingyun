@@ -8,7 +8,13 @@ import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.xingyun.basedata.entity.Product;
+import com.lframework.xingyun.basedata.bo.product.info.GetProductBo;
+import com.lframework.xingyun.basedata.bo.product.info.ProductSelectorBo;
+import com.lframework.xingyun.basedata.entity.ProductCategory;
 import com.lframework.xingyun.basedata.mappers.ProductMapper;
+import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
+import com.lframework.xingyun.basedata.service.product.ProductPropertyRelationService;
+import com.lframework.xingyun.basedata.service.product.ProductUnitService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.vo.product.info.UpdateProductAvailableVo;
 import org.junit.jupiter.api.Test;
@@ -34,6 +40,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mockStatic;
 
 class ProductAvailabilityTest {
 
@@ -112,6 +119,36 @@ class ProductAvailabilityTest {
 
         assertEquals(Boolean.FALSE, result.getAvailable());
         verify(mapper).selectById("product-1");
+    }
+
+    /**
+     * 验证历史数据回显对象保留商品停用状态。
+     */
+    @Test
+    void shouldExposeDisabledStatusInProductHistoryBos() {
+        Product disabledProduct = product("product-1", Boolean.FALSE);
+        ProductCategory category = new ProductCategory();
+        category.setId("category-1");
+        category.setName("分类");
+        ProductCategoryService categoryService = mock(ProductCategoryService.class);
+        when(categoryService.findById(any())).thenReturn(category);
+        ProductUnitService unitService = mock(ProductUnitService.class);
+        when(unitService.getByProductId("product-1")).thenReturn(Collections.emptyList());
+        ProductPropertyRelationService relationService = mock(ProductPropertyRelationService.class);
+        when(relationService.getByProductId("product-1")).thenReturn(Collections.emptyList());
+
+        try (org.mockito.MockedStatic<com.lframework.starter.web.core.utils.ApplicationUtil> applicationUtil =
+                     mockStatic(com.lframework.starter.web.core.utils.ApplicationUtil.class)) {
+            applicationUtil.when(() -> com.lframework.starter.web.core.utils.ApplicationUtil.getBean(ProductCategoryService.class))
+                    .thenReturn(categoryService);
+            applicationUtil.when(() -> com.lframework.starter.web.core.utils.ApplicationUtil.getBean(ProductUnitService.class))
+                    .thenReturn(unitService);
+            applicationUtil.when(() -> com.lframework.starter.web.core.utils.ApplicationUtil.getBean(ProductPropertyRelationService.class))
+                    .thenReturn(relationService);
+
+            assertEquals(Boolean.FALSE, new ProductSelectorBo(disabledProduct).getAvailable());
+            assertEquals(Boolean.FALSE, new GetProductBo(disabledProduct).getAvailable());
+        }
     }
 
     @Test

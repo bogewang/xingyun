@@ -36,6 +36,12 @@ public class GetProductBo extends BaseBo<Product> {
   private String id;
 
   /**
+   * 商品启用状态，用于历史业务数据回显。
+   */
+  @ApiModelProperty("商品启用状态")
+  private Boolean available;
+
+  /**
    * 编号
    */
   @ApiModelProperty("编号")
