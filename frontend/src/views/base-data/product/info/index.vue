@@ -49,7 +49,7 @@
                 <j-form-item label="状态">
                   <a-select v-model:value="searchFormData.available">
                     <a-select-option :value="AVAILABLE.ENABLE.code">启用</a-select-option>
-                    <a-select-option :value="AVAILABLE.UNABLE.code">禁用</a-select-option>
+                    <a-select-option :value="AVAILABLE.UNABLE.code">停用</a-select-option>
                     <a-select-option value="">全部</a-select-option>
                   </a-select>
                 </j-form-item>
@@ -94,7 +94,7 @@
                       key="batchDisable"
                       :icon="h(StopOutlined)"
                     >
-                      批量禁用
+                      批量停用
                     </a-menu-item>
                     <a-menu-item
                       v-permission="['base-data:product:info:delete']"
@@ -163,7 +163,7 @@
         { field: 'code', title: '编号', width: 120 },
         { field: 'name', title: '名称', minWidth: 160 },
       ]"
-      title="批量禁用"
+      title="批量停用"
       :table-data="batchHandleDatas"
       :handle-fn="doBatchAvailableItem"
       :batch-handle-fn="batchDisableHandle"
@@ -374,7 +374,7 @@
         return this.doBatchAvailable(records, true);
       },
       /**
-       * 批量禁用选中商品。
+       * 批量停用选中商品。
        * @param records 选中的商品记录
        */
       batchDisableHandle(records) {
@@ -386,7 +386,7 @@
        */
       openBatchAvailableDialog(available) {
         const records = this.$refs.grid.getCheckboxRecords();
-        const action = available ? '启用' : '禁用';
+        const action = available ? '启用' : '停用';
 
         if (isEmpty(records)) {
           createError(`请选择要${action}的商品！`);
@@ -405,7 +405,7 @@
         this.openBatchAvailableDialog(true);
       },
       /**
-       * 打开批量禁用确认窗口。
+       * 打开批量停用确认窗口。
        */
       batchDisable() {
         this.openBatchAvailableDialog(false);
