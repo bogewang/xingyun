@@ -2,6 +2,8 @@ package com.lframework.xingyun.sc.impl.sale;
 
 import com.lframework.xingyun.basedata.entity.Customer;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,6 +17,9 @@ import org.apache.commons.lang3.StringUtils;
  * 买菜汇总客户明细格式化器。
  */
 final class SaleOutSheetMarketBuySummaryFormatter {
+
+  private static final DateTimeFormatter ORDER_DATE_FORMATTER = DateTimeFormatter
+      .ofPattern("yyyy/M/d");
 
   private SaleOutSheetMarketBuySummaryFormatter() {
   }
@@ -96,6 +101,16 @@ final class SaleOutSheetMarketBuySummaryFormatter {
     }
 
     return formatNumber(total) + (StringUtils.isBlank(unit) ? "" : unit);
+  }
+
+  /**
+   * 格式化订单日期，月份和日期不补前导零。
+   *
+   * @param orderDate 订单日期
+   * @return 订单日期文本
+   */
+  static String formatOrderDate(LocalDate orderDate) {
+    return orderDate == null ? "" : orderDate.format(ORDER_DATE_FORMATTER);
   }
 
   /**

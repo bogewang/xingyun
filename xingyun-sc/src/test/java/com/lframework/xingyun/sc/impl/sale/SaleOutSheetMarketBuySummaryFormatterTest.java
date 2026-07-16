@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -83,14 +84,15 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
   void buildMarketBuySummaryHeadersShouldUseOneDetailColumn() {
     Map<String, String> headers = SaleOutSheetServiceImpl.buildMarketBuySummaryHeaders();
     Map<String, String> expectedHeaders = new LinkedHashMap<>();
-    expectedHeaders.put("category", "分类");
+    expectedHeaders.put("date", "日期");
     expectedHeaders.put("productName", "商品名称");
+    expectedHeaders.put("category", "分类名称");
     expectedHeaders.put("total", "总重量");
     expectedHeaders.put("detail", "明细数量");
 
     Assert.assertEquals(headers, expectedHeaders);
     Assert.assertEquals(new ArrayList<>(headers.keySet()), Arrays.asList(
-        "category", "productName", "total", "detail"));
+        "date", "productName", "category", "total", "detail"));
   }
 
   /**
@@ -104,5 +106,28 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
     Assert.assertEquals(
         SaleOutSheetMarketBuySummaryFormatter.formatTotalWithUnit(
             new BigDecimal("6.00"), ""), "6");
+  }
+
+  /**
+   * 验证订单日期按年月日且不补零的格式输出。
+   */
+  @Test
+  void formatOrderDateShouldUseYearMonthDayWithoutLeadingZeros() {
+    Assert.assertEquals(
+        SaleOutSheetMarketBuySummaryFormatter.formatOrderDate(
+            LocalDate.of(2026, 7, 19)), "2026/7/19");
+  }
+
+  /**
+   * 验证同一商品在不同订单日期下使用不同的汇总键。
+   */
+  @Test
+  void buildMarketBuySummaryRowKeyShouldSeparateDifferentDates() {
+    String firstKey = SaleOutSheetServiceImpl.buildMarketBuySummaryRowKey(
+        LocalDate.of(2026, 7, 19), "product-1");
+    String secondKey = SaleOutSheetServiceImpl.buildMarketBuySummaryRowKey(
+        LocalDate.of(2026, 7, 20), "product-1");
+
+    Assert.assertNotEquals(firstKey, secondKey);
   }
 }

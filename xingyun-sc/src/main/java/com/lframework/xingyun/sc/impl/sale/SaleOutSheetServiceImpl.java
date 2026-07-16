@@ -349,8 +349,9 @@ public class SaleOutSheetServiceImpl extends
         List<Map<String, String>> data = new ArrayList<>();
         for (SummaryRow row : summaryRows) {
             Map<String, String> map = new LinkedHashMap<>();
-            map.put("category", row.categoryName);
+            map.put("date", SaleOutSheetMarketBuySummaryFormatter.formatOrderDate(row.orderDate));
             map.put("productName", row.productName);
+            map.put("category", row.categoryName);
             map.put("total", SaleOutSheetMarketBuySummaryFormatter.formatTotalWithUnit(
                     row.total, row.unit));
             map.put("detail", buildMarketBuySummaryDetail(row, customerNameMap));
@@ -505,8 +506,9 @@ public class SaleOutSheetServiceImpl extends
      */
     static Map<String, String> buildMarketBuySummaryHeaders() {
         Map<String, String> headerMap = new LinkedHashMap<>();
-        headerMap.put("category", "分类");
+        headerMap.put("date", "日期");
         headerMap.put("productName", "商品名称");
+        headerMap.put("category", "分类名称");
         headerMap.put("total", "总重量");
         headerMap.put("detail", "明细数量");
         return headerMap;
@@ -588,11 +590,11 @@ public class SaleOutSheetServiceImpl extends
      * 将原始出库明细聚合成导出行。
      * <p>
      * 聚合维度：
-     * 1. 同商品归并为一行
-     * 2. 同客户同商品数量累加
-     * 3. 同客户同商品备注去重后按出现顺序拼接
+     * 1. 同日期同商品归并为一行
+     * 2. 同日期同客户同商品数量累加
+     * 3. 同日期同客户同商品备注去重后按出现顺序拼接
      * <p>
-     * 输出前按“分类 -> 商品名称”升序排序，满足导出展示要求。
+     * 输出前按“日期 -> 分类 -> 商品名称”升序排序，满足导出展示要求。
      */
     private List<SummaryRow> buildSummaryRows(List<SaleOutSheetDetail> details,
             Map<String, SaleOutSheet> sheetMap,
@@ -607,9 +609,11 @@ public class SaleOutSheetServiceImpl extends
                 continue;
             }
 
-            // 每个商品汇总成一行，行内再按客户拆分单元格数据。
-            SummaryRow row = summaryMap.computeIfAbsent(product.getId(),
-                    key -> new SummaryRow(getCategoryName(product, categoryMap), product.getName(),
+            // 每个日期和商品汇总成一行，行内再按客户拆分单元格数据。
+            String summaryKey = buildMarketBuySummaryRowKey(sheet.getOrderDate(), product.getId());
+            SummaryRow row = summaryMap.computeIfAbsent(summaryKey,
+                    key -> new SummaryRow(sheet.getOrderDate(), getCategoryName(product, categoryMap),
+                            product.getName(),
                             productUnitNameMap.getOrDefault(product.getUnit(), product.getUnit())));
 
             // 同一客户的数量累加，备注去重并保留原始出现顺序。
@@ -623,9 +627,22 @@ public class SaleOutSheetServiceImpl extends
         }
 
         return summaryMap.values().stream()
-                .sorted(Comparator.comparing((SummaryRow item) -> defaultString(item.categoryName))
+                .sorted(Comparator.comparing((SummaryRow item) -> item.orderDate,
+                                Comparator.nullsFirst(Comparator.naturalOrder()))
+                        .thenComparing(item -> defaultString(item.categoryName))
                         .thenComparing(item -> defaultString(item.productName)))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 构造买菜汇总行键，确保同一商品跨日期分别汇总。
+     *
+     * @param orderDate 订单日期
+     * @param productId 商品ID
+     * @return 日期和商品组合键
+     */
+    static String buildMarketBuySummaryRowKey(LocalDate orderDate, String productId) {
+        return String.valueOf(orderDate) + '\u0000' + String.valueOf(productId);
     }
 
     /**
@@ -685,6 +702,7 @@ public class SaleOutSheetServiceImpl extends
     }
 
     private static class SummaryRow {
+        private LocalDate orderDate;
         private String categoryName;
         private String productName;
         private String unit;
@@ -693,7 +711,9 @@ public class SaleOutSheetServiceImpl extends
         // key: customerId，value: 当前商品在该客户下的汇总数量与备注。
         private Map<String, SummaryCell> cells = new HashMap<>();
 
-        private SummaryRow(String categoryName, String productName, String unit) {
+        private SummaryRow(LocalDate orderDate, String categoryName, String productName,
+                String unit) {
+            this.orderDate = orderDate;
             this.categoryName = categoryName;
             this.productName = productName;
             this.unit = unit;
