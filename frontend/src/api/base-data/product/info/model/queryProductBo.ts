@@ -105,7 +105,7 @@ export interface QueryProductBo {
   productType: number;
 
   /**
-   * 状态
+   * 状态；true 表示启用，false 表示禁用
    */
   available: boolean;
 

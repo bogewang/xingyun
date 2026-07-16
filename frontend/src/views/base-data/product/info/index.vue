@@ -46,6 +46,13 @@
                     <a-select-option :value="false">否</a-select-option>
                   </a-select>
                 </j-form-item>
+                <j-form-item label="状态">
+                  <a-select v-model:value="searchFormData.available">
+                    <a-select-option :value="AVAILABLE.ENABLE.code">启用</a-select-option>
+                    <a-select-option :value="AVAILABLE.UNABLE.code">停用</a-select-option>
+                    <a-select-option value="">全部</a-select-option>
+                  </a-select>
+                </j-form-item>
               </j-form>
             </j-border>
           </template>
@@ -75,14 +82,34 @@
               <a-dropdown>
                 <template #overlay>
                   <a-menu @click="handleCommand">
-                    <a-menu-item key="batchDelete" :icon="h(DeleteOutlined)">
+                    <a-menu-item
+                      v-permission="['base-data:product:info:modify']"
+                      key="batchEnable"
+                      :icon="h(CheckOutlined)"
+                    >
+                      批量启用
+                    </a-menu-item>
+                    <a-menu-item
+                      v-permission="['base-data:product:info:modify']"
+                      key="batchDisable"
+                      :icon="h(StopOutlined)"
+                    >
+                      批量停用
+                    </a-menu-item>
+                    <a-menu-item
+                      v-permission="['base-data:product:info:delete']"
+                      key="batchDelete"
+                      :icon="h(DeleteOutlined)"
+                    >
                       批量删除
                     </a-menu-item>
                   </a-menu>
                 </template>
-                <a-button v-permission="['base-data:product:info:delete']"
-                  >更多<DownOutlined
-                /></a-button>
+                <a-button
+                  v-permission="['base-data:product:info:modify', 'base-data:product:info:delete']"
+                >
+                  更多<DownOutlined />
+                </a-button>
               </a-dropdown>
             </a-space>
           </template>
@@ -90,6 +117,11 @@
           <!-- 操作 列自定义内容 -->
           <template #action_default="{ row }">
             <table-action outside :actions="createActions(row)" />
+          </template>
+
+          <!-- 状态列自定义内容 -->
+          <template #available_default="{ row }">
+            <available-tag :available="row.available" />
           </template>
         </vxe-grid>
       </page-wrapper>
@@ -112,6 +144,30 @@
       :handle-fn="doBatchDelete"
       @confirm="search"
     />
+
+    <batch-handler
+      ref="batchEnableHandlerDialog"
+      :table-column="[
+        { field: 'code', title: '编号', width: 120 },
+        { field: 'name', title: '名称', minWidth: 160 },
+      ]"
+      title="批量启用"
+      :table-data="batchHandleDatas"
+      :handle-fn="doBatchAvailableItem"
+      :batch-handle-fn="batchEnableHandle"
+    />
+
+    <batch-handler
+      ref="batchDisableHandlerDialog"
+      :table-column="[
+        { field: 'code', title: '编号', width: 120 },
+        { field: 'name', title: '名称', minWidth: 160 },
+      ]"
+      title="批量停用"
+      :table-data="batchHandleDatas"
+      :handle-fn="doBatchAvailableItem"
+      :batch-handle-fn="batchDisableHandle"
+    />
   </div>
 </template>
 
@@ -123,9 +179,11 @@
     CloudUploadOutlined,
     DownloadOutlined,
     DeleteOutlined,
+    CheckOutlined,
     DownOutlined,
     PlusOutlined,
     SearchOutlined,
+    StopOutlined,
   } from '@ant-design/icons-vue';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { buildSortPageVo, isEmpty, isEqualWithStr } from '@/utils/utils';
@@ -133,6 +191,9 @@
   import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
   import { PRODUCT_TYPE } from '@/enums/biz/productType';
+  import { AVAILABLE } from '@/enums/biz/available';
+  import AvailableTag from '@/components/Tag/AvailableTag.vue';
+  import { buildProductAvailabilityRequest } from './productAvailability';
   import BatchHandler from '@/components/BatchHandler';
   import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
   import PageWrapper from '@/components/Page/src/PageWrapper.vue';
@@ -150,6 +211,7 @@
       JFormItem,
       PageWrapper,
       BatchHandler,
+      AvailableTag,
       DownOutlined,
       Detail,
       ProductImporter,
@@ -166,6 +228,9 @@
         SearchOutlined,
         PRODUCT_TYPE,
         DeleteOutlined,
+        CheckOutlined,
+        StopOutlined,
+        AVAILABLE,
       };
     },
     data() {
@@ -183,6 +248,7 @@
           categoryId: '',
           brandId: '',
           inquiryProduct: '',
+          available: AVAILABLE.ENABLE.code,
         },
         // 工具栏配置
         toolbarConfig: {
@@ -207,6 +273,7 @@
             width: 100,
             formatter: ({ cellValue }) => (cellValue ? '是' : '否'),
           },
+          { field: 'available', title: '状态', width: 80, slots: { default: 'available_default' } },
           { field: 'purchasePrice', title: '采购价', width: 120 },
           { field: 'latestPurchasePrice', title: '最新采购价', width: 120 },
           { field: 'salePrice', title: '销售价', width: 120 },
@@ -273,9 +340,75 @@
           });
       },
       handleCommand({ key }) {
-        if (key === 'batchDelete') {
+        if (key === 'batchEnable') {
+          this.batchEnable();
+        } else if (key === 'batchDisable') {
+          this.batchDisable();
+        } else if (key === 'batchDelete') {
           this.batchDelete();
         }
+      },
+      /**
+       * 执行批量状态更新请求。
+       * @param records 选中的商品记录
+       * @param available 目标状态
+       */
+      doBatchAvailable(records, available) {
+        return api.updateAvailable(buildProductAvailabilityRequest(records, available)).then(() => {
+          this.search();
+          this.$refs.grid.clearCheckboxRow();
+        });
+      },
+      /**
+       * 批量状态处理组件的单行回调占位。
+       * @returns 已完成的 Promise
+       */
+      doBatchAvailableItem() {
+        return Promise.resolve();
+      },
+      /**
+       * 批量启用选中商品。
+       * @param records 选中的商品记录
+       */
+      batchEnableHandle(records) {
+        return this.doBatchAvailable(records, true);
+      },
+      /**
+       * 批量停用选中商品。
+       * @param records 选中的商品记录
+       */
+      batchDisableHandle(records) {
+        return this.doBatchAvailable(records, false);
+      },
+      /**
+       * 打开批量状态确认窗口。
+       * @param available 目标状态
+       */
+      openBatchAvailableDialog(available) {
+        const records = this.$refs.grid.getCheckboxRecords();
+        const action = available ? '启用' : '停用';
+
+        if (isEmpty(records)) {
+          createError(`请选择要${action}的商品！`);
+          return;
+        }
+
+        this.batchHandleDatas = records;
+        this.$refs[
+          available ? 'batchEnableHandlerDialog' : 'batchDisableHandlerDialog'
+        ].openDialog();
+      },
+      /**
+       * 打开批量启用确认窗口。
+       */
+      batchEnable() {
+        this.openBatchAvailableDialog(true);
+      },
+      /**
+       * 打开批量停用确认窗口。
+       */
+      batchDisable() {
+        this.openBatchAvailableDialog(false);
       },
       doBatchDelete(row) {
         return api.deleteById(row.id);

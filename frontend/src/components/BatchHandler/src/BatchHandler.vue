@@ -43,9 +43,9 @@
       <template #footer>
         <div>
           <a-space>
-            <a-button @click="onClose">关 闭</a-button>
+            <a-button :disabled="loading && !!batchHandleFn" @click="onClose">关 闭</a-button>
             <a-button v-if="!loading" type="primary" @click="onBegin">开 始</a-button>
-            <a-button v-if="loading" type="primary" @click="onStop">停 止</a-button>
+            <a-button v-if="loading && !batchHandleFn" type="primary" @click="onStop">停 止</a-button>
           </a-space>
         </div>
       </template>
@@ -98,15 +98,14 @@ export default defineComponent({
         type: Function,
         required: true,
       },
+      batchHandleFn: {
+        type: Function,
+        default: null,
+      },
       tip: {
         type: String,
         default: '',
       },
-    },
-    setup() {
-      return {
-        isEmpty,
-      };
     },
     setup() {
       return {
@@ -193,6 +192,36 @@ export default defineComponent({
 
         createConfirm('是否确认开始执行？').then(() => {
           this.loading = true;
+
+          if (this.batchHandleFn) {
+            this.copyedTableData.forEach((item) => {
+              item.__status = 1;
+            });
+
+            Promise.resolve()
+              .then(() => this.batchHandleFn(this.copyedTableData))
+              .then(() => {
+                this.copyedTableData.forEach((item) => {
+                  item.__status = 2;
+                });
+              })
+              .catch((e) => {
+                const errorMsg = this.resolveErrorMessage(e);
+                this.copyedTableData.forEach((item) => {
+                  item.__errorMsg = errorMsg;
+                  item.__status = 3;
+                });
+              })
+              .finally(() => {
+                this.copyedTableData.forEach((item) => {
+                  this.$emit('confirm-row', item);
+                });
+                this.$emit('confirm');
+                this.loading = false;
+              });
+            return;
+          }
+
           this.concurrentPromise = new ConcurrentPromise(this.concurrency);
           this.copyedTableData.forEach((item, index) => {
             if (index >= this.currentIndex) {

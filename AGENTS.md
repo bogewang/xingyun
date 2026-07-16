@@ -13,9 +13,9 @@
 
 ## Commands
 
-- 构建：`mvn clean compile -DskipTests`
-- 后端启动：`cd xingyun-api && mvn spring-boot:run -Dspring-boot.run.profiles=dev`
-- 测试：`mvn test`
+- 构建：`cd backend && mvn clean compile -DskipTests`
+- 后端启动：`cd backend/xingyun-api && mvn spring-boot:run -Dspring-boot.run.profiles=dev`
+- 测试：`cd backend && mvn test`
 - 前端启动：`cd frontend && pnpm run dev`
 - 前端检查：`cd frontend && pnpm run lint`
 

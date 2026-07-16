@@ -125,7 +125,7 @@
       return {
         // 是否可见
         visible: false,
-        // 字段类型是否禁用
+        // 字段类型是否停用
         columnTypeDisabled: false,
         // 是否显示加载框
         loading: false,
