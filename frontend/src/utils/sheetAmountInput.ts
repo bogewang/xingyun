@@ -54,6 +54,13 @@ export function getSheetLineAmount(
     return Number(row.taxAmount || 0);
   }
 
+  if (row.taxAmount !== '' && row.taxAmount !== null && row.taxAmount !== undefined) {
+    const storedAmount = Number(row.taxAmount);
+    if (Number.isFinite(storedAmount)) {
+      return storedAmount;
+    }
+  }
+
   const amount = getNumber(mul(row[quantityField] || 0, row[priceField] || 0), 2);
   if (row.lastValidTaxAmount === undefined) {
     const initialAmount = sanitizeNonNegativeDecimalInput(row.taxAmount, String(amount));
