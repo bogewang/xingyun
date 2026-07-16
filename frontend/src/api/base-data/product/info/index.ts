@@ -8,6 +8,7 @@ import { QueryProductVo } from '@/api/base-data/product/info/model/queryProductV
 import { GetProductBo } from '@/api/base-data/product/info/model/getProductBo';
 import { CreateProductVo } from '@/api/base-data/product/info/model/createProductVo';
 import { UpdateProductVo } from '@/api/base-data/product/info/model/updateProductVo';
+import { UpdateProductAvailableVo } from '@/api/base-data/product/info/model/updateProductAvailableVo';
 
 const baseUrl = '/basedata/product';
 const selectorBaseUrl = '/selector';
@@ -110,6 +111,23 @@ export function update(data: UpdateProductVo): Promise<void> {
   return defHttp.put<void>(
     {
       url: baseUrl,
+      data,
+    },
+    {
+      contentType: ContentTypeEnum.JSON,
+      region,
+    },
+  );
+}
+
+/**
+ * 批量更新商品可用状态。
+ * @param data 批量更新请求参数
+ */
+export function updateAvailable(data: UpdateProductAvailableVo): Promise<void> {
+  return defHttp.put<void>(
+    {
+      url: baseUrl + '/available',
       data,
     },
     {
