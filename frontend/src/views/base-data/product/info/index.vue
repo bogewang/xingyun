@@ -39,6 +39,13 @@
                 <j-form-item label="商品品牌">
                   <product-brand-selector v-model:value="searchFormData.brandId" />
                 </j-form-item>
+                <j-form-item label="询价商品">
+                  <a-select v-model:value="searchFormData.inquiryProduct" allow-clear>
+                    <a-select-option value="">全部</a-select-option>
+                    <a-select-option :value="true">是</a-select-option>
+                    <a-select-option :value="false">否</a-select-option>
+                  </a-select>
+                </j-form-item>
               </j-form>
             </j-border>
           </template>
@@ -175,6 +182,7 @@
           skuCode: '',
           categoryId: '',
           brandId: '',
+          inquiryProduct: '',
         },
         // 工具栏配置
         toolbarConfig: {
@@ -193,6 +201,12 @@
           { field: 'categoryName', title: '分类', width: 120 },
           { field: 'spec', title: '规格', width: 120 },
           { field: 'unit', title: '单位', width: 100 },
+          {
+            field: 'inquiryProduct',
+            title: '询价商品',
+            width: 100,
+            formatter: ({ cellValue }) => (cellValue ? '是' : '否'),
+          },
           { field: 'purchasePrice', title: '采购价', width: 120 },
           { field: 'latestPurchasePrice', title: '最新采购价', width: 120 },
           { field: 'salePrice', title: '销售价', width: 120 },
