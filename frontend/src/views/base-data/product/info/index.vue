@@ -105,7 +105,11 @@
                     </a-menu-item>
                   </a-menu>
                 </template>
-                <a-button>更多<DownOutlined /></a-button>
+                <a-button
+                  v-permission="['base-data:product:info:modify', 'base-data:product:info:delete']"
+                >
+                  更多<DownOutlined />
+                </a-button>
               </a-dropdown>
             </a-space>
           </template>
