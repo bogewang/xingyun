@@ -82,16 +82,30 @@
               <a-dropdown>
                 <template #overlay>
                   <a-menu @click="handleCommand">
-                    <a-menu-item key="batchEnable" :icon="h(CheckOutlined)"> 批量启用 </a-menu-item>
-                    <a-menu-item key="batchDisable" :icon="h(StopOutlined)"> 批量禁用 </a-menu-item>
-                    <a-menu-item key="batchDelete" :icon="h(DeleteOutlined)">
+                    <a-menu-item
+                      v-permission="['base-data:product:info:modify']"
+                      key="batchEnable"
+                      :icon="h(CheckOutlined)"
+                    >
+                      批量启用
+                    </a-menu-item>
+                    <a-menu-item
+                      v-permission="['base-data:product:info:modify']"
+                      key="batchDisable"
+                      :icon="h(StopOutlined)"
+                    >
+                      批量禁用
+                    </a-menu-item>
+                    <a-menu-item
+                      v-permission="['base-data:product:info:delete']"
+                      key="batchDelete"
+                      :icon="h(DeleteOutlined)"
+                    >
                       批量删除
                     </a-menu-item>
                   </a-menu>
                 </template>
-                <a-button v-permission="['base-data:product:info:delete']"
-                  >更多<DownOutlined
-                /></a-button>
+                <a-button>更多<DownOutlined /></a-button>
               </a-dropdown>
             </a-space>
           </template>
