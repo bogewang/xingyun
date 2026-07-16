@@ -322,10 +322,7 @@ public class SaleOutSheetServiceImpl extends
 
     @Override
     public void marketBuySummary(QuerySaleOutSheetVo vo) {
-        Map<String, String> headerMap = new LinkedHashMap<>();
-        headerMap.put("category", "分类");
-        headerMap.put("productName", "商品名称");
-        headerMap.put("unit", "单位");
+        Map<String, String> headerMap = buildMarketBuySummaryHeaders();
 
         List<SaleOutSheet> sheets = this.query(vo);
         if (CollectionUtils.isEmpty(sheets)) {
@@ -335,8 +332,7 @@ public class SaleOutSheetServiceImpl extends
 
         Map<String, SaleOutSheet> sheetMap = sheets.stream().collect(Collectors.toMap(
                 SaleOutSheet::getId, item -> item, (v1, v2) -> v2));
-        LinkedHashMap<String, String> customerColumnMap = buildCustomerColumnMap(sheets, headerMap);
-        headerMap.put("total", "总计");
+        LinkedHashMap<String, String> customerNameMap = buildCustomerNameMap(sheets);
 
         List<SaleOutSheetDetail> details = queryMarketBuySummaryDetails(sheets);
         if (CollectionUtils.isEmpty(details)) {
@@ -356,11 +352,7 @@ public class SaleOutSheetServiceImpl extends
             map.put("category", row.categoryName);
             map.put("productName", row.productName);
             map.put("unit", row.unit);
-
-            for (Map.Entry<String, String> customerColumn : customerColumnMap.entrySet()) {
-                SummaryCell cell = row.cells.get(customerColumn.getKey());
-                map.put(customerColumn.getValue(), buildCellText(cell));
-            }
+            map.put("detail", buildMarketBuySummaryDetail(row, customerNameMap));
             map.put("total", formatNumber(row.total));
             data.add(map);
         }
@@ -507,33 +499,44 @@ public class SaleOutSheetServiceImpl extends
     }
 
     /**
-     * 按查询结果中的客户顺序生成动态列。
-     * <p>
-     * 导出工具按 Map 的插入顺序渲染表头，因此这里使用 LinkedHashMap，
-     * 保证“固定列 + 客户动态列 + 总计列”的展示顺序稳定。
+     * 生成买菜汇总固定表头，保证导出列顺序稳定。
+     *
+     * @return 买菜汇总表头
      */
-    private LinkedHashMap<String, String> buildCustomerColumnMap(List<SaleOutSheet> sheets,
-            Map<String, String> headerMap) {
+    static Map<String, String> buildMarketBuySummaryHeaders() {
+        Map<String, String> headerMap = new LinkedHashMap<>();
+        headerMap.put("category", "分类");
+        headerMap.put("productName", "商品名称");
+        headerMap.put("unit", "单位");
+        headerMap.put("detail", "明细数量");
+        headerMap.put("total", "总计");
+        return headerMap;
+    }
+
+    /**
+     * 按查询结果中的客户顺序生成客户展示名称映射。
+     *
+     * @param sheets 销售出库单
+     * @return 客户ID到展示名称的有序映射
+     */
+    private LinkedHashMap<String, String> buildCustomerNameMap(List<SaleOutSheet> sheets) {
         List<String> customerIds = sheets.stream().map(SaleOutSheet::getCustomerId).distinct()
                 .collect(Collectors.toList());
         Map<String, Customer> customerMap = customerService.listByIds(customerIds).stream()
                 .collect(Collectors.toMap(Customer::getId, item -> item, (v1, v2) -> v2));
 
-        LinkedHashMap<String, String> customerColumnMap = new LinkedHashMap<>();
-        int customerIndex = 1;
+        LinkedHashMap<String, String> customerNameMap = new LinkedHashMap<>();
         for (SaleOutSheet sheet : sheets) {
-            if (customerColumnMap.containsKey(sheet.getCustomerId())) {
+            if (customerNameMap.containsKey(sheet.getCustomerId())) {
                 continue;
             }
 
             Customer customer = customerMap.get(sheet.getCustomerId());
-            String customerName = customer == null ? StringPool.EMPTY_STR : customer.getName();
-            String columnKey = "customer" + customerIndex++;
-            customerColumnMap.put(sheet.getCustomerId(), columnKey);
-            headerMap.put(columnKey, customerName);
+            customerNameMap.put(sheet.getCustomerId(),
+                    SaleOutSheetMarketBuySummaryFormatter.resolveCustomerName(customer));
         }
 
-        return customerColumnMap;
+        return customerNameMap;
     }
 
     /**
@@ -650,24 +653,25 @@ public class SaleOutSheetServiceImpl extends
     }
 
     /**
-     * 将单个客户单元格格式化成“数量（备注1；备注2）”。
-     * <p>
-     * 没有数量时返回空字符串；没有备注时仅返回数量。
+     * 将商品下的客户数量明细合并为单列文本。
+     *
+     * @param row 商品汇总行
+     * @param customerNameMap 客户ID到展示名称的有序映射
+     * @return 合并后的客户数量明细
      */
-    private String buildCellText(SummaryCell cell) {
-        if (cell == null || cell.orderNum == null || cell.orderNum.compareTo(BigDecimal.ZERO) == 0) {
-            if (cell != null) {
-                return String.join("；", cell.descriptions);
+    private String buildMarketBuySummaryDetail(SummaryRow row,
+            LinkedHashMap<String, String> customerNameMap) {
+        List<SaleOutSheetMarketBuySummaryFormatter.CustomerDetail> details = new ArrayList<>();
+        for (Map.Entry<String, String> customer : customerNameMap.entrySet()) {
+            SummaryCell cell = row.cells.get(customer.getKey());
+            if (cell == null) {
+                continue;
             }
-            return StringPool.EMPTY_STR;
-        }
 
-        String orderNumText = formatNumber(cell.orderNum);
-        if (CollectionUtils.isEmpty(cell.descriptions)) {
-            return orderNumText;
+            details.add(new SaleOutSheetMarketBuySummaryFormatter.CustomerDetail(
+                    customer.getValue(), row.unit, cell.orderNum, cell.descriptions));
         }
-
-        return orderNumText + "（" + String.join("；", cell.descriptions) + "）";
+        return SaleOutSheetMarketBuySummaryFormatter.mergeCustomerDetails(details);
     }
 
     /**
