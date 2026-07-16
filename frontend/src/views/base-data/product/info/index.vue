@@ -355,7 +355,6 @@
        */
       doBatchAvailable(records, available) {
         return api.updateAvailable(buildProductAvailabilityRequest(records, available)).then(() => {
-          createSuccess(`${available ? '启用' : '禁用'}成功！`);
           this.search();
           this.$refs.grid.clearCheckboxRow();
         });
