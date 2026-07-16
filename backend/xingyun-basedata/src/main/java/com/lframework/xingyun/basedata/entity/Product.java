@@ -1,0 +1,178 @@
+package com.lframework.xingyun.basedata.entity;
+
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.lframework.starter.web.core.dto.BaseDto;
+import com.lframework.starter.web.core.entity.BaseEntity;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+/**
+ * <p>
+ * 商品
+ * </p>
+ *
+ * @author zmj
+ * @since 2021-07-11
+ */
+@Data
+@TableName("base_data_product")
+public class Product extends BaseEntity implements BaseDto {
+
+  private static final long serialVersionUID = 1L;
+
+  public static final String CACHE_NAME = "Product";
+
+  /**
+   * ID
+   */
+  private String id;
+
+  /**
+   * 编号
+   */
+  private String code;
+
+  /**
+   * 名称
+   */
+  private String name;
+
+  /**
+   * 简称
+   */
+  private String shortName;
+
+  /**
+   * SKU
+   */
+  private String skuCode;
+
+  /**
+   * 简码
+   */
+  private String externalCode;
+
+  /**
+   * 分类ID
+   */
+  private String categoryId;
+
+  /**
+   * 品牌ID
+   */
+  private String brandId;
+
+  /**
+   * 进项税率（%）
+   */
+  private BigDecimal taxRate;
+
+  /**
+   * 销项税率（%）
+   */
+  private BigDecimal saleTaxRate;
+  /**
+   * 销售价
+   */
+  private BigDecimal salePrice;
+  /**
+   * 进价
+   */
+  private BigDecimal purchasePrice;
+  /**
+   * 零售价
+   */
+  private BigDecimal retailPrice;
+
+  /**
+   * 是否询价商品
+   */
+  private Boolean inquiryProduct;
+
+  /**
+   * 规格
+   */
+  private String spec;
+
+  /**
+   * 单位
+   */
+  private String unit;
+
+  /**
+   * 重量（kg）
+   */
+  private BigDecimal weight;
+
+  /**
+   * 体积（cm3）
+   */
+  private BigDecimal volume;
+
+  /**
+   * 状态
+   */
+  private Boolean available;
+  /**
+   * 别名
+   */
+  private String alias;
+
+  /**
+   * 默认供应商
+   */
+  private String defaultSupplier;
+
+  /**
+   * 备注
+   */
+  private String remark;
+  /**
+   * 备注二
+   */
+  private String remark2;
+
+  /**
+   * 创建人ID 新增时赋值
+   */
+  @TableField(fill = FieldFill.INSERT)
+  private String createById;
+
+  /**
+   * 创建人 新增时赋值
+   */
+  @TableField(fill = FieldFill.INSERT)
+  private String createBy;
+
+  /**
+   * 创建时间 新增时赋值
+   */
+  @TableField(fill = FieldFill.INSERT)
+  private LocalDateTime createTime;
+
+  /**
+   * 修改人 新增和修改时赋值
+   */
+  @TableField(fill = FieldFill.INSERT_UPDATE)
+  private String updateBy;
+
+  /**
+   * 修改人ID 新增和修改时赋值
+   */
+  @TableField(fill = FieldFill.INSERT_UPDATE)
+  private String updateById;
+
+  /**
+   * 修改时间 新增和修改时赋值
+   */
+  @TableField(fill = FieldFill.INSERT_UPDATE)
+  private LocalDateTime updateTime;
+
+  public BigDecimal getPurchasePrice() {
+    return purchasePrice == null ? BigDecimal.ZERO : purchasePrice;
+  }
+}

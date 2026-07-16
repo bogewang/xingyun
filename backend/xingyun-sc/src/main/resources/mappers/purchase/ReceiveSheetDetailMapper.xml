@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lframework.xingyun.sc.mappers.ReceiveSheetDetailMapper">
+    <resultMap id="ReceiveSheetDetail" type="com.lframework.xingyun.sc.entity.ReceiveSheetDetail">
+        <id column="id" property="id"/>
+        <result column="sheet_id" property="sheetId"/>
+        <result column="product_id" property="productId"/>
+        <result column="order_num" property="orderNum"/>
+        <result column="tax_price" property="taxPrice"/>
+        <result column="is_gift" property="isGift"/>
+        <result column="tax_rate" property="taxRate"/>
+        <result column="description" property="description"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="return_num" property="returnNum"/>
+        <result column="production_date" property="productionDate"/>
+    </resultMap>
+    <resultMap id="QueryReceiveSheetDetailDto" type="com.lframework.xingyun.sc.dto.purchase.receive.QueryReceiveSheetDetailDto">
+        <id column="id" property="id"/>
+        <result column="product_id" property="productId"/>
+        <result column="tax_price" property="taxPrice"/>
+        <result column="supplier_id" property="supplierId"/>
+    </resultMap>
+
+    <sql id="ReceiveSheetDetailDto_sql">
+        SELECT
+            d.id,
+            d.sheet_id,
+            d.product_id,
+            d.order_num,
+            d.tax_price,
+            d.is_gift,
+            d.tax_rate,
+            d.description,
+            d.order_no,
+            d.return_num
+            , d.production_date
+        FROM tbl_receive_sheet_detail AS d
+    </sql>
+    <update id="addReturnNum">
+        UPDATE tbl_receive_sheet_detail
+        SET return_num = return_num + #{num}
+        WHERE id = #{id}
+        AND (order_num - return_num) >= #{num}
+    </update>
+    <update id="subReturnNum">
+        UPDATE tbl_receive_sheet_detail
+        SET return_num = return_num - #{num}
+        WHERE id = #{id}
+        AND return_num >= #{num}
+    </update>
+
+    <select id="getLatestCostPriceList" resultMap="QueryReceiveSheetDetailDto">
+        SELECT d.product_id,
+               d.tax_price / NULLIF(COALESCE(d.conversion_rate, 1), 0) AS tax_price,
+               s.supplier_id
+        FROM tbl_receive_sheet_detail d
+                 INNER JOIN tbl_receive_sheet s ON d.sheet_id = s.id
+        WHERE s.order_date <![CDATA[ >= ]]> #{beginDate}
+          AND s.order_date <![CDATA[ <= ]]> #{orderDate}
+          AND (d.product_id, s.order_date) IN (
+            -- 每个商品 取 最大order_date 的组合
+            SELECT product_id,
+                   MAX(order_date)  AS order_date
+            FROM tbl_receive_sheet_detail d2
+                     INNER JOIN tbl_receive_sheet s2 ON d2.sheet_id = s2.id
+            WHERE s2.order_date <![CDATA[ >= ]]> #{beginDate}
+              AND s2.order_date <![CDATA[ <= ]]> #{orderDate}
+            GROUP BY d2.product_id)
+        ORDER BY s.order_date DESC, d.product_id
+
+    </select>
+</mapper>

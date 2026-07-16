@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lframework.xingyun.sc.mappers.ProductStockLogMapper">
+    <resultMap id="ProductStockLog" type="com.lframework.xingyun.sc.entity.ProductStockLog">
+        <id column="id" property="id"/>
+        <result column="product_id" property="productId"/>
+        <result column="sc_id" property="scId"/>
+        <result column="ori_stock_num" property="oriStockNum"/>
+        <result column="cur_stock_num" property="curStockNum"/>
+        <result column="ori_tax_price" property="oriTaxPrice"/>
+        <result column="cur_tax_price" property="curTaxPrice"/>
+        <result column="stock_num" property="stockNum"/>
+        <result column="tax_amount" property="taxAmount"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+        <result column="biz_id" property="bizId"/>
+        <result column="biz_code" property="bizCode"/>
+        <result column="biz_detail_id" property="bizDetailId"/>
+        <result column="biz_type" property="bizType"/>
+        <result column="order_date" property="orderDate"/>
+    </resultMap>
+
+    <sql id="OrderDate_sql">
+        CASE
+            WHEN gsl.biz_type = 1 THEN rs.order_date
+            WHEN gsl.biz_type = 2 THEN DATE(IFNULL(pr.payment_date, pr.create_time))
+            WHEN gsl.biz_type = 3 THEN so.order_date
+            WHEN gsl.biz_type = 4 THEN DATE(IFNULL(sr.payment_date, sr.create_time))
+            WHEN gsl.biz_type = 5 THEN DATE(IFNULL(ro.payment_date, ro.create_time))
+            WHEN gsl.biz_type = 6 THEN DATE(IFNULL(rr.payment_date, rr.create_time))
+            WHEN gsl.biz_type IN (7, 8) THEN DATE(ts.create_time)
+            WHEN gsl.biz_type = 10 THEN DATE(sas.create_time)
+            WHEN gsl.biz_type = 11 THEN DATE(sto.create_time)
+            ELSE NULL
+        END
+    </sql>
+
+    <sql id="ProductStockLogDto_sql">
+        SELECT
+            gsl.id,
+            gsl.product_id,
+            gsl.sc_id,
+            gsl.ori_stock_num,
+            gsl.cur_stock_num,
+            gsl.ori_tax_price,
+            gsl.cur_tax_price,
+            gsl.stock_num,
+            gsl.tax_amount,
+            gsl.create_by,
+            gsl.create_time,
+            gsl.biz_id,
+            gsl.biz_code,
+            gsl.biz_detail_id,
+            gsl.biz_type,
+            DATE_FORMAT((<include refid="OrderDate_sql"/>), '%Y-%m-%d') AS order_date
+        FROM tbl_product_stock_log AS gsl
+        INNER JOIN base_data_product AS g ON g.id = gsl.product_id
+        LEFT JOIN base_data_product_brand AS b ON b.id = g.brand_id
+        LEFT JOIN base_data_product_category AS c ON c.id = g.category_id
+        LEFT JOIN tbl_receive_sheet AS rs ON rs.id = gsl.biz_id AND gsl.biz_type = 1
+        LEFT JOIN tbl_purchase_return AS pr ON pr.id = gsl.biz_id AND gsl.biz_type = 2
+        LEFT JOIN tbl_sale_out_sheet AS so ON so.id = gsl.biz_id AND gsl.biz_type = 3
+        LEFT JOIN tbl_sale_return AS sr ON sr.id = gsl.biz_id AND gsl.biz_type = 4
+        LEFT JOIN tbl_retail_out_sheet AS ro ON ro.id = gsl.biz_id AND gsl.biz_type = 5
+        LEFT JOIN tbl_retail_return AS rr ON rr.id = gsl.biz_id AND gsl.biz_type = 6
+        LEFT JOIN tbl_take_stock_sheet AS ts ON ts.id = gsl.biz_id AND gsl.biz_type IN (7, 8)
+        LEFT JOIN tbl_stock_adjust_sheet AS sas ON sas.id = gsl.biz_id AND gsl.biz_type = 10
+        LEFT JOIN tbl_sc_transfer_order AS sto ON sto.id = gsl.biz_id AND gsl.biz_type = 11
+    </sql>
+    <select id="query" resultMap="ProductStockLog">
+        <include refid="ProductStockLogDto_sql"/>
+        LEFT JOIN recursion_mapping AS rm ON rm.node_id = g.category_id and rm.node_type = 2
+        <where>
+            <if test="vo != null">
+                <if test="vo.scId != null and vo.scId != ''">
+                    AND gsl.sc_id = #{vo.scId}
+                </if>
+                <if test="vo.productCode != null and vo.productCode != ''">
+                    AND g.code = #{vo.productCode}
+                </if>
+                <if test="vo.productName != null and vo.productName != ''">
+                    AND g.name LIKE CONCAT('%', #{vo.productName}, '%')
+                </if>
+                <if test="vo.brandId != null and vo.brandId != ''">
+                    AND g.brand_id = #{vo.brandId}
+                </if>
+                <if test="vo.categoryId != null and vo.categoryId != ''">
+                    AND (g.category_id = #{vo.categoryId} OR FIND_IN_SET(#{vo.categoryId}, rm.path))
+                </if>
+                <if test="vo.createStartTime != null">
+                    AND gsl.create_time >= #{vo.createStartTime}
+                </if>
+                <if test="vo.createEndTime != null">
+                    <![CDATA[
+                    AND gsl.create_time <= #{vo.createEndTime}
+                    ]]>
+                </if>
+                <if test="vo.orderDateStart != null">
+                    AND (<include refid="OrderDate_sql"/>) >= #{vo.orderDateStart}
+                </if>
+                <if test="vo.orderDateEnd != null">
+                    AND (<include refid="OrderDate_sql"/>) &lt;= #{vo.orderDateEnd}
+                </if>
+                <if test="vo.bizType != null">
+                    <![CDATA[
+                    AND gsl.biz_type = #{vo.bizType}
+                    ]]>
+                </if>
+            </if>
+        </where>
+        ORDER BY gsl.time_stamp DESC, g.code
+    </select>
+</mapper>

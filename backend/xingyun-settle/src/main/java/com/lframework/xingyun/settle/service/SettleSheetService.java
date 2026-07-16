@@ -1,0 +1,123 @@
+package com.lframework.xingyun.settle.service;
+
+import com.lframework.starter.web.core.components.resp.PageResult;
+import com.lframework.starter.web.core.service.BaseMpService;
+import com.lframework.xingyun.sc.entity.ReceiveSheet;
+import com.lframework.xingyun.settle.bo.sheet.ReceiveSheetSettleInfoBo;
+import com.lframework.xingyun.settle.dto.sheet.SettleBizItemDto;
+import com.lframework.xingyun.settle.dto.sheet.SettleSheetFullDto;
+import com.lframework.xingyun.settle.entity.SettleSheet;
+import com.lframework.xingyun.settle.vo.sheet.*;
+
+import java.util.List;
+
+public interface SettleSheetService extends BaseMpService<SettleSheet> {
+
+    /**
+     * 查询列表
+     *
+     * @param pageIndex
+     * @param pageSize
+     * @param vo
+     * @return
+     */
+    PageResult<SettleSheet> query(Integer pageIndex, Integer pageSize, QuerySettleSheetVo vo);
+
+    /**
+     * 查询列表
+     *
+     * @param vo
+     * @return
+     */
+    List<SettleSheet> query(QuerySettleSheetVo vo);
+
+    /**
+     * 根据ID查询
+     *
+     * @param id
+     * @return
+     */
+    SettleSheetFullDto getDetail(String id);
+
+    /**
+     * 创建
+     *
+     * @param vo
+     * @return
+     */
+    String create(CreateSettleSheetVo vo);
+
+    /**
+     * 修改
+     *
+     * @param vo
+     */
+    @Deprecated
+    void update(UpdateSettleSheetVo vo);
+
+    /**
+     * 审核通过
+     *
+     * @param vo
+     */
+    void approvePass(ApprovePassSettleSheetVo vo);
+
+    /**
+     * 直接审核通过
+     *
+     * @param vo
+     */
+    String directApprovePass(CreateSettleSheetVo vo);
+
+    /**
+     * 审核拒绝
+     *
+     * @param vo
+     */
+    void approveRefuse(ApproveRefuseSettleSheetVo vo);
+
+    /**
+     * 根据ID删除
+     *
+     * @param id
+     */
+    void deleteById(String id);
+
+    /**
+     * 查询业务单据
+     *
+     * @param id
+     * @return
+     */
+    SettleBizItemDto getBizItem(String id);
+
+    /**
+     * 更新业务单据未结算
+     *
+     * @param bizId 业务单据ID
+     */
+    void setBizItemUnSettle(String bizId);
+
+    /**
+     * 更新业务单据结算中
+     *
+     * @param bizId 业务单据ID
+     */
+    void setBizItemPartSettle(String bizId);
+
+    /**
+     * 更新业务单据已结算
+     *
+     * @param bizId 业务单据ID
+     */
+    void setBizItemSettled(String bizId);
+
+    /**
+     * 查询收货单的对账/结算扩展信息
+     *
+     * @param sheetIds 收货单ID
+     * @return 扩展信息
+     */
+    List<ReceiveSheetSettleInfoBo> queryReceiveSheetSettleInfos(List<ReceiveSheet> sheetIds);
+
+}

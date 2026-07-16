@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lframework.xingyun.sc.mappers.ProductStockMapper">
+    <resultMap id="ProductStock" type="com.lframework.xingyun.sc.entity.ProductStock">
+        <id column="id" property="id"/>
+        <result column="product_id" property="productId"/>
+        <result column="sc_id" property="scId"/>
+        <result column="stock_num" property="stockNum"/>
+        <result column="tax_price" property="taxPrice"/>
+        <result column="tax_amount" property="taxAmount"/>
+    </resultMap>
+
+    <sql id="ProductStockDto_sql">
+        SELECT
+            gs.id,
+            gs.product_id,
+            gs.sc_id,
+            gs.stock_num,
+            gs.tax_price,
+            gs.tax_amount
+        FROM tbl_product_stock AS gs
+        INNER JOIN base_data_product AS g ON g.id = gs.product_id
+        LEFT JOIN base_data_product_brand AS b ON b.id = g.brand_id
+        LEFT JOIN base_data_product_category AS c ON c.id = g.category_id
+    </sql>
+
+    <update id="addStock">
+        UPDATE tbl_product_stock
+        SET stock_num = stock_num + #{stockNum}, tax_amount = COALESCE(tax_amount, 0) + #{taxAmount}
+        <if test="reCalcCostPrice">,
+            tax_price = CASE WHEN
+            (#{oriStockNum} + #{stockNum}) &lt;= 0
+            THEN #{taxPrice}
+            ELSE (COALESCE(#{oriTaxAmount}, 0) + #{taxAmount}) / (#{oriStockNum} + #{stockNum})
+            END
+        </if>
+        WHERE product_id = #{productId}
+        <if test="scId != null">
+            AND sc_id = #{scId}
+        </if>
+        <if test="oriStockNum != null">
+            AND stock_num = #{oriStockNum}
+        </if>
+        <if test="oriTaxAmount != null">
+            AND tax_amount = #{oriTaxAmount}
+        </if>
+    </update>
+    <update id="subStock">
+        UPDATE tbl_product_stock
+        SET stock_num = stock_num - #{stockNum}
+        <if test="taxAmount != null">,
+            tax_amount = COALESCE(tax_amount, 0) - #{taxAmount}
+          </if>
+        <if test="reCalcCostPrice">,
+            tax_price = CASE WHEN (#{oriStockNum} - #{stockNum}) &lt;= 0
+                THEN 0
+                ELSE (COALESCE(#{oriTaxAmount}, 0) - #{taxAmount}) / (#{oriStockNum} - #{stockNum})
+                END
+        </if>
+        WHERE product_id = #{productId}
+        <if test="scId != null">
+            AND sc_id = #{scId}
+        </if>
+        <if test="oriStockNum != null">
+            AND stock_num = #{oriStockNum}
+        </if>
+        <if test="oriTaxAmount != null">
+            AND tax_amount = #{oriTaxAmount}
+        </if>
+    </update>
+    <select id="getByProductIdAndScId" resultMap="ProductStock">
+        <include refid="ProductStockDto_sql"/>
+        WHERE gs.product_id = #{productId}
+        <if test="scId != null">
+            AND gs.sc_id = #{scId}
+        </if>
+    </select>
+    <select id="getPositiveStockListByScId" resultMap="ProductStock">
+        <include refid="ProductStockDto_sql"/>
+        WHERE gs.stock_num > 0
+        <if test="scId != null and scId != ''">
+            AND gs.sc_id = #{scId}
+        </if>
+    </select>
+    <select id="query" resultMap="ProductStock">
+        <include refid="ProductStockDto_sql"/>
+        LEFT JOIN recursion_mapping AS rm ON rm.node_id = g.category_id and rm.node_type = 2
+        <where>
+            <if test="vo != null">
+                <if test="vo.productCode != null and vo.productCode != ''">
+                    AND g.code = #{vo.productCode}
+                </if>
+                <if test="vo.productName != null and vo.productName != ''">
+                    AND g.name LIKE CONCAT('%', #{vo.productName}, '%')
+                </if>
+                <if test="vo.brandId != null and vo.brandId != ''">
+                    AND g.brand_id = #{vo.brandId}
+                </if>
+                <if test="vo.categoryId != null and vo.categoryId != ''">
+                    AND (g.category_id = #{vo.categoryId} OR FIND_IN_SET(#{vo.categoryId}, rm.path))
+                </if>
+                <if test="vo.stockNumStart != null">
+                    AND gs.stock_num &gt;= #{vo.stockNumStart}
+                </if>
+                <if test="vo.stockNumEnd != null">
+                    AND gs.stock_num &lt;= #{vo.stockNumEnd}
+                </if>
+            </if>
+        </where>
+        ORDER BY g.code
+    </select>
+    <select id="getByProductIdsAndScId" resultMap="ProductStock">
+        <include refid="ProductStockDto_sql"/>
+        WHERE gs.product_id IN <foreach collection="productIds" open="(" separator="," close=")" item="item">#{item}</foreach>
+        AND gs.sc_id = #{scId}
+    </select>
+</mapper>
