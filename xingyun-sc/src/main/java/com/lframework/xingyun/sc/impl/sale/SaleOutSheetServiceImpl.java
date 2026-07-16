@@ -1733,8 +1733,6 @@ public class SaleOutSheetServiceImpl extends
                 if (data.getTaxPrice() == null) {
                     data.setTaxPrice(NumberUtil.mul(getDefaultSalePrice(product), unit.getConversionRate()));
                 }
-            } else {
-                System.out.println(1);
             }
         }
         return errors;

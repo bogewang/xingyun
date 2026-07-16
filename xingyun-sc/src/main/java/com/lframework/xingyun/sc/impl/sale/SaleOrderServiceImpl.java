@@ -592,14 +592,13 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
       if (data.getTaxPrice() == null) {
         throw new DefaultClientException("第" + rowIndex + "行“单价”不能为空");
       }
-      if (data.getOrderNum() == null) {
-        throw new DefaultClientException("第" + rowIndex + "行“数量”不能为空");
-      }
-      if (NumberUtil.le(data.getOrderNum(), BigDecimal.ZERO)) {
-        throw new DefaultClientException("第" + rowIndex + "行“数量”必须大于0");
-      }
-      if (!NumberUtil.isNumberPrecision(data.getOrderNum(), 8)) {
-        throw new DefaultClientException("第" + rowIndex + "行“数量”最多允许8位小数");
+      if (data.getOrderNum() != null) {
+        if (NumberUtil.lt(data.getOrderNum(), BigDecimal.ZERO)) {
+          throw new DefaultClientException("第" + rowIndex + "行“数量”必须大于0");
+        }
+        if (!NumberUtil.isNumberPrecision(data.getOrderNum(), 8)) {
+          throw new DefaultClientException("第" + rowIndex + "行“数量”最多允许8位小数");
+        }
       }
 
       // 匹配商品,设置商品编号
