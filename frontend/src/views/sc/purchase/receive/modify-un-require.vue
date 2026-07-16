@@ -534,7 +534,7 @@
               approveTime: res.approveTime,
               refuseReason: res.refuseReason,
               totalNum: 0,
-              totalAmount: 0,
+              totalAmount: res.totalAmount || 0,
             });
             this.paidAmountDirty = false;
             this.totalAmountDirty = false;
@@ -566,7 +566,6 @@
             });
 
             this.tableData = tableData.map((item) => Object.assign(this.emptyProduct(), item));
-            this.calcSum();
           })
           .finally(() => {
             this.loading = false;

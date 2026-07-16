@@ -309,13 +309,11 @@
               approveTime: res.approveTime,
               refuseReason: res.refuseReason,
               totalNum: 0,
-              totalAmount: 0,
+              totalAmount: res.totalAmount || 0,
               totalProfit: res.totalProfit || 0,
               fillAllCost: !!res.fillAllCost,
             };
             this.tableData = res.details || [];
-
-            this.calcSum();
           })
           .finally(() => {
             this.loading = false;
