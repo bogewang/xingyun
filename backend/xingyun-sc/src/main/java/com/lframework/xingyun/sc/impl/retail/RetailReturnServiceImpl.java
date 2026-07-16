@@ -55,6 +55,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RetailReturnServiceImpl extends
@@ -126,6 +127,9 @@ public class RetailReturnServiceImpl extends
   @Transactional(rollbackFor = Exception.class)
   @Override
   public String create(CreateRetailReturnVo vo) {
+
+    productService.assertAvailable(vo.getProducts().stream()
+        .map(RetailReturnProductVo::getProductId).collect(Collectors.toList()));
 
     RetailReturn retailReturn = new RetailReturn();
     retailReturn.setId(IdUtil.getId());

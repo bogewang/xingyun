@@ -258,6 +258,9 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     @Override
     public String create(CreateReceiveSheetVo vo) {
 
+        productService.assertAvailable(vo.getProducts().stream()
+                .map(ReceiveProductVo::getProductId).collect(Collectors.toList()));
+
         ReceiveSheet sheet = new ReceiveSheet();
         sheet.setId(IdUtil.getId());
         sheet.setCode(generateCode());

@@ -53,6 +53,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SaleReturnServiceImpl extends
@@ -120,6 +121,9 @@ public class SaleReturnServiceImpl extends
   @Transactional(rollbackFor = Exception.class)
   @Override
   public String create(CreateSaleReturnVo vo) {
+
+    productService.assertAvailable(vo.getProducts().stream()
+        .map(SaleReturnProductVo::getProductId).collect(Collectors.toList()));
 
     SaleReturn saleReturn = new SaleReturn();
     saleReturn.setId(IdUtil.getId());

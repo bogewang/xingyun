@@ -49,6 +49,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class StockAdjustSheetServiceImpl extends
@@ -100,6 +101,9 @@ public class StockAdjustSheetServiceImpl extends
   @Transactional(rollbackFor = Exception.class)
   @Override
   public String create(CreateStockAdjustSheetVo vo) {
+
+    productService.assertAvailable(vo.getProducts().stream()
+        .map(StockAdjustProductVo::getProductId).collect(Collectors.toList()));
 
     StockAdjustSheet data = new StockAdjustSheet();
     data.setId(IdUtil.getId());

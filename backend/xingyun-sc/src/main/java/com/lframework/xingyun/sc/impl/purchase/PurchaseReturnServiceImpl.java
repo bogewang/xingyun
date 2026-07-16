@@ -66,6 +66,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -135,6 +136,9 @@ public class PurchaseReturnServiceImpl extends
   @Transactional(rollbackFor = Exception.class)
   @Override
   public String create(CreatePurchaseReturnVo vo) {
+
+    productService.assertAvailable(vo.getProducts().stream()
+        .map(ReturnProductVo::getProductId).collect(Collectors.toList()));
 
     PurchaseReturn purchaseReturn = new PurchaseReturn();
     purchaseReturn.setId(IdUtil.getId());

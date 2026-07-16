@@ -54,6 +54,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ScTransferOrderServiceImpl extends
@@ -105,6 +106,9 @@ public class ScTransferOrderServiceImpl extends
   @Transactional(rollbackFor = Exception.class)
   @Override
   public String create(CreateScTransferOrderVo vo) {
+
+    productService.assertAvailable(vo.getProducts().stream()
+        .map(ScTransferProductVo::getProductId).collect(Collectors.toList()));
 
     ScTransferOrder data = new ScTransferOrder();
     data.setId(IdUtil.getId());

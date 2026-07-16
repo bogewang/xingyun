@@ -36,8 +36,10 @@ import com.lframework.xingyun.sc.vo.stock.take.pre.PreTakeStockSheetSelectorVo;
 import com.lframework.xingyun.sc.vo.stock.take.pre.QueryPreTakeStockProductVo;
 import com.lframework.xingyun.sc.vo.stock.take.pre.QueryPreTakeStockSheetVo;
 import com.lframework.xingyun.sc.vo.stock.take.pre.UpdatePreTakeStockSheetVo;
+import com.lframework.xingyun.basedata.service.product.ProductService;
 import java.io.Serializable;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +54,9 @@ public class PreTakeStockSheetServiceImpl extends
 
   @Autowired
   private GenerateCodeService generateCodeService;
+
+  @Autowired
+  private ProductService productService;
 
   @Autowired
   private TakeStockSheetService takeStockSheetService;
@@ -109,6 +114,9 @@ public class PreTakeStockSheetServiceImpl extends
   @Transactional(rollbackFor = Exception.class)
   @Override
   public String create(CreatePreTakeStockSheetVo vo) {
+
+    productService.assertAvailable(vo.getProducts().stream()
+        .map(PreTakeStockProductVo::getProductId).collect(Collectors.toList()));
 
     PreTakeStockSheet data = new PreTakeStockSheet();
     data.setId(IdUtil.getId());

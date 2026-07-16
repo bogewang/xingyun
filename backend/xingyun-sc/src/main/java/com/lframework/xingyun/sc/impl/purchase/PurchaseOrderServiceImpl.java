@@ -207,6 +207,9 @@ public class PurchaseOrderServiceImpl extends
     @Override
     public String create(CreatePurchaseOrderVo vo) {
 
+        productService.assertAvailable(vo.getProducts().stream()
+                .map(PurchaseProductVo::getProductId).collect(Collectors.toList()));
+
         PurchaseConfig config = purchaseConfigService.get();
 
         PurchaseOrder order = newOrder(config.getPurchaseRequireBpm());

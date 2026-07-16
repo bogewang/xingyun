@@ -26,6 +26,7 @@ import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineB
 import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.starter.web.core.utils.OpLogUtil;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
+import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.sc.dto.stock.take.sheet.TakeStockSheetFullDto;
 import com.lframework.xingyun.sc.dto.stock.take.sheet.TakeStockSheetProductDto;
 import com.lframework.xingyun.sc.entity.TakeStockPlan;
@@ -69,6 +70,9 @@ public class TakeStockSheetServiceImpl extends
   private GenerateCodeService generateCodeService;
 
   @Autowired
+  private ProductService productService;
+
+  @Autowired
   private TakeStockPlanService takeStockPlanService;
 
   @Autowired
@@ -109,6 +113,9 @@ public class TakeStockSheetServiceImpl extends
   @Transactional(rollbackFor = Exception.class)
   @Override
   public String create(CreateTakeStockSheetVo vo) {
+
+    productService.assertAvailable(vo.getProducts().stream()
+        .map(TakeStockSheetProductVo::getProductId).collect(Collectors.toList()));
 
     TakeStockSheet data = new TakeStockSheet();
     data.setId(IdUtil.getId());

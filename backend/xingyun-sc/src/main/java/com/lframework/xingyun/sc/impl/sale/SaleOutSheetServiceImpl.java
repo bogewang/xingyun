@@ -837,6 +837,9 @@ public class SaleOutSheetServiceImpl extends
     @Override
     public String create(CreateSaleOutSheetVo vo) {
 
+        productService.assertAvailable(vo.getProducts().stream()
+                .map(SaleOutProductVo::getProductId).collect(Collectors.toList()));
+
         SaleOutSheet sheet = new SaleOutSheet();
         sheet.setId(IdUtil.getId());
         sheet.setCode(generateCode());

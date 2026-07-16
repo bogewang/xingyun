@@ -183,6 +183,9 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
     @Override
     public String create(CreateSaleOrderVo vo) {
 
+        productService.assertAvailable(vo.getProducts().stream()
+                .map(SaleProductVo::getProductId).collect(Collectors.toList()));
+
         SaleOrder order = new SaleOrder();
         order.setId(IdUtil.getId());
         order.setCode(generateCodeService.generate(GenerateCodeTypePool.SALE_ORDER));

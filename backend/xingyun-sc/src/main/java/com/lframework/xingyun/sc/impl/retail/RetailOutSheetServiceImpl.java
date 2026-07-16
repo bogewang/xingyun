@@ -220,6 +220,9 @@ public class RetailOutSheetServiceImpl extends
   @Override
   public String create(CreateRetailOutSheetVo vo) {
 
+    productService.assertAvailable(vo.getProducts().stream()
+        .map(RetailOutProductVo::getProductId).collect(Collectors.toList()));
+
     RetailOutSheet sheet = new RetailOutSheet();
     sheet.setId(IdUtil.getId());
     sheet.setCode(generateCodeService.generate(GenerateCodeTypePool.RETAIL_OUT_SHEET));
