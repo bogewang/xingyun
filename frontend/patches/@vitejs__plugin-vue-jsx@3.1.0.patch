@@ -1,0 +1,17 @@
+diff --git a/dist/index.cjs b/dist/index.cjs
+index 6f4446a77db5d4fab946905b8afff8b93adb5750..1c3256db1d07fbe2bf1fba013828c02790604496 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -80,10 +80,8 @@ function vueJsxPlugin(options = {}) {
+         const plugins = [[jsx__default, babelPluginOptions], ...babelPlugins];
+         if (id.endsWith(".tsx") || filepath.endsWith(".tsx")) {
+           plugins.push([
+-            // @ts-ignore missing type
+-            await import('@babel/plugin-transform-typescript').then(
+-              (r) => r.default
+-            ),
++            // Node 在 Windows 的 pnpm junction 中无法解析此处的动态 ESM 导入。
++            require('@babel/plugin-transform-typescript').default,
+             // @ts-ignore
+             { isTSX: true, allowExtensions: true }
+           ]);
