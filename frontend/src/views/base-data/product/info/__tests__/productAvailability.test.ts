@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ContentTypeEnum } from '@/enums/httpEnum';
 import * as productApi from '@/api/base-data/product/info';
+import { ConcurrentPromise } from '@/utils/concurrentPromise';
 import { buildProductAvailabilityRequest } from '../productAvailability';
 import BatchHandler from '../../../../../components/BatchHandler/src/BatchHandler.vue';
 
@@ -38,7 +39,7 @@ interface BatchContext {
   /** 并发处理器。 */
   concurrentPromise: undefined;
   /** 批量处理回调。 */
-  batchHandleFn: (records: BatchRow[]) => Promise<void>;
+  batchHandleFn?: (records: BatchRow[]) => Promise<void>;
   /** 并发数量。 */
   concurrency: number;
   /** 单行处理回调。 */
@@ -99,10 +100,13 @@ describe('商品批量状态请求', () => {
 
       expect(batchHandleFn).toHaveBeenCalledTimes(1);
       expect(batchHandleFn).toHaveBeenCalledWith(context.copyedTableData);
+      expect(context.handleFn).toHaveBeenCalledTimes(0);
       expect(context.copyedTableData.map((item) => item.__status)).toEqual([2, 2]);
-      expect(context.emit).toHaveBeenCalledWith('confirm-row', context.copyedTableData[0]);
-      expect(context.emit).toHaveBeenCalledWith('confirm-row', context.copyedTableData[1]);
-      expect(context.emit).toHaveBeenCalledWith('confirm');
+      expect(context.emit.mock.calls).toEqual([
+        ['confirm-row', context.copyedTableData[0]],
+        ['confirm-row', context.copyedTableData[1]],
+        ['confirm'],
+      ]);
     });
 
     it('失败时仅调用一次批量回调并将所有行标记为失败', async () => {
@@ -118,9 +122,29 @@ describe('商品批量状态请求', () => {
         '批量更新失败',
         '批量更新失败',
       ]);
-      expect(context.emit).toHaveBeenCalledWith('confirm-row', context.copyedTableData[0]);
-      expect(context.emit).toHaveBeenCalledWith('confirm-row', context.copyedTableData[1]);
-      expect(context.emit).toHaveBeenCalledWith('confirm');
+      expect(context.emit.mock.calls).toEqual([
+        ['confirm-row', context.copyedTableData[0]],
+        ['confirm-row', context.copyedTableData[1]],
+        ['confirm'],
+      ]);
+    });
+
+    it('缺省批量回调时逐行调用旧回调并按旧分支确认', async () => {
+      const context = createBatchContext(undefined);
+
+      batchMethods.onBegin.call(context);
+      await flushPromises();
+
+      expect(context.concurrentPromise).toBeInstanceOf(ConcurrentPromise);
+      expect(context.handleFn).toHaveBeenCalledTimes(context.copyedTableData.length);
+      expect(context.handleFn).toHaveBeenNthCalledWith(1, context.copyedTableData[0]);
+      expect(context.handleFn).toHaveBeenNthCalledWith(2, context.copyedTableData[1]);
+      expect(context.copyedTableData.map((item) => item.__status)).toEqual([2, 2]);
+      expect(context.emit.mock.calls).toEqual([
+        ['confirm-row', context.copyedTableData[0]],
+        ['confirm-row', context.copyedTableData[1]],
+        ['confirm'],
+      ]);
     });
   });
 });
@@ -129,7 +153,7 @@ describe('商品批量状态请求', () => {
  * 创建批量处理组件方法测试上下文。
  * @param batchHandleFn 批量处理回调
  */
-function createBatchContext(batchHandleFn: BatchContext['batchHandleFn']): BatchContext {
+function createBatchContext(batchHandleFn: BatchContext['batchHandleFn'] | undefined): BatchContext {
   const emit = vi.fn();
   const context: BatchContext = {
     loading: false,
