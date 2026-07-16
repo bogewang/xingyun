@@ -234,6 +234,11 @@ export interface OrderDetailBo {
   taxPrice: number;
 
   /**
+   * 金额
+   */
+  taxAmount: number;
+
+  /**
    * 折扣
    */
   discountRate: number;

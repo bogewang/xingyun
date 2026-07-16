@@ -208,9 +208,11 @@
 
         <!-- 含税金额 列自定义内容 -->
         <template #taxAmount_default="{ row }">
-          <span v-if="isFloatGeZero(row.taxPrice) && isFloatGeZero(row.outNum)">{{
-            getNumber(mul(row.taxPrice, row.outNum), 2)
-          }}</span>
+          <a-input
+            v-model:value="row.taxAmount"
+            class="number-input"
+            @input="(e) => taxAmountInput(row, e.target.value)"
+          />
         </template>
 
         <!-- 备注 列自定义内容 -->
@@ -253,7 +255,10 @@
         :sc-id="formData.scId"
         @confirm="batchAddProduct"
       />
-      <div class="sheet-editor-actions" style="text-align: center; background-color: #ffffff; padding: 8px 0">
+      <div
+        class="sheet-editor-actions"
+        style="text-align: center; background-color: #ffffff; padding: 8px 0"
+      >
         <a-space>
           <a-button
             v-permission="['sale:out:add']"
@@ -314,6 +319,11 @@
   } from '@/utils/searchSelect';
   import { requestCustomerSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
   import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
+  import {
+    applyManualSheetAmount,
+    clearManualSheetAmount,
+    getSheetLineAmount,
+  } from '@/utils/sheetAmountInput';
   import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
   import {
@@ -716,6 +726,12 @@
         );
       },
       taxPriceInput(_row, _value) {
+        clearManualSheetAmount(_row, 'outNum', 'taxPrice');
+        this.calcSum();
+      },
+      // 手工录入金额，并根据出库数量反算销售单价
+      taxAmountInput(row, value) {
+        applyManualSheetAmount(row, value, 'outNum', 'taxPrice');
         this.calcSum();
       },
       hasWarningAmount(row) {
@@ -733,10 +749,12 @@
       },
       outNumInput(row, value) {
         if (value === undefined) {
+          clearManualSheetAmount(row, 'outNum', 'taxPrice');
           this.calcSum();
           return;
         }
         row.outNum = sanitizeNonNegativeDecimalInput(value);
+        clearManualSheetAmount(row, 'outNum', 'taxPrice');
         this.calcSum();
       },
       // 计算汇总数据
@@ -745,12 +763,12 @@
         let totalAmount = 0;
         this.tableData
           .filter((t) => {
-            return isFloatGeZero(t.taxPrice) && isFloatGeZero(t.outNum);
+            return t.manualTaxAmount || (isFloatGeZero(t.taxPrice) && isFloatGeZero(t.outNum));
           })
           .forEach((t) => {
             const num = parseFloat(t.outNum);
             totalNum = add(totalNum, num);
-            totalAmount = add(totalAmount, getNumber(mul(num, t.taxPrice), 2));
+            totalAmount = add(totalAmount, getSheetLineAmount(t, 'outNum', 'taxPrice'));
           });
 
         this.formData.totalNum = totalNum;
@@ -777,7 +795,7 @@
           records.forEach((t) => {
             t.outNum = value;
 
-            this.outNumInput(value);
+            this.outNumInput(t, value);
           });
         });
       },
@@ -792,7 +810,7 @@
         for (let i = 0; i < records.length; i++) {
           const record = records[i];
           if (record.isFixed) {
-            record.outNum = record.remainNum;
+            this.outNumInput(record, record.remainNum);
           }
         }
 
@@ -992,6 +1010,7 @@
               });
 
               this.tableData = [...saleDetails, ...tableData];
+              this.calcSum();
 
               this.formData.scId = res.scId;
 

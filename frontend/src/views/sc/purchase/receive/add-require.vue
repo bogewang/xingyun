@@ -202,10 +202,12 @@
 
         <!-- 含税金额 列自定义内容 -->
         <template #taxAmount_default="{ row }">
-          <span v-if="isFloatGeZero(row.purchasePrice) && isFloatGeZero(row.receiveNum)">{{
-            getNumber(mul(row.purchasePrice, row.receiveNum), 2)
-          }}</span>
-          </template>
+          <a-input
+            v-model:value="row.taxAmount"
+            class="number-input"
+            @input="(e) => taxAmountInput(row, e.target.value)"
+          />
+        </template>
 
         <template #productionDate_default="{ row }">
           <a-input v-model:value="row.productionDate" />
@@ -311,6 +313,11 @@
   } from '@/utils/searchSelect';
   import { requestSupplierSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
   import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
+  import {
+    applyManualSheetAmount,
+    clearManualSheetAmount,
+    getSheetLineAmount,
+  } from '@/utils/sheetAmountInput';
   import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
   import {
@@ -716,6 +723,11 @@
         );
       },
       purchasePriceInput(_row, _value) {
+        clearManualSheetAmount(_row, 'receiveNum', 'purchasePrice');
+        this.calcSum();
+      },
+      taxAmountInput(row, value) {
+        applyManualSheetAmount(row, value, 'receiveNum', 'purchasePrice');
         this.calcSum();
       },
       hasWarningAmount(row) {
@@ -733,10 +745,12 @@
       },
       receiveNumInput(row, value) {
         if (value === undefined) {
+          clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
           this.calcSum();
           return;
         }
         row.receiveNum = sanitizeNonNegativeDecimalInput(value);
+        clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
         this.calcSum();
       },
       // 计算汇总数据
@@ -745,12 +759,14 @@
         let totalAmount = 0;
         this.tableData
           .filter((t) => {
-            return isFloatGeZero(t.purchasePrice) && isFloatGeZero(t.receiveNum);
+            return (
+              t.manualTaxAmount || (isFloatGeZero(t.purchasePrice) && isFloatGeZero(t.receiveNum))
+            );
           })
           .forEach((t) => {
             const num = parseFloat(t.receiveNum);
             totalNum = add(totalNum, num);
-            totalAmount = add(totalAmount, getNumber(mul(num, t.purchasePrice), 2));
+            totalAmount = add(totalAmount, getSheetLineAmount(t, 'receiveNum', 'purchasePrice'));
           });
 
         this.formData.totalNum = totalNum;
@@ -777,7 +793,7 @@
           records.forEach((t) => {
             t.receiveNum = value;
 
-            this.receiveNumInput(value);
+            this.receiveNumInput(t, value);
           });
         });
       },
@@ -792,7 +808,7 @@
         for (let i = 0; i < records.length; i++) {
           const record = records[i];
           if (record.isFixed) {
-            record.receiveNum = record.remainNum;
+            this.receiveNumInput(record, record.remainNum);
           }
         }
 
@@ -927,12 +943,14 @@
           orderDate: this.formData.orderDate || '',
           receiveDate: this.formData.receiveDate,
           paidAmount: this.formData.paidAmount,
+          totalAmount: this.formData.totalAmount,
           purchaseOrderId: this.formData.purchaseOrderId,
           description: this.formData.description,
           required: true,
           products: validTableData.map((t) => {
             const product = {
               productId: t.productId,
+              purchasePrice: t.purchasePrice,
               receiveNum: t.receiveNum,
               productionDate: t.productionDate,
               description: t.description,
@@ -1007,6 +1025,7 @@
               });
 
               this.tableData = [...purchaseDetails, ...tableData];
+              this.calcSum();
 
               this.formData.scId = res.scId;
 

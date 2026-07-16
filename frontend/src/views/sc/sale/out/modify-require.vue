@@ -53,7 +53,8 @@
           <j-form-item label="成本状态">
             <a-select
               v-model:value="formData.fillAllCost"
-              style="width: 140px"
+              class="cost-status-select"
+              style="width: 100%"
               @change="handleFillAllCostChange"
             >
               <a-select-option :value="true">已补全</a-select-option>
@@ -266,9 +267,11 @@
 
         <!-- 含税金额 列自定义内容 -->
         <template #taxAmount_default="{ row }">
-          <span v-if="isFloatGeZero(row.taxPrice) && isFloatGeZero(row.outNum)">{{
-            getNumber(mul(row.taxPrice, row.outNum), 2)
-          }}</span>
+          <a-input
+            v-model:value="row.taxAmount"
+            class="number-input"
+            @input="(e) => taxAmountInput(row, e.target.value)"
+          />
         </template>
 
         <template #costPrice_default="{ row }">
@@ -391,6 +394,11 @@
   } from '@/utils/searchSelect';
   import { focusVxeGridRow } from '@/utils/vxeGrid';
   import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
+  import {
+    applyManualSheetAmount,
+    clearManualSheetAmount,
+    getSheetLineAmount,
+  } from '@/utils/sheetAmountInput';
   import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import {
     getInlineProductSelectRowClass,
@@ -661,6 +669,7 @@
               return item;
             });
             this.tableData = tableData.map((item) => Object.assign(this.emptyProduct(), item));
+            this.calcSum();
 
             this.paidAmountDirty = true;
           })
@@ -849,6 +858,12 @@
         );
       },
       taxPriceInput(_row, _value) {
+        clearManualSheetAmount(_row, 'outNum', 'taxPrice');
+        this.calcSum();
+      },
+      // 手工录入金额，并根据出库数量反算销售单价
+      taxAmountInput(row, value) {
+        applyManualSheetAmount(row, value, 'outNum', 'taxPrice');
         this.calcSum();
       },
       hasWarningAmount(row) {
@@ -876,6 +891,7 @@
         row.taxPrice = basePrice * rate;
         row.oriPrice = row.taxPrice;
         row.stockNum = baseStock / rate;
+        clearManualSheetAmount(row, 'outNum', 'taxPrice');
         this.calcSum();
       },
       paidAmountInput(value) {
@@ -889,10 +905,12 @@
       },
       outNumInput(row, value) {
         if (value === undefined) {
+          clearManualSheetAmount(row, 'outNum', 'taxPrice');
           this.calcSum();
           return;
         }
         row.outNum = sanitizeNonNegativeDecimalInput(value);
+        clearManualSheetAmount(row, 'outNum', 'taxPrice');
         this.calcSum();
       },
       handleFillAllCostChange(value) {
@@ -904,12 +922,12 @@
         let totalAmount = 0;
         this.tableData
           .filter((t) => {
-            return isFloatGeZero(t.taxPrice) && isFloatGeZero(t.outNum);
+            return t.manualTaxAmount || (isFloatGeZero(t.taxPrice) && isFloatGeZero(t.outNum));
           })
           .forEach((t) => {
             const num = parseFloat(t.outNum);
             totalNum = add(totalNum, num);
-            totalAmount = add(totalAmount, getNumber(mul(num, t.taxPrice), 2));
+            totalAmount = add(totalAmount, getSheetLineAmount(t, 'outNum', 'taxPrice'));
           });
 
         this.formData.totalNum = totalNum;
@@ -936,7 +954,7 @@
           records.forEach((t) => {
             t.outNum = value;
 
-            this.outNumInput(value);
+            this.outNumInput(t, value);
           });
         });
       },
@@ -951,7 +969,7 @@
         for (let i = 0; i < records.length; i++) {
           const record = records[i];
           if (record.isFixed) {
-            record.outNum = record.remainNum;
+            this.outNumInput(record, record.remainNum);
           }
         }
 
@@ -1220,6 +1238,11 @@
 
   .sheet-editor-actions {
     margin-top: auto;
+  }
+
+  .cost-status-select :deep(.ant-select-arrow) {
+    top: 50%;
+    transform: translateY(-50%);
   }
 
   :deep(.vxe-body--row.sheet-price-warning-row) {

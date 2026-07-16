@@ -388,6 +388,12 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
         private BigDecimal taxPrice;
 
         /**
+         * 金额
+         */
+        @ApiModelProperty("金额")
+        private BigDecimal taxAmount;
+
+        /**
          * 折扣
          */
         @ApiModelProperty("折扣")
@@ -466,6 +472,7 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
 
             this.outNum = dto.getBusinessNum();
             this.taxPrice = dto.getTaxPrice();
+            this.taxAmount = dto.getTaxAmount();
             this.oriPrice = dto.getOriPrice();
             this.manualInputCost = dto.getManualInputCost();
 
