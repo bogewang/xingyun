@@ -97,6 +97,23 @@ class ProductAvailabilityTest {
         assertEquals(Arrays.asList("product-1", "product-2"), recordingProductService.getCleanCacheKeys());
     }
 
+    /**
+     * 验证历史数据按 ID 查询时仍可返回已停用商品。
+     */
+    @Test
+    void shouldReadDisabledProductForHistoricalData() throws Exception {
+        ProductMapper mapper = mock(ProductMapper.class);
+        when(mapper.selectById("product-1")).thenReturn(product("product-1", Boolean.FALSE));
+
+        ProductServiceImpl service = new ProductServiceImpl();
+        setBaseMapper(service, mapper);
+
+        Product result = service.findById("product-1");
+
+        assertEquals(Boolean.FALSE, result.getAvailable());
+        verify(mapper).selectById("product-1");
+    }
+
     @Test
     void shouldCleanCacheAfterTransactionCommit() throws Exception {
         ProductMapper mapper = mock(ProductMapper.class);
