@@ -141,6 +141,12 @@ public class CreateProductVo implements BaseVo, Serializable {
   @ApiModelProperty("零售价")
   private BigDecimal retailPrice;
 
+  /**
+   * 是否询价商品
+   */
+  @ApiModelProperty("是否询价商品")
+  private Boolean inquiryProduct;
+
   @ApiModelProperty("别名")
   private String alias;
 

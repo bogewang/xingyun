@@ -4,6 +4,7 @@ import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductUnit;
+import com.lframework.xingyun.basedata.excel.product.ProductImportModel;
 import com.lframework.xingyun.basedata.mappers.ProductMapper;
 import com.lframework.xingyun.basedata.service.product.ProductReferenceChecker;
 import com.lframework.xingyun.basedata.service.product.ProductService;
@@ -18,6 +19,50 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 class ProductServiceImplTest {
+
+  @Test
+  void shouldKeepInquiryProductOnProductEntity() {
+    Product product = new Product();
+    product.setInquiryProduct(Boolean.TRUE);
+    Assert.assertTrue(product.getInquiryProduct());
+  }
+
+  @Test
+  void shouldDefaultNullInquiryProductToFalse() {
+    Assert.assertFalse(ProductServiceImpl.resolveInquiryProduct(null, null, true));
+  }
+
+  @Test
+  void shouldKeepExistingInquiryProductWhenImportValueIsBlank() {
+    Assert.assertTrue(ProductServiceImpl.resolveInquiryProduct(null, Boolean.TRUE, false));
+  }
+
+  @Test
+  void shouldParseInquiryProductYesFromImport() {
+    Assert.assertTrue(ProductServiceImpl.parseInquiryProduct("是", 2));
+  }
+
+  @Test
+  void shouldParseInquiryProductNoFromImport() {
+    Assert.assertFalse(ProductServiceImpl.parseInquiryProduct("否", 2));
+  }
+
+  @Test
+  void shouldTreatBlankInquiryProductAsMissing() {
+    Assert.assertNull(ProductServiceImpl.parseInquiryProduct("  ", 2));
+  }
+
+  @Test(expectedExceptions = DefaultClientException.class,
+      expectedExceptionsMessageRegExp = "第2行“询价商品”只能填写“是”或“否”")
+  void shouldRejectInvalidInquiryProductFromImport() {
+    ProductServiceImpl.parseInquiryProduct("1", 2);
+  }
+
+  @Test
+  void shouldExportInquiryProductAsYesOrNo() {
+    Assert.assertEquals(ProductImportModel.formatInquiryProduct(Boolean.TRUE), "是");
+    Assert.assertEquals(ProductImportModel.formatInquiryProduct(Boolean.FALSE), "否");
+  }
 
   @Test
   void shouldCreateBaseUnitForUnconfiguredProduct() {

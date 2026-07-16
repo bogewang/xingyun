@@ -106,6 +106,24 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
     private String alias;
 
     /**
+     * 询价商品，导入导出使用“是”或“否”。
+     */
+    @ExcelProperty("询价商品")
+    private String inquiryProductText;
+
+    /**
+     * 解析后的询价商品标识。
+     */
+    @ExcelIgnore
+    private Boolean inquiryProductValue;
+
+    /**
+     * 更新商品原有的询价商品标识。
+     */
+    @ExcelIgnore
+    private Boolean existingInquiryProduct;
+
+    /**
      * 备注
      */
     @ExcelProperty("备注")
@@ -184,6 +202,17 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
 
     public ProductImportModel(Product dto) {
         super(dto);
+        this.inquiryProductText = formatInquiryProduct(dto.getInquiryProduct());
+    }
+
+    /**
+     * 将询价商品布尔值转换为导出文本。
+     *
+     * @param inquiryProduct 询价商品标识
+     * @return “是”或“否”
+     */
+    public static String formatInquiryProduct(Boolean inquiryProduct) {
+        return Boolean.TRUE.equals(inquiryProduct) ? "是" : "否";
     }
 
     @Override

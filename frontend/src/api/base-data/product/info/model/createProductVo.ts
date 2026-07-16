@@ -92,6 +92,11 @@ export interface CreateProductVo {
   retailPrice: number;
 
   /**
+   * 是否询价商品
+   */
+  inquiryProduct: boolean;
+
+  /**
    * 别名
    */
   alias: string;

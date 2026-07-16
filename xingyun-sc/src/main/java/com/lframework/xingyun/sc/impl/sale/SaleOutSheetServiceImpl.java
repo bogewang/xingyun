@@ -656,7 +656,7 @@ public class SaleOutSheetServiceImpl extends
      */
     private String buildCellText(SummaryCell cell) {
         if (cell == null || cell.orderNum == null || cell.orderNum.compareTo(BigDecimal.ZERO) == 0) {
-            return StringPool.EMPTY_STR;
+            return String.join("；", cell.descriptions);
         }
 
         String orderNumText = formatNumber(cell.orderNum);
@@ -1733,8 +1733,6 @@ public class SaleOutSheetServiceImpl extends
                 if (data.getTaxPrice() == null) {
                     data.setTaxPrice(NumberUtil.mul(getDefaultSalePrice(product), unit.getConversionRate()));
                 }
-            } else {
-                System.out.println(1);
             }
         }
         return errors;

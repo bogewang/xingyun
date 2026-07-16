@@ -162,6 +162,11 @@
             </a-form-item>
           </a-col>
           <a-col :md="6" :sm="24">
+            <a-form-item label="询价商品" name="inquiryProduct">
+              <a-checkbox v-model:checked="formData.inquiryProduct" />
+            </a-form-item>
+          </a-col>
+          <a-col :md="6" :sm="24">
             <a-form-item label="别名" name="alias">
               <a-textarea v-model:value="formData.alias" allow-clear :rows="2"/>
             </a-form-item>
@@ -406,7 +411,7 @@ export default defineComponent({
     },
     // 初始化表单数据
     initFormData() {
-      this.formData = {multiUnitEnabled: false, auxiliaryUnits: []};
+      this.formData = {inquiryProduct: false, multiUnitEnabled: false, auxiliaryUnits: []};
     },
     // 提交表单事件
     buildUnits() {
@@ -492,6 +497,7 @@ export default defineComponent({
             .filter((item) => !item.baseUnit)
             .map((item) => ({unitName: item.unitName, conversionRate: item.conversionRate}));
           this.formData = Object.assign({}, data, {
+            inquiryProduct: Boolean(data.inquiryProduct),
             multiUnitEnabled: auxiliaryUnits.length > 0,
             auxiliaryUnits,
           });
