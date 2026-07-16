@@ -1,63 +1,35 @@
-# Task 2 实施报告：商品询价标识持久化与查询筛选
+# Task 2 Report：采购入库新增与修改页面
 
-## 变更内容
+## 改动
 
-- `ProductServiceImpl#create` 将空的 `inquiryProduct` 持久化为 `false`。
-- `ProductServiceImpl#update` 覆盖持久化传入标识，空值按 `false` 保存。
-- 新增包可见静态方法 `resolveInquiryProduct`：新增空值返回 `false`，导入更新空值保留原值。
-- `ProductMapper.xml` 的 `query` 与 `queryCount` 增加可空 `inquiryProduct` 筛选，保证分页数据和总数一致。
-- 新增两项单元测试，覆盖新增默认值和导入更新空值保留逻辑。
+- 在采购入库关联/非关联新增、修改四个页面将“含税金额”列替换为可编辑输入框，并新增 `taxAmountInput`，统一调用 `applyManualSheetAmount(row, value, 'receiveNum', 'purchasePrice')`。
+- 数量、采购价、批量录入以及单位切换的实际赋值路径均先调用 `clearManualSheetAmount`，使后续有效数量/单价输入恢复“数量 × 单价”的自动金额。
+- `calcSum` 保留数量累加，金额改为 `getSheetLineAmount`；手工金额行即使数量为空或为 0 也参与汇总。
+- `buildParams` 仍显式组装产品字段，未添加 `manualTaxAmount` 请求字段。
+
+## 测试与输出
+
+- `pnpm test:unit -- src/utils/__tests__/sheetAmountInput.test.ts`
+  - 通过：1 个测试文件、3 个测试。
+- `pnpm exec eslint --no-cache --max-warnings 0 <四个页面>`
+  - 本次改动引入的格式问题已清除；仍有 `add-require.vue:252` 和 `add-require.vue:328` 两个既有 Prettier 错误，分别为既有单行属性格式和双引号 import，未为本任务改动无关代码。
+- `git diff --check`
+  - 通过，无空白错误。
 
 ## TDD 证据
 
-### RED
+- 公共金额工具及其覆盖的三项规则已由任务 1 在提交 `731bca61` 以 RED-GREEN 方式新增；本任务仅消费该工具，未重复创建相同测试。
+- 开始时尝试的 `pnpm test -- sheetAmountInput.test.ts` 因项目没有 `test` 脚本失败；改为项目定义的 `pnpm test:unit -- ...` 后聚焦测试通过。
+- 已验证零/空数量手工金额保留且不反算，以及随后数量/采购价输入清除手工标识的实现路径。
 
-命令：
+## 自审
 
-```powershell
-mvn -pl xingyun-basedata -am -Dtest=ProductServiceImplTest#shouldDefaultNullInquiryProductToFalse+shouldKeepExistingInquiryProductWhenImportValueIsBlank -DfailIfNoTests=false test
-```
-
-结果：退出码 `1`。`ProductServiceImplTest` 在测试编译阶段失败，错误为找不到 `ProductServiceImpl.resolveInquiryProduct(...)`，符合先写测试、生产方法尚不存在的预期。
-
-### GREEN（聚焦）
-
-命令：
-
-```powershell
-mvn -pl xingyun-basedata -am -Dtest=ProductServiceImplTest#shouldDefaultNullInquiryProductToFalse+shouldKeepExistingInquiryProductWhenImportValueIsBlank -DfailIfNoTests=false test
-```
-
-结果：退出码 `0`，`Tests run: 2, Failures: 0, Errors: 0, Skipped: 0`，reactor `BUILD SUCCESS`。
-
-### GREEN（全类回归）
-
-命令：
-
-```powershell
-mvn -pl xingyun-basedata -am -Dtest=ProductServiceImplTest -DfailIfNoTests=false test
-```
-
-结果：退出码 `0`，`Tests run: 9, Failures: 0, Errors: 0, Skipped: 0`，reactor `BUILD SUCCESS`。
-
-## 修改文件
-
-- `xingyun-basedata/src/main/java/com/lframework/xingyun/basedata/impl/product/ProductServiceImpl.java`
-- `xingyun-basedata/src/main/resources/mappers/product/ProductMapper.xml`
-- `xingyun-basedata/src/test/java/com/lframework/xingyun/basedata/impl/product/ProductServiceImplTest.java`
-- `.superpowers/sdd/task-2-report.md`
-
-## 自检
-
-- 已执行 `git diff --check`，无空白错误。
-- 创建、修改和查询筛选均使用简报指定表达式；未新增直接 SQL、未触及 Excel 或前端。
-- `queryCount` 同步添加筛选条件，避免分页总数与列表不一致。
-- 所有新增 Java 方法均含中文 Javadoc。
-
-## 提交
-
-提交信息：`feat: persist and filter product inquiry flag`
+- 四个页面均导入且使用三个公共函数。
+- 四个金额单元格均使用 `a-input` 和 `taxAmountInput`。
+- 四个汇总筛选条件均包含 `manualTaxAmount`，金额均通过 `getSheetLineAmount` 累加。
+- 未向接口 products 映射暴露临时 `manualTaxAmount` 字段。
 
 ## Concerns
 
-- 本任务按简报只覆盖解析辅助方法的单元测试；Mapper XML 筛选及完整服务持久化链路依赖 MyBatis/Spring 集成环境，未新增数据库集成测试。
+- 任务简报指定的 `pnpm lint -- <文件>` 会被 Turbo 当作任务名解析并失败；已使用直接 ESLint 命令完成等价文件级检查。
+- 全文件 ESLint 仍受 `add-require.vue` 两个既有 Prettier 问题影响，未修改它们以保持本任务范围聚焦。

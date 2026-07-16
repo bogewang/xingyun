@@ -189,9 +189,11 @@
 
           <!-- 含税金额 列自定义内容 -->
           <template #taxAmount_default="{ row }">
-            <span v-if="isFloatGeZero(row.purchasePrice) && isFloatGeZero(row.receiveNum)">{{
-              getNumber(mul(row.purchasePrice, row.receiveNum), 2)
-            }}</span>
+            <a-input
+              v-model:value="row.taxAmount"
+              class="number-input"
+              @input="(e) => taxAmountInput(row, e.target.value)"
+            />
           </template>
 
           <!-- 备注 列自定义内容 -->
@@ -301,6 +303,11 @@
   } from '@/utils/searchSelect';
   import { focusTableInput, focusVxeGridRow } from '@/utils/vxeGrid';
   import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
+  import {
+    applyManualSheetAmount,
+    clearManualSheetAmount,
+    getSheetLineAmount,
+  } from '@/utils/sheetAmountInput';
   import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import {
     getInlineProductSelectRowClass,
@@ -748,12 +755,18 @@
         this.paidAmountDirty = true;
       },
       purchasePriceInput(row, value) {
+        clearManualSheetAmount(row);
         row.purchasePrice = sanitizeNonNegativeDecimalInput(value);
+        this.calcSum();
+      },
+      taxAmountInput(row, value) {
+        applyManualSheetAmount(row, value, 'receiveNum', 'purchasePrice');
         this.calcSum();
       },
       selectUnit(row, unitId) {
         const unit = (row.units || []).find((item) => item.id === unitId);
         if (!unit) return;
+        clearManualSheetAmount(row);
         const rate = Number(unit.conversionRate) || 1;
         const oldRate = Number(row.conversionRate) || 1;
         const baseStock = Number(row.baseStockNum ?? row.stockNum) * oldRate;
@@ -780,6 +793,7 @@
         return this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
       },
       receiveNumInput(row, value) {
+        clearManualSheetAmount(row);
         if (value === undefined) {
           this.calcSum();
           return;
@@ -793,12 +807,14 @@
         let totalAmount = 0;
         this.tableData
           .filter((t) => {
-            return isFloatGeZero(t.purchasePrice) && isFloatGeZero(t.receiveNum);
+            return (
+              t.manualTaxAmount || (isFloatGeZero(t.purchasePrice) && isFloatGeZero(t.receiveNum))
+            );
           })
           .forEach((t) => {
             const num = parseFloat(t.receiveNum);
             totalNum = add(totalNum, num);
-            totalAmount = add(totalAmount, getNumber(mul(num, t.purchasePrice), 2));
+            totalAmount = add(totalAmount, getSheetLineAmount(t, 'receiveNum', 'purchasePrice'));
           });
 
         this.formData.totalNum = totalNum;
@@ -823,7 +839,7 @@
           records.forEach((t) => {
             t.receiveNum = value;
 
-            this.receiveNumInput(value);
+            this.receiveNumInput(t, value);
           });
         });
       },
