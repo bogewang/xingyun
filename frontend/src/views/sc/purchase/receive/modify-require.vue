@@ -652,6 +652,7 @@
               return item;
             });
             this.tableData = tableData.map((item) => Object.assign(this.emptyProduct(), item));
+            this.calcSum();
           })
           .finally(() => {
             this.loading = false;

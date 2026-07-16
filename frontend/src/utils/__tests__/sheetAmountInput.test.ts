@@ -66,4 +66,14 @@ describe('单据明细金额输入', () => {
       expect(row.taxAmount).toBe('80');
     });
   });
+
+  it('加载行未初始化缓存时首次输入非法值回退到自动金额', () => {
+    ['1e3', 'abc', '-1'].forEach((invalidAmount) => {
+      const row = { receiveNum: '3', purchasePrice: 26.666667, taxAmount: invalidAmount };
+
+      applyManualSheetAmount(row, invalidAmount, 'receiveNum', 'purchasePrice');
+
+      expect(row.taxAmount).toBe('80');
+    });
+  });
 });

@@ -1019,6 +1019,7 @@
               });
 
               this.tableData = [...purchaseDetails, ...tableData];
+              this.calcSum();
 
               this.formData.scId = res.scId;
 

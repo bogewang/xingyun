@@ -13,7 +13,12 @@ export function applyManualSheetAmount(
   quantityField: string,
   priceField: string,
 ): void {
-  const previousAmount = String(row.lastValidTaxAmount ?? row.taxAmount ?? '');
+  const autoAmount = getNumber(mul(row[quantityField] || 0, row[priceField] || 0), 2);
+  const currentAmount = String(row.taxAmount ?? '');
+  const initialAmount = sanitizeNonNegativeDecimalInput(currentAmount);
+  const previousAmount = String(
+    row.lastValidTaxAmount ?? (initialAmount === '' && currentAmount !== '' ? autoAmount : currentAmount),
+  );
   row.taxAmount = sanitizeNonNegativeDecimalInput(amount, previousAmount);
   row.lastValidTaxAmount = row.taxAmount;
   row.manualTaxAmount = true;
