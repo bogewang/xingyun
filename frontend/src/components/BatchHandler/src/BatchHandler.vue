@@ -43,9 +43,9 @@
       <template #footer>
         <div>
           <a-space>
-            <a-button @click="onClose">关 闭</a-button>
+            <a-button :disabled="loading && !!batchHandleFn" @click="onClose">关 闭</a-button>
             <a-button v-if="!loading" type="primary" @click="onBegin">开 始</a-button>
-            <a-button v-if="loading" type="primary" @click="onStop">停 止</a-button>
+            <a-button v-if="loading && !batchHandleFn" type="primary" @click="onStop">停 止</a-button>
           </a-space>
         </div>
       </template>
@@ -106,11 +106,6 @@ export default defineComponent({
         type: String,
         default: '',
       },
-    },
-    setup() {
-      return {
-        isEmpty,
-      };
     },
     setup() {
       return {
