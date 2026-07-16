@@ -729,6 +729,7 @@
         clearManualSheetAmount(_row, 'outNum', 'taxPrice');
         this.calcSum();
       },
+      // 手工录入金额，并根据出库数量反算销售单价
       taxAmountInput(row, value) {
         applyManualSheetAmount(row, value, 'outNum', 'taxPrice');
         this.calcSum();
@@ -1009,6 +1010,7 @@
               });
 
               this.tableData = [...saleDetails, ...tableData];
+              this.calcSum();
 
               this.formData.scId = res.scId;
 
