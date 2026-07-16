@@ -656,7 +656,10 @@ public class SaleOutSheetServiceImpl extends
      */
     private String buildCellText(SummaryCell cell) {
         if (cell == null || cell.orderNum == null || cell.orderNum.compareTo(BigDecimal.ZERO) == 0) {
-            return String.join("；", cell.descriptions);
+            if (cell != null) {
+                return String.join("；", cell.descriptions);
+            }
+            return StringPool.EMPTY_STR;
         }
 
         String orderNumText = formatNumber(cell.orderNum);
