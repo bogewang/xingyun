@@ -241,7 +241,6 @@ git commit -m "feat: reject disabled products in new business documents"
 **Files:**
 - Modify: `backend/xingyun-basedata/src/main/java/com/lframework/xingyun/basedata/bo/product/info/ProductSelectorBo.java`
 - Modify: `backend/xingyun-basedata/src/main/java/com/lframework/xingyun/basedata/bo/product/info/GetProductBo.java`
-- Modify: `frontend/src/api/base-data/product/info/model/productSelectorBo.ts` only if its existing `available` field needs alignment.
 - Test: `backend/xingyun-basedata/src/test/java/com/lframework/xingyun/basedata/impl/product/ProductAvailabilityTest.java`
 
 **Interfaces:**
