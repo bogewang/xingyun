@@ -8,9 +8,11 @@ import com.lframework.xingyun.basedata.vo.product.info.CreateProductVo;
 import com.lframework.xingyun.basedata.vo.product.info.QueryProductSelectorVo;
 import com.lframework.xingyun.basedata.vo.product.info.QueryProductVo;
 import com.lframework.xingyun.basedata.vo.product.info.UpdateProductVo;
+import com.lframework.xingyun.basedata.vo.product.info.UpdateProductAvailableVo;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Collection;
 
 public interface ProductService extends BaseMpService<Product> {
 
@@ -133,4 +135,18 @@ public interface ProductService extends BaseMpService<Product> {
     List<Product> selectByIds(List<String> ids);
 
     void updatePrice(String id, BigDecimal salePrice, BigDecimal purchasePrice);
+
+    /**
+     * 批量设置商品启用状态。
+     *
+     * @param vo 状态更新请求
+     */
+    void updateAvailable(UpdateProductAvailableVo vo);
+
+    /**
+     * 校验商品均为启用状态。
+     *
+     * @param productIds 商品 ID 集合
+     */
+    void assertAvailable(Collection<String> productIds);
 }

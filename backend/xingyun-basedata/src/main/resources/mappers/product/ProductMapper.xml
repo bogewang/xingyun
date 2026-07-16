@@ -45,7 +45,9 @@
                 ]]>
                 </if>
             </if>
-            AND g.available = TRUE
+            <if test="vo.available != null">
+                AND g.available = #{vo.available}
+            </if>
         </where>
         <choose>
             <when test="vo.isExport == true">
@@ -106,7 +108,9 @@
                 ]]>
                 </if>
             </if>
-            AND g.available = TRUE
+            <if test="vo.available != null">
+                AND g.available = #{vo.available}
+            </if>
         </where>
         ORDER BY g.code
     </select>

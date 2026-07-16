@@ -101,6 +101,12 @@ public class QueryProductBo extends BaseBo<Product> {
     @ApiModelProperty("是否询价商品")
     private Boolean inquiryProduct;
 
+    /**
+     * 商品启用状态。
+     */
+    @ApiModelProperty("商品启用状态")
+    private Boolean available;
+
     @ApiModelProperty("别名")
     private String alias;
 

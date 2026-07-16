@@ -21,6 +21,7 @@ import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.vo.product.info.CreateProductVo;
 import com.lframework.xingyun.basedata.vo.product.info.QueryProductVo;
 import com.lframework.xingyun.basedata.vo.product.info.UpdateProductVo;
+import com.lframework.xingyun.basedata.vo.product.info.UpdateProductAvailableVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -127,6 +128,25 @@ public class ProductController extends DefaultBaseController {
         productBundleService.cleanCacheByKey(vo.getId());
 
         return InvokeResultBuilder.success();
+    }
+
+    /**
+     * 批量更新商品启用状态。
+     *
+     * @param vo 商品启用状态请求
+     * @return 操作结果
+     */
+    @ApiOperation("批量更新商品启用状态")
+    @HasPermission({"base-data:product:info:modify"})
+    @PutMapping("/available")
+    public InvokeResult<Void> updateAvailable(@Valid @RequestBody UpdateProductAvailableVo vo) {
+        try {
+            productService.updateAvailable(vo);
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
     }
 
     /**

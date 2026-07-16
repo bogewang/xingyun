@@ -125,6 +125,57 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         return getBaseMapper().queryCount(vo);
     }
 
+    /**
+     * 批量设置商品启用状态并清理商品缓存。
+     *
+     * @param vo 状态更新请求
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void updateAvailable(UpdateProductAvailableVo vo) {
+        List<String> productIds = normalizeProductIds(vo.getIds());
+        if (productIds.isEmpty()) {
+            return;
+        }
+        getBaseMapper().update(null, Wrappers.lambdaUpdate(Product.class)
+                .in(Product::getId, productIds)
+                .set(Product::getAvailable, vo.getAvailable()));
+        for (String productId : productIds) {
+            productService.cleanCacheByKey(productId);
+        }
+    }
+
+    /**
+     * 校验指定商品均处于启用状态。
+     *
+     * @param productIds 商品 ID 集合
+     */
+    @Override
+    public void assertAvailable(Collection<String> productIds) {
+        List<String> normalizedIds = normalizeProductIds(productIds);
+        if (normalizedIds.isEmpty()) {
+            return;
+        }
+        List<Product> products = getBaseMapper().selectList(Wrappers.lambdaQuery(Product.class)
+                .in(Product::getId, normalizedIds));
+        if (products.stream().anyMatch(product -> Boolean.FALSE.equals(product.getAvailable()))) {
+            throw new DefaultClientException("商品已停用，无法新增业务单据！");
+        }
+    }
+
+    /**
+     * 清理商品 ID 集合中的空白值并保持首次出现顺序去重。
+     *
+     * @param productIds 商品 ID 集合
+     * @return 规范化后的商品 ID 列表
+     */
+    private List<String> normalizeProductIds(Collection<String> productIds) {
+        if (CollectionUtils.isEmpty(productIds)) {
+            return Collections.emptyList();
+        }
+        return productIds.stream().filter(StringUtil::isNotBlank).map(String::trim).distinct().collect(Collectors.toList());
+    }
+
     @Cacheable(value = Product.CACHE_NAME, key = "@cacheVariables.tenantId() + #id", unless = "#result == null")
     @Override
     public Product findById(String id) {
