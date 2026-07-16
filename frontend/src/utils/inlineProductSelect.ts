@@ -53,6 +53,32 @@ export function handleInlineProductSelectKeydown(
   scrollActiveInlineProductIntoView(nextTick);
 }
 
+/**
+ * 商品输入框处于待输入状态时，处理回车新增商品行。
+ *
+ * @return 是否已处理该回车事件
+ */
+export function handleEmptyProductInputEnter(
+  event: KeyboardEvent,
+  row: Recordable,
+  addProduct: () => void,
+) {
+  if (
+    event.key !== 'Enter' ||
+    event.isComposing ||
+    event.repeat ||
+    !isEmpty(row.productId) ||
+    !isEmpty(row.productQuery)
+  ) {
+    return false;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+  addProduct();
+  return true;
+}
+
 function scrollActiveInlineProductIntoView(nextTick: () => Promise<void>) {
   nextTick().then(() => {
     const activeRow = getVisibleActiveRow();

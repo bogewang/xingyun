@@ -50,6 +50,7 @@
           :data="tableData"
           :columns="tableColumn"
           :row-class-name="getTableRowClassName"
+          :cell-class-name="getCellClassName"
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
         >
@@ -128,7 +129,7 @@
                     <vxe-column
                       field="unit"
                       title="单位"
-                      width="100"
+                      width="80"
                       :slots="{ default: 'unit_default' }"
                     />
                     <vxe-column field="stockNum" title="库存数量" width="140" align="right" />
@@ -163,7 +164,6 @@
             <a-select
               v-model:value="row.unitId"
               size="small"
-              style="width: 90px"
               @change="(value) => selectUnit(row, value)"
             >
               <a-select-option v-for="item in row.units || []" :key="item.id" :value="item.id">{{
@@ -178,9 +178,6 @@
               :ref="'taxPriceInputRef' + rowIndex"
               v-model:value="row.taxPrice"
               class="number-input"
-              :style="{
-                color: isNegativeProfit(row) && !hasWarningPrice(row) ? '#f5222d' : undefined,
-              }"
               @input="(e) => taxPriceInput(row, e.target.value)"
             />
           </template>
@@ -197,7 +194,7 @@
               :ref="'outNumInputRef' + rowIndex"
               v-model:value="row.outNum"
               class="number-input"
-              @input="(e) => outNumInput(e.target.value)"
+              @input="(e) => outNumInput(row, e.target.value)"
             />
           </template>
 
@@ -222,7 +219,7 @@
           <template #profitRate_default="{ row }">
             <span
               :style="{
-                color: isNegativeProfit(row) && !hasWarningPrice(row) ? '#f5222d' : undefined,
+                color: isNegativeProfit(row) && !hasWarningAmount(row) ? '#f5222d' : undefined,
               }"
             >
               {{ calcProfitRate(row) }}
@@ -338,12 +335,16 @@
     normalizeSelectValue,
   } from '@/utils/searchSelect';
   import { focusTableInput, focusVxeGridRow } from '@/utils/vxeGrid';
+  import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
+  import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import {
     getInlineProductSelectRowClass,
+    handleEmptyProductInputEnter,
     handleInlineProductSelectKeydown,
     resetInlineProductSelect,
     setInlineProductSelectProducts,
   } from '@/utils/inlineProductSelect';
+  import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import { requestCustomerSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
@@ -428,9 +429,8 @@
             slots: { default: 'productName_default' },
           },
           { field: 'spec', title: '规格', width: 80 },
-          { field: 'unit', title: '单位', width: 100, slots: { default: 'unit_default' } },
-          { field: 'categoryName', title: '商品分类', width: 80 },
-          { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 140 },
+          { field: 'unit', title: '单位', width: 50, slots: { default: 'unit_default' } },
+
           {
             field: 'stockNum',
             title: '库存数量',
@@ -450,22 +450,31 @@
             field: 'taxPrice',
             title: '价格（元）',
             align: 'right',
-            width: 80,
+            width: 100,
             slots: { default: 'taxPrice_default' },
           },
-          {
-            field: 'costPrice',
-            title: '成本单价',
-            align: 'right',
-            width: 100,
-            slots: { default: 'costPrice_default' },
-          },
+
           {
             field: 'taxAmount',
             title: '金额',
             align: 'right',
             width: 80,
             slots: { default: 'taxAmount_default' },
+          },
+          {
+            field: 'description',
+            title: '备注',
+            width: 200,
+            slots: { default: 'description_default' },
+          },
+          { field: 'categoryName', title: '商品分类', width: 80 },
+          { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 140 },
+          {
+            field: 'costPrice',
+            title: '成本单价',
+            align: 'right',
+            width: 100,
+            slots: { default: 'costPrice_default' },
           },
           {
             field: 'profitRate',
@@ -480,12 +489,6 @@
             width: 100,
             slots: { default: 'costStatus_default' },
           },
-          {
-            field: 'description',
-            title: '备注',
-            width: 200,
-            slots: { default: 'description_default' },
-          },
         ],
         tableData: [],
         customerOptions: [],
@@ -497,21 +500,23 @@
     created() {
       this.openDialog();
     },
-    mounted() {
-      // 监听键盘事件，按下回车键时调用addProduct方法
+    activated() {
+      // 仅在当前页面激活时监听回车快捷键，避免缓存页面误响应。
       document.addEventListener('keydown', this.handleKeyDown);
     },
+    deactivated() {
+      document.removeEventListener('keydown', this.handleKeyDown);
+    },
     beforeUnmount() {
-      // 移除键盘事件监听
       document.removeEventListener('keydown', this.handleKeyDown);
     },
     methods: {
-      // 处理键盘事件
       handleKeyDown(event) {
-        // 按下回车键时调用addProduct方法
-        if (event.key === 'Enter' || event.keyCode === 13) {
-          this.addProduct();
+        if (!shouldAddProductByEnter(event)) {
+          return;
         }
+
+        this.addProduct();
       },
       // 打开对话框 由父页面触发
       async openDialog() {
@@ -732,10 +737,15 @@
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
+        const baseUnit = product.units?.find((item) => item.baseUnit);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           oriPrice: product.salePrice,
           taxPrice: this.getSelectedProductPrice(product),
+          baseSalePrice: this.getSelectedProductPrice(product),
+          baseStockNum: product.stockNum,
+          unitId: baseUnit?.id || '',
+          unit: baseUnit?.unitName || product.unit || '',
           editingProduct: false,
           productQuery: '',
         });
@@ -745,6 +755,10 @@
         this.focusRowInput('outNumInputRef', index);
       },
       handleProductSelectKeydown(event, row, rowIndex) {
+        if (handleEmptyProductInputEnter(event, row, this.addProduct)) {
+          return;
+        }
+
         handleInlineProductSelectKeydown(event, row, rowIndex, this.handleSelectProduct, () =>
           this.$nextTick(),
         );
@@ -795,7 +809,8 @@
           options,
         );
       },
-      taxPriceInput(_row, _value) {
+      taxPriceInput(row, value) {
+        row.taxPrice = sanitizeNonNegativeDecimalInput(value);
         this.calcSum();
       },
       selectUnit(row, unitId) {
@@ -805,9 +820,8 @@
         const oldRate = Number(row.conversionRate) || 1;
         const baseStock = Number(row.baseStockNum ?? row.stockNum) * oldRate;
         // baseSalePrice 已是主单位价，仅首次切换时需要从 taxPrice 折算
-        const basePrice = row.baseSalePrice != null
-          ? row.baseSalePrice
-          : Number(row.taxPrice) / (oldRate || 1);
+        const basePrice =
+          row.baseSalePrice != null ? row.baseSalePrice : Number(row.taxPrice) / (oldRate || 1);
         row.baseStockNum = baseStock;
         row.baseSalePrice = basePrice;
         row.conversionRate = rate;
@@ -818,14 +832,20 @@
         this.calcSum();
       },
       paidAmountInput(value) {
-        this.formData.paidAmount = value;
+        this.formData.paidAmount = sanitizeNonNegativeDecimalInput(value);
         this.paidAmountDirty = true;
       },
-      costPriceInput(_row, _value) {
-        _row.manualInputCost = !isEmpty(_value);
+      costPriceInput(row, value) {
+        row.costPrice = sanitizeNonNegativeDecimalInput(value);
+        row.manualInputCost = !isEmpty(row.costPrice);
         this.calcSum();
       },
-      outNumInput(_value) {
+      outNumInput(row, value) {
+        if (value === undefined) {
+          this.calcSum();
+          return;
+        }
+        row.outNum = sanitizeNonNegativeDecimalInput(value);
         this.calcSum();
       },
       handleFillAllCostChange(value) {
@@ -863,8 +883,11 @@
         const costAmount = Number(getNumber(mul(row.costPrice, row.outNum), 2));
         return `${(((amount - costAmount) / amount) * 100).toFixed(2)}%`;
       },
-      hasWarningPrice(row) {
-        return isEmpty(row?.taxPrice) || Number(row.taxPrice) === 0;
+      hasWarningAmount(row) {
+        return hasSheetAmountWarning(row, 'taxPrice', 'outNum');
+      },
+      getCellClassName({ row, column }) {
+        return getSheetAmountCellClass(row, column.field, 'taxPrice', 'outNum');
       },
       isNegativeProfit(row) {
         if (
@@ -880,7 +903,7 @@
         return saleAmount - costAmount < 0;
       },
       getTableRowClassName({ row }) {
-        return this.hasWarningPrice(row) ? 'sheet-price-warning-row' : '';
+        return this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
       },
       // 批量录入数量
       batchInputOutNum() {
@@ -972,24 +995,21 @@
         for (let i = 0; i < validTableData.length; i++) {
           const product = validTableData[i];
 
-          if (isEmpty(product.taxPrice)) {
-            createError('第' + (i + 1) + '行商品价格不允许为空！');
-            return false;
-          }
+          if (!isEmpty(product.taxPrice)) {
+            if (!isFloat(product.taxPrice)) {
+              createError('第' + (i + 1) + '行商品价格必须是数字！');
+              return false;
+            }
 
-          if (!isFloat(product.taxPrice)) {
-            createError('第' + (i + 1) + '行商品价格必须是数字！');
-            return false;
-          }
+            if (!isFloatGeZero(product.taxPrice)) {
+              createError('第' + (i + 1) + '行商品价格不允许小于0！');
+              return false;
+            }
 
-          // if (!isFloatGtZero(product.taxPrice)) {
-          //   createError('第' + (i + 1) + '行商品价格必须大于0！');
-          //   return false;
-          // }
-
-          if (!isNumberPrecision(product.taxPrice, 6)) {
-            createError('第' + (i + 1) + '行商品价格最多允许6位小数！');
-            return false;
+            if (!isNumberPrecision(product.taxPrice, 6)) {
+              createError('第' + (i + 1) + '行商品价格最多允许6位小数！');
+              return false;
+            }
           }
 
           if (!isEmpty(product.outNum)) {
@@ -1021,19 +1041,14 @@
                 return false;
               }
             } else {
-              if (!isFloatGtZero(product.outNum)) {
-                createError('第' + (i + 1) + '行商品出库数量必须大于0！');
+              if (!isFloatGeZero(product.outNum)) {
+                createError('第' + (i + 1) + '行商品出库数量不允许小于0！');
                 return false;
               }
             }
 
             if (!isNumberPrecision(product.outNum, 8)) {
               createError('第' + (i + 1) + '行商品出库数量最多允许8位小数！');
-              return false;
-            }
-          } else {
-            if (!product.isFixed) {
-              createError('第' + (i + 1) + '行商品出库数量不允许为空！');
               return false;
             }
           }
@@ -1079,22 +1094,20 @@
           fillAllCost: this.formData.fillAllCost,
           fillAllCostModified: this.formData.fillAllCost !== this.originalFillAllCost,
           description: this.formData.description,
-          products: validTableData
-            .filter((t) => isFloatGtZero(t.outNum))
-            .map((t) => {
-              const product = {
-                productId: t.productId,
-                unit: t.unit,
-                unitId: t.unitId,
-                oriPrice: t.oriPrice,
-                taxPrice: t.taxPrice,
-                orderNum: t.outNum,
-                description: t.description,
-                costPrice: this.canEditCostPrice(t) && !isEmpty(t.costPrice) ? t.costPrice : null,
-              };
+          products: validTableData.map((t) => {
+            const product = {
+              productId: t.productId,
+              unit: t.unit,
+              unitId: t.unitId,
+              oriPrice: t.oriPrice,
+              taxPrice: t.taxPrice,
+              orderNum: t.outNum,
+              description: t.description,
+              costPrice: this.canEditCostPrice(t) && !isEmpty(t.costPrice) ? t.costPrice : null,
+            };
 
-              return product;
-            }),
+            return product;
+          }),
         };
 
         const doUpdate = () => {
@@ -1170,11 +1183,16 @@
     margin-top: auto;
   }
 
-  :deep(.sheet-price-warning-row) {
-    background-color: #ffd8d6;
+  :deep(.vxe-body--row.sheet-price-warning-row) {
+    background-color: #ffd8d6 !important;
   }
 
   :deep(.sheet-price-warning-row td) {
     border-color: #ff7875;
+  }
+
+  :deep(.vxe-body--column.sheet-zero-warning-cell),
+  :deep(.sheet-zero-warning-cell .ant-input) {
+    color: #f5222d !important;
   }
 </style>

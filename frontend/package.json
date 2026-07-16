@@ -35,6 +35,7 @@
     "reinstall": "rimraf pnpm-lock.yaml && rimraf package.lock.json && rimraf node_modules && npm run bootstrap",
     "serve": "npm run dev",
     "test:gzip": "npx http-server dist --cors --gzip -c-1",
+    "test:unit": "vitest run",
     "type:check": "vue-tsc --noEmit --skipLibCheck"
   },
   "lint-staged": {
@@ -156,11 +157,17 @@
     "unbuild": "^1.2.1",
     "vite": "^4.4.0",
     "vite-plugin-mock": "^2.9.6",
+    "vitest": "^0.34.6",
     "vue-tsc": "^1.8.4"
   },
   "packageManager": "pnpm@8.1.0",
   "engines": {
     "node": ">=16.15.1",
     "pnpm": ">=8.1.0"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@vitejs/plugin-vue-jsx@3.1.0": "patches/@vitejs__plugin-vue-jsx@3.1.0.patch"
+    }
   }
 }

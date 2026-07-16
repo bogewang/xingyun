@@ -33,6 +33,7 @@
           :data="tableData"
           :columns="tableColumn"
           :row-class-name="getTableRowClassName"
+          :cell-class-name="getCellClassName"
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
         >
@@ -178,7 +179,7 @@
               :ref="'purchasePriceInputRef' + rowIndex"
               v-model:value="row.purchasePrice"
               class="number-input"
-              @input="(e) => purchasePriceInput(e.target.value)"
+              @input="(e) => purchasePriceInput(row, e.target.value)"
             />
           </template>
 
@@ -188,7 +189,7 @@
               :ref="'receiveNumInputRef' + rowIndex"
               v-model:value="row.receiveNum"
               class="number-input"
-              @input="(e) => receiveNumInput(e.target.value)"
+              @input="(e) => receiveNumInput(row, e.target.value)"
             />
           </template>
 
@@ -299,7 +300,6 @@
     isEmpty,
     isFloat,
     isFloatGeZero,
-    isFloatGtZero,
     isNumberPrecision,
     mul,
     PATTERN_IS_FLOAT_GT_ZERO,
@@ -313,6 +313,8 @@
     normalizeSelectValue,
   } from '@/utils/searchSelect';
   import { requestSupplierSelectOptions } from '@/utils/labelSelect';
+  import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
+  import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import {
     createConfirm,
     createError,
@@ -322,10 +324,12 @@
   } from '@/hooks/web/msg';
   import {
     getInlineProductSelectRowClass,
+    handleEmptyProductInputEnter,
     handleInlineProductSelectKeydown,
     resetInlineProductSelect,
     setInlineProductSelectProducts,
   } from '@/utils/inlineProductSelect';
+  import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import JFormItem from '@/components/JFormItem';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
   import { focusTableInput } from '@/utils/vxeGrid';
@@ -445,24 +449,26 @@
     created() {
       this.openDialog();
     },
-    mounted() {
-      // 监听键盘事件，按下回车键时调用addProduct方法
+    activated() {
+      // 仅在当前页面激活时监听回车快捷键，避免缓存页面误响应。
       document.addEventListener('keydown', this.handleKeyDown);
     },
+    deactivated() {
+      document.removeEventListener('keydown', this.handleKeyDown);
+    },
     beforeUnmount() {
-      // 移除键盘事件监听
       document.removeEventListener('keydown', this.handleKeyDown);
     },
     methods: {
       getImporterContainer() {
         return this.$refs.importerContainer;
       },
-      // 处理键盘事件
       handleKeyDown(event) {
-        // 按下回车键时调用addProduct方法
-        if (event.key === 'Enter' || event.keyCode === 13) {
-          this.addProduct();
+        if (!shouldAddProductByEnter(event)) {
+          return;
         }
+
+        this.addProduct();
       },
       // 打开对话框 由父页面触发
       openDialog() {
@@ -623,6 +629,10 @@
         }
       },
       handleProductSelectKeydown(event, row, rowIndex) {
+        if (handleEmptyProductInputEnter(event, row, this.addProduct)) {
+          return;
+        }
+
         handleInlineProductSelectKeydown(event, row, rowIndex, this.handleSelectProduct, () =>
           this.$nextTick(),
         );
@@ -633,15 +643,18 @@
       isImportUnmatchedProduct(row) {
         return row.importUnmatched && isEmpty(row.productId);
       },
-      hasWarningPrice(row) {
-        return isEmpty(row?.purchasePrice) || Number(row.purchasePrice) === 0;
+      hasWarningAmount(row) {
+        return hasSheetAmountWarning(row, 'purchasePrice', 'receiveNum');
+      },
+      getCellClassName({ row, column }) {
+        return getSheetAmountCellClass(row, column.field, 'purchasePrice', 'receiveNum');
       },
       getTableRowClassName({ row }) {
         const classNames = [];
         if (this.isImportUnmatchedProduct(row)) {
           classNames.push('receive-import-unmatched-row');
         }
-        if (this.hasWarningPrice(row)) {
+        if (this.hasWarningAmount(row)) {
           classNames.push('sheet-price-warning-row');
         }
         return classNames.join(' ');
@@ -690,17 +703,23 @@
         );
       },
       totalAmountInput(value) {
-        this.formData.totalAmount = value;
+        this.formData.totalAmount = sanitizeNonNegativeDecimalInput(value);
         this.totalAmountDirty = true;
       },
-      purchasePriceInput(_row, _value) {
+      purchasePriceInput(row, value) {
+        row.purchasePrice = sanitizeNonNegativeDecimalInput(value);
         this.calcSum();
       },
       paidAmountInput(value) {
-        this.formData.paidAmount = value;
+        this.formData.paidAmount = sanitizeNonNegativeDecimalInput(value);
         this.paidAmountDirty = true;
       },
-      receiveNumInput(_value) {
+      receiveNumInput(row, value) {
+        if (value === undefined) {
+          this.calcSum();
+          return;
+        }
+        row.receiveNum = sanitizeNonNegativeDecimalInput(value);
         this.calcSum();
       },
       // 计算汇总数据
@@ -874,24 +893,21 @@
         for (let i = 0; i < validTableData.length; i++) {
           const product = validTableData[i];
 
-          if (isEmpty(product.purchasePrice)) {
-            createError('第' + (i + 1) + '行商品采购价不允许为空！');
-            return false;
-          }
+          if (!isEmpty(product.purchasePrice)) {
+            if (!isFloat(product.purchasePrice)) {
+              createError('第' + (i + 1) + '行商品采购价必须是数字！');
+              return false;
+            }
 
-          if (!isFloat(product.purchasePrice)) {
-            createError('第' + (i + 1) + '行商品采购价必须是数字！');
-            return false;
-          }
+            if (!isFloatGeZero(product.purchasePrice)) {
+              createError('第' + (i + 1) + '行商品采购价不允许小于0！');
+              return false;
+            }
 
-          // if (!isFloatGtZero(product.purchasePrice)) {
-          //   createError('第' + (i + 1) + '行商品采购价必须大于0！');
-          //   return false;
-          // }
-
-          if (!isNumberPrecision(product.purchasePrice, 6)) {
-            createError('第' + (i + 1) + '行商品采购价最多允许6位小数！');
-            return false;
+            if (!isNumberPrecision(product.purchasePrice, 6)) {
+              createError('第' + (i + 1) + '行商品采购价最多允许6位小数！');
+              return false;
+            }
           }
 
           if (!isEmpty(product.receiveNum)) {
@@ -900,8 +916,8 @@
               return false;
             }
 
-            if (!isFloatGtZero(product.receiveNum)) {
-              createError('第' + (i + 1) + '行商品收货数量必须大于0！');
+            if (!isFloatGeZero(product.receiveNum)) {
+              createError('第' + (i + 1) + '行商品收货数量不允许小于0！');
               return false;
             }
 
@@ -909,9 +925,6 @@
               createError('第' + (i + 1) + '行商品收货数量最多允许8位小数！');
               return false;
             }
-          } else {
-            createError('第' + (i + 1) + '行商品收货数量不允许为空！');
-            return false;
           }
         }
 
@@ -929,19 +942,17 @@
           paidAmount: this.formData.paidAmount,
           description: this.formData.description,
           required: false,
-          products: validTableData
-            .filter((t) => isFloatGtZero(t.receiveNum))
-            .map((t) => {
-              const product = {
-                productId: t.productId,
-                unitId: t.unitId,
-                purchasePrice: t.purchasePrice,
-                receiveNum: t.receiveNum,
-                description: t.description,
-              };
+          products: validTableData.map((t) => {
+            const product = {
+              productId: t.productId,
+              unitId: t.unitId,
+              purchasePrice: t.purchasePrice,
+              receiveNum: t.receiveNum,
+              description: t.description,
+            };
 
-              return product;
-            }),
+            return product;
+          }),
         };
       },
       // 创建订单
@@ -1053,19 +1064,25 @@
     margin-top: auto;
   }
 
-  :deep(.receive-import-unmatched-row) {
-    background-color: #fff1f0;
+  /* 覆盖 VXE 表格的斑马纹、当前行及悬停行背景色，确保预警状态始终可见。 */
+  :deep(.vxe-body--row.receive-import-unmatched-row) {
+    background-color: #fff1f0 !important;
   }
 
   :deep(.receive-import-unmatched-row td) {
     border-color: #ffa39e;
   }
 
-  :deep(.sheet-price-warning-row) {
-    background-color: #ffd8d6;
+  :deep(.vxe-body--row.sheet-price-warning-row) {
+    background-color: #ffd8d6 !important;
   }
 
   :deep(.sheet-price-warning-row td) {
     border-color: #ff7875;
+  }
+
+  :deep(.vxe-body--column.sheet-zero-warning-cell),
+  :deep(.sheet-zero-warning-cell .ant-input) {
+    color: #f5222d !important;
   }
 </style>

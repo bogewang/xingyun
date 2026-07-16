@@ -656,7 +656,7 @@ public class SaleOutSheetServiceImpl extends
      */
     private String buildCellText(SummaryCell cell) {
         if (cell == null || cell.orderNum == null || cell.orderNum.compareTo(BigDecimal.ZERO) == 0) {
-            return StringPool.EMPTY_STR;
+            return String.join("；", cell.descriptions);
         }
 
         String orderNumText = formatNumber(cell.orderNum);
@@ -1328,6 +1328,10 @@ public class SaleOutSheetServiceImpl extends
 
         int orderNo = 1;
         for (SaleOutSheetDetail detail : details) {
+            if (detail.getOrderNum() == null || detail.getOrderNum().compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+
             SubProductStockVo subProductStockVo = new SubProductStockVo();
             subProductStockVo.setProductId(detail.getProductId());
             subProductStockVo.setScId(sheet.getScId());
@@ -1384,6 +1388,9 @@ public class SaleOutSheetServiceImpl extends
 
         Map<String, BigDecimal> lotCostMap = getDetailLotCostMap(details);
         for (SaleOutSheetDetail detail : details) {
+            if (detail.getOrderNum() == null || detail.getOrderNum().compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
             Product product = productService.findById(detail.getProductId());
 
             AddProductStockVo addProductStockVo = new AddProductStockVo();
@@ -1588,7 +1595,9 @@ public class SaleOutSheetServiceImpl extends
         SaleOutSheetService thisService = getThis(this.getClass());
 
         for (int i = 0; i < list.size(); i++) {
-            list.get(i).setSeq(i + 2);
+            SaleOutSheetQueryImportModel model = list.get(i);
+            model.setSeq(i + 2);
+            normalizeQueryImportNumbers(model);
         }
         Map<String, List<SaleOutSheetQueryImportModel>> map = list.stream().collect(
                 Collectors.groupingBy(item -> item.getOrderDate() + "|" + item.getCustomerName()));
@@ -1596,6 +1605,12 @@ public class SaleOutSheetServiceImpl extends
         return map.keySet().stream()
                 .map(item -> thisService.create(buildCreateVo(map.get(item))))
                 .collect(Collectors.toList());
+    }
+
+    static void normalizeQueryImportNumbers(SaleOutSheetQueryImportModel model) {
+        if (model.getOrderNum() == null) {
+            model.setOrderNum(BigDecimal.ZERO);
+        }
     }
 
     private CreateSaleOutSheetVo buildCreateVo(List<SaleOutSheetQueryImportModel> list) {
@@ -1698,15 +1713,7 @@ public class SaleOutSheetServiceImpl extends
             if (StringUtils.isBlank(data.getUnit())) {
                 errors.add("第" + rowIndex + "行“单位”不能为空");
             }
-            if (data.getOrderNum() == null) {
-                errors.add("第" + rowIndex + "行“数量”不能为空");
-            }
-            if (data.getOrderNum() != null && NumberUtil.le(data.getOrderNum(), BigDecimal.ZERO)) {
-                errors.add("第" + rowIndex + "行“数量”必须大于0");
-            }
-            if (data.getOrderNum() != null && !NumberUtil.isNumberPrecision(data.getOrderNum(), 8)) {
-                errors.add("第" + rowIndex + "行“数量”最多允许8位小数");
-            }
+            errors.addAll(validateImportNumbers(data));
 
             Product product = matchImportProduct(data, nameUnitMap);
             if (product != null) {
@@ -1727,6 +1734,24 @@ public class SaleOutSheetServiceImpl extends
                     data.setTaxPrice(NumberUtil.mul(getDefaultSalePrice(product), unit.getConversionRate()));
                 }
             }
+        }
+        return errors;
+    }
+
+    static List<String> validateImportNumbers(SaleOutSheetImportModel data) {
+        List<String> errors = Lists.newArrayList();
+        int rowIndex = data.getSeq();
+        if (data.getOrderNum() != null && NumberUtil.lt(data.getOrderNum(), BigDecimal.ZERO)) {
+            errors.add("第" + rowIndex + "行“数量”不允许小于0");
+        }
+        if (data.getOrderNum() != null && !NumberUtil.isNumberPrecision(data.getOrderNum(), 8)) {
+            errors.add("第" + rowIndex + "行“数量”最多允许8位小数");
+        }
+        if (data.getTaxPrice() != null && NumberUtil.lt(data.getTaxPrice(), BigDecimal.ZERO)) {
+            errors.add("第" + rowIndex + "行“单价”不允许小于0");
+        }
+        if (data.getTaxPrice() != null && !NumberUtil.isNumberPrecision(data.getTaxPrice(), 6)) {
+            errors.add("第" + rowIndex + "行“单价”最多允许6位小数");
         }
         return errors;
     }

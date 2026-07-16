@@ -28,11 +28,13 @@ import com.lframework.xingyun.basedata.service.UnitService;
 import com.lframework.xingyun.basedata.vo.product.brand.QueryProductBrandVo;
 import com.lframework.xingyun.basedata.vo.product.info.*;
 import com.lframework.xingyun.basedata.vo.product.property.realtion.CreateProductPropertyRelationVo;
+import com.lframework.xingyun.core.service.ProductDeleteReferenceChecker;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,6 +80,13 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
 
     @Autowired
     private GenerateCodeService generateCodeService;
+
+    @Autowired
+    private List<ProductReferenceChecker> productReferenceCheckers;
+
+    @Autowired
+    @Lazy
+    private ProductService productService;
 
     @Override
     public PageResult<Product> query(Integer pageIndex, Integer pageSize, QueryProductVo vo) {
@@ -140,13 +149,60 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     @Override
     public void deleteById(String id) {
 
-        Wrapper<Product> updateWrapper = Wrappers.lambdaUpdate(Product.class)
-                .set(Product::getAvailable, Boolean.FALSE).eq(Product::getId, id);
-        getBaseMapper().update(updateWrapper);
+        assertNoProductReference(id, productReferenceCheckers);
 
-        Product product = this.findById(id);
+        Product product = getBaseMapper().selectById(id);
+        getBaseMapper().deleteById(id);
 
         DataChangeEventBuilder.publishLogicDelete(this, DeleteProductEvent.class, product);
+        productService.cleanCacheByKey(id);
+    }
+
+    /**
+     * 校验商品未被业务数据引用。
+     *
+     * @param productId 商品 ID
+     * @param productReferenceCheckers 商品引用检查器列表
+     */
+    static void assertNoProductReference(String productId, List<ProductReferenceChecker> productReferenceCheckers) {
+        if (productReferenceCheckers.stream().anyMatch(checker -> checker.hasReference(productId))) {
+            throw new DefaultClientException("商品已被业务单据或库存数据引用，无法删除！");
+        }
+    }
+
+    /**
+     * 解析商品询价标识，新增商品默认关闭，导入更新时保留原值。
+     *
+     * @param inquiryProduct 导入或请求传入的询价标识
+     * @param existingInquiryProduct 已存在商品的询价标识
+     * @param isNew 是否为新增商品
+     * @return 最终保存的询价标识
+     */
+    static Boolean resolveInquiryProduct(Boolean inquiryProduct, Boolean existingInquiryProduct, boolean isNew) {
+        if (inquiryProduct != null) {
+            return inquiryProduct;
+        }
+        return isNew ? Boolean.FALSE : existingInquiryProduct;
+    }
+
+    /**
+     * 解析导入文件中的询价商品文本。
+     *
+     * @param inquiryProductText 导入的文本值
+     * @param rowIndex Excel 行号
+     * @return 解析后的布尔值；空白时返回 {@code null}
+     */
+    static Boolean parseInquiryProduct(String inquiryProductText, int rowIndex) {
+        if (StringUtil.isBlank(inquiryProductText)) {
+            return null;
+        }
+        if ("是".equals(inquiryProductText.trim())) {
+            return Boolean.TRUE;
+        }
+        if ("否".equals(inquiryProductText.trim())) {
+            return Boolean.FALSE;
+        }
+        throw new DefaultClientException("第" + rowIndex + "行“询价商品”只能填写“是”或“否”");
     }
 
     @OpLog(type = BaseDataOpLogType.class, name = "新增商品，ID：{}, 编号：{}", params = { "#_result",
@@ -221,6 +277,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                 StringUtil.isBlank(vo.getDefaultSupplier()) ? null : vo.getDefaultSupplier());
         data.setRemark(StringUtil.isBlank(vo.getRemark()) ? null : vo.getRemark());
         data.setRemark2(StringUtil.isBlank(vo.getRemark2()) ? null : vo.getRemark2());
+        data.setInquiryProduct(Boolean.TRUE.equals(vo.getInquiryProduct()));
 
         data.setAvailable(Boolean.TRUE);
 
@@ -380,6 +437,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                 .set(Product::getSalePrice, vo.getSalePrice())
                 .set(Product::getPurchasePrice, vo.getPurchasePrice())
                 .set(Product::getRetailPrice, vo.getRetailPrice())
+                .set(Product::getInquiryProduct, Boolean.TRUE.equals(vo.getInquiryProduct()))
                 .set(Product::getAlias, StringUtil.isBlank(vo.getAlias()) ? null : vo.getAlias())
                 .set(Product::getDefaultSupplier,
                         StringUtil.isBlank(vo.getDefaultSupplier()) ? null : vo.getDefaultSupplier())
@@ -388,9 +446,11 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                 .eq(Product::getId, vo.getId());
 
         getBaseMapper().update(updateWrapper);
+        data.setUnit(StringUtil.isBlank(vo.getUnit()) ? null : vo.getUnit());
         if (vo.getUnits() != null) {
-            data.setUnit(StringUtil.isBlank(vo.getUnit()) ? null : vo.getUnit());
             saveUnits(data, vo.getUnits());
+        } else {
+            syncBaseUnitNames(Collections.singletonList(data));
         }
 
         productPropertyRelationService.deleteByProductId(data.getId());
@@ -550,6 +610,131 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         if (CollectionUtils.isNotEmpty(persistBatch.getUpdates())) {
             super.updateBatchById(persistBatch.getUpdates());
         }
+        saveDefaultUnits(persistBatch.getInserts(), persistBatch.getUpdates());
+        syncBaseUnitNames(mergeProducts(persistBatch.getInserts(), persistBatch.getUpdates()));
+    }
+
+    /**
+     * 合并新增和更新的商品，供批量处理使用。
+     *
+     * @param inserts 新增商品
+     * @param updates 更新商品
+     * @return 合并后的商品列表
+     */
+    private List<Product> mergeProducts(List<Product> inserts, List<Product> updates) {
+        List<Product> products = new ArrayList<>(inserts.size() + updates.size());
+        products.addAll(inserts);
+        products.addAll(updates);
+        return products;
+    }
+
+    /**
+     * 将商品主单位对应的单位名称同步到商品单位配置中。
+     *
+     * @param products 发生变更的商品
+     */
+    private void syncBaseUnitNames(List<Product> products) {
+        if (CollectionUtil.isEmpty(products)) {
+            return;
+        }
+
+        Set<String> productIds = products.stream().map(Product::getId).collect(Collectors.toSet());
+        List<ProductUnit> productUnits = productUnitService.list(Wrappers.lambdaQuery(ProductUnit.class)
+                .in(ProductUnit::getProductId, productIds));
+        if (CollectionUtil.isEmpty(productUnits)) {
+            return;
+        }
+
+        Set<String> unitIds = products.stream().map(Product::getUnit).filter(StringUtil::isNotBlank)
+                .collect(Collectors.toSet());
+        Map<String, String> unitNames = CollectionUtil.isEmpty(unitIds) ? Collections.emptyMap()
+                : unitService.list(Wrappers.lambdaQuery(Unit.class).in(Unit::getId, unitIds)
+                        .eq(Unit::getAvailable, Boolean.TRUE)).stream()
+                        .collect(Collectors.toMap(Unit::getId, Unit::getName));
+        List<ProductUnit> updates = buildBaseUnitNameUpdates(products, productUnits, unitNames);
+        if (CollectionUtil.isNotEmpty(updates)) {
+            productUnitService.updateBatchById(updates);
+        }
+    }
+
+    private void saveDefaultUnits(List<Product> inserts, List<Product> updates) {
+        List<Product> products = new ArrayList<>(inserts.size() + updates.size());
+        products.addAll(inserts);
+        products.addAll(updates);
+        if (CollectionUtil.isEmpty(products)) {
+            return;
+        }
+
+        Set<String> productIds = products.stream().map(Product::getId).collect(Collectors.toSet());
+        Set<String> configuredProductIds = productUnitService.list(Wrappers.lambdaQuery(ProductUnit.class)
+                .in(ProductUnit::getProductId, productIds)).stream().map(ProductUnit::getProductId)
+                .collect(Collectors.toSet());
+        Set<String> unitIds = products.stream().filter(product -> !configuredProductIds.contains(product.getId()))
+                .map(Product::getUnit).filter(StringUtil::isNotBlank).collect(Collectors.toSet());
+        Map<String, String> unitNames = CollectionUtil.isEmpty(unitIds) ? Collections.emptyMap()
+                : unitService.list(Wrappers.lambdaQuery(Unit.class).in(Unit::getId, unitIds)
+                        .eq(Unit::getAvailable, Boolean.TRUE)).stream()
+                        .collect(Collectors.toMap(Unit::getId, Unit::getName));
+        List<ProductUnit> defaultUnits = buildDefaultProductUnits(products, configuredProductIds, unitNames);
+        if (CollectionUtils.isNotEmpty(defaultUnits)) {
+            defaultUnits.forEach(unit -> unit.setId(IdUtil.getId()));
+            productUnitService.saveBatch(defaultUnits);
+        }
+    }
+
+    static List<ProductUnit> buildDefaultProductUnits(List<Product> products, Set<String> configuredProductIds,
+            Map<String, String> unitNames) {
+        List<ProductUnit> units = new ArrayList<>();
+        for (Product product : products) {
+            if (configuredProductIds.contains(product.getId())) {
+                continue;
+            }
+            String unitName = unitNames.get(product.getUnit());
+            if (StringUtil.isBlank(product.getUnit()) || StringUtil.isBlank(unitName)) {
+                throw new DefaultClientException("主单位不存在或已停用！");
+            }
+            ProductUnit unit = new ProductUnit();
+            unit.setProductId(product.getId());
+            unit.setUnitName(unitName);
+            unit.setConversionRate(BigDecimal.ONE);
+            unit.setBaseUnit(Boolean.TRUE);
+            unit.setAvailable(Boolean.TRUE);
+            unit.setSortNo(0);
+            units.add(unit);
+        }
+        return units;
+    }
+
+    /**
+     * 构建主单位名称需要同步的商品单位记录。
+     *
+     * @param products 商品列表
+     * @param productUnits 商品单位配置
+     * @param unitNames 单位 ID 与名称映射
+     * @return 需要更新的商品单位记录
+     */
+    static List<ProductUnit> buildBaseUnitNameUpdates(List<Product> products, List<ProductUnit> productUnits,
+            Map<String, String> unitNames) {
+        Map<String, List<ProductUnit>> productUnitMap = productUnits.stream()
+                .collect(Collectors.groupingBy(ProductUnit::getProductId));
+        List<ProductUnit> updates = new ArrayList<>();
+        for (Product product : products) {
+            String unitName = unitNames.get(product.getUnit());
+            if (StringUtil.isBlank(unitName)) {
+                continue;
+            }
+            for (ProductUnit productUnit : productUnitMap.getOrDefault(product.getId(), Collections.emptyList())) {
+                if (!Boolean.TRUE.equals(productUnit.getBaseUnit()) || StringUtils.equals(unitName,
+                        productUnit.getUnitName())) {
+                    continue;
+                }
+                ProductUnit update = new ProductUnit();
+                update.setId(productUnit.getId());
+                update.setUnitName(unitName);
+                updates.add(update);
+            }
+        }
+        return updates;
     }
 
     private ProductImportPersistBatch buildProducts(List<ProductImportModel> list) {
@@ -575,6 +760,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             if (isNew) {
                 record.setId(IdUtil.getId());
             }
+            record.setInquiryProduct(resolveInquiryProduct(data.getInquiryProductValue(),
+                    data.getExistingInquiryProduct(), isNew));
             record.setTaxRate(data.getTaxRate() == null ? BigDecimal.ZERO : data.getTaxRate());
             record.setSaleTaxRate(data.getSaleTaxRate() == null ? BigDecimal.ZERO : data.getSaleTaxRate());
             record.setAvailable(Boolean.TRUE);
@@ -714,6 +901,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         ProductImportModel data = list.get(i);
         int rowIndex = (i + 2);
         checkCode(checkCodeSet, checkCodeRowMap, availableCodes, data, rowIndex);
+        data.setInquiryProductValue(parseInquiryProduct(data.getInquiryProductText(), rowIndex));
 
         if (StringUtil.isBlank(data.getName())) {
             throw new DefaultClientException("第" + rowIndex + "行“名称”不能为空");
@@ -775,7 +963,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         }
 
         if (!categoryMap.containsKey(data.getCategoryName())) {
-            throw new DefaultClientException("第" + rowIndex + "行“商品分类”不存在，请检查");
+            throw new DefaultClientException(String.format("第%s行商品分类:：“%s”不存在，请检查", rowIndex, data.getCategoryName()));
         }
 
         data.setCategoryId(categoryMap.get(data.getCategoryName()));
@@ -826,7 +1014,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         checkSkuCodeSet.add(data.getSkuCode());
         checkSkuCodeRowMap.put(data.getSkuCode(), rowIndex);
         if (availableSkuCodes.containsKey(data.getSkuCode()) && data.getId() == null) {
-            data.setId(availableSkuCodes.get(data.getSkuCode()).getId());
+            setExistingProduct(data, availableSkuCodes.get(data.getSkuCode()));
         }
     }
 
@@ -845,7 +1033,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         checkCodeSet.add(data.getCode());
         checkCodeRowMap.put(data.getCode(), rowIndex);
         if (availableCodes.containsKey(data.getCode())) {
-            data.setId(availableCodes.get(data.getCode()).getId());
+            setExistingProduct(data, availableCodes.get(data.getCode()));
         }
     }
 
@@ -865,9 +1053,20 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                     "第" + rowIndex + "行“名称+规格+单位”与第" + existsRowIndex + "行重复");
         }
         if (availableNameSpecUnitKeys.containsKey(key) && data.getId() == null) {
-            data.setId(availableNameSpecUnitKeys.get(key).getId());
+            setExistingProduct(data, availableNameSpecUnitKeys.get(key));
         }
         checkNameSpecUnitMap.put(key, rowIndex);
+    }
+
+    /**
+     * 记录导入行对应的既有商品，供空询价商品列更新时保留原值。
+     *
+     * @param data 导入行数据
+     * @param product 既有商品
+     */
+    private void setExistingProduct(ProductImportModel data, Product product) {
+        data.setId(product.getId());
+        data.setExistingInquiryProduct(product.getInquiryProduct());
     }
 
     private String generateProductCode(Set<String> checkCodeSet, Set<String> usedCodes) {

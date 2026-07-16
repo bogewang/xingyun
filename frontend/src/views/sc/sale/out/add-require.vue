@@ -68,6 +68,8 @@
         height="100%"
         :data="tableData"
         :columns="tableColumn"
+        :row-class-name="getTableRowClassName"
+        :cell-class-name="getCellClassName"
         :toolbar-config="toolbarConfig"
         :custom-config="{}"
       >
@@ -200,7 +202,7 @@
           <a-input
             v-model:value="row.outNum"
             class="number-input"
-            @input="(e) => outNumInput(e.target.value)"
+            @input="(e) => outNumInput(row, e.target.value)"
           />
         </template>
 
@@ -311,13 +313,18 @@
     normalizeSelectValue,
   } from '@/utils/searchSelect';
   import { requestCustomerSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
+  import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
+  import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
   import {
     getInlineProductSelectRowClass,
+    handleEmptyProductInputEnter,
     handleInlineProductSelectKeydown,
     resetInlineProductSelect,
     setInlineProductSelectProducts,
   } from '@/utils/inlineProductSelect';
+  import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
+  import { buildRequiredSaleOutProducts } from './components/saleOutProductParams';
 
   export default defineComponent({
     name: 'AddSaleOutSheetRequire',
@@ -447,21 +454,23 @@
     created() {
       this.openDialog();
     },
-    mounted() {
-      // 监听键盘事件，按下回车键时调用addProduct方法
+    activated() {
+      // 仅在当前页面激活时监听回车快捷键，避免缓存页面误响应。
       document.addEventListener('keydown', this.handleKeyDown);
     },
+    deactivated() {
+      document.removeEventListener('keydown', this.handleKeyDown);
+    },
     beforeUnmount() {
-      // 移除键盘事件监听
       document.removeEventListener('keydown', this.handleKeyDown);
     },
     methods: {
-      // 处理键盘事件
       handleKeyDown(event) {
-        // 按下回车键时调用addProduct方法
-        if (event.key === 'Enter' || event.keyCode === 13) {
-          this.addProduct();
+        if (!shouldAddProductByEnter(event)) {
+          return;
         }
+
+        this.addProduct();
       },
       // 打开对话框 由父页面触发
       openDialog() {
@@ -603,6 +612,10 @@
         this.taxPriceInput(this.tableData[index], this.tableData[index].taxPrice);
       },
       handleProductSelectKeydown(event, row, rowIndex) {
+        if (handleEmptyProductInputEnter(event, row, this.addProduct)) {
+          return;
+        }
+
         handleInlineProductSelectKeydown(event, row, rowIndex, this.handleSelectProduct, () =>
           this.$nextTick(),
         );
@@ -705,11 +718,25 @@
       taxPriceInput(_row, _value) {
         this.calcSum();
       },
+      hasWarningAmount(row) {
+        return hasSheetAmountWarning(row, 'taxPrice', 'outNum');
+      },
+      getTableRowClassName({ row }) {
+        return this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
+      },
+      getCellClassName({ row, column }) {
+        return getSheetAmountCellClass(row, column.field, 'taxPrice', 'outNum');
+      },
       paidAmountInput(value) {
-        this.formData.paidAmount = value;
+        this.formData.paidAmount = sanitizeNonNegativeDecimalInput(value);
         this.paidAmountDirty = true;
       },
-      outNumInput(_value) {
+      outNumInput(row, value) {
+        if (value === undefined) {
+          this.calcSum();
+          return;
+        }
+        row.outNum = sanitizeNonNegativeDecimalInput(value);
         this.calcSum();
       },
       // 计算汇总数据
@@ -825,24 +852,21 @@
         for (let i = 0; i < validTableData.length; i++) {
           const product = validTableData[i];
 
-          if (isEmpty(product.taxPrice)) {
-            createError('第' + (i + 1) + '行商品价格不允许为空！');
-            return false;
-          }
+          if (!isEmpty(product.taxPrice)) {
+            if (!isFloat(product.taxPrice)) {
+              createError('第' + (i + 1) + '行商品价格必须是数字！');
+              return false;
+            }
 
-          if (!isFloat(product.taxPrice)) {
-            createError('第' + (i + 1) + '行商品价格必须是数字！');
-            return false;
-          }
+            if (!isFloatGeZero(product.taxPrice)) {
+              createError('第' + (i + 1) + '行商品价格不允许小于0！');
+              return false;
+            }
 
-          if (!isFloatGtZero(product.taxPrice)) {
-            createError('第' + (i + 1) + '行商品价格必须大于0！');
-            return false;
-          }
-
-          if (!isNumberPrecision(product.taxPrice, 6)) {
-            createError('第' + (i + 1) + '行商品价格最多允许6位小数！');
-            return false;
+            if (!isNumberPrecision(product.taxPrice, 6)) {
+              createError('第' + (i + 1) + '行商品价格最多允许6位小数！');
+              return false;
+            }
           }
 
           if (!isEmpty(product.outNum)) {
@@ -862,8 +886,8 @@
                 return false;
               }
             } else {
-              if (!isFloatGtZero(product.outNum)) {
-                createError('第' + (i + 1) + '行商品出库数量必须大于0！');
+              if (!isFloatGeZero(product.outNum)) {
+                createError('第' + (i + 1) + '行商品出库数量不允许小于0！');
                 return false;
               }
             }
@@ -884,11 +908,6 @@
                 return false;
               }
             }
-          } else {
-            if (!product.isFixed) {
-              createError('第' + (i + 1) + '行商品出库数量不允许为空！');
-              return false;
-            }
           }
         }
 
@@ -900,7 +919,6 @@
         return true;
       },
       buildParams() {
-        const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
         return {
           scId: this.formData.scId,
           customerId: this.formData.customerId,
@@ -910,23 +928,7 @@
           saleOrderId: this.formData.saleOrderId,
           description: this.formData.description,
           required: true,
-          products: validTableData
-            .filter((t) => isFloatGtZero(t.outNum))
-            .map((t) => {
-              const product = {
-                productId: t.productId,
-                orderNum: t.outNum,
-                description: t.description,
-                oriPrice: t.oriPrice,
-                taxPrice: t.taxPrice,
-              };
-
-              if (t.isFixed) {
-                product.saleOrderDetailId = t.id;
-              }
-
-              return product;
-            }),
+          products: buildRequiredSaleOutProducts(this.tableData),
         };
       },
       // 创建订单
@@ -1047,5 +1049,18 @@
 
   .sheet-editor-actions {
     margin-top: auto;
+  }
+
+  :deep(.vxe-body--row.sheet-price-warning-row) {
+    background-color: #ffd8d6 !important;
+  }
+
+  :deep(.sheet-price-warning-row td) {
+    border-color: #ff7875;
+  }
+
+  :deep(.vxe-body--column.sheet-zero-warning-cell),
+  :deep(.sheet-zero-warning-cell .ant-input) {
+    color: #f5222d !important;
   }
 </style>

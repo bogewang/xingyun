@@ -65,7 +65,6 @@ public class SaleOutSheetImportModel implements ExcelModel {
     /**
      * 收货数量
      */
-    @ExcelRequired
     @ExcelProperty("数量")
     private BigDecimal orderNum;
 

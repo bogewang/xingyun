@@ -123,7 +123,7 @@ export function update(data: UpdateProductVo): Promise<void> {
  * 根据ID删除
  * @param id
  */
-export function deleteById(id: string, showError: boolean = false): Promise<void> {
+export function deleteById(id: string, showError: boolean = true): Promise<void> {
   return defHttp.delete<void>(
     {
       url: baseUrl,
