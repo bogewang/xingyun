@@ -29,6 +29,7 @@ import com.lframework.xingyun.basedata.vo.product.brand.QueryProductBrandVo;
 import com.lframework.xingyun.basedata.vo.product.info.*;
 import com.lframework.xingyun.basedata.vo.product.property.realtion.CreateProductPropertyRelationVo;
 import com.lframework.xingyun.core.service.ProductDeleteReferenceChecker;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product> implements
         ProductService {
 
@@ -182,7 +184,15 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
      * @param productIds 已规范化的商品 ID 列表
      */
     private void cleanProductCacheAfterCommit(List<String> productIds) {
-        Runnable cleanAction = () -> productIds.forEach(productService::cleanCacheByKey);
+        Runnable cleanAction = () -> {
+            for (String productId : productIds) {
+                try {
+                    productService.cleanCacheByKey(productId);
+                } catch (Exception e) {
+                    log.error("商品状态更新后清理缓存失败，商品ID：{}", productId, e);
+                }
+            }
+        };
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
 
