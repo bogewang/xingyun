@@ -53,6 +53,7 @@
           <j-form-item label="成本状态">
             <a-select
               v-model:value="formData.fillAllCost"
+              class="cost-status-select"
               style="width: 140px"
               @change="handleFillAllCostChange"
             >
@@ -1237,6 +1238,11 @@
 
   .sheet-editor-actions {
     margin-top: auto;
+  }
+
+  .cost-status-select :deep(.ant-select-arrow) {
+    top: 50%;
+    transform: translateY(-50%);
   }
 
   :deep(.vxe-body--row.sheet-price-warning-row) {
