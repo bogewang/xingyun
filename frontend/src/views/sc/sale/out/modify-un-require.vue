@@ -200,9 +200,11 @@
 
           <!-- 金额 列自定义内容 -->
           <template #taxAmount_default="{ row }">
-            <span v-if="isFloatGeZero(row.taxPrice) && isFloatGeZero(row.outNum)">{{
-              getNumber(mul(row.taxPrice, row.outNum), 2)
-            }}</span>
+            <a-input
+              v-model:value="row.taxAmount"
+              class="number-input"
+              @input="(e) => taxAmountInput(row, e.target.value)"
+            />
           </template>
 
           <template #costPrice_default="{ row, rowIndex }">
@@ -336,6 +338,11 @@
   } from '@/utils/searchSelect';
   import { focusTableInput, focusVxeGridRow } from '@/utils/vxeGrid';
   import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
+  import {
+    applyManualSheetAmount,
+    clearManualSheetAmount,
+    getSheetLineAmount,
+  } from '@/utils/sheetAmountInput';
   import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import {
     getInlineProductSelectRowClass,
@@ -810,6 +817,11 @@
       },
       taxPriceInput(row, value) {
         row.taxPrice = sanitizeNonNegativeDecimalInput(value);
+        clearManualSheetAmount(row, 'outNum', 'taxPrice');
+        this.calcSum();
+      },
+      taxAmountInput(row, value) {
+        applyManualSheetAmount(row, value, 'outNum', 'taxPrice');
         this.calcSum();
       },
       selectUnit(row, unitId) {
@@ -828,6 +840,7 @@
         row.taxPrice = basePrice * rate;
         row.oriPrice = row.taxPrice;
         row.stockNum = baseStock / rate;
+        clearManualSheetAmount(row, 'outNum', 'taxPrice');
         this.calcSum();
       },
       paidAmountInput(value) {
@@ -841,10 +854,12 @@
       },
       outNumInput(row, value) {
         if (value === undefined) {
+          clearManualSheetAmount(row, 'outNum', 'taxPrice');
           this.calcSum();
           return;
         }
         row.outNum = sanitizeNonNegativeDecimalInput(value);
+        clearManualSheetAmount(row, 'outNum', 'taxPrice');
         this.calcSum();
       },
       handleFillAllCostChange(value) {
@@ -856,12 +871,12 @@
         let totalAmount = 0;
         this.tableData
           .filter((t) => {
-            return isFloatGeZero(t.taxPrice) && isFloatGeZero(t.outNum);
+            return t.manualTaxAmount || (isFloatGeZero(t.taxPrice) && isFloatGeZero(t.outNum));
           })
           .forEach((t) => {
             const num = parseFloat(t.outNum);
             totalNum = add(totalNum, num);
-            totalAmount = add(totalAmount, getNumber(mul(num, t.taxPrice), 2));
+            totalAmount = add(totalAmount, getSheetLineAmount(t, 'outNum', 'taxPrice'));
           });
 
         this.formData.totalNum = totalNum;
@@ -921,7 +936,7 @@
           records.forEach((t) => {
             t.outNum = value;
 
-            this.outNumInput(value);
+            this.outNumInput(t, value);
           });
         });
       },
