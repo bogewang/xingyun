@@ -194,6 +194,10 @@
             }}</span>
           </template>
 
+          <template #productionDate_default="{ row, rowIndex }">
+            <a-input :ref="'productionDateInputRef' + rowIndex" v-model:value="row.productionDate" />
+          </template>
+
           <!-- 备注 列自定义内容 -->
           <template #description_default="{ row, rowIndex }">
             <a-input :ref="'descriptionInputRef' + rowIndex" v-model:value="row.description" />
@@ -419,6 +423,7 @@
             slots: { default: 'taxAmount_default' },
           },
           // { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
+          { field: 'productionDate', title: '生产日期', width: 120, slots: { default: 'productionDate_default' } },
           {
             field: 'description',
             title: '备注',
@@ -999,6 +1004,7 @@
               unitId: t.unitId,
               purchasePrice: t.purchasePrice,
               receiveNum: t.receiveNum,
+              productionDate: t.productionDate,
               description: t.description,
             };
 

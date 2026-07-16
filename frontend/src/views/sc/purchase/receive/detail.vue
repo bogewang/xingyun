@@ -152,6 +152,7 @@ export default defineComponent({
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'purchasePrice', title: '采购价（元）', align: 'right', width: 120 },
+          { field: 'productionDate', title: '生产日期', width: 120 },
           {
             field: 'orderNum',
             title: '数量',

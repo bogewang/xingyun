@@ -204,6 +204,11 @@ export interface OrderDetailBo {
   receiveNum: number;
 
   /**
+   * 生产日期
+   */
+  productionDate: string;
+
+  /**
    * 采购价
    */
   purchasePrice: number;

@@ -393,6 +393,12 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
     private BigDecimal taxRate;
 
     /**
+     * 生产日期
+     */
+    @ApiModelProperty("生产日期")
+    private String productionDate;
+
+    /**
      * 备注
      */
     @ApiModelProperty("备注")
@@ -476,6 +482,7 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
           productStock == null ? BigDecimal.ZERO
               : NumberUtil.getNumber(NumberUtil.getDefaultValue(productStock.getTaxPrice()), 6);
       this.stockNum = productStock == null ? BigDecimal.ZERO : productStock.getStockNum().divide(unitRate, 6, RoundingMode.HALF_UP);
+      this.productionDate = dto.getProductionDate();
     }
   }
 }

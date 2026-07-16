@@ -194,5 +194,10 @@ public class ReceiveSheetFullDto implements BaseDto, Serializable {
      * 采购订单明细ID
      */
     private String purchaseOrderDetailId;
+
+    /**
+     * 生产日期
+     */
+    private String productionDate;
   }
 }

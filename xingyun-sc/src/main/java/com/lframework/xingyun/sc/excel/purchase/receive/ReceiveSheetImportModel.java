@@ -123,6 +123,12 @@ public class ReceiveSheetImportModel implements ExcelModel {
   private BigDecimal purchasePrice;
 
   /**
+   * 生产日期
+   */
+  @ExcelProperty("生产日期")
+  private String productionDate;
+
+  /**
    * 是否赠品
    */
   // @ExcelRequired

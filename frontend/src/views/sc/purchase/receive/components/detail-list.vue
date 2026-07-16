@@ -220,6 +220,7 @@
             formatter: ({ cellValue }) => SETTLE_STATUS.getDesc(cellValue),
           },
           { field: 'description', title: '备注', width: 200 },
+          { field: 'productionDate', title: '生产日期', width: 120 },
         ],
         proxyConfig: {
           props: {
