@@ -46,7 +46,6 @@
                   </a-select>
                 </j-form-item>
 
-                <template #more>
                   <j-form-item label="客户">
                     <a-select
                       v-model:value="searchFormData.customerId"
@@ -76,57 +75,6 @@
                       @search="loadCreateByOptions"
                       @change="onCreateByChange"
                     />
-                  </j-form-item>
-
-                  <j-form-item label="审核人">
-                    <a-select
-                      v-model:value="searchFormData.approveBy"
-                      allow-clear
-                      show-search
-                      :filter-option="filterSelectOption"
-                      :options="approveByOptions"
-                      placeholder="请选择审核人"
-                      @focus="loadApproveByOptions()"
-                      @search="loadApproveByOptions"
-                      @change="onApproveByChange"
-                    />
-                  </j-form-item>
-
-                  <j-form-item label="审核日期">
-                    <a-range-picker
-                      v-model:value="approveDateRange"
-                      value-format="YYYY-MM-DD"
-                      :placeholder="['开始日期', '结束日期']"
-                    />
-                  </j-form-item>
-
-                  <j-form-item label="状态">
-                    <a-select v-model:value="searchFormData.status" placeholder="全部" allow-clear>
-                      <a-select-option
-                        v-for="item in RECEIVE_SHEET_STATUS.values()"
-                        :key="item.code"
-                        :value="item.code"
-                        >{{ item.desc }}</a-select-option
-                      >
-                    </a-select>
-                  </j-form-item>
-                  <j-form-item label="销售订单号">
-                    <a-input v-model:value="searchFormData.saleOrderCode" allow-clear />
-                  </j-form-item>
-
-                  <j-form-item label="结算状态">
-                    <a-select
-                      v-model:value="searchFormData.settleStatus"
-                      placeholder="全部"
-                      allow-clear
-                    >
-                      <a-select-option
-                        v-for="item in SETTLE_STATUS.values()"
-                        :key="item.code"
-                        :value="item.code"
-                        >{{ item.desc }}</a-select-option
-                      >
-                    </a-select>
                   </j-form-item>
 
                   <j-form-item label="已付金额">
@@ -164,7 +112,6 @@
                       />
                     </a-space>
                   </j-form-item>
-                </template>
               </j-form>
             </j-border>
           </template>

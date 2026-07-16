@@ -40,7 +40,6 @@
                 </a-checkbox>
               </j-form-item>
 
-              <template #more>
                 <j-form-item label="是否已录采购">
                   <a-select
                     v-model:value="searchFormData.hasCostPrice"
@@ -101,7 +100,6 @@
                     <a-select-option :value="false">未付完</a-select-option>
                   </a-select>
                 </j-form-item>
-              </template>
             </j-form>
           </j-border>
         </template>
