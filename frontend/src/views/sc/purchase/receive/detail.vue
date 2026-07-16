@@ -232,13 +232,11 @@ export default defineComponent({
               approveTime: res.approveTime,
               refuseReason: res.refuseReason,
               totalNum: 0,
-              totalAmount: 0,
+              totalAmount: res.totalAmount || 0,
               paidAmount: res.paidAmount || 0,
-              unpaidAmount: 0,
+              unpaidAmount: sub(res.totalAmount || 0, res.paidAmount || 0),
             };
             this.tableData = res.details || [];
-
-            this.calcSum();
           })
           .finally(() => {
             this.loading = false;
