@@ -89,11 +89,6 @@
               <a-input v-model:value="formData.retailPrice" allow-clear/>
             </a-form-item>
           </a-col>
-          <a-col :md="6" :sm="24">
-            <a-form-item label="询价商品" name="inquiryProduct">
-              <a-checkbox v-model:checked="formData.inquiryProduct">询价商品</a-checkbox>
-            </a-form-item>
-          </a-col>
         </a-row>
         <a-row v-if="formData.multiUnitEnabled">
           <a-col :span="24"
@@ -199,6 +194,11 @@
             </a-form-item>
           </a-col>
 
+          <a-col :md="6" :sm="24">
+            <a-form-item label="询价商品" name="inquiryProduct">
+              <a-checkbox v-model:checked="formData.inquiryProduct" />
+            </a-form-item>
+          </a-col>
           <a-col :md="6" :sm="24">
             <a-form-item label="别名" name="alias">
               <a-textarea v-model:value="formData.alias" allow-clear :rows="2"/>
