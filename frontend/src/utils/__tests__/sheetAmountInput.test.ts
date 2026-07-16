@@ -27,6 +27,13 @@ describe('单据明细金额输入', () => {
     expect(getSheetLineAmount(row, 'outNum', 'taxPrice')).toBe(79.8);
   });
 
+  it('自动金额计算时同步回写金额字段供输入框展示', () => {
+    const row = { outNum: '30', taxPrice: '2.666667', taxAmount: '' };
+
+    expect(getSheetLineAmount(row, 'outNum', 'taxPrice')).toBe(80);
+    expect(row.taxAmount).toBe('80');
+  });
+
   it('非法输入保留上一次金额且零数量不反算单价', () => {
     const row = { outNum: '0', taxPrice: '12', taxAmount: '8.5', manualTaxAmount: true };
 

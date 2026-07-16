@@ -60,5 +60,7 @@ export function getSheetLineAmount(
     row.lastValidTaxAmount = initialAmount === '' ? String(amount) : initialAmount;
   }
 
+  row.taxAmount = String(amount);
+
   return amount;
 }
