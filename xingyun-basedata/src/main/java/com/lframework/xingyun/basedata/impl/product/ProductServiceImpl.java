@@ -185,6 +185,26 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         return isNew ? Boolean.FALSE : existingInquiryProduct;
     }
 
+    /**
+     * 解析导入文件中的询价商品文本。
+     *
+     * @param inquiryProductText 导入的文本值
+     * @param rowIndex Excel 行号
+     * @return 解析后的布尔值；空白时返回 {@code null}
+     */
+    static Boolean parseInquiryProduct(String inquiryProductText, int rowIndex) {
+        if (StringUtil.isBlank(inquiryProductText)) {
+            return null;
+        }
+        if ("是".equals(inquiryProductText.trim())) {
+            return Boolean.TRUE;
+        }
+        if ("否".equals(inquiryProductText.trim())) {
+            return Boolean.FALSE;
+        }
+        throw new DefaultClientException("第" + rowIndex + "行“询价商品”只能填写“是”或“否”");
+    }
+
     @OpLog(type = BaseDataOpLogType.class, name = "新增商品，ID：{}, 编号：{}", params = { "#_result",
             "#vo.code" }, autoSaveParams = true)
     @Transactional(rollbackFor = Exception.class)
@@ -740,6 +760,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             if (isNew) {
                 record.setId(IdUtil.getId());
             }
+            record.setInquiryProduct(resolveInquiryProduct(data.getInquiryProductValue(),
+                    data.getExistingInquiryProduct(), isNew));
             record.setTaxRate(data.getTaxRate() == null ? BigDecimal.ZERO : data.getTaxRate());
             record.setSaleTaxRate(data.getSaleTaxRate() == null ? BigDecimal.ZERO : data.getSaleTaxRate());
             record.setAvailable(Boolean.TRUE);
@@ -879,6 +901,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         ProductImportModel data = list.get(i);
         int rowIndex = (i + 2);
         checkCode(checkCodeSet, checkCodeRowMap, availableCodes, data, rowIndex);
+        data.setInquiryProductValue(parseInquiryProduct(data.getInquiryProductText(), rowIndex));
 
         if (StringUtil.isBlank(data.getName())) {
             throw new DefaultClientException("第" + rowIndex + "行“名称”不能为空");
@@ -991,7 +1014,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         checkSkuCodeSet.add(data.getSkuCode());
         checkSkuCodeRowMap.put(data.getSkuCode(), rowIndex);
         if (availableSkuCodes.containsKey(data.getSkuCode()) && data.getId() == null) {
-            data.setId(availableSkuCodes.get(data.getSkuCode()).getId());
+            setExistingProduct(data, availableSkuCodes.get(data.getSkuCode()));
         }
     }
 
@@ -1010,7 +1033,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         checkCodeSet.add(data.getCode());
         checkCodeRowMap.put(data.getCode(), rowIndex);
         if (availableCodes.containsKey(data.getCode())) {
-            data.setId(availableCodes.get(data.getCode()).getId());
+            setExistingProduct(data, availableCodes.get(data.getCode()));
         }
     }
 
@@ -1030,9 +1053,20 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                     "第" + rowIndex + "行“名称+规格+单位”与第" + existsRowIndex + "行重复");
         }
         if (availableNameSpecUnitKeys.containsKey(key) && data.getId() == null) {
-            data.setId(availableNameSpecUnitKeys.get(key).getId());
+            setExistingProduct(data, availableNameSpecUnitKeys.get(key));
         }
         checkNameSpecUnitMap.put(key, rowIndex);
+    }
+
+    /**
+     * 记录导入行对应的既有商品，供空询价商品列更新时保留原值。
+     *
+     * @param data 导入行数据
+     * @param product 既有商品
+     */
+    private void setExistingProduct(ProductImportModel data, Product product) {
+        data.setId(product.getId());
+        data.setExistingInquiryProduct(product.getInquiryProduct());
     }
 
     private String generateProductCode(Set<String> checkCodeSet, Set<String> usedCodes) {
