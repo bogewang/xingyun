@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 
 $ROOT = git rev-parse --show-toplevel
 $FRONTEND = Join-Path $ROOT "frontend"
-# 后端 Java 就是当前目录，不再单独设 BACKEND 变量
+$BACKEND = Join-Path $ROOT "backend"
 
 # --------------------------
 # 1. 前端 Vue3 格式化
@@ -18,11 +18,11 @@ if (Test-Path $FRONTEND) {
 }
 
 # --------------------------
-# 2. 后端 Java 格式化（当前目录）
+# 2. 后端 Java 格式化
 # --------------------------
-Write-Host "Formatting Java backend in current directory..."
-Set-Location $ROOT
+Write-Host "Formatting Java backend..."
+Set-Location $BACKEND
 # Maven Spotless 格式化 Java
-.\mvnw.cmd spotless:apply
+mvn spotless:apply
 
 Write-Host "✅ Auto-format completed."

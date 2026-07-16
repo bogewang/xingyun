@@ -1,16 +1,16 @@
 ### 后端模块布局
 
-Maven 多模块项目（根 `pom.xml` packaging=pom）。所有模块均扫描自 `com.lframework.xingyun`：
+Maven 多模块项目（`backend/pom.xml` packaging=pom）。所有模块均扫描自 `com.lframework.xingyun`：
 
 | 模块 | 用途 |
 |---|---|
-| `xingyun-api` | **主应用入口**。包含 `XingYunApiApplication`、Spring 配置、Flyway 数据库迁移、Swagger 配置 |
-| `xingyun-core` | 核心组件、工具类、消息队列 |
-| `xingyun-basedata` | 基础数据：仓库、供应商、客户、商品分类、品牌、属性 |
-| `xingyun-sc` | 供应链：采购订单、销售订单、零售订单、库存管理 |
-| `xingyun-chart` | 图表与报表 |
-| `xingyun-settle` | 结算：供应商发票、预付款、对账、结算单 |
-| `xingyun-comp` | 对照/竞品模块 |
+| `backend/xingyun-api` | **主应用入口**。包含 `XingYunApiApplication`、Spring 配置、Flyway 数据库迁移、Swagger 配置 |
+| `backend/xingyun-core` | 核心组件、工具类、消息队列 |
+| `backend/xingyun-basedata` | 基础数据：仓库、供应商、客户、商品分类、品牌、属性 |
+| `backend/xingyun-sc` | 供应链：采购订单、销售订单、零售订单、库存管理 |
+| `backend/xingyun-chart` | 图表与报表 |
+| `backend/xingyun-settle` | 结算：供应商发票、预付款、对账、结算单 |
+| `backend/xingyun-comp` | 对照/竞品模块 |
 
 ### 后端包约定（各模块通用）
 
@@ -48,8 +48,8 @@ Maven 多模块项目（根 `pom.xml` packaging=pom）。所有模块均扫描�
 
 多租户**始终启用**（不再支持关闭）。数据库迁移分为：
 
-- `xingyun-api/src/main/resources/db/migration/platform/` — 平台级 schema（租户间共享）
-- `xingyun-api/src/main/resources/db/migration/tenant/` — 租户级 schema
+- `backend/xingyun-api/src/main/resources/db/migration/platform/` — 平台级 schema（租户间共享）
+- `backend/xingyun-api/src/main/resources/db/migration/tenant/` — 租户级 schema
 
 主库数据源名称为 **`master`**（在 `spring.datasource.dynamic.primary` 中配置）。
 
