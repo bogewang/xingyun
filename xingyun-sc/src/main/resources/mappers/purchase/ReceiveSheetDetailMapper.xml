@@ -12,6 +12,7 @@
         <result column="description" property="description"/>
         <result column="order_no" property="orderNo"/>
         <result column="return_num" property="returnNum"/>
+        <result column="production_date" property="productionDate"/>
     </resultMap>
     <resultMap id="QueryReceiveSheetDetailDto" type="com.lframework.xingyun.sc.dto.purchase.receive.QueryReceiveSheetDetailDto">
         <id column="id" property="id"/>
@@ -32,6 +33,7 @@
             d.description,
             d.order_no,
             d.return_num
+            , d.production_date
         FROM tbl_receive_sheet_detail AS d
     </sql>
     <update id="addReturnNum">

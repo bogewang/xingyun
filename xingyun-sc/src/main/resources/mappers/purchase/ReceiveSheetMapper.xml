@@ -64,6 +64,7 @@
             <result column="detail_description" property="description"/>
             <result column="detail_order_no" property="orderNo"/>
             <result column="detail_purchase_order_detail_id" property="purchaseOrderDetailId"/>
+            <result column="detail_production_date" property="productionDate"/>
         </collection>
     </resultMap>
 
@@ -154,6 +155,7 @@
             d.description AS detail_description,
             d.order_no AS detail_order_no,
             d.purchase_order_detail_id AS detail_purchase_order_detail_id
+            , d.production_date AS detail_production_date
         FROM tbl_receive_sheet AS r
         LEFT JOIN tbl_receive_sheet_detail AS d ON d.sheet_id = r.id
     </sql>
@@ -204,6 +206,7 @@
             d.tax_amount,
             d.is_gift,
             d.description,
+            d.production_date,
             r.settle_status,
             r.create_by,
             r.create_time,

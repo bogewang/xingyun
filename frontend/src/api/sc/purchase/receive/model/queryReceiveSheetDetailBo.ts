@@ -22,6 +22,7 @@ export interface QueryReceiveSheetDetailBo {
   taxPrice: number;
   taxAmount: number;
   isGift: boolean;
+  productionDate: string;
   description: string;
   settleStatus: number;
   createBy: string;

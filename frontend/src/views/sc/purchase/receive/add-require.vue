@@ -205,6 +205,10 @@
           <span v-if="isFloatGeZero(row.purchasePrice) && isFloatGeZero(row.receiveNum)">{{
             getNumber(mul(row.purchasePrice, row.receiveNum), 2)
           }}</span>
+          </template>
+
+        <template #productionDate_default="{ row }">
+          <a-input v-model:value="row.productionDate" />
         </template>
 
         <!-- 备注 列自定义内容 -->
@@ -428,6 +432,7 @@
             slots: { default: 'taxAmount_default' },
           },
           { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
+          { field: 'productionDate', title: '生产日期', width: 120, slots: { default: 'productionDate_default' } },
           {
             field: 'description',
             title: '备注',
@@ -929,6 +934,7 @@
             const product = {
               productId: t.productId,
               receiveNum: t.receiveNum,
+              productionDate: t.productionDate,
               description: t.description,
             };
 

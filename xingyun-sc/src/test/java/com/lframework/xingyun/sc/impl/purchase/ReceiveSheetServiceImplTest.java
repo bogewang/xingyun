@@ -53,6 +53,19 @@ class ReceiveSheetServiceImplTest {
     Assert.assertTrue(errors.contains("第2行“单价”最多允许6位小数"));
   }
 
+  @Test
+  void validateProductionDateShouldRequireStrictCalendarDate() {
+    Assert.assertTrue(ReceiveSheetServiceImpl.validateProductionDate(null, "第2行").isEmpty());
+    Assert.assertTrue(
+        ReceiveSheetServiceImpl.validateProductionDate("2024.02.29", "第2行").isEmpty());
+    Assert.assertEquals(
+        ReceiveSheetServiceImpl.validateProductionDate("2026.02.30", "第2行").get(0),
+        "第2行商品生产日期格式错误，应为yyyy.MM.dd且必须是有效日期");
+    Assert.assertEquals(
+        ReceiveSheetServiceImpl.validateProductionDate("2026-07-16", "第2行").get(0),
+        "第2行商品生产日期格式错误，应为yyyy.MM.dd且必须是有效日期");
+  }
+
   private ReceiveSheetImportModel createModel(BigDecimal receiveNum, BigDecimal purchasePrice) {
     ReceiveSheetImportModel model = new ReceiveSheetImportModel();
     model.setSeq(2);

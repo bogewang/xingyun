@@ -175,6 +175,7 @@
           { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
           { field: 'purchasePrice', title: '采购价（元）', align: 'right', width: 120 },
+          { field: 'productionDate', title: '生产日期', width: 120 },
           { field: 'taxCostPrice', title: '含税成本价（元）', align: 'right', width: 140 },
           { field: 'stockNum', title: '库存数量', align: 'right', width: 100 },
           {

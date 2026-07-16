@@ -35,6 +35,11 @@ export interface ReceiveProductVo {
   receiveNum: number;
 
   /**
+   * 生产日期
+   */
+  productionDate: string;
+
+  /**
    * 备注
    */
   description: string;

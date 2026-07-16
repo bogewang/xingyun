@@ -73,6 +73,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -84,6 +85,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter PRODUCTION_DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("uuuu.MM.dd").withResolverStyle(ResolverStyle.STRICT);
 
     @Autowired
     private ReceiveSheetDetailService receiveSheetDetailService;
@@ -624,6 +627,11 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         BigDecimal giftNum = BigDecimal.ZERO;
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (ReceiveProductVo productVo : vo.getProducts()) {
+            List<String> productionDateErrors = validateProductionDate(productVo.getProductionDate(),
+                    "第" + productVo.getSeq() + "行");
+            if (!productionDateErrors.isEmpty()) {
+                throw new DefaultClientException(productionDateErrors.get(0));
+            }
             Product product = productService.findById(productVo.getProductId());
             if (product == null) {
                 throw new InputErrorException("第" + productVo.getSeq() + "行商品不存在！");
@@ -661,6 +669,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
                     : productVo.getDescription());
             detail.setOrderNo(productVo.getSeq());
             detail.setActualDate(productVo.getActualDate());
+            detail.setProductionDate(StringUtils.trimToNull(productVo.getProductionDate()));
             receiveSheetDetailService.save(detail);
             updateProductPrice(product, detail);
             productLatestPriceCacheService.updateLatestPrice(product.getId(), null,
@@ -963,7 +972,23 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         if (data.getPurchasePrice() != null && !NumberUtil.isNumberPrecision(data.getPurchasePrice(), 6)) {
             errors.add("第" + rowIndex + "行“单价”最多允许6位小数");
         }
+        errors.addAll(validateProductionDate(data.getProductionDate(), "第" + rowIndex + "行"));
         return errors;
+    }
+
+    /**
+     * 校验生产日期格式和日历有效性。
+     */
+    static List<String> validateProductionDate(String productionDate, String errorPrefix) {
+        if (StringUtils.isBlank(productionDate)) {
+            return Lists.newArrayList();
+        }
+        try {
+            LocalDate.parse(productionDate, PRODUCTION_DATE_FORMATTER);
+            return Lists.newArrayList();
+        } catch (DateTimeParseException ex) {
+            return Lists.newArrayList(errorPrefix + "商品生产日期格式错误，应为yyyy.MM.dd且必须是有效日期");
+        }
     }
 
     private String buildProductImportKey(String productName, String unit) {
