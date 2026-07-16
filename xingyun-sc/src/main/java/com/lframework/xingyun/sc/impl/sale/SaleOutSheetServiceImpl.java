@@ -594,7 +594,7 @@ public class SaleOutSheetServiceImpl extends
      * 2. 同日期同客户同商品数量累加
      * 3. 同日期同客户同商品备注去重后按出现顺序拼接
      * <p>
-     * 输出前按“日期 -> 分类 -> 商品名称”升序排序，满足导出展示要求。
+     * 输出前按“分类 -> 商品名称 -> 日期”升序排序，满足导出展示要求。
      */
     private List<SummaryRow> buildSummaryRows(List<SaleOutSheetDetail> details,
             Map<String, SaleOutSheet> sheetMap,
@@ -627,10 +627,8 @@ public class SaleOutSheetServiceImpl extends
         }
 
         return summaryMap.values().stream()
-                .sorted(Comparator.comparing((SummaryRow item) -> item.orderDate,
-                                Comparator.nullsFirst(Comparator.naturalOrder()))
-                        .thenComparing(item -> defaultString(item.categoryName))
-                        .thenComparing(item -> defaultString(item.productName)))
+                .sorted(Comparator.comparing((SummaryRow item) -> buildMarketBuySummarySortKey(
+                        item.categoryName, item.productName, item.orderDate)))
                 .collect(Collectors.toList());
     }
 
@@ -643,6 +641,30 @@ public class SaleOutSheetServiceImpl extends
      */
     static String buildMarketBuySummaryRowKey(LocalDate orderDate, String productId) {
         return String.valueOf(orderDate) + '\u0000' + String.valueOf(productId);
+    }
+
+    /**
+     * 构造买菜汇总排序键，排序顺序为品类、商品名称、日期。
+     *
+     * @param categoryName 品类名称
+     * @param productName 商品名称
+     * @param orderDate 订单日期
+     * @return 品类、商品名称和日期组合排序键
+     */
+    static String buildMarketBuySummarySortKey(String categoryName, String productName,
+            LocalDate orderDate) {
+        return defaultSortValue(categoryName) + '\u0000' + defaultSortValue(productName)
+                + '\u0000' + defaultSortValue(orderDate == null ? null : orderDate.toString());
+    }
+
+    /**
+     * 将排序字段的空值转换为空字符串。
+     *
+     * @param value 排序字段
+     * @return 非空排序字段
+     */
+    private static String defaultSortValue(String value) {
+        return value == null ? StringPool.EMPTY_STR : value;
     }
 
     /**

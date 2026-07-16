@@ -130,4 +130,20 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
 
     Assert.assertNotEquals(firstKey, secondKey);
   }
+
+  /**
+   * 验证汇总排序键按品类、商品名称、日期依次排序。
+   */
+  @Test
+  void buildMarketBuySummarySortKeyShouldOrderCategoryProductAndDate() {
+    String earlierCategory = SaleOutSheetServiceImpl.buildMarketBuySummarySortKey(
+        "A类", "商品B", LocalDate.of(2026, 7, 20));
+    String laterProduct = SaleOutSheetServiceImpl.buildMarketBuySummarySortKey(
+        "A类", "商品C", LocalDate.of(2026, 7, 19));
+    String laterCategory = SaleOutSheetServiceImpl.buildMarketBuySummarySortKey(
+        "B类", "商品A", LocalDate.of(2026, 7, 1));
+
+    Assert.assertTrue(earlierCategory.compareTo(laterProduct) < 0);
+    Assert.assertTrue(laterProduct.compareTo(laterCategory) < 0);
+  }
 }
