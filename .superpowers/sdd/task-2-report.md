@@ -52,3 +52,9 @@
 - `pnpm test:unit -- src/utils/__tests__/sheetAmountInput.test.ts`：通过，4/4。
 - `pnpm exec eslint --no-cache --max-warnings 0 <公共工具、测试和四个页面>`：本次改动无新增问题；仍仅报告既有的 `add-require.vue:252`、`:328` Prettier 问题。
 - `git diff --check`：通过。
+
+## 复审修复（快捷数量与首次非法输入）
+
+- 关联采购入库新增、修改的 `receiveNumInput` 改为先写入并清理数量，再回填自动 `taxAmount`；快捷设置数量复用该方法，因此不再使用旧数量计算金额。
+- `getSheetLineAmount` 在首次计算自动金额时初始化 `lastValidTaxAmount`：优先缓存初始合法 `taxAmount`，否则缓存数量 × 单价的自动金额。新行、加载行和选单行在首次汇总/计算后都有合法回退值。
+- RED：新增“初始合法金额首次输入 `1e3`/`abc`/`-1`”测试后，5 项中该测试失败，收到未回退的 `1e3`。GREEN：实现首次缓存后，聚焦测试 5/5 通过；`git diff --check` 通过。

@@ -54,4 +54,16 @@ describe('单据明细金额输入', () => {
       expect(row.purchasePrice).toBe(26.666667);
     });
   });
+
+  it('初始合法金额首次输入非法值时回退到自动缓存金额', () => {
+    ['1e3', 'abc', '-1'].forEach((invalidAmount) => {
+      const row = { receiveNum: '3', purchasePrice: 26.666667, taxAmount: '80' };
+
+      getSheetLineAmount(row, 'receiveNum', 'purchasePrice');
+      row.taxAmount = invalidAmount;
+      applyManualSheetAmount(row, invalidAmount, 'receiveNum', 'purchasePrice');
+
+      expect(row.taxAmount).toBe('80');
+    });
+  });
 });

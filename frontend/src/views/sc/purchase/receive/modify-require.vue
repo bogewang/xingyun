@@ -875,12 +875,13 @@
         this.calcSum();
       },
       receiveNumInput(row, value) {
-        clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
         if (value === undefined) {
+          clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
           this.calcSum();
           return;
         }
         row.receiveNum = sanitizeNonNegativeDecimalInput(value);
+        clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
         this.calcSum();
       },
       // 计算汇总数据

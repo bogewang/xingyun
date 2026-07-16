@@ -49,5 +49,11 @@ export function getSheetLineAmount(
     return Number(row.taxAmount || 0);
   }
 
-  return getNumber(mul(row[quantityField] || 0, row[priceField] || 0), 2);
+  const amount = getNumber(mul(row[quantityField] || 0, row[priceField] || 0), 2);
+  if (row.lastValidTaxAmount === undefined) {
+    const initialAmount = sanitizeNonNegativeDecimalInput(row.taxAmount, String(amount));
+    row.lastValidTaxAmount = initialAmount === '' ? String(amount) : initialAmount;
+  }
+
+  return amount;
 }
