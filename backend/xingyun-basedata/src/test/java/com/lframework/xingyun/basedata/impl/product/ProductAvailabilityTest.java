@@ -13,6 +13,8 @@ import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.vo.product.info.UpdateProductAvailableVo;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
@@ -70,7 +72,9 @@ class ProductAvailabilityTest {
 
         service.assertAvailable(Arrays.asList("product-1", " ", null, "product-1"));
 
-        verify(mapper, times(1)).selectList(any());
+        ArgumentCaptor<Wrapper<Product>> wrapperCaptor = ArgumentCaptor.forClass(Wrapper.class);
+        verify(mapper, times(1)).selectList(wrapperCaptor.capture());
+        assertEquals(Collections.singletonList("product-1"), extractWrapperValues(wrapperCaptor.getValue()));
     }
 
     @Test
@@ -91,6 +95,37 @@ class ProductAvailabilityTest {
 
         verify(mapper, times(1)).update(isNull(), any(LambdaUpdateWrapper.class));
         assertEquals(Arrays.asList("product-1", "product-2"), recordingProductService.getCleanCacheKeys());
+    }
+
+    @Test
+    void shouldCleanCacheAfterTransactionCommit() throws Exception {
+        ProductMapper mapper = mock(ProductMapper.class);
+        when(mapper.update(isNull(), any(LambdaUpdateWrapper.class))).thenReturn(1);
+
+        RecordingProductService recordingProductService = new RecordingProductService();
+        ProductServiceImpl service = new ProductServiceImpl();
+        setBaseMapper(service, mapper);
+        setProductService(service, recordingProductService.proxy());
+
+        UpdateProductAvailableVo vo = new UpdateProductAvailableVo();
+        vo.setIds(Arrays.asList("product-1", "product-2", "product-1"));
+        vo.setAvailable(Boolean.TRUE);
+
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            service.updateAvailable(vo);
+
+            assertEquals(Collections.emptyList(), recordingProductService.getCleanCacheKeys());
+            assertEquals(1, TransactionSynchronizationManager.getSynchronizations().size());
+
+            for (TransactionSynchronization synchronization : TransactionSynchronizationManager.getSynchronizations()) {
+                synchronization.afterCommit();
+            }
+
+            assertEquals(Arrays.asList("product-1", "product-2"), recordingProductService.getCleanCacheKeys());
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
     }
 
     /**
@@ -136,6 +171,7 @@ class ProductAvailabilityTest {
      * @return 参数值列表
      */
     private List<Object> extractWrapperValues(Wrapper<Product> wrapper) {
+        wrapper.getSqlSegment();
         return new ArrayList<>(((AbstractWrapper<Product, ?, ?>) wrapper).getParamNameValuePairs().values());
     }
 

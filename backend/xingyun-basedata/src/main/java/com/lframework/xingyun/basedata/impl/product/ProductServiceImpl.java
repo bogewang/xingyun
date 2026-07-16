@@ -37,6 +37,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -140,9 +142,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         getBaseMapper().update(null, Wrappers.lambdaUpdate(Product.class)
                 .in(Product::getId, productIds)
                 .set(Product::getAvailable, vo.getAvailable()));
-        for (String productId : productIds) {
-            productService.cleanCacheByKey(productId);
-        }
+        cleanProductCacheAfterCommit(productIds);
     }
 
     /**
@@ -174,6 +174,26 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             return Collections.emptyList();
         }
         return productIds.stream().filter(StringUtil::isNotBlank).map(String::trim).distinct().collect(Collectors.toList());
+    }
+
+    /**
+     * 在事务提交后清理商品缓存；非事务场景下立即清理，避免测试或直接调用时遗漏缓存淘汰。
+     *
+     * @param productIds 已规范化的商品 ID 列表
+     */
+    private void cleanProductCacheAfterCommit(List<String> productIds) {
+        Runnable cleanAction = () -> productIds.forEach(productService::cleanCacheByKey);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+
+                @Override
+                public void afterCommit() {
+                    cleanAction.run();
+                }
+            });
+            return;
+        }
+        cleanAction.run();
     }
 
     @Cacheable(value = Product.CACHE_NAME, key = "@cacheVariables.tenantId() + #id", unless = "#result == null")
