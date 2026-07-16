@@ -838,7 +838,7 @@
         );
       },
       purchasePriceInput(_row, _value) {
-        clearManualSheetAmount(_row);
+        clearManualSheetAmount(_row, 'receiveNum', 'purchasePrice');
         this.calcSum();
       },
       taxAmountInput(row, value) {
@@ -857,7 +857,6 @@
       selectUnit(row, unitId) {
         const unit = (row.units || []).find((item) => item.id === unitId);
         if (!unit) return;
-        clearManualSheetAmount(row);
         const rate = Number(unit.conversionRate) || 1;
         const oldRate = Number(row.conversionRate) || 1;
         const baseStock = Number(row.baseStockNum ?? row.stockNum) * oldRate;
@@ -872,10 +871,11 @@
         row.unit = unit.unitName;
         row.purchasePrice = basePrice * rate;
         row.stockNum = baseStock / rate;
+        clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
         this.calcSum();
       },
       receiveNumInput(row, value) {
-        clearManualSheetAmount(row);
+        clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
         if (value === undefined) {
           this.calcSum();
           return;
@@ -1071,11 +1071,13 @@
           orderDate: this.formData.orderDate || '',
           receiveDate: this.formData.receiveDate,
           paidAmount: 0,
+          totalAmount: this.formData.totalAmount,
           purchaseOrderId: this.formData.purchaseOrder.id,
           description: this.formData.description,
           products: validTableData.map((t) => {
             const product = {
               productId: t.productId,
+              purchasePrice: t.purchasePrice,
               unit: t.unit,
               unitId: t.unitId,
               receiveNum: t.receiveNum,

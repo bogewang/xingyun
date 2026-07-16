@@ -755,8 +755,8 @@
         this.paidAmountDirty = true;
       },
       purchasePriceInput(row, value) {
-        clearManualSheetAmount(row);
         row.purchasePrice = sanitizeNonNegativeDecimalInput(value);
+        clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
         this.calcSum();
       },
       taxAmountInput(row, value) {
@@ -766,7 +766,6 @@
       selectUnit(row, unitId) {
         const unit = (row.units || []).find((item) => item.id === unitId);
         if (!unit) return;
-        clearManualSheetAmount(row);
         const rate = Number(unit.conversionRate) || 1;
         const oldRate = Number(row.conversionRate) || 1;
         const baseStock = Number(row.baseStockNum ?? row.stockNum) * oldRate;
@@ -781,6 +780,7 @@
         row.unit = unit.unitName;
         row.purchasePrice = basePrice * rate;
         row.stockNum = baseStock / rate;
+        clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
         this.calcSum();
       },
       hasWarningAmount(row) {
@@ -793,12 +793,13 @@
         return this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
       },
       receiveNumInput(row, value) {
-        clearManualSheetAmount(row);
         if (value === undefined) {
+          clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
           this.calcSum();
           return;
         }
         row.receiveNum = sanitizeNonNegativeDecimalInput(value);
+        clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
         this.calcSum();
       },
       // 计算汇总数据

@@ -718,7 +718,7 @@
         );
       },
       purchasePriceInput(_row, _value) {
-        clearManualSheetAmount(_row);
+        clearManualSheetAmount(_row, 'receiveNum', 'purchasePrice');
         this.calcSum();
       },
       taxAmountInput(row, value) {
@@ -739,7 +739,7 @@
         this.paidAmountDirty = true;
       },
       receiveNumInput(row, value) {
-        clearManualSheetAmount(row);
+        clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
         if (value === undefined) {
           this.calcSum();
           return;
@@ -937,12 +937,14 @@
           orderDate: this.formData.orderDate || '',
           receiveDate: this.formData.receiveDate,
           paidAmount: this.formData.paidAmount,
+          totalAmount: this.formData.totalAmount,
           purchaseOrderId: this.formData.purchaseOrderId,
           description: this.formData.description,
           required: true,
           products: validTableData.map((t) => {
             const product = {
               productId: t.productId,
+              purchasePrice: t.purchasePrice,
               receiveNum: t.receiveNum,
               description: t.description,
             };

@@ -625,7 +625,6 @@
       selectUnit(row, unitId) {
         const unit = (row.units || []).find((item) => item.id === unitId);
         if (unit) {
-          clearManualSheetAmount(row);
           if (row.baseStockNum === undefined || row.baseStockNum === null) {
             row.baseStockNum = row.stockNum;
           }
@@ -633,6 +632,7 @@
           row.unit = unit.unitName;
           row.purchasePrice = mul(row.basePurchasePrice || 0, unit.conversionRate);
           row.stockNum = getNumber(div(row.baseStockNum || 0, unit.conversionRate || 1), 6);
+          clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
           this.calcSum();
         }
       },
@@ -715,8 +715,8 @@
         this.totalAmountDirty = true;
       },
       purchasePriceInput(row, value) {
-        clearManualSheetAmount(row);
         row.purchasePrice = sanitizeNonNegativeDecimalInput(value);
+        clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
         this.calcSum();
       },
       taxAmountInput(row, value) {
@@ -728,12 +728,13 @@
         this.paidAmountDirty = true;
       },
       receiveNumInput(row, value) {
-        clearManualSheetAmount(row);
         if (value === undefined) {
+          clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
           this.calcSum();
           return;
         }
         row.receiveNum = sanitizeNonNegativeDecimalInput(value);
+        clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
         this.calcSum();
       },
       // 计算汇总数据

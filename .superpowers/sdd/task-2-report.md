@@ -33,3 +33,22 @@
 
 - 任务简报指定的 `pnpm lint -- <文件>` 会被 Turbo 当作任务名解析并失败；已使用直接 ESLint 命令完成等价文件级检查。
 - 全文件 ESLint 仍受 `add-require.vue` 两个既有 Prettier 问题影响，未修改它们以保持本任务范围聚焦。
+
+## 审查修复（P1）
+
+### 修复内容
+
+- 关联采购入库新增与修改的 `products` 显式加入 `purchasePrice`，并提交页面已计算的 `totalAmount`；仍只组装后端字段，未传递 `manualTaxAmount` 或 `lastValidTaxAmount`。
+- `clearManualSheetAmount` 现在接收数量、单价字段，清除手工状态后立即把 `row.taxAmount` 回填为数量 × 单价的两位精度自动金额。四个页面的数量、采购价、单位切换与批量路径都在最终值赋值后调用它。
+- 公共金额工具新增 `lastValidTaxAmount` 缓存。即使 Vue `v-model` 已把 `row.taxAmount` 覆盖成非法输入，`applyManualSheetAmount` 也会使用缓存回退到上次合法金额；该临时字段和手工标识均不会进入显式请求参数。
+
+### RED-GREEN 证据
+
+- RED：扩展 `sheetAmountInput.test.ts` 后执行 `pnpm test:unit -- src/utils/__tests__/sheetAmountInput.test.ts`，4 个测试中 2 个失败：清除手工状态未回填自动金额，且 `v-model` 覆盖为 `1e3` 后未回退到 `80`。
+- GREEN：实现自动金额回填与合法金额缓存后，同一命令通过，1 个文件、4 个测试全部通过。回退测试覆盖 `1e3`、`abc`、`-1`。
+
+### 修复后验证
+
+- `pnpm test:unit -- src/utils/__tests__/sheetAmountInput.test.ts`：通过，4/4。
+- `pnpm exec eslint --no-cache --max-warnings 0 <公共工具、测试和四个页面>`：本次改动无新增问题；仍仅报告既有的 `add-require.vue:252`、`:328` Prettier 问题。
+- `git diff --check`：通过。

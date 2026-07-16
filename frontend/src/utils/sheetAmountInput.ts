@@ -13,7 +13,9 @@ export function applyManualSheetAmount(
   quantityField: string,
   priceField: string,
 ): void {
-  row.taxAmount = sanitizeNonNegativeDecimalInput(amount, String(row.taxAmount ?? ''));
+  const previousAmount = String(row.lastValidTaxAmount ?? row.taxAmount ?? '');
+  row.taxAmount = sanitizeNonNegativeDecimalInput(amount, previousAmount);
+  row.lastValidTaxAmount = row.taxAmount;
   row.manualTaxAmount = true;
 
   const quantity = Number(row[quantityField]);
@@ -25,8 +27,14 @@ export function applyManualSheetAmount(
 /**
  * 清除明细行的手工金额标识，恢复自动金额计算。
  */
-export function clearManualSheetAmount(row: SheetAmountRow): void {
+export function clearManualSheetAmount(
+  row: SheetAmountRow,
+  quantityField: string,
+  priceField: string,
+): void {
   delete row.manualTaxAmount;
+  row.taxAmount = getNumber(mul(row[quantityField] || 0, row[priceField] || 0), 2);
+  row.lastValidTaxAmount = String(row.taxAmount);
 }
 
 /**
