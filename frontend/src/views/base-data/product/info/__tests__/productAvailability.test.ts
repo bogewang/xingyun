@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ContentTypeEnum } from '@/enums/httpEnum';
 import * as productApi from '@/api/base-data/product/info';
+import { QueryProductBo } from '@/api/base-data/product/info/model/queryProductBo';
+import { QueryProductVo } from '@/api/base-data/product/info/model/queryProductVo';
 import { ConcurrentPromise } from '@/utils/concurrentPromise';
 import { buildProductAvailabilityRequest } from '../productAvailability';
 import BatchHandler from '../../../../../components/BatchHandler/src/BatchHandler.vue';
@@ -62,6 +64,18 @@ interface BatchMethods {
 const batchMethods = (BatchHandler as unknown as { methods: BatchMethods }).methods;
 
 describe('商品批量状态请求', () => {
+  it('全部状态使用空值，启用和禁用使用布尔值', () => {
+    const enabled: Pick<QueryProductVo, 'available'> = { available: true };
+    const disabled: Pick<QueryProductVo, 'available'> = { available: false };
+    const all: Pick<QueryProductVo, 'available'> = { available: '' };
+    const product: Pick<QueryProductBo, 'available'> = { available: true };
+
+    expect(enabled).toEqual({ available: true });
+    expect(disabled).toEqual({ available: false });
+    expect(all).toEqual({ available: '' });
+    expect(product).toEqual({ available: true });
+  });
+
   it('使用 JSON PUT 发送批量状态请求', async () => {
     const request = { ids: ['p-1'], available: true };
     httpPut.mockResolvedValue(undefined);
@@ -153,7 +167,9 @@ describe('商品批量状态请求', () => {
  * 创建批量处理组件方法测试上下文。
  * @param batchHandleFn 批量处理回调
  */
-function createBatchContext(batchHandleFn: BatchContext['batchHandleFn'] | undefined): BatchContext {
+function createBatchContext(
+  batchHandleFn: BatchContext['batchHandleFn'] | undefined,
+): BatchContext {
   const emit = vi.fn();
   const context: BatchContext = {
     loading: false,

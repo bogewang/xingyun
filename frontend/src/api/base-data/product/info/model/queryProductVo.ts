@@ -53,6 +53,7 @@ export interface QueryProductVo extends SortPageVo {
 
   /**
    * 状态
+   * 空值表示全部
    */
-  available: boolean;
+  available: boolean | '';
 }
