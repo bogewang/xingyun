@@ -27,7 +27,7 @@
             <a-select
               v-model:value="formData.fillAllCost"
               class="cost-status-select"
-              style="width: 140px"
+              style="width: 100%"
               @change="handleFillAllCostChange"
             >
               <a-select-option :value="true">已补全</a-select-option>
