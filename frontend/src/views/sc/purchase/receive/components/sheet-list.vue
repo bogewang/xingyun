@@ -290,6 +290,8 @@
   import * as configApi from '@/api/sc/purchase/config';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
+  import { printMix } from '@/mixins/print';
+  import { previewReceiveSheetPrint } from '../print';
   import { isEmpty, buildSortPageVo } from '@/utils/utils';
   import {
     buildVisibleSelectOptions,
@@ -323,7 +325,7 @@
       BatchHandler,
       SupplierSelector,
     },
-    mixins: [multiplePageMix, gridCollapseHeightMix],
+    mixins: [multiplePageMix, gridCollapseHeightMix, printMix],
     setup() {
       return {
         h,
@@ -785,6 +787,22 @@
             this.loading = false;
           });
       },
+      /**
+       * 打开采购入库打印预览。
+       *
+       * @param row 采购入库列表行
+       */
+      async printOrder(row) {
+        this.loading = true;
+
+        try {
+          await previewReceiveSheetPrint(row.id, api.print, (type, data) => {
+            return this.vgPrintPreview(type, data);
+          });
+        } finally {
+          this.loading = false;
+        }
+      },
       viewPurchaseOrderDetail(id) {
         this.purchaseOrderId = id;
         this.$refs.viewPurchaseOrderDetailDialog.openDialog();
@@ -820,6 +838,12 @@
             label: '导出明细',
             onClick: () => {
               this.exportDetails(row);
+            },
+          },
+          {
+            label: '打印',
+            onClick: () => {
+              this.printOrder(row);
             },
           },
           {

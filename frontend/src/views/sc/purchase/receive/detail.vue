@@ -83,6 +83,7 @@
       <template #footer>
         <div class="form-modal-footer">
           <a-space>
+            <a-button type="primary" :loading="loading" @click="print">打印</a-button>
             <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
             <a-button :loading="loading" @click="closeDialog">关闭</a-button>
           </a-space>
@@ -99,9 +100,9 @@ import {defineComponent} from 'vue';
 import PurchaseOrderDetail from '@/views/sc/purchase/order/detail.vue';
 import * as api from '@/api/sc/purchase/receive';
 import {printMix} from '@/mixins/print.ts';
+import { previewReceiveSheetPrint } from './print';
 import {add, getNumber, isEmpty, isFloatGeZero, mul, sub} from '@/utils/utils';
 import {RECEIVE_SHEET_STATUS} from '@/enums/biz/receiveSheetStatus';
-import {PRINT_TYPE} from '@/enums/biz/printType';
 import OrderTimeLine from '@/components/OrderTimeLine';
 import PrintDialog from '/@/components/PrintDialog';
 import { createSuccess } from '@/hooks/web/msg';
@@ -271,8 +272,9 @@ export default defineComponent({
       async print() {
         this.loading = true;
         try {
-          const res = await api.print(this.id);
-          await this.vgPrintPreview(PRINT_TYPE.RECEIVE_SHEET.code, res);
+          await previewReceiveSheetPrint(this.id, api.print, (type, data) => {
+            return this.vgPrintPreview(type, data);
+          });
         } finally {
           this.loading = false;
         }
