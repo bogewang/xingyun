@@ -86,7 +86,7 @@ git commit -m "feat: 补齐采购入库打印字段"
 - Modify: `backend/xingyun-basedata/src/main/java/com/lframework/xingyun/basedata/impl/print/PrintTemplateServiceImpl.java`
 - Modify: `backend/xingyun-basedata/src/main/java/com/lframework/xingyun/basedata/controller/PrintTemplateController.java`
 - Modify: `backend/xingyun-basedata/src/main/java/com/lframework/xingyun/basedata/bo/print/GetPrintTemplateSettingBo.java`
-- Test: `backend/xingyun-basedata/src/test/java/com/lframework/xingyun/basedata/impl/print/PrintTemplateServiceImplTest.java`
+- Test: `backend/xingyun-sc/src/test/java/com/lframework/xingyun/basedata/impl/print/PrintTemplateServiceImplTest.java`
 
 **Interfaces:**
 - Consumes: optional `bizType` query parameter on `GET /basedata/print/template/fieldDesc`.
@@ -141,7 +141,7 @@ Run:
 
 ```powershell
 cd backend
-mvn -pl xingyun-basedata -Dtest=PrintTemplateServiceImplTest test
+mvn -pl xingyun-sc -am -Dtest=PrintTemplateServiceImplTest -Dsurefire.failIfNoSpecifiedTests=false test
 ```
 
 Expected: the focused test is red because the service currently has no `getFieldDesc(String)` overload and always reflects `PrintSaleOrderBo`; if the test does not compile after being added, correct only the test setup/imports before proceeding until the failure is caused by the missing behavior.
@@ -189,7 +189,7 @@ Expected: PASS with zero failures.
 - [ ] **Step 7: Commit the backend field-description change**
 
 ```powershell
-git add backend/xingyun-basedata/src/main/java/com/lframework/xingyun/basedata/service/print/PrintTemplateService.java backend/xingyun-basedata/src/main/java/com/lframework/xingyun/basedata/impl/print/PrintTemplateServiceImpl.java backend/xingyun-basedata/src/main/java/com/lframework/xingyun/basedata/controller/PrintTemplateController.java backend/xingyun-basedata/src/main/java/com/lframework/xingyun/basedata/bo/print/GetPrintTemplateSettingBo.java backend/xingyun-basedata/src/test/java/com/lframework/xingyun/basedata/impl/print/PrintTemplateServiceImplTest.java
+git add backend/xingyun-basedata/src/main/java/com/lframework/xingyun/basedata/service/print/PrintTemplateService.java backend/xingyun-basedata/src/main/java/com/lframework/xingyun/basedata/impl/print/PrintTemplateServiceImpl.java backend/xingyun-basedata/src/main/java/com/lframework/xingyun/basedata/controller/PrintTemplateController.java backend/xingyun-basedata/src/main/java/com/lframework/xingyun/basedata/bo/print/GetPrintTemplateSettingBo.java backend/xingyun-sc/src/test/java/com/lframework/xingyun/basedata/impl/print/PrintTemplateServiceImplTest.java
 git commit -m "feat: 按业务类型返回打印字段"
 ```
 
