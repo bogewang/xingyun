@@ -33,6 +33,10 @@
 
 `GET /basedata/print/template/fieldDesc` 当前硬编码反射 `PrintSaleOrderBo`，无论模板的 `bizType` 是什么都返回销售出库字段。采购入库模板因此无法在字段说明中看到 `supplierCode`、`purchaserName`、`purchaseOrderCode`、`receiveDate`、`details[].receiveNum` 等字段。
 
+### 2.4 采购入库打印 DTO 字段缺口
+
+当前 `PrintReceiveSheetBo` 只包含模板展示所需的部分采购入库字段，缺少 `ReceiveSheetFullDto` 中的单据原始字段；前端 `PrintReceiveSheetBo` 类型也存在同样缺口。后续模板如果需要使用单据 ID、业务关联 ID、数量汇总、审核状态、结算状态、更新时间或明细原始字段，就会再次触发接口修改。
+
 ## 3. 方案
 
 ### 3.1 字段说明按业务类型返回
@@ -52,7 +56,17 @@
 
 这样不会把销售和采购字段混在同一份字段列表中，也不会要求用户手动区分重复字段名。
 
-### 3.3 采购入库前端打印入口
+### 3.3 采购入库打印 DTO 补齐字段
+
+采购入库打印响应在保留现有展示友好字段和兼容别名的基础上，补齐 `ReceiveSheetFullDto` 的字段集合：
+
+- 主表补充 `id`、`scId`、`supplierId`、`purchaserId`、`purchaseOrderId`、`totalNum`、`totalGiftNum`、`totalAmount`、`updateBy`、`updateTime`、`status`、`refuseReason`、`settleStatus`。
+- 明细补充 `id`、`productId`、`orderNum`、`unitId`、`unitName`、`conversionRate`、`businessNum`、`taxPrice`、`taxAmount`、`isGift`、`taxRate`、`description`、`orderNo`、`purchaseOrderDetailId`、`productionDate`。
+- 保留现有的 `scCode`、`scName`、`supplierCode`、`supplierName`、`purchaserName`、`purchaseOrderCode`、`receiveNum`、`purchasePrice`、`receiveAmount` 等展示字段，不改变现有模板绑定。
+
+前端 `frontend/src/api/sc/purchase/receive/model/printReceiveSheetBo.ts` 同步声明上述完整字段，日期、状态和金额类型按后端 JSON 响应保持一致。这样采购入库打印数据一次覆盖当前完整单据模型，模板设计可以直接使用原始业务字段或展示字段，无需为已有 `ReceiveSheetFullDto` 字段重复扩展接口。
+
+### 3.4 采购入库前端打印入口
 
 在 `frontend/src/views/sc/purchase/receive/components/sheet-list.vue` 中：
 
