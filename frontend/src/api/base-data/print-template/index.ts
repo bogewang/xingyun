@@ -172,11 +172,15 @@ export function getTemplateComp(id: string): Promise<GetPrintTemplateCompSetting
 
 /**
  * 查询模板配置字段说明
+ * @param bizType 业务类型
  */
-export function getFieldDesc(): Promise<PrintTemplateColumnDescription[]> {
+export function getFieldDesc(bizType?: string | number): Promise<PrintTemplateColumnDescription[]> {
   return defHttp.get<PrintTemplateColumnDescription[]>(
     {
       url: baseUrl + '/fieldDesc',
+      ...(bizType === undefined || bizType === null || bizType === ''
+        ? {}
+        : { params: { bizType: String(bizType) } }),
     },
     {
       region,

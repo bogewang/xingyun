@@ -189,6 +189,10 @@
         type: [Array, Object, String],
         default: () => ({}),
       },
+      bizType: {
+        type: [String, Number],
+        default: undefined,
+      },
     },
     emits: ['save'],
     setup(props, { emit, expose }) {
@@ -242,7 +246,7 @@
 
         fieldDocLoading.value = true;
         try {
-          const data = await printTemplateApi.getFieldDesc();
+          const data = await printTemplateApi.getFieldDesc(props.bizType);
           fieldDocRows.value = mapFieldDocRows(data);
         } finally {
           fieldDocLoading.value = false;

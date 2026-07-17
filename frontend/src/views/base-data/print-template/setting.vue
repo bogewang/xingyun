@@ -19,6 +19,7 @@
         :temp-value="value"
         :widget-options="widgets"
         :demo-data="demoData"
+        :biz-type="formData.bizType"
         @save="submit"
       />
     </div>
@@ -189,6 +190,7 @@
         this.formData = {
           id: '',
           templateJson: '',
+          bizType: '',
         };
         // 回退到空模板，避免显示上一条记录的数据。
         this.value = createEmptyTemplate();

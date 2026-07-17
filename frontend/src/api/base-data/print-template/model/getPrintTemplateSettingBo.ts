@@ -5,6 +5,11 @@ export interface GetPrintTemplateSettingBo {
   id: string;
 
   /**
+   * 业务类型
+   */
+  bizType: string;
+
+  /**
    * JSON配置
    */
   templateJson: object;
