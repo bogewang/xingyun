@@ -197,7 +197,10 @@
           </template>
 
           <template #productionDate_default="{ row, rowIndex }">
-            <a-input :ref="'productionDateInputRef' + rowIndex" v-model:value="row.productionDate" />
+            <a-input
+              :ref="'productionDateInputRef' + rowIndex"
+              v-model:value="row.productionDate"
+            />
           </template>
 
           <!-- 备注 列自定义内容 -->
@@ -290,6 +293,7 @@
   import {
     isEmpty,
     isFloatGeZero,
+    isFloatGtZero,
     getNumber,
     mul,
     add,
@@ -430,7 +434,12 @@
             slots: { default: 'taxAmount_default' },
           },
           // { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
-          { field: 'productionDate', title: '生产日期', width: 120, slots: { default: 'productionDate_default' } },
+          {
+            field: 'productionDate',
+            title: '生产日期',
+            width: 120,
+            slots: { default: 'productionDate_default' },
+          },
           {
             field: 'description',
             title: '备注',
@@ -678,7 +687,10 @@
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
-        const purchasePrice = !isEmpty(product.latestPurchasePrice)
+        // 如果行内已有有效的采购价(>0)，则保留原价格，不被最新采购价覆盖
+        const purchasePrice = isFloatGtZero(this.tableData[index].purchasePrice)
+          ? this.tableData[index].purchasePrice
+          : !isEmpty(product.latestPurchasePrice)
           ? product.latestPurchasePrice
           : product.purchasePrice;
         const baseUnit = product.units?.find((item) => item.baseUnit);
