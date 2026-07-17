@@ -57,6 +57,11 @@ public class SaleOutSheetWithReturnDto implements BaseDto, Serializable {
     private BigDecimal orderNum;
 
     /**
+     * 验收数量，使用交易单位
+     */
+    private BigDecimal confirmNum;
+
+    /**
      * 原价
      */
     private BigDecimal oriPrice;
@@ -65,6 +70,11 @@ public class SaleOutSheetWithReturnDto implements BaseDto, Serializable {
      * 现价
      */
     private BigDecimal taxPrice;
+
+    /**
+     * 验收金额，根据验收数量和销售单价计算
+     */
+    private BigDecimal confirmAmt;
 
     /**
      * 折扣（%）

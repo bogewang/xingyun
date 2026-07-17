@@ -73,7 +73,7 @@ public class SaleOutSheet extends BaseEntity implements BaseDto {
   private BigDecimal totalNum;
 
   /**
-   * 验收数量
+   * 验收数量，使用交易单位
    */
   private BigDecimal confirmNum;
 
@@ -88,7 +88,7 @@ public class SaleOutSheet extends BaseEntity implements BaseDto {
   private BigDecimal totalAmount;
 
   /**
-   * 验收金额
+   * 验收金额，根据验收数量和销售单价计算
    */
   private BigDecimal confirmAmt;
 

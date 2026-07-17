@@ -44,7 +44,7 @@ public class SaleOutSheetDetail extends BaseEntity implements BaseDto {
   private BigDecimal orderNum;
 
   /**
-   * 验收数量
+   * 验收数量，使用交易单位
    */
   private BigDecimal confirmNum;
 
@@ -65,7 +65,7 @@ public class SaleOutSheetDetail extends BaseEntity implements BaseDto {
   private BigDecimal taxPrice;
 
   /**
-   * 验收金额
+   * 验收金额，根据验收数量和销售单价计算
    */
   private BigDecimal confirmAmt;
 

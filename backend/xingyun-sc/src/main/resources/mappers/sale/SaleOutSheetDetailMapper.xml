@@ -6,8 +6,10 @@
         <result column="sheet_id" property="sheetId"/>
         <result column="product_id" property="productId"/>
         <result column="order_num" property="orderNum"/>
+        <result column="confirm_num" property="confirmNum"/>
         <result column="ori_price" property="oriPrice"/>
         <result column="tax_price" property="taxPrice"/>
+        <result column="confirm_amt" property="confirmAmt"/>
         <result column="discount_rate" property="discountRate"/>
         <result column="is_gift" property="isGift"/>
         <result column="tax_rate" property="taxRate"/>
@@ -26,8 +28,10 @@
             d.sheet_id,
             d.product_id,
             d.order_num,
+            d.confirm_num,
             d.ori_price,
             d.tax_price,
+            d.confirm_amt,
             d.discount_rate,
             d.is_gift,
             d.tax_rate,

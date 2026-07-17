@@ -57,6 +57,11 @@ public class SaleOutSheetFullDto implements BaseDto, Serializable {
   private BigDecimal totalNum;
 
   /**
+   * 验收数量，使用交易单位
+   */
+  private BigDecimal confirmNum;
+
+  /**
    * 赠品数量
    */
   private BigDecimal totalGiftNum;
@@ -65,6 +70,11 @@ public class SaleOutSheetFullDto implements BaseDto, Serializable {
    * 出库总金额
    */
   private BigDecimal totalAmount;
+
+  /**
+   * 验收金额，根据验收数量和销售单价计算
+   */
+  private BigDecimal confirmAmt;
 
   /**
    * 已支付金额
@@ -170,6 +180,11 @@ public class SaleOutSheetFullDto implements BaseDto, Serializable {
      * 出库数量
      */
     private BigDecimal orderNum;
+
+    /**
+     * 验收数量，使用交易单位
+     */
+    private BigDecimal confirmNum;
     private String unitId;
     private String unitName;
     private BigDecimal conversionRate;
@@ -184,6 +199,11 @@ public class SaleOutSheetFullDto implements BaseDto, Serializable {
      * 现价
      */
     private BigDecimal taxPrice;
+
+    /**
+     * 验收金额，根据验收数量和销售单价计算
+     */
+    private BigDecimal confirmAmt;
 
     /**
      * 折扣（%）

@@ -12,8 +12,10 @@
         <result column="payment_date" property="paymentDate"/>
         <result column="sale_order_id" property="saleOrderId"/>
         <result column="total_num" property="totalNum"/>
+        <result column="confirm_num" property="confirmNum"/>
         <result column="total_gift_num" property="totalGiftNum"/>
         <result column="total_amount" property="totalAmount"/>
+        <result column="confirm_amt" property="confirmAmt"/>
         <result column="total_cost" property="totalCost"/>
         <result column="paid_amount" property="paidAmount"/>
         <result column="total_profit" property="totalProfit"/>
@@ -38,8 +40,10 @@
         <result column="payment_date" property="paymentDate"/>
         <result column="sale_order_id" property="saleOrderId"/>
         <result column="total_num" property="totalNum"/>
+        <result column="confirm_num" property="confirmNum"/>
         <result column="total_gift_num" property="totalGiftNum"/>
         <result column="total_amount" property="totalAmount"/>
+        <result column="confirm_amt" property="confirmAmt"/>
         <result column="total_cost" property="totalCost"/>
         <result column="paid_amount" property="paidAmount"/>
         <result column="total_profit" property="totalProfit"/>
@@ -59,12 +63,14 @@
             <result column="detail_main_product_id" property="mainProductId"/>
             <result column="detail_product_id" property="productId"/>
             <result column="detail_order_num" property="orderNum"/>
+            <result column="detail_confirm_num" property="confirmNum"/>
             <result column="detail_unit_id" property="unitId"/>
             <result column="detail_unit_name" property="unitName"/>
             <result column="detail_conversion_rate" property="conversionRate"/>
             <result column="detail_business_num" property="businessNum"/>
             <result column="detail_ori_price" property="oriPrice"/>
             <result column="detail_tax_price" property="taxPrice"/>
+            <result column="detail_confirm_amt" property="confirmAmt"/>
             <result column="detail_discount_rate" property="discountRate"/>
             <result column="detail_is_gift" property="isGift"/>
             <result column="detail_tax_rate" property="taxRate"/>
@@ -89,8 +95,10 @@
             <id column="detail_id" property="id"/>
             <result column="detail_product_id" property="productId"/>
             <result column="detail_order_num" property="orderNum"/>
+            <result column="detail_confirm_num" property="confirmNum"/>
             <result column="detail_ori_price" property="oriPrice"/>
             <result column="detail_tax_price" property="taxPrice"/>
+            <result column="detail_confirm_amt" property="confirmAmt"/>
             <result column="detail_discount_rate" property="discountRate"/>
             <result column="detail_is_gift" property="isGift"/>
             <result column="detail_tax_rate" property="taxRate"/>
@@ -111,8 +119,10 @@
             s.payment_date,
             s.sale_order_id,
             s.total_num,
+            s.confirm_num,
             s.total_gift_num,
             s.total_amount,
+            s.confirm_amt,
             s.total_cost,
             s.paid_amount,
             s.total_profit,
@@ -140,8 +150,10 @@
             s.payment_date,
             s.sale_order_id,
             s.total_num,
+            s.confirm_num,
             s.total_gift_num,
             s.total_amount,
+            s.confirm_amt,
             s.paid_amount,
             s.total_cost,
             s.total_profit,
@@ -160,12 +172,14 @@
             b.main_product_id AS detail_main_product_id,
             d.product_id AS detail_product_id,
             d.order_num AS detail_order_num,
+            d.confirm_num AS detail_confirm_num,
             d.unit_id AS detail_unit_id,
             d.unit_name AS detail_unit_name,
             d.conversion_rate AS detail_conversion_rate,
             d.business_num AS detail_business_num,
             d.ori_price AS detail_ori_price,
             d.tax_price AS detail_tax_price,
+            d.confirm_amt AS detail_confirm_amt,
             d.discount_rate AS detail_discount_rate,
             d.is_gift AS detail_is_gift,
             d.tax_rate AS detail_tax_rate,
@@ -206,8 +220,10 @@
             c.name AS category_name,
             b.name AS brand_name,
             d.business_num AS order_num,
+            d.confirm_num,
             d.tax_price,
             d.tax_amount,
+            d.confirm_amt,
             d.cost_price * COALESCE(d.conversion_rate, 1) AS cost_price,
             d.total_profit,
             d.is_gift,
@@ -1136,14 +1152,14 @@
     <select id="getWithReturn" resultMap="SaleOutSheetWithReturnDto">
         SELECT
         s.id, s.code, s.sc_id, s.customer_id, s.saler_id, d.id AS detail_id, d.sheet_id AS detail_sheet_id,
-        d.product_id AS detail_product_id, d.order_num AS detail_order_num, d.ori_price AS detail_ori_price,
-        d.tax_price AS detail_tax_price, d.discount_rate AS detail_discount_rate, d.is_gift AS detail_is_gift,
+        d.product_id AS detail_product_id, d.order_num AS detail_order_num, d.confirm_num AS detail_confirm_num, d.ori_price AS detail_ori_price,
+        d.tax_price AS detail_tax_price, d.confirm_amt AS detail_confirm_amt, d.discount_rate AS detail_discount_rate, d.is_gift AS detail_is_gift,
         d.tax_rate AS detail_tax_rate, d.description AS detail_description, d.order_no AS detail_order_no,
         d.return_num AS detail_return_num
         FROM tbl_sale_out_sheet AS s
         LEFT JOIN (
         SELECT
-        l.id, d.sheet_id, d.product_id, l.order_num, d.ori_price, d.tax_price, d.discount_rate, d.is_gift,
+        l.id, d.sheet_id, d.product_id, l.order_num, d.confirm_num, d.ori_price, d.tax_price, d.confirm_amt, d.discount_rate, d.is_gift,
         d.tax_rate, d.description, d.order_no, l.return_num, l.order_no AS lot_order_no
         FROM tbl_sale_out_sheet_detail AS d
         INNER JOIN tbl_sale_out_sheet_detail_lot AS l ON l.detail_id = d.id

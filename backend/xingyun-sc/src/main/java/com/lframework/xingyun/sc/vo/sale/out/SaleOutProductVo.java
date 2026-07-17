@@ -68,6 +68,12 @@ public class SaleOutProductVo implements BaseVo, Serializable {
     private BigDecimal orderNum;
 
     /**
+     * 验收数量，使用交易单位
+     */
+    @ApiModelProperty("验收数量")
+    private BigDecimal confirmNum;
+
+    /**
      * 备注
      */
     @ApiModelProperty("备注")
