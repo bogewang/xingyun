@@ -68,6 +68,11 @@ public class SaleOutSheetImportModel implements ExcelModel {
     @ExcelProperty("数量")
     private BigDecimal orderNum;
 
+    /**
+     * 验收数量
+     */
+    @ExcelProperty("验收数量")
+    private BigDecimal confirmNum;
 
     /**
      * 采购价

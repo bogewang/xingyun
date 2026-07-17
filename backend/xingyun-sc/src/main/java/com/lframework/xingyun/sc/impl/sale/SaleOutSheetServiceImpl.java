@@ -998,6 +998,7 @@ public class SaleOutSheetServiceImpl extends
             detail.setTaxPrice(vo.getTaxPrice());
             detail.setTaxAmount(
                     NumberUtil.getNumber(NumberUtil.mul(vo.getTaxPrice(), detail.getOrderNum()), 2));
+            SaleOutSheetConfirmCalculator.calculateDetail(detail);
             saleOutSheetDetailService.updateById(detail);
 
             productLatestPriceCacheService.updateLatestPrice(detail.getProductId(), vo.getTaxPrice(), null);
@@ -1011,6 +1012,8 @@ public class SaleOutSheetServiceImpl extends
             }
 
             BigDecimal totalAmount = calcSheetTotalAmount(sheetId);
+            List<SaleOutSheetDetail> sheetDetails = saleOutSheetDetailService.getBySheetId(sheetId);
+            SaleOutSheetConfirmCalculator.calculateSheet(sheet, sheetDetails);
             BigDecimal paidAmount = sheet.getPaidAmount() == null ? BigDecimal.ZERO : sheet.getPaidAmount();
             if (NumberUtil.gt(paidAmount, totalAmount)) {
                 throw new DefaultClientException("单据号：" + sheet.getCode() + " 的已付金额大于调整后的单据金额，不允许调整售价！");
@@ -1018,6 +1021,8 @@ public class SaleOutSheetServiceImpl extends
 
             LambdaUpdateWrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
                     .set(SaleOutSheet::getTotalAmount, totalAmount)
+                    .set(SaleOutSheet::getConfirmNum, sheet.getConfirmNum())
+                    .set(SaleOutSheet::getConfirmAmt, sheet.getConfirmAmt())
                     .eq(SaleOutSheet::getId, sheetId);
             if (!this.update(updateWrapper)) {
                 throw new DefaultClientException("销售出库单金额更新失败，请重试！");
@@ -1288,6 +1293,7 @@ public class SaleOutSheetServiceImpl extends
         BigDecimal businessTotalNum = BigDecimal.ZERO;
         BigDecimal giftNum = BigDecimal.ZERO;
         BigDecimal totalAmount = BigDecimal.ZERO;
+        List<SaleOutSheetDetail> details = new ArrayList<>(vo.getProducts().size());
         for (SaleOutProductVo productVo : vo.getProducts()) {
             Product product = productService.findById(productVo.getProductId());
             if (product == null) {
@@ -1316,6 +1322,7 @@ public class SaleOutSheetServiceImpl extends
             detail.setUnitName(unit.getUnitName());
             detail.setConversionRate(unit.getConversionRate());
             detail.setBusinessNum(productVo.getOrderNum());
+            detail.setConfirmNum(productVo.getConfirmNum());
             detail.setOriPrice(productVo.getOriPrice());
             detail.setTaxPrice(productVo.getTaxPrice());
             detail.setDiscountRate(productVo.getDiscountRate());
@@ -1339,8 +1346,10 @@ public class SaleOutSheetServiceImpl extends
             } else {
                 detail.setTotalProfit(null);
             }
+            SaleOutSheetConfirmCalculator.calculateDetail(detail);
 
             saleOutSheetDetailService.save(detail);
+            details.add(detail);
             updateProductPrice(product, detail);
             productLatestPriceCacheService.updateLatestPrice(product.getId(),
                     toBasePrice(detail.getTaxPrice(), detail.getConversionRate()),
@@ -1355,6 +1364,7 @@ public class SaleOutSheetServiceImpl extends
         sheet.setDescription(
                 StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(customer));
+        SaleOutSheetConfirmCalculator.calculateSheet(sheet, details);
     }
 
     private ProductUnit resolveUnit(Product product, String unitId, String unitName) {
@@ -1662,6 +1672,9 @@ public class SaleOutSheetServiceImpl extends
         if (model.getOrderNum() == null) {
             model.setOrderNum(BigDecimal.ZERO);
         }
+        if (model.getConfirmNum() == null) {
+            model.setConfirmNum(BigDecimal.ZERO);
+        }
     }
 
     private CreateSaleOutSheetVo buildCreateVo(List<SaleOutSheetQueryImportModel> list) {
@@ -1803,6 +1816,12 @@ public class SaleOutSheetServiceImpl extends
         }
         if (data.getTaxPrice() != null && !NumberUtil.isNumberPrecision(data.getTaxPrice(), 6)) {
             errors.add("第" + rowIndex + "行“单价”最多允许6位小数");
+        }
+        if (data.getConfirmNum() != null && NumberUtil.lt(data.getConfirmNum(), BigDecimal.ZERO)) {
+            errors.add("第" + rowIndex + "行“验收数量”不允许小于0");
+        }
+        if (data.getConfirmNum() != null && !NumberUtil.isNumberPrecision(data.getConfirmNum(), 6)) {
+            errors.add("第" + rowIndex + "行“验收数量”最多允许6位小数");
         }
         return errors;
     }
