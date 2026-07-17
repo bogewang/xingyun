@@ -284,10 +284,12 @@ public class SaleOutSheetServiceImpl extends
             List<PrintSaleTagBo> collect = map.keySet().stream()
                     .map(key -> {
                         String productId = key.split("#")[0];
+                        Product product = productMap.get(productId);
+
                         PrintSaleTagBo bo = new PrintSaleTagBo();
                         bo.setCustomerSimpleName(
                                 customer.getNickName() == null ? customer.getName() : customer.getNickName());
-                        bo.setProductName(productMap.get(productId).getName());
+                        bo.setProductName(product.getName());
 
                         List<SaleOutSheetDetail> outDetails = map.get(key);
                         BigDecimal outNum = outDetails.stream()
@@ -296,6 +298,7 @@ public class SaleOutSheetServiceImpl extends
                         String format = outNum.setScale(1, RoundingMode.HALF_UP).toString();
                         bo.setOrderNum(String.format("%s%s", format, outDetails.get(0).getUnitName()));
                         bo.setOrderDate(item.getOrderDate().toString());
+                        bo.setCategoryId(product.getCategoryId());
 
                         return bo;
                     }).collect(Collectors.toList());
@@ -305,7 +308,11 @@ public class SaleOutSheetServiceImpl extends
             }
         });
 
-        return res;
+        return res.stream()
+                .sorted(Comparator.comparing(PrintSaleTagBo::getCategoryId)
+                        .thenComparing(PrintSaleTagBo::getProductName)
+                        .thenComparing(PrintSaleTagBo::getOrderDate))
+                .collect(Collectors.toList());
     }
 
     @Override

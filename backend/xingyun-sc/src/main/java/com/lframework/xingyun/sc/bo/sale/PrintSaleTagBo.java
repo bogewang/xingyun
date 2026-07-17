@@ -29,4 +29,8 @@ public class PrintSaleTagBo {
      * '2026年05月05日'
      */
     private String orderDate;
+    /**
+     * 分类
+     */
+    private String categoryId;
 }
