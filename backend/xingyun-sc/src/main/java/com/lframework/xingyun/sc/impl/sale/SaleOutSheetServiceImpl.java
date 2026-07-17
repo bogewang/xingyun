@@ -423,11 +423,15 @@ public class SaleOutSheetServiceImpl extends
         data.setOrderDate(detail.getOrderDate());
         data.setTotalQty(detailBo.getTotalNum());
         data.setTotalAmount(detailBo.getTotalAmount());
+        data.setTotalConfirmQty(detail.getConfirmNum());
+        data.setTotalConfirmAmount(detail.getConfirmAmt());
 
-        if (!CollectionUtils.isEmpty(detailBo.getDetails())) {
-            List<SaleOutSheetSalesExportHelper.DetailData> details = detailBo.getDetails().stream()
-                    .map(this::buildSalesExportDetailData)
-                    .collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(detailBo.getDetails()) && !CollectionUtils.isEmpty(detail.getDetails())) {
+            List<SaleOutSheetSalesExportHelper.DetailData> details = new ArrayList<>();
+            int size = Math.min(detailBo.getDetails().size(), detail.getDetails().size());
+            for (int i = 0; i < size; i++) {
+                details.add(buildSalesExportDetailData(detailBo.getDetails().get(i), detail.getDetails().get(i)));
+            }
             data.setDetails(details);
         }
 
@@ -459,10 +463,14 @@ public class SaleOutSheetServiceImpl extends
 
             summary.setOrderNum(NumberUtil.add(defaultValue(summary.getOrderNum()),
                     defaultValue(current.getOrderNum())));
+            summary.setConfirmNum(NumberUtil.add(defaultValue(summary.getConfirmNum()),
+                    defaultValue(current.getConfirmNum())));
             summary.setCostAmount(NumberUtil.add(defaultValue(summary.getCostAmount()),
                     defaultValue(current.getCostAmount())));
             summary.setTaxAmount(NumberUtil.add(defaultValue(summary.getTaxAmount()),
                     defaultValue(current.getTaxAmount())));
+            summary.setConfirmAmt(NumberUtil.add(defaultValue(summary.getConfirmAmt()),
+                    defaultValue(current.getConfirmAmt())));
             summary.setProfitRate(buildProfitRate(summary.getTaxAmount(), summary.getCostAmount()));
             summary.setSupplierName(supplierMap.get(detail.getSupplierId()));
         }
@@ -471,7 +479,7 @@ public class SaleOutSheetServiceImpl extends
     }
 
     private SaleOutSheetSalesExportHelper.DetailData buildSalesExportDetailData(
-            GetSaleOutSheetBo.OrderDetailBo detail) {
+            GetSaleOutSheetBo.OrderDetailBo detail, SaleOutSheetFullDto.SheetDetailDto confirmDetail) {
         SaleOutSheetSalesExportHelper.DetailData data = new SaleOutSheetSalesExportHelper.DetailData();
         data.setProductName(detail.getProductName());
         data.setSpec(detail.getSpec());
@@ -482,6 +490,8 @@ public class SaleOutSheetServiceImpl extends
             data.setAmount(detail.getTaxPrice().multiply(detail.getOutNum()).setScale(2,
                     RoundingMode.HALF_UP));
         }
+        data.setConfirmQty(confirmDetail.getConfirmNum());
+        data.setConfirmAmount(confirmDetail.getConfirmAmt());
         data.setRemark(detail.getDescription());
         return data;
     }

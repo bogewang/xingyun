@@ -19,13 +19,13 @@ import java.util.List;
 
 public final class SaleOutSheetSalesExportHelper {
 
-  private static final int COLUMN_COUNT = 8;
+  private static final int COLUMN_COUNT = 10;
   private static final short DEFAULT_FONT_SIZE = 12;
   private static final String DEFAULT_FONT_NAME = "宋体";
   private static final String CUSTOMER = "云南交投绿美生活服务有限公司";
   private static final String DEFAULT_TITLE = "红河聚亿商贸有限公司销售单";
   private static final String[] TABLE_HEADERS = {
-      "序号", "商品名称", "规格", "单位", "数量", "单价", "金额", "备注"
+      "序号", "商品名称", "规格", "单位", "数量", "单价", "金额", "备注", "验收数量", "验收金额"
   };
 
   private SaleOutSheetSalesExportHelper() {
@@ -100,6 +100,8 @@ public final class SaleOutSheetSalesExportHelper {
       setCell(row, 5, formatAmount(detail.getPrice()), styles.bodyRight);
       setCell(row, 6, formatAmount(detail.getAmount()), styles.bodyRight);
       setCell(row, 7, defaultString(detail.getRemark()), styles.bodyLeft);
+      setCell(row, 8, formatNumber(detail.getConfirmQty()), styles.bodyRight);
+      setCell(row, 9, formatAmount(detail.getConfirmAmount()), styles.bodyRight);
     }
 
     Row totalRow = sheet.createRow(rowIndex);
@@ -110,6 +112,8 @@ public final class SaleOutSheetSalesExportHelper {
     setCell(totalRow, 5, "", styles.totalBlank);
     setCell(totalRow, 6, formatAmount(data.getTotalAmount()), styles.totalAmount);
     setCell(totalRow, 7, "", styles.totalBlank);
+    setCell(totalRow, 8, formatNumber(data.getTotalConfirmQty()), styles.totalQty);
+    setCell(totalRow, 9, formatAmount(data.getTotalConfirmAmount()), styles.totalAmount);
     RegionUtil.setBorderBottom(BorderStyle.THIN, totalRegion, sheet);
     RegionUtil.setBorderLeft(BorderStyle.THIN, totalRegion, sheet);
     RegionUtil.setBorderRight(BorderStyle.THIN, totalRegion, sheet);
@@ -120,14 +124,13 @@ public final class SaleOutSheetSalesExportHelper {
     merge(sheet, rowIndex, rowIndex, 0, 1);
     setCell(signRow, 2, "", styles.signBlank);
     setCell(signRow, 3, "制单人：", styles.signLeft);
-    merge(sheet, rowIndex, rowIndex, 3, 4);
-    setCell(signRow, 5, "", styles.signBlank);
+    merge(sheet, rowIndex, rowIndex, 3, 5);
     setCell(signRow, 6, "送货人：", styles.signLeft);
-    merge(sheet, rowIndex, rowIndex, 6, 7);
+    merge(sheet, rowIndex, rowIndex, 6, 9);
   }
 
   private static void setColumnWidths(Sheet sheet) {
-    int[] widths = { 8, 28, 18, 10, 10, 12, 14, 20 };
+    int[] widths = { 8, 28, 18, 10, 10, 12, 14, 20, 10, 14 };
     for (int i = 0; i < widths.length; i++) {
       sheet.setColumnWidth(i, widths[i] * 256);
     }
@@ -193,6 +196,8 @@ public final class SaleOutSheetSalesExportHelper {
     private LocalDate orderDate;
     private BigDecimal totalQty;
     private BigDecimal totalAmount;
+    private BigDecimal totalConfirmQty;
+    private BigDecimal totalConfirmAmount;
     private List<DetailData> details = new ArrayList<>();
   }
 
@@ -205,6 +210,8 @@ public final class SaleOutSheetSalesExportHelper {
     private BigDecimal price;
     private BigDecimal amount;
     private String remark;
+    private BigDecimal confirmQty;
+    private BigDecimal confirmAmount;
   }
 
   private static class Styles {

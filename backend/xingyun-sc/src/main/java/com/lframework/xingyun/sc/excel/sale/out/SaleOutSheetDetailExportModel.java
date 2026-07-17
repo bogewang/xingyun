@@ -43,6 +43,9 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
     @ExcelProperty("数量")
     private BigDecimal orderNum;
 
+    @ExcelProperty("验收数量")
+    private BigDecimal confirmNum;
+
     @ExcelProperty("售价")
     private BigDecimal taxPrice;
 
@@ -51,6 +54,9 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
 
     @ExcelProperty("销售额")
     private BigDecimal taxAmount;
+
+    @ExcelProperty("验收金额")
+    private BigDecimal confirmAmt;
 
     @ExcelProperty("进价")
     private BigDecimal costPrice;
@@ -98,7 +104,9 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
         this.setCategoryName(dto.getCategoryName());
         this.setTaxPrice(defaultValue(dto.getTaxPrice()));
         this.setOrderNum(defaultValue(dto.getOrderNum()));
+        this.setConfirmNum(defaultValue(dto.getConfirmNum()));
         this.setTaxAmount(defaultValue(dto.getTaxAmount()));
+        this.setConfirmAmt(defaultValue(dto.getConfirmAmt()));
         this.setCostPrice(defaultValue(dto.getCostPrice()));
         BigDecimal totalProfit = defaultValue(dto.getTotalProfit());
         this.setCostAmount(NumberUtil.sub(this.taxAmount, totalProfit));

@@ -97,6 +97,18 @@ public class SaleOutSheetExportModel extends BaseBo<SaleOutSheet> implements Exc
   private BigDecimal receiveNum;
 
   /**
+   * 验收数量
+   */
+  @ExcelProperty("验收数量")
+  private BigDecimal confirmNum;
+
+  /**
+   * 验收金额
+   */
+  @ExcelProperty("验收金额")
+  private BigDecimal confirmAmt;
+
+  /**
    * 赠品数量
    */
   @ExcelProperty("赠品数量")
@@ -196,6 +208,8 @@ public class SaleOutSheetExportModel extends BaseBo<SaleOutSheet> implements Exc
     this.setUnpaidAmount(dto.getTotalAmount() == null ? BigDecimal.ZERO : dto.getTotalAmount().subtract(paidAmount));
     this.setTotalProfit(dto.getTotalProfit());
     this.setReceiveNum(dto.getTotalNum());
+    this.setConfirmNum(dto.getConfirmNum() == null ? BigDecimal.ZERO : dto.getConfirmNum());
+    this.setConfirmAmt(dto.getConfirmAmt() == null ? BigDecimal.ZERO : dto.getConfirmAmt());
     this.setGiftNum(dto.getTotalGiftNum());
     this.setCreateTime(DateUtil.toDate(dto.getCreateTime()));
     this.setStatus(dto.getStatus().getDesc());
