@@ -199,5 +199,9 @@ public class ReceiveSheetFullDto implements BaseDto, Serializable {
      * 生产日期
      */
     private String productionDate;
+    /**
+     * 规格型号
+     */
+    private String spec;
   }
 }

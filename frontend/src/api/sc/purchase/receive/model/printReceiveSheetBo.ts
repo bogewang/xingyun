@@ -215,4 +215,10 @@ export interface OrderDetailBo {
    * 生产日期
    */
   productionDate: string;
+  /**
+   * 规格
+   */
+  spec: string;
+
+  seq: number;
 }

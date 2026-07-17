@@ -65,6 +65,7 @@
             <result column="detail_order_no" property="orderNo"/>
             <result column="detail_purchase_order_detail_id" property="purchaseOrderDetailId"/>
             <result column="detail_production_date" property="productionDate"/>
+            <result column="detail_spec" property="spec"/>
         </collection>
     </resultMap>
 
@@ -154,10 +155,12 @@
             d.tax_rate AS detail_tax_rate,
             d.description AS detail_description,
             d.order_no AS detail_order_no,
-            d.purchase_order_detail_id AS detail_purchase_order_detail_id
-            , d.production_date AS detail_production_date
+            d.purchase_order_detail_id AS detail_purchase_order_detail_id,
+            d.production_date AS detail_production_date,
+            p.spec AS detail_spec
         FROM tbl_receive_sheet AS r
         LEFT JOIN tbl_receive_sheet_detail AS d ON d.sheet_id = r.id
+        LEFT JOIN base_data_product p on d.product_id = p.id
     </sql>
 
     <sql id="ReceiveSheetWithReturnDto_sql">

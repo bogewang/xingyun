@@ -22,6 +22,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import lombok.Data;
 
 @Data
@@ -283,7 +284,12 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
     }
 
     if (!CollectionUtil.isEmpty(dto.getDetails())) {
-      this.details = dto.getDetails().stream().map(OrderDetailBo::new).collect(Collectors.toList());
+      this.details = IntStream.range(0, dto.getDetails().size())
+          .mapToObj(index -> {
+            OrderDetailBo detail = new OrderDetailBo(dto.getDetails().get(index));
+            detail.setSeq(index + 1);
+            return detail;
+          }).collect(Collectors.toList());
     }
   }
 
@@ -421,6 +427,17 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
      */
     @ApiModelProperty("收货金额")
     private BigDecimal receiveAmount;
+
+    /**
+     * 规格型号
+     */
+    @ApiModelProperty("规格型号")
+    private String spec;
+    /**
+     * 序号
+     */
+    @ApiModelProperty("序号")
+    private Integer seq;
 
     public OrderDetailBo(ReceiveSheetFullDto.OrderDetailDto dto) {
 
