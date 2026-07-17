@@ -50,6 +50,7 @@ public class SaleOutSheetConverter {
 
         PrintSaleOrderBo res = BeanUtil.copyProperties(data, PrintSaleOrderBo.class);
         res.setCustomerName(customer.getName());
+        res.setCustomerDescription(customer.getDescription());
         res.setOrderDate(DateUtil.formatDate(data.getOrderDate(), "yyyy-MM-dd"));
         res.setPaidAmount(data.getPaidAmount() == null ? BigDecimal.ZERO : data.getPaidAmount());
         res.setUnpaidAmount(NumberUtil.sub(data.getTotalAmount(), res.getPaidAmount()));

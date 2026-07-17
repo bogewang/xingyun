@@ -20,6 +20,10 @@ export interface PrintSaleOrderBo {
    */
   customerName: string;
   /**
+   * 客户备注
+   */
+  customerDescription: string;
+  /**
    * 销售员姓名
    */
   salerName: string;
@@ -43,6 +47,15 @@ export interface PrintSaleOrderBo {
    * 审核时间
    */
   approveTime: string;
+  /**
+   * 验收数量
+   */
+  confirmNum: number;
+  /**
+   * 验收金额
+   */
+  confirmAmt: number;
+
   /**
    * 订单明细
    */

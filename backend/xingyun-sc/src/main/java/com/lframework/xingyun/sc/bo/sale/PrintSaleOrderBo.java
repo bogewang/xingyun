@@ -28,6 +28,12 @@ public class PrintSaleOrderBo extends BaseBo<SaleOrderFullDto> {
     private String customerName;
 
     /**
+     * 客户备注
+     */
+    @ApiModelProperty("客户备注")
+    private String customerDescription;
+
+    /**
      * 备注
      */
     @ApiModelProperty("备注")
@@ -174,6 +180,12 @@ public class PrintSaleOrderBo extends BaseBo<SaleOrderFullDto> {
      */
     @ApiModelProperty("结算状态")
     private SettleStatus settleStatus;
+
+    @ApiModelProperty("验收数量")
+    private BigDecimal confirmNum;
+
+    @ApiModelProperty("验收金额")
+    private BigDecimal confirmAmt;
 
     /**
      * 订单明细
@@ -323,5 +335,11 @@ public class PrintSaleOrderBo extends BaseBo<SaleOrderFullDto> {
          */
         @ApiModelProperty("商品分类名称")
         private String categoryName;
+
+        @ApiModelProperty("验收数量")
+        private BigDecimal confirmNum;
+
+        @ApiModelProperty("验收金额")
+        private BigDecimal confirmAmt;
     }
 }
