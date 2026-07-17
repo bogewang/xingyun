@@ -279,21 +279,22 @@ public class SaleOutSheetServiceImpl extends
 
             Map<String, List<SaleOutSheetDetail>> map = details.stream()
                     .filter(detail -> productMap.containsKey(detail.getProductId()))
-                    .collect(Collectors.groupingBy(SaleOutSheetDetail::getProductId));
+                    .collect(Collectors.groupingBy(a -> String.format("%s#%s", a.getProductId(), a.getUnitName())));
 
             List<PrintSaleTagBo> collect = map.keySet().stream()
-                    .map(productId -> {
+                    .map(key -> {
+                        String productId = key.split("#")[0];
                         PrintSaleTagBo bo = new PrintSaleTagBo();
                         bo.setCustomerSimpleName(
                                 customer.getNickName() == null ? customer.getName() : customer.getNickName());
                         bo.setProductName(productMap.get(productId).getName());
 
-                        List<SaleOutSheetDetail> outDetails = map.get(productId);
+                        List<SaleOutSheetDetail> outDetails = map.get(key);
                         BigDecimal outNum = outDetails.stream()
-                                .map(SaleOutSheetDetail::getOrderNum)
+                                .map(SaleOutSheetDetail::getBusinessNum)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
                         String format = outNum.setScale(1, RoundingMode.HALF_UP).toString();
-                        bo.setOrderNum(String.format("%s%s", format, productMap.get(productId).getUnit()));
+                        bo.setOrderNum(String.format("%s%s", format, outDetails.get(0).getUnitName()));
                         bo.setOrderDate(item.getOrderDate().toString());
 
                         return bo;
