@@ -15,6 +15,7 @@ import com.lframework.xingyun.sc.dto.purchase.PurchaseProductDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.entity.PurchaseOrder;
 import com.lframework.xingyun.sc.enums.ReceiveSheetStatus;
+import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.service.purchase.PurchaseOrderService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
 import io.swagger.annotations.ApiModelProperty;
@@ -31,6 +32,18 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
    */
   @ApiModelProperty("单号")
   private String code;
+
+  /**
+   * ID
+   */
+  @ApiModelProperty("ID")
+  private String id;
+
+  /**
+   * 仓库ID
+   */
+  @ApiModelProperty("仓库ID")
+  private String scId;
 
   /**
    * 仓库编号
@@ -57,10 +70,22 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
   private String supplierName;
 
   /**
+   * 供应商ID
+   */
+  @ApiModelProperty("供应商ID")
+  private String supplierId;
+
+  /**
    * 采购员姓名
    */
   @ApiModelProperty("采购员姓名")
   private String purchaserName;
+
+  /**
+   * 采购员ID
+   */
+  @ApiModelProperty("采购员ID")
+  private String purchaserId;
 
   /**
    * 订单日期
@@ -79,6 +104,12 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
    */
   @ApiModelProperty("到货日期")
   private String receiveDate;
+
+  /**
+   * 采购订单ID
+   */
+  @ApiModelProperty("采购订单ID")
+  private String purchaseOrderId;
 
   /**
    * 采购订单号
@@ -105,6 +136,24 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
   private BigDecimal unpaidAmount;
 
   /**
+   * 采购数量
+   */
+  @ApiModelProperty("采购数量")
+  private BigDecimal totalNum;
+
+  /**
+   * 赠品数量
+   */
+  @ApiModelProperty("赠品数量")
+  private BigDecimal totalGiftNum;
+
+  /**
+   * 采购金额
+   */
+  @ApiModelProperty("采购金额")
+  private BigDecimal totalAmount;
+
+  /**
    * 创建人
    */
   @ApiModelProperty("创建人")
@@ -117,6 +166,18 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
   private String createTime;
 
   /**
+   * 修改人
+   */
+  @ApiModelProperty("修改人")
+  private String updateBy;
+
+  /**
+   * 修改时间
+   */
+  @ApiModelProperty("修改时间")
+  private String updateTime;
+
+  /**
    * 审核人
    */
   @ApiModelProperty("审核人")
@@ -127,6 +188,24 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
    */
   @ApiModelProperty("审核时间")
   private String approveTime;
+
+  /**
+   * 状态
+   */
+  @ApiModelProperty("状态")
+  private ReceiveSheetStatus status;
+
+  /**
+   * 拒绝原因
+   */
+  @ApiModelProperty("拒绝原因")
+  private String refuseReason;
+
+  /**
+   * 结算状态
+   */
+  @ApiModelProperty("结算状态")
+  private SettleStatus settleStatus;
 
   /**
    * 订单明细
@@ -210,6 +289,96 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
 
   @Data
   public static class OrderDetailBo extends BaseBo<ReceiveSheetFullDto.OrderDetailDto> {
+
+    /**
+     * 明细ID
+     */
+    @ApiModelProperty("明细ID")
+    private String id;
+
+    /**
+     * 商品ID
+     */
+    @ApiModelProperty("商品ID")
+    private String productId;
+
+    /**
+     * 收货数量原始值
+     */
+    @ApiModelProperty("收货数量原始值")
+    private BigDecimal orderNum;
+
+    /**
+     * 单位ID
+     */
+    @ApiModelProperty("单位ID")
+    private String unitId;
+
+    /**
+     * 单位名称
+     */
+    @ApiModelProperty("单位名称")
+    private String unitName;
+
+    /**
+     * 换算率
+     */
+    @ApiModelProperty("换算率")
+    private BigDecimal conversionRate;
+
+    /**
+     * 业务数量
+     */
+    @ApiModelProperty("业务数量")
+    private BigDecimal businessNum;
+
+    /**
+     * 采购价原始值
+     */
+    @ApiModelProperty("采购价原始值")
+    private BigDecimal taxPrice;
+
+    /**
+     * 采购总金额原始值
+     */
+    @ApiModelProperty("采购总金额原始值")
+    private BigDecimal taxAmount;
+
+    /**
+     * 是否赠品
+     */
+    @ApiModelProperty("是否赠品")
+    private Boolean isGift;
+
+    /**
+     * 税率
+     */
+    @ApiModelProperty("税率")
+    private BigDecimal taxRate;
+
+    /**
+     * 明细备注
+     */
+    @ApiModelProperty("明细备注")
+    private String description;
+
+    /**
+     * 排序编号
+     */
+    @ApiModelProperty("排序编号")
+    private Integer orderNo;
+
+    /**
+     * 采购订单明细ID
+     */
+    @ApiModelProperty("采购订单明细ID")
+    private String purchaseOrderDetailId;
+
+    /**
+     * 生产日期
+     */
+    @ApiModelProperty("生产日期")
+    private String productionDate;
 
     /**
      * 商品编号
