@@ -112,6 +112,12 @@
           <j-form-item label="含税总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
+          <j-form-item label="验收数量" :span="6">
+            <a-input v-model:value="formData.confirmNum" class="number-input" readonly />
+          </j-form-item>
+          <j-form-item label="验收金额" :span="6">
+            <a-input v-model:value="formData.confirmAmt" class="number-input" readonly />
+          </j-form-item>
           <j-form-item label="总利润" :span="6">
             <a-input v-model:value="formData.totalProfit" class="number-input" readonly />
           </j-form-item>
@@ -241,6 +247,8 @@
             width: 120,
             slots: { default: 'taxAmount_default' },
           },
+          { field: 'confirmNum', title: '验收数量', align: 'right', width: 100 },
+          { field: 'confirmAmt', title: '验收金额', align: 'right', width: 120 },
           { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           { field: 'description', title: '备注', width: 200 },
         ],
@@ -310,6 +318,8 @@
               refuseReason: res.refuseReason,
               totalNum: 0,
               totalAmount: res.totalAmount || 0,
+              confirmNum: res.confirmNum || 0,
+              confirmAmt: res.confirmAmt || 0,
               totalProfit: res.totalProfit || 0,
               fillAllCost: !!res.fillAllCost,
             };

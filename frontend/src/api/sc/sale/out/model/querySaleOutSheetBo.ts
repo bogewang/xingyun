@@ -65,6 +65,16 @@ export interface QuerySaleOutSheetBo {
   totalAmount: number;
 
   /**
+   * 验收数量
+   */
+  confirmNum: number;
+
+  /**
+   * 验收金额
+   */
+  confirmAmt: number;
+
+  /**
    * 成本单价
    */
   totalCost: number;

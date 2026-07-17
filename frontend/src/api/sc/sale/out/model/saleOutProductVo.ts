@@ -45,6 +45,11 @@ export interface SaleOutProductVo {
   orderNum: number;
 
   /**
+   * 验收数量
+   */
+  confirmNum: number;
+
+  /**
    * 备注
    */
   description: string;

@@ -2,6 +2,7 @@
   <div>
     <excel-importer
       ref="importer"
+      :tip-msg="'Excel 可填写“验收数量”；“验收金额”由系统按验收数量×单价自动计算，不能手工覆盖。'"
       :download-template-url="downloadTemplate"
       :upload-url="upload"
       :get-container="getContainer"

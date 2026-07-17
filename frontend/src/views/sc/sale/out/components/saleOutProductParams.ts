@@ -5,6 +5,7 @@ export interface SaleOutTableRow {
   oriPrice?: string | number;
   taxPrice?: string | number;
   outNum?: string | number;
+  confirmNum?: string | number;
   description?: string;
   isFixed?: boolean;
 }
@@ -19,6 +20,7 @@ export function buildUnrequiredSaleOutProducts(rows: SaleOutTableRow[]) {
     oriPrice: row.oriPrice,
     taxPrice: row.taxPrice,
     orderNum: row.outNum,
+    confirmNum: row.confirmNum,
     description: row.description,
   }));
 }
@@ -28,6 +30,7 @@ export function buildRequiredSaleOutProducts(rows: SaleOutTableRow[]) {
     const product = {
       productId: row.productId,
       orderNum: row.outNum,
+      confirmNum: row.confirmNum,
       description: row.description,
       oriPrice: row.oriPrice,
       taxPrice: row.taxPrice,

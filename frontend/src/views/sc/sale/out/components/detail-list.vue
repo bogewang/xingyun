@@ -427,6 +427,8 @@
             width: 100,
             slots: { default: 'taxAmount_default' },
           },
+          { field: 'confirmNum', title: '验收数量', align: 'right', width: 100 },
+          { field: 'confirmAmt', title: '验收金额', align: 'right', width: 100 },
           {
             field: 'costAmount',
             title: '成本',
@@ -487,6 +489,8 @@
             slots: { default: 'costAmount_default' },
           },
           { field: 'taxAmount', title: '销售金额', align: 'right', width: 80 },
+          { field: 'confirmNum', title: '验收数量', align: 'right', width: 80 },
+          { field: 'confirmAmt', title: '验收金额', align: 'right', width: 80 },
           { field: 'totalProfit', title: '毛利', align: 'right', width: 80 },
           {
             field: 'profitRate',
@@ -599,6 +603,8 @@
       footerMethod({ columns, data }) {
         const orderNum = this.sumByField(data, 'orderNum');
         const taxAmount = this.sumByField(data, 'taxAmount');
+        const confirmNum = this.sumByField(data, 'confirmNum');
+        const confirmAmt = this.sumByField(data, 'confirmAmt');
         const costAmount = (data || []).reduce(
           (total, item) => total + this.calcRowCostAmount(item),
           0,
@@ -615,6 +621,12 @@
             }
             if (column.field === 'taxAmount') {
               return this.formatAmount(taxAmount);
+            }
+            if (column.field === 'confirmNum') {
+              return this.formatQuantity(confirmNum);
+            }
+            if (column.field === 'confirmAmt') {
+              return this.formatAmount(confirmAmt);
             }
             if (column.field === 'costAmount') {
               return this.formatAmount(costAmount);

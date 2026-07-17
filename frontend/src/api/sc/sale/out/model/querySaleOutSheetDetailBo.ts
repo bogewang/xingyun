@@ -20,6 +20,10 @@ export interface QuerySaleOutSheetDetailBo {
   orderNum: number;
   taxPrice: number;
   taxAmount: number;
+  /** 验收数量 */
+  confirmNum: number;
+  /** 验收金额 */
+  confirmAmt: number;
   costPrice: number;
   totalProfit: number;
   isGift: boolean;

@@ -77,6 +77,16 @@ export interface GetSaleOutSheetBo {
   totalAmount: number;
 
   /**
+   * 验收数量
+   */
+  confirmNum: number;
+
+  /**
+   * 验收金额
+   */
+  confirmAmt: number;
+
+  /**
    * 总成本
    */
   totalCost: number;
@@ -237,6 +247,16 @@ export interface OrderDetailBo {
    * 金额
    */
   taxAmount: number;
+
+  /**
+   * 验收数量
+   */
+  confirmNum: number;
+
+  /**
+   * 验收金额
+   */
+  confirmAmt: number;
 
   /**
    * 折扣

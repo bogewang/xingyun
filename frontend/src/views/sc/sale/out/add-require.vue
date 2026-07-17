@@ -215,6 +215,13 @@
           />
         </template>
 
+        <template #confirmNum_default="{ row }">
+          <a-input v-model:value="row.confirmNum" class="number-input" @input="(e) => confirmNumInput(row, e.target.value)" />
+        </template>
+        <template #confirmAmt_default="{ row }">
+          <span>{{ row.confirmAmt }}</span>
+        </template>
+
         <!-- 备注 列自定义内容 -->
         <template #description_default="{ row }">
           <a-input v-model:value="row.description" />
@@ -229,6 +236,8 @@
           <j-form-item label="含税总金额" :span="8">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
+          <j-form-item label="验收数量" :span="8"><a-input v-model:value="formData.confirmNum" class="number-input" readonly /></j-form-item>
+          <j-form-item label="验收金额" :span="8"><a-input v-model:value="formData.confirmAmt" class="number-input" readonly /></j-form-item>
           <j-form-item label="付款金额" :span="8">
             <a-space>
               <a-input
@@ -335,6 +344,7 @@
   } from '@/utils/inlineProductSelect';
   import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import { buildRequiredSaleOutProducts } from './components/saleOutProductParams';
+  import { syncConfirmAmount, sumConfirmFields } from './components/saleOutConfirm';
 
   export default defineComponent({
     name: 'AddSaleOutSheetRequire',
@@ -443,6 +453,8 @@
             width: 140,
             slots: { default: 'taxAmount_default' },
           },
+          { field: 'confirmNum', title: '验收数量', align: 'right', width: 120, slots: { default: 'confirmNum_default' } },
+          { field: 'confirmAmt', title: '验收金额', align: 'right', width: 120, slots: { default: 'confirmAmt_default' } },
           { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           {
             field: 'description',
@@ -505,6 +517,8 @@
           orderDate: formatDate(Moment()),
           totalNum: 0,
           totalAmount: 0,
+          confirmNum: 0,
+          confirmAmt: 0,
           paidAmount: 0,
           description: '',
         };
@@ -532,6 +546,8 @@
           outNum: '',
           taxRate: '',
           taxAmount: '',
+          confirmNum: 0,
+          confirmAmt: 0,
           description: '',
           isFixed: false,
           editingProduct: false,
@@ -727,6 +743,13 @@
       },
       taxPriceInput(_row, _value) {
         clearManualSheetAmount(_row, 'outNum', 'taxPrice');
+        syncConfirmAmount(_row);
+        this.calcSum();
+      },
+      /** 验收数量输入后同步验收金额 */
+      confirmNumInput(row, value) {
+        row.confirmNum = sanitizeNonNegativeDecimalInput(value);
+        syncConfirmAmount(row);
         this.calcSum();
       },
       // 手工录入金额，并根据出库数量反算销售单价
@@ -759,6 +782,7 @@
       },
       // 计算汇总数据
       calcSum() {
+        this.tableData.forEach((row) => syncConfirmAmount(row));
         let totalNum = 0;
         let totalAmount = 0;
         this.tableData
@@ -773,6 +797,9 @@
 
         this.formData.totalNum = totalNum;
         this.formData.totalAmount = totalAmount;
+        const confirm = sumConfirmFields(this.tableData);
+        this.formData.confirmNum = confirm.confirmNum;
+        this.formData.confirmAmt = confirm.confirmAmt;
       },
       setPaid() {
         this.formData.paidAmount = this.formData.totalAmount || 0;

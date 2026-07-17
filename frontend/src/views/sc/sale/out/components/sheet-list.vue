@@ -409,6 +409,8 @@
           },
           { field: 'customerName', title: '客户名称', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
+          { field: 'confirmNum', title: '验收数量', align: 'right', width: 100 },
+          { field: 'confirmAmt', title: '验收金额', align: 'right', width: 100 },
           { field: 'paidAmount', title: '已付金额', align: 'right', width: 80 },
           { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 80 },
           {
@@ -512,6 +514,8 @@
         const unpaidAmount = this.sumByField(data, 'unpaidAmount');
         const totalProfit = this.sumByField(data, 'totalProfit');
         const totalNum = this.sumByField(data, 'totalNum');
+        const confirmNum = this.sumByField(data, 'confirmNum');
+        const confirmAmt = this.sumByField(data, 'confirmAmt');
 
         return [
           columns.map((column) => {
@@ -544,6 +548,12 @@
 
             if (column.field === 'totalNum') {
               return this.formatQuantity(totalNum);
+            }
+            if (column.field === 'confirmNum') {
+              return this.formatQuantity(confirmNum);
+            }
+            if (column.field === 'confirmAmt') {
+              return this.formatAmount(confirmAmt);
             }
 
             return '';
