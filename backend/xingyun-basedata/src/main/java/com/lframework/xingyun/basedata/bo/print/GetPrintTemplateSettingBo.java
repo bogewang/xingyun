@@ -22,6 +22,12 @@ public class GetPrintTemplateSettingBo extends BaseBo<PrintTemplate> {
   private Integer id;
 
   /**
+   * 业务类型
+   */
+  @ApiModelProperty("业务类型")
+  private String bizType;
+
+  /**
    * JSON配置
    */
   @ApiModelProperty("JSON配置")
@@ -51,11 +57,12 @@ public class GetPrintTemplateSettingBo extends BaseBo<PrintTemplate> {
   @Override
   public <A> BaseBo<PrintTemplate> convert(PrintTemplate dto) {
     return super.convert(dto, GetPrintTemplateSettingBo::getTemplateJson,
-        GetPrintTemplateSettingBo::getDemoData);
+        GetPrintTemplateSettingBo::getDemoData, GetPrintTemplateSettingBo::getBizType);
   }
 
   @Override
   protected void afterInit(PrintTemplate dto) {
+    this.bizType = dto.getBizType();
     this.templateJson = JsonUtil.parseMap(dto.getTemplateJson(), String.class, Object.class);
 
     this.demoData = dto.getDemoData();

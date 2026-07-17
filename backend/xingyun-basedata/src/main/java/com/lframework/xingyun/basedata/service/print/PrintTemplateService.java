@@ -89,4 +89,12 @@ public interface PrintTemplateService extends BaseMpService<PrintTemplate> {
      * @return
      */
     List<PrintTemplateColumnDescription> getFieldDesc();
+
+    /**
+     * 按业务类型查询模板配置字段说明。
+     *
+     * @param bizType 业务类型
+     * @return 模板字段说明
+     */
+    List<PrintTemplateColumnDescription> getFieldDesc(String bizType);
 }

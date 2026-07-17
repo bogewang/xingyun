@@ -173,9 +173,9 @@ public class PrintTemplateController extends DefaultBaseController {
 
     @ApiOperation("查询模板配置字段说明")
     @GetMapping("/fieldDesc")
-    public InvokeResult<List<PrintTemplateColumnDescription>> getFieldDesc() {
+    public InvokeResult<List<PrintTemplateColumnDescription>> getFieldDesc(String bizType) {
         try {
-            List<PrintTemplateColumnDescription> data = printTemplateService.getFieldDesc();
+            List<PrintTemplateColumnDescription> data = printTemplateService.getFieldDesc(bizType);
             return InvokeResultBuilder.success(data);
         } catch (Exception e) {
             log.error("请求出错", e);

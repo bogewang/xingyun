@@ -47,6 +47,10 @@ public class PrintTemplateServiceImpl extends
 
     private static final String PRINT_SALE_ORDER_BO_CLASS_NAME =
             "com.lframework.xingyun.sc.bo.sale.PrintSaleOrderBo";
+    private static final String PRINT_RECEIVE_SHEET_BO_CLASS_NAME =
+            "com.lframework.xingyun.sc.bo.purchase.receive.PrintReceiveSheetBo";
+    private static final String RECEIVE_SHEET_BIZ_TYPE = "2";
+    private static final String SALE_OUT_BIZ_TYPE = "7";
 
     @Autowired
     private PrintTemplateCompService printTemplateCompService;
@@ -207,20 +211,48 @@ public class PrintTemplateServiceImpl extends
 
     @Override
     public List<PrintTemplateColumnDescription> getFieldDesc() {
+        return getFieldDesc(null);
+    }
+
+    /**
+     * 按打印业务类型查询模板字段说明。
+     *
+     * @param bizType 打印业务类型
+     * @return 模板字段说明
+     */
+    @Override
+    public List<PrintTemplateColumnDescription> getFieldDesc(String bizType) {
+        String normalizedBizType = bizType == null || bizType.trim().isEmpty()
+                ? SALE_OUT_BIZ_TYPE : bizType;
+        String className;
+        Map<String, String> demos;
+        String missingMessage;
+
+        if (RECEIVE_SHEET_BIZ_TYPE.equals(normalizedBizType)) {
+            className = PRINT_RECEIVE_SHEET_BO_CLASS_NAME;
+            demos = buildPrintReceiveSheetDemoMap();
+            missingMessage = "采购入库打印字段定义不存在！";
+        } else if (SALE_OUT_BIZ_TYPE.equals(normalizedBizType)) {
+            className = PRINT_SALE_ORDER_BO_CLASS_NAME;
+            demos = buildPrintSaleOrderDemoMap();
+            missingMessage = "销售订单打印字段定义不存在！";
+        } else {
+            throw new DefaultClientException("不支持的打印业务类型！");
+        }
+
         List<PrintTemplateColumnDescription> res = Lists.newArrayList();
         try {
-            Class<?> printSaleOrderBoClass = Class.forName(PRINT_SALE_ORDER_BO_CLASS_NAME);
-            Map<String, String> demos = buildPrintSaleOrderDemoMap();
+            Class<?> printBoClass = Class.forName(className);
 
-            appendFieldDesc(res, printSaleOrderBoClass, "", demos);
-            for (Class<?> innerClass : printSaleOrderBoClass.getDeclaredClasses()) {
+            appendFieldDesc(res, printBoClass, "", demos);
+            for (Class<?> innerClass : printBoClass.getDeclaredClasses()) {
                 if ("OrderDetailBo".equals(innerClass.getSimpleName())) {
                     appendFieldDesc(res, innerClass, "details[]", demos);
                     break;
                 }
             }
         } catch (ClassNotFoundException e) {
-            throw new DefaultClientException("销售订单打印字段定义不存在！");
+            throw new DefaultClientException(missingMessage);
         }
 
         return res;
@@ -297,6 +329,70 @@ public class PrintTemplateServiceImpl extends
         demos.put("details[].manualInputCost", "false");
         demos.put("details[].totalProfit", "40.00");
         demos.put("details[].categoryName", "调味品");
+
+        return demos;
+    }
+
+    /**
+     * 构建采购入库打印字段示例值。
+     *
+     * @return 字段示例值
+     */
+    private Map<String, String> buildPrintReceiveSheetDemoMap() {
+        Map<String, String> demos = new LinkedHashMap<>();
+        demos.put("id", "RECEIVE202607050001");
+        demos.put("code", "RK202607050001");
+        demos.put("scId", "SC001");
+        demos.put("scCode", "SC001");
+        demos.put("scName", "示例仓库");
+        demos.put("supplierId", "SUP001");
+        demos.put("supplierCode", "SUP001");
+        demos.put("supplierName", "示例供应商");
+        demos.put("purchaserId", "USER001");
+        demos.put("purchaserName", "张三");
+        demos.put("orderDate", "2026-07-05");
+        demos.put("purchaseOrderId", "PO202607050001");
+        demos.put("purchaseOrderCode", "CG202607050001");
+        demos.put("paymentDate", "2026-07-06");
+        demos.put("receiveDate", "2026-07-07");
+        demos.put("totalNum", "10");
+        demos.put("totalGiftNum", "1");
+        demos.put("totalAmount", "120.00");
+        demos.put("paidAmount", "100.00");
+        demos.put("unpaidAmount", "20.00");
+        demos.put("description", "示例备注");
+        demos.put("createBy", "张三");
+        demos.put("createTime", "2026-07-05 10:00:00");
+        demos.put("updateBy", "李四");
+        demos.put("updateTime", "2026-07-05 11:00:00");
+        demos.put("approveBy", "王五");
+        demos.put("approveTime", "2026-07-05 12:00:00");
+        demos.put("status", "APPROVE_PASS");
+        demos.put("refuseReason", "资料不完整");
+        demos.put("settleStatus", "UN_SETTLE");
+        demos.put("details", "[{...}]");
+        demos.put("details[].id", "RECEIVE_DETAIL202607050001");
+        demos.put("details[].productId", "P001");
+        demos.put("details[].productCode", "P0001");
+        demos.put("details[].productName", "示例商品");
+        demos.put("details[].skuCode", "SKU001");
+        demos.put("details[].externalCode", "SP001");
+        demos.put("details[].orderNum", "10");
+        demos.put("details[].receiveNum", "10");
+        demos.put("details[].unitId", "UNIT001");
+        demos.put("details[].unitName", "袋");
+        demos.put("details[].conversionRate", "1");
+        demos.put("details[].businessNum", "10");
+        demos.put("details[].taxPrice", "12.00");
+        demos.put("details[].purchasePrice", "12.00");
+        demos.put("details[].taxAmount", "120.00");
+        demos.put("details[].receiveAmount", "120.00");
+        demos.put("details[].isGift", "false");
+        demos.put("details[].taxRate", "13");
+        demos.put("details[].description", "明细备注");
+        demos.put("details[].orderNo", "1");
+        demos.put("details[].purchaseOrderDetailId", "POD202607050001");
+        demos.put("details[].productionDate", "2026.07.01");
 
         return demos;
     }
