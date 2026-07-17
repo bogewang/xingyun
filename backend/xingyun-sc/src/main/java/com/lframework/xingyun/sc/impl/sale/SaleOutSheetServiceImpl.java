@@ -426,12 +426,9 @@ public class SaleOutSheetServiceImpl extends
         data.setTotalConfirmQty(detail.getConfirmNum());
         data.setTotalConfirmAmount(detail.getConfirmAmt());
 
-        if (!CollectionUtils.isEmpty(detailBo.getDetails()) && !CollectionUtils.isEmpty(detail.getDetails())) {
-            List<SaleOutSheetSalesExportHelper.DetailData> details = new ArrayList<>();
-            int size = Math.min(detailBo.getDetails().size(), detail.getDetails().size());
-            for (int i = 0; i < size; i++) {
-                details.add(buildSalesExportDetailData(detailBo.getDetails().get(i), detail.getDetails().get(i)));
-            }
+        if (!CollectionUtils.isEmpty(detailBo.getDetails())) {
+            List<SaleOutSheetSalesExportHelper.DetailData> details = buildSalesExportDetails(detailBo.getDetails(),
+                    detail.getDetails(), detail.getCode());
             data.setDetails(details);
         }
 
@@ -476,6 +473,73 @@ public class SaleOutSheetServiceImpl extends
         }
 
         return new ArrayList<>(summaryMap.values());
+    }
+
+    /**
+     * 构建销售单导出明细，按明细ID或商品ID显式匹配验收数据。
+     *
+     * @param orderDetails 销售单明细
+     * @param confirmDetails 验收明细
+     * @param sheetCode 单据号
+     * @return 导出明细
+     */
+    private List<SaleOutSheetSalesExportHelper.DetailData> buildSalesExportDetails(
+            List<GetSaleOutSheetBo.OrderDetailBo> orderDetails,
+            List<SaleOutSheetFullDto.SheetDetailDto> confirmDetails,
+            String sheetCode) {
+
+        List<SaleOutSheetSalesExportHelper.DetailData> res = new ArrayList<>();
+        for (GetSaleOutSheetBo.OrderDetailBo orderDetail : orderDetails) {
+            SaleOutSheetFullDto.SheetDetailDto confirmDetail = findConfirmDetail(orderDetail, confirmDetails,
+                    sheetCode);
+            res.add(buildSalesExportDetailData(orderDetail, confirmDetail));
+        }
+
+        if (!CollectionUtils.isEmpty(confirmDetails) && res.size() != confirmDetails.size()) {
+            throw new DefaultClientException("销售出库单【" + sheetCode + "】明细验收数据不完整，请刷新后重试！");
+        }
+
+        return res;
+    }
+
+    /**
+     * 按明细ID或商品ID查找对应验收明细。
+     *
+     * @param orderDetail 销售单明细
+     * @param confirmDetails 验收明细
+     * @param sheetCode 单据号
+     * @return 对应验收明细
+     */
+    private SaleOutSheetFullDto.SheetDetailDto findConfirmDetail(GetSaleOutSheetBo.OrderDetailBo orderDetail,
+            List<SaleOutSheetFullDto.SheetDetailDto> confirmDetails, String sheetCode) {
+
+        if (CollectionUtils.isEmpty(confirmDetails)) {
+            throw new DefaultClientException("销售出库单【" + sheetCode + "】缺少验收明细，请刷新后重试！");
+        }
+
+        List<SaleOutSheetFullDto.SheetDetailDto> matched = confirmDetails.stream()
+                .filter(item -> StringUtils.isNotBlank(orderDetail.getId()) && StringUtils.equals(orderDetail.getId(),
+                        item.getId()))
+                .collect(Collectors.toList());
+        if (matched.size() == 1) {
+            return matched.get(0);
+        }
+
+        matched = confirmDetails.stream()
+                .filter(item -> StringUtils.isNotBlank(orderDetail.getProductId())
+                        && StringUtils.equals(orderDetail.getProductId(), item.getProductId()))
+                .collect(Collectors.toList());
+        if (matched.size() == 1) {
+            return matched.get(0);
+        }
+
+        if (matched.isEmpty()) {
+            throw new DefaultClientException("销售出库单【" + sheetCode + "】商品【" + orderDetail.getProductName()
+                    + "】缺少验收数据，请刷新后重试！");
+        }
+
+        throw new DefaultClientException("销售出库单【" + sheetCode + "】商品【" + orderDetail.getProductName()
+                + "】验收数据存在重复，请刷新后重试！");
     }
 
     private SaleOutSheetSalesExportHelper.DetailData buildSalesExportDetailData(
