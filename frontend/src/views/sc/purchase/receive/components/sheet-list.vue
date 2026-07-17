@@ -389,25 +389,13 @@
             sortable: true,
             slots: { default: 'code_default' },
           },
-          // { field: 'supplierCode', title: '供应商编号', width: 100 },
           { field: 'supplierName', title: '供应商名称', width: 120 },
-          // { field: 'purchaserName', title: '采购员', width: 100 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
           { field: 'paidAmount', title: '本单已付', align: 'right', width: 100 },
           { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 100 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
-          // {
-          //   field: 'status',
-          //   title: '状态',
-          //   width: 100,
-          //   formatter: ({ cellValue }) => {
-          //     return RECEIVE_SHEET_STATUS.getDesc(cellValue);
-          //   },
-          // },
-          // { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
-          // { field: 'approveBy', title: '审核人', width: 100 },
           {
             field: 'settleStatus',
             title: '结算状态',
