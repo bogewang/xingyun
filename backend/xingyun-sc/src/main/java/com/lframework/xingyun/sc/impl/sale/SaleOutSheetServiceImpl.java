@@ -1937,8 +1937,8 @@ public class SaleOutSheetServiceImpl extends
 
         boolean fillAllCost = true;
         for (SaleOutSheetDetail saleDetail : saleDetails) {
-            QueryReceiveSheetDetailDto reciveDetail = receiveCostPriceMap.get(saleDetail.getProductId());
-            if (reciveDetail == null) {
+            QueryReceiveSheetDetailDto receiveDetail = receiveCostPriceMap.get(saleDetail.getProductId());
+            if (receiveDetail == null) {
                 fillAllCost = false;
                 saleDetail.setCostPrice(null);
                 saleDetail.setTotalProfit(null);
@@ -1946,12 +1946,12 @@ public class SaleOutSheetServiceImpl extends
                 continue;
             }
 
-            BigDecimal detailCostAmount = NumberUtil.calculateAmount(NumberUtil.getDefaultValue(reciveDetail.getTaxPrice()), saleDetail.getOrderNum());
+            BigDecimal detailCostAmount = NumberUtil.calculateAmount(NumberUtil.getDefaultValue(receiveDetail.getTaxPrice()), saleDetail.getOrderNum());
             BigDecimal detailTotalProfit = NumberUtil.getNumber(NumberUtil.sub(saleDetail.getTaxAmount(), detailCostAmount), NumberUtil.AMT_PRECISION);
 
-            saleDetail.setCostPrice(reciveDetail.getTaxPrice());
+            saleDetail.setCostPrice(receiveDetail.getTaxPrice());
             saleDetail.setTotalProfit(detailTotalProfit);
-            saleDetail.setSupplierId(reciveDetail.getSupplierId());
+            saleDetail.setSupplierId(receiveDetail.getSupplierId());
             saleOutSheetDetailService.saveOrUpdateAllColumn(saleDetail);
         }
 
