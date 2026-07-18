@@ -921,7 +921,6 @@ public class SaleOutSheetServiceImpl extends
         sheet.setStatus(SaleOutSheetStatus.CREATED);
 
         getBaseMapper().insert(sheet);
-        List<SaleOutSheetDetail> details = getSheetDetails(sheet.getId());
 
         this.adjustCustomerAmount(sheet.getCustomerId());
         refreshCostPrice(sheet.getId(), vo.getFillAllCost(), Boolean.TRUE.equals(vo.getFillAllCostModified()));
