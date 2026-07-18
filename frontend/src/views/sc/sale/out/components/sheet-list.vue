@@ -393,6 +393,8 @@
           },
         },
         pagerConfig: {
+          pageSize: 50,
+          pageSizes: [20, 50, 100, 200],
           layouts: ['Home', 'PrevPage', 'Jump', 'PageCount', 'NextPage', 'End', 'Sizes', 'Total'],
         },
         // 列表数据配置
