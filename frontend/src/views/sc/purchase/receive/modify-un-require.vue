@@ -333,6 +333,7 @@
   import JFormItem from '@/components/JFormItem';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
   import * as saleApi from '@/api/sc/sale/order';
+  import { calculateUnitPrice, calculateUnitStockNum } from '@/utils/productUnitConversion';
 
   export default defineComponent({
     name: 'ModifyPurchaseReceiveSheetUnRequire',
@@ -785,18 +786,19 @@
         if (!unit) return;
         const rate = Number(unit.conversionRate) || 1;
         const oldRate = Number(row.conversionRate) || 1;
-        const baseStock = Number(row.baseStockNum ?? row.stockNum) * oldRate;
-        // basePurchasePrice 已是主单位价，仅首次切换时需要从 purchasePrice 折算
-        const basePrice =
-          row.basePurchasePrice != null
-            ? row.basePurchasePrice
-            : Number(row.purchasePrice) / (oldRate || 1);
-        row.baseStockNum = baseStock;
-        row.basePurchasePrice = basePrice;
+        const stockNum = calculateUnitStockNum(row.stockNum, row.baseStockNum, oldRate, rate);
+        const purchasePrice = calculateUnitPrice(
+          row.purchasePrice,
+          row.basePurchasePrice,
+          oldRate,
+          rate,
+        );
+        row.baseStockNum = stockNum.baseStockNum;
+        row.basePurchasePrice = purchasePrice.basePrice;
         row.conversionRate = rate;
         row.unit = unit.unitName;
-        row.purchasePrice = basePrice * rate;
-        row.stockNum = baseStock / rate;
+        row.purchasePrice = purchasePrice.unitPrice;
+        row.stockNum = stockNum.stockNum;
         clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
         this.calcSum();
       },

@@ -303,7 +303,6 @@
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import {
     add,
-    div,
     formatDate,
     getNumber,
     isEmpty,
@@ -348,6 +347,7 @@
   import JFormItem from '@/components/JFormItem';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
   import { focusTableInput } from '@/utils/vxeGrid';
+  import { calculateUnitPrice, calculateUnitStockNum } from '@/utils/productUnitConversion';
 
   export default defineComponent({
     name: 'AddPurchaseReceiveSheetUnRequire',
@@ -642,13 +642,25 @@
       selectUnit(row, unitId) {
         const unit = (row.units || []).find((item) => item.id === unitId);
         if (unit) {
-          if (row.baseStockNum === undefined || row.baseStockNum === null) {
-            row.baseStockNum = row.stockNum;
-          }
+          const stockNum = calculateUnitStockNum(
+            row.stockNum,
+            row.baseStockNum,
+            row.conversionRate,
+            unit.conversionRate,
+          );
+          const purchasePrice = calculateUnitPrice(
+            row.purchasePrice,
+            row.basePurchasePrice,
+            row.conversionRate,
+            unit.conversionRate,
+          );
           row.unitId = unit.id;
           row.unit = unit.unitName;
-          row.purchasePrice = mul(row.basePurchasePrice || 0, unit.conversionRate);
-          row.stockNum = getNumber(div(row.baseStockNum || 0, unit.conversionRate || 1), 6);
+          row.baseStockNum = stockNum.baseStockNum;
+          row.conversionRate = unit.conversionRate;
+          row.basePurchasePrice = purchasePrice.basePrice;
+          row.purchasePrice = purchasePrice.unitPrice;
+          row.stockNum = stockNum.stockNum;
           clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
           this.calcSum();
         }

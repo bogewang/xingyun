@@ -316,7 +316,6 @@
   import { focusTableInput } from '@/utils/vxeGrid';
   import {
     add,
-    div,
     formatDate,
     getNumber,
     isEmpty,
@@ -361,6 +360,11 @@
   import { useUserStoreWithOut } from '/@/store/modules/user';
   import { buildUnrequiredSaleOutProducts } from './components/saleOutProductParams';
   import { syncConfirmAmount, sumConfirmFields } from './components/saleOutConfirm';
+  import {
+    calculateUnitPrice,
+    calculateUnitStockNum,
+    getUnitConversionRate,
+  } from '@/utils/productUnitConversion';
 
   export default defineComponent({
     name: 'AddSaleOutSheetUnRequire',
@@ -692,14 +696,26 @@
       selectUnit(row, unitId) {
         const unit = (row.units || []).find((item) => item.id === unitId);
         if (unit) {
-          if (row.baseStockNum === undefined || row.baseStockNum === null) {
-            row.baseStockNum = row.stockNum;
-          }
+          const stockNum = calculateUnitStockNum(
+            row.stockNum,
+            row.baseStockNum,
+            row.conversionRate,
+            unit.conversionRate,
+          );
+          const salePrice = calculateUnitPrice(
+            row.taxPrice,
+            row.baseSalePrice,
+            row.conversionRate,
+            unit.conversionRate,
+          );
           row.unitId = unit.id;
           row.unit = unit.unitName;
-          row.taxPrice = mul(row.baseSalePrice || 0, unit.conversionRate);
+          row.baseStockNum = stockNum.baseStockNum;
+          row.conversionRate = unit.conversionRate;
+          row.baseSalePrice = salePrice.basePrice;
+          row.taxPrice = salePrice.unitPrice;
           row.oriPrice = row.taxPrice;
-          row.stockNum = getNumber(div(row.baseStockNum || 0, unit.conversionRate || 1), 6);
+          row.stockNum = stockNum.stockNum;
           clearManualSheetAmount(row, 'outNum', 'taxPrice');
           this.calcSum();
         }
@@ -1097,12 +1113,7 @@
       checkStockNum(row) {
         const checkArr = this.tableData
           .filter((item) => item.productId === row.productId)
-          .map((item) =>
-            mul(
-              item.outNum || 0,
-              (item.units || []).find((unit) => unit.id === item.unitId)?.conversionRate || 1,
-            ),
-          );
+          .map((item) => mul(item.outNum || 0, getUnitConversionRate(item)));
         if (isEmpty(checkArr)) {
           checkArr.push(0);
         }
@@ -1111,7 +1122,7 @@
           return add(total, outNum);
         }, 0);
 
-        return totalOutNum <= (row.baseStockNum ?? row.stockNum);
+        return totalOutNum <= (row.baseStockNum ?? mul(row.stockNum || 0, row.conversionRate || 1));
       },
     },
   });

@@ -379,7 +379,11 @@
     syncConfirmAmount,
     sumConfirmFields,
   } from './components/saleOutConfirm';
-  import { calculateUnitPrice } from './components/saleOutUnitPrice';
+  import {
+    calculateUnitPrice,
+    calculateUnitStockNum,
+    getUnitConversionRate,
+  } from '@/utils/productUnitConversion';
 
   export default defineComponent({
     name: 'ModifySaleOutSheetUnRequire',
@@ -883,9 +887,9 @@
         if (!unit) return;
         const rate = Number(unit.conversionRate) || 1;
         const oldRate = Number(row.conversionRate) || 1;
-        const baseStock = Number(row.baseStockNum ?? row.stockNum) * oldRate;
+        const stockNum = calculateUnitStockNum(row.stockNum, row.baseStockNum, oldRate, rate);
         const salePrice = calculateUnitPrice(row.taxPrice, row.baseSalePrice, oldRate, rate);
-        row.baseStockNum = baseStock;
+        row.baseStockNum = stockNum.baseStockNum;
         row.baseSalePrice = salePrice.basePrice;
         row.conversionRate = rate;
         row.unit = unit.unitName;
@@ -896,7 +900,7 @@
           row.baseCostPrice = costPrice.basePrice;
           row.costPrice = costPrice.unitPrice;
         }
-        row.stockNum = baseStock / rate;
+        row.stockNum = stockNum.stockNum;
         clearManualSheetAmount(row, 'outNum', 'taxPrice');
         this.calcSum();
       },
@@ -1217,7 +1221,7 @@
       checkStockNum(row) {
         const checkArr = this.tableData
           .filter((item) => item.productId === row.productId)
-          .map((item) => item.outNum);
+          .map((item) => mul(item.outNum || 0, getUnitConversionRate(item)));
         if (isEmpty(checkArr)) {
           checkArr.push(0);
         }
@@ -1226,7 +1230,7 @@
           return add(total, outNum);
         }, 0);
 
-        return totalOutNum <= row.stockNum;
+        return totalOutNum <= (row.baseStockNum ?? mul(row.stockNum || 0, row.conversionRate || 1));
       },
     },
   });

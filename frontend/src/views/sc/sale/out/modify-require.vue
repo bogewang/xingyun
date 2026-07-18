@@ -273,8 +273,16 @@
             @input="(e) => taxAmountInput(row, e.target.value)"
           />
         </template>
-        <template #confirmNum_default="{ row }"><a-input v-model:value="row.confirmNum" class="number-input" @input="(e) => confirmNumInput(row, e.target.value)" /></template>
-        <template #confirmAmt_default="{ row }"><span>{{ row.confirmAmt }}</span></template>
+        <template #confirmNum_default="{ row }">
+          <a-input
+            v-model:value="row.confirmNum"
+            class="number-input"
+            @input="(e) => confirmNumInput(row, e.target.value)"
+          />
+        </template>
+        <template #confirmAmt_default="{ row }">
+          <span>{{ row.confirmAmt }}</span>
+        </template>
 
         <template #costPrice_default="{ row }">
           <a-input
@@ -306,8 +314,12 @@
           <j-form-item label="含税总金额" :span="8">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="验收数量" :span="8"><a-input v-model:value="formData.confirmNum" class="number-input" readonly /></j-form-item>
-          <j-form-item label="验收金额" :span="8"><a-input v-model:value="formData.confirmAmt" class="number-input" readonly /></j-form-item>
+          <j-form-item label="验收数量" :span="8">
+            <a-input v-model:value="formData.confirmNum" class="number-input" readonly />
+          </j-form-item>
+          <j-form-item label="验收金额" :span="8">
+            <a-input v-model:value="formData.confirmAmt" class="number-input" readonly />
+          </j-form-item>
           <j-form-item label="付款金额" :span="8">
             <a-space>
               <a-input
@@ -416,7 +428,16 @@
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
-  import { normalizeConfirmNum, syncConfirmAmount, sumConfirmFields } from './components/saleOutConfirm';
+  import {
+    normalizeConfirmNum,
+    syncConfirmAmount,
+    sumConfirmFields,
+  } from './components/saleOutConfirm';
+  import {
+    calculateUnitPrice,
+    calculateUnitStockNum,
+    getUnitConversionRate,
+  } from '@/utils/productUnitConversion';
 
   export default defineComponent({
     name: 'ModifySaleOutSheetRequire',
@@ -547,8 +568,20 @@
             width: 140,
             slots: { default: 'taxAmount_default' },
           },
-          { field: 'confirmNum', title: '验收数量', align: 'right', width: 120, slots: { default: 'confirmNum_default' } },
-          { field: 'confirmAmt', title: '验收金额', align: 'right', width: 120, slots: { default: 'confirmAmt_default' } },
+          {
+            field: 'confirmNum',
+            title: '验收数量',
+            align: 'right',
+            width: 120,
+            slots: { default: 'confirmNum_default' },
+          },
+          {
+            field: 'confirmAmt',
+            title: '验收金额',
+            align: 'right',
+            width: 120,
+            slots: { default: 'confirmAmt_default' },
+          },
           {
             field: 'costStatus',
             title: '成本状态',
@@ -901,17 +934,15 @@
         if (!unit) return;
         const rate = Number(unit.conversionRate) || 1;
         const oldRate = Number(row.conversionRate) || 1;
-        const baseStock = Number(row.baseStockNum ?? row.stockNum) * oldRate;
-        // baseSalePrice 已是主单位价，仅首次切换时需要从 taxPrice 折算
-        const basePrice =
-          row.baseSalePrice != null ? row.baseSalePrice : Number(row.taxPrice) / (oldRate || 1);
-        row.baseStockNum = baseStock;
-        row.baseSalePrice = basePrice;
+        const stockNum = calculateUnitStockNum(row.stockNum, row.baseStockNum, oldRate, rate);
+        const salePrice = calculateUnitPrice(row.taxPrice, row.baseSalePrice, oldRate, rate);
+        row.baseStockNum = stockNum.baseStockNum;
+        row.baseSalePrice = salePrice.basePrice;
         row.conversionRate = rate;
         row.unit = unit.unitName;
-        row.taxPrice = basePrice * rate;
+        row.taxPrice = salePrice.unitPrice;
         row.oriPrice = row.taxPrice;
-        row.stockNum = baseStock / rate;
+        row.stockNum = stockNum.stockNum;
         clearManualSheetAmount(row, 'outNum', 'taxPrice');
         this.calcSum();
       },
@@ -1225,7 +1256,7 @@
       checkStockNum(row) {
         const checkArr = this.tableData
           .filter((item) => item.productId === row.productId)
-          .map((item) => item.outNum);
+          .map((item) => mul(item.outNum || 0, getUnitConversionRate(item)));
         if (isEmpty(checkArr)) {
           checkArr.push(0);
         }
@@ -1234,7 +1265,7 @@
           return add(total, outNum);
         }, 0);
 
-        return totalOutNum <= row.stockNum;
+        return totalOutNum <= (row.baseStockNum ?? mul(row.stockNum || 0, row.conversionRate || 1));
       },
     },
   });
