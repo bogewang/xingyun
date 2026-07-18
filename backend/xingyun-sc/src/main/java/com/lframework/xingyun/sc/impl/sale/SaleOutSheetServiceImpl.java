@@ -1937,26 +1937,8 @@ public class SaleOutSheetServiceImpl extends
 
         boolean fillAllCost = true;
         for (SaleOutSheetDetail saleDetail : saleDetails) {
-
-            if (Boolean.TRUE.equals(saleDetail.getManualInputCost())) {
-                if (saleDetail.getCostPrice() == null) {
-                    fillAllCost = false;
-                    saleDetail.setTotalProfit(null);
-                    saleOutSheetDetailService.updateById(saleDetail);
-                    continue;
-                }
-
-                BigDecimal detailCostAmount = NumberUtil.getNumber(
-                        NumberUtil.mul(saleDetail.getCostPrice(), saleDetail.getOrderNum()), 6);
-                BigDecimal detailTotalProfit = NumberUtil.getNumber(
-                        NumberUtil.sub(saleDetail.getTaxAmount(), detailCostAmount), 6);
-                saleDetail.setTotalProfit(detailTotalProfit);
-                saleOutSheetDetailService.saveOrUpdateAllColumn(saleDetail);
-                continue;
-            }
-
-            QueryReceiveSheetDetailDto detail = receiveCostPriceMap.get(saleDetail.getProductId());
-            if (detail == null) {
+            QueryReceiveSheetDetailDto reciveDetail = receiveCostPriceMap.get(saleDetail.getProductId());
+            if (reciveDetail == null) {
                 fillAllCost = false;
                 saleDetail.setCostPrice(null);
                 saleDetail.setTotalProfit(null);
@@ -1964,18 +1946,13 @@ public class SaleOutSheetServiceImpl extends
                 continue;
             }
 
-            BigDecimal detailCostAmount = NumberUtil.getNumber(NumberUtil.mul(
-                    detail.getTaxPrice() == null ? BigDecimal.ZERO : detail.getTaxPrice(),
-                    saleDetail.getOrderNum()),
-                    6);
-            BigDecimal detailTotalProfit = NumberUtil
-                    .getNumber(NumberUtil.sub(saleDetail.getTaxAmount(), detailCostAmount), 6);
+            BigDecimal detailCostAmount = NumberUtil.calculateAmount(NumberUtil.getDefaultValue(reciveDetail.getTaxPrice()), saleDetail.getOrderNum());
+            BigDecimal detailTotalProfit = NumberUtil.getNumber(NumberUtil.sub(saleDetail.getTaxAmount(), detailCostAmount), NumberUtil.AMT_PRECISION);
 
-            saleDetail.setCostPrice(detail.getTaxPrice());
+            saleDetail.setCostPrice(reciveDetail.getTaxPrice());
             saleDetail.setTotalProfit(detailTotalProfit);
-            saleDetail.setSupplierId(detail.getSupplierId());
+            saleDetail.setSupplierId(reciveDetail.getSupplierId());
             saleOutSheetDetailService.saveOrUpdateAllColumn(saleDetail);
-
         }
 
         // 总利润由明细汇总

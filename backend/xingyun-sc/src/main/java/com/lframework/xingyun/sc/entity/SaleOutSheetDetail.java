@@ -39,7 +39,7 @@ public class SaleOutSheetDetail extends BaseEntity implements BaseDto {
   private String productId;
 
   /**
-   * 出库数量
+   * 出库数量(主单位数量)
    */
   private BigDecimal orderNum;
 
