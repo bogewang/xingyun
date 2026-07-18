@@ -629,7 +629,10 @@
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           // 参考价=》商品的售价，价格=》最新价格
           oriPrice: product.salePrice,
-          taxPrice: product.latestSalePrice,
+          // 如果行内已有有效的价格(>0)，则保留原价格，不被最新售价覆盖
+          taxPrice: isFloatGtZero(this.tableData[index].taxPrice)
+            ? this.tableData[index].taxPrice
+            : product.latestSalePrice,
           editingProduct: false,
           productQuery: '',
         });

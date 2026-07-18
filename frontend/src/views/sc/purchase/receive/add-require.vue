@@ -253,7 +253,10 @@
         :sc-id="formData.scId"
         @confirm="batchAddProduct"
       />
-      <div class="sheet-editor-actions" style="text-align: center; background-color: #ffffff; padding: 8px 0">
+      <div
+        class="sheet-editor-actions"
+        style="text-align: center; background-color: #ffffff; padding: 8px 0"
+      >
         <a-space>
           <a-button
             v-permission="['purchase:receive:add']"
@@ -329,7 +332,7 @@
   } from '@/utils/inlineProductSelect';
   import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
-  import * as saleApi from "@/api/sc/sale/order";
+  import * as saleApi from '@/api/sc/sale/order';
 
   export default defineComponent({
     name: 'AddPurchaseReceiveSheetRequire',
@@ -439,7 +442,12 @@
             slots: { default: 'taxAmount_default' },
           },
           { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
-          { field: 'productionDate', title: '生产日期', width: 120, slots: { default: 'productionDate_default' } },
+          {
+            field: 'productionDate',
+            title: '生产日期',
+            width: 120,
+            slots: { default: 'productionDate_default' },
+          },
           {
             field: 'description',
             title: '备注',
@@ -606,7 +614,10 @@
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
-        const purchasePrice = !isEmpty(product.latestPurchasePrice)
+        // 如果行内已有有效的采购价(>0)，则保留原价格，不被最新采购价覆盖
+        const purchasePrice = isFloatGtZero(this.tableData[index].purchasePrice)
+          ? this.tableData[index].purchasePrice
+          : !isEmpty(product.latestPurchasePrice)
           ? product.latestPurchasePrice
           : product.purchasePrice;
         // 将选中的商品数据赋值给当前行
