@@ -196,7 +196,7 @@
             <span v-else style="color: #f5222d">{{ row.stockNum }}</span>
           </template>
 
-          <!-- 含税金额 列自定义内容 -->
+          <!-- 金额 列自定义内容 -->
           <template #taxAmount_default="{ row }">
             <a-input
               v-model:value="row.taxAmount"
@@ -454,7 +454,7 @@
           },
           {
             field: 'taxAmount',
-            title: '含税金额',
+            title: '金额',
             align: 'right',
             width: 100,
             slots: { default: 'taxAmount_default' },

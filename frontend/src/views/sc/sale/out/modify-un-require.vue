@@ -379,6 +379,7 @@
     syncConfirmAmount,
     sumConfirmFields,
   } from './components/saleOutConfirm';
+  import { calculateUnitPrice } from './components/saleOutUnitPrice';
 
   export default defineComponent({
     name: 'ModifySaleOutSheetUnRequire',
@@ -883,15 +884,18 @@
         const rate = Number(unit.conversionRate) || 1;
         const oldRate = Number(row.conversionRate) || 1;
         const baseStock = Number(row.baseStockNum ?? row.stockNum) * oldRate;
-        // baseSalePrice 已是主单位价，仅首次切换时需要从 taxPrice 折算
-        const basePrice =
-          row.baseSalePrice != null ? row.baseSalePrice : Number(row.taxPrice) / (oldRate || 1);
+        const salePrice = calculateUnitPrice(row.taxPrice, row.baseSalePrice, oldRate, rate);
         row.baseStockNum = baseStock;
-        row.baseSalePrice = basePrice;
+        row.baseSalePrice = salePrice.basePrice;
         row.conversionRate = rate;
         row.unit = unit.unitName;
-        row.taxPrice = basePrice * rate;
+        row.taxPrice = salePrice.unitPrice;
         row.oriPrice = row.taxPrice;
+        if (row.baseCostPrice != null || !isEmpty(row.costPrice)) {
+          const costPrice = calculateUnitPrice(row.costPrice, row.baseCostPrice, oldRate, rate);
+          row.baseCostPrice = costPrice.basePrice;
+          row.costPrice = costPrice.unitPrice;
+        }
         row.stockNum = baseStock / rate;
         clearManualSheetAmount(row, 'outNum', 'taxPrice');
         this.calcSum();
@@ -902,6 +906,9 @@
       },
       costPriceInput(row, value) {
         row.costPrice = sanitizeNonNegativeDecimalInput(value);
+        row.baseCostPrice = isEmpty(row.costPrice)
+          ? null
+          : calculateUnitPrice(row.costPrice, null, row.conversionRate, 1).unitPrice;
         row.manualInputCost = !isEmpty(row.costPrice);
         this.calcSum();
       },
