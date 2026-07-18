@@ -2,6 +2,7 @@ package com.lframework.xingyun.sc.impl.sale;
 
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
+import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
 import java.math.BigDecimal;
 import java.util.List;
 import org.testng.Assert;
@@ -75,6 +76,41 @@ class SaleOutSheetServiceImplTest {
     List<String> errors = SaleOutSheetServiceImpl.validateImportNumbers(model);
 
     Assert.assertTrue(errors.contains("第2行“验收数量”最多允许6位小数"));
+  }
+
+  /**
+   * 验证刷新成本时优先使用验收数量计算成本金额。
+   */
+  @Test
+  void resolveCostNumShouldPreferPositiveConfirmNum() {
+    SaleOutSheetDetail detail = new SaleOutSheetDetail();
+    detail.setOrderNum(new BigDecimal("10"));
+    detail.setConfirmNum(new BigDecimal("6.5"));
+
+    Assert.assertEquals(SaleOutSheetServiceImpl.resolveCostNum(detail), new BigDecimal("6.5"));
+  }
+
+  /**
+   * 验证刷新成本时验收数量为空才使用出库数量计算成本金额。
+   */
+  @Test
+  void resolveCostNumShouldFallbackToOrderNumWhenConfirmNumNull() {
+    SaleOutSheetDetail detail = new SaleOutSheetDetail();
+    detail.setOrderNum(new BigDecimal("10"));
+
+    Assert.assertEquals(SaleOutSheetServiceImpl.resolveCostNum(detail), new BigDecimal("10"));
+  }
+
+  /**
+   * 验证刷新成本时验收数量为 0 也按验收数量计算成本金额。
+   */
+  @Test
+  void resolveCostNumShouldUseZeroConfirmNum() {
+    SaleOutSheetDetail detail = new SaleOutSheetDetail();
+    detail.setOrderNum(new BigDecimal("10"));
+    detail.setConfirmNum(BigDecimal.ZERO);
+
+    Assert.assertEquals(SaleOutSheetServiceImpl.resolveCostNum(detail), BigDecimal.ZERO);
   }
 
   private SaleOutSheetImportModel createModel(BigDecimal orderNum, BigDecimal taxPrice,

@@ -1936,6 +1936,7 @@ public class SaleOutSheetServiceImpl extends
         List<SaleOutSheetDetail> saleDetails = saleOutSheetDetailService.getBySheetId(orderId);
 
         boolean fillAllCost = true;
+        BigDecimal totalCostAmount = BigDecimal.ZERO;
         for (SaleOutSheetDetail saleDetail : saleDetails) {
             QueryReceiveSheetDetailDto receiveDetail = receiveCostPriceMap.get(saleDetail.getProductId());
             if (receiveDetail == null) {
@@ -1946,8 +1947,12 @@ public class SaleOutSheetServiceImpl extends
                 continue;
             }
             // receiveDetail.getTaxPrice() 在sql中已经换算成基本单位对应采购价了。
-            BigDecimal detailCostAmount = NumberUtil.calculateAmount(NumberUtil.getDefaultValue(receiveDetail.getTaxPrice()), saleDetail.getOrderNum());
-            BigDecimal detailTotalProfit = NumberUtil.getNumber(NumberUtil.sub(saleDetail.getTaxAmount(), detailCostAmount), NumberUtil.AMT_PRECISION);
+            BigDecimal detailCostAmount = NumberUtil.calculateAmount(
+                    NumberUtil.getDefaultValue(receiveDetail.getTaxPrice()), resolveCostNum(saleDetail));
+            BigDecimal detailTotalProfit = NumberUtil.getNumber(
+                    NumberUtil.sub(NumberUtil.getDefaultValue(saleDetail.getConfirmAmt()), detailCostAmount),
+                    NumberUtil.AMT_PRECISION);
+            totalCostAmount = NumberUtil.add(totalCostAmount, detailCostAmount);
 
             saleDetail.setCostPrice(receiveDetail.getTaxPrice());
             saleDetail.setTotalProfit(detailTotalProfit);
@@ -1957,10 +1962,7 @@ public class SaleOutSheetServiceImpl extends
 
         // 总利润由明细汇总
         BigDecimal totalProfit = saleDetails.stream()
-                .map(item -> item.getTotalProfit() == null ? BigDecimal.ZERO : item.getTotalProfit())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalCostAmount = saleDetails.stream()
-                .map(item -> item.getCostPrice() == null ? BigDecimal.ZERO : item.getCostPrice())
+                .map(item -> NumberUtil.getDefaultValue(item.getTotalProfit()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Boolean finalFillAllCost = overrideFillAllCost ? manualFillAllCost : fillAllCost;
@@ -1972,6 +1974,26 @@ public class SaleOutSheetServiceImpl extends
                 .eq(SaleOutSheet::getId, orderId);
         this.update(updateWrapper);
         log.info("refreshCostPrice end, orderId: {}", orderId);
+    }
+
+    /**
+     * 获取计算成本金额使用的数量。
+     *
+     * @param saleDetail 销售出库单明细
+     * @return 成本计算数量
+     */
+    static BigDecimal resolveCostNum(SaleOutSheetDetail saleDetail) {
+        if (saleDetail == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal confirmNum = saleDetail.getConfirmNum();
+        if (confirmNum != null) {
+            // 这里的确认数量可能是辅单位，因此需要换算成主单位。
+            return NumberUtil.mul(confirmNum, saleDetail.getConversionRate() == null ? BigDecimal.ONE : saleDetail.getConversionRate());
+        }
+
+        return NumberUtil.getDefaultValue(saleDetail.getOrderNum());
     }
 
     /**
