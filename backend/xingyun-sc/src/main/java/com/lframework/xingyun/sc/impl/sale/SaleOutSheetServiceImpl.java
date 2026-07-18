@@ -1987,12 +1987,6 @@ public class SaleOutSheetServiceImpl extends
             return BigDecimal.ZERO;
         }
 
-        BigDecimal confirmNum = saleDetail.getConfirmNum();
-        if (confirmNum != null && confirmNum.compareTo(BigDecimal.ZERO) > 0) {
-            // 这里的确认数量可能是辅单位，因此需要换算成主单位。
-            return NumberUtil.mul(confirmNum, saleDetail.getConversionRate() == null ? BigDecimal.ONE : saleDetail.getConversionRate());
-        }
-
         return NumberUtil.getDefaultValue(saleDetail.getOrderNum());
     }
 

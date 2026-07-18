@@ -337,7 +337,6 @@
   import {
     isEmpty,
     isFloatGeZero,
-    getNumber,
     mul,
     add,
     isFloat,
@@ -379,6 +378,7 @@
     syncConfirmAmount,
     sumConfirmFields,
   } from './components/saleOutConfirm';
+  import { calcSaleOutProfitRate, isSaleOutProfitNegative } from './components/saleOutProfit';
   import {
     calculateUnitPrice,
     calculateUnitStockNum,
@@ -405,7 +405,6 @@
         EditOutlined,
         isEmpty,
         isFloatGeZero,
-        getNumber,
         mul,
         hasCostPrice: (row) =>
           row &&
@@ -950,20 +949,8 @@
         this.formData.confirmNum = confirm.confirmNum;
         this.formData.confirmAmt = confirm.confirmAmt;
       },
-      calcTaxAmount(row) {
-        if (!isFloatGeZero(row?.taxPrice) || !isFloatGeZero(row?.outNum)) {
-          return 0;
-        }
-        return getNumber(mul(row.taxPrice, row.outNum), 2);
-      },
       calcProfitRate(row) {
-        const amount = Number(this.calcTaxAmount(row));
-        if (!amount || !isFloatGeZero(row?.costPrice) || !isFloatGeZero(row?.outNum)) {
-          return '0.00%';
-        }
-
-        const costAmount = Number(getNumber(mul(row.costPrice, row.outNum), 2));
-        return `${(((amount - costAmount) / amount) * 100).toFixed(2)}%`;
+        return calcSaleOutProfitRate(row);
       },
       hasWarningAmount(row) {
         return hasSheetAmountWarning(row, 'taxPrice', 'outNum');
@@ -972,17 +959,7 @@
         return getSheetAmountCellClass(row, column.field, 'taxPrice', 'outNum');
       },
       isNegativeProfit(row) {
-        if (
-          !isFloatGeZero(row?.taxPrice) ||
-          !isFloatGeZero(row?.costPrice) ||
-          !isFloatGeZero(row?.outNum)
-        ) {
-          return false;
-        }
-
-        const saleAmount = Number(this.calcTaxAmount(row));
-        const costAmount = Number(getNumber(mul(row.costPrice, row.outNum), 2));
-        return saleAmount - costAmount < 0;
+        return isSaleOutProfitNegative(row);
       },
       getTableRowClassName({ row }) {
         return this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
