@@ -25,7 +25,9 @@ public class SaleOutSheetImportModel implements ExcelModel {
     @ExcelIgnore()
     private String productId;
 
-    /** 商品单位关系ID */
+    /**
+     * 商品单位关系ID
+     */
     @ExcelIgnore
     private String unitId;
 
@@ -34,12 +36,6 @@ public class SaleOutSheetImportModel implements ExcelModel {
      */
     @ExcelIgnore()
     private String productCode;
-
-    /**
-     * 销售价
-     */
-    // @ExcelIgnore()
-    // private BigDecimal salePrice;
 
     /**
      * 原价
@@ -69,12 +65,6 @@ public class SaleOutSheetImportModel implements ExcelModel {
     private BigDecimal orderNum;
 
     /**
-     * 验收数量
-     */
-    @ExcelProperty("验收数量")
-    private BigDecimal confirmNum;
-
-    /**
      * 采购价
      */
     // @ExcelRequired
@@ -86,4 +76,10 @@ public class SaleOutSheetImportModel implements ExcelModel {
      */
     @ExcelProperty("备注")
     private String description;
+
+    /**
+     * 验收数量
+     */
+    @ExcelProperty("验收数量")
+    private BigDecimal confirmNum;
 }

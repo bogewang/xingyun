@@ -58,8 +58,8 @@
               <a-button :icon="h(NumberOutlined)" @click="batchInputOutNum">批量录入数量</a-button>
               <a-button :icon="h(EditOutlined)" @click="batchInputTaxPrice">批量调整价格</a-button>
               <a-button :icon="h(CloudUploadOutlined)" @click="$refs.importer.openDialog()"
-                >导入Excel</a-button
-              >
+                >导入Excel
+              </a-button>
             </a-space>
           </template>
 
@@ -204,8 +204,16 @@
               @input="(e) => taxAmountInput(row, e.target.value)"
             />
           </template>
-          <template #confirmNum_default="{ row }"><a-input v-model:value="row.confirmNum" class="number-input" @input="(e) => confirmNumInput(row, e.target.value)" /></template>
-          <template #confirmAmt_default="{ row }"><span>{{ row.confirmAmt }}</span></template>
+          <template #confirmNum_default="{ row }">
+            <a-input
+              v-model:value="row.confirmNum"
+              class="number-input"
+              @input="(e) => confirmNumInput(row, e.target.value)"
+            />
+          </template>
+          <template #confirmAmt_default="{ row }"
+            ><span>{{ row.confirmAmt }}</span></template
+          >
 
           <!-- 备注 列自定义内容 -->
           <template #description_default="{ row, rowIndex }">
@@ -222,8 +230,12 @@
           <j-form-item label="含税总金额" :span="8">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="验收数量" :span="8"><a-input v-model:value="formData.confirmNum" class="number-input" readonly /></j-form-item>
-          <j-form-item label="验收金额" :span="8"><a-input v-model:value="formData.confirmAmt" class="number-input" readonly /></j-form-item>
+          <j-form-item label="验收数量" :span="8">
+            <a-input v-model:value="formData.confirmNum" class="number-input" readonly />
+          </j-form-item>
+          <j-form-item label="验收金额" :span="8">
+            <a-input v-model:value="formData.confirmAmt" class="number-input" readonly />
+          </j-form-item>
           <j-form-item label="付款金额" :span="8">
             <a-space>
               <a-input
@@ -447,13 +459,25 @@
             width: 100,
             slots: { default: 'taxAmount_default' },
           },
-          { field: 'confirmNum', title: '验收数量', align: 'right', width: 100, slots: { default: 'confirmNum_default' } },
-          { field: 'confirmAmt', title: '验收金额', align: 'right', width: 100, slots: { default: 'confirmAmt_default' } },
           {
             field: 'description',
             title: '备注',
             width: 200,
             slots: { default: 'description_default' },
+          },
+          {
+            field: 'confirmNum',
+            title: '验收数量',
+            align: 'right',
+            width: 100,
+            slots: { default: 'confirmNum_default' },
+          },
+          {
+            field: 'confirmAmt',
+            title: '验收金额',
+            align: 'right',
+            width: 100,
+            slots: { default: 'confirmAmt_default' },
           },
         ],
         tableData: [],

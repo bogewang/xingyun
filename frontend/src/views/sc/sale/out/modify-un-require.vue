@@ -475,13 +475,7 @@
             width: 80,
             slots: { default: 'outNum_default' },
           },
-          {
-            field: 'confirmNum',
-            title: '验收数量',
-            align: 'right',
-            width: 100,
-            slots: { default: 'confirmNum_default' },
-          },
+
           {
             field: 'taxPrice',
             title: '价格（元）',
@@ -489,7 +483,12 @@
             width: 100,
             slots: { default: 'taxPrice_default' },
           },
-
+          {
+            field: 'description',
+            title: '备注',
+            width: 200,
+            slots: { default: 'description_default' },
+          },
           {
             field: 'taxAmount',
             title: '金额',
@@ -498,17 +497,18 @@
             slots: { default: 'taxAmount_default' },
           },
           {
+            field: 'confirmNum',
+            title: '验收数量',
+            align: 'right',
+            width: 100,
+            slots: { default: 'confirmNum_default' },
+          },
+          {
             field: 'confirmAmt',
             title: '验收金额',
             align: 'right',
             width: 100,
             slots: { default: 'confirmAmt_default' },
-          },
-          {
-            field: 'description',
-            title: '备注',
-            width: 200,
-            slots: { default: 'description_default' },
           },
           { field: 'categoryName', title: '商品分类', width: 80 },
           { field: 'oriPrice', title: '参考销售价（元）', align: 'right', width: 140 },
