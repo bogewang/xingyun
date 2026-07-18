@@ -416,7 +416,7 @@
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
-  import { syncConfirmAmount, sumConfirmFields } from './components/saleOutConfirm';
+  import { normalizeConfirmNum, syncConfirmAmount, sumConfirmFields } from './components/saleOutConfirm';
 
   export default defineComponent({
     name: 'ModifySaleOutSheetRequire',
@@ -1179,7 +1179,7 @@
               unit: t.unit,
               unitId: t.unitId,
               orderNum: t.outNum,
-              confirmNum: t.confirmNum,
+              confirmNum: normalizeConfirmNum(t.confirmNum),
               description: t.description,
               oriPrice: t.oriPrice,
               taxPrice: t.taxPrice,

@@ -1,3 +1,5 @@
+import { normalizeConfirmNum } from './saleOutConfirm';
+
 export interface SaleOutTableRow {
   id?: string;
   productId?: string;
@@ -20,7 +22,7 @@ export function buildUnrequiredSaleOutProducts(rows: SaleOutTableRow[]) {
     oriPrice: row.oriPrice,
     taxPrice: row.taxPrice,
     orderNum: row.outNum,
-    confirmNum: row.confirmNum,
+    confirmNum: normalizeConfirmNum(row.confirmNum),
     description: row.description,
   }));
 }
@@ -30,7 +32,7 @@ export function buildRequiredSaleOutProducts(rows: SaleOutTableRow[]) {
     const product = {
       productId: row.productId,
       orderNum: row.outNum,
-      confirmNum: row.confirmNum,
+      confirmNum: normalizeConfirmNum(row.confirmNum),
       description: row.description,
       oriPrice: row.oriPrice,
       taxPrice: row.taxPrice,

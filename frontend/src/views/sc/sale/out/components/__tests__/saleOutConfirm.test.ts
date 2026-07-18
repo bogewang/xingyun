@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { getConfirmAmount, sumConfirmFields, syncConfirmAmount } from '../saleOutConfirm';
+import { getConfirmAmount, normalizeConfirmNum, sumConfirmFields, syncConfirmAmount } from '../saleOutConfirm';
 
 describe('saleOutConfirm', () => {
   it('calculates amount from confirm quantity and tax price', () => {
     expect(getConfirmAmount({ confirmNum: 1.234567, taxPrice: 2.345678 })).toBe(2.895897);
+  });
+
+  it('normalizes confirm quantity to number for payloads', () => {
+    expect(normalizeConfirmNum('5.1')).toBe(5.1);
+    expect(typeof normalizeConfirmNum('5.1')).toBe('number');
+    expect(normalizeConfirmNum(null)).toBe(0);
   });
 
   it('returns zero when confirm quantity or tax price is empty', () => {

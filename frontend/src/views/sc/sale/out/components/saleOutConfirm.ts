@@ -7,12 +7,21 @@ export interface SaleOutConfirmRow {
 }
 
 /**
+ * 将验收数量归一为数字，供提交参数使用。
+ * @param confirmNum 验收数量
+ * @returns 数字类型验收数量
+ */
+export function normalizeConfirmNum(confirmNum?: number | string | null): number {
+  return isEmpty(confirmNum) ? 0 : getNumber(confirmNum, 6);
+}
+
+/**
  * 计算单行验收金额，空值按 0 处理并保留六位小数。
  * @param row 验收行数据
  * @returns 单行验收金额
  */
 export function getConfirmAmount(row: SaleOutConfirmRow): number {
-  const confirmNum = isEmpty(row?.confirmNum) ? 0 : row.confirmNum;
+  const confirmNum = normalizeConfirmNum(row?.confirmNum);
   const taxPrice = isEmpty(row?.taxPrice) ? 0 : row.taxPrice;
   return getNumber(mul(confirmNum, taxPrice), 6);
 }
@@ -38,7 +47,7 @@ export function sumConfirmFields(
 ): { confirmNum: number; confirmAmt: number } {
   return rows.reduce(
     (totals, row) => ({
-      confirmNum: add(totals.confirmNum, isEmpty(row?.confirmNum) ? 0 : row.confirmNum),
+      confirmNum: add(totals.confirmNum, normalizeConfirmNum(row?.confirmNum)),
       confirmAmt: add(totals.confirmAmt, isEmpty(row?.confirmAmt) ? 0 : row.confirmAmt),
     }),
     { confirmNum: 0, confirmAmt: 0 },

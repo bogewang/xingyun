@@ -362,7 +362,7 @@
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
   import { useUserStoreWithOut } from '/@/store/modules/user';
-  import { syncConfirmAmount, sumConfirmFields } from './components/saleOutConfirm';
+  import { normalizeConfirmNum, syncConfirmAmount, sumConfirmFields } from './components/saleOutConfirm';
 
   export default defineComponent({
     name: 'ModifySaleOutSheetUnRequire',
@@ -1141,7 +1141,7 @@
               oriPrice: t.oriPrice,
               taxPrice: t.taxPrice,
               orderNum: t.outNum,
-              confirmNum: t.confirmNum,
+              confirmNum: normalizeConfirmNum(t.confirmNum),
               description: t.description,
               costPrice: this.canEditCostPrice(t) && !isEmpty(t.costPrice) ? t.costPrice : null,
             };
