@@ -1950,7 +1950,7 @@ public class SaleOutSheetServiceImpl extends
             BigDecimal detailCostAmount = NumberUtil.calculateAmount(
                     NumberUtil.getDefaultValue(receiveDetail.getTaxPrice()), resolveCostNum(saleDetail));
             BigDecimal detailTotalProfit = NumberUtil.getNumber(
-                    NumberUtil.sub(NumberUtil.getDefaultValue(saleDetail.getConfirmAmt()), detailCostAmount),
+                    NumberUtil.sub(resolveConfirmAmt(saleDetail), detailCostAmount),
                     NumberUtil.AMT_PRECISION);
             totalCostAmount = NumberUtil.add(totalCostAmount, detailCostAmount);
 
@@ -1988,12 +1988,22 @@ public class SaleOutSheetServiceImpl extends
         }
 
         BigDecimal confirmNum = saleDetail.getConfirmNum();
-        if (confirmNum != null) {
+        if (confirmNum != null && confirmNum.compareTo(BigDecimal.ZERO) > 0) {
             // 这里的确认数量可能是辅单位，因此需要换算成主单位。
             return NumberUtil.mul(confirmNum, saleDetail.getConversionRate() == null ? BigDecimal.ONE : saleDetail.getConversionRate());
         }
 
         return NumberUtil.getDefaultValue(saleDetail.getOrderNum());
+    }
+
+    private BigDecimal resolveConfirmAmt(SaleOutSheetDetail saleDetail) {
+        if (saleDetail == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return saleDetail.getConfirmAmt() != null && saleDetail.getConfirmAmt().compareTo(BigDecimal.ZERO) > 0
+                ? saleDetail.getConfirmAmt()
+                : NumberUtil.getDefaultValue(saleDetail.getTaxAmount());
     }
 
     /**
