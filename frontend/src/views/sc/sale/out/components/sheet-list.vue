@@ -323,6 +323,7 @@
   import PrintDialog from '/@/components/PrintDialog';
   import SaleOutSheetQueryImporter from '@/components/Importor/SaleOutSheetQueryImporter.vue';
   import { usePermission } from '/@/hooks/web/usePermission';
+  import { buildMarketBuySummaryParams } from './saleOutMarketBuySummary';
 
   export default defineComponent({
     name: 'SaleOutSheetSheetList',
@@ -920,9 +921,16 @@
           this.loading = false;
         }
       },
+      // 按勾选单据导出买菜汇总
       marketBuySummary() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要汇总的销售出库单！');
+          return;
+        }
+
         this.loading = true;
-        api.exportMarketBuySummary(this.buildSearchFormData()).finally(() => {
+        api.exportMarketBuySummary(buildMarketBuySummaryParams(records)).finally(() => {
           this.loading = false;
         });
       },

@@ -22,6 +22,11 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
   productSpec: string;
 
   /**
+   * 单据ID列表
+   */
+  idList: string[];
+
+  /**
    * 客户ID
    */
   customerId: string;

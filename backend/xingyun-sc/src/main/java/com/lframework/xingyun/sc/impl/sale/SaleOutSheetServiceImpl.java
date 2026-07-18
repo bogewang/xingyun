@@ -328,6 +328,8 @@ public class SaleOutSheetServiceImpl extends
 
     @Override
     public void marketBuySummary(QuerySaleOutSheetVo vo) {
+        validateMarketBuySummaryIds(vo);
+
         Map<String, String> headerMap = buildMarketBuySummaryHeaders();
 
         List<SaleOutSheet> sheets = this.query(vo);
@@ -365,6 +367,17 @@ public class SaleOutSheetServiceImpl extends
         }
 
         exportMarketBuySummary(headerMap, data);
+    }
+
+    /**
+     * 校验买菜汇总必须基于勾选的销售出库单ID。
+     *
+     * @param vo 查询参数
+     */
+    static void validateMarketBuySummaryIds(QuerySaleOutSheetVo vo) {
+        if (vo == null || CollectionUtils.isEmpty(vo.getIdList())) {
+            throw new DefaultClientException("请选择要汇总的销售出库单！");
+        }
     }
 
     @Override

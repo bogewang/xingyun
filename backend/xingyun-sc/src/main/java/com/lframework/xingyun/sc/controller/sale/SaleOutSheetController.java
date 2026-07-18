@@ -304,10 +304,12 @@ public class SaleOutSheetController extends DefaultBaseController {
      */
     @ApiOperation("买菜汇总导出")
     @HasPermission({ "sale:out:query" })
-    @GetMapping("/export/marketBuySummary")
-    public void exportMarketBuySummary(@Valid QuerySaleOutSheetVo vo) {
+    @PostMapping("/export/marketBuySummary")
+    public void exportMarketBuySummary(@RequestBody @Valid QuerySaleOutSheetVo vo) {
         try {
             saleOutSheetService.marketBuySummary(vo);
+        } catch (DefaultClientException e) {
+            throw e;
         } catch (Exception e) {
             log.error("导出买菜汇总失败", e);
             throw new DefaultClientException(e.getMessage());

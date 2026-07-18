@@ -30,6 +30,10 @@ type TagPrintParams = QuerySaleOutSheetVo & {
   idList?: string[];
 };
 
+type MarketBuySummaryParams = {
+  idList: string[];
+};
+
 /**
  * 打印
  */
@@ -220,14 +224,15 @@ export function tagPrint(params: TagPrintParams): Promise<PrintSaleTagBo[]> {
 /**
  * 买菜汇总导出
  */
-export function exportMarketBuySummary(params: QuerySaleOutSheetVo): Promise<void> {
-  return defHttp.get<void>(
+export function exportMarketBuySummary(params: MarketBuySummaryParams): Promise<void> {
+  return defHttp.post<void>(
     {
       url: baseUrl + '/export/marketBuySummary',
-      params,
+      data: params,
     },
     {
       region,
+      contentType: ContentTypeEnum.JSON,
       responseType: ResponseEnum.BLOB,
     },
   );
