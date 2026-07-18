@@ -155,7 +155,7 @@ export default defineComponent({
           { field: 'purchasePrice', title: '采购价（元）', align: 'right', width: 120 },
           { field: 'productionDate', title: '生产日期', width: 120 },
           {
-            field: 'orderNum',
+            field: 'receiveNum',
             title: '数量',
             align: 'right',
             width: 100,
