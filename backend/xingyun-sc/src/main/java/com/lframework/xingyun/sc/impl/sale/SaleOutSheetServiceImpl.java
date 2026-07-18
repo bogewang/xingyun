@@ -264,9 +264,7 @@ public class SaleOutSheetServiceImpl extends
         List<PrintSaleTagBo> res = Lists.newArrayList();
         result.getDatas().forEach(item -> {
             Customer customer = customerService.findById(item.getCustomerId());
-            Wrapper<SaleOutSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(SaleOutSheetDetail.class)
-                    .eq(SaleOutSheetDetail::getSheetId, item.getId());
-            List<SaleOutSheetDetail> details = saleOutSheetDetailService.list(queryDetailWrapper);
+            List<SaleOutSheetDetail> details = getSheetDetails(item.getId());
 
             List<String> productIds = details.stream()
                     .map(SaleOutSheetDetail::getProductId)
@@ -928,7 +926,7 @@ public class SaleOutSheetServiceImpl extends
         this.adjustCustomerAmount(sheet.getCustomerId());
         refreshCostPrice(sheet.getId(), vo.getFillAllCost(), Boolean.TRUE.equals(vo.getFillAllCostModified()));
 
-        subStock(sheet, details);
+        subStock(sheet);
         productHotnessService.increment(
                 vo.getProducts().stream().map(SaleOutProductVo::getProductId).collect(Collectors.toList()));
 
@@ -949,15 +947,7 @@ public class SaleOutSheetServiceImpl extends
             throw new InputErrorException("销售出库单不存在！");
         }
 
-        if (sheet.getStatus() != SaleOutSheetStatus.CREATED
-                && sheet.getStatus() != SaleOutSheetStatus.APPROVE_REFUSE) {
-
-            if (sheet.getStatus() == SaleOutSheetStatus.APPROVE_PASS) {
-                throw new DefaultClientException("销售出库单已审核通过，无法修改！");
-            }
-
-            throw new DefaultClientException("销售出库单无法修改！");
-        }
+        checkApproveStatus(sheet, "销售出库单已审核通过，无法修改！", "销售出库单无法修改！");
 
         String oldCustomerId = sheet.getCustomerId();
         List<SaleOutSheetDetail> oldDetails = getSheetDetails(sheet.getId());
@@ -966,15 +956,7 @@ public class SaleOutSheetServiceImpl extends
             rollbackStock(sheet, oldDetails);
         }
 
-        // 删除出库单明细
-        Wrapper<SaleOutSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(SaleOutSheetDetail.class)
-                .eq(SaleOutSheetDetail::getSheetId, sheet.getId());
-        saleOutSheetDetailService.remove(deleteDetailWrapper);
-
-        // 删除组合商品信息
-        Wrapper<SaleOutSheetDetailBundle> deleteDetailBundleWrapper = Wrappers.lambdaQuery(
-                SaleOutSheetDetailBundle.class).eq(SaleOutSheetDetailBundle::getSheetId, sheet.getId());
-        saleOutSheetDetailBundleService.remove(deleteDetailBundleWrapper);
+        deleteSheetDetail(sheet.getId());
 
         removeDetailLots(oldDetails);
 
@@ -982,17 +964,7 @@ public class SaleOutSheetServiceImpl extends
 
         sheet.setStatus(SaleOutSheetStatus.CREATED);
 
-        List<SaleOutSheetStatus> statusList = new ArrayList<>();
-        statusList.add(SaleOutSheetStatus.CREATED);
-        statusList.add(SaleOutSheetStatus.APPROVE_REFUSE);
-
-        Wrapper<SaleOutSheet> updateOrderWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
-                .set(SaleOutSheet::getApproveBy, null).set(SaleOutSheet::getApproveTime, null)
-                .set(SaleOutSheet::getRefuseReason, StringPool.EMPTY_STR)
-                .eq(SaleOutSheet::getId, sheet.getId()).in(SaleOutSheet::getStatus, statusList);
-        if (getBaseMapper().updateAllColumn(sheet, updateOrderWrapper) != 1) {
-            throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
-        }
+        clearApproveStatus(sheet);
 
         this.adjustCustomerAmount(oldCustomerId);
         if (!StringUtil.equals(oldCustomerId, sheet.getCustomerId())) {
@@ -1000,14 +972,61 @@ public class SaleOutSheetServiceImpl extends
         }
 
         refreshCostPrice(sheet.getId(), vo.getFillAllCost(), Boolean.TRUE.equals(vo.getFillAllCostModified()));
-        List<SaleOutSheetDetail> details = getSheetDetails(sheet.getId());
-        subStock(sheet, details);
+        subStock(sheet);
 
         productHotnessService.increment(
                 vo.getProducts().stream().map(SaleOutProductVo::getProductId).collect(Collectors.toList()));
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
+    }
+
+    /**
+     *
+     * @param sheet
+     * @param msg
+     * @param msg1
+     */
+    private void checkApproveStatus(SaleOutSheet sheet, String msg, String msg1) {
+        if (sheet.getStatus() != SaleOutSheetStatus.CREATED
+                && sheet.getStatus() != SaleOutSheetStatus.APPROVE_REFUSE) {
+
+            if (sheet.getStatus() == SaleOutSheetStatus.APPROVE_PASS) {
+                throw new DefaultClientException(msg);
+            }
+
+            throw new DefaultClientException(msg1);
+        }
+    }
+
+    /**
+     * 清空审核相关信息
+     * @param sheet
+     */
+    private void clearApproveStatus(SaleOutSheet sheet) {
+        List<SaleOutSheetStatus> statusList = new ArrayList<>();
+        statusList.add(SaleOutSheetStatus.CREATED);
+        statusList.add(SaleOutSheetStatus.APPROVE_REFUSE);
+
+        Wrapper<SaleOutSheet> updateOrderWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
+                .set(SaleOutSheet::getApproveBy, null)
+                .set(SaleOutSheet::getApproveTime, null)
+                .set(SaleOutSheet::getRefuseReason, StringPool.EMPTY_STR)
+                .eq(SaleOutSheet::getId, sheet.getId())
+                .in(SaleOutSheet::getStatus, statusList);
+        if (getBaseMapper().updateAllColumn(sheet, updateOrderWrapper) != 1) {
+            throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
+        }
+    }
+
+    /**
+     * 删除出库单明细
+     * @param sheetId
+     */
+    private void deleteSheetDetail(String sheetId) {
+        Wrapper<SaleOutSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(SaleOutSheetDetail.class)
+                .eq(SaleOutSheetDetail::getSheetId, sheetId);
+        saleOutSheetDetailService.remove(deleteDetailWrapper);
     }
 
     @OpLog(type = SaleOpLogType.class, name = "修改销售出库单备注，单号：{}", params = "#code")
@@ -1122,15 +1141,7 @@ public class SaleOutSheetServiceImpl extends
             throw new InputErrorException("销售出库单不存在！");
         }
 
-        if (sheet.getStatus() != SaleOutSheetStatus.CREATED
-                && sheet.getStatus() != SaleOutSheetStatus.APPROVE_REFUSE) {
-
-            if (sheet.getStatus() == SaleOutSheetStatus.APPROVE_PASS) {
-                throw new DefaultClientException("销售出库单已审核通过，不允许继续执行审核！");
-            }
-
-            throw new DefaultClientException("销售出库单无法审核通过！");
-        }
+        checkApproveStatus(sheet, "销售出库单已审核通过，不允许继续执行审核！", "销售出库单无法审核通过！");
 
         SaleConfig saleConfig = saleConfigService.get();
 
@@ -1245,60 +1256,36 @@ public class SaleOutSheetServiceImpl extends
             throw new InputErrorException("销售出库单不存在！");
         }
 
-        if (sheet.getStatus() != SaleOutSheetStatus.CREATED
-                && sheet.getStatus() != SaleOutSheetStatus.APPROVE_REFUSE) {
-
-            if (sheet.getStatus() == SaleOutSheetStatus.APPROVE_PASS) {
-                throw new DefaultClientException("“审核通过”的销售出库单不允许执行删除操作！");
-            }
-
-            throw new DefaultClientException("销售出库单无法删除！");
-        }
-
-        if (logisticsSheetDetailService.getByBizId(sheet.getId(),
-                LogisticsSheetDetailBizType.SALE_OUT_SHEET) != null) {
-            throw new DefaultClientException("销售出库单已关联物流单，请先删除物流单！");
-        }
-
-        // 查询销售出库单明细
-        Wrapper<SaleOutSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(SaleOutSheetDetail.class)
-                .eq(SaleOutSheetDetail::getSheetId, sheet.getId());
-        List<SaleOutSheetDetail> details = saleOutSheetDetailService.list(queryDetailWrapper);
-
-        if (!StringUtil.isBlank(sheet.getSaleOrderId())) {
-            for (SaleOutSheetDetail detail : details) {
-                if (!StringUtil.isBlank(detail.getSaleOrderDetailId())) {
-                    // 恢复已出库数量
-                    saleOrderDetailService.subOutNum(detail.getSaleOrderDetailId(), detail.getOrderNum());
-                }
-            }
-        }
+        checkApproveStatus(sheet, "“审核通过”的销售出库单不允许执行删除操作！", "销售出库单无法删除！");
 
         if (hasStockSynced(sheet.getId())) {
+            // 查询销售出库单明细
+            List<SaleOutSheetDetail> details = getSheetDetails(sheet.getId());
             rollbackStock(sheet, details);
         }
 
         // 删除订单明细
-        Wrapper<SaleOutSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(SaleOutSheetDetail.class)
-                .eq(SaleOutSheetDetail::getSheetId, sheet.getId());
-        saleOutSheetDetailService.remove(deleteDetailWrapper);
-
-        // 删除组合商品信息
-        Wrapper<SaleOutSheetDetailBundle> deleteDetailBundleWrapper = Wrappers.lambdaQuery(
-                SaleOutSheetDetailBundle.class).eq(SaleOutSheetDetailBundle::getSheetId, sheet.getId());
-        saleOutSheetDetailBundleService.remove(deleteDetailBundleWrapper);
+        deleteSheetDetail(sheet.getId());
 
         // 删除订单
+        deleteSheet(id);
+
+        this.adjustCustomerAmount(sheet.getCustomerId());
+
+        OpLogUtil.setVariable("code", sheet.getCode());
+    }
+
+    /**
+     * 删除销售出库单
+     * @param id
+     */
+    private void deleteSheet(String id) {
         Wrapper<SaleOutSheet> deleteWrapper = Wrappers.lambdaQuery(SaleOutSheet.class)
                 .in(SaleOutSheet::getId, id)
                 .in(SaleOutSheet::getStatus, SaleOutSheetStatus.CREATED, SaleOutSheetStatus.APPROVE_REFUSE);
         if (!remove(deleteWrapper)) {
             throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
         }
-
-        this.adjustCustomerAmount(sheet.getCustomerId());
-
-        OpLogUtil.setVariable("code", sheet.getCode());
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -1346,27 +1333,18 @@ public class SaleOutSheetServiceImpl extends
 
     private void create(SaleOutSheet sheet, CreateSaleOutSheetVo vo) {
 
-        if (!StringUtil.isBlank(vo.getScId())) {
-            StoreCenter sc = storeCenterService.findById(vo.getScId());
-            if (sc == null) {
-                throw new InputErrorException("仓库不存在！");
-            }
-
-            sheet.setScId(vo.getScId());
-        }
-
+        handleScId(sheet, vo);
         Customer customer = customerService.findById(vo.getCustomerId());
         if (customer == null) {
             throw new InputErrorException("客户不存在！");
         }
         sheet.setCustomerId(vo.getCustomerId());
-
         sheet.setOrderDate(vo.getOrderDate());
 
         BigDecimal purchaseNum = BigDecimal.ZERO;
         BigDecimal businessTotalNum = BigDecimal.ZERO;
-        BigDecimal giftNum = BigDecimal.ZERO;
         BigDecimal totalAmount = BigDecimal.ZERO;
+
         List<SaleOutSheetDetail> details = new ArrayList<>(vo.getProducts().size());
         for (SaleOutProductVo productVo : vo.getProducts()) {
             Product product = productService.findById(productVo.getProductId());
@@ -1430,7 +1408,6 @@ public class SaleOutSheetServiceImpl extends
                     null);
         }
         sheet.setTotalNum(businessTotalNum);
-        sheet.setTotalGiftNum(giftNum);
         sheet.setTotalAmount(totalAmount);
         sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), totalAmount));
         sheet.setTotalCost(BigDecimal.ZERO);
@@ -1439,6 +1416,17 @@ public class SaleOutSheetServiceImpl extends
                 StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(customer));
         SaleOutSheetConfirmCalculator.calculateSheet(sheet, details);
+    }
+
+    private void handleScId(SaleOutSheet sheet, CreateSaleOutSheetVo vo) {
+        if (StringUtil.isNotBlank(vo.getScId())) {
+            StoreCenter sc = storeCenterService.findById(vo.getScId());
+            if (sc == null) {
+                throw new InputErrorException("仓库不存在！");
+            }
+
+            sheet.setScId(vo.getScId());
+        }
     }
 
     private ProductUnit resolveUnit(Product product, String unitId, String unitName) {
@@ -1456,7 +1444,9 @@ public class SaleOutSheetServiceImpl extends
         return unit;
     }
 
-    private void subStock(SaleOutSheet sheet, List<SaleOutSheetDetail> details) {
+    private void subStock(SaleOutSheet sheet) {
+        List<SaleOutSheetDetail> details = getSheetDetails(sheet.getId());
+
         if (CollectionUtil.isEmpty(details)) {
             return;
         }

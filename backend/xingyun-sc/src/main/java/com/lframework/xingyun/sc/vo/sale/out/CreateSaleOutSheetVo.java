@@ -149,6 +149,16 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
                 }
             }
 
+            if (product.getConfirmNum() != null) {
+                if (NumberUtil.lt(product.getConfirmNum(), BigDecimal.ZERO)) {
+                    throw new InputErrorException("第" + orderNo + "行商品验收数量不允许小于0！");
+                }
+
+                if (!NumberUtil.isNumberPrecision(product.getConfirmNum(), 6)) {
+                    throw new InputErrorException("第" + orderNo + "行商品验收数量最多允许6位小数！");
+                }
+            }
+
             if (product.getTaxPrice() != null) {
                 if (NumberUtil.lt(product.getTaxPrice(), 0D)) {
                     throw new InputErrorException("第" + orderNo + "行商品价格不允许小于0！");

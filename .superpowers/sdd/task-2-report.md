@@ -50,4 +50,4 @@ mvn -pl xingyun-sc -am '-DskipTests' compile
 
 ## Commit
 
-- 待提交
+- `b5bb4507`

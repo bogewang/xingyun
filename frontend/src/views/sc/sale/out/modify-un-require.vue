@@ -167,9 +167,9 @@
               size="small"
               @change="(value) => selectUnit(row, value)"
             >
-              <a-select-option v-for="item in row.units || []" :key="item.id" :value="item.id">{{
-                item.unitName
-              }}</a-select-option>
+              <a-select-option v-for="item in row.units || []" :key="item.id" :value="item.id"
+                >{{ item.unitName }}
+              </a-select-option>
             </a-select>
           </template>
 
@@ -207,8 +207,16 @@
               @input="(e) => taxAmountInput(row, e.target.value)"
             />
           </template>
-          <template #confirmNum_default="{ row }"><a-input v-model:value="row.confirmNum" class="number-input" @input="(e) => confirmNumInput(row, e.target.value)" /></template>
-          <template #confirmAmt_default="{ row }"><span>{{ row.confirmAmt }}</span></template>
+          <template #confirmNum_default="{ row }">
+            <a-input
+              v-model:value="row.confirmNum"
+              class="number-input"
+              @input="(e) => confirmNumInput(row, e.target.value)"
+            />
+          </template>
+          <template #confirmAmt_default="{ row }"
+            ><span>{{ row.confirmAmt }}</span></template
+          >
 
           <template #costPrice_default="{ row, rowIndex }">
             <a-input
@@ -252,8 +260,12 @@
           <j-form-item label="含税总金额" :span="8">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
-          <j-form-item label="验收数量" :span="8"><a-input v-model:value="formData.confirmNum" class="number-input" readonly /></j-form-item>
-          <j-form-item label="验收金额" :span="8"><a-input v-model:value="formData.confirmAmt" class="number-input" readonly /></j-form-item>
+          <j-form-item label="验收数量" :span="8">
+            <a-input v-model:value="formData.confirmNum" class="number-input" readonly />
+          </j-form-item>
+          <j-form-item label="验收金额" :span="8">
+            <a-input v-model:value="formData.confirmAmt" class="number-input" readonly />
+          </j-form-item>
           <j-form-item label="付款金额" :span="8">
             <a-input
               v-model:value="formData.paidAmount"
@@ -362,7 +374,11 @@
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
   import { useUserStoreWithOut } from '/@/store/modules/user';
-  import { normalizeConfirmNum, syncConfirmAmount, sumConfirmFields } from './components/saleOutConfirm';
+  import {
+    normalizeConfirmNum,
+    syncConfirmAmount,
+    sumConfirmFields,
+  } from './components/saleOutConfirm';
 
   export default defineComponent({
     name: 'ModifySaleOutSheetUnRequire',
@@ -394,11 +410,11 @@
           (row.manualInputCost === true || row.costPrice >= 0),
         canEditCostPrice: () => false,
         /*row &&
-          (row.manualInputCost === true ||
-            row.costPrice === null ||
-            row.costPrice === undefined ||
-            row.costPrice === '' ||
-            row.costPrice <= 0)*/ SALE_OUT_SHEET_STATUS,
+        (row.manualInputCost === true ||
+          row.costPrice === null ||
+          row.costPrice === undefined ||
+          row.costPrice === '' ||
+          row.costPrice <= 0)*/ SALE_OUT_SHEET_STATUS,
       };
     },
     data() {
@@ -460,6 +476,13 @@
             slots: { default: 'outNum_default' },
           },
           {
+            field: 'confirmNum',
+            title: '验收数量',
+            align: 'right',
+            width: 100,
+            slots: { default: 'confirmNum_default' },
+          },
+          {
             field: 'taxPrice',
             title: '价格（元）',
             align: 'right',
@@ -474,8 +497,13 @@
             width: 80,
             slots: { default: 'taxAmount_default' },
           },
-          { field: 'confirmNum', title: '验收数量', align: 'right', width: 100, slots: { default: 'confirmNum_default' } },
-          { field: 'confirmAmt', title: '验收金额', align: 'right', width: 100, slots: { default: 'confirmAmt_default' } },
+          {
+            field: 'confirmAmt',
+            title: '验收金额',
+            align: 'right',
+            width: 100,
+            slots: { default: 'confirmAmt_default' },
+          },
           {
             field: 'description',
             title: '备注',
