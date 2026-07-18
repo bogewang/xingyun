@@ -1088,9 +1088,9 @@ public class SaleOutSheetServiceImpl extends
             validateBatchUpdatePriceDetail(detail);
 
             detail.setTaxPrice(vo.getTaxPrice());
-            detail.setTaxAmount(
-                    NumberUtil.getNumber(NumberUtil.mul(vo.getTaxPrice(), detail.getOrderNum()), 2));
-            SaleOutSheetConfirmCalculator.calculateDetail(detail);
+            detail.setTaxAmount(NumberUtil.calculateAmount(vo.getTaxPrice(), detail.getOrderNum()));
+            detail.setConfirmAmt(NumberUtil.calculateAmount(vo.getTaxPrice(), detail.getConfirmNum()));
+
             saleOutSheetDetailService.updateById(detail);
 
             productLatestPriceCacheService.updateLatestPrice(detail.getProductId(), vo.getTaxPrice(), null);
@@ -1105,7 +1105,7 @@ public class SaleOutSheetServiceImpl extends
 
             BigDecimal totalAmount = calcSheetTotalAmount(sheetId);
             List<SaleOutSheetDetail> sheetDetails = saleOutSheetDetailService.getBySheetId(sheetId);
-            SaleOutSheetConfirmCalculator.calculateSheet(sheet, sheetDetails);
+            SaleOutSheetAmtCalculator.calculateSheet(sheet, sheetDetails);
             BigDecimal paidAmount = sheet.getPaidAmount() == null ? BigDecimal.ZERO : sheet.getPaidAmount();
             if (NumberUtil.gt(paidAmount, totalAmount)) {
                 throw new DefaultClientException("单据号：" + sheet.getCode() + " 的已付金额大于调整后的单据金额，不允许调整售价！");
@@ -1340,81 +1340,56 @@ public class SaleOutSheetServiceImpl extends
         sheet.setCustomerId(vo.getCustomerId());
         sheet.setOrderDate(vo.getOrderDate());
 
-        BigDecimal purchaseNum = BigDecimal.ZERO;
-        BigDecimal businessTotalNum = BigDecimal.ZERO;
-        BigDecimal totalAmount = BigDecimal.ZERO;
-
         List<SaleOutSheetDetail> details = new ArrayList<>(vo.getProducts().size());
         for (SaleOutProductVo productVo : vo.getProducts()) {
             Product product = productService.findById(productVo.getProductId());
-            if (product == null) {
-                throw new InputErrorException("第" + productVo.getSeq() + "行商品不存在！");
-            }
-            ProductUnit unit = resolveUnit(product, productVo.getUnitId(), productVo.getUnit());
-            BigDecimal baseNum = NumberUtil.mul(productVo.getOrderNum(), unit.getConversionRate());
-            purchaseNum = NumberUtil.add(purchaseNum, baseNum);
-            businessTotalNum = NumberUtil.add(businessTotalNum, productVo.getOrderNum());
+            Assert.notNull(product, "第" + productVo.getSeq() + "行商品不存在！");
 
-            BigDecimal price = productVo.getTaxPrice();
-            if (price == null) {
-                price = getDefaultSalePrice(product);
-            }
-            totalAmount = NumberUtil.add(totalAmount,
-                    NumberUtil.getNumber(NumberUtil.mul(price, productVo.getOrderNum()),
-                            2));
-
-            SaleOutSheetDetail detail = new SaleOutSheetDetail();
-            detail.setId(IdUtil.getId());
-            detail.setSheetId(sheet.getId());
-
-            detail.setProductId(productVo.getProductId());
-            detail.setOrderNum(baseNum);
-            detail.setUnitId(unit.getId());
-            detail.setUnitName(unit.getUnitName());
-            detail.setConversionRate(unit.getConversionRate());
-            detail.setBusinessNum(productVo.getOrderNum());
-            detail.setConfirmNum(productVo.getConfirmNum());
-            detail.setOriPrice(productVo.getOriPrice());
-            detail.setTaxPrice(productVo.getTaxPrice());
-            detail.setDiscountRate(productVo.getDiscountRate());
-            detail.setTaxRate(product.getSaleTaxRate());
-            detail.setDescription(StringUtil.isBlank(productVo.getDescription()) ? StringPool.EMPTY_STR
-                    : productVo.getDescription());
-            detail.setOrderNo(productVo.getSeq());
-            detail.setActualDate(productVo.getActualDate());
-            detail.setSettleStatus(this.getInitSettleStatus(customer));
-            detail.setTaxAmount(
-                    NumberUtil.getNumber(NumberUtil.mul(detail.getTaxPrice(), detail.getBusinessNum()), 2));
-            boolean hasInputCost = productVo.getCostPrice() != null;
-            detail.setManualInputCost(hasInputCost);
-            detail.setCostPrice(hasInputCost ? productVo.getCostPrice().divide(unit.getConversionRate(), 6,
-                    RoundingMode.HALF_UP) : null);
-            if (Boolean.TRUE.equals(detail.getManualInputCost())) {
-                BigDecimal detailCostAmount = NumberUtil.getNumber(
-                        NumberUtil.mul(detail.getCostPrice(), detail.getOrderNum()), 6);
-                detail.setTotalProfit(
-                        NumberUtil.getNumber(NumberUtil.sub(detail.getTaxAmount(), detailCostAmount), 6));
-            } else {
-                detail.setTotalProfit(null);
-            }
-            SaleOutSheetConfirmCalculator.calculateDetail(detail);
+            SaleOutSheetDetail detail = buildDetail(sheet, productVo, product, customer);
 
             saleOutSheetDetailService.save(detail);
-            details.add(detail);
             updateProductPrice(product, detail);
             productLatestPriceCacheService.updateLatestPrice(product.getId(),
                     toBasePrice(detail.getTaxPrice(), detail.getConversionRate()),
                     null);
+            details.add(detail);
         }
-        sheet.setTotalNum(businessTotalNum);
-        sheet.setTotalAmount(totalAmount);
-        sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), totalAmount));
-        sheet.setTotalCost(BigDecimal.ZERO);
-        sheet.setTotalProfit(BigDecimal.ZERO);
-        sheet.setDescription(
-                StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
+        sheet.setDescription(vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(customer));
-        SaleOutSheetConfirmCalculator.calculateSheet(sheet, details);
+        SaleOutSheetAmtCalculator.calculateSheet(sheet, details);
+        sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), sheet.getTotalAmount()));
+    }
+
+    private SaleOutSheetDetail buildDetail(SaleOutSheet sheet,
+                                           SaleOutProductVo productVo,
+                                           Product product,
+                                           Customer customer) {
+        ProductUnit unit = resolveUnit(product, productVo.getUnitId(), productVo.getUnit());
+        BigDecimal baseNum = NumberUtil.mul(productVo.getOrderNum(), unit.getConversionRate());
+        BigDecimal price = productVo.getTaxPrice() == null ? NumberUtil.mul(getDefaultSalePrice(product), unit.getConversionRate()) : productVo.getTaxPrice();
+
+        SaleOutSheetDetail detail = new SaleOutSheetDetail();
+        detail.setId(IdUtil.getId());
+        detail.setSheetId(sheet.getId());
+
+        detail.setProductId(productVo.getProductId());
+        detail.setOrderNum(baseNum);
+        detail.setUnitId(unit.getId());
+        detail.setUnitName(unit.getUnitName());
+        detail.setConversionRate(unit.getConversionRate());
+        detail.setBusinessNum(productVo.getOrderNum());
+        detail.setConfirmNum(productVo.getConfirmNum());
+        detail.setOriPrice(productVo.getOriPrice());
+        detail.setTaxPrice(price);
+        detail.setDiscountRate(productVo.getDiscountRate());
+        detail.setTaxRate(product.getSaleTaxRate());
+        detail.setDescription(productVo.getDescription());
+        detail.setOrderNo(productVo.getSeq());
+        detail.setActualDate(productVo.getActualDate());
+        detail.setSettleStatus(this.getInitSettleStatus(customer));
+        detail.setTaxAmount(NumberUtil.calculateAmount(price, detail.getBusinessNum()));
+        detail.setConfirmAmt(NumberUtil.calculateAmount(price, detail.getConfirmNum()));
+        return detail;
     }
 
     private void handleScId(SaleOutSheet sheet, CreateSaleOutSheetVo vo) {
@@ -1601,7 +1576,7 @@ public class SaleOutSheetServiceImpl extends
 
     private BigDecimal toBasePrice(BigDecimal price, BigDecimal conversionRate) {
         BigDecimal rate = conversionRate == null ? BigDecimal.ONE : conversionRate;
-        return price.divide(rate, 6, RoundingMode.HALF_UP);
+        return price.divide(rate, NumberUtil.AMT_PRECISION, RoundingMode.HALF_UP);
     }
 
     /**
@@ -1622,7 +1597,7 @@ public class SaleOutSheetServiceImpl extends
             throw new InputErrorException("付款金额不允许小于0！");
         }
 
-        if (!NumberUtil.isNumberPrecision(actualPaidAmount, 6)) {
+        if (!NumberUtil.isNumberPrecision(actualPaidAmount, NumberUtil.AMT_PRECISION)) {
             throw new InputErrorException("付款金额最多允许6位小数！");
         }
 

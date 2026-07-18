@@ -181,6 +181,18 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
     @ApiModelProperty("结算状态")
     private Integer settleStatus;
 
+    /**
+     * 验收金额
+     */
+    @ApiModelProperty("验收金额")
+    private BigDecimal confirmAmt;
+
+    /**
+     * 验收数量
+     */
+    @ApiModelProperty("验收数量")
+    private BigDecimal confirmNum;
+
     public QuerySaleOutSheetBo(SaleOutSheet dto) {
 
         super(dto);
@@ -218,5 +230,7 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
             SaleOrder saleOrder = saleOrderService.getById(dto.getSaleOrderId());
             this.saleOrderCode = saleOrder.getCode();
         }
+        this.confirmNum = dto.getConfirmNum();
+        this.confirmAmt = dto.getConfirmAmt();
     }
 }

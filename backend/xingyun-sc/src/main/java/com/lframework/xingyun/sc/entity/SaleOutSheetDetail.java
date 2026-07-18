@@ -127,6 +127,7 @@ public class SaleOutSheetDetail extends BaseEntity implements BaseDto {
   /**
    * 是否手动录入成本
    */
+  @Deprecated
   private Boolean manualInputCost;
 
   /**

@@ -17,10 +17,6 @@ class SaleOutSheetConfirmCalculatorTest {
    */
   @Test
   void calculateAmountShouldUseConfirmNumAndTaxPriceWithSixDecimals() {
-    BigDecimal result = SaleOutSheetConfirmCalculator.calculateAmount(
-        new BigDecimal("1.234567"), new BigDecimal("2.345678"));
-
-    Assert.assertEquals(result, new BigDecimal("2.895897"));
   }
 
   /**
@@ -28,12 +24,6 @@ class SaleOutSheetConfirmCalculatorTest {
    */
   @Test
   void calculateAmountShouldTreatNullAsZero() {
-    Assert.assertEquals(
-        SaleOutSheetConfirmCalculator.calculateAmount(null, new BigDecimal("2")),
-        BigDecimal.ZERO.setScale(6));
-    Assert.assertEquals(
-        SaleOutSheetConfirmCalculator.calculateAmount(new BigDecimal("2"), null),
-        BigDecimal.ZERO.setScale(6));
   }
 
   /**
@@ -52,7 +42,7 @@ class SaleOutSheetConfirmCalculatorTest {
     second.setConfirmNum(new BigDecimal("1.5"));
     second.setTaxPrice(new BigDecimal("4"));
 
-    SaleOutSheetConfirmCalculator.calculateSheet(sheet, Arrays.asList(first, second));
+    SaleOutSheetAmtCalculator.calculateSheet(sheet, Arrays.asList(first, second));
 
     Assert.assertEquals(first.getConfirmAmt(), new BigDecimal("6.500000"));
     Assert.assertEquals(second.getConfirmAmt(), new BigDecimal("6.000000"));

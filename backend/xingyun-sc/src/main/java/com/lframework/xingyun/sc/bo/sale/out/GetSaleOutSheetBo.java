@@ -210,6 +210,16 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
     private Integer settleStatus;
 
     /**
+     * 验收数量，使用交易单位
+     */
+    private BigDecimal confirmNum;
+
+    /**
+     * 验收金额，根据验收数量和销售单价计算
+     */
+    private BigDecimal confirmAmt;
+
+    /**
      * 订单明细
      */
     @ApiModelProperty("订单明细")
@@ -262,15 +272,13 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
         this.paidAmount = dto.getPaidAmount();
         this.totalProfit = dto.getTotalProfit();
         this.fillAllCost = dto.getFillAllCost();
+        this.confirmNum = dto.getConfirmNum();
+        this.confirmAmt = dto.getConfirmAmt();
 
         if (!CollectionUtil.isEmpty(dto.getDetails())) {
             this.details = dto.getDetails().stream().map(t -> new OrderDetailBo(this.getScId(), t))
                     .collect(Collectors.toList());
         }
-
-        OrderPayTypeService orderPayTypeService = ApplicationUtil.getBean(OrderPayTypeService.class);
-        List<OrderPayType> orderPayTypes = orderPayTypeService.findByOrderId(dto.getId());
-        this.payTypes = orderPayTypes.stream().map(OrderPayTypeBo::new).collect(Collectors.toList());
     }
 
     @Data
@@ -448,6 +456,16 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
         private String saleOrderDetailId;
 
         /**
+         * 验收数量，使用交易单位
+         */
+        private BigDecimal confirmNum;
+
+        /**
+         * 验收金额，根据验收数量和销售单价计算
+         */
+        private BigDecimal confirmAmt;
+
+        /**
          * 仓库ID
          */
         @ApiModelProperty(value = "仓库ID", hidden = true)
@@ -517,6 +535,8 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
                 this.mainProductId = dto.getMainProductId();
                 this.mainProductName = mainProduct.getName();
             }
+            this.confirmNum = dto.getConfirmNum() == null ? BigDecimal.ZERO : dto.getConfirmNum();
+            this.confirmAmt = dto.getConfirmAmt();
         }
     }
 }

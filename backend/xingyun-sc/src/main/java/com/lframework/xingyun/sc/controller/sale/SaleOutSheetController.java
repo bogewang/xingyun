@@ -103,11 +103,9 @@ public class SaleOutSheetController extends DefaultBaseController {
         PageResult<SaleOutSheet> pageResult = saleOutSheetService.query(getPageIndex(vo),
                 getPageSize(vo), vo);
 
-        List<SaleOutSheet> datas = pageResult.getDatas();
         List<QuerySaleOutSheetBo> results = null;
-
-        if (!CollectionUtil.isEmpty(datas)) {
-            results = datas.stream().map(QuerySaleOutSheetBo::new).collect(Collectors.toList());
+        if (!CollectionUtil.isEmpty(pageResult.getDatas())) {
+            results = pageResult.getDatas().stream().map(QuerySaleOutSheetBo::new).collect(Collectors.toList());
         }
 
         return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
