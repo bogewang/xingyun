@@ -1945,7 +1945,7 @@ public class SaleOutSheetServiceImpl extends
                 saleOutSheetDetailService.saveOrUpdateAllColumn(saleDetail);
                 continue;
             }
-
+            // receiveDetail.getTaxPrice() 在sql中已经换算成基本单位对应采购价了。
             BigDecimal detailCostAmount = NumberUtil.calculateAmount(NumberUtil.getDefaultValue(receiveDetail.getTaxPrice()), saleDetail.getOrderNum());
             BigDecimal detailTotalProfit = NumberUtil.getNumber(NumberUtil.sub(saleDetail.getTaxAmount(), detailCostAmount), NumberUtil.AMT_PRECISION);
 
