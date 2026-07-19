@@ -25,6 +25,8 @@ stages:
         jdkVersion: 8
         mavenVersion: 3.6.3
         commands:
+          - git clone --depth 1 --branch main https://github.com/bogewang/jugg.git .gitee-go-jugg
+          - cd .gitee-go-jugg && mvn -B clean install -DskipTests
           - cd backend && mvn -B clean compile -DskipTests
 
       - step: build@nodejs
