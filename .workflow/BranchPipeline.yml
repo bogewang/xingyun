@@ -28,7 +28,7 @@ stages:
           - set -e
           - export MAVEN_REPO=$PWD/.m2/repository
           - rm -rf .gitee-go-jugg
-          - git clone --depth 1 --branch main https://gitee.com/foren236598164/jugg .gitee-go-jugg
+          - git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
           - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
           - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
           - find $MAVEN_REPO/com/lframework -maxdepth 4 -type f | sort
