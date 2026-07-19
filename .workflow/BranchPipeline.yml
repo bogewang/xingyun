@@ -38,9 +38,8 @@ stages:
         nodeVersion: 16.15.1
         commands:
           - npm config set registry https://registry.npmmirror.com
-          - npm install -g pnpm@8.1.0
           - cd frontend
-          - pnpm config set registry https://registry.npmmirror.com
-          - pnpm install --frozen-lockfile
-          - pnpm run lint
-          - pnpm run build
+          - npm exec --yes --package pnpm@8.1.0 -- pnpm config set registry https://registry.npmmirror.com
+          - npm exec --yes --package pnpm@8.1.0 -- pnpm install --frozen-lockfile
+          - npm exec --yes --package pnpm@8.1.0 -- pnpm run lint
+          - npm exec --yes --package pnpm@8.1.0 -- pnpm run build
