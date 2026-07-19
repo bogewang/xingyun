@@ -39,7 +39,8 @@ stages:
         commands:
           - npm config set registry https://registry.npmmirror.com
           - npm install -g pnpm@8.1.0
-          - cd frontend && pnpm config set registry https://registry.npmmirror.com
-          - cd frontend && pnpm install --frozen-lockfile
-          - cd frontend && pnpm run lint
-          - cd frontend && pnpm run build
+          - cd frontend
+          - pnpm config set registry https://registry.npmmirror.com
+          - pnpm install --frozen-lockfile
+          - pnpm run lint
+          - pnpm run build
