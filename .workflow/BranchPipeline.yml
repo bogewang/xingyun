@@ -35,11 +35,19 @@ stages:
       - step: build@nodejs
         name: frontend_build
         displayName: 前端检查与构建
-        nodeVersion: 16.15.1
+        nodeVersion: 14.16.0
         commands:
+          - export NODEJS_HOME=$PWD/.node-v16.15.1
+          - wget -q https://npmmirror.com/mirrors/node/v16.15.1/node-v16.15.1-linux-x64.tar.xz -O node-v16.15.1-linux-x64.tar.xz
+          - mkdir -p $NODEJS_HOME
+          - tar -xJf node-v16.15.1-linux-x64.tar.xz -C $NODEJS_HOME --strip-components=1
+          - export PATH=$NODEJS_HOME/bin:$PATH
+          - node -v
+          - npm -v
           - npm config set registry https://registry.npmmirror.com
+          - npm install -g pnpm@8.1.0
           - cd frontend
-          - npm exec --yes --package pnpm@8.1.0 -- pnpm config set registry https://registry.npmmirror.com
-          - npm exec --yes --package pnpm@8.1.0 -- pnpm install --frozen-lockfile
-          - npm exec --yes --package pnpm@8.1.0 -- pnpm run lint
-          - npm exec --yes --package pnpm@8.1.0 -- pnpm run build
+          - pnpm config set registry https://registry.npmmirror.com
+          - pnpm install --frozen-lockfile
+          - pnpm run lint
+          - pnpm run build
