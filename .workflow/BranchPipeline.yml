@@ -27,7 +27,7 @@ stages:
         commands:
           - export MAVEN_REPO=$PWD/.m2/repository
           - rm -rf .gitee-go-jugg
-          - git clone --depth 1 --branch main https://github.com/bogewang/jugg.git .gitee-go-jugg
+          - git clone --depth 1 --branch main https://gitee.com/foren236598164/jugg .gitee-go-jugg
           - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
           - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
           - test -f $MAVEN_REPO/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
