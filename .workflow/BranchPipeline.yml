@@ -27,10 +27,10 @@ stages:
         commands:
           - rm -rf .gitee-go-jugg
           - git clone --depth 1 --branch main https://github.com/bogewang/jugg.git .gitee-go-jugg
-          - cd .gitee-go-jugg && mvn -B -N clean install -DskipTests
+          - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests
           - test -f ~/.m2/repository/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
-          - cd .gitee-go-jugg && mvn -B -U clean install -DskipTests
-          - cd backend && mvn -B -U clean compile -DskipTests
+          - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests
+          - mvn -B -U -f backend/pom.xml clean compile -DskipTests
 
       - step: build@nodejs
         name: frontend_build
