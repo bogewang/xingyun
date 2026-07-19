@@ -1,0 +1,40 @@
+version: '1.0'
+name: xingyun-branch-ci
+displayName: 星云ERP分支构建
+
+triggers:
+  push:
+    branches:
+      precise:
+        - deploy
+  pr:
+    branches:
+      precise:
+        - deploy
+
+stages:
+  - stage:
+    name: build
+    displayName: 构建校验
+    strategy: fast
+    trigger: auto
+    steps:
+      - step: build@maven
+        name: backend_build
+        displayName: 后端编译
+        jdkVersion: 8
+        mavenVersion: 3.6.3
+        commands:
+          - cd backend && mvn -B clean compile -DskipTests
+
+      - step: build@nodejs
+        name: frontend_build
+        displayName: 前端检查与构建
+        nodeVersion: 16.15.1
+        commands:
+          - npm config set registry https://registry.npmmirror.com
+          - npm install -g pnpm@8.1.0
+          - cd frontend && pnpm config set registry https://registry.npmmirror.com
+          - cd frontend && pnpm install --frozen-lockfile
+          - cd frontend && pnpm run lint
+          - cd frontend && pnpm run build
