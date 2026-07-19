@@ -25,12 +25,14 @@ stages:
         jdkVersion: 8
         mavenVersion: 3.6.3
         commands:
+          - export MAVEN_REPO=$PWD/.m2/repository
           - rm -rf .gitee-go-jugg
           - git clone --depth 1 --branch main https://github.com/bogewang/jugg.git .gitee-go-jugg
-          - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests
-          - test -f ~/.m2/repository/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
-          - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests
-          - mvn -B -U -f backend/pom.xml clean compile -DskipTests
+          - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+          - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+          - test -f $MAVEN_REPO/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
+          - test -f $MAVEN_REPO/com/lframework/mq-starter/4.1.2-SNAPSHOT/mq-starter-4.1.2-SNAPSHOT.pom
+          - mvn -B -U -f backend/pom.xml clean compile -DskipTests -Dmaven.repo.local=$MAVEN_REPO
 
       - step: build@nodejs
         name: frontend_build
