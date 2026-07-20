@@ -70,6 +70,28 @@ final class SaleOutSheetMarketBuySummaryFormatter {
   }
 
   /**
+   * 格式化动态客户列的数量和备注，不包含客户名称及商品单位。
+   *
+   * @param orderNum 数量
+   * @param descriptions 备注集合
+   * @return 数量和备注文本
+   */
+  static String formatCustomerQuantity(BigDecimal orderNum, Collection<String> descriptions) {
+    Set<String> remarks = distinctDescriptions(descriptions);
+    BigDecimal quantity = orderNum == null ? BigDecimal.ZERO : orderNum;
+    if (quantity.compareTo(BigDecimal.ZERO) == 0 && remarks.isEmpty()) {
+      return "";
+    }
+
+    StringBuilder result = new StringBuilder();
+    if (quantity.compareTo(BigDecimal.ZERO) != 0) {
+      result.append(formatNumber(quantity));
+    }
+    appendDescriptions(result, remarks);
+    return result.toString();
+  }
+
+  /**
    * 按输入顺序合并多个客户的商品数量明细。
    *
    * @param details 客户明细

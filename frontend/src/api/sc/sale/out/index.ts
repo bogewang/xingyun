@@ -239,6 +239,23 @@ export function exportMarketBuySummary(params: MarketBuySummaryParams): Promise<
 }
 
 /**
+ * 买菜汇总2导出
+ */
+export function exportMarketBuySummary2(params: MarketBuySummaryParams): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/export/marketBuySummary2',
+      data: params,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+      responseType: ResponseEnum.BLOB,
+    },
+  );
+}
+
+/**
  * 导出
  */
 export function exportList(data: QuerySaleOutSheetVo): Promise<void> {
