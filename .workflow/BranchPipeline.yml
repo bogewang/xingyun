@@ -59,16 +59,16 @@ stages:
     displayName: 部署到测试服务器
     strategy: fast
     trigger: push
+    env:
+      SSH_TEST_HOST: ${SSH_TEST_HOST}
+      SSH_TEST_USER: ${SSH_TEST_USER}
+      SSH_TEST_PRIVATE_KEY: ${SSH_TEST_PRIVATE_KEY}
     steps:
       - step: build@maven
         name: deploy_server
         displayName: 上传并重启服务
         jdkVersion: 8
         mavenVersion: 3.6.3
-        env:
-          SSH_TEST_HOST: ${{ variables.SSH_TEST_HOST }}
-          SSH_TEST_USER: ${{ variables.SSH_TEST_USER }}
-          SSH_TEST_PRIVATE_KEY: ${{ secrets.SSH_TEST_PRIVATE_KEY }}
         commands:
           - set -e
           # 配置 SSH 密钥
