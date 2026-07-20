@@ -41,6 +41,7 @@ import com.lframework.xingyun.settle.service.SettleCheckSheetDetailService;
 import com.lframework.xingyun.settle.service.SettleCheckSheetService;
 import com.lframework.xingyun.settle.service.SettleSheetDetailService;
 import com.lframework.xingyun.settle.service.SettleSheetService;
+import com.lframework.xingyun.settle.utils.SettleAmountAllocationUtil;
 import com.lframework.xingyun.settle.vo.sheet.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -605,23 +606,12 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
             return;
         }
 
-        // 未结算金额
-        BigDecimal checkAmount = vo.getItems().stream()
-                .map(item -> item.getUnSettleAmount() == null ? BigDecimal.ZERO : item.getUnSettleAmount())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        // 对账金额差额合计
-        BigDecimal totalDiffAmount = NumberUtil.sub(vo.getSettleAmount(), checkAmount);
-        // 将对账金额差额平均分摊给每个业务单据
-        BigDecimal avgDiffAmount = NumberUtil.div(totalDiffAmount, BigDecimal.valueOf(vo.getItems().size()));
-
-        vo.getItems().forEach(item -> {
-            BigDecimal settleAmt = NumberUtil.add(item.getUnSettleAmount(), avgDiffAmount);
-            if (NumberUtil.lt(settleAmt, BigDecimal.ZERO)) {
-                settleAmt = BigDecimal.ZERO;
-            }
-            item.setSettleAmount(settleAmt);
-        });
+        List<BigDecimal> amounts = SettleAmountAllocationUtil.allocate(vo.getSettleAmount(),
+                vo.getItems().stream().map(SettleSheetItemVo::getUnSettleAmount)
+                        .collect(Collectors.toList()));
+        for (int index = 0; index < vo.getItems().size(); index++) {
+            vo.getItems().get(index).setSettleAmount(amounts.get(index));
+        }
     }
 
     /**
