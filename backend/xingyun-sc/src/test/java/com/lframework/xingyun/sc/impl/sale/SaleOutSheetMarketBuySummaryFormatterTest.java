@@ -16,6 +16,15 @@ import org.testng.annotations.Test;
 class SaleOutSheetMarketBuySummaryFormatterTest {
 
   /**
+   * 验证动态客户列只保留数量和去重后的备注，不包含客户名称或单位。
+   */
+  @Test
+  void formatCustomerQuantityShouldKeepQuantityAndRemarksWithoutCustomerOrUnit() {
+    Assert.assertEquals(SaleOutSheetMarketBuySummaryFormatter.formatCustomerQuantity(
+        new BigDecimal("0.1"), Arrays.asList("2条大", "2条大", "切好")), "0.1（2条大；切好）");
+  }
+
+  /**
    * 验证客户昵称非空时优先使用昵称，昵称为空白时回退到客户名称。
    */
   @Test
