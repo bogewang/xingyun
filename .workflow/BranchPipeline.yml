@@ -12,26 +12,12 @@ triggers:
       precise:
         - deploy
 
-# 流水线变量：非敏感信息直接定义，敏感信息引用仓库环境变量
-variables:
-  global:
-    - SSH_PRIVATE_KEY          # 在仓库「管理」→「环境变量管理」中配置
-  SSH_TEST_HOST: 47.103.125.229
-  SSH_TEST_USER: www
-
-# 缓存：极大加速构建
-caches:
-  - path: .m2/repository
-  - path: .node-v18.20.4
-  - path: frontend/node_modules
-
 stages:
   - name: build
     displayName: 构建校验
     strategy: fast
     trigger: auto
     steps:
-      # ================== 后端构建 ==================
       - step: build@maven
         name: backend_build
         displayName: 后端编译
@@ -40,72 +26,66 @@ stages:
         commands:
           - set -e
           - export MAVEN_REPO=$PWD/.m2/repository
-
-          # 克隆依赖项目（只一次）
-          - |
-            if [ ! -d ".gitee-go-jugg" ]; then
-              git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
-            fi
-          - mvn -B -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-
-          # 校验依赖包是否存在
+          - rm -rf .gitee-go-jugg
+          - git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
+          - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+          - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+          - find $MAVEN_REPO/com/lframework -maxdepth 4 -type f | sort
           - test -f $MAVEN_REPO/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
           - test -f $MAVEN_REPO/com/lframework/mq-starter/4.1.2-SNAPSHOT/mq-starter-4.1.2-SNAPSHOT.pom
+          - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
 
-          # 后端打包
-          - mvn -B -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-
-      # ================== 前端构建 ==================
       - step: build@nodejs
         name: frontend_build
         displayName: 前端检查与构建
         nodeVersion: 14.16.0
         commands:
-          - set -e
-          # 手动升级到 Node 18（Gitee Go 内置版本太旧）
           - export NODEJS_HOME=$PWD/.node-v18.20.4
-          - |
-            if [ ! -d "$NODEJS_HOME" ]; then
-              wget -q https://npmmirror.com/mirrors/node/v18.20.4/node-v18.20.4-linux-x64.tar.xz -O node-v18.20.4-linux-x64.tar.xz
-              mkdir -p $NODEJS_HOME
-              tar -xJf node-v18.20.4-linux-x64.tar.xz -C $NODEJS_HOME --strip-components=1
-            fi
+          - wget -q https://npmmirror.com/mirrors/node/v18.20.4/node-v18.20.4-linux-x64.tar.xz -O node-v18.20.4-linux-x64.tar.xz
+          - mkdir -p $NODEJS_HOME
+          - tar -xJf node-v18.20.4-linux-x64.tar.xz -C $NODEJS_HOME --strip-components=1
           - export PATH=$NODEJS_HOME/bin:$PATH
           - node -v
           - npm -v
           - npm config set registry https://registry.npmmirror.com
           - npm install -g pnpm@9.15.0
-
           - cd frontend
           - pnpm config set registry https://registry.npmmirror.com
           - pnpm install --frozen-lockfile
           - pnpm run lint
           - pnpm run build
 
-  # ================== 部署阶段（仅 push 触发） ==================
   - name: deploy
     displayName: 部署到测试服务器
     strategy: fast
     trigger: push
+    env:
+      SSH_TEST_HOST: 47.103.125.229
+      SSH_TEST_USER: www
+      SSH_TEST_PRIVATE_KEY: |
+        -----BEGIN OPENSSH PRIVATE KEY-----
+        b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+        QyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252AAAAKBOlxGvTpcR
+        rwAAAAtzc2gtZWQyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252A
+        AAAEBi+I/kAE2Hv9bfT0XtAsVUOZ0aOOyFzsaAuQQkZNjgX1LR22/zR80WnVyxQWTv2sS5
+        ZqCINLftRZ09ZeIuvbnYAAAAGmdpdGh1Yi1hY3Rpb25zLXhpbmd5dW4td3d3AQID
+        -----END OPENSSH PRIVATE KEY-----
     steps:
       - step: build@maven
-        name: deploy_all
-        displayName: 前后端部署
+        name: deploy_server
+        displayName: 上传并重启服务
         jdkVersion: 8
         mavenVersion: 3.6.3
         commands:
           - set -e
-
-          # 写入 SSH 私钥
+          # 配置 SSH 密钥
           - mkdir -p ~/.ssh
-          - echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
+          - echo "$SSH_TEST_PRIVATE_KEY" > ~/.ssh/id_rsa
           - chmod 600 ~/.ssh/id_rsa
-
-          # 部署后端
-          - scp -o StrictHostKeyChecking=no backend/xingyun-api/target/xingyun-api.jar ${SSH_TEST_USER}@${SSH_TEST_HOST}:/www/wwwroot/xingyun/
-          - ssh -o StrictHostKeyChecking=no ${SSH_TEST_USER}@${SSH_TEST_HOST} "systemctl restart xingyun-api"
-
-          # 部署前 端
-          - ssh -o StrictHostKeyChecking=no ${SSH_TEST_USER}@${SSH_TEST_HOST} "mkdir -p /www/wwwroot/xingyun/dist"
-          - scp -o StrictHostKeyChecking=no -r frontend/dist/* ${SSH_TEST_USER}@${SSH_TEST_HOST}:/www/wwwroot/xingyun/dist/
-          - ssh -o StrictHostKeyChecking=no ${SSH_TEST_USER}@${SSH_TEST_HOST} "sudo /www/server/nginx/sbin/nginx -s reload"
+          # 部署后端 JAR 包
+          - scp -o StrictHostKeyChecking=no backend/xingyun-api/target/xingyun-api-1.0.0-SNAPSHOT.jar $SSH_TEST_USER@$SSH_TEST_HOST:/www/wwwroot/xingyun/
+          # 部署前端 dist
+          - ssh -o StrictHostKeyChecking=no $SSH_TEST_USER@$SSH_TEST_HOST "mkdir -p /www/wwwroot/xingyun/dist"
+          - scp -o StrictHostKeyChecking=no -r frontend/dist/* $SSH_TEST_USER@$SSH_TEST_HOST:/www/wwwroot/xingyun/dist/
+          # 重启后端服务
+          - ssh -o StrictHostKeyChecking=no $SSH_TEST_USER@$SSH_TEST_HOST "systemctl restart xingyun-api"
