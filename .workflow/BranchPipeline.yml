@@ -71,6 +71,10 @@ stages:
         mavenVersion: 3.6.3
         commands:
           - set -e
+          # ===== 调试：查看所有环境变量 =====
+          - echo "=== DEBUG: 环境变量列表 ==="
+          - env | grep -i ssh || echo "未发现SSH相关环境变量"
+          - echo "=== DEBUG: env 列表结束 ==="
           # 配置 SSH 密钥
           - mkdir -p ~/.ssh
           - echo "$SSH_TEST_PRIVATE_KEY" > ~/.ssh/id_rsa
