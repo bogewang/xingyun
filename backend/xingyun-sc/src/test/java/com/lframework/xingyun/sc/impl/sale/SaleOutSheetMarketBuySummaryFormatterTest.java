@@ -123,6 +123,24 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
   }
 
   /**
+   * 验证买菜汇总2将日期置于首列，并在总计列前按客户顺序生成动态列。
+   */
+  @Test
+  void buildMarketBuySummary2HeadersShouldPutDateFirstAndCustomersBeforeTotal() {
+    LinkedHashMap<String, String> customers = new LinkedHashMap<>();
+    customers.put("customer-1", "机关A");
+    customers.put("customer-2", "机关B");
+
+    Map<String, String> headers = SaleOutSheetServiceImpl.buildMarketBuySummary2Headers(customers);
+
+    Assert.assertEquals(new ArrayList<>(headers.keySet()), Arrays.asList(
+        "date", "category", "productName", "unit", "customer-customer-1",
+        "customer-customer-2", "total"));
+    Assert.assertEquals(new ArrayList<>(headers.values()), Arrays.asList(
+        "日期", "分类", "商品名称", "单位", "机关A", "机关B", "总计"));
+  }
+
+  /**
    * 验证总重量将数量和单位拼接为“数量单位”。
    */
   @Test
