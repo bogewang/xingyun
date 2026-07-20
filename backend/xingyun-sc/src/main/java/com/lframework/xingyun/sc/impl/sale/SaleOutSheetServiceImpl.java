@@ -678,8 +678,8 @@ public class SaleOutSheetServiceImpl extends
     static Map<String, String> buildMarketBuySummaryHeaders() {
         Map<String, String> headerMap = new LinkedHashMap<>();
         headerMap.put("date", "日期");
-        headerMap.put("productName", "商品名称");
         headerMap.put("category", "分类名称");
+        headerMap.put("productName", "商品名称");
         headerMap.put("total", "总重量");
         headerMap.put("detail", "明细数量");
         return headerMap;
