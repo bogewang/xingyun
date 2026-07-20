@@ -28,9 +28,9 @@ export function getSaleOutAmount(row: SaleOutProfitRow): number {
  * @returns 利润额
  */
 export function calcSaleOutProfitAmount(row: SaleOutProfitRow): number {
-  const confirmAmount = Number(row?.confirmAmt || 0);
+  const amt = getSaleOutAmount(row);
   const costAmount = Number(getNumber(mul(row?.costPrice || 0, row?.outNum || 0), 2));
-  return confirmAmount - costAmount;
+  return amt - costAmount;
 }
 
 /**

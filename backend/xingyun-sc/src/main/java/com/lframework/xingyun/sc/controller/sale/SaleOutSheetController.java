@@ -317,6 +317,23 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
+     * 买菜汇总2导出
+     */
+    @ApiOperation("买菜汇总2导出")
+    @HasPermission({ "sale:out:query" })
+    @PostMapping("/export/marketBuySummary2")
+    public void exportMarketBuySummary2(@RequestBody @Valid QuerySaleOutSheetVo vo) {
+        try {
+            saleOutSheetService.marketBuySummary2(vo);
+        } catch (DefaultClientException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("导出买菜汇总2失败", e);
+            throw new DefaultClientException(e.getMessage());
+        }
+    }
+
+    /**
      * 导出
      */
     @ApiOperation("导出")
