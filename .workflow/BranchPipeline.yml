@@ -60,9 +60,16 @@ stages:
     strategy: fast
     trigger: push
     env:
-      SSH_TEST_HOST: ${SSH_TEST_HOST}
-      SSH_TEST_USER: ${SSH_TEST_USER}
-      SSH_TEST_PRIVATE_KEY: ${SSH_TEST_PRIVATE_KEY}
+      SSH_TEST_HOST: 47.103.125.229
+      SSH_TEST_USER: www
+      SSH_TEST_PRIVATE_KEY: |
+        -----BEGIN OPENSSH PRIVATE KEY-----
+        b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+        QyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252AAAAKBOlxGvTpcR
+        rwAAAAtzc2gtZWQyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252A
+        AAAEBi+I/kAE2Hv9bfT0XtAsVUOZ0aOOyFzsaAuQQkZNjgX1LR22/zR80WnVyxQWTv2sS5
+        ZqCINLftRZ09ZeIuvbnYAAAAGmdpdGh1Yi1hY3Rpb25zLXhpbmd5dW4td3d3AQID
+        -----END OPENSSH PRIVATE KEY-----
     steps:
       - step: build@maven
         name: deploy_server
@@ -71,10 +78,6 @@ stages:
         mavenVersion: 3.6.3
         commands:
           - set -e
-          # ===== 调试：查看所有环境变量 =====
-          - echo "=== DEBUG: 环境变量列表 ==="
-          - env | grep -i ssh || echo "未发现SSH相关环境变量"
-          - echo "=== DEBUG: env 列表结束 ==="
           # 配置 SSH 密钥
           - mkdir -p ~/.ssh
           - echo "$SSH_TEST_PRIVATE_KEY" > ~/.ssh/id_rsa
