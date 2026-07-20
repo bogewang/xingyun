@@ -25,6 +25,24 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
   }
 
   /**
+   * 验证数量为零且没有备注时动态客户列为空。
+   */
+  @Test
+  void formatCustomerQuantityShouldReturnEmptyWhenQuantityAndRemarksAreEmpty() {
+    Assert.assertEquals(SaleOutSheetMarketBuySummaryFormatter.formatCustomerQuantity(
+        BigDecimal.ZERO, Collections.emptyList()), "");
+  }
+
+  /**
+   * 验证数量为零但存在备注时动态客户列保留备注。
+   */
+  @Test
+  void formatCustomerQuantityShouldRetainRemarksWhenQuantityIsZero() {
+    Assert.assertEquals(SaleOutSheetMarketBuySummaryFormatter.formatCustomerQuantity(
+        BigDecimal.ZERO, Collections.singletonList("补送")), "（补送）");
+  }
+
+  /**
    * 验证客户昵称非空时优先使用昵称，昵称为空白时回退到客户名称。
    */
   @Test
