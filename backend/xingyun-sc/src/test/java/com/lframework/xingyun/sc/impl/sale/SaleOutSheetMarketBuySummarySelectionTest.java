@@ -23,4 +23,20 @@ class SaleOutSheetMarketBuySummarySelectionTest {
       Assert.assertEquals(e.getMessage(), "请选择要汇总的销售出库单！");
     }
   }
+
+  /**
+   * 验证买菜汇总2入口会在访问依赖前校验勾选的单据ID。
+   */
+  @Test
+  void marketBuySummary2ShouldRejectEmptyIdsBeforeAccessingDependencies() {
+    QuerySaleOutSheetVo vo = new QuerySaleOutSheetVo();
+    vo.setIdList(Collections.emptyList());
+
+    try {
+      new SaleOutSheetServiceImpl().marketBuySummary2(vo);
+      Assert.fail("空单据ID列表应该抛出业务异常");
+    } catch (DefaultClientException e) {
+      Assert.assertEquals(e.getMessage(), "请选择要汇总的销售出库单！");
+    }
+  }
 }
