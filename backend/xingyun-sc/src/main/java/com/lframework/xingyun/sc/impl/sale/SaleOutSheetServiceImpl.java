@@ -378,7 +378,8 @@ public class SaleOutSheetServiceImpl extends
     public void marketBuySummary2(QuerySaleOutSheetVo vo) {
         validateMarketBuySummaryIds(vo);
 
-        List<SaleOutSheet> sheets = this.query(vo);
+        List<SaleOutSheet> sheets = sortMarketBuySummary2SheetsBySelection(this.query(vo),
+                vo.getIdList());
         LinkedHashMap<String, String> customerNameMap = CollectionUtils.isEmpty(sheets)
                 ? new LinkedHashMap<>() : buildCustomerNameMap(sheets);
         Map<String, String> headerMap = buildMarketBuySummary2Headers(customerNameMap);
@@ -430,6 +431,31 @@ public class SaleOutSheetServiceImpl extends
         if (vo == null || CollectionUtils.isEmpty(vo.getIdList())) {
             throw new DefaultClientException("请选择要汇总的销售出库单！");
         }
+    }
+
+    /**
+     * 按勾选单据ID的首次出现顺序重排买菜汇总2单据，忽略查询结果中不存在的ID。
+     *
+     * @param sheets 数据库查询出的销售出库单
+     * @param idList 勾选的销售出库单ID列表
+     * @return 按勾选顺序重排后的销售出库单
+     */
+    static List<SaleOutSheet> sortMarketBuySummary2SheetsBySelection(List<SaleOutSheet> sheets,
+            List<String> idList) {
+        if (CollectionUtils.isEmpty(sheets) || CollectionUtils.isEmpty(idList)) {
+            return Collections.emptyList();
+        }
+
+        Map<String, SaleOutSheet> sheetMap = sheets.stream().collect(Collectors.toMap(
+                SaleOutSheet::getId, item -> item, (v1, v2) -> v1));
+        List<SaleOutSheet> sortedSheets = new ArrayList<>();
+        Set<String> selectedIds = new HashSet<>();
+        for (String id : idList) {
+            if (selectedIds.add(id) && sheetMap.containsKey(id)) {
+                sortedSheets.add(sheetMap.get(id));
+            }
+        }
+        return sortedSheets;
     }
 
     @Override
