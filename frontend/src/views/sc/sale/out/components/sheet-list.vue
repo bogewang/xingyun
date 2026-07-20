@@ -172,6 +172,12 @@
               >
               <a-button
                 v-permission="['sale:out:query']"
+                :icon="h(DownloadOutlined)"
+                @click="marketBuySummary2"
+                >买菜汇总2</a-button
+              >
+              <a-button
+                v-permission="['sale:out:query']"
                 :icon="h(PrinterOutlined)"
                 @click="tagPrint"
                 >标签打印</a-button
@@ -323,7 +329,10 @@
   import PrintDialog from '/@/components/PrintDialog';
   import SaleOutSheetQueryImporter from '@/components/Importor/SaleOutSheetQueryImporter.vue';
   import { usePermission } from '/@/hooks/web/usePermission';
-  import { buildMarketBuySummaryParams } from './saleOutMarketBuySummary';
+  import {
+    buildMarketBuySummary2Params,
+    buildMarketBuySummaryParams,
+  } from './saleOutMarketBuySummary';
 
   export default defineComponent({
     name: 'SaleOutSheetSheetList',
@@ -931,6 +940,19 @@
 
         this.loading = true;
         api.exportMarketBuySummary(buildMarketBuySummaryParams(records)).finally(() => {
+          this.loading = false;
+        });
+      },
+      // 按勾选单据导出买菜汇总2
+      marketBuySummary2() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要汇总的销售出库单！');
+          return;
+        }
+
+        this.loading = true;
+        api.exportMarketBuySummary2(buildMarketBuySummary2Params(records)).finally(() => {
           this.loading = false;
         });
       },
