@@ -2034,7 +2034,7 @@ public class SaleOutSheetServiceImpl extends
      * @return
      */
     private Map<String, QueryReceiveSheetDetailDto> getCostPriceMapFromReceiveSheet(LocalDate orderDate) {
-        LocalDate beginDate = orderDate.plusMonths(-1);
+        LocalDate beginDate = orderDate.plusMonths(-6);
         List<QueryReceiveSheetDetailDto> latestCostPrices = receiveSheetDetailMapper.getLatestCostPriceList(beginDate,
                 orderDate);
 
