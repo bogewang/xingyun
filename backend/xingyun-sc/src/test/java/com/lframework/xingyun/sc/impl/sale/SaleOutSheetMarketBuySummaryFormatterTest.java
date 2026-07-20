@@ -16,6 +16,33 @@ import org.testng.annotations.Test;
 class SaleOutSheetMarketBuySummaryFormatterTest {
 
   /**
+   * 验证动态客户列只保留数量和去重后的备注，不包含客户名称或单位。
+   */
+  @Test
+  void formatCustomerQuantityShouldKeepQuantityAndRemarksWithoutCustomerOrUnit() {
+    Assert.assertEquals(SaleOutSheetMarketBuySummaryFormatter.formatCustomerQuantity(
+        new BigDecimal("0.1"), Arrays.asList("2条大", "2条大", "切好")), "0.1（2条大；切好）");
+  }
+
+  /**
+   * 验证数量为零且没有备注时动态客户列为空。
+   */
+  @Test
+  void formatCustomerQuantityShouldReturnEmptyWhenQuantityAndRemarksAreEmpty() {
+    Assert.assertEquals(SaleOutSheetMarketBuySummaryFormatter.formatCustomerQuantity(
+        BigDecimal.ZERO, Collections.emptyList()), "");
+  }
+
+  /**
+   * 验证数量为零但存在备注时动态客户列保留备注。
+   */
+  @Test
+  void formatCustomerQuantityShouldRetainRemarksWhenQuantityIsZero() {
+    Assert.assertEquals(SaleOutSheetMarketBuySummaryFormatter.formatCustomerQuantity(
+        BigDecimal.ZERO, Collections.singletonList("补送")), "（补送）");
+  }
+
+  /**
    * 验证客户昵称非空时优先使用昵称，昵称为空白时回退到客户名称。
    */
   @Test
@@ -93,6 +120,24 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
     Assert.assertEquals(headers, expectedHeaders);
     Assert.assertEquals(new ArrayList<>(headers.keySet()), Arrays.asList(
         "date", "productName", "category", "total", "detail"));
+  }
+
+  /**
+   * 验证买菜汇总2将日期置于首列，并在总计列前按客户顺序生成动态列。
+   */
+  @Test
+  void buildMarketBuySummary2HeadersShouldPutDateFirstAndCustomersBeforeTotal() {
+    LinkedHashMap<String, String> customers = new LinkedHashMap<>();
+    customers.put("customer-1", "机关A");
+    customers.put("customer-2", "机关B");
+
+    Map<String, String> headers = SaleOutSheetServiceImpl.buildMarketBuySummary2Headers(customers);
+
+    Assert.assertEquals(new ArrayList<>(headers.keySet()), Arrays.asList(
+        "date", "category", "productName", "unit", "customer-customer-1",
+        "customer-customer-2", "total"));
+    Assert.assertEquals(new ArrayList<>(headers.values()), Arrays.asList(
+        "日期", "分类", "商品名称", "单位", "机关A", "机关B", "总计"));
   }
 
   /**
