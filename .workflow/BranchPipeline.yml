@@ -77,9 +77,11 @@ stages:
     strategy: fast
     trigger: push
     steps:
-      - step: publish@general
+      - step: build@maven
         name: deploy_all
         displayName: 前后端部署
+        jdkVersion: 8
+        mavenVersion: 3.6.3
         commands:
           - set -e
 
