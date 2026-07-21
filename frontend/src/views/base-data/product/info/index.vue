@@ -459,7 +459,7 @@
               this.openChildPage('/product/info/modify/' + row.id);
             },
           },
-          ...(row.available
+          ...(row.available === true
             ? [
                 {
                   permission: ['base-data:product:info:modify'],
