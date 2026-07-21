@@ -1,93 +1,34 @@
-version: '1.0'
-name: xingyun-branch-ci
-displayName: 星云ERP分支构建
+- step: build@maven
+  name: deploy_server
+  displayName: 上传并重启服务
+  jdkVersion: 8
+  mavenVersion: 3.6.3
+  commands:
+    - set -e
+    - SSH_HOST=47.103.125.229
+    - SSH_USER=www
+    - SSH_DIR=/www/wwwroot/xingyun
 
-triggers:
-  push:
-    branches:
-      precise:
-        - deploy
-  pr:
-    branches:
-      precise:
-        - deploy
+    # 生成 SSH 密钥
+    - mkdir -p /root/.ssh
+    - echo "-----BEGIN OPENSSH PRIVATE KEY-----" > /root/.ssh/id_rsa
+    - echo "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW" >> /root/.ssh/id_rsa
+    - echo "QyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252AAAAKBOlxGvTpcR" >> /root/.ssh/id_rsa
+    - echo "rwAAAAtzc2gtZWQyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252A" >> /root/.ssh/id_rsa
+    - echo "AAAEBi+I/kAE2Hv9bfT0XtAsVUOZ0aOOyFzsaAuQQkZNjgX1LR22/zR80WnVyxQWTv2sS5" >> /root/.ssh/id_rsa
+    - echo "ZqCINLftRZ09ZeIuvbnYAAAAGmdpdGh1Yi1hY3Rpb25zLXhpbmd5dW4td3d3AQID" >> /root/.ssh/id_rsa
+    - echo "-----END OPENSSH PRIVATE KEY-----" >> /root/.ssh/id_rsa
+    - chmod 600 /root/.ssh/id_rsa
 
-stages:
-  - name: build
-    displayName: 构建校验
-    strategy: fast
-    trigger: auto
-    steps:
-      - step: build@maven
-        name: backend_build
-        displayName: 后端编译
-        jdkVersion: 8
-        mavenVersion: 3.6.3
-        commands:
-          - set -e
-          - export MAVEN_REPO=$PWD/.m2/repository
-          - rm -rf .gitee-go-jugg
-          - git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
-          - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-          - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-          - find $MAVEN_REPO/com/lframework -maxdepth 4 -type f | sort
-          - test -f $MAVEN_REPO/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
-          - test -f $MAVEN_REPO/com/lframework/mq-starter/4.1.2-SNAPSHOT/mq-starter-4.1.2-SNAPSHOT.pom
-          - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-          - ls -lh backend/xingyun-api/target/
+    # 加入主机信任
+    - ssh-keyscan -H $SSH_HOST >> /root/.ssh/known_hosts
 
-      - step: build@nodejs
-        name: frontend_build
-        displayName: 前端检查与构建
-        nodeVersion: 14.16.0
-        commands:
-          - set -e
-          - export NODEJS_HOME=$PWD/.node-v18.20.4
-          - wget -q https://npmmirror.com/mirrors/node/v18.20.4/node-v18.20.4-linux-x64.tar.xz -O node-v18.20.4-linux-x64.tar.xz
-          - mkdir -p $NODEJS_HOME
-          - tar -xJf node-v18.20.4-linux-x64.tar.xz -C $NODEJS_HOME --strip-components=1
-          - export PATH=$NODEJS_HOME/bin:$PATH
-          - node -v
-          - npm -v
-          - npm config set registry https://registry.npmmirror.com
-          - npm install -g pnpm@9.15.0
-          - cd frontend
-          - pnpm config set registry https://registry.npmmirror.com
-          - pnpm install --frozen-lockfile
-          - pnpm run lint
-          - pnpm run build
-          - ls -lh dist/
+    # 上传 jar
+    - scp -v -o StrictHostKeyChecking=no backend/xingyun-api/target/xingyun-api-1.0.0-SNAPSHOT.jar $SSH_USER@$SSH_HOST:$SSH_DIR/
 
-  - name: deploy
-    displayName: 部署到测试服务器
-    strategy: fast
-    trigger: push
-    env:
-      SSH_TEST_HOST: "47.103.125.229"
-      SSH_TEST_USER: "www"
-      SSH_TEST_DIR: "/www/wwwroot/xingyun"
-    steps:
-      - step: build@maven
-        name: deploy_server
-        displayName: 上传并重启服务
-        jdkVersion: 8
-        mavenVersion: 3.6.3
-        commands:
-          - set -e
-          - mkdir -p /root/.ssh
-          - echo "-----BEGIN OPENSSH PRIVATE KEY-----" > /root/.ssh/id_rsa
-          - echo "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW" >> /root/.ssh/id_rsa
-          - echo "QyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252AAAAKBOlxGvTpcR" >> /root/.ssh/id_rsa
-          - echo "rwAAAAtzc2gtZWQyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252A" >> /root/.ssh/id_rsa
-          - echo "AAAEBi+I/kAE2Hv9bfT0XtAsVUOZ0aOOyFzsaAuQQkZNjgX1LR22/zR80WnVyxQWTv2sS5" >> /root/.ssh/id_rsa
-          - echo "ZqCINLftRZ09ZeIuvbnYAAAAGmdpdGh1Yi1hY3Rpb25zLXhpbmd5dW4td3d3AQID" >> /root/.ssh/id_rsa
-          - echo "-----END OPENSSH PRIVATE KEY-----" >> /root/.ssh/id_rsa
-          - chmod 600 /root/.ssh/id_rsa
-          - ssh-keyscan -H $SSH_TEST_HOST >> /root/.ssh/known_hosts
+    # 上传前端 dist
+    - ssh $SSH_USER@$SSH_HOST "mkdir -p $SSH_DIR/dist"
+    - scp -v -r -o StrictHostKeyChecking=no frontend/dist/* $SSH_USER@$SSH_HOST:$SSH_DIR/dist/
 
-          - scp -v -o StrictHostKeyChecking=no backend/xingyun-api/target/xingyun-api-1.0.0-SNAPSHOT.jar $SSH_TEST_USER@$SSH_TEST_HOST:$SSH_TEST_DIR/
-
-          - ssh $SSH_TEST_USER@$SSH_TEST_HOST "mkdir -p $SSH_TEST_DIR/dist"
-          - scp -v -r -o StrictHostKeyChecking=no frontend/dist/* $SSH_TEST_USER@$SSH_TEST_HOST:$SSH_TEST_DIR/dist/
-
-          - ssh $SSH_TEST_USER@$SSH_TEST_HOST "systemctl daemon-reload && systemctl restart xingyun-api"
+    # 重启服务
+    - ssh $SSH_USER@$SSH_HOST "systemctl daemon-reload && systemctl restart xingyun-api"
