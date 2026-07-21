@@ -59,17 +59,6 @@ stages:
     displayName: 部署到测试服务器
     strategy: fast
     trigger: push
-    env:
-      SSH_TEST_HOST: 47.103.125.229
-      SSH_TEST_USER: www
-      SSH_TEST_PRIVATE_KEY: |
-        -----BEGIN OPENSSH PRIVATE KEY-----
-        b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-        QyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252AAAAKBOlxGvTpcR
-        rwAAAAtzc2gtZWQyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252A
-        AAAEBi+I/kAE2Hv9bfT0XtAsVUOZ0aOOyFzsaAuQQkZNjgX1LR22/zR80WnVyxQWTv2sS5
-        ZqCINLftRZ09ZeIuvbnYAAAAGmdpdGh1Yi1hY3Rpb25zLXhpbmd5dW4td3d3AQID
-        -----END OPENSSH PRIVATE KEY-----
     steps:
       - step: build@maven
         name: deploy_server
@@ -78,9 +67,11 @@ stages:
         mavenVersion: 3.6.3
         commands:
           - set -e
-          # 配置 SSH 密钥
-          - mkdir -p ~/.ssh
-          - echo "$SSH_TEST_PRIVATE_KEY" > ~/.ssh/id_rsa
+          # 目标服务器信息（使用export确保变量在后续命令中可用）
+          - export SSH_TEST_HOST=47.103.125.229
+          - export SSH_TEST_USER=www
+          # 配置 SSH 密钥（base64编码避免YAML多行解析问题）
+          - echo "LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUFNd0FBQUF0emMyZ3RaVwpReU5UVXhPUUFBQUNCUzBkdHY4MGZORnAxY3NVRms3OXJFdVdhZ2lEUzM3VVdkUFdYaUxyMjUyQUFBQUtCT2x4R3ZUcGNSCnJ3QUFBQXR6YzJndFpXUXlOVFV4T1FBQUFDQlMwZHR2ODBmTkZwMWNzVUZrNzlyRXVXYWdpRFMzN1VXZFBXWGlMcjI1MkEKQUFBRUJpK0kva0FFMkh2OWJmVDBYdEFzVlVPWjBhT095RnpzYUF1UVFrWk5qZ1gxTFIyMi96UjgwV25WeXhRV1R2MnNTNQpacUNJTkxmdFJaMDlaZUl1dmJuWUFBQUFHbWRwZEdoMVlpMWhZM1JwYjI1ekxYaHBibWQ1ZFc0dGQzZDNBUUlECi0tLS0tRU5EIE9QRU5TU0ggUFJJVkFURSBLRVktLS0tLQo=" | base64 -d > ~/.ssh/id_rsa
           - chmod 600 ~/.ssh/id_rsa
           # 部署后端 JAR 包
           - scp -o StrictHostKeyChecking=no backend/xingyun-api/target/xingyun-api-1.0.0-SNAPSHOT.jar $SSH_TEST_USER@$SSH_TEST_HOST:/www/wwwroot/xingyun/
