@@ -59,9 +59,20 @@ stages:
       - step: build@nodejs
         name: frontend_build
         displayName: 前端检查与构建
-        nodeVersion: 18.20.4
+        nodeVersion: 14.16.0
         commands:
           - set -e
+          # 手动升级到 Node 18（Gitee Go 内置版本太旧）
+          - export NODEJS_HOME=$PWD/.node-v18.20.4
+          - |
+            if [ ! -d "$NODEJS_HOME" ]; then
+              wget -q https://npmmirror.com/mirrors/node/v18.20.4/node-v18.20.4-linux-x64.tar.xz -O node-v18.20.4-linux-x64.tar.xz
+              mkdir -p $NODEJS_HOME
+              tar -xJf node-v18.20.4-linux-x64.tar.xz -C $NODEJS_HOME --strip-components=1
+            fi
+          - export PATH=$NODEJS_HOME/bin:$PATH
+          - node -v
+          - npm -v
           - npm config set registry https://registry.npmmirror.com
           - npm install -g pnpm@9.15.0
 
