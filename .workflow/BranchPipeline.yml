@@ -12,12 +12,19 @@ triggers:
       precise:
         - deploy
 
+# 缓存：极大加速构建
+caches:
+  - path: .m2/repository
+  - path: .node-v18.20.4
+  - path: frontend/node_modules
+
 stages:
   - name: build
     displayName: 构建校验
     strategy: fast
     trigger: auto
     steps:
+      # ================== 后端构建 ==================
       - step: build@maven
         name: backend_build
         displayName: 后端编译
@@ -26,89 +33,64 @@ stages:
         commands:
           - set -e
           - export MAVEN_REPO=$PWD/.m2/repository
-          - rm -rf .gitee-go-jugg
-          - git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
-          - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-          - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-          - find $MAVEN_REPO/com/lframework -maxdepth 4 -type f | sort
+
+          # 克隆依赖项目（只一次）
+          - |
+            if [ ! -d ".gitee-go-jugg" ]; then
+              git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
+            fi
+          - mvn -B -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+
+          # 校验依赖包是否存在
           - test -f $MAVEN_REPO/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
           - test -f $MAVEN_REPO/com/lframework/mq-starter/4.1.2-SNAPSHOT/mq-starter-4.1.2-SNAPSHOT.pom
-          - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
 
+          # 后端打包
+          - mvn -B -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+
+      # ================== 前端构建 ==================
       - step: build@nodejs
         name: frontend_build
         displayName: 前端检查与构建
-        nodeVersion: 14.16.0
+        nodeVersion: 18.20.4
         commands:
-          - export NODEJS_HOME=$PWD/.node-v18.20.4
-          - wget -q https://npmmirror.com/mirrors/node/v18.20.4/node-v18.20.4-linux-x64.tar.xz -O node-v18.20.4-linux-x64.tar.xz
-          - mkdir -p $NODEJS_HOME
-          - tar -xJf node-v18.20.4-linux-x64.tar.xz -C $NODEJS_HOME --strip-components=1
-          - export PATH=$NODEJS_HOME/bin:$PATH
-          - node -v
-          - npm -v
+          - set -e
           - npm config set registry https://registry.npmmirror.com
           - npm install -g pnpm@9.15.0
+
           - cd frontend
           - pnpm config set registry https://registry.npmmirror.com
           - pnpm install --frozen-lockfile
           - pnpm run lint
           - pnpm run build
 
+  # ================== 部署阶段（仅 push 触发） ==================
   - name: deploy
-    displayName: 构建并部署到测试服务器
+    displayName: 部署到测试服务器
     strategy: fast
     trigger: push
     steps:
-      - step: build@maven
-        name: backend_deploy
-        displayName: 后端构建与部署
-        jdkVersion: 8
-        mavenVersion: 3.6.3
+      - step: publish@general
+        name: deploy_all
+        displayName: 前后端部署
         commands:
           - set -e
-          # 构建后端 JAR
-          - export MAVEN_REPO=$PWD/.m2/repository
-          - rm -rf .gitee-go-jugg
-          - git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
-          - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-          - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-          - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-          # SSH 配置与部署
-          - export SSH_TEST_HOST=47.103.125.229
-          - export SSH_TEST_USER=www
-          - mkdir -p ~/.ssh
-          - echo "LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUFNd0FBQUF0emMyZ3RaVwpReU5UVXhPUUFBQUNCUzBkdHY4MGZORnAxY3NVRms3OXJFdVdhZ2lEUzM3VVdkUFdYaUxyMjUyQUFBQUtCT2x4R3ZUcGNSCnJ3QUFBQXR6YzJndFpXUXlOVFV4T1FBQUFDQlMwZHR2ODBmTkZwMWNzVUZrNzlyRXVXYWdpRFMzN1VXZFBXWGlMcjI1MkEKQUFBRUJpK0kva0FFMkh2OWJmVDBYdEFzVlVPWjBhT095RnpzYUF1UVFrWk5qZ1gxTFIyMi96UjgwV25WeXhRV1R2MnNTNQpacUNJTkxmdFJaMDlaZUl1dmJuWUFBQUFHbWRwZEdoMVlpMWhZM1JwYjI1ekxYaHBibWQ1ZFc0dGQzZDNBUUlECi0tLS0tRU5EIE9QRU5TU0ggUFJJVkFURSBLRVktLS0tLQo=" | base64 -d > ~/.ssh/id_rsa
-          - chmod 600 ~/.ssh/id_rsa
-          - scp -o StrictHostKeyChecking=no backend/xingyun-api/target/xingyun-api.jar $SSH_TEST_USER@$SSH_TEST_HOST:/www/wwwroot/xingyun/
-          - ssh -o StrictHostKeyChecking=no $SSH_TEST_USER@$SSH_TEST_HOST "systemctl restart xingyun-api"
 
-      - step: build@nodejs
-        name: frontend_deploy
-        displayName: 前端构建与部署
-        nodeVersion: 14.16.0
-        commands:
-          - set -e
-          # 构建前端
-          - export NODEJS_HOME=$PWD/.node-v18.20.4
-          - wget -q https://npmmirror.com/mirrors/node/v18.20.4/node-v18.20.4-linux-x64.tar.xz -O node-v18.20.4-linux-x64.tar.xz
-          - mkdir -p $NODEJS_HOME
-          - tar -xJf node-v18.20.4-linux-x64.tar.xz -C $NODEJS_HOME --strip-components=1
-          - export PATH=$NODEJS_HOME/bin:$PATH
-          - node -v
-          - npm -v
-          - npm config set registry https://registry.npmmirror.com
-          - npm install -g pnpm@9.15.0
-          - cd frontend
-          - pnpm config set registry https://registry.npmmirror.com
-          - pnpm install --frozen-lockfile
-          - pnpm run build
-          # SSH 配置与部署
+          # 从缓存/工作区直接使用已构建好的产物
+          # 服务器信息
           - export SSH_TEST_HOST=47.103.125.229
           - export SSH_TEST_USER=www
+
+          # 写入 SSH 私钥（建议替换为环境变量！！！）
           - mkdir -p ~/.ssh
-          - echo "LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUFNd0FBQUF0emMyZ3RaVwpReU5UVXhPUUFBQUNCUzBkdHY4MGZORnAxY3NVRms3OXJFdVdhZ2lEUzM3VVdkUFdYaUxyMjUyQUFBQUtCT2x4R3ZUcGNSCnJ3QUFBQXR6YzJndFpXUXlOVFV4T1FBQUFDQlMwZHR2ODBmTkZwMWNzVUZrNzlyRXVXYWdpRFMzN1VXZFBXWGlMcjI1MkEKQUFBRUJpK0kva0FFMkh2OWJmVDBYdEFzVlVPWjBhT095RnpzYUF1UVFrWk5qZ1gxTFIyMi96UjgwV25WeXhRV1R2MnNTNQpacUNJTkxmdFJaMDlaZUl1dmJuWUFBQUFHbWRwZEdoMVlpMWhZM1JwYjI1ekxYaHBibWQ1ZFc0dGQzZDNBUUlECi0tLS0tRU5EIE9QRU5TU0ggUFJJVkFURSBLRVktLS0tLQo=" | base64 -d > ~/.ssh/id_rsa
+          - echo "${SSH_PRIVATE_KEY}" | base64 -d > ~/.ssh/id_rsa
           - chmod 600 ~/.ssh/id_rsa
-          - ssh -o StrictHostKeyChecking=no $SSH_TEST_USER@$SSH_TEST_HOST "mkdir -p /www/wwwroot/xingyun/dist"
-          - scp -o StrictHostKeyChecking=no -r frontend/dist/* $SSH_TEST_USER@$SSH_TEST_HOST:/www/wwwroot/xingyun/dist/
-          - ssh -o StrictHostKeyChecking=no $SSH_TEST_USER@$SSH_TEST_HOST "sudo /www/server/nginx/sbin/nginx -s reload"
+
+          # 部署后端
+          - scp -o StrictHostKeyChecking=no backend/xingyun-api/target/xingyun-api.jar ${SSH_TEST_USER}@${SSH_TEST_HOST}:/www/wwwroot/xingyun/
+          - ssh -o StrictHostKeyChecking=no ${SSH_TEST_USER}@${SSH_TEST_HOST} "systemctl restart xingyun-api"
+
+          # 部署前端
+          - ssh -o StrictHostKeyChecking=no ${SSH_TEST_USER}@${SSH_TEST_HOST} "mkdir -p /www/wwwroot/xingyun/dist"
+          - scp -o StrictHostKeyChecking=no -r frontend/dist/* ${SSH_TEST_USER}@${SSH_TEST_HOST}:/www/wwwroot/xingyun/dist/
+          - ssh -o StrictHostKeyChecking=no ${SSH_TEST_USER}@${SSH_TEST_HOST} "sudo /www/server/nginx/sbin/nginx -s reload"
