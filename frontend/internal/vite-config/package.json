@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "clean": "pnpm rimraf .turbo node_modules dist",
-    "lint": "pnpm eslint .",
+    "lint": "pnpm eslint . --ignore-pattern dist",
     "stub": "pnpm unbuild --stub"
   },
   "dependencies": {
