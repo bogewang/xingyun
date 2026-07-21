@@ -13,8 +13,8 @@ triggers:
         - deploy
 
 stages:
-  - name: build
-    displayName: 构建校验
+  - name: build-and-deploy
+    displayName: 构建校验与部署
     strategy: fast
     trigger: auto
     steps:
@@ -58,11 +58,6 @@ stages:
           - pnpm run build
           - ls -lh dist/
 
-  - name: deploy
-    displayName: 部署到测试服务器
-    strategy: fast
-    trigger: push
-    steps:
       - step: build@maven
         name: deploy_server
         displayName: 上传并重启服务
