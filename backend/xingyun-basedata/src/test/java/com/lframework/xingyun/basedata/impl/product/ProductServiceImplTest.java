@@ -13,7 +13,9 @@ import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.context.support.StaticApplicationContext;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -81,6 +83,14 @@ class ProductServiceImplTest {
         Collections.singletonList(importRow), Collections.singletonList(availableProduct));
 
     Assert.assertEquals(result, Collections.singletonList(importRow));
+  }
+
+  @Test
+  void shouldNormalizeDisabledProductQueryNamesWithTrimmedValues() {
+    Set<String> normalizedNames = ProductServiceImpl.normalizeDisabledProductQueryNames(
+        new HashSet<>(Arrays.asList("  可乐  ", "可乐", " 雪碧 ", "  ")));
+
+    Assert.assertEquals(normalizedNames, new HashSet<>(Arrays.asList("可乐", "雪碧")));
   }
 
   @Test(expectedExceptions = DefaultClientException.class,

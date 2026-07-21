@@ -1,6 +1,7 @@
 package com.lframework.xingyun.basedata.impl.product;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.pagehelper.PageInfo;
@@ -1209,12 +1210,28 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
      * @return 停用商品列表
      */
     private List<Product> queryDisabledProductsByNames(Set<String> names) {
-        if (CollectionUtil.isEmpty(names)) {
+        Set<String> normalizedNames = normalizeDisabledProductQueryNames(names);
+        if (CollectionUtil.isEmpty(normalizedNames)) {
             return CollectionUtil.emptyList();
         }
 
-        return getBaseMapper().selectList(Wrappers.lambdaQuery(Product.class)
-                .in(Product::getName, names).eq(Product::getAvailable, Boolean.FALSE));
+        QueryWrapper<Product> checkWrapper = new QueryWrapper<>();
+        checkWrapper.in("TRIM(name)", normalizedNames).eq("available", Boolean.FALSE);
+        return getBaseMapper().selectList(checkWrapper);
+    }
+
+    /**
+     * 归一化停用商品查询名称，保持与商品组合键一致的 trim 语义。
+     *
+     * @param names 商品名称集合
+     * @return 去除空白后的商品名称集合
+     */
+    static Set<String> normalizeDisabledProductQueryNames(Set<String> names) {
+        if (CollectionUtil.isEmpty(names)) {
+            return Collections.emptySet();
+        }
+
+        return names.stream().filter(StringUtil::isNotBlank).map(String::trim).collect(Collectors.toSet());
     }
 
     private List<Product> queryAvailableProductsByName(String name) {
