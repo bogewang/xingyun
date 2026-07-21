@@ -410,6 +410,18 @@
       batchDisable() {
         this.openBatchAvailableDialog(false);
       },
+      /**
+       * 停用单个商品。
+       * @param row 商品列表行数据
+       */
+      disableProduct(row) {
+        createConfirm(`确认停用商品“${row.name}”？`).then(() => {
+          api.updateAvailable(buildProductAvailabilityRequest([row], false)).then(() => {
+            createSuccess('停用成功！');
+            this.search();
+          });
+        });
+      },
       doBatchDelete(row) {
         return api.deleteById(row.id);
       },
@@ -447,6 +459,16 @@
               this.openChildPage('/product/info/modify/' + row.id);
             },
           },
+          ...(row.available === true
+            ? [
+                {
+                  permission: ['base-data:product:info:modify'],
+                  label: '停用',
+                  danger: true,
+                  onClick: () => this.disableProduct(row),
+                },
+              ]
+            : []),
           {
             permission: ['base-data:product:info:delete'],
             label: '删除',

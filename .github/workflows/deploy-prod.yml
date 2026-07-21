@@ -1,0 +1,107 @@
+name: Deploy Prod
+
+on:
+  push:
+    branches:
+      - master1
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: true
+
+jobs:
+  deploy-prod:
+    name: Build and deploy prod
+    runs-on: [self-hosted, linux, x64, deploy]
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          # 禁用 HTTP2，解决 curl 16 错误
+          http-protocol: https
+          enable-http2: false
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+          cache: maven
+          overwrite-settings: false
+
+      - name: Install jugg dependencies
+        run: |
+          git clone --depth 1 --branch main https://github.com/bogewang/jugg.git "$RUNNER_TEMP/jugg"
+          mvn --settings "$GITHUB_WORKSPACE/.github/maven-settings.xml" -f "$RUNNER_TEMP/jugg/pom.xml" clean install -DskipTests
+
+      - name: Build backend
+        working-directory: backend
+        run: mvn --settings "$GITHUB_WORKSPACE/.github/maven-settings.xml" clean package -Pprod -DskipTests -pl xingyun-api -am
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+
+      - name: Package frontend
+        run: tar -czf frontend-dist.tar.gz -C frontend dist
+
+      - name: Prepare SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${{ secrets.PROD_SSH_PORT }}" "${{ secrets.PROD_SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Prepare remote directories
+        run: |
+          ssh -p "${{ secrets.PROD_SSH_PORT }}" -i ~/.ssh/deploy_key "${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}" '
+            set -e
+            umask 0002
+            mkdir -p /www/wwwroot/xingyun/data/tmp
+            mkdir -p /www/wwwroot/xingyun/data/upload
+            mkdir -p /www/wwwroot/xingyun/data/security-upload
+            chmod 775 /www/wwwroot/xingyun
+            chmod -R 775 /www/wwwroot/xingyun/data
+          '
+
+      - name: Upload artifacts
+        run: |
+          scp -P "${{ secrets.PROD_SSH_PORT }}" -i ~/.ssh/deploy_key backend/xingyun-api/target/xingyun-api.jar "${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}:/www/wwwroot/xingyun/xingyun-api.jar.new"
+          scp -P "${{ secrets.PROD_SSH_PORT }}" -i ~/.ssh/deploy_key frontend-dist.tar.gz "${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}:/www/wwwroot/xingyun/frontend-dist.tar.gz"
+
+      - name: Restart prod services
+        run: |
+          ssh -p "${{ secrets.PROD_SSH_PORT }}" -i ~/.ssh/deploy_key "${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}" '
+            set -e
+            umask 0002
+            cd /www/wwwroot/xingyun
+            rm -rf dist.new
+            mkdir -p dist.new
+            tar -xzf frontend-dist.tar.gz -C dist.new
+            rm -rf dist
+            mv dist.new/dist dist
+            rm -rf dist.new
+            mv xingyun-api.jar.new xingyun-api.jar
+            chmod 664 xingyun-api-81.jar frontend-dist.tar.gz
+            chmod -R 775 dist
+            sudo /usr/bin/systemctl restart xingyun-api-prod
+            sudo /www/server/nginx/sbin/nginx -s reload
+          '

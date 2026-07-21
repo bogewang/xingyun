@@ -1,0 +1,14 @@
+[Unit]
+Description=Xingyun ERP API Prod
+After=network.target
+
+[Service]
+Type=simple
+User=www
+WorkingDirectory=/www/wwwroot/xingyun
+ExecStart=/www/server/java/jdk1.8.0_371/bin/java -Dspring.profiles.active=prod -jar -Xmx1024M -Xms256M /www/wwwroot/xingyun/xingyun-api-81.jar
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -38,6 +38,7 @@ import com.lframework.xingyun.settle.entity.*;
 import com.lframework.xingyun.settle.enums.*;
 import com.lframework.xingyun.settle.mappers.SettleCheckSheetMapper;
 import com.lframework.xingyun.settle.service.*;
+import com.lframework.xingyun.settle.utils.SettleAmountAllocationUtil;
 import com.lframework.xingyun.settle.vo.check.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -888,24 +889,12 @@ public class SettleCheckSheetServiceImpl extends
             return;
         }
 
-        // 收货单汇总金额, todo 部分结算
-        BigDecimal totalBizAmt = vo.getItems().stream()
-                .map(item -> item.getPaidAmount() != null ? item.getPaidAmount() : (
-                    item.getBizAmount() == null ? BigDecimal.ZERO : item.getBizAmount()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        // 对账金额差额合计
-        BigDecimal totalDiffAmount = NumberUtil.sub(vo.getCheckAmt(), totalBizAmt);
-        // 将对账金额差额平均分摊给每个业务单据
-        BigDecimal avgDiffAmount = NumberUtil.div(totalDiffAmount, BigDecimal.valueOf(vo.getItems().size()));
-
-        vo.getItems().forEach(item -> {
-            BigDecimal bizAmt = NumberUtil.add(item.getPaidAmount() != null ? item.getPaidAmount() : item.getBizAmount(), avgDiffAmount);
-            if (NumberUtil.lt(bizAmt, BigDecimal.ZERO)) {
-                throw new DefaultClientException("对账金额过小，分摊后会出现负数单据，请调整对账金额！");
-            }
-            item.setCheckAmt(bizAmt);
-        });
+        List<BigDecimal> amounts = SettleAmountAllocationUtil.allocate(vo.getCheckAmt(),
+                vo.getItems().stream().map(SettleCheckSheetItemVo::getBizAmount)
+                        .collect(Collectors.toList()));
+        for (int index = 0; index < vo.getItems().size(); index++) {
+            vo.getItems().get(index).setCheckAmt(amounts.get(index));
+        }
     }
 
     private BigDecimal getReceiveSheetSettledAmount(String bizId) {

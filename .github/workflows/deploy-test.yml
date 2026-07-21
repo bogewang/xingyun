@@ -1,0 +1,101 @@
+name: Deploy Test
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-test
+  cancel-in-progress: true
+
+jobs:
+  deploy-test:
+    name: Build and deploy test
+    runs-on: ubuntu-latest
+    environment: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+          cache: maven
+
+      - name: Install jugg dependencies
+        run: |
+          git clone --depth 1 --branch main https://github.com/bogewang/jugg.git "$RUNNER_TEMP/jugg"
+          mvn --settings "$GITHUB_WORKSPACE/.github/maven-settings.xml" -f "$RUNNER_TEMP/jugg/pom.xml" clean install -DskipTests
+
+      - name: Build backend
+        working-directory: backend
+        run: mvn --settings "$GITHUB_WORKSPACE/.github/maven-settings.xml" clean package -Pprod -DskipTests -pl xingyun-api -am
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+
+      - name: Package frontend
+        run: tar -czf frontend-dist.tar.gz -C frontend dist
+
+      - name: Prepare SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.TEST_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${{ secrets.TEST_SSH_PORT }}" "${{ secrets.TEST_SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Prepare remote directories
+        run: |
+          ssh -p "${{ secrets.TEST_SSH_PORT }}" -i ~/.ssh/deploy_key "${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SSH_HOST }}" '
+            set -e
+            umask 0002
+            mkdir -p /www/wwwroot/xingyun/data/tmp
+            mkdir -p /www/wwwroot/xingyun/data/upload
+            mkdir -p /www/wwwroot/xingyun/data/security-upload
+            chmod 775 /www/wwwroot/xingyun
+            chmod -R 775 /www/wwwroot/xingyun/data
+          '
+
+      - name: Upload artifacts
+        run: |
+          scp -P "${{ secrets.TEST_SSH_PORT }}" -i ~/.ssh/deploy_key backend/xingyun-api/target/xingyun-api.jar "${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SSH_HOST }}:/www/wwwroot/xingyun/xingyun-api.jar.new"
+          scp -P "${{ secrets.TEST_SSH_PORT }}" -i ~/.ssh/deploy_key frontend-dist.tar.gz "${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SSH_HOST }}:/www/wwwroot/xingyun/frontend-dist.tar.gz"
+
+      - name: Restart test services
+        run: |
+          ssh -p "${{ secrets.TEST_SSH_PORT }}" -i ~/.ssh/deploy_key "${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SSH_HOST }}" '
+            set -e
+            umask 0002
+            cd /www/wwwroot/xingyun
+            rm -rf dist.new
+            mkdir -p dist.new
+            tar -xzf frontend-dist.tar.gz -C dist.new
+            rm -rf dist
+            mv dist.new/dist dist
+            rm -rf dist.new
+            mv xingyun-api.jar.new xingyun-api.jar
+            chmod 664 xingyun-api.jar frontend-dist.tar.gz
+            chmod -R 775 dist
+            sudo /usr/bin/systemctl restart xingyun-api-test
+            sudo /www/server/nginx/sbin/nginx -s reload
+          '
