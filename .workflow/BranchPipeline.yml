@@ -34,12 +34,14 @@ stages:
           - test -f $MAVEN_REPO/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
           - test -f $MAVEN_REPO/com/lframework/mq-starter/4.1.2-SNAPSHOT/mq-starter-4.1.2-SNAPSHOT.pom
           - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+          - ls -lh backend/xingyun-api/target/
 
       - step: build@nodejs
         name: frontend_build
         displayName: 前端检查与构建
         nodeVersion: 14.16.0
         commands:
+          - set -e
           - export NODEJS_HOME=$PWD/.node-v18.20.4
           - wget -q https://npmmirror.com/mirrors/node/v18.20.4/node-v18.20.4-linux-x64.tar.xz -O node-v18.20.4-linux-x64.tar.xz
           - mkdir -p $NODEJS_HOME
@@ -54,6 +56,7 @@ stages:
           - pnpm install --frozen-lockfile
           - pnpm run lint
           - pnpm run build
+          - ls -lh dist/
 
   - name: deploy
     displayName: 部署到测试服务器
@@ -62,6 +65,7 @@ stages:
     env:
       SSH_TEST_HOST: 47.103.125.229
       SSH_TEST_USER: www
+      SSH_TEST_DIR: /www/wwwroot/xingyun
       SSH_TEST_PRIVATE_KEY: |
         -----BEGIN OPENSSH PRIVATE KEY-----
         b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
@@ -78,14 +82,17 @@ stages:
         mavenVersion: 3.6.3
         commands:
           - set -e
-          # 配置 SSH 密钥
-          - mkdir -p ~/.ssh
-          - echo "$SSH_TEST_PRIVATE_KEY" > ~/.ssh/id_rsa
-          - chmod 600 ~/.ssh/id_rsa
-          # 部署后端 JAR 包
-          - scp -o StrictHostKeyChecking=no backend/xingyun-api/target/xingyun-api-1.0.0-SNAPSHOT.jar $SSH_TEST_USER@$SSH_TEST_HOST:/www/wwwroot/xingyun/
-          # 部署前端 dist
-          - ssh -o StrictHostKeyChecking=no $SSH_TEST_USER@$SSH_TEST_HOST "mkdir -p /www/wwwroot/xingyun/dist"
-          - scp -o StrictHostKeyChecking=no -r frontend/dist/* $SSH_TEST_USER@$SSH_TEST_HOST:/www/wwwroot/xingyun/dist/
-          # 重启后端服务
-          - ssh -o StrictHostKeyChecking=no $SSH_TEST_USER@$SSH_TEST_HOST "systemctl restart xingyun-api"
+          - mkdir -p /root/.ssh
+          - echo "$SSH_TEST_PRIVATE_KEY" > /root/.ssh/id_rsa
+          - chmod 600 /root/.ssh/id_rsa
+          - ssh-keyscan -H $SSH_TEST_HOST >> /root/.ssh/known_hosts
+
+          # 上传后端 jar
+          - scp -v backend/xingyun-api/target/xingyun-api-1.0.0-SNAPSHOT.jar ${SSH_TEST_USER}@${SSH_TEST_HOST}:${SSH_TEST_DIR}/
+
+          # 上传前端 dist
+          - ssh ${SSH_TEST_USER}@${SSH_TEST_HOST} "mkdir -p ${SSH_TEST_DIR}/dist"
+          - scp -v -r frontend/dist/* ${SSH_TEST_USER}@${SSH_TEST_HOST}:${SSH_TEST_DIR}/dist/
+
+          # 重启服务
+          - ssh ${SSH_TEST_USER}@${SSH_TEST_HOST} "systemctl daemon-reload && systemctl restart xingyun-api && systemctl status xingyun-api --no-pager"
