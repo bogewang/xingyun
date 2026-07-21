@@ -94,7 +94,7 @@ jobs:
             - name: $COS_BUCKET
               alias: deploy
               region: $COS_REGION
-              endpoint: cos.accelerate.myqcloud.com
+              endpoint: cos.$COS_REGION.myqcloud.com
               ofs: false
           EOF
           "$RUNNER_TEMP/coscli" -c "$config_file" cp backend/xingyun-api/target/xingyun-api.jar "cos://deploy/xingyun/prod/$RELEASE_ID/xingyun-api.jar"
