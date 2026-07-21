@@ -99,7 +99,7 @@ jobs:
             rm -rf dist
             mv dist.new/dist dist
             rm -rf dist.new
-            mv xingyun-api.jar.new xingyun-api-81.jar
+            mv xingyun-api.jar.new xingyun-api.jar
             chmod 664 xingyun-api-81.jar frontend-dist.tar.gz
             chmod -R 775 dist
             sudo /usr/bin/systemctl restart xingyun-api-prod
