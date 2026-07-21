@@ -19,6 +19,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          # 禁用 HTTP2，解决 curl 16 错误
+          http-protocol: https
+          enable-http2: false
 
       - name: Setup Java
         uses: actions/setup-java@v4
