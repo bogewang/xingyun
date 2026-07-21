@@ -36,11 +36,11 @@ jobs:
       - name: Install jugg dependencies
         run: |
           git clone --depth 1 --branch main https://github.com/bogewang/jugg.git "$RUNNER_TEMP/jugg"
-          mvn -f "$RUNNER_TEMP/jugg/pom.xml" clean install -DskipTests
+          mvn --settings "$GITHUB_WORKSPACE/.github/maven-settings.xml" -f "$RUNNER_TEMP/jugg/pom.xml" clean install -DskipTests
 
       - name: Build backend
         working-directory: backend
-        run: mvn clean package -Pprod -DskipTests -pl xingyun-api -am
+        run: mvn --settings "$GITHUB_WORKSPACE/.github/maven-settings.xml" clean package -Pprod -DskipTests -pl xingyun-api -am
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
