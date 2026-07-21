@@ -48,6 +48,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -683,11 +684,20 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             throw new DefaultClientException("导入数据为空！");
         }
 
+        Map<ProductImportModel, Integer> importRowIndexes = buildImportRowIndexes(list);
         Set<String> importNames = list.stream().map(ProductImportModel::getName)
                 .filter(StringUtil::isNotBlank).collect(Collectors.toSet());
-        list = filterDisabledDuplicateImportRows(list, queryDisabledProductsByNames(importNames));
-        this.check(list);
-        ProductImportPersistBatch persistBatch = this.buildProducts(list);
+        List<Product> disabledProducts = queryDisabledProductsByNames(importNames);
+        List<Product> availableProducts = queryAvailableProductsByNames(importNames);
+        List<Unit> units = queryImportUnits(list, disabledProducts, availableProducts);
+        Map<String, String> unitNamesById = units.stream().collect(Collectors.toMap(Unit::getId, Unit::getName,
+                (a, b) -> a));
+        Map<String, Unit> availableUnitsByName = units.stream().filter(unit -> Boolean.TRUE.equals(unit.getAvailable()))
+                .filter(unit -> StringUtil.isNotBlank(unit.getName())).collect(Collectors.toMap(
+                        unit -> unit.getName().trim(), unit -> unit, (a, b) -> a));
+        list = filterDisabledDuplicateImportRows(list, disabledProducts, availableProducts, unitNamesById);
+        this.check(list, importRowIndexes, unitNamesById);
+        ProductImportPersistBatch persistBatch = this.buildProducts(list, availableUnitsByName);
 
         if (CollectionUtils.isNotEmpty(persistBatch.getInserts())) {
             super.saveBatch(persistBatch.getInserts());
@@ -822,7 +832,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         return updates;
     }
 
-    private ProductImportPersistBatch buildProducts(List<ProductImportModel> list) {
+    private ProductImportPersistBatch buildProducts(List<ProductImportModel> list, Map<String, Unit> availableUnitsByName) {
         if (CollectionUtil.isEmpty(list)) {
             return new ProductImportPersistBatch(CollectionUtil.emptyList(), CollectionUtil.emptyList());
         }
@@ -834,8 +844,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         list.forEach(data -> {
             Product record = BeanUtil.copyProperties(data, Product.class);
             if (StringUtil.isNotBlank(data.getUnit())) {
-                Unit unit = unitService.getOne(Wrappers.lambdaQuery(Unit.class)
-                        .eq(Unit::getName, data.getUnit()).eq(Unit::getAvailable, Boolean.TRUE));
+                Unit unit = availableUnitsByName.get(data.getUnit().trim());
                 if (unit == null) {
                     throw new DefaultClientException(String.format("单位%s不存在或已停用", data.getUnit()));
                 }
@@ -893,7 +902,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         }
     }
 
-    private void check(List<ProductImportModel> list) {
+    private void check(List<ProductImportModel> list, Map<ProductImportModel, Integer> importRowIndexes,
+            Map<String, String> unitNamesById) {
         Set<String> checkCodeSet = new HashSet<>();
         Map<String, Integer> checkCodeRowMap = new HashMap<>();
         Set<String> checkSkuCodeSet = new HashSet<>();
@@ -911,7 +921,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         Map<String, Product> availableSkuCodes = queryAvailableProductsBySkuCodes(importSkuCodes).stream()
                 .collect(Collectors.toMap(Product::getSkuCode, item -> item, (a, b) -> a));
         Map<String, Product> availableNameSpecUnitKeys = queryAvailableProductsByNames(importNames).stream()
-                .collect(Collectors.toMap(this::buildNameSpecUnitKey, item -> item));
+                .collect(Collectors.toMap(product -> buildNameSpecUnitKey(product.getName(), product.getSpec(),
+                        unitNamesById.get(product.getUnit())), item -> item, (a, b) -> a));
         // 检查分类编号是否重复
         List<ProductCategory> availableCategories = productCategoryService.getAllProductCategories();
         Map<String, String> categoryMap = availableCategories.stream()
@@ -935,10 +946,10 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
 
             checkRules(list, checkCodeSet, checkCodeRowMap, checkSkuCodeSet, checkSkuCodeRowMap, checkNameSpecUnitMap,
                     availableCodes, availableSkuCodes, availableNameSpecUnitKeys, categoryMap, brandCodeMap, brandNameMap,
-                    parentCategoryIds, i);
+                    parentCategoryIds, i, getImportRowIndex(importRowIndexes, data, i));
         }
 
-        checkIsLeafCategory(list, new ArrayList<>(parentCategoryIds));
+        checkIsLeafCategory(list, new ArrayList<>(parentCategoryIds), importRowIndexes);
 
     }
 
@@ -948,7 +959,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
      * @param list
      * @param parentCategoryIds
      */
-    private void checkIsLeafCategory(List<ProductImportModel> list, List<String> parentCategoryIds) {
+    private void checkIsLeafCategory(List<ProductImportModel> list, List<String> parentCategoryIds,
+            Map<ProductImportModel, Integer> importRowIndexes) {
         Map<String, List<ProductCategory>> categoryMapByParentId = productCategoryService
                 .getCategoryByParentIds(parentCategoryIds)
                 .stream()
@@ -957,7 +969,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         for (int i = 0; i < list.size(); i++) {
             ProductImportModel data = list.get(i);
             if (categoryMapByParentId.containsKey(data.getCategoryId())) {
-                throw new DefaultClientException("第" + (i + 2) + "行“商品分类”不是末级分类，请使用末级分类");
+                throw new DefaultClientException("第" + getImportRowIndex(importRowIndexes, data, i)
+                        + "行“商品分类”不是末级分类，请使用末级分类");
             }
         }
     }
@@ -982,9 +995,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             Set<String> checkSkuCodeSet, Map<String, Integer> checkSkuCodeRowMap, Map<String, Integer> checkNameSpecUnitMap,
             Map<String, Product> availableCodes, Map<String, Product> availableSkuCodes, Map<String, Product> availableNameSpecUnitKeys,
             Map<String, String> categoryMap, Map<String, String> brandCodeMap, Map<String, String> brandNameMap,
-            Set<String> parentCategoryIds, int i) {
+            Set<String> parentCategoryIds, int i, int rowIndex) {
         ProductImportModel data = list.get(i);
-        int rowIndex = (i + 2);
         checkCode(checkCodeSet, checkCodeRowMap, availableCodes, data, rowIndex);
         data.setInquiryProductValue(parseInquiryProduct(data.getInquiryProductText(), rowIndex));
 
@@ -1193,13 +1205,13 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     }
 
     private List<Product> queryAvailableProductsByNames(Set<String> names) {
-        if (CollectionUtil.isEmpty(names)) {
+        Set<String> normalizedNames = normalizeDisabledProductQueryNames(names);
+        if (CollectionUtil.isEmpty(normalizedNames)) {
             return CollectionUtil.emptyList();
         }
 
-        Wrapper<Product> checkWrapper = Wrappers.lambdaQuery(Product.class)
-                .in(Product::getName, names)
-                .eq(Product::getAvailable, Boolean.TRUE);
+        QueryWrapper<Product> checkWrapper = new QueryWrapper<>();
+        checkWrapper.in("TRIM(name)", normalizedNames).eq("available", Boolean.TRUE);
         return getBaseMapper().selectList(checkWrapper);
     }
 
@@ -1232,6 +1244,35 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         }
 
         return names.stream().filter(StringUtil::isNotBlank).map(String::trim).collect(Collectors.toSet());
+    }
+
+    /**
+     * 批量查询导入商品和既有商品比较所需的单位字典。
+     *
+     * @param importRows 商品导入行
+     * @param disabledProducts 停用商品列表
+     * @param availableProducts 启用商品列表
+     * @return 单位字典列表
+     */
+    private List<Unit> queryImportUnits(List<ProductImportModel> importRows, List<Product> disabledProducts,
+            List<Product> availableProducts) {
+        Set<String> importUnitNames = importRows.stream().map(ProductImportModel::getUnit)
+                .filter(StringUtil::isNotBlank).map(String::trim).collect(Collectors.toSet());
+        Set<String> productUnitIds = Stream.concat(disabledProducts.stream(), availableProducts.stream())
+                .map(Product::getUnit).filter(StringUtil::isNotBlank).collect(Collectors.toSet());
+        if (CollectionUtil.isEmpty(importUnitNames) && CollectionUtil.isEmpty(productUnitIds)) {
+            return CollectionUtil.emptyList();
+        }
+
+        QueryWrapper<Unit> queryWrapper = new QueryWrapper<>();
+        if (CollectionUtil.isNotEmpty(importUnitNames) && CollectionUtil.isNotEmpty(productUnitIds)) {
+            queryWrapper.and(wrapper -> wrapper.in("TRIM(name)", importUnitNames).or().in("id", productUnitIds));
+        } else if (CollectionUtil.isNotEmpty(importUnitNames)) {
+            queryWrapper.in("TRIM(name)", importUnitNames);
+        } else {
+            queryWrapper.in("id", productUnitIds);
+        }
+        return unitService.list(queryWrapper);
     }
 
     private List<Product> queryAvailableProductsByName(String name) {
@@ -1336,18 +1377,68 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
      */
     static List<ProductImportModel> filterDisabledDuplicateImportRows(List<ProductImportModel> importRows,
             List<Product> disabledProducts) {
+        Map<String, String> unitNames = disabledProducts.stream().collect(Collectors.toMap(Product::getUnit,
+                Product::getUnit, (a, b) -> a));
+        return filterDisabledDuplicateImportRows(importRows, disabledProducts, Collections.emptyList(), unitNames);
+    }
+
+    /**
+     * 过滤仅与停用商品匹配且未与启用商品匹配的导入行。
+     *
+     * @param importRows 商品导入行
+     * @param disabledProducts 停用商品列表
+     * @param availableProducts 启用商品列表
+     * @param unitNamesById 单位 ID 与名称映射
+     * @return 未被过滤的商品导入行
+     */
+    static List<ProductImportModel> filterDisabledDuplicateImportRows(List<ProductImportModel> importRows,
+            List<Product> disabledProducts, List<Product> availableProducts, Map<String, String> unitNamesById) {
         if (CollectionUtil.isEmpty(importRows) || CollectionUtil.isEmpty(disabledProducts)) {
             return importRows;
         }
 
         Set<String> disabledProductKeys = disabledProducts.stream()
                 .filter(product -> Boolean.FALSE.equals(product.getAvailable()))
-                .map(product -> buildNameSpecUnitKey(product.getName(), product.getSpec(), product.getUnit()))
+                .map(product -> buildNameSpecUnitKey(product.getName(), product.getSpec(),
+                        unitNamesById.get(product.getUnit())))
                 .collect(Collectors.toSet());
+        Set<String> availableProductKeys = availableProducts.stream()
+                .filter(product -> Boolean.TRUE.equals(product.getAvailable()))
+                .map(product -> buildNameSpecUnitKey(product.getName(), product.getSpec(),
+                        unitNamesById.get(product.getUnit())))
+                .collect(Collectors.toSet());
+        disabledProductKeys.removeAll(availableProductKeys);
         return importRows.stream()
                 .filter(row -> !disabledProductKeys.contains(
                         buildNameSpecUnitKey(row.getName(), row.getSpec(), row.getUnit())))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 记录导入行对应的原始 Excel 行号。
+     *
+     * @param importRows 商品导入行
+     * @return 导入行与 Excel 行号映射
+     */
+    static Map<ProductImportModel, Integer> buildImportRowIndexes(List<ProductImportModel> importRows) {
+        Map<ProductImportModel, Integer> rowIndexes = new IdentityHashMap<>();
+        for (int i = 0; i < importRows.size(); i++) {
+            rowIndexes.put(importRows.get(i), i + 2);
+        }
+        return rowIndexes;
+    }
+
+    /**
+     * 获取导入行的原始 Excel 行号。
+     *
+     * @param importRowIndexes 导入行与 Excel 行号映射
+     * @param importRow 商品导入行
+     * @param fallbackIndex 当前列表下标
+     * @return Excel 行号
+     */
+    static int getImportRowIndex(Map<ProductImportModel, Integer> importRowIndexes, ProductImportModel importRow,
+            int fallbackIndex) {
+        return importRowIndexes.getOrDefault(importRow, fallbackIndex + 2);
     }
 
     /**
