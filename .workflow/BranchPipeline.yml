@@ -105,7 +105,7 @@ stages:
           - scp -o StrictHostKeyChecking=no backend/xingyun-api/target/xingyun-api.jar ${SSH_TEST_USER}@${SSH_TEST_HOST}:/www/wwwroot/xingyun/
           - ssh -o StrictHostKeyChecking=no ${SSH_TEST_USER}@${SSH_TEST_HOST} "systemctl restart xingyun-api"
 
-          # 部署前端
+          # 部署前 端
           - ssh -o StrictHostKeyChecking=no ${SSH_TEST_USER}@${SSH_TEST_HOST} "mkdir -p /www/wwwroot/xingyun/dist"
           - scp -o StrictHostKeyChecking=no -r frontend/dist/* ${SSH_TEST_USER}@${SSH_TEST_HOST}:/www/wwwroot/xingyun/dist/
           - ssh -o StrictHostKeyChecking=no ${SSH_TEST_USER}@${SSH_TEST_HOST} "sudo /www/server/nginx/sbin/nginx -s reload"
