@@ -100,6 +100,13 @@ describe('商品批量状态请求', () => {
     ).toEqual({ ids: ['p-1', 'p-2'], available: false });
   });
 
+  it('单个商品停用时生成停用状态请求', () => {
+    expect(buildProductAvailabilityRequest([{ id: 'p-1' }], false)).toEqual({
+      ids: ['p-1'],
+      available: false,
+    });
+  });
+
   describe('批量处理组件', () => {
     beforeEach(() => {
       vi.clearAllMocks();
