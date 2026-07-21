@@ -3,7 +3,7 @@ name: Deploy Prod
 on:
   push:
     branches:
-      - main
+      - github_actions
   workflow_dispatch:
 
 concurrency:
