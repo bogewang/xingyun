@@ -12,6 +12,13 @@ triggers:
       precise:
         - deploy
 
+# 流水线变量：非敏感信息直接定义，敏感信息引用仓库环境变量
+variables:
+  global:
+    - SSH_PRIVATE_KEY          # 在仓库「管理」→「环境变量管理」中配置
+  SSH_TEST_HOST: 47.103.125.229
+  SSH_TEST_USER: www
+
 # 缓存：极大加速构建
 caches:
   - path: .m2/repository
@@ -76,14 +83,9 @@ stages:
         commands:
           - set -e
 
-          # 从缓存/工作区直接使用已构建好的产物
-          # 服务器信息
-          - export SSH_TEST_HOST=47.103.125.229
-          - export SSH_TEST_USER=www
-
-          # 写入 SSH 私钥（建议替换为环境变量！！！）
+          # 写入 SSH 私钥
           - mkdir -p ~/.ssh
-          - echo "${SSH_PRIVATE_KEY}" | base64 -d > ~/.ssh/id_rsa
+          - echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
           - chmod 600 ~/.ssh/id_rsa
 
           # 部署后端
