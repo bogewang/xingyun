@@ -62,6 +62,10 @@ stages:
     displayName: 部署到测试服务器
     strategy: fast
     trigger: push
+    env:
+      SSH_TEST_HOST: "47.103.125.229"
+      SSH_TEST_USER: "www"
+      SSH_TEST_DIR: "/www/wwwroot/xingyun"
     steps:
       - step: build@maven
         name: deploy_server
@@ -70,27 +74,20 @@ stages:
         mavenVersion: 3.6.3
         commands:
           - set -e
-          - SSH_TEST_HOST="47.103.125.229"
-          - SSH_TEST_USER="www"
-          - SSH_TEST_DIR="/www/wwwroot/xingyun"
-
           - mkdir -p /root/.ssh
-          - echo "-----BEGIN OPENSSH PRIVATE KEY-----
-  b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-  QyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252AAAAKBOlxGvTpcR
-  rwAAAAtzc2gtZWQyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252A
-  AAAEBi+I/kAE2Hv9bfT0XtAsVUOZ0aOOyFzsaAuQQkZNjgX1LR22/zR80WnVyxQWTv2sS5
-  ZqCINLftRZ09ZeIuvbnYAAAAGmdpdGh1Yi1hY3Rpb25zLXhpbmd5dW4td3d3AQID
-  -----END OPENSSH PRIVATE KEY-----" > /root/.ssh/id_rsa
+          - echo "-----BEGIN OPENSSH PRIVATE KEY-----" > /root/.ssh/id_rsa
+          - echo "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW" >> /root/.ssh/id_rsa
+          - echo "QyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252AAAAKBOlxGvTpcR" >> /root/.ssh/id_rsa
+          - echo "rwAAAAtzc2gtZWQyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252A" >> /root/.ssh/id_rsa
+          - echo "AAAEBi+I/kAE2Hv9bfT0XtAsVUOZ0aOOyFzsaAuQQkZNjgX1LR22/zR80WnVyxQWTv2sS5" >> /root/.ssh/id_rsa
+          - echo "ZqCINLftRZ09ZeIuvbnYAAAAGmdpdGh1Yi1hY3Rpb25zLXhpbmd5dW4td3d3AQID" >> /root/.ssh/id_rsa
+          - echo "-----END OPENSSH PRIVATE KEY-----" >> /root/.ssh/id_rsa
           - chmod 600 /root/.ssh/id_rsa
           - ssh-keyscan -H $SSH_TEST_HOST >> /root/.ssh/known_hosts
 
-          # 上传后端
           - scp -v -o StrictHostKeyChecking=no backend/xingyun-api/target/xingyun-api-1.0.0-SNAPSHOT.jar $SSH_TEST_USER@$SSH_TEST_HOST:$SSH_TEST_DIR/
 
-          # 上传前端
           - ssh $SSH_TEST_USER@$SSH_TEST_HOST "mkdir -p $SSH_TEST_DIR/dist"
           - scp -v -r -o StrictHostKeyChecking=no frontend/dist/* $SSH_TEST_USER@$SSH_TEST_HOST:$SSH_TEST_DIR/dist/
 
-          # 重启
           - ssh $SSH_TEST_USER@$SSH_TEST_HOST "systemctl daemon-reload && systemctl restart xingyun-api"
