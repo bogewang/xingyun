@@ -52,6 +52,37 @@ class ProductServiceImplTest {
     Assert.assertNull(ProductServiceImpl.parseInquiryProduct("  ", 2));
   }
 
+  @Test
+  void shouldFilterImportRowsMatchingDisabledProductByTrimmedNameSpecAndUnit() {
+    Product disabledProduct = new Product();
+    disabledProduct.setName("  可乐  ");
+    disabledProduct.setSpec("500ml");
+    disabledProduct.setUnit("瓶");
+    disabledProduct.setAvailable(Boolean.FALSE);
+    ProductImportModel unrelatedRow = importModel("雪碧", "500ml", "瓶");
+
+    List<ProductImportModel> result = ProductServiceImpl.filterDisabledDuplicateImportRows(
+        Arrays.asList(importModel("可乐", "500ml", "瓶"), unrelatedRow),
+        Collections.singletonList(disabledProduct));
+
+    Assert.assertEquals(result, Collections.singletonList(unrelatedRow));
+  }
+
+  @Test
+  void shouldKeepImportRowMatchingAvailableProduct() {
+    Product availableProduct = new Product();
+    availableProduct.setName("可乐");
+    availableProduct.setSpec("500ml");
+    availableProduct.setUnit("瓶");
+    availableProduct.setAvailable(Boolean.TRUE);
+    ProductImportModel importRow = importModel("可乐", "500ml", "瓶");
+
+    List<ProductImportModel> result = ProductServiceImpl.filterDisabledDuplicateImportRows(
+        Collections.singletonList(importRow), Collections.singletonList(availableProduct));
+
+    Assert.assertEquals(result, Collections.singletonList(importRow));
+  }
+
   @Test(expectedExceptions = DefaultClientException.class,
       expectedExceptionsMessageRegExp = "第2行“询价商品”只能填写“是”或“否”")
   void shouldRejectInvalidInquiryProductFromImport() {
@@ -286,5 +317,21 @@ class ProductServiceImplTest {
     product.setId(id);
     product.setUnit(unitId);
     return product;
+  }
+
+  /**
+   * 构造商品导入行。
+   *
+   * @param name 商品名称
+   * @param spec 商品规格
+   * @param unit 商品单位
+   * @return 商品导入行
+   */
+  private static ProductImportModel importModel(String name, String spec, String unit) {
+    ProductImportModel model = new ProductImportModel();
+    model.setName(name);
+    model.setSpec(spec);
+    model.setUnit(unit);
+    return model;
   }
 }

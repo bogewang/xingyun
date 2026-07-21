@@ -682,6 +682,9 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             throw new DefaultClientException("导入数据为空！");
         }
 
+        Set<String> importNames = list.stream().map(ProductImportModel::getName)
+                .filter(StringUtil::isNotBlank).collect(Collectors.toSet());
+        list = filterDisabledDuplicateImportRows(list, queryDisabledProductsByNames(importNames));
         this.check(list);
         ProductImportPersistBatch persistBatch = this.buildProducts(list);
 
@@ -1199,6 +1202,21 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         return getBaseMapper().selectList(checkWrapper);
     }
 
+    /**
+     * 根据商品名称批量查询停用商品。
+     *
+     * @param names 商品名称集合
+     * @return 停用商品列表
+     */
+    private List<Product> queryDisabledProductsByNames(Set<String> names) {
+        if (CollectionUtil.isEmpty(names)) {
+            return CollectionUtil.emptyList();
+        }
+
+        return getBaseMapper().selectList(Wrappers.lambdaQuery(Product.class)
+                .in(Product::getName, names).eq(Product::getAvailable, Boolean.FALSE));
+    }
+
     private List<Product> queryAvailableProductsByName(String name) {
         Wrapper<Product> checkWrapper = Wrappers.lambdaQuery(Product.class)
                 .apply("TRIM(name) = {0}", Objects.toString(name, "").trim())
@@ -1292,7 +1310,38 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         return buildNameSpecUnitKey(data.getName(), data.getSpec(), data.getUnit());
     }
 
-    private String buildNameSpecUnitKey(String name, String spec, String unit) {
+    /**
+     * 过滤与停用商品名称、规格、单位完全匹配的导入行。
+     *
+     * @param importRows 商品导入行
+     * @param disabledProducts 停用商品列表
+     * @return 未匹配停用商品的导入行
+     */
+    static List<ProductImportModel> filterDisabledDuplicateImportRows(List<ProductImportModel> importRows,
+            List<Product> disabledProducts) {
+        if (CollectionUtil.isEmpty(importRows) || CollectionUtil.isEmpty(disabledProducts)) {
+            return importRows;
+        }
+
+        Set<String> disabledProductKeys = disabledProducts.stream()
+                .filter(product -> Boolean.FALSE.equals(product.getAvailable()))
+                .map(product -> buildNameSpecUnitKey(product.getName(), product.getSpec(), product.getUnit()))
+                .collect(Collectors.toSet());
+        return importRows.stream()
+                .filter(row -> !disabledProductKeys.contains(
+                        buildNameSpecUnitKey(row.getName(), row.getSpec(), row.getUnit())))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 构建商品名称、规格、单位组合键。
+     *
+     * @param name 商品名称
+     * @param spec 商品规格
+     * @param unit 商品单位
+     * @return 组合键
+     */
+    private static String buildNameSpecUnitKey(String name, String spec, String unit) {
         return Objects.toString(name, "").trim() + "||" + Objects.toString(spec, "").trim() + "||"
                 + Objects.toString(unit, "").trim();
     }
