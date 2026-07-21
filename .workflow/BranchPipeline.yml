@@ -56,28 +56,59 @@ stages:
           - pnpm run build
 
   - name: deploy
-    displayName: 部署到测试服务器
+    displayName: 构建并部署到测试服务器
     strategy: fast
     trigger: push
     steps:
       - step: build@maven
-        name: deploy_server
-        displayName: 上传并重启服务
+        name: backend_deploy
+        displayName: 后端构建与部署
         jdkVersion: 8
         mavenVersion: 3.6.3
         commands:
           - set -e
-          # 目标服务器信息（使用export确保变量在后续命令中可用）
+          # 构建后端 JAR
+          - export MAVEN_REPO=$PWD/.m2/repository
+          - rm -rf .gitee-go-jugg
+          - git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
+          - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+          - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+          - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+          # SSH 配置与部署
           - export SSH_TEST_HOST=47.103.125.229
           - export SSH_TEST_USER=www
-          # 配置 SSH 密钥（base64编码避免YAML多行解析问题）
           - mkdir -p ~/.ssh
           - echo "LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUFNd0FBQUF0emMyZ3RaVwpReU5UVXhPUUFBQUNCUzBkdHY4MGZORnAxY3NVRms3OXJFdVdhZ2lEUzM3VVdkUFdYaUxyMjUyQUFBQUtCT2x4R3ZUcGNSCnJ3QUFBQXR6YzJndFpXUXlOVFV4T1FBQUFDQlMwZHR2ODBmTkZwMWNzVUZrNzlyRXVXYWdpRFMzN1VXZFBXWGlMcjI1MkEKQUFBRUJpK0kva0FFMkh2OWJmVDBYdEFzVlVPWjBhT095RnpzYUF1UVFrWk5qZ1gxTFIyMi96UjgwV25WeXhRV1R2MnNTNQpacUNJTkxmdFJaMDlaZUl1dmJuWUFBQUFHbWRwZEdoMVlpMWhZM1JwYjI1ekxYaHBibWQ1ZFc0dGQzZDNBUUlECi0tLS0tRU5EIE9QRU5TU0ggUFJJVkFURSBLRVktLS0tLQo=" | base64 -d > ~/.ssh/id_rsa
           - chmod 600 ~/.ssh/id_rsa
-          # 部署后端 JAR 包
-          - scp -o StrictHostKeyChecking=no backend/xingyun-api/target/xingyun-api-1.0.0-SNAPSHOT.jar $SSH_TEST_USER@$SSH_TEST_HOST:/www/wwwroot/xingyun/
-          # 部署前端 dist
+          - scp -o StrictHostKeyChecking=no backend/xingyun-api/target/xingyun-api.jar $SSH_TEST_USER@$SSH_TEST_HOST:/www/wwwroot/xingyun/
+          - ssh -o StrictHostKeyChecking=no $SSH_TEST_USER@$SSH_TEST_HOST "systemctl restart xingyun-api"
+
+      - step: build@nodejs
+        name: frontend_deploy
+        displayName: 前端构建与部署
+        nodeVersion: 14.16.0
+        commands:
+          - set -e
+          # 构建前端
+          - export NODEJS_HOME=$PWD/.node-v18.20.4
+          - wget -q https://npmmirror.com/mirrors/node/v18.20.4/node-v18.20.4-linux-x64.tar.xz -O node-v18.20.4-linux-x64.tar.xz
+          - mkdir -p $NODEJS_HOME
+          - tar -xJf node-v18.20.4-linux-x64.tar.xz -C $NODEJS_HOME --strip-components=1
+          - export PATH=$NODEJS_HOME/bin:$PATH
+          - node -v
+          - npm -v
+          - npm config set registry https://registry.npmmirror.com
+          - npm install -g pnpm@9.15.0
+          - cd frontend
+          - pnpm config set registry https://registry.npmmirror.com
+          - pnpm install --frozen-lockfile
+          - pnpm run build
+          # SSH 配置与部署
+          - export SSH_TEST_HOST=47.103.125.229
+          - export SSH_TEST_USER=www
+          - mkdir -p ~/.ssh
+          - echo "LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUFNd0FBQUF0emMyZ3RaVwpReU5UVXhPUUFBQUNCUzBkdHY4MGZORnAxY3NVRms3OXJFdVdhZ2lEUzM3VVdkUFdYaUxyMjUyQUFBQUtCT2x4R3ZUcGNSCnJ3QUFBQXR6YzJndFpXUXlOVFV4T1FBQUFDQlMwZHR2ODBmTkZwMWNzVUZrNzlyRXVXYWdpRFMzN1VXZFBXWGlMcjI1MkEKQUFBRUJpK0kva0FFMkh2OWJmVDBYdEFzVlVPWjBhT095RnpzYUF1UVFrWk5qZ1gxTFIyMi96UjgwV25WeXhRV1R2MnNTNQpacUNJTkxmdFJaMDlaZUl1dmJuWUFBQUFHbWRwZEdoMVlpMWhZM1JwYjI1ekxYaHBibWQ1ZFc0dGQzZDNBUUlECi0tLS0tRU5EIE9QRU5TU0ggUFJJVkFURSBLRVktLS0tLQo=" | base64 -d > ~/.ssh/id_rsa
+          - chmod 600 ~/.ssh/id_rsa
           - ssh -o StrictHostKeyChecking=no $SSH_TEST_USER@$SSH_TEST_HOST "mkdir -p /www/wwwroot/xingyun/dist"
           - scp -o StrictHostKeyChecking=no -r frontend/dist/* $SSH_TEST_USER@$SSH_TEST_HOST:/www/wwwroot/xingyun/dist/
-          # 重启后端服务
-          - ssh -o StrictHostKeyChecking=no $SSH_TEST_USER@$SSH_TEST_HOST "systemctl restart xingyun-api"
+          - ssh -o StrictHostKeyChecking=no $SSH_TEST_USER@$SSH_TEST_HOST "sudo /www/server/nginx/sbin/nginx -s reload"
