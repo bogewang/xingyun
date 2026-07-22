@@ -35,7 +35,7 @@ jobs:
 
       - name: Install jugg dependencies
         run: |
-          git -c protocol.version=1 clone --depth 1 --branch main https://github.com/bogewang/jugg.git "$RUNNER_TEMP/jugg"
+          git -c protocol.version=1 clone --depth 1 --branch main https://gitclone.com/github.com/bogewang/jugg.git "$RUNNER_TEMP/jugg"
           mvn --settings "$GITHUB_WORKSPACE/.github/maven-settings.xml" -f "$RUNNER_TEMP/jugg/pom.xml" clean install -DskipTests
 
       - name: Build backend
