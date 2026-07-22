@@ -3,7 +3,7 @@ name: Deploy Prod
 on:
   push:
     branches:
-      - master1
+      - deploy101
   workflow_dispatch:
 
 concurrency:
