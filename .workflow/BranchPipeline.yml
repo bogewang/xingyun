@@ -58,29 +58,27 @@ stages:
           - pnpm run build
           - ls -lh dist/
 
-  - name: deploy
-    displayName: 部署到测试服务器
-    strategy: fast
-    trigger: push
+  - name: 部署
+    displayName: 部署
+    strategy: naturally
+    trigger: auto
     steps:
-      - step: build@maven
-        name: deploy_server
-        displayName: 上传并重启服务
-        jdkVersion: 8
-        mavenVersion: 3.6.3
-        commands:
-          - set -e
-          - mkdir -p /root/.ssh
-          - echo "-----BEGIN OPENSSH PRIVATE KEY-----" > /root/.ssh/id_rsa
-          - echo "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW" >> /root/.ssh/id_rsa
-          - echo "QyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252AAAAKBOlxGvTpcR" >> /root/.ssh/id_rsa
-          - echo "rwAAAAtzc2gtZWQyNTUxOQAAACBS0dtv80fNFp1csUFk79rEuWagiDS37UWdPWXiLr252A" >> /root/.ssh/id_rsa
-          - echo "AAAEBi+I/kAE2Hv9bfT0XtAsVUOZ0aOOyFzsaAuQQkZNjgX1LR22/zR80WnVyxQWTv2sS5" >> /root/.ssh/id_rsa
-          - echo "ZqCINLftRZ09ZeIuvbnYAAAAGmdpdGh1Yi1hY3Rpb25zLXhpbmd5dW4td3d3AQID" >> /root/.ssh/id_rsa
-          - echo "-----END OPENSSH PRIVATE KEY-----" >> /root/.ssh/id_rsa
-          - chmod 600 /root/.ssh/id_rsa
-          - ssh-keyscan -H 47.103.125.229 >> /root/.ssh/known_hosts
-          - scp -v -o StrictHostKeyChecking=no backend/xingyun-api/target/xingyun-api.jar www@47.103.125.229:/www/wwwroot/xingyun/xingyun-api.jar.new
-          - ssh www@47.103.125.229 "mkdir -p /www/wwwroot/xingyun/dist"
-          - scp -v -r -o StrictHostKeyChecking=no frontend/dist/* www@47.103.125.229:/www/wwwroot/xingyun/dist/
-          - ssh www@47.103.125.229 "systemctl daemon-reload && systemctl restart xingyun-api"
+      - step: deploy@agent
+        name: ""
+        displayName: 主机部署
+        deployArtifact:
+          - name: output
+            target: "~/gitee_go/deploy"
+            source: build
+            dependArtifact: BUILD_ARTIFACT
+            artifactRepository: default
+            artifactName: output
+            artifactVersion: latest
+        script: |-
+          # 请在此输入部署脚本，如启动Java应用如下
+          # nohup java -jar test.jar &gt; nohup.out &amp;
+           echo 'Hello Gitee!'
+        hostGroupID: { }
+        notify: [ ]
+        strategy:
+          retry: "0"
