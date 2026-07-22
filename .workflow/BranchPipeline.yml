@@ -14,7 +14,7 @@ triggers:
 
 stages:
   - name: deploy
-    displayName: 构建并部署到测试服务器
+    displayName: 构建并部署到测试服务器1
     strategy: fast
     trigger: push
     steps:
