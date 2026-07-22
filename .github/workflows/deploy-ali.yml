@@ -13,7 +13,7 @@ concurrency:
 jobs:
   deploy-prod:
     name: Build and deploy prod
-    runs-on: [iZuf64v4wc5ct0ixcr7jztZ]
+    runs-on: [ali]
     environment: production
 
     steps:
