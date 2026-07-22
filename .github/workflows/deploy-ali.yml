@@ -35,7 +35,7 @@ jobs:
 
       - name: Install jugg dependencies
         run: |
-          git clone --depth 1 --branch main https://ghproxy.com/https://github.com/bogewang/jugg.git "$RUNNER_TEMP/jugg"
+          git clone --depth 1 --branch main https://hub.fastgit.xyz/bogewang/jugg.git "$RUNNER_TEMP/jugg"
           mvn --settings "$GITHUB_WORKSPACE/.github/maven-settings.xml" -f "$RUNNER_TEMP/jugg/pom.xml" clean install -DskipTests
 
       - name: Build backend
