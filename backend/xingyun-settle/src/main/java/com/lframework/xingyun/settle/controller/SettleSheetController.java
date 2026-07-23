@@ -109,14 +109,14 @@ public class SettleSheetController extends DefaultBaseController {
     }
 
     @ApiOperation("查询收货单对账结算扩展信息")
-    @HasPermission({"settle:sheet:query"})
+    @HasPermission({"purchase:receive:query", "settle:sheet:query"})
     @PostMapping("/receive-sheet-settle-infos")
-    public InvokeResult<List<ReceiveSheetSettleInfoBo>> queryReceiveSheetSettleInfos(@RequestBody @Valid QueryReceiveSheetVo vo) {
+    public InvokeResult<PageResult<ReceiveSheetSettleInfoBo>> queryReceiveSheetSettleInfos(@RequestBody @Valid QueryReceiveSheetVo vo) {
         try {
             PageResult<ReceiveSheet> pageResult = receiveSheetService.query(getPageIndex(vo), getPageSize(vo), vo);
 
             List<ReceiveSheetSettleInfoBo> data = settleSheetService.queryReceiveSheetSettleInfos(pageResult.getDatas());
-            return InvokeResultBuilder.success(data);
+            return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, data));
         } catch (Exception e) {
             log.error("请求出错", e);
             return InvokeResultBuilder.fail(e.getMessage(), null);

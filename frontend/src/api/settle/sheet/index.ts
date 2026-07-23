@@ -69,8 +69,8 @@ export function exportSummary(data: QuerySettleSheetSummaryVo): Promise<void> {
  */
 export function queryReceiveSheetSettleInfos(
   data: QueryReceiveSheetSettleInfoVo,
-): Promise<ReceiveSheetSettleInfoBo[]> {
-  return defHttp.post<ReceiveSheetSettleInfoBo[]>(
+): Promise<PageResult<ReceiveSheetSettleInfoBo>> {
+  return defHttp.post<PageResult<ReceiveSheetSettleInfoBo>>(
     {
       url: baseUrl + '/receive-sheet-settle-infos',
       data,

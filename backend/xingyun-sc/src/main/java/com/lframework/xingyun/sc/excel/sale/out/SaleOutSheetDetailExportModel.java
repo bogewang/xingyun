@@ -93,7 +93,7 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
     protected void afterInit(QuerySaleOutSheetDetailDto dto) {
 
         // 补齐订单日期和客户名称
-        this.setOrderDate(dto.getOrderDate());
+        this.setOrderDate(dto.getOrderDate().replace("-", ""));
         this.setCustomerName(dto.getCustomerName());
 
         this.setProductCode(dto.getProductCode());

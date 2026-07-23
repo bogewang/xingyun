@@ -175,6 +175,7 @@
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { createError, createSuccess } from '@/hooks/web/msg';
+  import { normalizeSettleQueryResult } from './settleQueryResult';
   import {
     buildSortPageVo,
     dateTimeToDate,
@@ -455,30 +456,35 @@
         const keyword = this.searchFormData.keyword || '';
         this.keywordField = 'code';
         let queryParams = this.buildQueryParams();
-        let res = await settleApi.queryReceiveSheetSettleInfos(queryParams);
+        let result = normalizeSettleQueryResult(
+          await settleApi.queryReceiveSheetSettleInfos(queryParams),
+        );
 
-        if (keyword && (!res || res.length === 0)) {
+        if (keyword && result.datas.length === 0) {
           this.keywordField = 'purchaseOrderCode';
           queryParams = this.buildQueryParams();
-          res = await settleApi.queryReceiveSheetSettleInfos(queryParams);
+          result = normalizeSettleQueryResult(
+            await settleApi.queryReceiveSheetSettleInfos(queryParams),
+          );
         }
 
         return {
           queryParams,
-          res,
+          res: result.datas,
+          totalCount: result.totalCount,
         };
       },
       async loadList() {
         this.loading = true;
         try {
-          const { res } = await this.resolveQueryResult();
+          const { res, totalCount } = await this.resolveQueryResult();
 
           this.tableData = (res || []).map((item) => ({
             ...item,
             checkDescription: item.checkDescription || '',
             settleDescription: item.settleDescription || '',
           }));
-          this.pagerConfig.total = this.tableData.length;
+          this.pagerConfig.total = totalCount;
           this.$nextTick(() => {
             this.syncSelection();
           });

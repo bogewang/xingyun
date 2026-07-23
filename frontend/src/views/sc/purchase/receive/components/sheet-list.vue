@@ -287,6 +287,7 @@
     SearchOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/purchase/receive';
+  import * as settleApi from '@/api/settle/sheet';
   import * as configApi from '@/api/sc/purchase/config';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
@@ -313,6 +314,10 @@
   import BatchHandler from '@/components/BatchHandler';
   import ReceiveSheetQueryImporter from '@/components/Importor/PurchaseOrderQueryImporter.vue';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
+  import {
+    buildReceiveSheetFooter,
+    resolveReceiveSheetPaymentAmounts,
+  } from './receiveSheetFooter';
 
   export default defineComponent({
     name: 'ReceiveSheetSheetList',
@@ -392,8 +397,24 @@
           { field: 'supplierName', title: '供应商名称', width: 120 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
-          { field: 'paidAmount', title: '本单已付', align: 'right', width: 100 },
-          { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 100 },
+          {
+            field: 'paidAmount',
+            title: '本单已付',
+            align: 'right',
+            width: 100,
+            formatter: ({ row }) => {
+              return resolveReceiveSheetPaymentAmounts(row).paidAmount.toFixed(2);
+            },
+          },
+          {
+            field: 'unpaidAmount',
+            title: '未付金额',
+            align: 'right',
+            width: 100,
+            formatter: ({ row }) => {
+              return resolveReceiveSheetPaymentAmounts(row).unpaidAmount.toFixed(2);
+            },
+          },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
           {
@@ -418,7 +439,7 @@
           ajax: {
             // 查询接口
             query: ({ page, sorts }) => {
-              return api.query(this.buildQueryParams(page, sorts));
+              return settleApi.queryReceiveSheetSettleInfos(this.buildQueryParams(page, sorts));
             },
           },
         },
@@ -449,42 +470,7 @@
       },
       CloudUploadOutlined,
       footerMethod({ columns, data }) {
-        const totalAmount = this.sumByField(data, 'totalAmount');
-        const totalNum = this.sumByField(data, 'totalNum');
-
-        return [
-          columns.map((column) => {
-            if (column.type === 'seq') {
-              return '合计';
-            }
-
-            if (column.field === 'totalAmount') {
-              return this.formatAmount(totalAmount);
-            }
-
-            if (column.field === 'totalNum') {
-              return this.formatQuantity(totalNum);
-            }
-
-            return '';
-          }),
-        ];
-      },
-      sumByField(data, field) {
-        return (data || []).reduce((total, item) => {
-          const value = Number(item?.[field] ?? 0);
-          return total + (Number.isNaN(value) ? 0 : value);
-        }, 0);
-      },
-      formatAmount(value) {
-        return this.toFixedNumber(value, 2);
-      },
-      formatQuantity(value) {
-        return this.toFixedNumber(value, 2, true);
-      },
-      toFixedNumber(value, digits = 2, trimZero = false) {
-        const text = Number(value || 0).toFixed(digits);
-        return trimZero ? text.replace(/\.?0+$/, '') : text;
+        return buildReceiveSheetFooter(columns, data);
       },
       // 列表发生查询时的事件
       search() {
