@@ -5,16 +5,23 @@ displayName: 星云ERP分支构建
 stages:
 - name: 构建校验
   displayName: 构建校验
-  strategy: fast
+  strategy: naturally
   trigger: auto
   steps:
-  - step: build@maven
-    name: backend_build
-    displayName: 后端编译
-    jdkVersion: "8"
-    mavenVersion: 3.6.3
+  - step: build@shell
+    name: full_build
+    displayName: 全量构建
     commands:
     - set -e
+
+    - export JAVA_HOME=/opt/gitee-go/java/jdk1.8.0_281
+    - export PATH=$JAVA_HOME/bin:$PATH
+    - java -version
+
+    - export MAVEN_HOME=/opt/gitee-go/maven/apache-maven-3.6.3
+    - export PATH=$MAVEN_HOME/bin:$PATH
+    - mvn -version
+
     - export MAVEN_REPO=$PWD/.m2/repository
     - rm -rf .gitee-go-jugg
     - git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
@@ -26,12 +33,6 @@ stages:
     - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
     - ls -lh backend/xingyun-api/target/
 
-  - step: build@nodejs
-    name: frontend_build
-    displayName: 前端检查与构建
-    nodeVersion: 14.16.0
-    commands:
-    - set -e
     - export NODEJS_HOME=$PWD/.node-v18.20.4
     - wget -q https://npmmirror.com/mirrors/node/v18.20.4/node-v18.20.4-linux-x64.tar.xz -O node-v18.20.4-linux-x64.tar.xz
     - mkdir -p $NODEJS_HOME
@@ -48,13 +49,12 @@ stages:
     - pnpm run build
     - ls -lh dist/
 
-    # 回到项目根目录，统一打包产物（绝对不会路径错）
+    - mkdir -p ../output
+    - cp ../backend/xingyun-api/target/xingyun-api.jar ../output/
+    - cp -r dist ../output/
     - cd ..
-    - mkdir -p output
-    - cp backend/xingyun-api/target/xingyun-api.jar output/
-    - cp -r frontend/dist output/
+    - ls -lh output/
 
-  # 声明产物
   outputs:
   - name: BUILD_ARTIFACT
     path: output
@@ -78,7 +78,6 @@ stages:
       DEPLOY_DIR=/root/gitee_go/deploy
       APP_JAR="$DEPLOY_DIR/xingyun-api.jar"
 
-      # 停止旧进程
       echo "Stopping old process..."
       PID=$(ps -ef | grep xingyun-api.jar | grep -v grep | awk '{print $2}')
       if [ -n "$PID" ]; then
@@ -86,11 +85,9 @@ stages:
         sleep 2
       fi
 
-      # 解压产物
       cd $DEPLOY_DIR
       tar zxf output.tar.gz --strip-components=1 -C .
 
-      # 启动应用
       echo "Starting application..."
       nohup java -jar "$APP_JAR" > "$DEPLOY_DIR/nohup.out" 2>&1 &
       echo "Deploy finished."
