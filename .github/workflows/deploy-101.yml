@@ -3,7 +3,7 @@ name: Deploy Prod
 on:
   push:
     branches:
-      - master1
+      - master
   workflow_dispatch:
 
 concurrency:
@@ -100,7 +100,7 @@ jobs:
             mv dist.new/dist dist
             rm -rf dist.new
             mv xingyun-api.jar.new xingyun-api.jar
-            chmod 664 xingyun-api-81.jar frontend-dist.tar.gz
+            chmod 664 xingyun-api.jar frontend-dist.tar.gz
             chmod -R 775 dist
             sudo /usr/bin/systemctl restart xingyun-api-prod
             sudo /www/server/nginx/sbin/nginx -s reload
