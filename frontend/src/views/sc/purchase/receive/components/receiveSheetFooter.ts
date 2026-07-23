@@ -1,3 +1,5 @@
+import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
+
 /** vxe-table 合计行所需的列配置。 */
 export interface ReceiveSheetFooterColumn {
   type?: string;
@@ -77,7 +79,7 @@ export function resolveReceiveSheetPaymentAmounts(
 ): { paidAmount: number; unpaidAmount: number } {
   const paidAmount = parseFiniteNumber(row?.paidAmount);
 
-  if (parseFiniteNumber(row?.settleStatus) !== 3) {
+  if (!SETTLE_STATUS.SETTLED.equalsCode(parseFiniteNumber(row?.settleStatus))) {
     return {
       paidAmount,
       unpaidAmount: parseFiniteNumber(row?.unpaidAmount),
