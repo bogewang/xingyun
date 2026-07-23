@@ -3,114 +3,115 @@ name: xingyun-branch-ci
 displayName: 星云ERP分支构建
 
 stages:
-  - name: 构建校验
-    displayName: 构建校验
-    strategy: fast
-    trigger: auto
-    steps:
-      - step: build@maven
-        name: backend_build
-        displayName: 后端编译
-        jdkVersion: "8"
-        mavenVersion: 3.6.3
-        commands:
-          - set -e
-          - export MAVEN_REPO=$PWD/.m2/repository
-          - rm -rf .gitee-go-jugg
-          - git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
-          - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-          - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-          - find $MAVEN_REPO/com/lframework -maxdepth 4 -type f | sort
-          - test -f $MAVEN_REPO/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
-          - test -f $MAVEN_REPO/com/lframework/mq-starter/4.1.2-SNAPSHOT/mq-starter-4.1.2-SNAPSHOT.pom
-          - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-          - ls -lh backend/xingyun-api/target/
+- name: 构建校验
+  displayName: 构建校验
+  strategy: fast
+  trigger: auto
+  steps:
+  - step: build@maven
+    name: backend_build
+    displayName: 后端编译
+    jdkVersion: "8"
+    mavenVersion: 3.6.3
+    commands:
+    - set -e
+    - export MAVEN_REPO=$PWD/.m2/repository
+    - rm -rf .gitee-go-jugg
+    - git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
+    - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+    - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+    - find $MAVEN_REPO/com/lframework -maxdepth 4 -type f | sort
+    - test -f $MAVEN_REPO/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
+    - test -f $MAVEN_REPO/com/lframework/mq-starter/4.1.2-SNAPSHOT/mq-starter-4.1.2-SNAPSHOT.pom
+    - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+    - ls -lh backend/xingyun-api/target/
 
-      - step: build@nodejs
-        name: frontend_build
-        displayName: 前端检查与构建
-        nodeVersion: 14.16.0
-        commands:
-          - set -e
-          - export NODEJS_HOME=$PWD/.node-v18.20.4
-          - wget -q https://npmmirror.com/mirrors/node/v18.20.4/node-v18.20.4-linux-x64.tar.xz -O node-v18.20.4-linux-x64.tar.xz
-          - mkdir -p $NODEJS_HOME
-          - tar -xJf node-v18.20.4-linux-x64.tar.xz -C $NODEJS_HOME --strip-components=1
-          - export PATH=$NODEJS_HOME/bin:$PATH
-          - node -v
-          - npm -v
-          - npm config set registry https://registry.npmmirror.com
-          - npm install -g pnpm@9.15.0
-          - cd frontend
-          - pnpm config set registry https://registry.npmmirror.com
-          - pnpm install --frozen-lockfile
-          - pnpm run lint
-          - pnpm run build
-          - ls -lh dist/
+  - step: build@nodejs
+    name: frontend_build
+    displayName: 前端检查与构建
+    nodeVersion: 14.16.0
+    commands:
+    - set -e
+    - export NODEJS_HOME=$PWD/.node-v18.20.4
+    - wget -q https://npmmirror.com/mirrors/node/v18.20.4/node-v18.20.4-linux-x64.tar.xz -O node-v18.20.4-linux-x64.tar.xz
+    - mkdir -p $NODEJS_HOME
+    - tar -xJf node-v18.20.4-linux-x64.tar.xz -C $NODEJS_HOME --strip-components=1
+    - export PATH=$NODEJS_HOME/bin:$PATH
+    - node -v
+    - npm -v
+    - npm config set registry https://registry.npmmirror.com
+    - npm install -g pnpm@9.15.0
+    - cd frontend
+    - pnpm config set registry https://registry.npmmirror.com
+    - pnpm install --frozen-lockfile
+    - pnpm run lint
+    - pnpm run build
+    - ls -lh dist/
 
-          # 前端构建完，再统一打包前后端产物
-          - mkdir -p ../../output
-          - cp ../../backend/xingyun-api/target/xingyun-api.jar ../../output/
-          - cp -r dist ../../output/
+    # 回到项目根目录，统一打包产物（绝对不会路径错）
+    - cd ..
+    - mkdir -p output
+    - cp backend/xingyun-api/target/xingyun-api.jar output/
+    - cp -r frontend/dist output/
 
-    # 声明构建产物
-    outputs:
-      - name: BUILD_ARTIFACT
-        path: output
-        type: archive
+  # 声明产物
+  outputs:
+  - name: BUILD_ARTIFACT
+    path: output
+    type: archive
 
-  - name: 部署
-    displayName: 部署
-    strategy: naturally
-    trigger: auto
-    steps:
-      - step: deploy@agent
-        name: deploy_server
-        displayName: 主机部署
-        deployArtifact:
-          - name: output
-            target: /root/gitee_go/deploy
-            source: build
-            dependArtifact: BUILD_ARTIFACT
+- name: 部署
+  displayName: 部署
+  strategy: naturally
+  trigger: auto
+  steps:
+  - step: deploy@agent
+    name: deploy_server
+    displayName: 主机部署
+    deployArtifact:
+    - name: output
+      target: /root/gitee_go/deploy
+      source: build
+      dependArtifact: BUILD_ARTIFACT
 
-        script: |-
-          DEPLOY_DIR=/root/gitee_go/deploy
-          APP_JAR="$DEPLOY_DIR/xingyun-api.jar"
-          
-          # 停止旧进程
-          echo "Stopping old process..."
-          PID=$(ps -ef | grep xingyun-api.jar | grep -v grep | awk '{print $2}')
-          if [ -n "$PID" ]; then
-            kill -9 $PID || true
-            sleep 2
-          fi
-          
-          # 解压产物
-          cd $DEPLOY_DIR
-          tar zxf output.tar.gz --strip-components=1 -C .
-          
-          # 启动应用
-          echo "Starting application..."
-          nohup java -jar "$APP_JAR" > "$DEPLOY_DIR/nohup.out" 2>&1 &
-          echo "Deploy finished."
+    script: |-
+      DEPLOY_DIR=/root/gitee_go/deploy
+      APP_JAR="$DEPLOY_DIR/xingyun-api.jar"
 
-        hostGroupID:
-          ID: test
-          hostID:
-            - 6436ea08-ced0-4883-95cf-d96016ca71a4
-        notify: []
-        strategy:
-          retry: "0"
+      # 停止旧进程
+      echo "Stopping old process..."
+      PID=$(ps -ef | grep xingyun-api.jar | grep -v grep | awk '{print $2}')
+      if [ -n "$PID" ]; then
+        kill -9 $PID || true
+        sleep 2
+      fi
+
+      # 解压产物
+      cd $DEPLOY_DIR
+      tar zxf output.tar.gz --strip-components=1 -C .
+
+      # 启动应用
+      echo "Starting application..."
+      nohup java -jar "$APP_JAR" > "$DEPLOY_DIR/nohup.out" 2>&1 &
+      echo "Deploy finished."
+
+    hostGroupID:
+      ID: test
+      hostID:
+      - 6436ea08-ced0-4883-95cf-d96016ca71a4
+    notify: []
+    strategy:
+      retry: "0"
 
 triggers:
   trigger: auto
   push:
     branches:
       precise:
-        - deploy
+      - deploy
   pr:
     branches:
       precise:
-        - deploy
+      - deploy
 
 notify: []
