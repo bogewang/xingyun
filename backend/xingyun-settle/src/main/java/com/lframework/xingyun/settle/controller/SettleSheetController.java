@@ -109,7 +109,7 @@ public class SettleSheetController extends DefaultBaseController {
     }
 
     @ApiOperation("查询收货单对账结算扩展信息")
-    @HasPermission({"settle:sheet:query"})
+    @HasPermission({"purchase:receive:query", "settle:sheet:query"})
     @PostMapping("/receive-sheet-settle-infos")
     public InvokeResult<PageResult<ReceiveSheetSettleInfoBo>> queryReceiveSheetSettleInfos(@RequestBody @Valid QueryReceiveSheetVo vo) {
         try {

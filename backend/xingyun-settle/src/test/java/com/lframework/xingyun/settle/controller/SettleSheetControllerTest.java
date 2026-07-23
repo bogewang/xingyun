@@ -2,6 +2,7 @@ package com.lframework.xingyun.settle.controller;
 
 import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.PageResult;
+import com.lframework.starter.web.core.annotations.security.HasPermission;
 import com.lframework.starter.web.core.components.trace.TraceBuilder;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
@@ -11,9 +12,9 @@ import com.lframework.xingyun.sc.vo.purchase.receive.QueryReceiveSheetVo;
 import com.lframework.xingyun.settle.bo.sheet.ReceiveSheetSettleInfoBo;
 import com.lframework.xingyun.settle.service.SettleSheetService;
 import org.mockito.Mockito;
+import org.junit.Assert;
+import org.junit.Test;
 import org.springframework.context.support.StaticApplicationContext;
-import org.testng.Assert;
-import org.testng.annotations.Test;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -53,6 +54,20 @@ public class SettleSheetControllerTest {
         PageResult<?> result = (PageResult<?>) response.getData();
         Assert.assertEquals(result.getTotalCount(), 3L);
         Assert.assertEquals(result.getDatas(), settleInfos);
+    }
+
+    /**
+     * 查询收货单结算扩展信息应同时允许采购收货单查询和结算单查询权限。
+     */
+    @Test
+    public void shouldAllowReceiveSheetAndSettleSheetQueryPermissions() throws Exception {
+        HasPermission permission = SettleSheetController.class
+                .getMethod("queryReceiveSheetSettleInfos", QueryReceiveSheetVo.class)
+                .getAnnotation(HasPermission.class);
+
+        Assert.assertNotNull(permission);
+        Assert.assertArrayEquals(new String[]{"purchase:receive:query", "settle:sheet:query"},
+                permission.value());
     }
 
     /**
