@@ -59,6 +59,9 @@ public class ReceiveSheetDetailExportModel extends BaseBo<ReceiveSheetDetail> im
     @ExcelProperty("备注")
     private String description;
 
+    @ExcelProperty("单据备注")
+    private String sheetDescription;
+
     public ReceiveSheetDetailExportModel() {
     }
 
@@ -97,6 +100,7 @@ public class ReceiveSheetDetailExportModel extends BaseBo<ReceiveSheetDetail> im
         this.setTaxAmount(dto.getTaxAmount());
         this.setProductionDate(dto.getProductionDate());
         this.setDescription(dto.getDescription());
+        this.setSheetDescription(sheetFullDto.getDescription());
         if (supplier != null) {
             this.setSupplierName(supplier.getName());
         }

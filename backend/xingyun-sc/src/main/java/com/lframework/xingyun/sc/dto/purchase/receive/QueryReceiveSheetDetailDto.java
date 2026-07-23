@@ -60,6 +60,11 @@ public class QueryReceiveSheetDetailDto implements BaseDto, Serializable {
   private String description;
 
   /**
+   * 单据备注
+   */
+  private String sheetDescription;
+
+  /**
    * 生产日期
    */
   private String productionDate;

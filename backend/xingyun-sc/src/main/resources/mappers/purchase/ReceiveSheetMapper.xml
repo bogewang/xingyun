@@ -209,6 +209,7 @@
             d.tax_amount,
             d.is_gift,
             d.description,
+            r.description AS sheet_description,
             d.production_date,
             r.settle_status,
             r.create_by,

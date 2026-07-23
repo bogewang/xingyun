@@ -228,6 +228,7 @@
             d.total_profit,
             d.is_gift,
             d.description,
+            s.description AS sheet_description,
             d.settle_status,
             s.create_by,
             s.create_time,

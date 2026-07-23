@@ -1143,6 +1143,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         model.setOrderNum(detail.getOrderNum());
         model.setTaxAmount(detail.getTaxAmount());
         model.setDescription(detail.getDescription());
+        model.setSheetDescription(detail.getSheetDescription());
         return model;
     }
 
