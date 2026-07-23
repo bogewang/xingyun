@@ -3,7 +3,7 @@ name: Deploy Prod
 on:
   push:
     branches:
-      - master1
+      - master
   workflow_dispatch:
 
 concurrency:
@@ -17,13 +17,14 @@ jobs:
     environment: production
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          fetch-depth: 1
-          # 禁用 HTTP2，解决 curl 16 错误
-          http-protocol: https
-          enable-http2: false
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Fetch code
+        run: |
+          git fetch --no-tags --prune --no-recurse-submodules origin +${{ github.sha }}:refs/remotes/origin/master
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -35,7 +36,7 @@ jobs:
 
       - name: Install jugg dependencies
         run: |
-          git clone --depth 1 --branch main https://github.com/bogewang/jugg.git "$RUNNER_TEMP/jugg"
+          git clone --depth 1 --branch main git@github.com:bogewang/jugg.git "$RUNNER_TEMP/jugg"
           mvn --settings "$GITHUB_WORKSPACE/.github/maven-settings.xml" -f "$RUNNER_TEMP/jugg/pom.xml" clean install -DskipTests
 
       - name: Build backend
