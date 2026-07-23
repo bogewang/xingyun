@@ -38,7 +38,7 @@ stages:
     artifacts:
     - name: BUILD_ARTIFACT
       path:
-      - ./backend/target
+      - ./backend/xingyun-api/target
       type: .tar.gz
     settings: []
     caches:
