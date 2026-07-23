@@ -24,7 +24,7 @@ jobs:
 
       - name: Fetch code
         run: |
-          git fetch --no-tags --prune --no-recurse-submodules origin +<commit_hash>:refs/remotes/origin/master
+          git fetch --no-tags --prune --no-recurse-submodules origin +${{ github.sha }}:refs/remotes/origin/master
 
       - name: Setup Java
         uses: actions/setup-java@v4
