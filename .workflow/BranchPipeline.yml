@@ -1,90 +1,117 @@
 version: "1.0"
 name: xingyun-branch-ci
 displayName: 星云ERP分支构建
+
 stages:
-- name: 构建校验
-  displayName: 构建校验
-  strategy: fast
-  trigger: auto
-  steps:
-  - step: build@maven
-    name: backend_build
-    displayName: 后端编译
-    jdkVersion: "8"
-    mavenVersion: 3.6.3
-    commands:
-    - set -e
-    - export MAVEN_REPO=$PWD/.m2/repository
-    - rm -rf .gitee-go-jugg
-    - git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
-    - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-    - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-    - find $MAVEN_REPO/com/lframework -maxdepth 4 -type f | sort
-    - test -f $MAVEN_REPO/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
-    - test -f $MAVEN_REPO/com/lframework/mq-starter/4.1.2-SNAPSHOT/mq-starter-4.1.2-SNAPSHOT.pom
-    - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-    - ls -lh backend/xingyun-api/target/
-  - step: build@nodejs
-    name: frontend_build
-    displayName: 前端检查与构建
-    nodeVersion: 14.16.0
-    commands:
-    - set -e
-    - export NODEJS_HOME=$PWD/.node-v18.20.4
-    - wget -q https://npmmirror.com/mirrors/node/v18.20.4/node-v18.20.4-linux-x64.tar.xz
-      -O node-v18.20.4-linux-x64.tar.xz
-    - mkdir -p $NODEJS_HOME
-    - tar -xJf node-v18.20.4-linux-x64.tar.xz -C $NODEJS_HOME --strip-components=1
-    - export PATH=$NODEJS_HOME/bin:$PATH
-    - node -v
-    - npm -v
-    - npm config set registry https://registry.npmmirror.com
-    - npm install -g pnpm@9.15.0
-    - cd frontend
-    - pnpm config set registry https://registry.npmmirror.com
-    - pnpm install --frozen-lockfile
-    - pnpm run lint
-    - pnpm run build
-    - ls -lh dist/
-- name: 部署
-  displayName: 部署
-  strategy: naturally
-  trigger: auto
-  steps:
-  - step: deploy@agent
-    name: ""
-    displayName: 主机部署
-    deployArtifact:
-    - name: output
-      target: "~/gitee_go/deploy"
-      source: build
-      dependArtifact: BUILD_ARTIFACT
-      artifactRepository: default
-      artifactName: output
-      artifactVersion: latest
-    script: |-
-      # 请在此输入部署脚本，如启动Java应用如下
-      # nohup java -jar test.jar &gt; nohup.out &amp;
-       echo 'Hello Gitee!'
-    hostGroupID:
-      ID: test
-      hostID:
-      - 6436ea08-ced0-4883-95cf-d96016ca71a4
-    notify: []
-    strategy:
-      retry: "0"
+  - name: 构建校验
+    displayName: 构建校验
+    strategy: fast
+    trigger: auto
+    steps:
+      - step: build@maven
+        name: backend_build
+        displayName: 后端编译
+        jdkVersion: "8"
+        mavenVersion: 3.6.3
+        commands:
+          - set -e
+          - export MAVEN_REPO=$PWD/.m2/repository
+          - rm -rf .gitee-go-jugg
+          - git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
+          - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+          - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+          - find $MAVEN_REPO/com/lframework -maxdepth 4 -type f | sort
+          - test -f $MAVEN_REPO/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
+          - test -f $MAVEN_REPO/com/lframework/mq-starter/4.1.2-SNAPSHOT/mq-starter-4.1.2-SNAPSHOT.pom
+          - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+          - ls -lh backend/xingyun-api/target/
+
+          # ====================== 关键：打包构建产物 ======================
+          - mkdir -p output
+          - cp backend/xingyun-api/target/*.jar output/
+          - cp -r frontend/dist output/
+
+    # 声明构建产物，让部署阶段可以拿到
+    outputs:
+      - name: BUILD_ARTIFACT
+        path: output
+        type: archive
+
+      - step: build@nodejs
+        name: frontend_build
+        displayName: 前端检查与构建
+        nodeVersion: 14.16.0
+        commands:
+          - set -e
+          - export NODEJS_HOME=$PWD/.node-v18.20.4
+          - wget -q https://npmmirror.com/mirrors/node/v18.20.4/node-v18.20.4-linux-x64.tar.xz -O node-v18.20.4-linux-x64.tar.xz
+          - mkdir -p $NODEJS_HOME
+          - tar -xJf node-v18.20.4-linux-x64.tar.xz -C $NODEJS_HOME --strip-components=1
+          - export PATH=$NODEJS_HOME/bin:$PATH
+          - node -v
+          - npm -v
+          - npm config set registry https://registry.npmmirror.com
+          - npm install -g pnpm@9.15.0
+          - cd frontend
+          - pnpm config set registry https://registry.npmmirror.com
+          - pnpm install --frozen-lockfile
+          - pnpm run lint
+          - pnpm run build
+          - ls -lh dist/
+
+  - name: 部署
+    displayName: 部署
+    strategy: naturally
+    trigger: auto
+    steps:
+      - step: deploy@agent
+        name: deploy_server
+        displayName: 主机部署
+        deployArtifact:
+          - name: output
+            target: /root/gitee_go/deploy
+            source: build
+            dependArtifact: BUILD_ARTIFACT
+
+        script: |-
+          # 部署目录
+          DEPLOY_DIR=/root/gitee_go/deploy
+          APP_NAME=xingyun-api.jar
+          
+          # 停掉旧进程
+          echo "查找旧进程..."
+          PID=$(ps -ef | grep $APP_NAME | grep -v grep | awk '{print $2}')
+          if [ -n "$PID" ]; then
+            echo "kill $PID"
+            kill -9 $PID || true
+          fi
+          
+          # 解压产物（Gitee Go 会自动把 output.tar.gz 放到这里）
+          cd $DEPLOY_DIR
+          tar zxf output.tar.gz -C $DEPLOY_DIR --strip-components=1
+          
+          # 启动 Java 应用
+          echo "启动应用..."
+          nohup java -jar $DEPLOY_DIR/*.jar > $DEPLOY_DIR/nohup.out 2>&1 &
+          echo "启动完成"
+
+        hostGroupID:
+          ID: test
+          hostID:
+            - 6436ea08-ced0-4883-95cf-d96016ca71a4
+        notify: []
+        strategy:
+          retry: "0"
+
 triggers:
   trigger: auto
   push:
     branches:
-      prefix: []
       precise:
-      - deploy
-      include: []
+        - deploy
   pr:
     branches:
-      prefix: []
       precise:
-      - deploy
-      include: []
+        - deploy
+
 notify: []
