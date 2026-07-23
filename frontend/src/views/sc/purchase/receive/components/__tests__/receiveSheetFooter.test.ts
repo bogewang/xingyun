@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildReceiveSheetFooter } from '../receiveSheetFooter';
+import { buildReceiveSheetFooter, resolveReceiveSheetPaymentAmounts } from '../receiveSheetFooter';
 
 describe('采购收货单合计行', () => {
   it('汇总商品数量、总金额、已付金额和未付金额', () => {
@@ -83,20 +83,40 @@ describe('采购收货单合计行', () => {
   });
 
   it('已结算单据将结算金额并入已付并从对账金额扣减未付', () => {
+    const row = { settleStatus: 3, checkAmount: 100, settleAmount: 60, paidAmount: 10, unpaidAmount: 90 };
+
+    expect(resolveReceiveSheetPaymentAmounts(row)).toEqual({ paidAmount: 70, unpaidAmount: 30 });
+
     expect(
       buildReceiveSheetFooter(
         [{ type: 'seq' }, { field: 'paidAmount' }, { field: 'unpaidAmount' }],
-        [{ settleStatus: 3, checkAmount: 100, settleAmount: 60, paidAmount: 10, unpaidAmount: 90 }],
+        [row],
       ),
     ).toEqual([['合计', '70.00', '30.00']]);
   });
 
   it('非已结算单据继续使用原始已付和未付金额', () => {
+    const row = { settleStatus: 1, checkAmount: 100, settleAmount: 60, paidAmount: 10, unpaidAmount: 90 };
+
+    expect(resolveReceiveSheetPaymentAmounts(row)).toEqual({ paidAmount: 10, unpaidAmount: 90 });
+
     expect(
       buildReceiveSheetFooter(
         [{ type: 'seq' }, { field: 'paidAmount' }, { field: 'unpaidAmount' }],
-        [{ settleStatus: 1, checkAmount: 100, settleAmount: 60, paidAmount: 10, unpaidAmount: 90 }],
+        [row],
       ),
     ).toEqual([['合计', '10.00', '90.00']]);
+  });
+
+  it('已结算单据将非法金额按零处理', () => {
+    expect(
+      resolveReceiveSheetPaymentAmounts({
+        settleStatus: '3',
+        checkAmount: 'invalid',
+        settleAmount: Infinity,
+        paidAmount: Symbol('paidAmount'),
+        unpaidAmount: 90,
+      }),
+    ).toEqual({ paidAmount: 0, unpaidAmount: 0 });
   });
 });

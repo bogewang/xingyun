@@ -5,4 +5,14 @@ export interface QueryReceiveSheetSettleInfoBo extends QueryReceiveSheetBo {
   checkAmount: number;
 
   settleAmount: number;
+
+  unSettleAmount?: number;
+
+  checkDescription?: string;
+
+  checkTime?: string;
+
+  settleDescription?: string;
+
+  settleTime?: string;
 }

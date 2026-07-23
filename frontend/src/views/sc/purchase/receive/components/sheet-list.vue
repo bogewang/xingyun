@@ -314,7 +314,10 @@
   import BatchHandler from '@/components/BatchHandler';
   import ReceiveSheetQueryImporter from '@/components/Importor/PurchaseOrderQueryImporter.vue';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
-  import { buildReceiveSheetFooter } from './receiveSheetFooter';
+  import {
+    buildReceiveSheetFooter,
+    resolveReceiveSheetPaymentAmounts,
+  } from './receiveSheetFooter';
 
   export default defineComponent({
     name: 'ReceiveSheetSheetList',
@@ -394,8 +397,24 @@
           { field: 'supplierName', title: '供应商名称', width: 120 },
           { field: 'totalNum', title: '商品数量', align: 'right', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
-          { field: 'paidAmount', title: '本单已付', align: 'right', width: 100 },
-          { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 100 },
+          {
+            field: 'paidAmount',
+            title: '本单已付',
+            align: 'right',
+            width: 100,
+            formatter: ({ row }) => {
+              return resolveReceiveSheetPaymentAmounts(row).paidAmount.toFixed(2);
+            },
+          },
+          {
+            field: 'unpaidAmount',
+            title: '未付金额',
+            align: 'right',
+            width: 100,
+            formatter: ({ row }) => {
+              return resolveReceiveSheetPaymentAmounts(row).unpaidAmount.toFixed(2);
+            },
+          },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
           {

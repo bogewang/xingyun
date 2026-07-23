@@ -22,7 +22,7 @@ export function buildReceiveSheetFooter(
 ): string[][] {
   const totalNum = sumByField(data, 'totalNum');
   const totalAmount = sumByField(data, 'totalAmount');
-  const paymentAmounts = (data || []).map(resolvePaymentAmounts);
+  const paymentAmounts = (data || []).map(resolveReceiveSheetPaymentAmounts);
   const paidAmount = sumByValue(paymentAmounts, (row) => row.paidAmount);
   const unpaidAmount = sumByValue(paymentAmounts, (row) => row.unpaidAmount);
 
@@ -66,22 +66,29 @@ function sumByValue<T>(data: T[], getValue: (row: T) => number): number {
   }, 0);
 }
 
-/** 根据结算状态计算单据用于合计的已付和未付金额。 */
-function resolvePaymentAmounts(row: ReceiveSheetFooterRow): { paidAmount: number; unpaidAmount: number } {
-  const paidAmount = parseFiniteNumber(row.paidAmount);
+/**
+ * 根据结算状态计算采购收货单的有效已付和未付金额。
+ *
+ * @param row 采购收货单列表行
+ * @returns 用于行展示和合计的安全金额
+ */
+export function resolveReceiveSheetPaymentAmounts(
+  row: ReceiveSheetFooterRow,
+): { paidAmount: number; unpaidAmount: number } {
+  const paidAmount = parseFiniteNumber(row?.paidAmount);
 
-  if (parseFiniteNumber(row.settleStatus) !== 3) {
+  if (parseFiniteNumber(row?.settleStatus) !== 3) {
     return {
       paidAmount,
-      unpaidAmount: parseFiniteNumber(row.unpaidAmount),
+      unpaidAmount: parseFiniteNumber(row?.unpaidAmount),
     };
   }
 
-  const settleAmount = parseFiniteNumber(row.settleAmount);
+  const settleAmount = parseFiniteNumber(row?.settleAmount);
 
   return {
-    paidAmount: settleAmount + paidAmount,
-    unpaidAmount: parseFiniteNumber(row.checkAmount) - settleAmount - paidAmount,
+    paidAmount: parseFiniteNumber(settleAmount + paidAmount),
+    unpaidAmount: parseFiniteNumber(parseFiniteNumber(row?.checkAmount) - settleAmount - paidAmount),
   };
 }
 
