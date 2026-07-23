@@ -44,6 +44,7 @@ public class ReceiveSheetDetailExportTaskWorker implements
     model.setTaxAmount(data.getTaxAmount());
     model.setProductionDate(data.getProductionDate());
     model.setDescription(data.getDescription());
+    model.setSheetDescription(data.getSheetDescription());
     return model;
   }
 

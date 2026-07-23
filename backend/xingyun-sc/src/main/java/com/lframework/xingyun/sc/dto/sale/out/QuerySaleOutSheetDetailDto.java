@@ -72,6 +72,11 @@ public class QuerySaleOutSheetDetailDto implements BaseDto, Serializable {
 
   private String description;
 
+  /**
+   * 单据备注
+   */
+  private String sheetDescription;
+
   private Integer settleStatus;
 
   private String createBy;

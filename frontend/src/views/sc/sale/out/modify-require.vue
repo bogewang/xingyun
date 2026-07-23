@@ -354,11 +354,13 @@
       >
         <order-time-line v-if="timelineVisible" :id="id" :expand-all="true" />
       </a-modal>
+      <order-print-dialog />
       <div
         class="sheet-editor-actions"
         style="text-align: center; background-color: #ffffff; padding: 8px 0"
       >
         <a-space>
+          <a-button type="primary" :loading="loading" @click="print">打印</a-button>
           <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
           <a-button :loading="loading" @click="openTimeline">操作记录</a-button>
           <a-button
@@ -389,6 +391,9 @@
   import * as api from '@/api/sc/sale/out';
   import * as saleApi from '@/api/sc/sale/order';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { printMix } from '@/mixins/print.ts';
+  import { PRINT_TYPE } from '@/enums/biz/printType';
+  import PrintDialog from '/@/components/PrintDialog';
   import {
     isEmpty,
     isFloatGeZero,
@@ -445,8 +450,9 @@
       BatchAddProduct,
       OrderTimeLine,
       StarTwoTone,
+      OrderPrintDialog: PrintDialog,
     },
-    mixins: [multiplePageMix],
+    mixins: [multiplePageMix, printMix],
     setup() {
       return {
         h,
@@ -1167,6 +1173,16 @@
         }
 
         return true;
+      },
+      // 打印
+      async print() {
+        this.loading = true;
+        try {
+          const res = await api.print(this.id);
+          await this.vgPrintPreview(PRINT_TYPE.SALE_OUT.code, res);
+        } finally {
+          this.loading = false;
+        }
       },
       // 修改订单
       exportDetails() {

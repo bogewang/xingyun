@@ -73,6 +73,9 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
     @ExcelProperty("供应商名称")
     private String supplierName;
 
+    @ExcelProperty("单据备注")
+    private String sheetDescription;
+
 
 
     public SaleOutSheetDetailExportModel() {
@@ -112,6 +115,7 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
         this.setCostAmount(NumberUtil.sub(this.taxAmount, totalProfit));
         this.setProfitRate(this.buildProfitRate(this.taxAmount, totalProfit));
         this.setDescription(dto.getDescription());
+        this.setSheetDescription(dto.getSheetDescription());
 
         Supplier supplier = ApplicationUtil.getBean(SupplierService.class).findById(dto.getSupplierId());
         if (supplier != null) {

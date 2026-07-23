@@ -255,11 +255,13 @@
         <order-time-line v-if="timelineVisible" :id="id" :expand-all="true" />
       </a-modal>
 
+      <order-print-dialog />
       <div
         class="sheet-editor-actions"
         style="text-align: center; background-color: #ffffff; padding: 8px 0"
       >
         <a-space>
+          <a-button type="primary" :loading="loading" @click="print">打印</a-button>
           <a-button :loading="loading" @click="exportDetails">导出明细</a-button>
           <a-button :loading="loading" @click="openTimeline">操作记录</a-button>
           <a-button
@@ -290,6 +292,9 @@
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/purchase/receive';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { printMix } from '@/mixins/print.ts';
+  import { previewReceiveSheetPrint } from './print';
+  import PrintDialog from '/@/components/PrintDialog';
   import {
     isEmpty,
     isFloatGeZero,
@@ -343,8 +348,9 @@
       OrderTimeLine,
       SupplierSelector,
       StarTwoTone,
+      OrderPrintDialog: PrintDialog,
     },
-    mixins: [multiplePageMix],
+    mixins: [multiplePageMix, printMix],
     setup() {
       return {
         h,
@@ -989,6 +995,17 @@
         }
 
         return true;
+      },
+      // 打印
+      async print() {
+        this.loading = true;
+        try {
+          await previewReceiveSheetPrint(this.id, api.print, (type, data) => {
+            return this.vgPrintPreview(type, data);
+          });
+        } finally {
+          this.loading = false;
+        }
       },
       // 修改订单
       exportDetails() {
