@@ -21,4 +21,52 @@ describe('采购收货单合计行', () => {
       ),
     ).toEqual([['合计', '3.5', '120.50', '45.25', '75.25', '']]);
   });
+
+  it('将缺失和非有限或非数值字段按零处理且不抛出异常', () => {
+    expect(buildReceiveSheetFooter([{ type: 'seq' }, { field: 'totalAmount' }], [])).toEqual([
+      ['合计', '0.00'],
+    ]);
+
+    expect(() =>
+      buildReceiveSheetFooter(
+        [
+          { type: 'seq' },
+          { field: 'totalNum' },
+          { field: 'totalAmount' },
+          { field: 'paidAmount' },
+          { field: 'unpaidAmount' },
+        ],
+        [
+          {},
+          {
+            totalNum: null,
+            totalAmount: 'invalid',
+            paidAmount: Infinity,
+            unpaidAmount: Symbol('unpaidAmount'),
+          },
+        ],
+      ),
+    ).not.toThrow();
+
+    expect(
+      buildReceiveSheetFooter(
+        [
+          { type: 'seq' },
+          { field: 'totalNum' },
+          { field: 'totalAmount' },
+          { field: 'paidAmount' },
+          { field: 'unpaidAmount' },
+        ],
+        [
+          {},
+          {
+            totalNum: null,
+            totalAmount: 'invalid',
+            paidAmount: Infinity,
+            unpaidAmount: Symbol('unpaidAmount'),
+          },
+        ],
+      ),
+    ).toEqual([['合计', '0', '0.00', '0.00', '0.00']]);
+  });
 });

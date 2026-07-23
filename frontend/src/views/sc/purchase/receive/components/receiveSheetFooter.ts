@@ -55,9 +55,27 @@ export function buildReceiveSheetFooter(
 /** 汇总指定字段的数值，非数值按零处理。 */
 function sumByField(data: ReceiveSheetFooterRow[], field: string): number {
   return (data || []).reduce((total, item) => {
-    const value = Number(item?.[field] ?? 0);
-    return total + (Number.isNaN(value) ? 0 : value);
+    return total + parseFiniteNumber(item?.[field]);
   }, 0);
+}
+
+/**
+ * 解析用于合计的有限数值。
+ *
+ * 仅接受有限 number，或为兼容后端数字字符串而接受可解析为有限数的 string；
+ * null、undefined、布尔值、数组、Symbol、Infinity 及非法字符串均按零处理，且不触发隐式转换。
+ */
+function parseFiniteNumber(value: unknown): number {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  if (typeof value === 'string') {
+    const numberValue = Number(value);
+    return Number.isFinite(numberValue) ? numberValue : 0;
+  }
+
+  return 0;
 }
 
 /** 将金额格式化为两位小数。 */
