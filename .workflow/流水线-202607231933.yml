@@ -30,6 +30,7 @@ stages:
     - test -f $MAVEN_REPO/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
     - test -f $MAVEN_REPO/com/lframework/mq-starter/4.1.2-SNAPSHOT/mq-starter-4.1.2-SNAPSHOT.pom
     - mvn -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+    - cp backend/xingyun-api/target/xingyun-api.jar .
     - ""
     - '# 功能：自定义settings配置'
     - '# 使用场景：如需手工指定settings.xml，可使用如下方式'
@@ -38,7 +39,7 @@ stages:
     artifacts:
     - name: BUILD_ARTIFACT
       path:
-      - ./backend/xingyun-api/target/xingyun-api.jar
+      - xingyun-api.jar
       type: .tar.gz
     settings: []
     caches:
@@ -70,7 +71,7 @@ stages:
       mv /root/gitee_go/deploy/output.tar.gz /www/wwwroot/xingyun
       cd /www/wwwroot/xingyun
       rm -rf target
-      tar -xzf frontend-dist.tar.gz
+      tar -xzf output.tar.gz -O > xingyun-api.jar.new
     hostGroupID:
       ID: test
       hostID:
