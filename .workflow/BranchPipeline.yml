@@ -131,10 +131,10 @@ triggers:
   push:
     branches:
       precise:
-      - deploy
+      - worktrees
   pr:
     branches:
       precise:
-      - deploy
+      - worktrees
 
 notify: []
