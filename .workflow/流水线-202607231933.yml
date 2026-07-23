@@ -37,7 +37,7 @@ stages:
     - '# 注意事项：如无需自定义settings配置且需要私有依赖仓库，可在该任务配置《私有仓库》处添加私有依赖'
     - '# mvn -U clean package -s ./settings.xml'
     artifacts:
-    - name: BUILD_ARTIFACT
+    - name: BACKEND_ARTIFACT
       path:
       - xingyun-api.jar
       type: .tar.gz
@@ -57,13 +57,17 @@ stages:
     commands:
     - '# 设置NPM源，提升安装速度'
     - npm config set registry https://registry.npmmirror.com
+    - pnpm config set registry https://registry.npmmirror.com
     - ""
     - '# 执行编译命令'
-    - cd frontend && npm install && npm run build
+    - 'cd frontend '
+    - pnpm install --frozen-lockfile
+    - pnpm run lint
+    - pnpm run build
     artifacts:
-    - name: BUILD_ARTIFACT
+    - name: FRONTEND_ARTIFACT
       path:
-      - ./frontend/dist
+      - frontend/dist
       type: .tar.gz
     caches:
     - "~/.npm"
