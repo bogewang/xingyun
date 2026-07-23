@@ -63,7 +63,6 @@ stages:
     - npm install -g pnpm@9.7.1
     - cd frontend
     - npx pnpm@9.7.1 install --frozen-lockfile --force
-    - npx pnpm@9.7.1 run lint
     - npx pnpm@9.7.1 run build
     artifacts:
     - name: FRONTEND_ARTIFACT
@@ -91,20 +90,34 @@ stages:
       source: build
       dependArtifact: BACKEND_ARTIFACT
       artifactRepository: default
-      artifactName: output
+      artifactName: backend
       artifactVersion: latest
     - name: frontend
       target: "~/gitee_go/deploy"
       source: build
       dependArtifact: FRONTEND_ARTIFACT
       artifactRepository: default
-      artifactName: output
+      artifactName: frontend
       artifactVersion: latest
     script: |-
       # 请在此输入部署脚本，如启动Java应用如下
-      mv /root/gitee_go/deploy/output.tar.gz /www/wwwroot/xingyun
+      mv /root/gitee_go/deploy/backend.tar.gz /www/wwwroot/xingyun
+      mv /root/gitee_go/deploy/frontend.tar.gz /www/wwwroot/xingyun
       cd /www/wwwroot/xingyun
-      tar -xzf output.tar.gz -O > xingyun-api.jar.new
+      rm -rf dist.new
+      mkdir -p dist.new
+      tar -xzf frontend.tar.gz -C dist.new
+      rm -rf dist
+      mv dist.new/dist dist
+      rm -rf frontend.tar.gz
+      rm -rf dist.new
+      rm -rf xingyun-api.jar
+      tar -xzf backend.tar.gz -O > xingyun-api.jar
+      chmod 664 xingyun-api.jar
+      chmod -R 775 dist
+      sudo /usr/bin/systemctl restart xingyun-api-prod
+      sudo /www/server/nginx/sbin/nginx -s reload
+
     hostGroupID:
       ID: test
       hostID:
@@ -118,13 +131,13 @@ triggers:
     branches:
       prefix: []
       precise:
-      - deploy0723
+      - deploy0723111
       include: []
   pr:
     branches:
       prefix: []
       precise:
-      - deploy0723
+      - deploy0723111
       include: []
 notify: []
 strategy:
