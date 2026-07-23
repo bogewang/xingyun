@@ -38,7 +38,7 @@ stages:
     artifacts:
     - name: BUILD_ARTIFACT
       path:
-      - ./target
+      - ./backend/target
       type: .tar.gz
     settings: []
     caches:
@@ -77,7 +77,15 @@ stages:
     strategy:
       retry: "0"
 triggers:
-  trigger: manual
+  trigger: auto
+  push:
+    branches:
+      precise:
+        - deploy0723
+  pr:
+    branches:
+      precise:
+        - deploy0723
 notify: []
 strategy:
   blocking: true
