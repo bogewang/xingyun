@@ -131,13 +131,13 @@ triggers:
     branches:
       prefix: []
       precise:
-      - deploy0723111
+      - deploy0723
       include: []
   pr:
     branches:
       prefix: []
       precise:
-      - deploy0723111
+      - deploy0723
       include: []
 notify: []
 strategy:
