@@ -3,19 +3,18 @@ name: xingyun-branch-ci
 displayName: 星云ERP分支构建
 
 stages:
-- name: 构建校验
-  displayName: 构建校验
+- name: 后端构建
+  displayName: 后端构建
   strategy: naturally
   trigger: auto
   steps:
   - step: build@maven
-    name: full_build
-    displayName: 全量构建
+    name: backend_build
+    displayName: 后端编译
     jdkVersion: "8"
     mavenVersion: 3.6.3
     commands:
     - set -e
-
     - export MAVEN_REPO=$PWD/.m2/repository
     - rm -rf .gitee-go-jugg
     - git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
@@ -27,6 +26,22 @@ stages:
     - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
     - ls -lh backend/xingyun-api/target/
 
+  outputs:
+  - name: BACKEND_ARTIFACT
+    path: backend/xingyun-api/target/xingyun-api.jar
+    type: file
+
+- name: 前端构建
+  displayName: 前端构建
+  strategy: naturally
+  trigger: auto
+  steps:
+  - step: build@nodejs
+    name: frontend_build
+    displayName: 前端检查与构建
+    nodeVersion: 14.16.0
+    commands:
+    - set -e
     - export NODEJS_HOME=$PWD/.node-v18.20.4
     - wget -q https://npmmirror.com/mirrors/node/v18.20.4/node-v18.20.4-linux-x64.tar.xz -O node-v18.20.4-linux-x64.tar.xz
     - mkdir -p $NODEJS_HOME
@@ -43,16 +58,10 @@ stages:
     - pnpm run build
     - ls -lh dist/
 
-    - mkdir -p ../output
-    - cp ../backend/xingyun-api/target/xingyun-api.jar ../output/
-    - cp -r dist ../output/
-    - cd ..
-    - ls -lh output/
-
   outputs:
-  - name: BUILD_ARTIFACT
-    path: output
-    type: archive
+  - name: FRONTEND_ARTIFACT
+    path: frontend/dist
+    type: directory
 
 - name: 部署
   displayName: 部署
@@ -63,10 +72,14 @@ stages:
     name: deploy_server
     displayName: 主机部署
     deployArtifact:
-    - name: output
+    - name: xingyun-api.jar
       target: /root/gitee_go/deploy
       source: build
-      dependArtifact: BUILD_ARTIFACT
+      dependArtifact: BACKEND_ARTIFACT
+    - name: dist
+      target: /root/gitee_go/deploy
+      source: build
+      dependArtifact: FRONTEND_ARTIFACT
 
     script: |-
       DEPLOY_DIR=/root/gitee_go/deploy
@@ -78,9 +91,6 @@ stages:
         kill -9 $PID || true
         sleep 2
       fi
-
-      cd $DEPLOY_DIR
-      tar zxf output.tar.gz --strip-components=1 -C .
 
       echo "Starting application..."
       nohup java -jar "$APP_JAR" > "$DEPLOY_DIR/nohup.out" 2>&1 &
