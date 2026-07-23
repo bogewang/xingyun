@@ -60,7 +60,7 @@ stages:
     - pnpm config set registry https://registry.npmmirror.com
     - ""
     - '# 执行编译命令'
-    - 'cd frontend '
+    - cd frontend
     - pnpm install --frozen-lockfile
     - pnpm run lint
     - pnpm run build
@@ -85,10 +85,17 @@ stages:
     name: deploy
     displayName: 主机部署
     deployArtifact:
-    - name: output
+    - name: backend
       target: "~/gitee_go/deploy"
       source: build
-      dependArtifact: BUILD_ARTIFACT
+      dependArtifact: BACKEND_ARTIFACT
+      artifactRepository: default
+      artifactName: output
+      artifactVersion: latest
+    - name: frontend
+      target: "~/gitee_go/deploy"
+      source: build
+      dependArtifact: FRONTEND_ARTIFACT
       artifactRepository: default
       artifactName: output
       artifactVersion: latest
