@@ -62,10 +62,9 @@ stages:
     - '# 执行编译命令'
     - npm install -g pnpm@9.7.1
     - cd frontend
-    - pnpm -v
-    - pnpm install --frozen-lockfile
-    - pnpm run lint
-    - pnpm run build
+    - npx pnpm@9.7.1 install --frozen-lockfile --force
+    - npx pnpm@9.7.1 run lint
+    - npx pnpm@9.7.1 run build
     artifacts:
     - name: FRONTEND_ARTIFACT
       path:
