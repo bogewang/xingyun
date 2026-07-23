@@ -8,7 +8,7 @@ stages:
   trigger: auto
   steps:
   - step: build@maven
-    name: ""
+    name: backend_build
     displayName: Maven 构建
     jdkVersion: "8"
     mavenVersion: 3.3.9
@@ -55,7 +55,7 @@ stages:
   trigger: auto
   steps:
   - step: deploy@agent
-    name: ""
+    name: deploy
     displayName: 主机部署
     deployArtifact:
     - name: output
@@ -67,8 +67,9 @@ stages:
       artifactVersion: latest
     script: |-
       # 请在此输入部署脚本，如启动Java应用如下
-      # nohup java -jar test.jar &gt; nohup.out &amp;
-       echo 'Hello Gitee!'
+      mv /root/gitee_go/deploy/output.tar.gz /www/wwwroot/xingyun
+      cd /www/wwwroot/xingyun
+      tar -xzf frontend-dist.tar.gz
     hostGroupID:
       ID: test
       hostID:
