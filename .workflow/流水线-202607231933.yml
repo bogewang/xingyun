@@ -60,6 +60,7 @@ stages:
     - pnpm config set registry https://registry.npmmirror.com
     - ""
     - '# 执行编译命令'
+    - npm install -g pnpm@9.15.0
     - cd frontend
     - pnpm install --frozen-lockfile
     - pnpm run lint
