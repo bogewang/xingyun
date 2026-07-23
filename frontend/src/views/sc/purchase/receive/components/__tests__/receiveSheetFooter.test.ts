@@ -69,4 +69,16 @@ describe('采购收货单合计行', () => {
       ),
     ).toEqual([['合计', '0', '0.00', '0.00', '0.00']]);
   });
+
+  it('在有限数累加溢出时回退为零并保留数字字符串金额兼容', () => {
+    expect(
+      buildReceiveSheetFooter(
+        [{ type: 'seq' }, { field: 'totalAmount' }, { field: 'paidAmount' }],
+        [
+          { totalAmount: Number.MAX_VALUE, paidAmount: '40.25' },
+          { totalAmount: Number.MAX_VALUE, paidAmount: 5 },
+        ],
+      ),
+    ).toEqual([['合计', '0.00', '45.25']]);
+  });
 });

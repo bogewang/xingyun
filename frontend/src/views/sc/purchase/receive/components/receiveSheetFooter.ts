@@ -52,10 +52,11 @@ export function buildReceiveSheetFooter(
   ];
 }
 
-/** 汇总指定字段的数值，非数值按零处理。 */
+/** 汇总指定字段的数值；单次解析失败或累计溢出为非有限数时，该字段当前累计回退为零。 */
 function sumByField(data: ReceiveSheetFooterRow[], field: string): number {
   return (data || []).reduce((total, item) => {
-    return total + parseFiniteNumber(item?.[field]);
+    const sum = total + parseFiniteNumber(item?.[field]);
+    return Number.isFinite(sum) ? sum : 0;
   }, 0);
 }
 
