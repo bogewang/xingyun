@@ -6,11 +6,11 @@
 
 ## 方案
 
-仅调整 `frontend/src/views/sc/purchase/receive/components/sheet-list.vue`：
+新增可单测的合计行纯函数，并调整 `frontend/src/views/sc/purchase/receive/components/sheet-list.vue` 调用它：
 
-- 在既有 `footerMethod` 中通过 `sumByField` 汇总 `paidAmount` 和 `unpaidAmount`。
-- 按现有金额列的规则使用 `formatAmount` 格式化两个汇总结果。
-- 将格式化后的结果分别返回到 `paidAmount`（本单已付）和 `unpaidAmount`（未付金额）列的合计单元格。
+- 纯函数负责汇总 `totalNum`、`totalAmount`、`paidAmount` 和 `unpaidAmount`，并生成列对应的合计单元格文本。
+- 通过 Vitest 覆盖已付和未付金额的汇总与格式化结果。
+- 列表组件继续把 vxe-table 的 `columns`、`data` 传入该函数，不改变表格配置。
 
 ## 范围与约束
 

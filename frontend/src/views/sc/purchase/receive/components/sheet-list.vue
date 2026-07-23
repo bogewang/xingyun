@@ -313,6 +313,7 @@
   import BatchHandler from '@/components/BatchHandler';
   import ReceiveSheetQueryImporter from '@/components/Importor/PurchaseOrderQueryImporter.vue';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
+  import { buildReceiveSheetFooter } from './receiveSheetFooter';
 
   export default defineComponent({
     name: 'ReceiveSheetSheetList',
@@ -449,42 +450,7 @@
       },
       CloudUploadOutlined,
       footerMethod({ columns, data }) {
-        const totalAmount = this.sumByField(data, 'totalAmount');
-        const totalNum = this.sumByField(data, 'totalNum');
-
-        return [
-          columns.map((column) => {
-            if (column.type === 'seq') {
-              return '合计';
-            }
-
-            if (column.field === 'totalAmount') {
-              return this.formatAmount(totalAmount);
-            }
-
-            if (column.field === 'totalNum') {
-              return this.formatQuantity(totalNum);
-            }
-
-            return '';
-          }),
-        ];
-      },
-      sumByField(data, field) {
-        return (data || []).reduce((total, item) => {
-          const value = Number(item?.[field] ?? 0);
-          return total + (Number.isNaN(value) ? 0 : value);
-        }, 0);
-      },
-      formatAmount(value) {
-        return this.toFixedNumber(value, 2);
-      },
-      formatQuantity(value) {
-        return this.toFixedNumber(value, 2, true);
-      },
-      toFixedNumber(value, digits = 2, trimZero = false) {
-        const text = Number(value || 0).toFixed(digits);
-        return trimZero ? text.replace(/\.?0+$/, '') : text;
+        return buildReceiveSheetFooter(columns, data);
       },
       // 列表发生查询时的事件
       search() {
