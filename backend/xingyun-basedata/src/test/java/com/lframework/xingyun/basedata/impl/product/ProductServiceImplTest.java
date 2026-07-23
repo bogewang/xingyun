@@ -13,7 +13,10 @@ import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.springframework.context.support.StaticApplicationContext;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -50,6 +53,73 @@ class ProductServiceImplTest {
   @Test
   void shouldTreatBlankInquiryProductAsMissing() {
     Assert.assertNull(ProductServiceImpl.parseInquiryProduct("  ", 2));
+  }
+
+  @Test
+  void shouldFilterImportRowsMatchingDisabledProductByTrimmedNameSpecAndUnit() {
+    Product disabledProduct = new Product();
+    disabledProduct.setName("  可乐  ");
+    disabledProduct.setSpec("500ml");
+    disabledProduct.setUnit("unit-bottle");
+    disabledProduct.setAvailable(Boolean.FALSE);
+    ProductImportModel unrelatedRow = importModel("雪碧", "500ml", "瓶");
+    Map<String, String> unitNames = Collections.singletonMap("unit-bottle", "瓶");
+
+    List<ProductImportModel> result = ProductServiceImpl.filterDisabledDuplicateImportRows(
+        Arrays.asList(importModel("可乐", "500ml", "瓶"), unrelatedRow),
+        Collections.singletonList(disabledProduct), Collections.<Product>emptyList(), unitNames);
+
+    Assert.assertEquals(result, Collections.singletonList(unrelatedRow));
+  }
+
+  @Test
+  void shouldKeepImportRowMatchingAvailableProduct() {
+    Product availableProduct = new Product();
+    availableProduct.setName("可乐");
+    availableProduct.setSpec("500ml");
+    availableProduct.setUnit("unit-bottle");
+    availableProduct.setAvailable(Boolean.TRUE);
+    Product disabledProduct = new Product();
+    disabledProduct.setName("可乐");
+    disabledProduct.setSpec("500ml");
+    disabledProduct.setUnit("unit-bottle");
+    disabledProduct.setAvailable(Boolean.FALSE);
+    ProductImportModel importRow = importModel("可乐", "500ml", "瓶");
+
+    List<ProductImportModel> result = ProductServiceImpl.filterDisabledDuplicateImportRows(
+        Collections.singletonList(importRow), Collections.singletonList(disabledProduct),
+        Collections.singletonList(availableProduct), Collections.singletonMap("unit-bottle", "瓶"));
+
+    Assert.assertEquals(result, Collections.singletonList(importRow));
+  }
+
+  @Test
+  void shouldNormalizeDisabledProductQueryNamesWithTrimmedValues() {
+    Set<String> normalizedNames = ProductServiceImpl.normalizeDisabledProductQueryNames(
+        new HashSet<>(Arrays.asList("  可乐  ", "可乐", " 雪碧 ", "  ")));
+
+    Assert.assertEquals(normalizedNames, new HashSet<>(Arrays.asList("可乐", "雪碧")));
+  }
+
+  @Test(expectedExceptions = DefaultClientException.class,
+      expectedExceptionsMessageRegExp = "第3行“询价商品”只能填写“是”或“否”")
+  void shouldReportOriginalExcelRowIndexAfterFilteringDisabledRow() {
+    ProductImportModel disabledRow = importModel("可乐", "500ml", "瓶");
+    ProductImportModel invalidRow = importModel("雪碧", "500ml", "瓶");
+    Product disabledProduct = new Product();
+    disabledProduct.setName("可乐");
+    disabledProduct.setSpec("500ml");
+    disabledProduct.setUnit("unit-bottle");
+    disabledProduct.setAvailable(Boolean.FALSE);
+    Map<ProductImportModel, Integer> rowIndexes = ProductServiceImpl.buildImportRowIndexes(
+        Arrays.asList(disabledRow, invalidRow));
+
+    List<ProductImportModel> filteredRows = ProductServiceImpl.filterDisabledDuplicateImportRows(
+        Arrays.asList(disabledRow, invalidRow), Collections.singletonList(disabledProduct),
+        Collections.<Product>emptyList(), Collections.singletonMap("unit-bottle", "瓶"));
+
+    Assert.assertEquals(filteredRows, Collections.singletonList(invalidRow));
+    ProductServiceImpl.parseInquiryProduct("错误值", ProductServiceImpl.getImportRowIndex(rowIndexes, invalidRow, 0));
   }
 
   @Test(expectedExceptions = DefaultClientException.class,
@@ -286,5 +356,21 @@ class ProductServiceImplTest {
     product.setId(id);
     product.setUnit(unitId);
     return product;
+  }
+
+  /**
+   * 构造商品导入行。
+   *
+   * @param name 商品名称
+   * @param spec 商品规格
+   * @param unit 商品单位
+   * @return 商品导入行
+   */
+  private static ProductImportModel importModel(String name, String spec, String unit) {
+    ProductImportModel model = new ProductImportModel();
+    model.setName(name);
+    model.setSpec(spec);
+    model.setUnit(unit);
+    return model;
   }
 }
