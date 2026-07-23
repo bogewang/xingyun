@@ -38,7 +38,7 @@ stages:
     artifacts:
     - name: BUILD_ARTIFACT
       path:
-      - ./backend/xingyun-api/target
+      - ./backend/xingyun-api/target/xingyun-api.jar
       type: .tar.gz
     settings: []
     caches:
@@ -69,7 +69,8 @@ stages:
       # 请在此输入部署脚本，如启动Java应用如下
       mv /root/gitee_go/deploy/output.tar.gz /www/wwwroot/xingyun
       cd /www/wwwroot/xingyun
-      tar -xzf frontend-dist.tar.gz -C xingyun-api.jar.new
+      rm -rf target
+      tar -xzf frontend-dist.tar.gz
     hostGroupID:
       ID: test
       hostID:
