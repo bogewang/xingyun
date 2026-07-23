@@ -81,4 +81,22 @@ describe('采购收货单合计行', () => {
       ),
     ).toEqual([['合计', '0.00', '45.25']]);
   });
+
+  it('已结算单据将结算金额并入已付并从对账金额扣减未付', () => {
+    expect(
+      buildReceiveSheetFooter(
+        [{ type: 'seq' }, { field: 'paidAmount' }, { field: 'unpaidAmount' }],
+        [{ settleStatus: 3, checkAmount: 100, settleAmount: 60, paidAmount: 10, unpaidAmount: 90 }],
+      ),
+    ).toEqual([['合计', '70.00', '30.00']]);
+  });
+
+  it('非已结算单据继续使用原始已付和未付金额', () => {
+    expect(
+      buildReceiveSheetFooter(
+        [{ type: 'seq' }, { field: 'paidAmount' }, { field: 'unpaidAmount' }],
+        [{ settleStatus: 1, checkAmount: 100, settleAmount: 60, paidAmount: 10, unpaidAmount: 90 }],
+      ),
+    ).toEqual([['合计', '10.00', '90.00']]);
+  });
 });

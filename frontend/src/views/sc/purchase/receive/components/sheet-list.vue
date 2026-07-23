@@ -287,6 +287,7 @@
     SearchOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/purchase/receive';
+  import * as settleApi from '@/api/settle/sheet';
   import * as configApi from '@/api/sc/purchase/config';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
@@ -419,7 +420,7 @@
           ajax: {
             // 查询接口
             query: ({ page, sorts }) => {
-              return api.query(this.buildQueryParams(page, sorts));
+              return settleApi.queryReceiveSheetSettleInfos(this.buildQueryParams(page, sorts));
             },
           },
         },

@@ -14,6 +14,7 @@ import { QuerySettleSheetSummaryVo } from '@/api/settle/sheet/model/querySettleS
 import { SettleSheetSummaryBo } from '@/api/settle/sheet/model/settleSheetSummaryBo';
 import { QueryReceiveSheetSettleInfoVo } from '@/api/settle/sheet/model/queryReceiveSheetSettleInfoVo';
 import { ReceiveSheetSettleInfoBo } from '@/api/settle/sheet/model/receiveSheetSettleInfoBo';
+import { QueryReceiveSheetSettleInfoBo } from '@/api/settle/sheet/model/queryReceiveSheetSettleInfoBo';
 
 const baseUrl = '/settle/sheet';
 const region = 'cloud-api';
@@ -69,8 +70,8 @@ export function exportSummary(data: QuerySettleSheetSummaryVo): Promise<void> {
  */
 export function queryReceiveSheetSettleInfos(
   data: QueryReceiveSheetSettleInfoVo,
-): Promise<ReceiveSheetSettleInfoBo[]> {
-  return defHttp.post<ReceiveSheetSettleInfoBo[]>(
+): Promise<PageResult<QueryReceiveSheetSettleInfoBo>> {
+  return defHttp.post<PageResult<QueryReceiveSheetSettleInfoBo>>(
     {
       url: baseUrl + '/receive-sheet-settle-infos',
       data,

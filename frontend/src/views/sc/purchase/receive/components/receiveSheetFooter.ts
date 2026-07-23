@@ -22,8 +22,9 @@ export function buildReceiveSheetFooter(
 ): string[][] {
   const totalNum = sumByField(data, 'totalNum');
   const totalAmount = sumByField(data, 'totalAmount');
-  const paidAmount = sumByField(data, 'paidAmount');
-  const unpaidAmount = sumByField(data, 'unpaidAmount');
+  const paymentAmounts = (data || []).map(resolvePaymentAmounts);
+  const paidAmount = sumByValue(paymentAmounts, (row) => row.paidAmount);
+  const unpaidAmount = sumByValue(paymentAmounts, (row) => row.unpaidAmount);
 
   return [
     columns.map((column) => {
@@ -54,10 +55,34 @@ export function buildReceiveSheetFooter(
 
 /** 汇总指定字段的数值；单次解析失败或累计溢出为非有限数时，该字段当前累计回退为零。 */
 function sumByField(data: ReceiveSheetFooterRow[], field: string): number {
+  return sumByValue(data, (item) => parseFiniteNumber(item?.[field]));
+}
+
+/** 汇总数值；单次解析失败或累计溢出为非有限数时，该字段当前累计回退为零。 */
+function sumByValue<T>(data: T[], getValue: (row: T) => number): number {
   return (data || []).reduce((total, item) => {
-    const sum = total + parseFiniteNumber(item?.[field]);
+    const sum = total + getValue(item);
     return Number.isFinite(sum) ? sum : 0;
   }, 0);
+}
+
+/** 根据结算状态计算单据用于合计的已付和未付金额。 */
+function resolvePaymentAmounts(row: ReceiveSheetFooterRow): { paidAmount: number; unpaidAmount: number } {
+  const paidAmount = parseFiniteNumber(row.paidAmount);
+
+  if (parseFiniteNumber(row.settleStatus) !== 3) {
+    return {
+      paidAmount,
+      unpaidAmount: parseFiniteNumber(row.unpaidAmount),
+    };
+  }
+
+  const settleAmount = parseFiniteNumber(row.settleAmount);
+
+  return {
+    paidAmount: settleAmount + paidAmount,
+    unpaidAmount: parseFiniteNumber(row.checkAmount) - settleAmount - paidAmount,
+  };
 }
 
 /**
