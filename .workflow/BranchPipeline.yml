@@ -25,12 +25,10 @@ stages:
     - test -f $MAVEN_REPO/com/lframework/mq-starter/4.1.2-SNAPSHOT/mq-starter-4.1.2-SNAPSHOT.pom
     - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
     - ls -lh backend/xingyun-api/target/
-    - mkdir -p output
-    - cp backend/xingyun-api/target/xingyun-api.jar output/
 
   outputs:
   - name: BACKEND_ARTIFACT
-    path: output
+    path: backend/xingyun-api/target/xingyun-api.jar
     type: archive
 
 - name: 前端构建
@@ -59,31 +57,25 @@ stages:
     - pnpm run lint
     - pnpm run build
     - ls -lh dist/
-    - mkdir -p ../output
-    - cp -r dist ../output/
 
   outputs:
   - name: FRONTEND_ARTIFACT
-    path: output
+    path: frontend/dist
     type: archive
 
-- name: 部署
-  displayName: 部署
+- name: 部署后端
+  displayName: 部署后端
   strategy: naturally
   trigger: auto
   steps:
   - step: deploy@agent
-    name: deploy_server
-    displayName: 主机部署
+    name: deploy_backend
+    displayName: 部署后端服务
     deployArtifact:
-    - name: backend_output
+    - name: xingyun-api.jar
       target: /root/gitee_go/deploy
       source: build
       dependArtifact: BACKEND_ARTIFACT
-    - name: frontend_output
-      target: /root/gitee_go/deploy
-      source: build
-      dependArtifact: FRONTEND_ARTIFACT
 
     script: |-
       DEPLOY_DIR=/root/gitee_go/deploy
@@ -96,13 +88,35 @@ stages:
         sleep 2
       fi
 
-      cd $DEPLOY_DIR
-      tar zxf backend_output.tar.gz --strip-components=1 -C .
-      tar zxf frontend_output.tar.gz --strip-components=1 -C .
-
       echo "Starting application..."
       nohup java -jar "$APP_JAR" > "$DEPLOY_DIR/nohup.out" 2>&1 &
-      echo "Deploy finished."
+      echo "Backend deploy finished."
+
+    hostGroupID:
+      ID: test
+      hostID:
+      - 6436ea08-ced0-4883-95cf-d96016ca71a4
+    notify: []
+    strategy:
+      retry: "0"
+
+- name: 部署前端
+  displayName: 部署前端
+  strategy: naturally
+  trigger: auto
+  steps:
+  - step: deploy@agent
+    name: deploy_frontend
+    displayName: 部署前端静态资源
+    deployArtifact:
+    - name: dist
+      target: /root/gitee_go/deploy
+      source: build
+      dependArtifact: FRONTEND_ARTIFACT
+
+    script: |-
+      DEPLOY_DIR=/root/gitee_go/deploy
+      echo "Frontend deploy finished."
 
     hostGroupID:
       ID: test
