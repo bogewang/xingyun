@@ -20,7 +20,16 @@ stages:
     - '#    -e -X ：打印调试信息，定位疑难构建问题时建议使用此参数构建'
     - '#    -B：以batch模式运行，可避免日志打印时出现ArrayIndexOutOfBoundsException异常'
     - '# 使用场景：打包项目且不需要执行单元测试时使用'
-    - cd backend
+    - set -e
+    - export MAVEN_REPO=$PWD/.m2/repository
+    - rm -rf .gitee-go-jugg
+    - git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
+    - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+    - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+    - find $MAVEN_REPO/com/lframework -maxdepth 4 -type f | sort
+    - test -f $MAVEN_REPO/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
+    - test -f $MAVEN_REPO/com/lframework/mq-starter/4.1.2-SNAPSHOT/mq-starter-4.1.2-SNAPSHOT.pom
+    - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
     - mvn clean package -Dmaven.test.skip=true -U -e -X -B
     - ""
     - '# 功能：自定义settings配置'
