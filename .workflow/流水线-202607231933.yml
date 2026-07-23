@@ -30,7 +30,6 @@ stages:
     - test -f $MAVEN_REPO/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
     - test -f $MAVEN_REPO/com/lframework/mq-starter/4.1.2-SNAPSHOT/mq-starter-4.1.2-SNAPSHOT.pom
     - mvn -B -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
-    - mvn clean package -Dmaven.test.skip=true -U -e -X -B
     - ""
     - '# 功能：自定义settings配置'
     - '# 使用场景：如需手工指定settings.xml，可使用如下方式'
