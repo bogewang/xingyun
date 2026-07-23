@@ -50,6 +50,28 @@ stages:
       resource:
         cpu: "2"
         memory: "4"
+  - step: build@nodejs
+    name: 13f53468
+    displayName: 前端构建
+    nodeVersion: 18.16.0
+    commands:
+    - '# 设置NPM源，提升安装速度'
+    - npm config set registry https://registry.npmmirror.com
+    - ""
+    - '# 执行编译命令'
+    - cd frontend && npm install && npm run build
+    artifacts:
+    - name: BUILD_ARTIFACT
+      path:
+      - ./frontend/dist
+      type: .tar.gz
+    caches:
+    - "~/.npm"
+    strategy:
+      retry: "0"
+      resource:
+        cpu: "2"
+        memory: "4"
 - name: 部署
   displayName: 部署
   strategy: naturally
@@ -83,12 +105,16 @@ triggers:
   trigger: auto
   push:
     branches:
+      prefix: []
       precise:
-        - deploy0723
+      - deploy0723
+      include: []
   pr:
     branches:
+      prefix: []
       precise:
-        - deploy0723
+      - deploy0723
+      include: []
 notify: []
 strategy:
   blocking: true
