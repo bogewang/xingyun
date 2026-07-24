@@ -20,7 +20,7 @@
         highlight-hover-row
         keep-source
         row-id="productId"
-        height="500"
+        height="800"
         :proxy-config="proxyConfig"
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
@@ -139,8 +139,7 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
-          { field: 'productCode', title: '商品编号', width: 120 },
-          { field: 'productName', title: '商品名称', minWidth: 260 },
+          { field: 'productName', title: '商品名称', minWidth: 150 },
           ...(this.showInquiryProduct
             ? [
                 {
@@ -151,12 +150,9 @@
                 },
               ]
             : []),
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
           { field: 'purchasePrice', title: '采购参考价（元）', align: 'right', width: 140 },
           {
             field: 'latestPurchasePrice',
