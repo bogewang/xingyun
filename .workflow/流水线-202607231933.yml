@@ -69,7 +69,7 @@ stages:
     - cd frontend
     - npx pnpm@9.7.1 install --frozen-lockfile --force
     - npx pnpm@9.7.1 run build
-    - mv frontend/dist ../
+    - mv dist ../
     artifacts:
     - name: FRONTEND_ARTIFACT
       path:
