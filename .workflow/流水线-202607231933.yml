@@ -75,7 +75,7 @@ stages:
       retry: "0"
       resource:
         cpu: "2"
-        memory: "4"
+        memory: "5"
 - name: 部署
   displayName: 部署
   strategy: naturally
