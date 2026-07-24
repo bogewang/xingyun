@@ -2,6 +2,7 @@
   <shared-batch-add-product
     ref="shared"
     biz-type="purchase"
+    :show-inquiry-product="true"
     :sc-id="scId"
     :is-return="isReturn"
     v-bind="$attrs"

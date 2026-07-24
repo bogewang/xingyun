@@ -58,6 +58,11 @@
             <a-button type="primary" :icon="h(SearchOutlined)" @click="search">查询</a-button>
           </a-space>
         </template>
+        <template #inquiryProduct_default="{ row }">
+          <span :class="formatInquiryProduct(row.inquiryProduct).className">
+            {{ formatInquiryProduct(row.inquiryProduct).text }}
+          </span>
+        </template>
       </vxe-grid>
     </div>
     <template #footer>
@@ -79,6 +84,7 @@
   import { createError } from '@/hooks/web/msg';
   import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
+  import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
 
   export default defineComponent({
     name: 'SharedBatchAddProduct',
@@ -102,11 +108,16 @@
         type: Boolean,
         default: false,
       },
+      showInquiryProduct: {
+        type: Boolean,
+        default: false,
+      },
     },
     setup() {
       return {
         h,
         SearchOutlined,
+        formatInquiryProduct,
       };
     },
     data() {
@@ -130,6 +141,16 @@
           { type: 'seq', width: 50, title: '序号' },
           { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', minWidth: 260 },
+          ...(this.showInquiryProduct
+            ? [
+                {
+                  field: 'inquiryProduct',
+                  title: '是否询价商品',
+                  width: 120,
+                  slots: { default: 'inquiryProduct_default' },
+                },
+              ]
+            : []),
           { field: 'skuCode', title: '商品SKU编号', width: 120 },
           { field: 'externalCode', title: '商品简码', width: 120 },
           { field: 'unit', title: '单位', width: 80 },
