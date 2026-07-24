@@ -2215,7 +2215,7 @@ public class SaleOutSheetServiceImpl extends
                 getCostPriceMapFromReceiveSheet(endDate);
 
         // 3. 查询时间范围内所有销售出库单
-        List<SaleOutSheet> sheets = querySaleOutSheets(vo, beginDate, endDate);
+        List<SaleOutSheet> sheets = querySaleOutSheets(vo.getScId(), beginDate, endDate);
 
         if (CollectionUtils.isEmpty(sheets)) {
             log.info("月底成本重算：时间范围内无销售出库单");
