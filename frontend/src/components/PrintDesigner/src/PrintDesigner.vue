@@ -9,11 +9,7 @@
     >
       <template #headerLeft>
         <div class="print-designer-header-left">
-          <a-button
-            class="print-template-field-doc-btn"
-            size="small"
-            @click="openFieldDoc"
-          >
+          <a-button class="print-template-field-doc-btn" size="small" @click="openFieldDoc">
             模板字段说明
           </a-button>
         </div>

@@ -195,41 +195,41 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import BatchAddProduct from '@/views/sc/retail/batch-add-product.vue';
-import Moment from 'moment';
-import PayType from '@/views/sc/pay-type/index.vue';
-import MemberSelector from '@/components/Selector/MemberSelector.vue';
-import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
-import {
-  AlertOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  NumberOutlined,
-  PlusOutlined,
-} from '@ant-design/icons-vue';
-import * as configApi from '@/api/sc/retail/config';
-import * as api from '@/api/sc/retail/out';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {
-  add,
-  eq,
-  formatDate,
-  getNumber,
-  isEmpty,
-  isFloat,
-  isFloatGeZero,
-  isFloatGtZero,
-  isNumberPrecision,
-  mul,
-  PATTERN_IS_FLOAT_GT_ZERO,
-  PATTERN_IS_PRICE,
-  uuid,
-} from '@/utils/utils';
-import {createConfirm, createError, createPrompt, createSuccess} from '@/hooks/web/msg';
-import UserSelector from '@/components/Selector/UserSelector.vue';
+  import { defineComponent, h } from 'vue';
+  import BatchAddProduct from '@/views/sc/retail/batch-add-product.vue';
+  import Moment from 'moment';
+  import PayType from '@/views/sc/pay-type/index.vue';
+  import MemberSelector from '@/components/Selector/MemberSelector.vue';
+  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
+  import {
+    AlertOutlined,
+    DeleteOutlined,
+    EditOutlined,
+    NumberOutlined,
+    PlusOutlined,
+  } from '@ant-design/icons-vue';
+  import * as configApi from '@/api/sc/retail/config';
+  import * as api from '@/api/sc/retail/out';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    add,
+    eq,
+    formatDate,
+    getNumber,
+    isEmpty,
+    isFloat,
+    isFloatGeZero,
+    isFloatGtZero,
+    isNumberPrecision,
+    mul,
+    PATTERN_IS_FLOAT_GT_ZERO,
+    PATTERN_IS_PRICE,
+    uuid,
+  } from '@/utils/utils';
+  import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
+  import UserSelector from '@/components/Selector/UserSelector.vue';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddRetailOutSheet',
     components: {
       BatchAddProduct,

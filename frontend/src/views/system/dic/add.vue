@@ -37,13 +37,13 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {validCode} from '@/utils/validate';
-import * as api from '@/api/system/dic';
-import {createSuccess} from '@/hooks/web/msg';
-import SysDataDicCategorySelector from '@/components/Selector/SysDataDicCategorySelector.vue';
+  import { defineComponent } from 'vue';
+  import { validCode } from '@/utils/validate';
+  import * as api from '@/api/system/dic';
+  import { createSuccess } from '@/hooks/web/msg';
+  import SysDataDicCategorySelector from '@/components/Selector/SysDataDicCategorySelector.vue';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       SysDataDicCategorySelector,
     },

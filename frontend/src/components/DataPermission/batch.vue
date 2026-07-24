@@ -34,16 +34,16 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import DataPermissionDragger from '@/components/DataPermissionDragger/index.vue';
-import * as api from '@/api/system/data-permission';
-import {createSuccess} from '@/hooks/web/msg';
-import {
-  SYS_DATA_PERMISSION_DATA_PERMISSION_TYPE,
-  SYS_DATA_PERMISSION_DATA_PERMISSION_TYPE_NAME,
-} from '@/enums/biz/sysDataPermissionDataPermissionType';
+  import { defineComponent } from 'vue';
+  import DataPermissionDragger from '@/components/DataPermissionDragger/index.vue';
+  import * as api from '@/api/system/data-permission';
+  import { createSuccess } from '@/hooks/web/msg';
+  import {
+    SYS_DATA_PERMISSION_DATA_PERMISSION_TYPE,
+    SYS_DATA_PERMISSION_DATA_PERMISSION_TYPE_NAME,
+  } from '@/enums/biz/sysDataPermissionDataPermissionType';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'BatchDataPermission',
     components: {
       DataPermissionDragger,

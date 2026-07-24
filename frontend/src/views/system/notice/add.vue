@@ -47,12 +47,12 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {Tinymce} from '@/components/Tinymce';
-import * as api from '@/api/system/notice';
-import {createConfirm, createSuccess} from '@/hooks/web/msg';
+  import { defineComponent } from 'vue';
+  import { Tinymce } from '@/components/Tinymce';
+  import * as api from '@/api/system/notice';
+  import { createConfirm, createSuccess } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       Tinymce,
     },

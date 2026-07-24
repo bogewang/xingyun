@@ -191,36 +191,36 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import SaleOutSheetSelectorWithReturn from './SaleOutSheetSelectorWithReturn.vue';
-import BatchAddProduct from '@/views/sc/sale/batch-add-product.vue';
-import Moment from 'moment';
-import {DeleteOutlined, NumberOutlined, PlusOutlined} from '@ant-design/icons-vue';
-import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
-import * as api from '@/api/sc/sale/return';
-import * as saleApi from '@/api/sc/sale/order';
-import * as outApi from '@/api/sc/sale/out';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {
-  add,
-  formatDate,
-  getCurrentDateTime,
-  getNumber,
-  isEmpty,
-  isFloat,
-  isFloatGeZero,
-  isFloatGtZero,
-  isNumberPrecision,
-  mul,
-  PATTERN_IS_FLOAT_GE_ZERO,
-  sub,
-  uuid,
-} from '@/utils/utils';
-import {createConfirm, createError, createPrompt, createSuccess} from '@/hooks/web/msg';
-import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
-import UserSelector from '@/components/Selector/UserSelector.vue';
+  import { defineComponent, h } from 'vue';
+  import SaleOutSheetSelectorWithReturn from './SaleOutSheetSelectorWithReturn.vue';
+  import BatchAddProduct from '@/views/sc/sale/batch-add-product.vue';
+  import Moment from 'moment';
+  import { DeleteOutlined, NumberOutlined, PlusOutlined } from '@ant-design/icons-vue';
+  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
+  import * as api from '@/api/sc/sale/return';
+  import * as saleApi from '@/api/sc/sale/order';
+  import * as outApi from '@/api/sc/sale/out';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    add,
+    formatDate,
+    getCurrentDateTime,
+    getNumber,
+    isEmpty,
+    isFloat,
+    isFloatGeZero,
+    isFloatGtZero,
+    isNumberPrecision,
+    mul,
+    PATTERN_IS_FLOAT_GE_ZERO,
+    sub,
+    uuid,
+  } from '@/utils/utils';
+  import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
+  import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
+  import UserSelector from '@/components/Selector/UserSelector.vue';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddSaleReturnSheetRequire',
     components: {
       SaleOutSheetSelectorWithReturn,

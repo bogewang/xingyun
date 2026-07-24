@@ -140,27 +140,27 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import moment from 'moment';
-import {SearchOutlined} from '@ant-design/icons-vue';
-import * as api from '@/api/customer-settle/sheet';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {
-  add,
-  dateTimeToDate,
-  formatDateTime,
-  getDateTimeWithMaxTime,
-  getDateTimeWithMinTime,
-  isEmpty,
-  isFloat,
-  isNumberPrecision,
-  sub,
-  uuid,
-} from '@/utils/utils';
-import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
+  import { defineComponent, h } from 'vue';
+  import moment from 'moment';
+  import { SearchOutlined } from '@ant-design/icons-vue';
+  import * as api from '@/api/customer-settle/sheet';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    add,
+    dateTimeToDate,
+    formatDateTime,
+    getDateTimeWithMaxTime,
+    getDateTimeWithMinTime,
+    isEmpty,
+    isFloat,
+    isNumberPrecision,
+    sub,
+    uuid,
+  } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddCustomerSettleSheet',
     components: {
       CustomerSelector,

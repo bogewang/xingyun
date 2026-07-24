@@ -32,17 +32,17 @@
   <order-print-dialog />
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/sc/purchase/order';
-import {printMix} from '@/mixins/print.ts';
-import Viewer from './viewer.vue';
-import {isEmpty} from '@/utils/utils';
-import {PRINT_TYPE} from '@/enums/biz/printType';
-import OrderTimeLine from '@/components/OrderTimeLine';
-import PrintDialog from '/@/components/PrintDialog';
-import {createSuccess} from "@/hooks/web/msg";
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/sc/purchase/order';
+  import { printMix } from '@/mixins/print.ts';
+  import Viewer from './viewer.vue';
+  import { isEmpty } from '@/utils/utils';
+  import { PRINT_TYPE } from '@/enums/biz/printType';
+  import OrderTimeLine from '@/components/OrderTimeLine';
+  import PrintDialog from '/@/components/PrintDialog';
+  import { createSuccess } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       Viewer,
       OrderTimeLine,

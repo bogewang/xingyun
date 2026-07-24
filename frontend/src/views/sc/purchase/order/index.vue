@@ -203,11 +203,7 @@
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/purchase/order';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import {
-    isEmpty,
-    formatDate,
-    buildSortPageVo,
-  } from '@/utils/utils';
+  import { isEmpty, formatDate, buildSortPageVo } from '@/utils/utils';
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
   import BatchHandler from '@/components/BatchHandler';

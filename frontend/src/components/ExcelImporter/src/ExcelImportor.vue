@@ -64,12 +64,12 @@
   </div>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {InboxOutlined} from '@ant-design/icons-vue';
-import * as api from '@/api/components';
-import {isEmpty, uuid} from '@/utils/utils';
+  import { defineComponent } from 'vue';
+  import { InboxOutlined } from '@ant-design/icons-vue';
+  import * as api from '@/api/components';
+  import { isEmpty, uuid } from '@/utils/utils';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'ExcelImporter',
     components: {
       InboxOutlined,

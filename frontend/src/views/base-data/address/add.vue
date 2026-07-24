@@ -89,20 +89,20 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/base-data/address';
-import {isEmpty} from '@/utils/utils';
-import {createSuccess} from '@/hooks/web/msg';
-import CitySelector from '@/components/Selector/CitySelector.vue';
-import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
-import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
-import MemberSelector from '@/components/Selector/MemberSelector.vue';
-import ShopSelector from '@/components/Selector/ShopSelector.vue';
-import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
-import {ADDRESS_ENTITY_TYPE} from '@/enums/biz/addressEntityType';
-import {ADDRESS_TYPE} from '@/enums/biz/addressType';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/base-data/address';
+  import { isEmpty } from '@/utils/utils';
+  import { createSuccess } from '@/hooks/web/msg';
+  import CitySelector from '@/components/Selector/CitySelector.vue';
+  import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
+  import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
+  import MemberSelector from '@/components/Selector/MemberSelector.vue';
+  import ShopSelector from '@/components/Selector/ShopSelector.vue';
+  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
+  import { ADDRESS_ENTITY_TYPE } from '@/enums/biz/addressEntityType';
+  import { ADDRESS_TYPE } from '@/enums/biz/addressType';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       CitySelector,
       CustomerSelector,

@@ -24,11 +24,6 @@
     components: {
       ExcelImporter,
     },
-    data() {
-      return {
-        formData: {},
-      };
-    },
     props: {
       getContainer: {
         type: [Function, Boolean],
@@ -42,6 +37,11 @@
         type: Boolean,
         default: false,
       },
+    },
+    data() {
+      return {
+        formData: {},
+      };
     },
     methods: {
       openDialog() {

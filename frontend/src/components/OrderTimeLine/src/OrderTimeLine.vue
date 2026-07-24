@@ -39,19 +39,19 @@
   </j-border>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  DownOutlined,
-  ExclamationCircleOutlined,
-  UpOutlined,
-} from '@ant-design/icons-vue';
-import * as api from '@/api/components';
-import {isEmpty} from '@/utils/utils';
-import {ORDER_TIME_LINE_BIZ_TYPE} from '@/enums/biz/orderTimeLineBizType';
+  import { defineComponent } from 'vue';
+  import {
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    DownOutlined,
+    ExclamationCircleOutlined,
+    UpOutlined,
+  } from '@ant-design/icons-vue';
+  import * as api from '@/api/components';
+  import { isEmpty } from '@/utils/utils';
+  import { ORDER_TIME_LINE_BIZ_TYPE } from '@/enums/biz/orderTimeLineBizType';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'OrderTimeLine',
     components: {
       ExclamationCircleOutlined,
@@ -96,7 +96,9 @@ export default defineComponent({
         if (isEmpty(this.lines)) {
           return [];
         }
-        return this.expandAll || this.collapseStatus ? this.lines : [this.lines[this.lines.length - 1]];
+        return this.expandAll || this.collapseStatus
+          ? this.lines
+          : [this.lines[this.lines.length - 1]];
       },
     },
     created() {

@@ -27,14 +27,14 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import 'codemirror/lib/codemirror.css';
-import CodeMirror from 'codemirror/lib/codemirror';
-import 'codemirror/mode/javascript/javascript';
-import {isEmpty} from '@/utils/utils';
-import {createError} from '@/hooks/web/msg';
+  import { defineComponent } from 'vue';
+  import 'codemirror/lib/codemirror.css';
+  import CodeMirror from 'codemirror/lib/codemirror';
+  import 'codemirror/mode/javascript/javascript';
+  import { isEmpty } from '@/utils/utils';
+  import { createError } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     components: {},
     props: {
       value: {

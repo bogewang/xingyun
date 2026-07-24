@@ -1,4 +1,3 @@
-
 export interface PrintSaleTagBo {
   /**
    * 客户名称

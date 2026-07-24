@@ -83,7 +83,13 @@ describe('采购收货单合计行', () => {
   });
 
   it('已结算单据将结算金额并入已付并从对账金额扣减未付', () => {
-    const row = { settleStatus: 3, checkAmount: 100, settleAmount: 60, paidAmount: 10, unpaidAmount: 90 };
+    const row = {
+      settleStatus: 3,
+      checkAmount: 100,
+      settleAmount: 60,
+      paidAmount: 10,
+      unpaidAmount: 90,
+    };
 
     expect(resolveReceiveSheetPaymentAmounts(row)).toEqual({ paidAmount: 70, unpaidAmount: 30 });
 
@@ -96,7 +102,13 @@ describe('采购收货单合计行', () => {
   });
 
   it('非已结算单据继续使用原始已付和未付金额', () => {
-    const row = { settleStatus: 1, checkAmount: 100, settleAmount: 60, paidAmount: 10, unpaidAmount: 90 };
+    const row = {
+      settleStatus: 1,
+      checkAmount: 100,
+      settleAmount: 60,
+      paidAmount: 10,
+      unpaidAmount: 90,
+    };
 
     expect(resolveReceiveSheetPaymentAmounts(row)).toEqual({ paidAmount: 10, unpaidAmount: 90 });
 

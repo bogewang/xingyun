@@ -34,21 +34,19 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import DataPermissionDragger from '@/components/DataPermissionDragger/index.vue';
-import * as api from '@/api/system/data-permission';
-import * as modelDetailApi from '@/api/system/data-permission-model-detail';
-import {eachTree, isEmpty} from '@/utils/utils';
-import {createSuccess} from '@/hooks/web/msg';
-import {
-  SYS_DATA_PERMISSION_DATA_PERMISSION_TYPE,
-  SYS_DATA_PERMISSION_DATA_PERMISSION_TYPE_NAME,
-} from '@/enums/biz/sysDataPermissionDataPermissionType';
-import {
-  SYS_DATA_PERMISSION_MODEL_DETAIL_CONDITION_TYPE
-} from '@/enums/biz/sysDataPermissionModelDetailConditionType';
+  import { defineComponent } from 'vue';
+  import DataPermissionDragger from '@/components/DataPermissionDragger/index.vue';
+  import * as api from '@/api/system/data-permission';
+  import * as modelDetailApi from '@/api/system/data-permission-model-detail';
+  import { eachTree, isEmpty } from '@/utils/utils';
+  import { createSuccess } from '@/hooks/web/msg';
+  import {
+    SYS_DATA_PERMISSION_DATA_PERMISSION_TYPE,
+    SYS_DATA_PERMISSION_DATA_PERMISSION_TYPE_NAME,
+  } from '@/enums/biz/sysDataPermissionDataPermissionType';
+  import { SYS_DATA_PERMISSION_MODEL_DETAIL_CONDITION_TYPE } from '@/enums/biz/sysDataPermissionModelDetailConditionType';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'DataPermission',
     components: {
       DataPermissionDragger,

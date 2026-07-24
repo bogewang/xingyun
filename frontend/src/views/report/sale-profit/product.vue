@@ -58,7 +58,7 @@
               >导出
             </a-button>
             <a-button
-              v-permission="['report:sale-profit:product:query']"
+              v-permission="['report:sale-profit:query']"
               :icon="h(SyncOutlined)"
               @click="openCostRefresh"
               >成本重算

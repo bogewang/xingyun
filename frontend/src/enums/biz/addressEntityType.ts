@@ -1,4 +1,4 @@
-import {BaseEnum, BaseEnumItem} from '@/enums/baseEnum';
+import { BaseEnum, BaseEnumItem } from '@/enums/baseEnum';
 
 const ADDRESS_ENTITY_TYPE: BaseEnum<number, string> = new BaseEnum<number, string>();
 ADDRESS_ENTITY_TYPE.set('SC', new BaseEnumItem<number, string>(1, '仓库'));

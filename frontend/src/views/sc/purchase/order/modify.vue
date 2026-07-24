@@ -245,7 +245,7 @@
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { PURCHASE_ORDER_STATUS } from '@/enums/biz/purchaseOrderStatus';
   import JFormItem from '@/components/JFormItem';
-  import * as saleApi from "@/api/sc/sale/order";
+  import * as saleApi from '@/api/sc/sale/order';
 
   export default defineComponent({
     name: 'ModifyPurchaseOrder',

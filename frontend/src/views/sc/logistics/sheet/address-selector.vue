@@ -45,12 +45,12 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import {SearchOutlined} from '@ant-design/icons-vue';
-import * as api from '@/api/base-data/address';
-import {isEmpty} from '@/utils/utils';
+  import { defineComponent, h } from 'vue';
+  import { SearchOutlined } from '@ant-design/icons-vue';
+  import * as api from '@/api/base-data/address';
+  import { isEmpty } from '@/utils/utils';
 
-export default defineComponent({
+  export default defineComponent({
     components: {},
     props: {
       entityId: {

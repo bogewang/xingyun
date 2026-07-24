@@ -177,7 +177,7 @@
                 >买菜汇总2</a-button
               >
               <a-button
-                v-permission="['sale:out:query']"
+                v-permission="['report:sale-profit:query']"
                 :icon="h(SyncOutlined)"
                 @click="openCostRecalculate"
                 >重算成本</a-button
@@ -291,12 +291,12 @@
 
       <!-- 月底成本重算弹窗 -->
       <a-modal
-        v-model:visible="costRecalculateVisible"
+        v-model:open="costRecalculateVisible"
         title="月底成本重算"
         :confirm-loading="costRecalculateLoading"
         @ok="executeCostRecalculate"
       >
-        <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 16 }">
+        <a-form layout="vertical">
           <a-form-item label="时间范围">
             <a-range-picker
               v-model:value="costRecalculateDateRange"

@@ -108,29 +108,29 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import moment from 'moment';
-import {SearchOutlined} from '@ant-design/icons-vue';
-import * as api from '@/api/settle/check';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {
-  add,
-  dateTimeToDate,
-  formatDateTime,
-  getDateTimeWithMaxTime,
-  getDateTimeWithMinTime,
-  isEmpty,
-  isFloat,
-  isNumberPrecision,
-  uuid,
-} from '@/utils/utils';
-import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
-import {MANAGE_TYPE} from '@/enums/biz/manageType';
-import {SETTLE_CHECK_SHEET_BIZ_TYPE} from '@/enums/biz/settleCheckSheetBizType';
-import {SETTLE_CHECK_SHEET_CALC_TYPE} from '@/enums/biz/settleCheckSheetCalcType';
+  import { defineComponent, h } from 'vue';
+  import moment from 'moment';
+  import { SearchOutlined } from '@ant-design/icons-vue';
+  import * as api from '@/api/settle/check';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    add,
+    dateTimeToDate,
+    formatDateTime,
+    getDateTimeWithMaxTime,
+    getDateTimeWithMinTime,
+    isEmpty,
+    isFloat,
+    isNumberPrecision,
+    uuid,
+  } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
+  import { MANAGE_TYPE } from '@/enums/biz/manageType';
+  import { SETTLE_CHECK_SHEET_BIZ_TYPE } from '@/enums/biz/settleCheckSheetBizType';
+  import { SETTLE_CHECK_SHEET_CALC_TYPE } from '@/enums/biz/settleCheckSheetCalcType';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddSupplierSettleCheckSheet',
     components: {
       SupplierSelector,

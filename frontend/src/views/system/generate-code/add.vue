@@ -34,12 +34,12 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/system/generate-code';
-import {isEmpty, isIntegerGtZero} from '@/utils/utils';
-import {createSuccess} from '@/hooks/web/msg';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/system/generate-code';
+  import { isEmpty, isIntegerGtZero } from '@/utils/utils';
+  import { createSuccess } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     components: {},
     data() {
       return {

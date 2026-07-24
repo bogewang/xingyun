@@ -64,16 +64,16 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/sc/stock/take/plan';
-import {isEmpty} from '@/utils/utils';
-import {createSuccess} from '@/hooks/web/msg';
-import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
-import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
-import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
-import {TAKE_STOCK_PLAN_TYPE} from '@/enums/biz/takeStockPlanType';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/sc/stock/take/plan';
+  import { isEmpty } from '@/utils/utils';
+  import { createSuccess } from '@/hooks/web/msg';
+  import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
+  import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
+  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
+  import { TAKE_STOCK_PLAN_TYPE } from '@/enums/biz/takeStockPlanType';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       ProductBrandSelector,
       ProductCategorySelector,

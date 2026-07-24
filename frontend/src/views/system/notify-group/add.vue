@@ -79,17 +79,17 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/system/notify-group';
-import {createSuccess} from '@/hooks/web/msg';
-import SysDeptSelector from '@/components/Selector/SysDeptSelector.vue';
-import SysRoleSelector from '@/components/Selector/SysRoleSelector.vue';
-import UserGroupSelector from '@/components/Selector/UserGroupSelector.vue';
-import UserSelector from '@/components/Selector/UserSelector.vue';
-import {SYS_NOTIFY_GROUP_RECEIVER_TYPE} from '@/enums/biz/sysNotifyReceiverType';
-import {SYS_NOTIFY_GROUP_MESSAGE_TYPE} from '@/enums/biz/sysNotifyMessageType';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/system/notify-group';
+  import { createSuccess } from '@/hooks/web/msg';
+  import SysDeptSelector from '@/components/Selector/SysDeptSelector.vue';
+  import SysRoleSelector from '@/components/Selector/SysRoleSelector.vue';
+  import UserGroupSelector from '@/components/Selector/UserGroupSelector.vue';
+  import UserSelector from '@/components/Selector/UserSelector.vue';
+  import { SYS_NOTIFY_GROUP_RECEIVER_TYPE } from '@/enums/biz/sysNotifyReceiverType';
+  import { SYS_NOTIFY_GROUP_MESSAGE_TYPE } from '@/enums/biz/sysNotifyMessageType';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       SysDeptSelector,
       SysRoleSelector,

@@ -74,9 +74,10 @@ function sumByValue<T>(data: T[], getValue: (row: T) => number): number {
  * @param row 采购收货单列表行
  * @returns 用于行展示和合计的安全金额
  */
-export function resolveReceiveSheetPaymentAmounts(
-  row: ReceiveSheetFooterRow,
-): { paidAmount: number; unpaidAmount: number } {
+export function resolveReceiveSheetPaymentAmounts(row: ReceiveSheetFooterRow): {
+  paidAmount: number;
+  unpaidAmount: number;
+} {
   const paidAmount = parseFiniteNumber(row?.paidAmount);
 
   if (!SETTLE_STATUS.SETTLED.equalsCode(parseFiniteNumber(row?.settleStatus))) {
@@ -90,7 +91,9 @@ export function resolveReceiveSheetPaymentAmounts(
 
   return {
     paidAmount: parseFiniteNumber(settleAmount + paidAmount),
-    unpaidAmount: parseFiniteNumber(parseFiniteNumber(row?.checkAmount) - settleAmount - paidAmount),
+    unpaidAmount: parseFiniteNumber(
+      parseFiniteNumber(row?.checkAmount) - settleAmount - paidAmount,
+    ),
   };
 }
 

@@ -44,12 +44,12 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {validCode} from '@/utils/validate';
-import * as api from '@/api/base-data/pay-type';
-import {createSuccess} from '@/hooks/web/msg';
+  import { defineComponent } from 'vue';
+  import { validCode } from '@/utils/validate';
+  import * as api from '@/api/base-data/pay-type';
+  import { createSuccess } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     components: {},
     data() {
       return {

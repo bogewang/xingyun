@@ -34,11 +34,11 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/bpm/flow/flow-category';
-import {createSuccess} from '@/hooks/web/msg';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/bpm/flow/flow-category';
+  import { createSuccess } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     components: {},
     props: {
       parentId: {

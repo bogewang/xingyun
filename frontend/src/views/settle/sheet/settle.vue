@@ -116,9 +116,7 @@
             style="width: 100%"
             placeholder="请输入对账金额"
           />
-          <div class="amount-tip">
-            选中货流单总金额：{{ formatAmount(selectedTotalAmount) }}
-          </div>
+          <div class="amount-tip"> 选中货流单总金额：{{ formatAmount(selectedTotalAmount) }} </div>
         </a-form-item>
         <a-form-item label="备注">
           <a-textarea
@@ -146,7 +144,9 @@
             style="width: 100%"
             placeholder="请输入结算金额"
           />
-          <div class="amount-tip">选中单据未结算总额：{{ formatAmount(selectedTotalUnSettleAmount) }}</div>
+          <div class="amount-tip"
+            >选中单据未结算总额：{{ formatAmount(selectedTotalUnSettleAmount) }}</div
+          >
         </a-form-item>
         <a-form-item label="备注">
           <a-textarea
@@ -205,8 +205,8 @@
       const keyword = routeQuery.code
         ? String(routeQuery.code).trim()
         : routeQuery.keyword
-          ? String(routeQuery.keyword).trim()
-          : '';
+        ? String(routeQuery.keyword).trim()
+        : '';
       const startTime = routeQuery.startTime
         ? moment(String(routeQuery.startTime)).format('YYYY-MM-DD')
         : moment(getDateTimeWithMinTime(moment().subtract(3, 'M'))).format('YYYY-MM-DD');
@@ -333,7 +333,10 @@
         return [...new Set(this.selectedRows.map((item) => item.settleStatus))];
       },
       selectedTotalUnSettleAmount() {
-        return this.selectedRows.reduce((total, item) => total + Number(item.unSettleAmount || 0), 0);
+        return this.selectedRows.reduce(
+          (total, item) => total + Number(item.unSettleAmount || 0),
+          0,
+        );
       },
       selectedTotalAmount() {
         return this.selectedRows.reduce((total, item) => total + Number(item.totalAmount || 0), 0);
@@ -367,8 +370,8 @@
         const keyword = routeQuery.code
           ? String(routeQuery.code).trim()
           : routeQuery.keyword
-            ? String(routeQuery.keyword).trim()
-            : '';
+          ? String(routeQuery.keyword).trim()
+          : '';
 
         this.searchFormData.supplierId = routeQuery.supplierId ? String(routeQuery.supplierId) : '';
         this.searchFormData.keyword = keyword;
@@ -526,9 +529,7 @@
       exportList() {
         this.loading = true;
         this.resolveQueryResult()
-          .then(({ queryParams }) =>
-            settleApi.exportReceiveSheetSettleInfos(queryParams),
-          )
+          .then(({ queryParams }) => settleApi.exportReceiveSheetSettleInfos(queryParams))
           .then(() => {
             createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
           })
@@ -563,7 +564,7 @@
           return;
         }
 
-        this.checkDialog.amount = Number((this.selectedTotalAmount).toFixed(2));
+        this.checkDialog.amount = Number(this.selectedTotalAmount.toFixed(2));
         this.checkDialog.description = '';
         this.checkDialog.visible = true;
       },

@@ -3,7 +3,7 @@ import {
   FormItemRenderOptions,
   VxeGlobalRendererHandles,
 } from 'vxe-table';
-import {createDefaultRender, createEditRender, createFormItemRender} from './AButton';
+import { createDefaultRender, createEditRender, createFormItemRender } from './AButton';
 
 function createEditButtonRender() {
   return function (

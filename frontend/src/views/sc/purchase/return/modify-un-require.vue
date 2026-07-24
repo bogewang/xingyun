@@ -269,7 +269,7 @@
   import UserSelector from '@/components/Selector/UserSelector.vue';
   import { PURCHASE_RETURN_STATUS } from '@/enums/biz/purchaseReturnStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
-  import * as saleApi from "@/api/sc/sale/order";
+  import * as saleApi from '@/api/sc/sale/order';
 
   export default defineComponent({
     name: 'ModifyPurchaseReturnUnRequire',

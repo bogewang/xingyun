@@ -2264,7 +2264,6 @@ public class SaleOutSheetServiceImpl extends
 
                 detail.setCostPrice(costDto.getTaxPrice());
                 detail.setTotalProfit(detailTotalProfit);
-                detail.setSupplierId(costDto.getSupplierId());
                 saleOutSheetDetailService.saveOrUpdateAllColumn(detail);
                 detailCount++;
             }

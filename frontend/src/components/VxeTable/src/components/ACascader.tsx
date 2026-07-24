@@ -1,4 +1,4 @@
-import {VxeGlobalRendererHandles} from 'vxe-table';
+import { VxeGlobalRendererHandles } from 'vxe-table';
 import XEUtils from 'xe-utils';
 import {
   createCellRender,

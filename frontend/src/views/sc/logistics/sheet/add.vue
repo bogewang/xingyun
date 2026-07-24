@@ -172,23 +172,23 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import QueryBizOrder from './query-biz-order.vue';
-import DetailSaleOutSheet from '@/views/sc/sale/out/detail.vue';
-import DetailRetailOutSheet from '@/views/sc/retail/out/detail.vue';
-import AddressSelector from './address-selector.vue';
-import {DeleteOutlined, PlusOutlined} from '@ant-design/icons-vue';
-import * as api from '@/api/sc/logistics/sheet';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {isEmpty, isFloat, isFloatGeZero, isNumberPrecision, uuid} from '@/utils/utils';
-import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import CitySelector from '@/components/Selector/CitySelector.vue';
-import LogisticsCompanySelector from '@/components/Selector/LogisticsCompanySelector.vue';
-import {LOGISTICS_SHEET_DETAIL_BIZ_TYPE} from '@/enums/biz/logisticsSheetDetailBizType';
-import {ADDRESS_ENTITY_TYPE} from '@/enums/biz/addressEntityType';
-import {ADDRESS_TYPE} from '@/enums/biz/addressType';
+  import { defineComponent, h } from 'vue';
+  import QueryBizOrder from './query-biz-order.vue';
+  import DetailSaleOutSheet from '@/views/sc/sale/out/detail.vue';
+  import DetailRetailOutSheet from '@/views/sc/retail/out/detail.vue';
+  import AddressSelector from './address-selector.vue';
+  import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue';
+  import * as api from '@/api/sc/logistics/sheet';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { isEmpty, isFloat, isFloatGeZero, isNumberPrecision, uuid } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import CitySelector from '@/components/Selector/CitySelector.vue';
+  import LogisticsCompanySelector from '@/components/Selector/LogisticsCompanySelector.vue';
+  import { LOGISTICS_SHEET_DETAIL_BIZ_TYPE } from '@/enums/biz/logisticsSheetDetailBizType';
+  import { ADDRESS_ENTITY_TYPE } from '@/enums/biz/addressEntityType';
+  import { ADDRESS_TYPE } from '@/enums/biz/addressType';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddLogisticsSheet',
     components: {
       QueryBizOrder,

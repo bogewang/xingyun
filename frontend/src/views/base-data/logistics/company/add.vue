@@ -63,14 +63,14 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {validCode} from '@/utils/validate';
-import * as api from '@/api/base-data/logistics/company';
-import {isEmpty} from '@/utils/utils';
-import {createSuccess} from '@/hooks/web/msg';
-import CitySelector from '@/components/Selector/CitySelector.vue';
+  import { defineComponent } from 'vue';
+  import { validCode } from '@/utils/validate';
+  import * as api from '@/api/base-data/logistics/company';
+  import { isEmpty } from '@/utils/utils';
+  import { createSuccess } from '@/hooks/web/msg';
+  import CitySelector from '@/components/Selector/CitySelector.vue';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       CitySelector,
     },

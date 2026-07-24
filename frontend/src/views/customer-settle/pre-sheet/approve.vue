@@ -120,16 +120,16 @@
   </div>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import ApproveRefuse from '@/components/ApproveRefuse';
-import * as api from '@/api/customer-settle/pre';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {add, isEmpty, isFloatGeZero} from '@/utils/utils';
-import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import {CUSTOMER_SETTLE_PRE_SHEET_STATUS} from '@/enums/biz/customerSettlePreSheetStatus';
-import OrderTimeLine from '@/components/OrderTimeLine';
+  import { defineComponent } from 'vue';
+  import ApproveRefuse from '@/components/ApproveRefuse';
+  import * as api from '@/api/customer-settle/pre';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { add, isEmpty, isFloatGeZero } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import { CUSTOMER_SETTLE_PRE_SHEET_STATUS } from '@/enums/biz/customerSettlePreSheetStatus';
+  import OrderTimeLine from '@/components/OrderTimeLine';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'ApproveCustomerSettlePreSheet',
     components: {
       ApproveRefuse,

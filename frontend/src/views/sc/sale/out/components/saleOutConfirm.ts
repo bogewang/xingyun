@@ -42,9 +42,10 @@ export function syncConfirmAmount(row: SaleOutConfirmRow): number {
  * @param rows 验收明细列表
  * @returns 汇总结果
  */
-export function sumConfirmFields(
-  rows: SaleOutConfirmRow[],
-): { confirmNum: number; confirmAmt: number } {
+export function sumConfirmFields(rows: SaleOutConfirmRow[]): {
+  confirmNum: number;
+  confirmAmt: number;
+} {
   return rows.reduce(
     (totals, row) => ({
       confirmNum: add(totals.confirmNum, normalizeConfirmNum(row?.confirmNum)),

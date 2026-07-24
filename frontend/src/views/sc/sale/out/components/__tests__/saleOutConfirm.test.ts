@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { getConfirmAmount, normalizeConfirmNum, sumConfirmFields, syncConfirmAmount } from '../saleOutConfirm';
+import {
+  getConfirmAmount,
+  normalizeConfirmNum,
+  sumConfirmFields,
+  syncConfirmAmount,
+} from '../saleOutConfirm';
 
 describe('saleOutConfirm', () => {
   it('calculates amount from confirm quantity and tax price', () => {

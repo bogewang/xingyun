@@ -137,8 +137,8 @@
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
-  import JFormItem from "@/components/JFormItem";
-  import JBorder from "@/components/JBorder";
+  import JFormItem from '@/components/JFormItem';
+  import JBorder from '@/components/JBorder';
 
   export default defineComponent({
     name: 'ApprovePurchaseReceiveSheet',

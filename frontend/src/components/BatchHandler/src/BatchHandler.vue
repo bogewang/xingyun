@@ -45,7 +45,9 @@
           <a-space>
             <a-button :disabled="loading && !!batchHandleFn" @click="onClose">关 闭</a-button>
             <a-button v-if="!loading" type="primary" @click="onBegin">开 始</a-button>
-            <a-button v-if="loading && !batchHandleFn" type="primary" @click="onStop">停 止</a-button>
+            <a-button v-if="loading && !batchHandleFn" type="primary" @click="onStop"
+              >停 止</a-button
+            >
           </a-space>
         </div>
       </template>
@@ -53,18 +55,18 @@
   </div>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {
-  CheckCircleFilled,
-  ClockCircleOutlined,
-  CloseCircleFilled,
-  LoadingOutlined,
-} from '@ant-design/icons-vue';
-import {ConcurrentPromise} from '@/utils/concurrentPromise';
-import {isEmpty} from '@/utils/utils';
-import {createConfirm, createErrorDialog} from '@/hooks/web/msg';
+  import { defineComponent } from 'vue';
+  import {
+    CheckCircleFilled,
+    ClockCircleOutlined,
+    CloseCircleFilled,
+    LoadingOutlined,
+  } from '@ant-design/icons-vue';
+  import { ConcurrentPromise } from '@/utils/concurrentPromise';
+  import { isEmpty } from '@/utils/utils';
+  import { createConfirm, createErrorDialog } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       LoadingOutlined,
       CheckCircleFilled,

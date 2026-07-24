@@ -10,8 +10,7 @@
       :local-container="localContainer"
       :hide-on-deactivated="hideOnDeactivated"
       @confirm="(e) => $emit('confirm', e)"
-    >
-    </excel-importer>
+    />
   </div>
 </template>
 
@@ -24,11 +23,6 @@
     name: 'ReceiveSheetQueryImporter',
     components: {
       ExcelImporter,
-    },
-    data() {
-      return {
-        formData: {},
-      };
     },
     props: {
       getContainer: {
@@ -43,6 +37,11 @@
         type: Boolean,
         default: false,
       },
+    },
+    data() {
+      return {
+        formData: {},
+      };
     },
     methods: {
       openDialog() {

@@ -112,19 +112,19 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import moment from 'moment';
-import {isEmail, validCode} from '@/utils/validate';
-import * as api from '@/api/base-data/member';
-import {generateCode} from '@/api/components';
-import {formatDate, getCurrentDate, isEmpty} from '@/utils/utils';
-import {createSuccess} from '@/hooks/web/msg';
-import ShopSelector from '@/components/Selector/ShopSelector.vue';
-import UserSelector from '@/components/Selector/UserSelector.vue';
-import {GENDER} from '@/enums/biz/gender';
-import {GENERATE_CODE_TYPE} from '@/enums/biz/generateCodeType';
+  import { defineComponent } from 'vue';
+  import moment from 'moment';
+  import { isEmail, validCode } from '@/utils/validate';
+  import * as api from '@/api/base-data/member';
+  import { generateCode } from '@/api/components';
+  import { formatDate, getCurrentDate, isEmpty } from '@/utils/utils';
+  import { createSuccess } from '@/hooks/web/msg';
+  import ShopSelector from '@/components/Selector/ShopSelector.vue';
+  import UserSelector from '@/components/Selector/UserSelector.vue';
+  import { GENDER } from '@/enums/biz/gender';
+  import { GENERATE_CODE_TYPE } from '@/enums/biz/generateCodeType';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       UserSelector,
       ShopSelector,

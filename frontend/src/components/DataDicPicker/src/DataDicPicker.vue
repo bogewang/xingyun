@@ -18,11 +18,11 @@
   </div>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/system/dic-item';
-import {isEmpty} from '@/utils/utils';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/system/dic-item';
+  import { isEmpty } from '@/utils/utils';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'DataDicPicker',
     props: {
       code: {

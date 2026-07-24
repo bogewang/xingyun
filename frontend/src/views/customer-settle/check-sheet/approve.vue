@@ -237,21 +237,21 @@
   </div>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import ApproveRefuse from '@/components/ApproveRefuse';
-import SaleOutSheetDetail from '@/views/sc/sale/out/detail.vue';
-import SaleReturnDetail from '@/views/sc/sale/return/detail.vue';
-import SettleFeeSheetDetail from '@/views/customer-settle/fee-sheet/detail.vue';
-import SettlePreSheetDetail from '@/views/customer-settle/pre-sheet/detail.vue';
-import * as api from '@/api/customer-settle/check';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {add, isFloat} from '@/utils/utils';
-import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import {CUSTOMER_SETTLE_CHECK_SHEET_STATUS} from '@/enums/biz/customerSettleCheckSheetStatus';
-import {CUSTOMER_SETTLE_CHECK_SHEET_BIZ_TYPE} from '@/enums/biz/customerSettleCheckSheetBizType';
-import OrderTimeLine from '@/components/OrderTimeLine';
+  import { defineComponent } from 'vue';
+  import ApproveRefuse from '@/components/ApproveRefuse';
+  import SaleOutSheetDetail from '@/views/sc/sale/out/detail.vue';
+  import SaleReturnDetail from '@/views/sc/sale/return/detail.vue';
+  import SettleFeeSheetDetail from '@/views/customer-settle/fee-sheet/detail.vue';
+  import SettlePreSheetDetail from '@/views/customer-settle/pre-sheet/detail.vue';
+  import * as api from '@/api/customer-settle/check';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { add, isFloat } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import { CUSTOMER_SETTLE_CHECK_SHEET_STATUS } from '@/enums/biz/customerSettleCheckSheetStatus';
+  import { CUSTOMER_SETTLE_CHECK_SHEET_BIZ_TYPE } from '@/enums/biz/customerSettleCheckSheetBizType';
+  import OrderTimeLine from '@/components/OrderTimeLine';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'ApproveCustomerSettleCheckSheet',
     components: {
       ApproveRefuse,

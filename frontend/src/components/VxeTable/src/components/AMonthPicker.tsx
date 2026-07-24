@@ -1,4 +1,4 @@
-import {getDatePickerCellValue} from './ADatePicker';
+import { getDatePickerCellValue } from './ADatePicker';
 import {
   createCellRender,
   createEditRender,

@@ -129,7 +129,11 @@
               <j-border>
                 <j-form bordered label-width="140px">
                   <j-form-item label="备注" :span="24" :content-nest="false">
-                    <a-textarea v-model:value.trim="formData.description" maxlength="200" readonly />
+                    <a-textarea
+                      v-model:value.trim="formData.description"
+                      maxlength="200"
+                      readonly
+                    />
                   </j-form-item>
                 </j-form>
               </j-border>
@@ -155,17 +159,17 @@
   </div>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import ReceiveSheetDetail from '@/views/sc/purchase/receive/detail.vue';
-import * as api from '@/api/sc/purchase/return';
-import {printMix} from '@/mixins/print.ts';
-import {add, getNumber, isEmpty, isFloatGeZero, mul} from '@/utils/utils';
-import {PURCHASE_RETURN_STATUS} from '@/enums/biz/purchaseReturnStatus';
-import {PRINT_TYPE} from '@/enums/biz/printType';
-import OrderTimeLine from '@/components/OrderTimeLine';
-import PrintDialog from '/@/components/PrintDialog';
+  import { defineComponent } from 'vue';
+  import ReceiveSheetDetail from '@/views/sc/purchase/receive/detail.vue';
+  import * as api from '@/api/sc/purchase/return';
+  import { printMix } from '@/mixins/print.ts';
+  import { add, getNumber, isEmpty, isFloatGeZero, mul } from '@/utils/utils';
+  import { PURCHASE_RETURN_STATUS } from '@/enums/biz/purchaseReturnStatus';
+  import { PRINT_TYPE } from '@/enums/biz/printType';
+  import OrderTimeLine from '@/components/OrderTimeLine';
+  import PrintDialog from '/@/components/PrintDialog';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       ReceiveSheetDetail,
       OrderTimeLine,
@@ -360,36 +364,36 @@ export default defineComponent({
   });
 </script>
 <style scoped>
-.order-detail-modal-content {
-  height: 100%;
-  overflow: hidden;
-}
+  .order-detail-modal-content {
+    height: 100%;
+    overflow: hidden;
+  }
 
-.order-detail-tabs {
-  height: 100%;
-}
+  .order-detail-tabs {
+    height: 100%;
+  }
 
-.order-detail-pane {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow: hidden;
-}
+  .order-detail-pane {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+  }
 
-.order-detail-grid-wrap {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
+  .order-detail-grid-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
 
-.order-detail-tabs :deep(.ant-tabs-content-holder),
-.order-detail-tabs :deep(.ant-tabs-content),
-.order-detail-tabs :deep(.ant-tabs-tabpane) {
-  height: 100%;
-}
+  .order-detail-tabs :deep(.ant-tabs-content-holder),
+  .order-detail-tabs :deep(.ant-tabs-content),
+  .order-detail-tabs :deep(.ant-tabs-tabpane) {
+    height: 100%;
+  }
 
-.order-detail-tabs :deep(.ant-tabs-nav) {
-  margin-bottom: 12px;
-}
+  .order-detail-tabs :deep(.ant-tabs-nav) {
+    margin-bottom: 12px;
+  }
 </style>

@@ -164,25 +164,17 @@
   </div>
 </template>
 <script>
-import Draggable from 'vuedraggable';
-import {Empty} from 'ant-design-vue';
-import {defineComponent} from 'vue';
-import {createError} from '@/hooks/web/msg';
-import {getEnum} from '@/utils/enumUtil';
-import {
-  SYS_DATA_PERMISSION_MODEL_DETAIL_NODE_TYPE
-} from '@/enums/biz/sysDataPermissionModelDetailNodeType';
-import {
-  SYS_DATA_PERMISSION_MODEL_DETAIL_CALC_TYPE
-} from '@/enums/biz/sysDataPermissionModelDetailCalcType';
-import {
-  SYS_DATA_PERMISSION_MODEL_DETAIL_INPUT_TYPE
-} from '@/enums/biz/sysDataPermissionModelDetailInputType';
-import {
-  SYS_DATA_PERMISSION_MODEL_DETAIL_CONDITION_TYPE
-} from '@/enums/biz/sysDataPermissionModelDetailConditionType';
+  import Draggable from 'vuedraggable';
+  import { Empty } from 'ant-design-vue';
+  import { defineComponent } from 'vue';
+  import { createError } from '@/hooks/web/msg';
+  import { getEnum } from '@/utils/enumUtil';
+  import { SYS_DATA_PERMISSION_MODEL_DETAIL_NODE_TYPE } from '@/enums/biz/sysDataPermissionModelDetailNodeType';
+  import { SYS_DATA_PERMISSION_MODEL_DETAIL_CALC_TYPE } from '@/enums/biz/sysDataPermissionModelDetailCalcType';
+  import { SYS_DATA_PERMISSION_MODEL_DETAIL_INPUT_TYPE } from '@/enums/biz/sysDataPermissionModelDetailInputType';
+  import { SYS_DATA_PERMISSION_MODEL_DETAIL_CONDITION_TYPE } from '@/enums/biz/sysDataPermissionModelDetailConditionType';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'DataPermissionNested',
     components: {
       Draggable,

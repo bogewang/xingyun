@@ -40,66 +40,66 @@
                 </a-checkbox>
               </j-form-item>
 
-                <j-form-item label="是否已录采购">
-                  <a-select
-                    v-model:value="searchFormData.hasCostPrice"
-                    placeholder="全部"
-                    allow-clear
+              <j-form-item label="是否已录采购">
+                <a-select
+                  v-model:value="searchFormData.hasCostPrice"
+                  placeholder="全部"
+                  allow-clear
+                >
+                  <a-select-option :value="true">已录</a-select-option>
+                  <a-select-option :value="false">未录</a-select-option>
+                </a-select>
+              </j-form-item>
+              <j-form-item label="客户">
+                <a-select
+                  v-model:value="searchFormData.customerId"
+                  allow-clear
+                  show-search
+                  :filter-option="filterSelectOption"
+                  :options="customerOptions"
+                  placeholder="请选择客户"
+                  @focus="loadCustomerOptions()"
+                  @search="loadCustomerOptions"
+                  @change="onCustomerChange"
+                />
+              </j-form-item>
+              <j-form-item label="单据号">
+                <a-input v-model:value="searchFormData.code" allow-clear />
+              </j-form-item>
+              <j-form-item label="操作人">
+                <a-select
+                  v-model:value="searchFormData.createBy"
+                  allow-clear
+                  show-search
+                  :filter-option="filterSelectOption"
+                  :options="createByOptions"
+                  placeholder="请选择操作人"
+                  @focus="loadCreateByOptions()"
+                  @search="loadCreateByOptions"
+                  @change="onCreateByChange"
+                />
+              </j-form-item>
+              <j-form-item label="结算状态">
+                <a-select
+                  v-model:value="searchFormData.settleStatus"
+                  placeholder="全部"
+                  allow-clear
+                >
+                  <a-select-option
+                    v-for="item in SETTLE_STATUS.values()"
+                    :key="item.code"
+                    :value="item.code"
                   >
-                    <a-select-option :value="true">已录</a-select-option>
-                    <a-select-option :value="false">未录</a-select-option>
-                  </a-select>
-                </j-form-item>
-                <j-form-item label="客户">
-                  <a-select
-                    v-model:value="searchFormData.customerId"
-                    allow-clear
-                    show-search
-                    :filter-option="filterSelectOption"
-                    :options="customerOptions"
-                    placeholder="请选择客户"
-                    @focus="loadCustomerOptions()"
-                    @search="loadCustomerOptions"
-                    @change="onCustomerChange"
-                  />
-                </j-form-item>
-                <j-form-item label="单据号">
-                  <a-input v-model:value="searchFormData.code" allow-clear />
-                </j-form-item>
-                <j-form-item label="操作人">
-                  <a-select
-                    v-model:value="searchFormData.createBy"
-                    allow-clear
-                    show-search
-                    :filter-option="filterSelectOption"
-                    :options="createByOptions"
-                    placeholder="请选择操作人"
-                    @focus="loadCreateByOptions()"
-                    @search="loadCreateByOptions"
-                    @change="onCreateByChange"
-                  />
-                </j-form-item>
-                <j-form-item label="结算状态">
-                  <a-select
-                    v-model:value="searchFormData.settleStatus"
-                    placeholder="全部"
-                    allow-clear
-                  >
-                    <a-select-option
-                      v-for="item in SETTLE_STATUS.values()"
-                      :key="item.code"
-                      :value="item.code"
-                    >
-                      {{ item.desc }}
-                    </a-select-option>
-                  </a-select>
-                </j-form-item>
-                <j-form-item label="是否已付完">
-                  <a-select v-model:value="searchFormData.fullyPaid" placeholder="全部" allow-clear>
-                    <a-select-option :value="true">已付完</a-select-option>
-                    <a-select-option :value="false">未付完</a-select-option>
-                  </a-select>
-                </j-form-item>
+                    {{ item.desc }}
+                  </a-select-option>
+                </a-select>
+              </j-form-item>
+              <j-form-item label="是否已付完">
+                <a-select v-model:value="searchFormData.fullyPaid" placeholder="全部" allow-clear>
+                  <a-select-option :value="true">已付完</a-select-option>
+                  <a-select-option :value="false">未付完</a-select-option>
+                </a-select>
+              </j-form-item>
             </j-form>
           </j-border>
         </template>
@@ -664,7 +664,9 @@
         return Number(value || 0).toFixed(2);
       },
       formatPrice(value) {
-        return Number(value || 0).toFixed(6).replace(/\.?0+$/, '');
+        return Number(value || 0)
+          .toFixed(6)
+          .replace(/\.?0+$/, '');
       },
       formatQuantity(value) {
         return Number(value || 0)
@@ -681,7 +683,11 @@
           return Number(costPrice) * qty;
         }
 
-        if (row?.totalProfit !== null && row?.totalProfit !== undefined && row?.totalProfit !== '') {
+        if (
+          row?.totalProfit !== null &&
+          row?.totalProfit !== undefined &&
+          row?.totalProfit !== ''
+        ) {
           return Number(row?.taxAmount || 0) - Number(row?.totalProfit || 0);
         }
 
@@ -782,8 +788,14 @@
       },
       openBatchUpdatePriceDialog(records) {
         const totalQty = records.reduce((sum, item) => sum + Number(item?.orderNum || 0), 0);
-        const totalSaleAmount = records.reduce((sum, item) => sum + Number(item?.taxAmount || 0), 0);
-        const totalCostAmount = records.reduce((sum, item) => sum + this.calcRowCostAmount(item), 0);
+        const totalSaleAmount = records.reduce(
+          (sum, item) => sum + Number(item?.taxAmount || 0),
+          0,
+        );
+        const totalCostAmount = records.reduce(
+          (sum, item) => sum + this.calcRowCostAmount(item),
+          0,
+        );
         const avgCostPrice = totalQty > 0 ? totalCostAmount / totalQty : 0;
         const avgTaxPrice = totalQty > 0 ? totalSaleAmount / totalQty : 0;
         const profitRate =

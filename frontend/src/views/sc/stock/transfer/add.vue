@@ -110,25 +110,25 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import BatchAddProduct from '@/views/sc/stock/transfer/batch-add-product.vue';
-import {DeleteOutlined, PlusOutlined} from '@ant-design/icons-vue';
-import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
-import * as api from '@/api/sc/stock/transfer-sc';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {
-  add,
-  isEmpty,
-  isEqualWithStr,
-  isFloat,
-  isFloatGeZero,
-  isFloatGtZero,
-  isNumberPrecision,
-  uuid,
-} from '@/utils/utils';
-import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
+  import { defineComponent, h } from 'vue';
+  import BatchAddProduct from '@/views/sc/stock/transfer/batch-add-product.vue';
+  import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue';
+  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
+  import * as api from '@/api/sc/stock/transfer-sc';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    add,
+    isEmpty,
+    isEqualWithStr,
+    isFloat,
+    isFloatGeZero,
+    isFloatGtZero,
+    isNumberPrecision,
+    uuid,
+  } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddScTransferSheet',
     components: {
       BatchAddProduct,

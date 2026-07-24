@@ -123,17 +123,17 @@
   </div>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import ApproveRefuse from '@/components/ApproveRefuse';
-import * as api from '@/api/customer-settle/fee';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {add, isEmpty, isFloatGeZero} from '@/utils/utils';
-import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import {CUSTOMER_SETTLE_FEE_SHEET_STATUS} from '@/enums/biz/customerSettleFeeSheetStatus';
-import {CUSTOMER_SETTLE_FEE_SHEET_TYPE} from '@/enums/biz/customerSettleFeeSheetType';
-import OrderTimeLine from '@/components/OrderTimeLine';
+  import { defineComponent } from 'vue';
+  import ApproveRefuse from '@/components/ApproveRefuse';
+  import * as api from '@/api/customer-settle/fee';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { add, isEmpty, isFloatGeZero } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import { CUSTOMER_SETTLE_FEE_SHEET_STATUS } from '@/enums/biz/customerSettleFeeSheetStatus';
+  import { CUSTOMER_SETTLE_FEE_SHEET_TYPE } from '@/enums/biz/customerSettleFeeSheetType';
+  import OrderTimeLine from '@/components/OrderTimeLine';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'ApproveCustomerSettleFeeSheet',
     components: {
       ApproveRefuse,

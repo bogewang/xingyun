@@ -37,13 +37,13 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/bpm/flow/definition';
-import {validCode} from '@/utils/validate';
-import {createConfirm, createSuccess} from '@/hooks/web/msg';
-import FlowCategorySelector from '@/components/Selector/FlowCategorySelector.vue';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/bpm/flow/definition';
+  import { validCode } from '@/utils/validate';
+  import { createConfirm, createSuccess } from '@/hooks/web/msg';
+  import FlowCategorySelector from '@/components/Selector/FlowCategorySelector.vue';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       FlowCategorySelector,
     },

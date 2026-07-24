@@ -77,17 +77,17 @@
 </template>
 
 <script>
-import {defineComponent, h} from 'vue';
-import Add from './add.vue';
-import Modify from './modify.vue';
-import Detail from './detail.vue';
-import * as api from '@/api/system/parameter';
-import {PlusOutlined, SearchOutlined} from '@ant-design/icons-vue';
-import {buildSortPageVo} from '@/utils/utils';
-import {createConfirm, createSuccess} from '@/hooks/web/msg';
-import TenantList from '@/components/TenantList';
+  import { defineComponent, h } from 'vue';
+  import Add from './add.vue';
+  import Modify from './modify.vue';
+  import Detail from './detail.vue';
+  import * as api from '@/api/system/parameter';
+  import { PlusOutlined, SearchOutlined } from '@ant-design/icons-vue';
+  import { buildSortPageVo } from '@/utils/utils';
+  import { createConfirm, createSuccess } from '@/hooks/web/msg';
+  import TenantList from '@/components/TenantList';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'SysParameter',
     components: {
       TenantList,

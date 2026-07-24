@@ -59,12 +59,12 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/system/tenant';
-import {QuestionCircleOutlined} from '@ant-design/icons-vue';
-import {createSuccess} from '@/hooks/web/msg';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/system/tenant';
+  import { QuestionCircleOutlined } from '@ant-design/icons-vue';
+  import { createSuccess } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     components: { QuestionCircleOutlined },
     data() {
       return {

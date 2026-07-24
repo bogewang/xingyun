@@ -37,12 +37,12 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/system/parameter';
-import {validKey} from './constants';
-import {createSuccess} from '@/hooks/web/msg';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/system/parameter';
+  import { validKey } from './constants';
+  import { createSuccess } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     components: {},
     props: {
       tenantId: {

@@ -281,8 +281,8 @@
 
           this.load(params).then((res) => {
             if (reloadSeq === this.reloadSeq) {
-                if (!isEmpty(res)) {
-                  if (this.multiple) {
+              if (!isEmpty(res)) {
+                if (this.multiple) {
                   this.selectValue = res.map((item) => item[this.columnOption.value]);
                   this.selectRow = res;
                   const tmpRes = res.map((item) => item[this.columnOption.label]);
