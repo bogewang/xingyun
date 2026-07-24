@@ -2215,13 +2215,7 @@ public class SaleOutSheetServiceImpl extends
                 getCostPriceMapFromReceiveSheet(endDate);
 
         // 3. 查询时间范围内所有销售出库单
-        LambdaQueryWrapper<SaleOutSheet> queryWrapper = Wrappers.lambdaQuery(SaleOutSheet.class)
-                .ge(SaleOutSheet::getOrderDate, beginDate)
-                .le(SaleOutSheet::getOrderDate, endDate);
-        if (StringUtils.isNotBlank(vo.getScId())) {
-            queryWrapper.eq(SaleOutSheet::getScId, vo.getScId());
-        }
-        List<SaleOutSheet> sheets = getBaseMapper().selectList(queryWrapper);
+        List<SaleOutSheet> sheets = querySaleOutSheets(vo, beginDate, endDate);
 
         if (CollectionUtils.isEmpty(sheets)) {
             log.info("月底成本重算：时间范围内无销售出库单");
@@ -2284,6 +2278,24 @@ public class SaleOutSheetServiceImpl extends
         log.info("月底成本重算完成, 单据数: {}, 明细数: {}, 未填充数: {}",
                 sheets.size(), detailCount, notFilledCount);
         return new MonthEndRecalculateResult(sheets.size(), detailCount, notFilledCount);
+    }
+
+    /**
+     * 查询时间段内销售单
+     * @param scId
+     * @param beginDate
+     * @param endDate
+     * @return
+     */
+    private List<SaleOutSheet> querySaleOutSheets(String scId, LocalDate beginDate, LocalDate endDate) {
+        LambdaQueryWrapper<SaleOutSheet> queryWrapper = Wrappers.lambdaQuery(SaleOutSheet.class)
+                .ge(SaleOutSheet::getOrderDate, beginDate)
+                .le(SaleOutSheet::getOrderDate, endDate);
+        if (StringUtils.isNotBlank(scId)) {
+            queryWrapper.eq(SaleOutSheet::getScId, scId);
+        }
+        List<SaleOutSheet> sheets = getBaseMapper().selectList(queryWrapper);
+        return sheets;
     }
 
     /**
