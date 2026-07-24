@@ -1,12 +1,12 @@
-import {resolve} from 'node:path';
+import { resolve } from 'node:path';
 
 import dayjs from 'dayjs';
-import {readPackageJSON} from 'pkg-types';
-import {defineConfig, loadEnv, mergeConfig, type UserConfig} from 'vite';
+import { readPackageJSON } from 'pkg-types';
+import { defineConfig, loadEnv, mergeConfig, type UserConfig } from 'vite';
 
-import {createPlugins} from '../plugins';
-import {generateModifyVars} from '../utils/modifyVars';
-import {commonConfig} from './common';
+import { createPlugins } from '../plugins';
+import { generateModifyVars } from '../utils/modifyVars';
+import { commonConfig } from './common';
 
 interface DefineOptions {
   overrides?: UserConfig;
@@ -21,10 +21,7 @@ function defineApplicationConfig(defineOptions: DefineOptions = {}) {
   return defineConfig(async ({ command, mode }) => {
     const root = process.cwd();
     const isBuild = command === 'build';
-    const { VITE_PUBLIC_PATH, VITE_USE_MOCK, VITE_BUILD_COMPRESS, VITE_ENABLE_ANALYZE } = loadEnv(
-      mode,
-      root,
-    );
+    const { VITE_PUBLIC_PATH, VITE_BUILD_COMPRESS, VITE_ENABLE_ANALYZE } = loadEnv(mode, root);
 
     const defineData = await createDefineData(root);
     const plugins = await createPlugins({
