@@ -138,13 +138,13 @@ triggers:
     branches:
       prefix: []
       precise:
-      - deploy0723
+      - master
       include: []
   pr:
     branches:
       prefix: []
       precise:
-      - deploy0723
+      - master
       include: []
 notify: []
 strategy:
