@@ -32,6 +32,7 @@ import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
+import com.lframework.xingyun.sc.dto.sale.out.MonthEndRecalculateResult;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetDetailExportTaskWorker;
@@ -54,6 +55,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -691,6 +693,47 @@ public class SaleOutSheetController extends DefaultBaseController {
             return InvokeResultBuilder.success(data);
         } catch (Exception e) {
             log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    /**
+     * 成本重算
+     */
+    @ApiOperation("成本重算")
+    @HasPermission({ "report:sale-profit:query" })
+    @PostMapping("/refreshCostPrice")
+    public InvokeResult<Void> refreshCostPrice(
+            @RequestParam @NotNull(message = "开始日期不能为空！") LocalDate startDate,
+            @RequestParam @NotNull(message = "结束日期不能为空！") LocalDate endDate) {
+
+        try {
+            LocalDate current = startDate;
+            while (!current.isAfter(endDate)) {
+                saleOutSheetService.refreshCostPrice(current);
+                current = current.plusDays(1);
+            }
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
+    }
+
+    /**
+     * 月底成本重算 - 月加权平均法
+     */
+    @ApiOperation("月底成本重算 - 月加权平均法")
+    @HasPermission({"report:sale-profit:query"})
+    @PostMapping("/month-end/recalculate")
+    public InvokeResult<MonthEndRecalculateResult> monthEndRecalculate(
+            @Valid @RequestBody MonthEndRecalculateVo vo) {
+
+        try {
+            MonthEndRecalculateResult result = saleOutSheetService.monthEndRecalculate(vo);
+            return InvokeResultBuilder.success(result);
+        } catch (Exception e) {
+            log.error("月底成本重算失败", e);
             return InvokeResultBuilder.fail(e.getMessage(), null);
         }
     }
