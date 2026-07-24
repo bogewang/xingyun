@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.lframework.xingyun.sc.bo.purchase.receive.GetReceiveSheetBo;
+import com.lframework.xingyun.sc.bo.purchase.receive.QueryReceiveSheetDetailBo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -43,6 +44,20 @@ class ReceiveSheetInquiryProductMappingTest {
   void shouldExposeInquiryProductInReceiveFullDetailResponse() throws NoSuchMethodException {
     assertTrue(GetReceiveSheetBo.OrderDetailBo.class
         .getMethod("getInquiryProduct").getReturnType().equals(Boolean.class));
+  }
+
+  /** 验证收货查询明细 BO 对外暴露 DTO 的询价标识。 */
+  @Test
+  void shouldExposeInquiryProductInReceiveQueryDetailResponse() {
+    QueryReceiveSheetDetailDto inquiryDetail = new QueryReceiveSheetDetailDto();
+    inquiryDetail.setInquiryProduct(true);
+
+    assertTrue(new QueryReceiveSheetDetailBo(inquiryDetail).getInquiryProduct());
+
+    QueryReceiveSheetDetailDto normalDetail = new QueryReceiveSheetDetailDto();
+    normalDetail.setInquiryProduct(false);
+
+    assertFalse(new QueryReceiveSheetDetailBo(normalDetail).getInquiryProduct());
   }
 
   /** 验证收货 SQL 从商品表选择询价标识并映射完整单据明细。 */

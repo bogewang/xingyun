@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
+import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetDetailBo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -43,6 +44,20 @@ class SaleOutSheetInquiryProductMappingTest {
   void shouldExposeInquiryProductInSaleOutFullDetailResponse() throws NoSuchMethodException {
     assertTrue(GetSaleOutSheetBo.OrderDetailBo.class
         .getMethod("getInquiryProduct").getReturnType().equals(Boolean.class));
+  }
+
+  /** 验证销售出库查询明细 BO 对外暴露 DTO 的询价标识。 */
+  @Test
+  void shouldExposeInquiryProductInSaleOutQueryDetailResponse() {
+    QuerySaleOutSheetDetailDto inquiryDetail = new QuerySaleOutSheetDetailDto();
+    inquiryDetail.setInquiryProduct(true);
+
+    assertTrue(new QuerySaleOutSheetDetailBo(inquiryDetail).getInquiryProduct());
+
+    QuerySaleOutSheetDetailDto normalDetail = new QuerySaleOutSheetDetailDto();
+    normalDetail.setInquiryProduct(false);
+
+    assertFalse(new QuerySaleOutSheetDetailBo(normalDetail).getInquiryProduct());
   }
 
   /** 验证销售出库 SQL 从商品表选择询价标识并映射完整单据明细。 */
