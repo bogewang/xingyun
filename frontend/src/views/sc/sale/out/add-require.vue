@@ -107,6 +107,12 @@
           </a-space>
         </template>
 
+        <template #inquiryProduct_default="{ row }">
+          <span :class="formatInquiryProduct(row.inquiryProduct).className">
+            {{ formatInquiryProduct(row.inquiryProduct).text }}
+          </span>
+        </template>
+
         <!-- 商品名称 列自定义内容 -->
         <template #productName_default="{ row, rowIndex }">
           <a-auto-complete
@@ -144,6 +150,13 @@
                           :key="star"
                           two-tone-color="#faad14"
                         />
+                      </span>
+                    </template>
+                  </vxe-column>
+                  <vxe-column field="inquiryProduct" title="是否询价商品" width="120">
+                    <template #default="{ row: product }">
+                      <span :class="formatInquiryProduct(product.inquiryProduct).className">
+                        {{ formatInquiryProduct(product.inquiryProduct).text }}
                       </span>
                     </template>
                   </vxe-column>
@@ -345,6 +358,7 @@
   import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import { buildRequiredSaleOutProducts } from './components/saleOutProductParams';
   import { syncConfirmAmount, sumConfirmFields } from './components/saleOutConfirm';
+  import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
 
   export default defineComponent({
     name: 'AddSaleOutSheetRequire',
@@ -368,6 +382,7 @@
         sub,
         getNumber,
         mul,
+        formatInquiryProduct,
       };
     },
     data() {
@@ -406,6 +421,12 @@
             title: '商品名称',
             width: 260,
             slots: { default: 'productName_default' },
+          },
+          {
+            field: 'inquiryProduct',
+            title: '是否询价商品',
+            width: 120,
+            slots: { default: 'inquiryProduct_default' },
           },
           { field: 'skuCode', title: '商品SKU编号', width: 120 },
           { field: 'externalCode', title: '商品简码', width: 120 },
