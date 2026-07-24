@@ -177,6 +177,11 @@ public class SaleOutSheetFullDto implements BaseDto, Serializable {
     private String productId;
 
     /**
+     * 是否询价商品
+     */
+    private Boolean inquiryProduct;
+
+    /**
      * 出库数量
      */
     private BigDecimal orderNum;

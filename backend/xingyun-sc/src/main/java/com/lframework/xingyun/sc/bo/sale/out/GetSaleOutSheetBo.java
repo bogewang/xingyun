@@ -321,6 +321,12 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
         private String productName;
 
         /**
+         * 是否询价商品
+         */
+        @ApiModelProperty("是否询价商品")
+        private Boolean inquiryProduct;
+
+        /**
          * SKU编号
          */
         @ApiModelProperty("SKU编号")

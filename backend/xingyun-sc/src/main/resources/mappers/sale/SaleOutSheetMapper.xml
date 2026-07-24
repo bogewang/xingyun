@@ -62,6 +62,7 @@
             <id column="detail_id" property="id"/>
             <result column="detail_main_product_id" property="mainProductId"/>
             <result column="detail_product_id" property="productId"/>
+            <result column="detail_inquiry_product" property="inquiryProduct"/>
             <result column="detail_order_num" property="orderNum"/>
             <result column="detail_confirm_num" property="confirmNum"/>
             <result column="detail_unit_id" property="unitId"/>
@@ -171,6 +172,7 @@
             d.id AS detail_id,
             b.main_product_id AS detail_main_product_id,
             d.product_id AS detail_product_id,
+            g.inquiry_product AS detail_inquiry_product,
             d.order_num AS detail_order_num,
             d.confirm_num AS detail_confirm_num,
             d.unit_id AS detail_unit_id,
@@ -213,6 +215,7 @@
             d.product_id,
             g.code AS product_code,
             g.name AS product_name,
+            g.inquiry_product AS inquiry_product,
             g.sku_code,
             g.external_code,
             g.spec,
