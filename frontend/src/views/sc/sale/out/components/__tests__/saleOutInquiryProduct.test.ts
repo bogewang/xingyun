@@ -33,7 +33,7 @@ describe('销售出库询价商品展示', () => {
   });
 
   it('销售批量添加商品弹窗包含是否询价商品', () => {
-    const source = readSaleOutSource('../batch-add-product.vue');
+    const source = readSaleOutSource('add-un-require.vue');
 
     expect(source).toContain(':show-inquiry-product="true"');
   });

@@ -161,7 +161,7 @@ export interface OrderDetailBo {
   /**
    * 是否询价商品
    */
-  inquiryProduct: boolean;
+  inquiryProduct: boolean | null;
 
   /**
    * SKU编号

@@ -12,7 +12,7 @@ export interface QuerySaleOutSheetDetailBo {
   productCode: string;
   productName: string;
   /** 是否询价商品 */
-  inquiryProduct: boolean;
+  inquiryProduct: boolean | null;
   skuCode: string;
   externalCode: string;
   spec: string;

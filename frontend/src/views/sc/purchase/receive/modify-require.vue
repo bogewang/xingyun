@@ -324,6 +324,7 @@
       </j-border>
       <batch-add-product
         ref="batchAddProductDialog"
+        :show-inquiry-product="true"
         :sc-id="formData.sc.id"
         @confirm="batchAddProduct"
       />

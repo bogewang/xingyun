@@ -299,6 +299,7 @@
 
       <batch-add-product
         ref="batchAddProductDialog"
+        :show-inquiry-product="true"
         :sc-id="formData.scId"
         @confirm="batchAddProduct"
       />
