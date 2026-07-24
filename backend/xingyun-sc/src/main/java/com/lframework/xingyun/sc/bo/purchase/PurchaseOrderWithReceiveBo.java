@@ -180,6 +180,12 @@ public class PurchaseOrderWithReceiveBo extends BaseBo<PurchaseOrderWithReceiveD
     private String brandName;
 
     /**
+     * 是否询价商品
+     */
+    @ApiModelProperty("是否询价商品")
+    private Boolean inquiryProduct;
+
+    /**
      * 采购数量
      */
     @ApiModelProperty("采购数量")
@@ -276,6 +282,7 @@ public class PurchaseOrderWithReceiveBo extends BaseBo<PurchaseOrderWithReceiveD
       this.spec = product.getSpec();
       this.categoryName = product.getCategoryName();
       this.brandName = product.getBrandName();
+      this.inquiryProduct = product.getInquiryProduct();
 
       this.orderNum = dto.getOrderNum();
       this.purchasePrice = dto.getTaxPrice();

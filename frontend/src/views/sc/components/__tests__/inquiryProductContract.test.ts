@@ -81,6 +81,17 @@ describe('询价商品前端契约', () => {
     });
   });
 
+  it('采购与销售来源订单明细 API 将询价标识声明为可空布尔值', () => {
+    const typeSources = [
+      'api/sc/purchase/order/model/purchaseOrderWithReceiveBo.ts',
+      'api/sc/sale/order/model/saleOrderWithOutBo.ts',
+    ].map(readSource);
+
+    typeSources.forEach((source) => {
+      expect(source).toContain('inquiryProduct: boolean | null;');
+    });
+  });
+
   it('共享格式化工具注释同时说明采购收货与销售出库用途', () => {
     const source = readSource('views/sc/components/inquiryProduct.ts');
 

@@ -193,6 +193,12 @@ public class SaleOrderWithOutBo extends BaseBo<SaleOrderWithOutDto> {
     private String brandName;
 
     /**
+     * 是否询价商品
+     */
+    @ApiModelProperty("是否询价商品")
+    private Boolean inquiryProduct;
+
+    /**
      * 销售数量
      */
     @ApiModelProperty("销售数量")
@@ -292,6 +298,7 @@ public class SaleOrderWithOutBo extends BaseBo<SaleOrderWithOutDto> {
       this.spec = product.getSpec();
       this.categoryName = product.getCategoryName();
       this.brandName = product.getBrandName();
+      this.inquiryProduct = product.getInquiryProduct();
 
       this.orderNum = dto.getOrderNum();
       this.salePrice = dto.getOriPrice();
