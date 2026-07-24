@@ -2,8 +2,8 @@ version: "1.0"
 name: 构建、部署到自有主机
 displayName: 构建、部署到自有主机
 stages:
-- name: 后端构建
-  displayName: 后端构建
+- name: 构建
+  displayName: 构建
   strategy: naturally
   trigger: auto
   steps:
@@ -37,7 +37,7 @@ stages:
     - '# 注意事项：如无需自定义settings配置且需要私有依赖仓库，可在该任务配置《私有仓库》处添加私有依赖'
     - '# mvn -U clean package -s ./settings.xml'
     artifacts:
-    - name: BACKEND_ARTIFACT
+    - name: BUILD_ARTIFACT
       path:
       - xingyun-api.jar
       type: .tar.gz
@@ -50,37 +50,6 @@ stages:
       resource:
         cpu: "2"
         memory: "4"
-- name: 前端构建
-  displayName: 前端构建
-  strategy: naturally
-  trigger: auto
-  steps:
-  - step: build@nodejs
-    name: frontend_build
-    displayName: 前端构建
-    nodeVersion: 18.16.0
-    commands:
-    - '# 设置NPM源，提升安装速度'
-    - npm config set registry https://registry.npmmirror.com
-    - pnpm config set registry https://registry.npmmirror.com
-    - ""
-    - '# 执行编译命令'
-    - npm install -g pnpm@9.7.1
-    - cd frontend
-    - npx pnpm@9.7.1 install --frozen-lockfile --force
-    - npx pnpm@9.7.1 run build
-    artifacts:
-    - name: FRONTEND_ARTIFACT
-      path:
-      - frontend/dist
-      type: .tar.gz
-    caches:
-    - "~/.npm"
-    strategy:
-      retry: "0"
-      resource:
-        cpu: "4"
-        memory: "8"
 - name: 部署
   displayName: 部署
   strategy: naturally
@@ -90,38 +59,19 @@ stages:
     name: deploy
     displayName: 主机部署
     deployArtifact:
-    - name: backend
+    - name: output
       target: "~/gitee_go/deploy"
       source: build
-      dependArtifact: BACKEND_ARTIFACT
+      dependArtifact: BUILD_ARTIFACT
       artifactRepository: default
       artifactName: output
       artifactVersion: latest
-    - name: frontend
-      target: "~/gitee_go/deploy"
-      source: 前端构建
-      dependArtifact: FRONTEND_ARTIFACT
-      artifactRepository: default
-      artifactName: frontend
-      artifactVersion: latest
     script: |-
       # 请在此输入部署脚本，如启动Java应用如下
-#      mv /root/gitee_go/deploy/backend.tar.gz /www/wwwroot/xingyun
-#      mv /root/gitee_go/deploy/frontend.tar.gz /www/wwwroot/xingyun
-#      cd /www/wwwroot/xingyun
-#      rm -rf dist.new
-#      mkdir -p dist.new
-#      tar -xzf frontend.tar.gz -C dist.new
-#      rm -rf dist
-#      mv dist.new/dist dist
-#      rm -rf frontend.tar.gz
-#      rm -rf dist.new
-#      rm -rf xingyun-api.jar
-#      tar -xzf backend.tar.gz -O > xingyun-api.jar
-#      chmod 664 xingyun-api.jar
-#      chmod -R 775 dist
-#      sudo /usr/bin/systemctl restart xingyun-api-prod
-#      sudo /www/server/nginx/sbin/nginx -s reload
+      mv /root/gitee_go/deploy/output.tar.gz /www/wwwroot/xingyun
+      cd /www/wwwroot/xingyun
+      rm -rf target
+      tar -xzf output.tar.gz -O > xingyun-api.jar.new
     hostGroupID:
       ID: test
       hostID:
@@ -133,16 +83,12 @@ triggers:
   trigger: auto
   push:
     branches:
-      prefix: []
       precise:
-      - deploy0723
-      include: []
+        - deploy072311
   pr:
     branches:
-      prefix: []
       precise:
-      - deploy0723
-      include: []
+        - deploy072311
 notify: []
 strategy:
   blocking: true
