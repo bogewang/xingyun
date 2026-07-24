@@ -57,6 +57,12 @@
               @click="exportList"
               >导出
             </a-button>
+            <a-button
+              v-permission="['report:sale-profit:product:query']"
+              :icon="h(SyncOutlined)"
+              @click="openCostRefresh"
+              >成本重算
+            </a-button>
           </a-space>
         </template>
 
@@ -83,6 +89,23 @@
           <div ref="trendChartRef" class="trend-chart"></div>
         </div>
       </a-modal>
+
+      <a-modal
+        v-model:open="costRefreshVisible"
+        title="成本重算"
+        :confirm-loading="costRefreshLoading"
+        @ok="executeCostRefresh"
+      >
+        <a-form layout="vertical">
+          <a-form-item label="日期范围">
+            <a-range-picker
+              v-model:value="costRefreshDateRange"
+              value-format="YYYY-MM-DD"
+              :placeholder="['开始日期', '结束日期']"
+            />
+          </a-form-item>
+        </a-form>
+      </a-modal>
     </page-wrapper>
   </div>
 </template>
@@ -90,8 +113,9 @@
 <script>
   import { h, defineComponent, markRaw } from 'vue';
   import moment from 'moment';
-  import { SearchOutlined, DownloadOutlined } from '@ant-design/icons-vue';
+  import { SearchOutlined, DownloadOutlined, SyncOutlined } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
+  import { monthEndRecalculate } from '@/api/sc/sale/out';
   import { buildSortPageVo } from '@/utils/utils';
   import * as echarts from 'echarts';
   import {
@@ -112,6 +136,7 @@
         h,
         SearchOutlined,
         DownloadOutlined,
+        SyncOutlined,
       };
     },
     data() {
@@ -121,6 +146,9 @@
         trendTitle: '商品销售趋势',
         trendDatas: [],
         trendEmpty: false,
+        costRefreshVisible: false,
+        costRefreshLoading: false,
+        costRefreshDateRange: this.getDefaultOrderDateRange(),
         searchFormData: {
           productName: '',
           productSpec: '',
@@ -455,6 +483,32 @@
           return `${item.marker}${item.seriesName}：${value}`;
         });
         return [`日期：${title}`, ...lines].join('<br/>');
+      },
+      openCostRefresh() {
+        this.costRefreshDateRange = this.getDefaultOrderDateRange();
+        this.costRefreshVisible = true;
+      },
+      executeCostRefresh() {
+        const [beginDate, endDate] = this.costRefreshDateRange || [];
+        if (!beginDate || !endDate) {
+          return;
+        }
+        this.costRefreshLoading = true;
+        monthEndRecalculate({
+          beginDate,
+          endDate,
+        })
+          .then((res) => {
+            createSuccess(
+              `重算完成：更新单据 ${res.updatedSheetCount} 条，明细 ${res.updatedDetailCount} 条` +
+                (res.notFilledCount > 0 ? `，${res.notFilledCount} 条未填充` : ''),
+            );
+            this.costRefreshVisible = false;
+            this.search();
+          })
+          .finally(() => {
+            this.costRefreshLoading = false;
+          });
       },
       disposeTrendChart() {
         if (this._trendChart) {
