@@ -62,6 +62,12 @@ public class ReceiveSheetDetailExportModel extends BaseBo<ReceiveSheetDetail> im
     @ExcelProperty("单据备注")
     private String sheetDescription;
 
+    /**
+     * 是否询价商品。
+     */
+    @ExcelProperty("是否询价商品")
+    private String inquiryProduct;
+
     public ReceiveSheetDetailExportModel() {
     }
 
@@ -104,5 +110,16 @@ public class ReceiveSheetDetailExportModel extends BaseBo<ReceiveSheetDetail> im
         if (supplier != null) {
             this.setSupplierName(supplier.getName());
         }
+    }
+
+    /**
+     * 将询价商品标识转换为导出文本。
+     *
+     * @param inquiryProduct 询价商品标识
+     * @return 导出文本
+     */
+    public static String formatInquiryProduct(Boolean inquiryProduct) {
+
+        return Boolean.TRUE.equals(inquiryProduct) ? "是" : "否";
     }
 }

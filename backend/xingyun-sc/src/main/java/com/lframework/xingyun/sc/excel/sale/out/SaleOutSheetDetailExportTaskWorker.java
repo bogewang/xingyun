@@ -34,7 +34,9 @@ public class SaleOutSheetDetailExportTaskWorker implements
 
     @Override
     public SaleOutSheetDetailExportModel exportData(QuerySaleOutSheetDetailDto data) {
-        return new SaleOutSheetDetailExportModel(data);
+        SaleOutSheetDetailExportModel model = new SaleOutSheetDetailExportModel(data);
+        model.setInquiryProduct(SaleOutSheetDetailExportModel.formatInquiryProduct(data.getInquiryProduct()));
+        return model;
     }
 
     @Override

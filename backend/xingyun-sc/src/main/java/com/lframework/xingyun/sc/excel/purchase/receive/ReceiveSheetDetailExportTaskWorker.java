@@ -45,6 +45,7 @@ public class ReceiveSheetDetailExportTaskWorker implements
     model.setProductionDate(data.getProductionDate());
     model.setDescription(data.getDescription());
     model.setSheetDescription(data.getSheetDescription());
+    model.setInquiryProduct(ReceiveSheetDetailExportModel.formatInquiryProduct(data.getInquiryProduct()));
     return model;
   }
 
