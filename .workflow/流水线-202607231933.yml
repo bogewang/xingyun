@@ -95,14 +95,14 @@ stages:
       source: 后端构建
       dependArtifact: BACKEND_ARTIFACT
       artifactRepository: default
-      artifactName: backend
+      artifactName: output
       artifactVersion: latest
     - name: frontend
       target: "~/gitee_go/deploy"
       source: 前端构建
       dependArtifact: FRONTEND_ARTIFACT
       artifactRepository: default
-      artifactName: frontend
+      artifactName: output
       artifactVersion: latest
     script: |-
       # 请在此输入部署脚本，如启动Java应用如下
