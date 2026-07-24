@@ -69,10 +69,11 @@ stages:
     - cd frontend
     - npx pnpm@9.7.1 install --frozen-lockfile --force
     - npx pnpm@9.7.1 run build
+    - cp frontend/dist .
     artifacts:
     - name: FRONTEND_ARTIFACT
       path:
-      - frontend/dist
+      - dist
       type: .tar.gz
     caches:
     - "~/.npm"
@@ -104,7 +105,24 @@ stages:
       artifactRepository: default
       artifactName: frontend
       artifactVersion: latest
-    script: '# 请在此输入部署脚本，如启动Java应用如下'
+    script: |-
+      # 请在此输入部署脚本，如启动Java应用如下
+      mv /root/gitee_go/deploy/backend.tar.gz /www/wwwroot/xingyun
+      mv /root/gitee_go/deploy/frontend.tar.gz /www/wwwroot/xingyun
+      cd /www/wwwroot/xingyun
+      rm -rf dist.new
+      mkdir -p dist.new
+      tar -xzf frontend.tar.gz -C dist.new
+      rm -rf dist
+      mv dist.new/dist dist
+      rm -rf frontend.tar.gz
+      rm -rf dist.new
+      rm -rf xingyun-api.jar
+      tar -xzf backend.tar.gz -O > xingyun-api.jar
+      chmod 664 xingyun-api.jar
+      chmod -R 775 dist
+      sudo /usr/bin/systemctl restart xingyun-api-prod
+      sudo /www/server/nginx/sbin/nginx -s reload
     hostGroupID:
       ID: test
       hostID:
