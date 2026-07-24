@@ -69,4 +69,16 @@
         ORDER BY s.order_date DESC, d.product_id
 
     </select>
+
+    <select id="getMonthWtdAvgCostPriceList"
+            resultMap="QueryReceiveSheetDetailDto">
+        SELECT d.product_id,
+               SUM(d.tax_amount) / NULLIF(SUM(d.order_num), 0) AS tax_price
+        FROM tbl_receive_sheet_detail d
+                 INNER JOIN tbl_receive_sheet s ON d.sheet_id = s.id
+        WHERE s.order_date <![CDATA[ >= ]]> #{beginDate}
+          AND s.order_date <![CDATA[ <= ]]> #{endDate}
+          AND d.is_gift = 0
+        GROUP BY d.product_id
+    </select>
 </mapper>
