@@ -84,7 +84,7 @@ stages:
           retry: "0"
           resource:
             cpu: "2"
-            memory: "4"
+            memory: "6"
 
   # 部署阶段
   - name: 部署
