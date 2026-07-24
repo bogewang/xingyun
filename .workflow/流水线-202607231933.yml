@@ -80,8 +80,8 @@ stages:
     strategy:
       retry: "0"
       resource:
-        cpu: "2"
-        memory: "4"
+        cpu: "4"
+        memory: "8"
 - name: 部署
   displayName: 部署
   strategy: naturally
@@ -126,9 +126,9 @@ stages:
       sudo /usr/bin/systemctl restart xingyun-api-prod
       sudo /www/server/nginx/sbin/nginx -s reload
     hostGroupID:
-      ID: test
+      ID: prod
       hostID:
-      - 6436ea08-ced0-4883-95cf-d96016ca71a4
+      - b2d53d39-68d3-4767-b0f3-bc82ba7b4c29
     notify: []
     strategy:
       retry: "0"
