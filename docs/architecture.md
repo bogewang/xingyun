@@ -12,6 +12,7 @@ Maven 多模块项目（`backend/pom.xml` packaging=pom）。所有模块均扫�
 | `backend/xingyun-settle` | 结算：供应商发票、预付款、对账、结算单 |
 | `backend/xingyun-comp` | 对照/竞品模块 |
 
+
 ### 后端包约定（各模块通用）
 
 每个模块遵循一致的分层结构。并非所有层在每个模块中都存在：

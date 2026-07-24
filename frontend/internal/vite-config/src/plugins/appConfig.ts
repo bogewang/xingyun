@@ -1,8 +1,8 @@
 import GenerateConfig from 'unplugin-config/vite';
-import {type PluginOption} from 'vite';
+import { type PluginOption } from 'vite';
 
-import {getEnvConfig} from '../utils/env';
-import {strToHex} from '../utils/hash';
+import { getEnvConfig } from '../utils/env';
+import { strToHex } from '../utils/hash';
 
 const GLOBAL_CONFIG_FILE_NAME = '_app.config.js';
 // This constant sets the output directory for the Vite package

@@ -1,0 +1,144 @@
+version: "1.0"
+name: 构建、部署到自有主机
+displayName: 构建、部署到自有主机
+stages:
+- name: 构建
+  displayName: 构建
+  strategy: naturally
+  trigger: auto
+  steps:
+  - step: build@maven
+    name: backend_build
+    displayName: Maven 构建
+    jdkVersion: "8"
+    mavenVersion: 3.3.9
+    commands:
+    - '# 功能：打包'
+    - '# 参数说明：'
+    - '#    -Dmaven.test.skip=true：跳过单元测试'
+    - '#    -U：每次构建检查依赖更新，可避免缓存中快照版本依赖不更新问题，但会牺牲部分性能'
+    - '#    -e -X ：打印调试信息，定位疑难构建问题时建议使用此参数构建'
+    - '#    -B：以batch模式运行，可避免日志打印时出现ArrayIndexOutOfBoundsException异常'
+    - '# 使用场景：打包项目且不需要执行单元测试时使用'
+    - set -e
+    - export MAVEN_REPO=$PWD/.m2/repository
+    - rm -rf .gitee-go-jugg
+    - git clone --depth 1 --branch master https://gitee.com/foren236598164/jugg .gitee-go-jugg
+    - mvn -B -N -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+    - mvn -B -U -f .gitee-go-jugg/pom.xml clean install -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+    - find $MAVEN_REPO/com/lframework -maxdepth 4 -type f | sort
+    - test -f $MAVEN_REPO/com/lframework/parent/4.1.2-SNAPSHOT/parent-4.1.2-SNAPSHOT.pom
+    - test -f $MAVEN_REPO/com/lframework/mq-starter/4.1.2-SNAPSHOT/mq-starter-4.1.2-SNAPSHOT.pom
+    - mvn -U -f backend/pom.xml clean package -DskipTests -Dmaven.repo.local=$MAVEN_REPO
+    - cp backend/xingyun-api/target/xingyun-api.jar .
+    - ""
+    - '# 功能：自定义settings配置'
+    - '# 使用场景：如需手工指定settings.xml，可使用如下方式'
+    - '# 注意事项：如无需自定义settings配置且需要私有依赖仓库，可在该任务配置《私有仓库》处添加私有依赖'
+    - '# mvn -U clean package -s ./settings.xml'
+    artifacts:
+    - name: BACKEND_ARTIFACT
+      path:
+      - xingyun-api.jar
+      type: .tar.gz
+    settings: []
+    caches:
+    - "~/.m2"
+    notify: []
+    strategy:
+      retry: "0"
+      resource:
+        cpu: "2"
+        memory: "4"
+  - step: build@nodejs
+    name: 13f53468
+    displayName: 前端构建
+    nodeVersion: 18.16.0
+    commands:
+    - '# 设置NPM源，提升安装速度'
+    - npm config set registry https://registry.npmmirror.com
+    - pnpm config set registry https://registry.npmmirror.com
+    - ""
+    - '# 执行编译命令'
+    - npm install -g pnpm@9.7.1
+    - cd frontend
+    - npx pnpm@9.7.1 install --frozen-lockfile --force
+    - npx pnpm@9.7.1 run build
+    artifacts:
+    - name: FRONTEND_ARTIFACT
+      path:
+      - frontend/dist
+      type: .tar.gz
+    caches:
+    - "~/.npm"
+    strategy:
+      retry: "0"
+      resource:
+        cpu: "2"
+        memory: "5"
+- name: 部署
+  displayName: 部署
+  strategy: naturally
+  trigger: auto
+  steps:
+  - step: deploy@agent
+    name: deploy
+    displayName: 主机部署
+    deployArtifact:
+    - name: backend
+      target: "~/gitee_go/deploy"
+      source: build
+      dependArtifact: BACKEND_ARTIFACT
+      artifactRepository: default
+      artifactName: backend
+      artifactVersion: latest
+    - name: frontend
+      target: "~/gitee_go/deploy"
+      source: build
+      dependArtifact: FRONTEND_ARTIFACT
+      artifactRepository: default
+      artifactName: frontend
+      artifactVersion: latest
+    script: |-
+      # 请在此输入部署脚本，如启动Java应用如下
+      mv /root/gitee_go/deploy/backend.tar.gz /www/wwwroot/xingyun
+      mv /root/gitee_go/deploy/frontend.tar.gz /www/wwwroot/xingyun
+      cd /www/wwwroot/xingyun
+      rm -rf dist.new
+      mkdir -p dist.new
+      tar -xzf frontend.tar.gz -C dist.new
+      rm -rf dist
+      mv dist.new/dist dist
+      rm -rf frontend.tar.gz
+      rm -rf dist.new
+      rm -rf xingyun-api.jar
+      tar -xzf backend.tar.gz -O > xingyun-api.jar
+      chmod 664 xingyun-api.jar
+      chmod -R 775 dist
+      sudo /usr/bin/systemctl restart xingyun-api-prod
+      sudo /www/server/nginx/sbin/nginx -s reload
+
+    hostGroupID:
+      ID: test
+      hostID:
+      - 6436ea08-ced0-4883-95cf-d96016ca71a4
+    notify: []
+    strategy:
+      retry: "0"
+triggers:
+  trigger: auto
+  push:
+    branches:
+      prefix: []
+      precise:
+      - deploy07231111
+      include: []
+  pr:
+    branches:
+      prefix: []
+      precise:
+      - deploy07231111
+      include: []
+notify: []
+strategy:
+  blocking: true
