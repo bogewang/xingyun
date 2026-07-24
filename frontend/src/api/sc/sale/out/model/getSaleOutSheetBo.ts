@@ -189,6 +189,11 @@ export interface OrderDetailBo {
   productName: string;
 
   /**
+   * 是否询价商品
+   */
+  inquiryProduct: boolean | null;
+
+  /**
    * SKU编号
    */
   skuCode: string;

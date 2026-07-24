@@ -92,6 +92,11 @@ public class SaleProductDto implements BaseDto, Serializable {
   private BigDecimal taxRate;
 
   /**
+   * 是否询价商品
+   */
+  private Boolean inquiryProduct;
+
+  /**
    * 状态
    */
   private Boolean available;

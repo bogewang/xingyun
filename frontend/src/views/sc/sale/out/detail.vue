@@ -54,6 +54,11 @@
                 :toolbar-config="toolbarConfig"
                 :custom-config="{}"
               >
+                <template #inquiryProduct_default="{ row }">
+                  <span :class="formatInquiryProduct(row.inquiryProduct).className">
+                    {{ formatInquiryProduct(row.inquiryProduct).text }}
+                  </span>
+                </template>
                 <template #taxAmount_default="{ row }">
                   <span v-if="isFloatGeZero(row.taxPrice) && isFloatGeZero(row.outNum)">{{
                     getNumber(mul(row.taxPrice, row.outNum), 2)
@@ -142,6 +147,7 @@
   import JFormItem from '@/components/JFormItem';
   import { createSuccess } from '@/hooks/web/msg';
   import { usePermission } from '/@/hooks/web/usePermission';
+  import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
 
   export default defineComponent({
     components: {
@@ -164,6 +170,7 @@
         isFloatGeZero,
         getNumber,
         mul,
+        formatInquiryProduct,
         hasPermission,
         hasCostPrice: (row) =>
           row && row.costPrice !== null && row.costPrice !== undefined && row.costPrice !== '',
@@ -190,6 +197,12 @@
           { type: 'seq', width: 50 },
           { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 150 },
+          {
+            field: 'inquiryProduct',
+            title: '是否询价商品',
+            width: 120,
+            slots: { default: 'inquiryProduct_default' },
+          },
           { field: 'categoryName', title: '商品分类', width: 80 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },

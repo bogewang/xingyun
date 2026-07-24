@@ -48,6 +48,12 @@ public class QuerySaleOutSheetDetailBo extends BaseBo<QuerySaleOutSheetDetailDto
   @ApiModelProperty("商品名称")
   private String productName;
 
+  /**
+   * 是否询价商品
+   */
+  @ApiModelProperty("是否询价商品")
+  private Boolean inquiryProduct;
+
   @ApiModelProperty("商品SKU编号")
   private String skuCode;
 

@@ -444,7 +444,7 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
 
         PageHelperUtil.startPage(pageIndex, pageSize);
 
-        List<SaleProductDto> datas = getBaseMapper().querySaleList(vo);
+        List<SaleProductDto> datas = getBaseMapper().querySaleList(vo, vo.getScId());
         fillProductUnits(datas);
         PageResult<SaleProductDto> pageResult = PageResultUtil.convert(new PageInfo<>(datas));
 

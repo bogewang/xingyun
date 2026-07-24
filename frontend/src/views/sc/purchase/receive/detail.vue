@@ -54,6 +54,11 @@
                       getNumber(mul(row.purchasePrice, row.receiveNum), 2)
                     }}</span>
                   </template>
+                  <template #inquiryProduct_default="{ row }">
+                    <span :class="formatInquiryProduct(row.inquiryProduct).className">
+                      {{ formatInquiryProduct(row.inquiryProduct).text }}
+                    </span>
+                  </template>
                 </vxe-grid>
               </div>
 
@@ -106,6 +111,7 @@ import {RECEIVE_SHEET_STATUS} from '@/enums/biz/receiveSheetStatus';
 import OrderTimeLine from '@/components/OrderTimeLine';
 import PrintDialog from '/@/components/PrintDialog';
 import { createSuccess } from '@/hooks/web/msg';
+import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
 
 export default defineComponent({
     components: {
@@ -126,6 +132,7 @@ export default defineComponent({
         isFloatGeZero,
         getNumber,
         mul,
+        formatInquiryProduct,
         RECEIVE_SHEET_STATUS,
       };
     },
@@ -149,6 +156,12 @@ export default defineComponent({
           { type: 'seq', width: 50 },
           { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 260 },
+          {
+            field: 'inquiryProduct',
+            title: '是否询价商品',
+            width: 120,
+            slots: { default: 'inquiryProduct_default' },
+          },
           { field: 'categoryName', title: '商品分类', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },

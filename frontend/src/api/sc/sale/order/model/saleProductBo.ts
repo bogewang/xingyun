@@ -90,6 +90,11 @@ export interface SaleProductBo {
   taxRate: number;
 
   /**
+   * 是否询价商品
+   */
+  inquiryProduct: boolean | null;
+
+  /**
    * 仓库ID
    */
   scId: string;

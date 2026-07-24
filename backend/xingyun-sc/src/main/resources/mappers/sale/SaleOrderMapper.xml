@@ -95,6 +95,7 @@
         <result column="sale_price" property="salePrice"/>
         <result column="purchase_price" property="purchasePrice"/>
         <result column="sale_tax_rate" property="taxRate"/>
+        <result column="inquiry_product" property="inquiryProduct"/>
         <result column="available" property="available"/>
     </resultMap>
 
@@ -174,6 +175,7 @@
             g.unit,
             g.purchase_price,
             g.sale_price,
+            g.inquiry_product,
             ps.stock_num AS stock_num,
             g.sale_tax_rate,
             g.available

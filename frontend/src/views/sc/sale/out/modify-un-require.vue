@@ -86,6 +86,12 @@
             </a-space>
           </template>
 
+          <template #inquiryProduct_default="{ row }">
+            <span :class="formatInquiryProduct(row.inquiryProduct).className">
+              {{ formatInquiryProduct(row.inquiryProduct).text }}
+            </span>
+          </template>
+
           <!-- 商品名称 列自定义内容 -->
           <template #productName_default="{ row, rowIndex }">
             <a-auto-complete
@@ -123,6 +129,13 @@
                             :key="star"
                             two-tone-color="#faad14"
                           />
+                        </span>
+                      </template>
+                    </vxe-column>
+                    <vxe-column field="inquiryProduct" title="是否询价商品" width="120">
+                      <template #default="{ row: product }">
+                        <span :class="formatInquiryProduct(product.inquiryProduct).className">
+                          {{ formatInquiryProduct(product.inquiryProduct).text }}
                         </span>
                       </template>
                     </vxe-column>
@@ -286,6 +299,7 @@
 
       <batch-add-product
         ref="batchAddProductDialog"
+        :show-inquiry-product="true"
         :sc-id="formData.scId"
         @confirm="batchAddProduct"
       />
@@ -375,6 +389,7 @@
   import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import { requestCustomerSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
+  import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
   import { useUserStoreWithOut } from '/@/store/modules/user';
@@ -412,6 +427,7 @@
         isEmpty,
         isFloatGeZero,
         mul,
+        formatInquiryProduct,
         hasCostPrice: (row) =>
           row &&
           row.costPrice !== null &&
@@ -466,6 +482,12 @@
             title: '商品名称',
             width: 150,
             slots: { default: 'productName_default' },
+          },
+          {
+            field: 'inquiryProduct',
+            title: '是否询价商品',
+            width: 120,
+            slots: { default: 'inquiryProduct_default' },
           },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 50, slots: { default: 'unit_default' } },

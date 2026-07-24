@@ -1,6 +1,12 @@
 package com.lframework.xingyun.sc.bo.purchase.receive;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import com.lframework.starter.web.core.utils.ApplicationUtil;
+import com.lframework.xingyun.sc.dto.purchase.PurchaseProductDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
+import com.lframework.xingyun.sc.service.purchase.PurchaseOrderService;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
@@ -9,6 +15,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.springframework.context.ApplicationContext;
 
 /**
  * 采购入库打印模型字段测试。
@@ -44,10 +51,56 @@ class PrintReceiveSheetBoTest {
         "businessNum", "taxPrice", "taxAmount", "isGift", "taxRate", "description",
         "orderNo", "purchaseOrderDetailId", "productionDate", "productCode",
         "productName", "skuCode", "externalCode", "receiveNum", "purchasePrice",
-        "receiveAmount"));
+        "receiveAmount", "inquiryProduct"));
 
     Assert.assertTrue(fieldNames.containsAll(expectedFields),
         "采购入库打印明细缺少字段：" + difference(expectedFields, fieldNames));
+  }
+
+  /**
+   * 确认询价商品标识能从收货明细 DTO 原样映射到打印明细。
+   */
+  @Test
+  void shouldMapInquiryProductToPrintDetail() throws ReflectiveOperationException {
+    synchronized (ApplicationUtil.class) {
+      ApplicationContext originalApplicationContext = getApplicationContext();
+      ApplicationContext applicationContext = mock(ApplicationContext.class);
+      PurchaseOrderService purchaseOrderService = mock(PurchaseOrderService.class);
+      when(applicationContext.getBean(PurchaseOrderService.class)).thenReturn(purchaseOrderService);
+      PurchaseProductDto product = new PurchaseProductDto();
+      product.setCode("P001");
+      product.setName("询价商品");
+      when(purchaseOrderService.getPurchaseById("product-1")).thenReturn(product);
+      new ApplicationUtil().setApplicationContext(applicationContext);
+
+      try {
+        ReceiveSheetFullDto.OrderDetailDto inquiryDetail = new ReceiveSheetFullDto.OrderDetailDto();
+        inquiryDetail.setProductId("product-1");
+        inquiryDetail.setInquiryProduct(true);
+        ReceiveSheetFullDto.OrderDetailDto normalDetail = new ReceiveSheetFullDto.OrderDetailDto();
+        normalDetail.setProductId("product-1");
+        normalDetail.setInquiryProduct(false);
+
+        Assert.assertTrue(
+            new PrintReceiveSheetBo.OrderDetailBo(inquiryDetail).getInquiryProduct());
+        Assert.assertFalse(
+            new PrintReceiveSheetBo.OrderDetailBo(normalDetail).getInquiryProduct());
+      } finally {
+        new ApplicationUtil().setApplicationContext(originalApplicationContext);
+      }
+    }
+  }
+
+  /**
+   * 获取测试开始前的全局 Spring 上下文。
+   *
+   * @return 当前全局 Spring 上下文
+   * @throws ReflectiveOperationException 反射读取失败
+   */
+  private ApplicationContext getApplicationContext() throws ReflectiveOperationException {
+    Field field = ApplicationUtil.class.getDeclaredField("APPLICATION_CONTEXT");
+    field.setAccessible(true);
+    return (ApplicationContext) field.get(null);
   }
 
   /**
