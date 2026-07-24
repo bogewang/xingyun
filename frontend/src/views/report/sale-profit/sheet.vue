@@ -80,6 +80,12 @@
               @click="exportList"
               >导出
             </a-button>
+            <a-button
+              v-permission="['report:sale-profit:query']"
+              :icon="h(SyncOutlined)"
+              @click="openCostRefresh"
+              >成本重算
+            </a-button>
           </a-space>
         </template>
 
@@ -122,6 +128,23 @@
       </a-modal>
 
       <detail :id="id" ref="viewDialog" />
+
+      <a-modal
+        v-model:open="costRefreshVisible"
+        title="成本重算"
+        :confirm-loading="costRefreshLoading"
+        @ok="executeCostRefresh"
+      >
+        <a-form layout="vertical">
+          <a-form-item label="日期范围">
+            <a-range-picker
+              v-model:value="costRefreshDateRange"
+              value-format="YYYY-MM-DD"
+              :placeholder="['开始日期', '结束日期']"
+            />
+          </a-form-item>
+        </a-form>
+      </a-modal>
     </page-wrapper>
   </div>
 </template>
@@ -129,8 +152,9 @@
 <script>
   import { h, defineComponent } from 'vue';
   import moment from 'moment';
-  import { SearchOutlined, DownloadOutlined } from '@ant-design/icons-vue';
+  import { SearchOutlined, DownloadOutlined, SyncOutlined } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
+  import { monthEndRecalculate } from '@/api/sc/sale/out';
   import { buildSortPageVo } from '@/utils/utils';
   import echarts from '/@/utils/lib/echarts';
   import Detail from '@/views/sc/sale/out/detail.vue';
@@ -153,6 +177,7 @@
         h,
         SearchOutlined,
         DownloadOutlined,
+        SyncOutlined,
       };
     },
     data() {
@@ -168,6 +193,9 @@
         sheetAmountPieChart: null,
         sheetProfitPieChart: null,
         sheetChartEmpty: false,
+        costRefreshVisible: false,
+        costRefreshLoading: false,
+        costRefreshDateRange: this.getDefaultOrderDateRange(),
         searchFormData: {
           code: '',
           productName: '',
@@ -574,6 +602,32 @@
             },
           ],
         });
+      },
+      openCostRefresh() {
+        this.costRefreshDateRange = this.getDefaultOrderDateRange();
+        this.costRefreshVisible = true;
+      },
+      executeCostRefresh() {
+        const [beginDate, endDate] = this.costRefreshDateRange || [];
+        if (!beginDate || !endDate) {
+          return;
+        }
+        this.costRefreshLoading = true;
+        monthEndRecalculate({
+          beginDate,
+          endDate,
+        })
+          .then((res) => {
+            createSuccess(
+              `重算完成：更新单据 ${res.updatedSheetCount} 条，明细 ${res.updatedDetailCount} 条` +
+                (res.notFilledCount > 0 ? `，${res.notFilledCount} 条未填充` : ''),
+            );
+            this.costRefreshVisible = false;
+            this.search();
+          })
+          .finally(() => {
+            this.costRefreshLoading = false;
+          });
       },
       disposeSheetChart() {
         ['sheetAmountPieChart', 'sheetProfitPieChart'].forEach((key) => {
