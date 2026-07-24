@@ -135,6 +135,11 @@
         <template #code_default="{ row }">
           <a @click="openModifyPage(row)">{{ row.code }}</a>
         </template>
+        <template #inquiryProduct_default="{ row }">
+          <span :class="formatInquiryProduct(row.inquiryProduct).className">
+            {{ formatInquiryProduct(row.inquiryProduct).text }}
+          </span>
+        </template>
         <template #costPrice_default="{ row }">
           {{ formatPrice(row.costPrice) }}
         </template>
@@ -311,6 +316,7 @@
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import { createError, createSuccess, createSuccessAutoClose } from '@/hooks/web/msg';
   import { usePermission } from '/@/hooks/web/usePermission';
+  import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
 
   const createDefaultSearchFormData = () => ({
     code: '',
@@ -344,6 +350,7 @@
         SearchOutlined,
         EditOutlined,
         DownloadOutlined,
+        formatInquiryProduct,
         SETTLE_STATUS,
         SALE_OUT_SHEET_STATUS,
       };
@@ -408,6 +415,12 @@
           },
           { field: 'customerName', title: '客户名称', width: 140 },
           { field: 'productName', title: '商品名称', width: 180 },
+          {
+            field: 'inquiryProduct',
+            title: '是否询价商品',
+            width: 120,
+            slots: { default: 'inquiryProduct_default' },
+          },
           { field: 'spec', title: '规格', width: 100 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },

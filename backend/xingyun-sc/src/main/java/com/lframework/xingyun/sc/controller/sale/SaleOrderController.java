@@ -337,7 +337,9 @@ public class SaleOrderController extends DefaultBaseController {
             "sale:return:add", "sale:return:modify" })
     @GetMapping("/product/list")
     public InvokeResult<PageResult<SaleProductBo>> querySaleProductList(@Valid QuerySaleProductVo vo) {
-
+        if (StringUtils.isBlank(vo.getScId())) {
+            vo.setScId(storeCenterService.getDefaultStoreId());
+        }
         PageResult<SaleProductDto> pageResult = saleOrderService.querySaleList(getPageIndex(vo),
                 getPageSize(vo), vo);
 

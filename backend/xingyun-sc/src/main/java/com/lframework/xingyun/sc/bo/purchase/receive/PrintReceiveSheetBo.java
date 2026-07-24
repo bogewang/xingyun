@@ -433,6 +433,13 @@ public class PrintReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
      */
     @ApiModelProperty("规格型号")
     private String spec;
+
+    /**
+     * 是否询价商品
+     */
+    @ApiModelProperty("是否询价商品")
+    private Boolean inquiryProduct;
+
     /**
      * 序号
      */

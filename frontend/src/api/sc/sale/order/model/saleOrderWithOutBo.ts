@@ -102,6 +102,11 @@ export interface DetailBo {
   brandName: string;
 
   /**
+   * 是否询价商品
+   */
+  inquiryProduct: boolean | null;
+
+  /**
    * 销售数量
    */
   orderNum: number;

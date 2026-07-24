@@ -132,6 +132,12 @@ public class SaleProductBo extends BaseBo<SaleProductDto> {
     private BigDecimal taxRate;
 
     /**
+     * 是否询价商品
+     */
+    @ApiModelProperty("是否询价商品")
+    private Boolean inquiryProduct;
+
+    /**
      * 仓库ID
      */
     @ApiModelProperty(value = "仓库ID", hidden = true)

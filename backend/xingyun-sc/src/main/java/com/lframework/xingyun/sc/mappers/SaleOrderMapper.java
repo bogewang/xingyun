@@ -109,7 +109,7 @@ public interface SaleOrderMapper extends BaseMapper<SaleOrder> {
       @DataPermission(template = "brand", alias = "b"),
       @DataPermission(template = "category", alias = "c")
   })
-  List<SaleProductDto> querySaleList(@Param("vo") QuerySaleProductVo vo);
+  List<SaleProductDto> querySaleList(@Param("vo") QuerySaleProductVo vo, @Param("scId") String scId);
 
   /**
    * 根据ID查询

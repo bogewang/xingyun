@@ -152,6 +152,11 @@ public class ReceiveSheetFullDto implements BaseDto, Serializable {
     private String productId;
 
     /**
+     * 是否询价商品
+     */
+    private Boolean inquiryProduct;
+
+    /**
      * 收货数量
      */
     private BigDecimal orderNum;

@@ -113,6 +113,11 @@
         <template #isGift_default="{ row }">
           {{ row.isGift ? '是' : '否' }}
         </template>
+        <template #inquiryProduct_default="{ row }">
+          <span :class="formatInquiryProduct(row.inquiryProduct).className">
+            {{ formatInquiryProduct(row.inquiryProduct).text }}
+          </span>
+        </template>
       </vxe-grid>
     </page-wrapper>
 
@@ -142,6 +147,7 @@
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { createSuccess } from '@/hooks/web/msg';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
+  import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
 
   export default defineComponent({
     name: 'ReceiveSheetDetailList',
@@ -159,6 +165,7 @@
         DownloadOutlined,
         RECEIVE_SHEET_STATUS,
         SETTLE_STATUS,
+        formatInquiryProduct,
       };
     },
     data() {
@@ -205,6 +212,12 @@
           { field: 'supplierName', title: '供应商名称', width: 140 },
           { field: 'productCode', title: '商品编号', width: 120 },
           { field: 'productName', title: '商品名称', width: 180 },
+          {
+            field: 'inquiryProduct',
+            title: '是否询价商品',
+            width: 120,
+            slots: { default: 'inquiryProduct_default' },
+          },
           { field: 'spec', title: '规格', width: 100 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },

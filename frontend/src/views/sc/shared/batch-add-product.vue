@@ -20,7 +20,7 @@
         highlight-hover-row
         keep-source
         row-id="productId"
-        height="500"
+        height="800"
         :proxy-config="proxyConfig"
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
@@ -58,6 +58,11 @@
             <a-button type="primary" :icon="h(SearchOutlined)" @click="search">查询</a-button>
           </a-space>
         </template>
+        <template #inquiryProduct_default="{ row }">
+          <span :class="formatInquiryProduct(row.inquiryProduct).className">
+            {{ formatInquiryProduct(row.inquiryProduct).text }}
+          </span>
+        </template>
       </vxe-grid>
     </div>
     <template #footer>
@@ -79,6 +84,7 @@
   import { createError } from '@/hooks/web/msg';
   import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
+  import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
 
   export default defineComponent({
     name: 'SharedBatchAddProduct',
@@ -102,11 +108,16 @@
         type: Boolean,
         default: false,
       },
+      showInquiryProduct: {
+        type: Boolean,
+        default: false,
+      },
     },
     setup() {
       return {
         h,
         SearchOutlined,
+        formatInquiryProduct,
       };
     },
     data() {
@@ -128,14 +139,20 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
-          { field: 'productCode', title: '商品编号', width: 120 },
-          { field: 'productName', title: '商品名称', minWidth: 260 },
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
-          { field: 'externalCode', title: '商品简码', width: 120 },
+          { field: 'productName', title: '商品名称', minWidth: 150 },
+          ...(this.showInquiryProduct
+            ? [
+                {
+                  field: 'inquiryProduct',
+                  title: '是否询价商品',
+                  width: 120,
+                  slots: { default: 'inquiryProduct_default' },
+                },
+              ]
+            : []),
           { field: 'unit', title: '单位', width: 80 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'brandName', title: '商品品牌', width: 120 },
           { field: 'purchasePrice', title: '采购参考价（元）', align: 'right', width: 140 },
           {
             field: 'latestPurchasePrice',

@@ -2,6 +2,7 @@
   <shared-batch-add-product
     ref="shared"
     biz-type="purchase"
+    :show-inquiry-product="showInquiryProduct"
     :sc-id="scId"
     :is-return="isReturn"
     v-bind="$attrs"
@@ -25,6 +26,10 @@
         default: '',
       },
       isReturn: {
+        type: Boolean,
+        default: false,
+      },
+      showInquiryProduct: {
         type: Boolean,
         default: false,
       },

@@ -76,6 +76,12 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
     @ExcelProperty("单据备注")
     private String sheetDescription;
 
+    /**
+     * 是否询价商品。
+     */
+    @ExcelProperty("是否询价商品")
+    private String inquiryProduct;
+
 
 
     public SaleOutSheetDetailExportModel() {
@@ -116,6 +122,7 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
         this.setProfitRate(this.buildProfitRate(this.taxAmount, totalProfit));
         this.setDescription(dto.getDescription());
         this.setSheetDescription(dto.getSheetDescription());
+        this.setInquiryProduct(formatInquiryProduct(dto.getInquiryProduct()));
 
         Supplier supplier = ApplicationUtil.getBean(SupplierService.class).findById(dto.getSupplierId());
         if (supplier != null) {
@@ -132,5 +139,16 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
             return "0.00%";
         }
         return profit.multiply(new BigDecimal("100")).divide(amount, 2, RoundingMode.HALF_UP) + "%";
+    }
+
+    /**
+     * 将询价商品标识转换为导出文本。
+     *
+     * @param inquiryProduct 询价商品标识
+     * @return 导出文本
+     */
+    public static String formatInquiryProduct(Boolean inquiryProduct) {
+
+        return Boolean.TRUE.equals(inquiryProduct) ? "是" : "否";
     }
 }

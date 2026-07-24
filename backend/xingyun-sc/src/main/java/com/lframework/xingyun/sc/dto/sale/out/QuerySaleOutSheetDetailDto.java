@@ -36,6 +36,11 @@ public class QuerySaleOutSheetDetailDto implements BaseDto, Serializable {
 
   private String productName;
 
+  /**
+   * 是否询价商品
+   */
+  private Boolean inquiryProduct;
+
   private String skuCode;
 
   private String externalCode;
