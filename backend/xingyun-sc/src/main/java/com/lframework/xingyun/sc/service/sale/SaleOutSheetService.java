@@ -16,7 +16,9 @@ import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
+import com.lframework.xingyun.sc.dto.sale.out.MonthEndRecalculateResult;
 import com.lframework.xingyun.sc.vo.sale.out.*;
+import com.lframework.xingyun.sc.vo.sale.out.MonthEndRecalculateVo;
 import javax.servlet.http.HttpServletResponse;
 
 import java.time.LocalDate;
@@ -252,6 +254,14 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
    * @param orderId
    */
   void refreshCostPrice(String orderId);
+
+  /**
+   * 月底成本重算 - 使用月加权平均法
+   *
+   * @param vo 重算参数（beginDate, endDate, scId）
+   * @return 重算结果
+   */
+  MonthEndRecalculateResult monthEndRecalculate(MonthEndRecalculateVo vo);
 
   /**
    * 从销售出库查询页面导入并创建订单
