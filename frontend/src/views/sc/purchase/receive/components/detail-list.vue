@@ -255,6 +255,8 @@
       footerMethod({ columns, data }) {
         const orderNum = this.sumByField(data, 'orderNum');
         const taxAmount = this.sumByField(data, 'taxAmount');
+        // 采购均价 = 总金额合计 / 总数量合计
+        const avgPrice = orderNum > 0 ? taxAmount / orderNum : 0;
 
         return [
           columns.map((column) => {
@@ -266,6 +268,9 @@
             }
             if (column.field === 'taxAmount') {
               return this.formatAmount(taxAmount);
+            }
+            if (column.field === 'taxPrice') {
+              return this.formatAmount(avgPrice);
             }
             return '';
           }),
