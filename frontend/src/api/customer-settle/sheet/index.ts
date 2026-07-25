@@ -10,9 +10,55 @@ import { ApprovePassCustomerSettleSheetVo } from '@/api/customer-settle/sheet/mo
 import { ApproveRefuseCustomerSettleSheetVo } from '@/api/customer-settle/sheet/model/approveRefuseCustomerSettleSheetVo';
 import { CustomerSettleBizItemBo } from '@/api/customer-settle/sheet/model/customerSettleBizItemBo';
 import { QueryCustomerUnSettleBizItemVo } from '@/api/customer-settle/sheet/model/queryCustomerUnSettleBizItemVo';
+import { QueryCustomerSaleSettleInfoVo } from '@/api/customer-settle/sheet/model/queryCustomerSaleSettleInfoVo';
+import { CustomerSaleSettleInfoBo } from '@/api/customer-settle/sheet/model/customerSaleSettleInfoBo';
 
 const baseUrl = '/customer/settle/sheet';
 const region = 'cloud-api';
+
+/** 查询客户销售结算工作台。 */
+export function querySaleSettleInfos(
+  data: QueryCustomerSaleSettleInfoVo,
+): Promise<PageResult<CustomerSaleSettleInfoBo>> {
+  return defHttp.post<PageResult<CustomerSaleSettleInfoBo>>(
+    {
+      url: baseUrl + '/sale-settle-infos',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/** 导出客户销售结算工作台。 */
+export function exportSaleSettleInfos(data: QueryCustomerSaleSettleInfoVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/export-sale-settle-infos',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/** 导出客户结算记录。 */
+export function exportRecord(data: QueryCustomerSettleSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/export-record',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
 
 /**
  * 订单列表

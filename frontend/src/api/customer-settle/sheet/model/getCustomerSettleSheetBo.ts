@@ -101,6 +101,9 @@ export interface SheetDetailBo {
    */
   bizCode: string;
 
+  /** 业务类型：1-销售出库单，2-销售退货单。 */
+  bizType?: number;
+
   /**
    * 审核时间
    */
