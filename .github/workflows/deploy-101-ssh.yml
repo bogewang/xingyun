@@ -26,10 +26,11 @@ jobs:
         run: |
           git remote set-url origin git@github.com:bogewang/xingyun.git
 
-      - name: Fetch code
+      - name: Fetch and update to latest master
         run: |
           git fetch --no-tags --prune --no-recurse-submodules origin master
           git checkout master
+          git reset --hard origin/master
 
       - name: Setup Java
         uses: actions/setup-java@v4
