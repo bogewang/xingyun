@@ -45,6 +45,11 @@ export interface ReceiveProductVo {
   description: string;
 
   /**
+   * 是否询价商品
+   */
+  inquiryProduct: boolean;
+
+  /**
    * 采购订单明细ID
    */
   purchaseOrderDetailId: string;

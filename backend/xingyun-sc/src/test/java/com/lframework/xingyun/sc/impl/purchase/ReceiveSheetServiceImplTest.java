@@ -1,13 +1,41 @@
 package com.lframework.xingyun.sc.impl.purchase;
 
+import com.lframework.starter.common.utils.BeanUtil;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetQueryImportModel;
+import com.lframework.xingyun.sc.vo.purchase.receive.ReceiveProductVo;
 import java.math.BigDecimal;
 import java.util.List;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 class ReceiveSheetServiceImplTest {
+
+  /**
+   * 验证导入模型中的询价商品标识能正确复制到VO。
+   */
+  @Test
+  void beanUtilCopyShouldTransferInquiryProduct() {
+    ReceiveSheetImportModel model = new ReceiveSheetImportModel();
+    model.setInquiryProduct(Boolean.TRUE);
+
+    ReceiveProductVo vo = BeanUtil.copyProperties(model, ReceiveProductVo.class);
+
+    Assert.assertEquals(vo.getInquiryProduct(), Boolean.TRUE);
+  }
+
+  /**
+   * 验证导入模型中的询价商品标识为 false 时也能正确复制。
+   */
+  @Test
+  void beanUtilCopyShouldTransferFalseInquiryProduct() {
+    ReceiveSheetImportModel model = new ReceiveSheetImportModel();
+    model.setInquiryProduct(Boolean.FALSE);
+
+    ReceiveProductVo vo = BeanUtil.copyProperties(model, ReceiveProductVo.class);
+
+    Assert.assertEquals(vo.getInquiryProduct(), Boolean.FALSE);
+  }
 
   @Test
   void normalizeQueryImportNumbersShouldConvertNullQuantityToZero() {
