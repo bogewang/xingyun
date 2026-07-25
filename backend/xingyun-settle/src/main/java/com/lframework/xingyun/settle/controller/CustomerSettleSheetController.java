@@ -80,8 +80,13 @@ public class CustomerSettleSheetController extends DefaultBaseController {
   @HasPermission({"customer-settle:sheet:export"})
   @PostMapping("/export-sale-settle-infos")
   public InvokeResult<Void> exportSaleSettleInfos(@RequestBody @Valid QueryCustomerSaleSettleInfoVo vo) {
-    ExportTaskUtil.exportTask("客户结算工作台", CustomerSaleSettleInfoExportTaskWorker.class, vo);
-    return InvokeResultBuilder.success();
+    try {
+      ExportTaskUtil.exportTask("客户结算工作台", CustomerSaleSettleInfoExportTaskWorker.class, vo);
+      return InvokeResultBuilder.success();
+    } catch (Exception e) {
+      log.error("导出客户结算工作台失败", e);
+      return InvokeResultBuilder.fail(e.getMessage(), null);
+    }
   }
 
   /**
@@ -129,8 +134,13 @@ public class CustomerSettleSheetController extends DefaultBaseController {
   @HasPermission({"customer-settle:sheet:export"})
   @PostMapping("/export-record")
   public InvokeResult<Void> exportRecord(@RequestBody @Valid QueryCustomerSettleSheetVo vo) {
-    ExportTaskUtil.exportTask("客户结算记录", CustomerSettleSheetExportTaskWorker.class, vo);
-    return InvokeResultBuilder.success();
+    try {
+      ExportTaskUtil.exportTask("客户结算记录", CustomerSettleSheetExportTaskWorker.class, vo);
+      return InvokeResultBuilder.success();
+    } catch (Exception e) {
+      log.error("导出客户结算记录失败", e);
+      return InvokeResultBuilder.fail(e.getMessage(), null);
+    }
   }
 
   /**

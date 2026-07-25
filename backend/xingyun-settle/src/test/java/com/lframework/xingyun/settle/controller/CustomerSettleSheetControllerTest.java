@@ -64,6 +64,39 @@ public class CustomerSettleSheetControllerTest {
   }
 
   /**
+   * 创建客户结算工作台导出任务失败时，应返回失败响应。
+   */
+  @Test
+  public void shouldReturnFailureWhenCreatingCustomerWorkbenchExportTaskFails() {
+    MqProducerService mqProducerService = initializeApplicationContext();
+    Mockito.doThrow(new IllegalStateException("模拟导出失败")).when(mqProducerService).addExportTask(
+        Mockito.any());
+    CustomerSettleSheetController controller = new CustomerSettleSheetController();
+
+    InvokeResult<Void> response = controller.exportSaleSettleInfos(
+        new QueryCustomerSaleSettleInfoVo());
+
+    Assert.assertEquals(InvokeResultBuilder.fail("模拟导出失败").getCode(), response.getCode());
+    Assert.assertEquals("模拟导出失败", response.getMsg());
+  }
+
+  /**
+   * 创建客户结算记录导出任务失败时，应返回失败响应。
+   */
+  @Test
+  public void shouldReturnFailureWhenCreatingCustomerSettleRecordExportTaskFails() {
+    MqProducerService mqProducerService = initializeApplicationContext();
+    Mockito.doThrow(new IllegalStateException("模拟导出失败")).when(mqProducerService).addExportTask(
+        Mockito.any());
+    CustomerSettleSheetController controller = new CustomerSettleSheetController();
+
+    InvokeResult<Void> response = controller.exportRecord(new QueryCustomerSettleSheetVo());
+
+    Assert.assertEquals(InvokeResultBuilder.fail("模拟导出失败").getCode(), response.getCode());
+    Assert.assertEquals("模拟导出失败", response.getMsg());
+  }
+
+  /**
    * 两个导出接口应使用 JSON 请求体接收与查询接口一致的筛选条件。
    */
   @Test
