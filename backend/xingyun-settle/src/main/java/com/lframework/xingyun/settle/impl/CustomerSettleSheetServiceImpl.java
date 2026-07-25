@@ -32,6 +32,8 @@ import com.lframework.xingyun.settle.entity.CustomerSettleSheet;
 import com.lframework.xingyun.settle.entity.CustomerSettleSheetDetail;
 import com.lframework.xingyun.basedata.entity.Customer;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
+import com.lframework.xingyun.sc.entity.SaleOutSheet;
+import com.lframework.xingyun.sc.entity.SaleReturn;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
 import com.lframework.xingyun.sc.service.sale.SaleReturnService;
 import com.lframework.xingyun.sc.vo.sale.out.QuerySaleOutSheetVo;
@@ -96,20 +98,17 @@ public class CustomerSettleSheetServiceImpl extends
   @Override
   public PageResult<CustomerSaleSettleInfoBo> querySaleSettleInfos(
       QueryCustomerSaleSettleInfoVo vo) {
-    List<CustomerSaleSettleInfoBo> results = new ArrayList<>();
-    if (vo.getBizType() == null || vo.getBizType() == 1) {
-      results.addAll(buildSaleOutSettleInfos(vo));
+    if (vo.getBizType() == null || (vo.getBizType() != 1 && vo.getBizType() != 2)) {
+      throw new DefaultClientException("业务类型不正确！");
     }
-    if (vo.getBizType() == null || vo.getBizType() == 2) {
-      results.addAll(buildSaleReturnSettleInfos(vo));
-    }
-    fillSettleAmounts(results);
     int pageIndex = vo.getPageIndex() == null || vo.getPageIndex() < 1 ? 1 : vo.getPageIndex();
     int pageSize = vo.getPageSize() == null || vo.getPageSize() < 1 ? 20 : vo.getPageSize();
-    int fromIndex = Math.min((pageIndex - 1) * pageSize, results.size());
-    int toIndex = Math.min(fromIndex + pageSize, results.size());
-    return PageResultUtil.newInstance(pageIndex, pageSize, results.size(),
-        results.subList(fromIndex, toIndex));
+    PageResult<CustomerSaleSettleInfoBo> result = vo.getBizType() == 1
+        ? querySaleOutSettleInfos(pageIndex, pageSize, vo)
+        : querySaleReturnSettleInfos(pageIndex, pageSize, vo);
+    List<CustomerSaleSettleInfoBo> results = result.getDatas();
+    fillSettleAmounts(results);
+    return result;
   }
 
   /**
@@ -118,15 +117,19 @@ public class CustomerSettleSheetServiceImpl extends
    * @param vo 查询条件
    * @return 销售出库单工作台信息
    */
-  private List<CustomerSaleSettleInfoBo> buildSaleOutSettleInfos(QueryCustomerSaleSettleInfoVo vo) {
+  private PageResult<CustomerSaleSettleInfoBo> querySaleOutSettleInfos(int pageIndex, int pageSize,
+      QueryCustomerSaleSettleInfoVo vo) {
     QuerySaleOutSheetVo saleOutVo = new QuerySaleOutSheetVo();
     saleOutVo.setCode(vo.getCode());
     saleOutVo.setCustomerId(vo.getCustomerId());
-    return saleOutSheetService.query(saleOutVo).stream()
+    PageResult<SaleOutSheet> pageResult = saleOutSheetService.query(
+        pageIndex, pageSize, saleOutVo);
+    List<CustomerSaleSettleInfoBo> results = pageResult.getDatas().stream()
         .map(sheet -> buildSettleInfo(sheet.getId(), 1, sheet.getCode(), sheet.getCustomerId(),
             sheet.getTotalAmount(), sheet.getPaidAmount(), sheet.getSettleStatus() == null ? null
                 : sheet.getSettleStatus().getCode()))
         .collect(Collectors.toList());
+    return PageResultUtil.rebuild(pageResult, results);
   }
 
   /**
@@ -135,15 +138,19 @@ public class CustomerSettleSheetServiceImpl extends
    * @param vo 查询条件
    * @return 销售退货单工作台信息
    */
-  private List<CustomerSaleSettleInfoBo> buildSaleReturnSettleInfos(QueryCustomerSaleSettleInfoVo vo) {
+  private PageResult<CustomerSaleSettleInfoBo> querySaleReturnSettleInfos(int pageIndex,
+      int pageSize, QueryCustomerSaleSettleInfoVo vo) {
     QuerySaleReturnVo saleReturnVo = new QuerySaleReturnVo();
     saleReturnVo.setCode(vo.getCode());
     saleReturnVo.setCustomerId(vo.getCustomerId());
-    return saleReturnService.query(saleReturnVo).stream()
+    PageResult<SaleReturn> pageResult = saleReturnService.query(
+        pageIndex, pageSize, saleReturnVo);
+    List<CustomerSaleSettleInfoBo> results = pageResult.getDatas().stream()
         .map(sheet -> buildSettleInfo(sheet.getId(), 2, sheet.getCode(), sheet.getCustomerId(),
             sheet.getTotalAmount(), BigDecimal.ZERO, sheet.getSettleStatus() == null ? null
                 : sheet.getSettleStatus().getCode()))
         .collect(Collectors.toList());
+    return PageResultUtil.rebuild(pageResult, results);
   }
 
   /**
@@ -205,11 +212,24 @@ public class CustomerSettleSheetServiceImpl extends
     if (CollectionUtil.isEmpty(bizIds)) {
       return Collections.emptyMap();
     }
-    return customerSettleSheetDetailService.list(Wrappers.lambdaQuery(CustomerSettleSheetDetail.class)
-            .in(CustomerSettleSheetDetail::getBizId, bizIds))
-        .stream().collect(Collectors.groupingBy(CustomerSettleSheetDetail::getBizId,
+    List<CustomerSettleSheetDetail> details = customerSettleSheetDetailService.list(
+        Wrappers.lambdaQuery(CustomerSettleSheetDetail.class)
+            .in(CustomerSettleSheetDetail::getBizId, bizIds));
+    if (CollectionUtil.isEmpty(details)) {
+      return Collections.emptyMap();
+    }
+    List<String> approvedSheetIds = getBaseMapper().selectBatchIds(details.stream()
+            .map(CustomerSettleSheetDetail::getSheetId).collect(Collectors.toSet()))
+        .stream().filter(sheet -> sheet.getStatus() == CustomerSettleSheetStatus.APPROVE_PASS)
+        .map(CustomerSettleSheet::getId).collect(Collectors.toList());
+    if (CollectionUtil.isEmpty(approvedSheetIds)) {
+      return Collections.emptyMap();
+    }
+    return details.stream().filter(detail -> approvedSheetIds.contains(detail.getSheetId()))
+        .filter(detail -> detail.getPayAmount() != null)
+        .collect(Collectors.groupingBy(CustomerSettleSheetDetail::getBizId,
             Collectors.reducing(BigDecimal.ZERO, CustomerSettleSheetDetail::getPayAmount,
-                (left, right) -> left.add(right == null ? BigDecimal.ZERO : right))));
+                BigDecimal::add)));
   }
 
   @Override
