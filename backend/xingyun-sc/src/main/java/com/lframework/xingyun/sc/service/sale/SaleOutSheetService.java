@@ -17,8 +17,9 @@ import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.dto.sale.out.MonthEndRecalculateResult;
+import com.lframework.xingyun.sc.dto.sale.out.MonthEndRecalculateStartResult;
+import com.lframework.xingyun.sc.dto.sale.out.MonthEndRecalculateStepResult;
 import com.lframework.xingyun.sc.vo.sale.out.*;
-import com.lframework.xingyun.sc.vo.sale.out.MonthEndRecalculateVo;
 import javax.servlet.http.HttpServletResponse;
 
 import java.time.LocalDate;
@@ -262,6 +263,22 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
    * @return 重算结果
    */
   MonthEndRecalculateResult monthEndRecalculate(MonthEndRecalculateVo vo);
+
+  /**
+   * 月底成本重算（启动）—— 计算并缓存全范围月加权均价
+   *
+   * @param vo 启动参数（calcBeginDate, calcEndDate, scId）
+   * @return 任务ID及总天数
+   */
+  MonthEndRecalculateStartResult startMonthEndRecalculate(MonthEndRecalculateStartVo vo);
+
+  /**
+   * 月底成本重算（逐天执行）—— 使用缓存的均价处理指定日期的单据
+   *
+   * @param vo 执行参数（taskId, processDate）
+   * @return 当天执行结果
+   */
+  MonthEndRecalculateStepResult stepMonthEndRecalculate(MonthEndRecalculateStepVo vo);
 
   /**
    * 从销售出库查询页面导入并创建订单

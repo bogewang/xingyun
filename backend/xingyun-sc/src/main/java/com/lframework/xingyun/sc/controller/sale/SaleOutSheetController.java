@@ -33,6 +33,8 @@ import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.dto.sale.out.MonthEndRecalculateResult;
+import com.lframework.xingyun.sc.dto.sale.out.MonthEndRecalculateStartResult;
+import com.lframework.xingyun.sc.dto.sale.out.MonthEndRecalculateStepResult;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetDetailExportTaskWorker;
@@ -734,6 +736,45 @@ public class SaleOutSheetController extends DefaultBaseController {
             return InvokeResultBuilder.success(result);
         } catch (Exception e) {
             log.error("月底成本重算失败", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    /**
+     * 月底成本重算（启动）—— 计算并缓存全范围月加权均价
+     */
+    @ApiOperation("月底成本重算（启动）—— 计算并缓存全范围月加权均价")
+    @HasPermission({"report:sale-profit:query"})
+    @PostMapping("/month-end/recalculate/start")
+    public InvokeResult<MonthEndRecalculateStartResult> startMonthEndRecalculate(
+            @Valid @RequestBody MonthEndRecalculateStartVo vo) {
+
+        try {
+            MonthEndRecalculateStartResult result = saleOutSheetService.startMonthEndRecalculate(vo);
+            return InvokeResultBuilder.success(result);
+        } catch (Exception e) {
+            log.error("成本重算启动失败", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    /**
+     * 月底成本重算（逐天执行）—— 使用缓存的均价处理指定日期的单据
+     */
+    @ApiOperation("月底成本重算（逐天执行）—— 使用缓存的均价处理指定日期的单据")
+    @HasPermission({"report:sale-profit:query"})
+    @PostMapping("/month-end/recalculate/step")
+    public InvokeResult<MonthEndRecalculateStepResult> stepMonthEndRecalculate(
+            @Valid @RequestBody MonthEndRecalculateStepVo vo) {
+
+        try {
+            MonthEndRecalculateStepResult result = saleOutSheetService.stepMonthEndRecalculate(vo);
+            if (result.isHasError()) {
+                return InvokeResultBuilder.fail(result.getErrorMsg(), result);
+            }
+            return InvokeResultBuilder.success(result);
+        } catch (Exception e) {
+            log.error("成本重算逐天执行失败", e);
             return InvokeResultBuilder.fail(e.getMessage(), null);
         }
     }
