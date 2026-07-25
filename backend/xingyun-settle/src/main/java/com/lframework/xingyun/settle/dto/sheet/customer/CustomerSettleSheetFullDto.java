@@ -120,6 +120,11 @@ public class CustomerSettleSheetFullDto implements BaseDto, Serializable {
     private String bizCode;
 
     /**
+     * 业务类型：1-销售出库单，2-销售退货单。
+     */
+    private Integer bizType;
+
+    /**
      * 明细排序号。
      */
     private Integer orderNo;

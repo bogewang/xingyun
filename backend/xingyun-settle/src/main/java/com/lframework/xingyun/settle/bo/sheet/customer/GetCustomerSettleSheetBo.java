@@ -187,6 +187,12 @@ public class GetCustomerSettleSheetBo extends BaseBo<CustomerSettleSheetFullDto>
     private String bizCode;
 
     /**
+     * 业务类型：1-销售出库单，2-销售退货单。
+     */
+    @ApiModelProperty("业务类型")
+    private Integer bizType;
+
+    /**
      * 审核时间
      */
     @ApiModelProperty("审核时间")

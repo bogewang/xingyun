@@ -80,6 +80,7 @@
   import { createError, createSuccess } from '@/hooks/web/msg';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { buildSortPageVo, getDateTimeWithMaxTime, getDateTimeWithMinTime } from '@/utils/utils';
+  import { getCustomerSettleBizListPath } from './customerSettleWorkbench';
 
   export default defineComponent({
     name: 'CustomerSettleSheetRecord',
@@ -227,12 +228,13 @@
       },
       /** 按业务类型跳转到销售出库或销售退货列表。 */
       openBizList(item: any) {
-        if (item.bizType !== 1 && item.bizType !== 2) {
+        const path = getCustomerSettleBizListPath(item.bizType);
+        if (!path) {
           createError('结算明细缺少业务类型，无法跳转关联单据！');
           return;
         }
         this.openChildPage({
-          path: item.bizType === 2 ? '/sale/return' : '/sale/out',
+          path,
           query: { code: item.bizCode || '' },
         });
       },

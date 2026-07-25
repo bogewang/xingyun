@@ -232,15 +232,25 @@ public class CustomerSettleSheetServiceImpl extends
         .map(CustomerSettleSheetFullDto.SheetDetailDto::getBizId)
         .filter(StringUtil::isNotBlank).collect(Collectors.toSet());
     Map<String, String> bizCodeMap = new HashMap<>();
+    Map<String, Integer> bizTypeMap = new HashMap<>();
     List<SaleOutSheet> saleOutSheets = saleOutSheetService.listByIds(bizIds);
     if (!CollectionUtil.isEmpty(saleOutSheets)) {
-      saleOutSheets.forEach(item -> bizCodeMap.put(item.getId(), item.getCode()));
+      saleOutSheets.forEach(item -> {
+        bizCodeMap.put(item.getId(), item.getCode());
+        bizTypeMap.put(item.getId(), 1);
+      });
     }
     List<SaleReturn> saleReturns = saleReturnService.listByIds(bizIds);
     if (!CollectionUtil.isEmpty(saleReturns)) {
-      saleReturns.forEach(item -> bizCodeMap.put(item.getId(), item.getCode()));
+      saleReturns.forEach(item -> {
+        bizCodeMap.put(item.getId(), item.getCode());
+        bizTypeMap.put(item.getId(), 2);
+      });
     }
-    result.getDetails().forEach(item -> item.setBizCode(bizCodeMap.get(item.getBizId())));
+    result.getDetails().forEach(item -> {
+      item.setBizCode(bizCodeMap.get(item.getBizId()));
+      item.setBizType(bizTypeMap.get(item.getBizId()));
+    });
     return result;
   }
 

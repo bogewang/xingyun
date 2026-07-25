@@ -14,6 +14,7 @@
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
         :pager-config="pagerConfig"
+        :checkbox-config="checkboxConfig"
         :footer-method="footerMethod"
         :loading="loading"
         height="auto"
@@ -106,22 +107,12 @@
   import { createError, createSuccess } from '@/hooks/web/msg';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { buildSortPageVo } from '@/utils/utils';
-
-  export interface DirectSettleRow {
-    customerId?: string;
-    settleStatus?: number | string;
-  }
-
-  /** 判断勾选的单据是否允许直接结算。 */
-  export function canDirectSettle(rows: DirectSettleRow[]): boolean {
-    if (!rows.length) {
-      return false;
-    }
-
-    const customerIds = new Set(rows.map((item) => item.customerId).filter(Boolean));
-    const allowedStatuses = new Set([0, 1, '0', '1', 'UN_SETTLE', 'PART_SETTLE']);
-    return customerIds.size === 1 && rows.every((item) => allowedStatuses.has(item.settleStatus));
-  }
+  import {
+    buildDirectSettlePayload,
+    canDirectSettle,
+    canSelectDirectSettleRow,
+    getCustomerSettleBizListPath,
+  } from './customerSettleWorkbench';
 
   export default defineComponent({
     name: 'CustomerSettleWorkbench',
@@ -146,6 +137,9 @@
           pageSize: 20,
           total: 0,
           layouts: ['PrevPage', 'JumpNumber', 'NextPage', 'Sizes', 'Total'],
+        },
+        checkboxConfig: {
+          checkMethod: ({ row }: { row: any }) => this.canCheckRow(row),
         },
         tableData: [] as any[],
         selectedRows: [] as any[],
@@ -248,6 +242,11 @@
       syncSelection() {
         this.selectedRows = (this.$refs.grid as any)?.getCheckboxRecords?.() || [];
       },
+      /** 限制只能勾选同一客户的可结算单据。 */
+      canCheckRow(row: any): boolean {
+        const selectedRows = (this.$refs.grid as any)?.getCheckboxRecords?.() || [];
+        return canSelectDirectSettleRow(row, selectedRows);
+      },
       /** 返回状态对应的展示样式。 */
       getStatusClass(status: number): string {
         if (SETTLE_STATUS.UN_SETTLE.equalsCode(status)) return 'status-text--primary';
@@ -264,8 +263,13 @@
       },
       /** 跳转到关联的销售单据列表。 */
       openBizList(row: any) {
+        const path = getCustomerSettleBizListPath(row.bizType);
+        if (!path) {
+          createError('业务类型不正确，无法跳转关联单据！');
+          return;
+        }
         this.openChildPage({
-          path: row.bizType === 2 ? '/sale/return' : '/sale/out',
+          path,
           query: { code: row.code || '' },
         });
       },
@@ -297,19 +301,20 @@
           createError('勾选的单据不满足结算条件！');
           return;
         }
-        if (this.settleDialog.amount === undefined || this.settleDialog.amount < 0) {
-          createError('请输入正确的结算金额！');
+        if (this.settleDialog.amount === undefined || this.settleDialog.amount <= 0) {
+          createError('结算金额必须大于0！');
           return;
         }
 
         this.settleDialog.loading = true;
         try {
-          await api.directApprovePass({
-            customerId: this.selectedRows[0].customerId,
-            settleAmount: this.settleDialog.amount,
-            description: this.settleDialog.description || undefined,
-            items: this.selectedRows.map(({ id, bizType }) => ({ bizId: id, bizType })),
-          });
+          await api.directApprovePass(
+            buildDirectSettlePayload(
+              this.selectedRows,
+              this.settleDialog.amount,
+              this.settleDialog.description,
+            ),
+          );
           createSuccess('结算成功！');
           this.settleDialog.visible = false;
           this.search();

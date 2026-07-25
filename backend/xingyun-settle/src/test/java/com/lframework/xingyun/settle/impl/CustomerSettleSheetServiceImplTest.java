@@ -6,10 +6,12 @@ import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.xingyun.basedata.entity.Customer;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
+import com.lframework.xingyun.sc.entity.SaleReturn;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
 import com.lframework.xingyun.sc.service.sale.SaleReturnService;
 import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSaleSettleInfoBo;
+import com.lframework.xingyun.settle.bo.sheet.customer.GetCustomerSettleSheetBo;
 import com.lframework.xingyun.settle.entity.CustomerSettleSheet;
 import com.lframework.xingyun.settle.entity.CustomerSettleSheetDetail;
 import com.lframework.xingyun.settle.enums.CustomerSettleSheetStatus;
@@ -106,6 +108,43 @@ public class CustomerSettleSheetServiceImplTest {
     CustomerSettleSheetFullDto result = service.getDetail("sheet-1");
 
     Assert.assertEquals("sale-1", result.getDetails().get(0).getBizCode());
+  }
+
+  /**
+   * 详情查询应批量从销售源单补齐业务类型，供前端跳转到对应列表。
+   */
+  @Test
+  public void getDetailShouldFillBizTypesFromSaleSources() throws Exception {
+    CustomerSettleSheetServiceImpl service = directSettleService();
+    CustomerSettleSheetMapper mapper = getField(service, "baseMapper");
+    SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
+    SaleReturnService saleReturnService = getField(service, "saleReturnService");
+    CustomerSettleSheetFullDto detail = new CustomerSettleSheetFullDto();
+    CustomerSettleSheetFullDto.SheetDetailDto saleOutItem =
+        new CustomerSettleSheetFullDto.SheetDetailDto();
+    saleOutItem.setBizId("sale-out-1");
+    CustomerSettleSheetFullDto.SheetDetailDto saleReturnItem =
+        new CustomerSettleSheetFullDto.SheetDetailDto();
+    saleReturnItem.setBizId("sale-return-1");
+    detail.setDetails(Arrays.asList(saleOutItem, saleReturnItem));
+    Mockito.when(mapper.getDetail("sheet-1")).thenReturn(detail);
+    Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(
+        Collections.singletonList(saleOutSheet("sale-out-1", "customer-1", "10", "0",
+            SettleStatus.UN_SETTLE)));
+    SaleReturn saleReturn = new SaleReturn();
+    saleReturn.setId("sale-return-1");
+    saleReturn.setCode("sale-return-1");
+    Mockito.when(saleReturnService.listByIds(Mockito.anyCollection())).thenReturn(
+        Collections.singletonList(saleReturn));
+
+    CustomerSettleSheetFullDto result = service.getDetail("sheet-1");
+
+    Assert.assertEquals(Integer.valueOf(1), result.getDetails().get(0).getBizType());
+    Assert.assertEquals(Integer.valueOf(2), result.getDetails().get(1).getBizType());
+    Assert.assertEquals(Integer.valueOf(1),
+        new GetCustomerSettleSheetBo.SheetDetailBo(result.getDetails().get(0)).getBizType());
+    Assert.assertEquals(Integer.valueOf(2),
+        new GetCustomerSettleSheetBo.SheetDetailBo(result.getDetails().get(1)).getBizType());
   }
 
   /**
