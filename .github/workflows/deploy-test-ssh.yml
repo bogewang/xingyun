@@ -22,15 +22,11 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Switch remote to SSH
+      - name: Checkout master via SSH
         run: |
           git remote set-url origin git@github.com:bogewang/xingyun.git
-
-      - name: Fetch code
-        run: |
           git fetch --no-tags --prune --no-recurse-submodules origin master
-          git checkout master
-          git reset --hard origin/master
+          git checkout -B master origin/master
 
       - name: Setup Java
         uses: actions/setup-java@v4
