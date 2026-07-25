@@ -28,7 +28,7 @@ jobs:
 
       - name: Fetch code
         run: |
-          git fetch origin master
+          git clone git@github.com:bogewang/xingyun.git
 
       - name: Setup Java
         uses: actions/setup-java@v4
