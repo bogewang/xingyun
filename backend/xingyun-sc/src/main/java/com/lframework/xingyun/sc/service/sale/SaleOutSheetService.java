@@ -201,14 +201,14 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   int setPartSettle(String id);
 
   /**
-   * 按源单结算状态与更新时间乐观锁设置为部分结算。
+   * 按源单结算状态与结算版本号乐观锁设置为部分结算。
    *
    * @param id 单据ID
    * @param settleStatus 提交时读取到的结算状态
-   * @param updateTime 提交时读取到的更新时间
+   * @param settleVersion 提交时读取到的结算版本号
    * @return 受影响行数
    */
-  int setPartSettle(String id, SettleStatus settleStatus, LocalDateTime updateTime);
+  int setPartSettle(String id, SettleStatus settleStatus, Long settleVersion);
 
   /**
    * 设置成已结算
@@ -219,14 +219,14 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   int setSettled(String id);
 
   /**
-   * 按源单结算状态与更新时间乐观锁设置为已结算。
+   * 按源单结算状态与结算版本号乐观锁设置为已结算。
    *
    * @param id 单据ID
    * @param settleStatus 提交时读取到的结算状态
-   * @param updateTime 提交时读取到的更新时间
+   * @param settleVersion 提交时读取到的结算版本号
    * @return 受影响行数
    */
-  int setSettled(String id, SettleStatus settleStatus, LocalDateTime updateTime);
+  int setSettled(String id, SettleStatus settleStatus, Long settleVersion);
 
   /**
    * 查询已审核列表

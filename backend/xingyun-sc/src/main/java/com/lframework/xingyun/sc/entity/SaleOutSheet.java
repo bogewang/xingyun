@@ -177,4 +177,9 @@ public class SaleOutSheet extends BaseEntity implements BaseDto {
    * 结算状态
    */
   private SettleStatus settleStatus;
+
+  /**
+   * 结算版本号
+   */
+  private Long settleVersion;
 }

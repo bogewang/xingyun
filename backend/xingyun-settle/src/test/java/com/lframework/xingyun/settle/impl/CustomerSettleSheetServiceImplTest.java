@@ -21,7 +21,9 @@ import com.lframework.xingyun.settle.vo.sheet.customer.CustomerSettleSheetItemVo
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSaleSettleInfoVo;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,11 +47,11 @@ public class CustomerSettleSheetServiceImplTest {
         "customerSettleSheetDetailService");
     SaleOutSheet sheet = saleOutSheet("sale-1", "customer-1", "100", "0",
         SettleStatus.UN_SETTLE);
-    sheet.setUpdateTime(LocalDateTime.of(2026, 7, 25, 20, 0));
+    sheet.setSettleVersion(0L);
     Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(
         Collections.singletonList(sheet));
     Mockito.when(saleOutSheetService.setPartSettle(Mockito.eq("sale-1"),
-        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.eq(sheet.getUpdateTime()))).thenReturn(1, 0);
+        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.eq(0L))).thenReturn(1, 0);
     Mockito.when(detailService.saveBatch(Mockito.anyCollection())).thenReturn(true);
 
     service.directApprovePass(directSettleVo("customer-1", "60", item("sale-1", 1)));
@@ -77,7 +79,7 @@ public class CustomerSettleSheetServiceImplTest {
     Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(
         Collections.singletonList(sheet));
     Mockito.when(saleOutSheetService.setPartSettle(Mockito.eq("sale-1"),
-        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.isNull())).thenReturn(1);
+        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.eq(0L))).thenReturn(1);
     Mockito.when(detailService.saveBatch(Mockito.anyCollection())).thenReturn(true);
 
     service.directApprovePass(directSettleVo("customer-1", "0.001", item("sale-1", 1)));
@@ -155,7 +157,7 @@ public class CustomerSettleSheetServiceImplTest {
         Collections.singletonList(saleOutSheet("sale-1", "customer-1", "10", "0",
             SettleStatus.UN_SETTLE)));
     Mockito.when(saleOutSheetService.setSettled(Mockito.eq("sale-1"),
-        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.isNull())).thenReturn(1);
+        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.eq(0L))).thenReturn(1);
     CustomerSettleSheetDetailService detailService = getField(service,
         "customerSettleSheetDetailService");
     Mockito.when(detailService.saveBatch(Mockito.anyCollection())).thenReturn(true);
@@ -176,7 +178,7 @@ public class CustomerSettleSheetServiceImplTest {
         Collections.singletonList(saleOutSheet("sale-1", "customer-1", "10", "0",
             SettleStatus.UN_SETTLE)));
     Mockito.when(saleOutSheetService.setSettled(Mockito.eq("sale-1"),
-        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.isNull())).thenReturn(0);
+        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.eq(0L))).thenReturn(0);
 
     try {
       service.directApprovePass(directSettleVo("customer-1", "10", item("sale-1", 1)));
@@ -201,7 +203,7 @@ public class CustomerSettleSheetServiceImplTest {
         saleOutSheet("sale-1", "customer-1", "10", "0", SettleStatus.UN_SETTLE),
         saleOutSheet("sale-2", "customer-1", "20", "0", SettleStatus.UN_SETTLE)));
     Mockito.when(saleOutSheetService.setPartSettle(Mockito.anyString(),
-        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.isNull())).thenReturn(1);
+        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.eq(0L))).thenReturn(1);
     Mockito.when(detailService.saveBatch(Mockito.anyCollection())).thenReturn(true);
 
     service.directApprovePass(directSettleVo("customer-1", "24", item("sale-1", 1),
@@ -340,7 +342,69 @@ public class CustomerSettleSheetServiceImplTest {
     sheet.setTotalAmount(new BigDecimal(totalAmount));
     sheet.setPaidAmount(new BigDecimal(paidAmount));
     sheet.setSettleStatus(settleStatus);
+    sheet.setSettleVersion(0L);
     return sheet;
+  }
+
+  /**
+   * 销售源单 Mapper 必须以状态和数值版本作为原子结算更新条件。
+   */
+  @Test
+  public void saleSourceMappersShouldAtomicallyIncrementSettleVersion() throws Exception {
+    String saleOutMapper = new String(Files.readAllBytes(Paths.get("..", "xingyun-sc", "src",
+        "main", "resources", "mappers", "sale", "SaleOutSheetMapper.xml")),
+        StandardCharsets.UTF_8);
+    String saleReturnMapper = new String(Files.readAllBytes(Paths.get("..", "xingyun-sc", "src",
+        "main", "resources", "mappers", "sale", "SaleReturnMapper.xml")),
+        StandardCharsets.UTF_8);
+
+    assertVersionUpdateContract(saleOutMapper);
+    assertVersionUpdateContract(saleReturnMapper);
+  }
+
+  /**
+   * 旧结算入口也必须转发到带版本号的原子更新，避免绕过直接结算的并发保护。
+   */
+  @Test
+  public void legacySaleSourceStatusUpdatesShouldUseVersionedMapperContract() throws Exception {
+    String saleOutService = readScSource("SaleOutSheetServiceImpl.java");
+    String saleReturnService = readScSource("SaleReturnServiceImpl.java");
+
+    assertLegacyStatusUpdateContract(saleOutService);
+    assertLegacyStatusUpdateContract(saleReturnService);
+  }
+
+  /**
+   * 验证 Mapper SQL 使用结算状态和数值版本作为更新条件，并递增版本。
+   */
+  private void assertVersionUpdateContract(String mapperXml) {
+    Assert.assertTrue(mapperXml.contains("id=\"updateSettleStatusWithVersion\""));
+    Assert.assertTrue(mapperXml.contains("settle_version = settle_version + 1"));
+    Assert.assertTrue(mapperXml.contains("WHERE id = #{id}"));
+    Assert.assertTrue(mapperXml.contains("settle_status = #{expectedStatus}"));
+    Assert.assertTrue(mapperXml.contains("settle_version = #{settleVersion}"));
+  }
+
+  /**
+   * 验证无版本参数的历史状态更新也会读取当前版本并调用版本化 Mapper。
+   */
+  private void assertLegacyStatusUpdateContract(String serviceSource) {
+    Assert.assertTrue(serviceSource.contains(
+        "updateSettleStatus(id, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE)"));
+    Assert.assertTrue(serviceSource.contains(
+        "updateSettleStatus(id, SettleStatus.PART_SETTLE, SettleStatus.UN_SETTLE,"));
+    Assert.assertTrue(serviceSource.contains("getBaseMapper().updateSettleStatusWithVersion(id,"));
+    Assert.assertTrue(serviceSource.contains(
+        "sheet.getSettleVersion() == null ? 0L : sheet.getSettleVersion()"));
+  }
+
+  /**
+   * 读取销售模块服务源码。
+   */
+  private String readScSource(String fileName) throws Exception {
+    return new String(Files.readAllBytes(Paths.get("..", "xingyun-sc", "src", "main", "java",
+        "com", "lframework", "xingyun", "sc", "impl", "sale", fileName)),
+        StandardCharsets.UTF_8);
   }
 
   /**

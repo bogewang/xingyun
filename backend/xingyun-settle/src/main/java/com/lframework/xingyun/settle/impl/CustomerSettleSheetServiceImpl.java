@@ -363,7 +363,7 @@ public class CustomerSettleSheetServiceImpl extends
     }
     validateSettleStatus(sheet.getCode(), sheet.getSettleStatus());
     return new DirectSettleBiz(item.getBizId(), item.getBizType(), sheet.getCode(),
-        sheet.getCustomerId(), sheet.getSettleStatus(), sheet.getUpdateTime(),
+        sheet.getCustomerId(), sheet.getSettleStatus(), sheet.getSettleVersion(),
         amountOrZero(sheet.getTotalAmount()).subtract(
             amountOrZero(sheet.getPaidAmount())).subtract(
             settledAmountMap.getOrDefault(item.getBizId(), BigDecimal.ZERO)));
@@ -379,7 +379,7 @@ public class CustomerSettleSheetServiceImpl extends
     }
     validateSettleStatus(sheet.getCode(), sheet.getSettleStatus());
     return new DirectSettleBiz(item.getBizId(), item.getBizType(), sheet.getCode(),
-        sheet.getCustomerId(), sheet.getSettleStatus(), sheet.getUpdateTime(),
+        sheet.getCustomerId(), sheet.getSettleStatus(), sheet.getSettleVersion(),
         amountOrZero(sheet.getTotalAmount()).subtract(
             settledAmountMap.getOrDefault(item.getBizId(), BigDecimal.ZERO)));
   }
@@ -437,12 +437,12 @@ public class CustomerSettleSheetServiceImpl extends
     int count;
     if (biz.getBizType() == 1) {
       count = settled ? saleOutSheetService.setSettled(biz.getBizId(), biz.getSettleStatus(),
-          biz.getUpdateTime()) : saleOutSheetService.setPartSettle(biz.getBizId(),
-          biz.getSettleStatus(), biz.getUpdateTime());
+          biz.getSettleVersion()) : saleOutSheetService.setPartSettle(biz.getBizId(),
+          biz.getSettleStatus(), biz.getSettleVersion());
     } else {
       count = settled ? saleReturnService.setSettled(biz.getBizId(), biz.getSettleStatus(),
-          biz.getUpdateTime()) : saleReturnService.setPartSettle(biz.getBizId(),
-          biz.getSettleStatus(), biz.getUpdateTime());
+          biz.getSettleVersion()) : saleReturnService.setPartSettle(biz.getBizId(),
+          biz.getSettleStatus(), biz.getSettleVersion());
     }
     if (count != 1) {
       throw new DefaultClientException("单号：" + biz.getCode() + "结算状态已变化，请刷新后重试！");
@@ -473,20 +473,20 @@ public class CustomerSettleSheetServiceImpl extends
     private final String code;
     private final String customerId;
     private final SettleStatus settleStatus;
-    private final LocalDateTime updateTime;
+    private final Long settleVersion;
     private final BigDecimal unSettleAmount;
 
     /**
      * 创建源单据结算信息。
      */
     DirectSettleBiz(String bizId, Integer bizType, String code, String customerId,
-        SettleStatus settleStatus, LocalDateTime updateTime, BigDecimal unSettleAmount) {
+        SettleStatus settleStatus, Long settleVersion, BigDecimal unSettleAmount) {
       this.bizId = bizId;
       this.bizType = bizType;
       this.code = code;
       this.customerId = customerId;
       this.settleStatus = settleStatus;
-      this.updateTime = updateTime;
+      this.settleVersion = settleVersion;
       this.unSettleAmount = unSettleAmount;
     }
 
@@ -526,10 +526,10 @@ public class CustomerSettleSheetServiceImpl extends
     }
 
     /**
-     * 获取提交时的源单版本时间。
+     * 获取提交时的源单结算版本号。
      */
-    LocalDateTime getUpdateTime() {
-      return updateTime;
+    Long getSettleVersion() {
+      return settleVersion;
     }
 
     /**

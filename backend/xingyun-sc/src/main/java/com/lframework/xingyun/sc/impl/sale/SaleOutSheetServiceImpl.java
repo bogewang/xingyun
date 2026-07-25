@@ -1450,24 +1450,15 @@ public class SaleOutSheetServiceImpl extends
     @Override
     public int setUnSettle(String id) {
 
-        Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
-                .set(SaleOutSheet::getSettleStatus, SettleStatus.UN_SETTLE).eq(SaleOutSheet::getId, id)
-                .eq(SaleOutSheet::getSettleStatus, SettleStatus.PART_SETTLE);
-        int count = getBaseMapper().update(updateWrapper);
-
-        return count;
+        return updateSettleStatus(id, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public int setPartSettle(String id) {
 
-        Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
-                .set(SaleOutSheet::getSettleStatus, SettleStatus.PART_SETTLE).eq(SaleOutSheet::getId, id)
-                .in(SaleOutSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
-        int count = getBaseMapper().update(updateWrapper);
-
-        return count;
+        return updateSettleStatus(id, SettleStatus.PART_SETTLE, SettleStatus.UN_SETTLE,
+                SettleStatus.PART_SETTLE);
     }
 
     /**
@@ -1475,21 +1466,18 @@ public class SaleOutSheetServiceImpl extends
      */
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public int setPartSettle(String id, SettleStatus settleStatus, LocalDateTime updateTime) {
+    public int setPartSettle(String id, SettleStatus settleStatus, Long settleVersion) {
 
-        return updateSettleStatus(id, settleStatus, updateTime, SettleStatus.PART_SETTLE);
+        return getBaseMapper().updateSettleStatusWithVersion(id, settleStatus,
+                SettleStatus.PART_SETTLE, settleVersion);
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public int setSettled(String id) {
 
-        Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
-                .set(SaleOutSheet::getSettleStatus, SettleStatus.SETTLED).eq(SaleOutSheet::getId, id)
-                .in(SaleOutSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
-        int count = getBaseMapper().update(updateWrapper);
-
-        return count;
+        return updateSettleStatus(id, SettleStatus.SETTLED, SettleStatus.UN_SETTLE,
+                SettleStatus.PART_SETTLE);
     }
 
     /**
@@ -1497,28 +1485,25 @@ public class SaleOutSheetServiceImpl extends
      */
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public int setSettled(String id, SettleStatus settleStatus, LocalDateTime updateTime) {
+    public int setSettled(String id, SettleStatus settleStatus, Long settleVersion) {
 
-        return updateSettleStatus(id, settleStatus, updateTime, SettleStatus.SETTLED);
+        return getBaseMapper().updateSettleStatusWithVersion(id, settleStatus,
+                SettleStatus.SETTLED, settleVersion);
     }
 
     /**
-     * 使用结算状态和更新时间作为乐观锁更新源单结算状态。
+     * 按当前结算状态和版本号原子回写历史结算入口的状态。
      */
-    private int updateSettleStatus(String id, SettleStatus settleStatus, LocalDateTime updateTime,
-            SettleStatus targetStatus) {
+    private int updateSettleStatus(String id, SettleStatus targetStatus,
+            SettleStatus... allowedStatuses) {
 
-        LambdaUpdateWrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
-                .set(SaleOutSheet::getSettleStatus, targetStatus)
-                .set(SaleOutSheet::getUpdateTime, LocalDateTime.now())
-                .eq(SaleOutSheet::getId, id)
-                .eq(SaleOutSheet::getSettleStatus, settleStatus);
-        if (updateTime == null) {
-            updateWrapper.isNull(SaleOutSheet::getUpdateTime);
-        } else {
-            updateWrapper.eq(SaleOutSheet::getUpdateTime, updateTime);
+        SaleOutSheet sheet = getById(id);
+        if (sheet == null || !Arrays.asList(allowedStatuses).contains(sheet.getSettleStatus())) {
+            return 0;
         }
-        return getBaseMapper().update(updateWrapper);
+        Long settleVersion = sheet.getSettleVersion() == null ? 0L : sheet.getSettleVersion();
+        return getBaseMapper().updateSettleStatusWithVersion(id, sheet.getSettleStatus(),
+                targetStatus, settleVersion);
     }
 
     @Override
