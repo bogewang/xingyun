@@ -13,6 +13,7 @@ import com.lframework.xingyun.settle.bo.sheet.customer.GetCustomerSettleSheetBo;
 import com.lframework.xingyun.settle.bo.sheet.customer.QueryCustomerSettleSheetBo;
 import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleSheetFullDto;
 import com.lframework.xingyun.settle.entity.CustomerSettleSheet;
+import com.lframework.xingyun.settle.excel.sheet.customer.CustomerSaleSettleInfoExportTaskWorker;
 import com.lframework.xingyun.settle.excel.sheet.customer.CustomerSettleSheetExportTaskWorker;
 import com.lframework.xingyun.settle.service.CustomerSettleSheetService;
 import com.lframework.xingyun.settle.vo.sheet.customer.CreateCustomerSettleSheetVo;
@@ -70,6 +71,20 @@ public class CustomerSettleSheetController extends DefaultBaseController {
   }
 
   /**
+   * 导出客户销售结算工作台信息。
+   *
+   * @param vo 查询条件
+   * @return 导出任务创建结果
+   */
+  @ApiOperation("导出客户销售结算工作台")
+  @HasPermission({"customer-settle:sheet:export"})
+  @PostMapping("/export-sale-settle-infos")
+  public InvokeResult<Void> exportSaleSettleInfos(@RequestBody @Valid QueryCustomerSaleSettleInfoVo vo) {
+    ExportTaskUtil.exportTask("客户结算工作台", CustomerSaleSettleInfoExportTaskWorker.class, vo);
+    return InvokeResultBuilder.success();
+  }
+
+  /**
    * 客户结算单列表
    */
   @ApiOperation("客户结算单列表")
@@ -101,6 +116,20 @@ public class CustomerSettleSheetController extends DefaultBaseController {
 
     ExportTaskUtil.exportTask("客户结算单信息", CustomerSettleSheetExportTaskWorker.class, vo);
 
+    return InvokeResultBuilder.success();
+  }
+
+  /**
+   * 导出客户结算记录。
+   *
+   * @param vo 查询条件
+   * @return 导出任务创建结果
+   */
+  @ApiOperation("导出客户结算记录")
+  @HasPermission({"customer-settle:sheet:export"})
+  @PostMapping("/export-record")
+  public InvokeResult<Void> exportRecord(@RequestBody @Valid QueryCustomerSettleSheetVo vo) {
+    ExportTaskUtil.exportTask("客户结算记录", CustomerSettleSheetExportTaskWorker.class, vo);
     return InvokeResultBuilder.success();
   }
 

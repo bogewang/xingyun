@@ -125,6 +125,7 @@ public class CustomerSettleSheetExportModel extends BaseBo<CustomerSettleSheet> 
     this.setTotalAmount(dto.getTotalAmount());
     this.setTotalDiscountAmount(dto.getTotalDiscountAmount());
     this.setCreateTime(DateUtil.toDate(dto.getCreateTime()));
+    this.setCreateBy(dto.getCreateBy());
     this.setStatus(EnumUtil.getDesc(CustomerSettleSheetStatus.class, dto.getStatus()));
     if (approveBy != null) {
       this.setApproveBy(approveBy.getName());

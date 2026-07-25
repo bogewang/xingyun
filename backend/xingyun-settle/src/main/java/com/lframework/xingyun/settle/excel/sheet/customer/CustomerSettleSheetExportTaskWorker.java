@@ -8,6 +8,9 @@ import com.lframework.xingyun.settle.entity.CustomerSettleSheet;
 import com.lframework.xingyun.settle.service.CustomerSettleSheetService;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleSheetVo;
 
+/**
+ * 客户结算记录导出任务。
+ */
 public class CustomerSettleSheetExportTaskWorker implements
     ExportTaskWorker<QueryCustomerSettleSheetVo, CustomerSettleSheet, CustomerSettleSheetExportModel> {
 
