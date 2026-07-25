@@ -1470,6 +1470,16 @@ public class SaleOutSheetServiceImpl extends
         return count;
     }
 
+    /**
+     * 按提交时源单版本设置为部分结算，避免并发结算重复占用余额。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int setPartSettle(String id, SettleStatus settleStatus, LocalDateTime updateTime) {
+
+        return updateSettleStatus(id, settleStatus, updateTime, SettleStatus.PART_SETTLE);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public int setSettled(String id) {
@@ -1480,6 +1490,35 @@ public class SaleOutSheetServiceImpl extends
         int count = getBaseMapper().update(updateWrapper);
 
         return count;
+    }
+
+    /**
+     * 按提交时源单版本设置为已结算，避免并发结算重复占用余额。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int setSettled(String id, SettleStatus settleStatus, LocalDateTime updateTime) {
+
+        return updateSettleStatus(id, settleStatus, updateTime, SettleStatus.SETTLED);
+    }
+
+    /**
+     * 使用结算状态和更新时间作为乐观锁更新源单结算状态。
+     */
+    private int updateSettleStatus(String id, SettleStatus settleStatus, LocalDateTime updateTime,
+            SettleStatus targetStatus) {
+
+        LambdaUpdateWrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
+                .set(SaleOutSheet::getSettleStatus, targetStatus)
+                .set(SaleOutSheet::getUpdateTime, LocalDateTime.now())
+                .eq(SaleOutSheet::getId, id)
+                .eq(SaleOutSheet::getSettleStatus, settleStatus);
+        if (updateTime == null) {
+            updateWrapper.isNull(SaleOutSheet::getUpdateTime);
+        } else {
+            updateWrapper.eq(SaleOutSheet::getUpdateTime, updateTime);
+        }
+        return getBaseMapper().update(updateWrapper);
     }
 
     @Override

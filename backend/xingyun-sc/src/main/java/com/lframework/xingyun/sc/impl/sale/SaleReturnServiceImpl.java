@@ -417,6 +417,16 @@ public class SaleReturnServiceImpl extends
     return count;
   }
 
+  /**
+   * 按提交时源单版本设置为部分结算，避免并发结算重复占用余额。
+   */
+  @Transactional(rollbackFor = Exception.class)
+  @Override
+  public int setPartSettle(String id, SettleStatus settleStatus, LocalDateTime updateTime) {
+
+    return updateSettleStatus(id, settleStatus, updateTime, SettleStatus.PART_SETTLE);
+  }
+
   @Transactional(rollbackFor = Exception.class)
   @Override
   public int setSettled(String id) {
@@ -427,6 +437,35 @@ public class SaleReturnServiceImpl extends
     int count = getBaseMapper().update(updateWrapper);
 
     return count;
+  }
+
+  /**
+   * 按提交时源单版本设置为已结算，避免并发结算重复占用余额。
+   */
+  @Transactional(rollbackFor = Exception.class)
+  @Override
+  public int setSettled(String id, SettleStatus settleStatus, LocalDateTime updateTime) {
+
+    return updateSettleStatus(id, settleStatus, updateTime, SettleStatus.SETTLED);
+  }
+
+  /**
+   * 使用结算状态和更新时间作为乐观锁更新源单结算状态。
+   */
+  private int updateSettleStatus(String id, SettleStatus settleStatus, LocalDateTime updateTime,
+      SettleStatus targetStatus) {
+
+    LambdaUpdateWrapper<SaleReturn> updateWrapper = Wrappers.lambdaUpdate(SaleReturn.class)
+            .set(SaleReturn::getSettleStatus, targetStatus)
+            .set(SaleReturn::getUpdateTime, LocalDateTime.now())
+            .eq(SaleReturn::getId, id)
+            .eq(SaleReturn::getSettleStatus, settleStatus);
+    if (updateTime == null) {
+      updateWrapper.isNull(SaleReturn::getUpdateTime);
+    } else {
+      updateWrapper.eq(SaleReturn::getUpdateTime, updateTime);
+    }
+    return getBaseMapper().update(updateWrapper);
   }
 
   @Override

@@ -21,6 +21,7 @@ import com.lframework.xingyun.settle.vo.sheet.customer.CustomerSettleSheetItemVo
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSaleSettleInfoVo;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,6 +33,55 @@ import org.mockito.Mockito;
  * 客户结算工作台服务测试。
  */
 public class CustomerSettleSheetServiceImplTest {
+
+  /**
+   * 源单版本变化后，第二次按同一旧余额结算必须失败且不得再次保存明细。
+   */
+  @Test
+  public void directApprovePassShouldRejectSecondSubmissionWithStaleBizVersion() throws Exception {
+    CustomerSettleSheetServiceImpl service = directSettleService();
+    SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
+    CustomerSettleSheetDetailService detailService = getField(service,
+        "customerSettleSheetDetailService");
+    SaleOutSheet sheet = saleOutSheet("sale-1", "customer-1", "100", "0",
+        SettleStatus.UN_SETTLE);
+    sheet.setUpdateTime(LocalDateTime.of(2026, 7, 25, 20, 0));
+    Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(
+        Collections.singletonList(sheet));
+    Mockito.when(saleOutSheetService.setPartSettle(Mockito.eq("sale-1"),
+        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.eq(sheet.getUpdateTime()))).thenReturn(1, 0);
+    Mockito.when(detailService.saveBatch(Mockito.anyCollection())).thenReturn(true);
+
+    service.directApprovePass(directSettleVo("customer-1", "60", item("sale-1", 1)));
+    try {
+      service.directApprovePass(directSettleVo("customer-1", "60", item("sale-1", 1)));
+      Assert.fail("源单版本已变化时应拒绝再次结算");
+    } catch (DefaultClientException e) {
+      // 预期异常。
+    }
+
+    Mockito.verify(detailService, Mockito.times(1)).saveBatch(Mockito.anyCollection());
+  }
+
+  /**
+   * 直接结算金额精度不得超过两位小数。
+   */
+  @Test(expected = DefaultClientException.class)
+  public void directApprovePassShouldRejectAmountWithMoreThanTwoDecimalPlaces() throws Exception {
+    CustomerSettleSheetServiceImpl service = directSettleService();
+    SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
+    CustomerSettleSheetDetailService detailService = getField(service,
+        "customerSettleSheetDetailService");
+    SaleOutSheet sheet = saleOutSheet("sale-1", "customer-1", "10", "0",
+        SettleStatus.UN_SETTLE);
+    Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(
+        Collections.singletonList(sheet));
+    Mockito.when(saleOutSheetService.setPartSettle(Mockito.eq("sale-1"),
+        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.isNull())).thenReturn(1);
+    Mockito.when(detailService.saveBatch(Mockito.anyCollection())).thenReturn(true);
+
+    service.directApprovePass(directSettleVo("customer-1", "0.001", item("sale-1", 1)));
+  }
 
   /**
    * 详情查询应批量从销售源单补齐业务单号。
@@ -104,7 +154,8 @@ public class CustomerSettleSheetServiceImplTest {
     Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(
         Collections.singletonList(saleOutSheet("sale-1", "customer-1", "10", "0",
             SettleStatus.UN_SETTLE)));
-    Mockito.when(saleOutSheetService.setSettled("sale-1")).thenReturn(1);
+    Mockito.when(saleOutSheetService.setSettled(Mockito.eq("sale-1"),
+        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.isNull())).thenReturn(1);
     CustomerSettleSheetDetailService detailService = getField(service,
         "customerSettleSheetDetailService");
     Mockito.when(detailService.saveBatch(Mockito.anyCollection())).thenReturn(true);
@@ -124,7 +175,8 @@ public class CustomerSettleSheetServiceImplTest {
     Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(
         Collections.singletonList(saleOutSheet("sale-1", "customer-1", "10", "0",
             SettleStatus.UN_SETTLE)));
-    Mockito.when(saleOutSheetService.setSettled("sale-1")).thenReturn(0);
+    Mockito.when(saleOutSheetService.setSettled(Mockito.eq("sale-1"),
+        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.isNull())).thenReturn(0);
 
     try {
       service.directApprovePass(directSettleVo("customer-1", "10", item("sale-1", 1)));
@@ -148,7 +200,8 @@ public class CustomerSettleSheetServiceImplTest {
     Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(Arrays.asList(
         saleOutSheet("sale-1", "customer-1", "10", "0", SettleStatus.UN_SETTLE),
         saleOutSheet("sale-2", "customer-1", "20", "0", SettleStatus.UN_SETTLE)));
-    Mockito.when(saleOutSheetService.setPartSettle(Mockito.anyString())).thenReturn(1);
+    Mockito.when(saleOutSheetService.setPartSettle(Mockito.anyString(),
+        Mockito.eq(SettleStatus.UN_SETTLE), Mockito.isNull())).thenReturn(1);
     Mockito.when(detailService.saveBatch(Mockito.anyCollection())).thenReturn(true);
 
     service.directApprovePass(directSettleVo("customer-1", "24", item("sale-1", 1),
