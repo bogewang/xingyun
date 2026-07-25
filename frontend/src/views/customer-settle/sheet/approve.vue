@@ -90,38 +90,12 @@
           <span>{{ row.bizCode }}</span>
         </template>
 
-        <!-- 已收款金额 列自定义内容 -->
-        <template #totalPayedAmount_default="{ row }">
-          <span v-if="isFloat(row.payAmount)">{{ add(row.totalPayedAmount, row.payAmount) }}</span>
-          <span v-else>{{ row.totalPayedAmount }}</span>
-        </template>
-
-        <!-- 已优惠金额 列自定义内容 -->
-        <template #totalDiscountAmount_default="{ row }">
-          <span v-if="isFloat(row.discountAmount)">{{
-            add(row.totalDiscountAmount, row.discountAmount)
-          }}</span>
-          <span v-else>{{ row.totalDiscountAmount }}</span>
-        </template>
-
-        <!-- 未收款金额 列自定义内容 -->
-        <template #totalUnPayAmount_default="{ row }">
-          <span>{{
-            sub(
-              sub(row.totalUnPayAmount, isFloat(row.payAmount) ? row.payAmount : 0),
-              isFloat(row.discountAmount) ? row.discountAmount : 0,
-            )
-          }}</span>
-        </template>
       </vxe-grid>
 
       <order-time-line :id="id" />
 
       <j-border title="合计">
         <j-form bordered label-width="140px">
-          <j-form-item label="未收款总金额" :span="6">
-            <a-input v-model:value="formData.totalUnPayAmount" class="number-input" readonly />
-          </j-form-item>
           <j-form-item label="实收总金额" :span="6">
             <a-input v-model:value="formData.totalAmount" class="number-input" readonly />
           </j-form-item>
@@ -174,8 +148,9 @@
   import ApproveRefuse from '@/components/ApproveRefuse';
   import * as api from '@/api/customer-settle/sheet';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import { add, isFloat, sub } from '@/utils/utils';
+  import { add } from '@/utils/utils';
   import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import { CUSTOMER_SALE_SETTLE_BIZ_TYPE } from '@/enums/biz/customerSaleSettleBizType';
   import { CUSTOMER_SETTLE_SHEET_STATUS } from '@/enums/biz/customerSettleSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
 
@@ -188,9 +163,7 @@
     mixins: [multiplePageMix],
     setup() {
       return {
-        isFloat,
-        add,
-        sub,
+        CUSTOMER_SALE_SETTLE_BIZ_TYPE,
         CUSTOMER_SETTLE_SHEET_STATUS,
       };
     },
@@ -209,32 +182,7 @@
             field: 'bizType',
             title: '单据类型',
             width: 120,
-            formatter: ({ cellValue }) => {
-              return '客户对账单';
-            },
-          },
-          { field: 'approveTime', title: '审核时间', width: 170 },
-          { field: 'totalPayAmount', title: '应收金额', align: 'right', width: 100 },
-          {
-            field: 'totalPayedAmount',
-            title: '已收款金额',
-            align: 'right',
-            width: 100,
-            slots: { default: 'totalPayedAmount_default' },
-          },
-          {
-            field: 'totalDiscountAmount',
-            title: '已优惠金额',
-            align: 'right',
-            width: 100,
-            slots: { default: 'totalDiscountAmount_default' },
-          },
-          {
-            field: 'totalUnPayAmount',
-            title: '未收款金额',
-            align: 'right',
-            width: 100,
-            slots: { default: 'totalUnPayAmount_default' },
+            formatter: ({ cellValue }) => CUSTOMER_SALE_SETTLE_BIZ_TYPE.getDesc(cellValue) || '-',
           },
           { field: 'payAmount', title: '实收金额', align: 'right', width: 100 },
           { field: 'discountAmount', title: '优惠金额', align: 'right', width: 100 },
@@ -266,7 +214,6 @@
           endTime: '',
           description: '',
           totalAmount: 0,
-          totalUnPayAmount: 0,
           totalDiscountAmount: 0,
         };
       },
@@ -296,7 +243,6 @@
               approveTime: res.approveTime,
               refuseReason: res.refuseReason,
               totalAmount: 0,
-              totalUnPayAmount: 0,
               totalDiscountAmount: 0,
             };
             const details = res.details.map((item) => {
@@ -304,13 +250,9 @@
                 id: item.id,
                 bizId: item.bizId,
                 bizCode: item.bizCode,
-                totalPayAmount: item.totalPayAmount,
-                totalPayedAmount: item.totalPayedAmount,
-                totalDiscountAmount: item.totalDiscountAmount,
-                totalUnPayAmount: item.totalUnPayAmount,
+                bizType: item.bizType,
                 payAmount: item.payAmount,
                 discountAmount: item.discountAmount,
-                approveTime: item.approveTime,
                 description: item.description,
               };
             });
@@ -326,34 +268,14 @@
       // 计算汇总数据
       calcSum() {
         let totalAmount = 0;
-        let totalUnPayAmount = 0;
         let totalDiscountAmount = 0;
 
         this.tableData.forEach((item) => {
-          if (isFloat(item.payAmount)) {
-            totalAmount = add(totalAmount, item.payAmount);
-          }
-
-          if (isFloat(item.discountAmount)) {
-            totalDiscountAmount = add(
-              totalDiscountAmount,
-              add(item.discountAmount, item.totalDiscountAmount),
-            );
-          } else {
-            totalDiscountAmount = add(totalDiscountAmount, item.totalDiscountAmount);
-          }
-
-          totalUnPayAmount = add(
-            totalUnPayAmount,
-            sub(
-              sub(item.totalUnPayAmount, isFloat(item.payAmount) ? item.payAmount : 0),
-              isFloat(item.discountAmount) ? item.discountAmount : 0,
-            ),
-          );
+          totalAmount = add(totalAmount, item.payAmount || 0);
+          totalDiscountAmount = add(totalDiscountAmount, item.discountAmount || 0);
         });
 
         this.formData.totalAmount = totalAmount;
-        this.formData.totalUnPayAmount = totalUnPayAmount;
         this.formData.totalDiscountAmount = totalDiscountAmount;
       },
       // 审核通过
