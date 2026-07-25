@@ -3,7 +3,7 @@ name: Deploy Test
 on:
   push:
     branches:
-      - master
+      - test0725
   workflow_dispatch:
 
 concurrency:
