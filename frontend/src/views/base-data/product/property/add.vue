@@ -88,17 +88,17 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {validCode} from '@/utils/validate';
-import * as api from '@/api/base-data/product/property';
-import {isEmpty} from '@/utils/utils';
-import {createError, createSuccess} from '@/hooks/web/msg';
-import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
-import {COLUMN_TYPE} from '@/enums/biz/columnType';
-import {COLUMN_DATA_TYPE} from '@/enums/biz/columnDataType';
-import {PROPERTY_TYPE} from '@/enums/biz/propertyType';
+  import { defineComponent } from 'vue';
+  import { validCode } from '@/utils/validate';
+  import * as api from '@/api/base-data/product/property';
+  import { isEmpty } from '@/utils/utils';
+  import { createError, createSuccess } from '@/hooks/web/msg';
+  import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
+  import { COLUMN_TYPE } from '@/enums/biz/columnType';
+  import { COLUMN_DATA_TYPE } from '@/enums/biz/columnDataType';
+  import { PROPERTY_TYPE } from '@/enums/biz/propertyType';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       ProductCategorySelector,
     },

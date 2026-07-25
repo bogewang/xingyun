@@ -11,13 +11,13 @@
 </template>
 
 <script>
-import {defineComponent} from 'vue';
-import ExcelImporter from '@/components/ExcelImporter';
-import * as api from '@/api/base-data/address';
-import {ADDRESS_ENTITY_TYPE} from '@/enums/biz/addressEntityType';
-import {ADDRESS_TYPE} from '@/enums/biz/addressType';
+  import { defineComponent } from 'vue';
+  import ExcelImporter from '@/components/ExcelImporter';
+  import * as api from '@/api/base-data/address';
+  import { ADDRESS_ENTITY_TYPE } from '@/enums/biz/addressEntityType';
+  import { ADDRESS_TYPE } from '@/enums/biz/addressType';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddressImporter',
     components: { ExcelImporter },
     data() {

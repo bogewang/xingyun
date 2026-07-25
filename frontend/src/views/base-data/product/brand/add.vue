@@ -53,15 +53,15 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {validCode} from '@/utils/validate';
-import * as api from '@/api/base-data/product/brand';
-import {generateCode} from '@/api/components';
-import {createSuccess} from '@/hooks/web/msg';
-import JImgUpload from '@/components/JImgUpload';
-import {GENERATE_CODE_TYPE} from '@/enums/biz/generateCodeType';
+  import { defineComponent } from 'vue';
+  import { validCode } from '@/utils/validate';
+  import * as api from '@/api/base-data/product/brand';
+  import { generateCode } from '@/api/components';
+  import { createSuccess } from '@/hooks/web/msg';
+  import JImgUpload from '@/components/JImgUpload';
+  import { GENERATE_CODE_TYPE } from '@/enums/biz/generateCodeType';
 
-export default defineComponent({
+  export default defineComponent({
     components: { JImgUpload },
     data() {
       return {

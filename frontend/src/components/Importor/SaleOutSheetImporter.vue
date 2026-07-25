@@ -21,9 +21,6 @@
   export default defineComponent({
     name: 'SaleOutSheetImporter',
     components: { ExcelImporter },
-    data() {
-      return {};
-    },
     props: {
       getContainer: {
         type: [Function, Boolean],
@@ -37,6 +34,9 @@
         type: Boolean,
         default: false,
       },
+    },
+    data() {
+      return {};
     },
     computed: {},
     methods: {

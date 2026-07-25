@@ -1,11 +1,11 @@
-import {h} from 'vue';
+import { h } from 'vue';
 import {
   FormItemContentRenderParams,
   FormItemRenderOptions,
   VxeGlobalRendererHandles,
 } from 'vxe-table';
 import XEUtils from 'xe-utils';
-import {cellText, createEvents, createProps, getComponent} from './common';
+import { cellText, createEvents, createProps, getComponent } from './common';
 
 const COMPONENT_NAME = 'AButton';
 

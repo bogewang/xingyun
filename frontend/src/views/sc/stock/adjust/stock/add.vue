@@ -125,20 +125,17 @@
         </j-form>
       </j-border>
 
-      <batch-add-product
-        ref="batchAddProductDialog"
-        @confirm="batchAddProduct"
-      />
+      <batch-add-product ref="batchAddProductDialog" @confirm="batchAddProduct" />
 
       <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
         <a-space>
-<!--          <a-button-->
-<!--            v-permission="['stock:adjust:add']"-->
-<!--            type="primary"-->
-<!--            :loading="loading"-->
-<!--            @click="submit"-->
-<!--            >保存</a-button-->
-<!--          >-->
+          <!--          <a-button-->
+          <!--            v-permission="['stock:adjust:add']"-->
+          <!--            type="primary"-->
+          <!--            :loading="loading"-->
+          <!--            @click="submit"-->
+          <!--            >保存</a-button-->
+          <!--          >-->
           <a-button
             v-permission="['stock:adjust:approve']"
             type="primary"
@@ -153,30 +150,30 @@
   </div>
 </template>
 <script>
-import {defineComponent, h, nextTick} from 'vue';
-import BatchAddProduct from '@/views/sc/stock/adjust/stock/batch-add-product.vue';
-import {
-  DeleteOutlined,
-  MinusCircleTwoTone,
-  PlusCircleTwoTone,
-  PlusOutlined,
-} from '@ant-design/icons-vue';
-import * as api from '@/api/sc/stock/adjust/stock';
-import * as reasonApi from '@/api/sc/stock/adjust/reason';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {
-  add,
-  isEmpty,
-  isFloat,
-  isFloatGeZero,
-  isFloatGtZero,
-  isNumberPrecision,
-  uuid,
-} from '@/utils/utils';
-import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import {STOCK_ADJUST_SHEET_BIZ_TYPE} from '@/enums/biz/stockAdjustSheetBizType';
+  import { defineComponent, h, nextTick } from 'vue';
+  import BatchAddProduct from '@/views/sc/stock/adjust/stock/batch-add-product.vue';
+  import {
+    DeleteOutlined,
+    MinusCircleTwoTone,
+    PlusCircleTwoTone,
+    PlusOutlined,
+  } from '@ant-design/icons-vue';
+  import * as api from '@/api/sc/stock/adjust/stock';
+  import * as reasonApi from '@/api/sc/stock/adjust/reason';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    add,
+    isEmpty,
+    isFloat,
+    isFloatGeZero,
+    isFloatGtZero,
+    isNumberPrecision,
+    uuid,
+  } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import { STOCK_ADJUST_SHEET_BIZ_TYPE } from '@/enums/biz/stockAdjustSheetBizType';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddStockAdjustSheet',
     components: {
       BatchAddProduct,
@@ -190,7 +187,7 @@ export default defineComponent({
         MinusCircleTwoTone,
         DeleteOutlined,
         isEmpty,
-        nextTick,
+        nextTick(),
         STOCK_ADJUST_SHEET_BIZ_TYPE,
       };
     },

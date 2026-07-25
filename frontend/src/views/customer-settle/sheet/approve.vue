@@ -184,17 +184,17 @@
   </div>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import ApproveRefuse from '@/components/ApproveRefuse';
-import SettleCheckSheetDetail from '@/views/customer-settle/check-sheet/detail.vue';
-import * as api from '@/api/customer-settle/sheet';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {add, isFloat, sub} from '@/utils/utils';
-import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import {CUSTOMER_SETTLE_SHEET_STATUS} from '@/enums/biz/customerSettleSheetStatus';
-import OrderTimeLine from '@/components/OrderTimeLine';
+  import { defineComponent } from 'vue';
+  import ApproveRefuse from '@/components/ApproveRefuse';
+  import SettleCheckSheetDetail from '@/views/customer-settle/check-sheet/detail.vue';
+  import * as api from '@/api/customer-settle/sheet';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { add, isFloat, sub } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import { CUSTOMER_SETTLE_SHEET_STATUS } from '@/enums/biz/customerSettleSheetStatus';
+  import OrderTimeLine from '@/components/OrderTimeLine';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'ApproveCustomerSettleSheet',
     components: {
       ApproveRefuse,

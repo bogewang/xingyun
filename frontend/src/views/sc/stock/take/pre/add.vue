@@ -145,17 +145,17 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import BatchAddProduct from '@/views/sc/stock/take/pre/batch-add-product.vue';
-import {DeleteOutlined, PlusOutlined} from '@ant-design/icons-vue';
-import * as api from '@/api/sc/stock/take/pre';
-import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {isEmpty, isFloat, isFloatGeZero, isNumberPrecision, sub, uuid} from '@/utils/utils';
-import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import {PRE_TAKE_STOCK_SHEET_STATUS} from '@/enums/biz/preTakeStockSheetStatus';
+  import { defineComponent, h } from 'vue';
+  import BatchAddProduct from '@/views/sc/stock/take/pre/batch-add-product.vue';
+  import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue';
+  import * as api from '@/api/sc/stock/take/pre';
+  import StoreCenterSelector from '@/components/Selector/StoreCenterSelector.vue';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { isEmpty, isFloat, isFloatGeZero, isNumberPrecision, sub, uuid } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import { PRE_TAKE_STOCK_SHEET_STATUS } from '@/enums/biz/preTakeStockSheetStatus';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddPreTakeStockSheet',
     components: {
       BatchAddProduct,

@@ -50,16 +50,16 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {validCode} from '@/utils/validate';
-import * as api from '@/api/system/role';
-import * as roleMenuApi from '@/api/system/role-menu';
-import {generateCode} from '@/api/components';
-import {createSuccess, createWarning} from '@/hooks/web/msg';
-import SysRoleCategorySelector from '@/components/Selector/SysRoleCategorySelector.vue';
-import {GENERATE_CODE_TYPE} from '@/enums/biz/generateCodeType';
+  import { defineComponent } from 'vue';
+  import { validCode } from '@/utils/validate';
+  import * as api from '@/api/system/role';
+  import * as roleMenuApi from '@/api/system/role-menu';
+  import { generateCode } from '@/api/components';
+  import { createSuccess, createWarning } from '@/hooks/web/msg';
+  import SysRoleCategorySelector from '@/components/Selector/SysRoleCategorySelector.vue';
+  import { GENERATE_CODE_TYPE } from '@/enums/biz/generateCodeType';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       SysRoleCategorySelector,
     },
@@ -126,7 +126,9 @@ export default defineComponent({
               .then((res) => {
                 if (this.isCopy) {
                   return this.copyRoleMenus(res).then((copiedMenus) => {
-                    createSuccess(copiedMenus ? '复制成功！' : '角色已复制，请检查权限是否需要补充。');
+                    createSuccess(
+                      copiedMenus ? '复制成功！' : '角色已复制，请检查权限是否需要补充。',
+                    );
                   });
                 }
 
@@ -159,7 +161,11 @@ export default defineComponent({
       },
       loadCopyData() {
         this.loading = true;
-        Promise.all([api.get(this.sourceRoleId), roleMenuApi.menus(this.sourceRoleId), this.onGenerateCode()])
+        Promise.all([
+          api.get(this.sourceRoleId),
+          roleMenuApi.menus(this.sourceRoleId),
+          this.onGenerateCode(),
+        ])
           .then(([role, menus]) => {
             this.formData = {
               code: this.formData.code,
@@ -169,7 +175,9 @@ export default defineComponent({
               shortName: '',
               categoryId: role.categoryId || '',
             };
-            this.sourceMenuIds = (menus || []).filter((item) => item.selected).map((item) => item.id);
+            this.sourceMenuIds = (menus || [])
+              .filter((item) => item.selected)
+              .map((item) => item.id);
           })
           .finally(() => {
             this.loading = false;

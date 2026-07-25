@@ -159,10 +159,7 @@
   import * as saleReturnApi from '@/api/sc/sale/return';
   import * as retailReturnApi from '@/api/sc/retail/return';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import {
-    buildSortPageVo,
-    isEmpty,
-  } from '@/utils/utils';
+  import { buildSortPageVo, isEmpty } from '@/utils/utils';
   import { createError, createSuccess } from '@/hooks/web/msg';
   import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
@@ -256,7 +253,6 @@
           },
           { field: 'taxAmount', title: '变动金额', align: 'right', width: 100, sortable: true },
           { field: 'createBy', title: '操作人', width: 150 },
-
         ],
         proxyConfig: {
           props: {

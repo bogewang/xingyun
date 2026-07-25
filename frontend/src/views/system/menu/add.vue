@@ -151,19 +151,19 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {validCode} from '@/utils/validate';
-import {IconPicker} from '@/components/Icon';
-import JsonEditor from './json-editor.vue';
-import {QuestionCircleOutlined} from '@ant-design/icons-vue';
-import * as api from '@/api/system/menu';
-import {isEmpty} from '@/utils/utils';
-import {createSuccess} from '@/hooks/web/msg';
-import SysMenuSelector from '@/components/Selector/SysMenuSelector.vue';
-import {MENU_DISPLAY} from '@/enums/biz/menuDisplay';
-import {MENU_COMPONENT_TYPE} from '@/enums/biz/menuComponentType';
+  import { defineComponent } from 'vue';
+  import { validCode } from '@/utils/validate';
+  import { IconPicker } from '@/components/Icon';
+  import JsonEditor from './json-editor.vue';
+  import { QuestionCircleOutlined } from '@ant-design/icons-vue';
+  import * as api from '@/api/system/menu';
+  import { isEmpty } from '@/utils/utils';
+  import { createSuccess } from '@/hooks/web/msg';
+  import SysMenuSelector from '@/components/Selector/SysMenuSelector.vue';
+  import { MENU_DISPLAY } from '@/enums/biz/menuDisplay';
+  import { MENU_COMPONENT_TYPE } from '@/enums/biz/menuComponentType';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       IconPicker,
       JsonEditor,

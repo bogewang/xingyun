@@ -50,9 +50,10 @@
                   :custom-config="{}"
                 >
                   <template #taxAmount_default="{ row }">
-                    <span v-if="isFloatGeZero(row.purchasePrice) && isFloatGeZero(row.receiveNum)">{{
-                      getNumber(mul(row.purchasePrice, row.receiveNum), 2)
-                    }}</span>
+                    <span
+                      v-if="isFloatGeZero(row.purchasePrice) && isFloatGeZero(row.receiveNum)"
+                      >{{ getNumber(mul(row.purchasePrice, row.receiveNum), 2) }}</span
+                    >
                   </template>
                   <template #inquiryProduct_default="{ row }">
                     <span :class="formatInquiryProduct(row.inquiryProduct).className">
@@ -101,19 +102,19 @@
   </div>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import PurchaseOrderDetail from '@/views/sc/purchase/order/detail.vue';
-import * as api from '@/api/sc/purchase/receive';
-import {printMix} from '@/mixins/print.ts';
-import { previewReceiveSheetPrint } from './print';
-import {add, getNumber, isEmpty, isFloatGeZero, mul, sub} from '@/utils/utils';
-import {RECEIVE_SHEET_STATUS} from '@/enums/biz/receiveSheetStatus';
-import OrderTimeLine from '@/components/OrderTimeLine';
-import PrintDialog from '/@/components/PrintDialog';
-import { createSuccess } from '@/hooks/web/msg';
-import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
+  import { defineComponent } from 'vue';
+  import PurchaseOrderDetail from '@/views/sc/purchase/order/detail.vue';
+  import * as api from '@/api/sc/purchase/receive';
+  import { printMix } from '@/mixins/print.ts';
+  import { previewReceiveSheetPrint } from './print';
+  import { add, getNumber, isEmpty, isFloatGeZero, mul, sub } from '@/utils/utils';
+  import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
+  import OrderTimeLine from '@/components/OrderTimeLine';
+  import PrintDialog from '/@/components/PrintDialog';
+  import { createSuccess } from '@/hooks/web/msg';
+  import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       PurchaseOrderDetail,
       OrderTimeLine,
@@ -280,7 +281,10 @@ export default defineComponent({
 
         this.formData.totalNum = totalNum;
         this.formData.totalAmount = totalAmount;
-        this.formData.unpaidAmount = sub(this.formData.totalAmount || 0, this.formData.paidAmount || 0);
+        this.formData.unpaidAmount = sub(
+          this.formData.totalAmount || 0,
+          this.formData.paidAmount || 0,
+        );
       },
       async print() {
         this.loading = true;
@@ -294,7 +298,8 @@ export default defineComponent({
       },
       exportDetails() {
         this.loading = true;
-        api.exportDetail(this.buildQueryParams())
+        api
+          .exportDetail(this.buildQueryParams())
           .then(() => {
             createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
           })
@@ -313,53 +318,53 @@ export default defineComponent({
   });
 </script>
 <style scoped>
-:global(.order-detail-modal-wrap .ant-modal) {
-  top: 2px !important;
-  padding-bottom: 0;
-}
+  :global(.order-detail-modal-wrap .ant-modal) {
+    top: 2px !important;
+    padding-bottom: 0;
+  }
 
-:global(.order-detail-modal-wrap .ant-modal-content) {
-  height: calc(100vh - 4px);
-  display: flex;
-  flex-direction: column;
-}
+  :global(.order-detail-modal-wrap .ant-modal-content) {
+    height: calc(100vh - 4px);
+    display: flex;
+    flex-direction: column;
+  }
 
-:global(.order-detail-modal-wrap .ant-modal-body) {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
+  :global(.order-detail-modal-wrap .ant-modal-body) {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
 
-.order-detail-modal-content {
-  height: 100%;
-  overflow: hidden;
-}
+  .order-detail-modal-content {
+    height: 100%;
+    overflow: hidden;
+  }
 
-.order-detail-tabs {
-  height: 100%;
-}
+  .order-detail-tabs {
+    height: 100%;
+  }
 
-.order-detail-pane {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
+  .order-detail-pane {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
 
-.order-detail-grid-wrap {
-  flex: 0 0 500px;
-  overflow: hidden;
-}
+  .order-detail-grid-wrap {
+    flex: 0 0 500px;
+    overflow: hidden;
+  }
 
-.order-detail-tabs :deep(.ant-tabs-content-holder),
-.order-detail-tabs :deep(.ant-tabs-content),
-.order-detail-tabs :deep(.ant-tabs-tabpane) {
-  height: 100%;
-}
+  .order-detail-tabs :deep(.ant-tabs-content-holder),
+  .order-detail-tabs :deep(.ant-tabs-content),
+  .order-detail-tabs :deep(.ant-tabs-tabpane) {
+    height: 100%;
+  }
 
-.order-detail-tabs :deep(.ant-tabs-nav) {
-  margin-bottom: 12px;
-}
+  .order-detail-tabs :deep(.ant-tabs-nav) {
+    margin-bottom: 12px;
+  }
 </style>

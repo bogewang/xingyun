@@ -18,7 +18,8 @@ describe('买菜汇总请求参数', () => {
   });
 
   it('买菜汇总2根据勾选单据构建单据ID筛选条件', () => {
-    expect(buildMarketBuySummary2Params([{ id: 'sheet-1' }, { id: undefined }, { id: 'sheet-2' }]))
-      .toEqual({ idList: ['sheet-1', 'sheet-2'] });
+    expect(
+      buildMarketBuySummary2Params([{ id: 'sheet-1' }, { id: undefined }, { id: 'sheet-2' }]),
+    ).toEqual({ idList: ['sheet-1', 'sheet-2'] });
   });
 });

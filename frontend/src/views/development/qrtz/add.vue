@@ -138,14 +138,14 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/development/qrtz';
-import {createSuccess} from '@/hooks/web/msg';
-import CronPicker from '@/components/CronPicker';
-import SysTenantSelector from '@/components/Selector/SysTenantSelector.vue';
-import {QRTZ_JOB_TYPE} from '@/enums/biz/qrtzJobType';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/development/qrtz';
+  import { createSuccess } from '@/hooks/web/msg';
+  import CronPicker from '@/components/CronPicker';
+  import SysTenantSelector from '@/components/Selector/SysTenantSelector.vue';
+  import { QRTZ_JOB_TYPE } from '@/enums/biz/qrtzJobType';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       CronPicker,
       SysTenantSelector,

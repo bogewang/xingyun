@@ -1,5 +1,5 @@
 import XEUtils from 'xe-utils';
-import {createDefaultRender, createEditRender, createFormItemRender} from './common';
+import { createDefaultRender, createEditRender, createFormItemRender } from './common';
 
 export default {
   renderDefault: createDefaultRender({}, (_, params) => {

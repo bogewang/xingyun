@@ -67,14 +67,14 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as constants from './constants';
-import * as api from '@/api/sc/stock/take/plan';
-import {isEmpty, keys} from '@/utils/utils';
-import {TAKE_STOCK_PLAN_TYPE} from '@/enums/biz/takeStockPlanType';
-import {TAKE_STOCK_PLAN_STATUS} from '@/enums/biz/takeStockPlanStatus';
+  import { defineComponent } from 'vue';
+  import * as constants from './constants';
+  import * as api from '@/api/sc/stock/take/plan';
+  import { isEmpty, keys } from '@/utils/utils';
+  import { TAKE_STOCK_PLAN_TYPE } from '@/enums/biz/takeStockPlanType';
+  import { TAKE_STOCK_PLAN_STATUS } from '@/enums/biz/takeStockPlanStatus';
 
-export default defineComponent({
+  export default defineComponent({
     // 使用组件
     components: {},
     props: {

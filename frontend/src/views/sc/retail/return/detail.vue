@@ -159,18 +159,18 @@
   <order-print-dialog />
 </template>
 <script>
-import {defineComponent} from 'vue';
-import OutSheetDetail from '@/views/sc/retail/out/detail.vue';
-import PayType from '@/views/sc/pay-type/index.vue';
-import * as api from '@/api/sc/retail/return';
-import {printMix} from '@/mixins/print.ts';
-import {add, getNumber, isEmpty, isFloatGeZero, mul} from '@/utils/utils';
-import {RETAIL_RETURN_STATUS} from '@/enums/biz/retailReturnStatus';
-import {PRINT_TYPE} from '@/enums/biz/printType';
-import OrderTimeLine from '@/components/OrderTimeLine';
-import PrintDialog from '/@/components/PrintDialog';
+  import { defineComponent } from 'vue';
+  import OutSheetDetail from '@/views/sc/retail/out/detail.vue';
+  import PayType from '@/views/sc/pay-type/index.vue';
+  import * as api from '@/api/sc/retail/return';
+  import { printMix } from '@/mixins/print.ts';
+  import { add, getNumber, isEmpty, isFloatGeZero, mul } from '@/utils/utils';
+  import { RETAIL_RETURN_STATUS } from '@/enums/biz/retailReturnStatus';
+  import { PRINT_TYPE } from '@/enums/biz/printType';
+  import OrderTimeLine from '@/components/OrderTimeLine';
+  import PrintDialog from '/@/components/PrintDialog';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       OutSheetDetail,
       PayType,
@@ -362,36 +362,36 @@ export default defineComponent({
   });
 </script>
 <style scoped>
-.order-detail-modal-content {
-  height: 100%;
-  overflow: hidden;
-}
+  .order-detail-modal-content {
+    height: 100%;
+    overflow: hidden;
+  }
 
-.order-detail-tabs {
-  height: 100%;
-}
+  .order-detail-tabs {
+    height: 100%;
+  }
 
-.order-detail-pane {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow: hidden;
-}
+  .order-detail-pane {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+  }
 
-.order-detail-grid-wrap {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
+  .order-detail-grid-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
 
-.order-detail-tabs :deep(.ant-tabs-content-holder),
-.order-detail-tabs :deep(.ant-tabs-content),
-.order-detail-tabs :deep(.ant-tabs-tabpane) {
-  height: 100%;
-}
+  .order-detail-tabs :deep(.ant-tabs-content-holder),
+  .order-detail-tabs :deep(.ant-tabs-content),
+  .order-detail-tabs :deep(.ant-tabs-tabpane) {
+    height: 100%;
+  }
 
-.order-detail-tabs :deep(.ant-tabs-nav) {
-  margin-bottom: 12px;
-}
+  .order-detail-tabs :deep(.ant-tabs-nav) {
+    margin-bottom: 12px;
+  }
 </style>

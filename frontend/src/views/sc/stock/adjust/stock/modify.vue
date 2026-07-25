@@ -173,14 +173,11 @@
         </j-form>
       </j-border>
 
-      <batch-add-product
-        ref="batchAddProductDialog"
-        @confirm="batchAddProduct"
-      />
+      <batch-add-product ref="batchAddProductDialog" @confirm="batchAddProduct" />
 
       <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
         <a-space>
-<!--          <a-button
+          <!--          <a-button
             v-permission="['stock:adjust:modify']"
             type="primary"
             :loading="loading"

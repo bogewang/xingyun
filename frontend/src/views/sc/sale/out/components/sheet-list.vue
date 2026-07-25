@@ -46,72 +46,72 @@
                   </a-select>
                 </j-form-item>
 
-                  <j-form-item label="客户">
-                    <a-select
-                      v-model:value="searchFormData.customerId"
-                      allow-clear
-                      show-search
-                      :filter-option="filterSelectOption"
-                      :options="customerOptions"
-                      placeholder="请选择客户"
-                      @focus="loadCustomerOptions()"
-                      @search="loadCustomerOptions"
-                      @change="onCustomerChange"
+                <j-form-item label="客户">
+                  <a-select
+                    v-model:value="searchFormData.customerId"
+                    allow-clear
+                    show-search
+                    :filter-option="filterSelectOption"
+                    :options="customerOptions"
+                    placeholder="请选择客户"
+                    @focus="loadCustomerOptions()"
+                    @search="loadCustomerOptions"
+                    @change="onCustomerChange"
+                  />
+                </j-form-item>
+
+                <j-form-item label="单据号">
+                  <a-input v-model:value="searchFormData.code" allow-clear />
+                </j-form-item>
+                <j-form-item label="操作人">
+                  <a-select
+                    v-model:value="searchFormData.createBy"
+                    allow-clear
+                    show-search
+                    :filter-option="filterSelectOption"
+                    :options="createByOptions"
+                    placeholder="请选择操作人"
+                    @focus="loadCreateByOptions()"
+                    @search="loadCreateByOptions"
+                    @change="onCreateByChange"
+                  />
+                </j-form-item>
+
+                <j-form-item label="已付金额">
+                  <a-space class="amount-range-input" :size="4">
+                    <a-input-number
+                      v-model:value="searchFormData.paidAmountStart"
+                      :min="0"
+                      :precision="2"
+                      placeholder="最小值"
                     />
-                  </j-form-item>
-
-                  <j-form-item label="单据号">
-                    <a-input v-model:value="searchFormData.code" allow-clear />
-                  </j-form-item>
-                  <j-form-item label="操作人">
-                    <a-select
-                      v-model:value="searchFormData.createBy"
-                      allow-clear
-                      show-search
-                      :filter-option="filterSelectOption"
-                      :options="createByOptions"
-                      placeholder="请选择操作人"
-                      @focus="loadCreateByOptions()"
-                      @search="loadCreateByOptions"
-                      @change="onCreateByChange"
+                    <span>至</span>
+                    <a-input-number
+                      v-model:value="searchFormData.paidAmountEnd"
+                      :min="0"
+                      :precision="2"
+                      placeholder="最大值"
                     />
-                  </j-form-item>
+                  </a-space>
+                </j-form-item>
 
-                  <j-form-item label="已付金额">
-                    <a-space class="amount-range-input" :size="4">
-                      <a-input-number
-                        v-model:value="searchFormData.paidAmountStart"
-                        :min="0"
-                        :precision="2"
-                        placeholder="最小值"
-                      />
-                      <span>至</span>
-                      <a-input-number
-                        v-model:value="searchFormData.paidAmountEnd"
-                        :min="0"
-                        :precision="2"
-                        placeholder="最大值"
-                      />
-                    </a-space>
-                  </j-form-item>
-
-                  <j-form-item label="未付金额">
-                    <a-space class="amount-range-input" :size="4">
-                      <a-input-number
-                        v-model:value="searchFormData.unpaidAmountStart"
-                        :min="0"
-                        :precision="2"
-                        placeholder="最小值"
-                      />
-                      <span>至</span>
-                      <a-input-number
-                        v-model:value="searchFormData.unpaidAmountEnd"
-                        :min="0"
-                        :precision="2"
-                        placeholder="最大值"
-                      />
-                    </a-space>
-                  </j-form-item>
+                <j-form-item label="未付金额">
+                  <a-space class="amount-range-input" :size="4">
+                    <a-input-number
+                      v-model:value="searchFormData.unpaidAmountStart"
+                      :min="0"
+                      :precision="2"
+                      placeholder="最小值"
+                    />
+                    <span>至</span>
+                    <a-input-number
+                      v-model:value="searchFormData.unpaidAmountEnd"
+                      :min="0"
+                      :precision="2"
+                      placeholder="最大值"
+                    />
+                  </a-space>
+                </j-form-item>
               </j-form>
             </j-border>
           </template>
@@ -175,6 +175,12 @@
                 :icon="h(DownloadOutlined)"
                 @click="marketBuySummary2"
                 >买菜汇总2</a-button
+              >
+              <a-button
+                v-permission="['report:sale-profit:query']"
+                :icon="h(SyncOutlined)"
+                @click="openCostRecalculate"
+                >重算成本</a-button
               >
               <a-button
                 v-permission="['sale:out:query']"
@@ -282,6 +288,24 @@
         @confirm="search"
       />
       <order-print-dialog />
+
+      <!-- 月底成本重算弹窗 -->
+      <a-modal
+        v-model:open="costRecalculateVisible"
+        title="月底成本重算"
+        :confirm-loading="costRecalculateLoading"
+        @ok="executeCostRecalculate"
+      >
+        <a-form layout="vertical">
+          <a-form-item label="时间范围">
+            <a-range-picker
+              v-model:value="costRecalculateDateRange"
+              value-format="YYYY-MM-DD"
+              :placeholder="['开始日期', '结束日期']"
+            />
+          </a-form-item>
+        </a-form>
+      </a-modal>
     </div>
   </div>
 </template>
@@ -301,6 +325,7 @@
     PlusOutlined,
     PrinterOutlined,
     SearchOutlined,
+    SyncOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
   import * as configApi from '@/api/sc/sale/config';
@@ -357,6 +382,7 @@
         DeleteOutlined,
         DownloadOutlined,
         PrinterOutlined,
+        SyncOutlined,
         isEmpty,
         hasPermission,
         RECEIVE_SHEET_STATUS,
@@ -474,6 +500,10 @@
           id: '',
           description: '',
         },
+        // 月底成本重算
+        costRecalculateVisible: false,
+        costRecalculateLoading: false,
+        costRecalculateDateRange: [],
       };
     },
     computed: {
@@ -1035,6 +1065,44 @@
       },
       onRefreshPage() {
         this.search();
+      },
+      /**
+       * 打开成本重算弹窗，默认时间范围为月初到今天
+       */
+      openCostRecalculate() {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const formatDate = (d) => {
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        this.costRecalculateDateRange = [formatDate(firstDay), formatDate(now)];
+        this.costRecalculateVisible = true;
+      },
+      /**
+       * 执行月底成本重算
+       */
+      executeCostRecalculate() {
+        const [beginDate, endDate] = this.costRecalculateDateRange || [];
+        if (!beginDate || !endDate) {
+          return;
+        }
+        this.costRecalculateLoading = true;
+        api
+          .monthEndRecalculate({ beginDate, endDate })
+          .then((res) => {
+            createSuccess(
+              `重算完成：更新单据 ${res.updatedSheetCount} 条，明细 ${res.updatedDetailCount} 条` +
+                (res.notFilledCount > 0 ? `，${res.notFilledCount} 条未填充` : ''),
+            );
+            this.costRecalculateVisible = false;
+            this.search();
+          })
+          .finally(() => {
+            this.costRecalculateLoading = false;
+          });
       },
     },
   });

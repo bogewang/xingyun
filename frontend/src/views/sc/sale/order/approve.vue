@@ -97,7 +97,6 @@
         </j-form>
       </j-border>
 
-
       <div
         v-if="
           SALE_ORDER_STATUS.CREATED.equalsCode(formData.status) ||

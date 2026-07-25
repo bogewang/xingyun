@@ -39,4 +39,15 @@ public interface ReceiveSheetDetailMapper extends BaseMapper<ReceiveSheetDetail>
 
   List<QueryReceiveSheetDetailDto> getLatestCostPriceList(@Param("beginDate") LocalDate beginDate, @Param("orderDate") LocalDate orderDate);
 
+  /**
+   * 获取时间范围内每个商品的月加权均价
+   *
+   * @param beginDate 开始日期
+   * @param endDate   结束日期
+   * @return 商品月加权均价列表
+   */
+  List<QueryReceiveSheetDetailDto> getMonthWtdAvgCostPriceList(
+          @Param("beginDate") LocalDate beginDate,
+          @Param("endDate") LocalDate endDate);
+
 }

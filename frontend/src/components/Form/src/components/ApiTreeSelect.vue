@@ -10,15 +10,15 @@
 </template>
 
 <script lang="ts">
-import {type Recordable} from '@vben/types';
-import {computed, defineComponent, onMounted, type PropType, ref, unref, watch} from 'vue';
-import {TreeSelect} from 'ant-design-vue';
-import {isArray, isFunction} from '/@/utils/is';
-import {get} from 'lodash-es';
-import {propTypes} from '/@/utils/propTypes';
-import {LoadingOutlined} from '@ant-design/icons-vue';
+  import { type Recordable } from '@vben/types';
+  import { computed, defineComponent, onMounted, type PropType, ref, unref, watch } from 'vue';
+  import { TreeSelect } from 'ant-design-vue';
+  import { isArray, isFunction } from '/@/utils/is';
+  import { get } from 'lodash-es';
+  import { propTypes } from '/@/utils/propTypes';
+  import { LoadingOutlined } from '@ant-design/icons-vue';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'ApiTreeSelect',
     components: { ATreeSelect: TreeSelect, LoadingOutlined },
     props: {

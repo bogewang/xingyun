@@ -77,16 +77,16 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {validCode} from '@/utils/validate';
-import * as api from '@/api/base-data/store-center';
-import {generateCode} from '@/api/components';
-import {isEmpty, isInteger, isIntegerGeZero} from '@/utils/utils';
-import {createSuccess} from '@/hooks/web/msg';
-import CitySelector from '@/components/Selector/CitySelector.vue';
-import {GENERATE_CODE_TYPE} from '@/enums/biz/generateCodeType';
+  import { defineComponent } from 'vue';
+  import { validCode } from '@/utils/validate';
+  import * as api from '@/api/base-data/store-center';
+  import { generateCode } from '@/api/components';
+  import { isEmpty, isInteger, isIntegerGeZero } from '@/utils/utils';
+  import { createSuccess } from '@/hooks/web/msg';
+  import CitySelector from '@/components/Selector/CitySelector.vue';
+  import { GENERATE_CODE_TYPE } from '@/enums/biz/generateCodeType';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       CitySelector,
     },

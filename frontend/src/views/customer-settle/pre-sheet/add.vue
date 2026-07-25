@@ -83,24 +83,24 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import {DeleteOutlined, PlusOutlined} from '@ant-design/icons-vue';
-import * as api from '@/api/customer-settle/pre';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {
-  add,
-  isEmpty,
-  isFloat,
-  isFloatGeZero,
-  isFloatGtZero,
-  isNumberPrecision,
-  uuid,
-} from '@/utils/utils';
-import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
-import SettleInItemSelector from '@/components/Selector/SettleInItemSelector.vue';
+  import { defineComponent, h } from 'vue';
+  import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue';
+  import * as api from '@/api/customer-settle/pre';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    add,
+    isEmpty,
+    isFloat,
+    isFloatGeZero,
+    isFloatGtZero,
+    isNumberPrecision,
+    uuid,
+  } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
+  import SettleInItemSelector from '@/components/Selector/SettleInItemSelector.vue';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddCustomerSettlePreSheet',
     components: {
       CustomerSelector,

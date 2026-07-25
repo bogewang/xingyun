@@ -1,4 +1,4 @@
-import {BaseEnum, BaseEnumItem} from '@/enums/baseEnum';
+import { BaseEnum, BaseEnumItem } from '@/enums/baseEnum';
 
 const ADDRESS_TYPE: BaseEnum<number, string> = new BaseEnum<number, string>();
 ADDRESS_TYPE.set('DELIVERY', new BaseEnumItem<number, string>(1, '发货地址'));

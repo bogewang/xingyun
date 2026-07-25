@@ -18,15 +18,15 @@
   </Dropdown>
 </template>
 <script lang="ts" setup>
-import type {LocaleType} from '/#/config';
-import type {DropMenu} from '/@/components/Dropdown';
-import {Dropdown} from '/@/components/Dropdown';
-import {computed, ref, unref, watchEffect} from 'vue';
-import {Icon} from '@/components/Icon';
-import {useLocale} from '/@/locales/useLocale';
-import {localeList} from '/@/settings/localeSetting';
+  import type { LocaleType } from '/#/config';
+  import type { DropMenu } from '/@/components/Dropdown';
+  import { Dropdown } from '/@/components/Dropdown';
+  import { computed, ref, unref, watchEffect } from 'vue';
+  import { Icon } from '@/components/Icon';
+  import { useLocale } from '/@/locales/useLocale';
+  import { localeList } from '/@/settings/localeSetting';
 
-const props = defineProps({
+  const props = defineProps({
     /**
      * Whether to display text
      */

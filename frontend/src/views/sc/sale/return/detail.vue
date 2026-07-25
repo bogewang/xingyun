@@ -358,36 +358,36 @@
   });
 </script>
 <style scoped>
-.order-detail-modal-content {
-  height: 100%;
-  overflow: hidden;
-}
+  .order-detail-modal-content {
+    height: 100%;
+    overflow: hidden;
+  }
 
-.order-detail-tabs {
-  height: 100%;
-}
+  .order-detail-tabs {
+    height: 100%;
+  }
 
-.order-detail-pane {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow: hidden;
-}
+  .order-detail-pane {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+  }
 
-.order-detail-grid-wrap {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
+  .order-detail-grid-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
 
-.order-detail-tabs :deep(.ant-tabs-content-holder),
-.order-detail-tabs :deep(.ant-tabs-content),
-.order-detail-tabs :deep(.ant-tabs-tabpane) {
-  height: 100%;
-}
+  .order-detail-tabs :deep(.ant-tabs-content-holder),
+  .order-detail-tabs :deep(.ant-tabs-content),
+  .order-detail-tabs :deep(.ant-tabs-tabpane) {
+    height: 100%;
+  }
 
-.order-detail-tabs :deep(.ant-tabs-nav) {
-  margin-bottom: 12px;
-}
+  .order-detail-tabs :deep(.ant-tabs-nav) {
+    margin-bottom: 12px;
+  }
 </style>

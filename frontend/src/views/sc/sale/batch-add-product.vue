@@ -16,7 +16,6 @@
 
   export default defineComponent({
     name: 'SaleBatchAddProduct',
-    emits: ['close', 'confirm'],
     components: {
       SharedBatchAddProduct,
     },
@@ -34,6 +33,7 @@
         default: false,
       },
     },
+    emits: ['close', 'confirm'],
     methods: {
       openDialog() {
         this.$refs.shared.openDialog();

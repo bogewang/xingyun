@@ -24,8 +24,6 @@ export interface QueryReceiveSheetBo {
    */
   supplierCode: string;
 
-
-
   /**
    * 供应商ID
    */

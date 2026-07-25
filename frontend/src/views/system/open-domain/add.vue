@@ -43,13 +43,13 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/system/open-domain';
-import {isEmpty, uuid} from '@/utils/utils';
-import {createSuccess} from '@/hooks/web/msg';
-import SysTenantSelector from '@/components/Selector/SysTenantSelector.vue';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/system/open-domain';
+  import { isEmpty, uuid } from '@/utils/utils';
+  import { createSuccess } from '@/hooks/web/msg';
+  import SysTenantSelector from '@/components/Selector/SysTenantSelector.vue';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       SysTenantSelector,
     },

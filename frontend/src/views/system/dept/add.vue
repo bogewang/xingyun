@@ -51,15 +51,15 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import {validCode} from '@/utils/validate';
-import * as api from '@/api/system/dept';
-import {generateCode} from '@/api/components';
-import {createSuccess} from '@/hooks/web/msg';
-import SysDeptSelector from '@/components/Selector/SysDeptSelector.vue';
-import {GENERATE_CODE_TYPE} from '@/enums/biz/generateCodeType';
+  import { defineComponent } from 'vue';
+  import { validCode } from '@/utils/validate';
+  import * as api from '@/api/system/dept';
+  import { generateCode } from '@/api/components';
+  import { createSuccess } from '@/hooks/web/msg';
+  import SysDeptSelector from '@/components/Selector/SysDeptSelector.vue';
+  import { GENERATE_CODE_TYPE } from '@/enums/biz/generateCodeType';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       SysDeptSelector,
     },

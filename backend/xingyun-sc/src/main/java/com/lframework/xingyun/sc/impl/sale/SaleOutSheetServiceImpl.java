@@ -2172,6 +2172,133 @@ public class SaleOutSheetServiceImpl extends
     }
 
     /**
+     * 计算月加权均价
+     * <p>
+     * 月加权均价 = SUM(采购总金额) / SUM(采购总数量)
+     * 已过滤赠品（is_gift = 0），数据在 SQL 中已汇总
+     *
+     * @param beginDate 采购时间范围起
+     * @param endDate   采购时间范围止
+     * @return productId -> 月加权均价
+     */
+    private Map<String, QueryReceiveSheetDetailDto> getCostPriceMapFromMonthWtdAvg(
+            LocalDate beginDate, LocalDate endDate) {
+        List<QueryReceiveSheetDetailDto> list =
+                receiveSheetDetailMapper.getMonthWtdAvgCostPriceList(beginDate, endDate);
+        return toCostPriceMap(list);
+    }
+
+    /**
+     * 月底成本重算 - 使用月加权平均法
+     * <p>
+     * 1. 计算时间范围内的月加权均价（采购总金额 / 采购总数量）
+     * 2. 当月无采购的商品回退到最近一次采购价
+     * 3. 遍历时间范围内所有销售出库单，更新 costPrice / totalProfit
+     *
+     * @param vo 重算参数
+     * @return 重算结果
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public MonthEndRecalculateResult monthEndRecalculate(MonthEndRecalculateVo vo) {
+        LocalDate beginDate = vo.getBeginDate();
+        LocalDate endDate = vo.getEndDate();
+
+        log.info("月底成本重算开始, beginDate: {}, endDate: {}, scId: {}", beginDate, endDate, vo.getScId());
+
+        // 1. 计算月加权均价
+        Map<String, QueryReceiveSheetDetailDto> monthWtdAvgMap =
+                getCostPriceMapFromMonthWtdAvg(beginDate, endDate);
+
+        // 2. 回退方案：当月无采购的商品用最近一次采购价
+        Map<String, QueryReceiveSheetDetailDto> fallbackMap =
+                getCostPriceMapFromReceiveSheet(endDate);
+
+        // 3. 查询时间范围内所有销售出库单
+        List<SaleOutSheet> sheets = querySaleOutSheets(vo.getScId(), beginDate, endDate);
+
+        if (CollectionUtils.isEmpty(sheets)) {
+            log.info("月底成本重算：时间范围内无销售出库单");
+            return new MonthEndRecalculateResult(0, 0, 0);
+        }
+
+        // 4. 逐单据更新成本
+        int detailCount = 0;
+        int notFilledCount = 0;
+        for (SaleOutSheet sheet : sheets) {
+            List<SaleOutSheetDetail> details = saleOutSheetDetailService.getBySheetId(sheet.getId());
+            if (CollectionUtils.isEmpty(details)) {
+                continue;
+            }
+
+            boolean fillAllCost = true;
+            BigDecimal totalCostAmount = BigDecimal.ZERO;
+            for (SaleOutSheetDetail detail : details) {
+                // 优先月加权均价，无则回退到最近采购价
+                QueryReceiveSheetDetailDto costDto = monthWtdAvgMap.get(detail.getProductId());
+                if (costDto == null) {
+                    costDto = fallbackMap.get(detail.getProductId());
+                }
+
+                if (costDto == null) {
+                    fillAllCost = false;
+                    notFilledCount++;
+                    detail.setCostPrice(null);
+                    detail.setTotalProfit(null);
+                    saleOutSheetDetailService.saveOrUpdateAllColumn(detail);
+                    continue;
+                }
+
+                BigDecimal detailCostAmount = NumberUtil.calculateAmount(
+                        NumberUtil.getDefaultValue(costDto.getTaxPrice()), resolveCostNum(detail));
+                BigDecimal detailTotalProfit = NumberUtil.getNumber(
+                        NumberUtil.sub(resolveConfirmAmt(detail), detailCostAmount),
+                        NumberUtil.AMT_PRECISION);
+                totalCostAmount = NumberUtil.add(totalCostAmount, detailCostAmount);
+
+                detail.setCostPrice(costDto.getTaxPrice());
+                detail.setTotalProfit(detailTotalProfit);
+                saleOutSheetDetailService.saveOrUpdateAllColumn(detail);
+                detailCount++;
+            }
+
+            // 汇总单据总利润
+            BigDecimal totalProfit = details.stream()
+                    .map(item -> NumberUtil.getDefaultValue(item.getTotalProfit()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            LambdaUpdateWrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
+                    .set(SaleOutSheet::getTotalCost, totalCostAmount)
+                    .set(SaleOutSheet::getTotalProfit, totalProfit)
+                    .set(SaleOutSheet::getFillAllCost, fillAllCost)
+                    .eq(SaleOutSheet::getId, sheet.getId());
+            this.update(updateWrapper);
+        }
+
+        log.info("月底成本重算完成, 单据数: {}, 明细数: {}, 未填充数: {}",
+                sheets.size(), detailCount, notFilledCount);
+        return new MonthEndRecalculateResult(sheets.size(), detailCount, notFilledCount);
+    }
+
+    /**
+     * 查询时间段内销售单
+     * @param scId
+     * @param beginDate
+     * @param endDate
+     * @return
+     */
+    private List<SaleOutSheet> querySaleOutSheets(String scId, LocalDate beginDate, LocalDate endDate) {
+        LambdaQueryWrapper<SaleOutSheet> queryWrapper = Wrappers.lambdaQuery(SaleOutSheet.class)
+                .ge(SaleOutSheet::getOrderDate, beginDate)
+                .le(SaleOutSheet::getOrderDate, endDate);
+        if (StringUtils.isNotBlank(scId)) {
+            queryWrapper.eq(SaleOutSheet::getScId, scId);
+        }
+        List<SaleOutSheet> sheets = getBaseMapper().selectList(queryWrapper);
+        return sheets;
+    }
+
+    /**
      *
      * @param latestCostPrices
      * @return

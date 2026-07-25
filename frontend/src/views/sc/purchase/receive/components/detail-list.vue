@@ -41,43 +41,43 @@
                 />
               </j-form-item>
 
-                <j-form-item label="单据号">
-                  <a-input v-model:value="searchFormData.code" allow-clear />
-                </j-form-item>
-                <j-form-item label="操作人">
-                  <a-select
-                    v-model:value="searchFormData.createBy"
-                    allow-clear
-                    show-search
-                    :filter-option="filterSelectOption"
-                    :options="createByOptions"
-                    placeholder="请选择操作人"
-                    @focus="loadCreateByOptions()"
-                    @search="loadCreateByOptions"
-                    @change="onCreateByChange"
-                  />
-                </j-form-item>
-                <j-form-item label="结算状态">
-                  <a-select
-                    v-model:value="searchFormData.settleStatus"
-                    placeholder="全部"
-                    allow-clear
+              <j-form-item label="单据号">
+                <a-input v-model:value="searchFormData.code" allow-clear />
+              </j-form-item>
+              <j-form-item label="操作人">
+                <a-select
+                  v-model:value="searchFormData.createBy"
+                  allow-clear
+                  show-search
+                  :filter-option="filterSelectOption"
+                  :options="createByOptions"
+                  placeholder="请选择操作人"
+                  @focus="loadCreateByOptions()"
+                  @search="loadCreateByOptions"
+                  @change="onCreateByChange"
+                />
+              </j-form-item>
+              <j-form-item label="结算状态">
+                <a-select
+                  v-model:value="searchFormData.settleStatus"
+                  placeholder="全部"
+                  allow-clear
+                >
+                  <a-select-option
+                    v-for="item in SETTLE_STATUS.values()"
+                    :key="item.code"
+                    :value="item.code"
                   >
-                    <a-select-option
-                      v-for="item in SETTLE_STATUS.values()"
-                      :key="item.code"
-                      :value="item.code"
-                    >
-                      {{ item.desc }}
-                    </a-select-option>
-                  </a-select>
-                </j-form-item>
-                <j-form-item label="是否已付完">
-                  <a-select v-model:value="searchFormData.fullyPaid" placeholder="全部" allow-clear>
-                    <a-select-option :value="true">已付完</a-select-option>
-                    <a-select-option :value="false">未付完</a-select-option>
-                  </a-select>
-                </j-form-item>
+                    {{ item.desc }}
+                  </a-select-option>
+                </a-select>
+              </j-form-item>
+              <j-form-item label="是否已付完">
+                <a-select v-model:value="searchFormData.fullyPaid" placeholder="全部" allow-clear>
+                  <a-select-option :value="true">已付完</a-select-option>
+                  <a-select-option :value="false">未付完</a-select-option>
+                </a-select>
+              </j-form-item>
             </j-form>
           </j-border>
         </template>
@@ -255,6 +255,8 @@
       footerMethod({ columns, data }) {
         const orderNum = this.sumByField(data, 'orderNum');
         const taxAmount = this.sumByField(data, 'taxAmount');
+        // 采购均价 = 总金额合计 / 总数量合计
+        const avgPrice = orderNum > 0 ? taxAmount / orderNum : 0;
 
         return [
           columns.map((column) => {
@@ -266,6 +268,9 @@
             }
             if (column.field === 'taxAmount') {
               return this.formatAmount(taxAmount);
+            }
+            if (column.field === 'taxPrice') {
+              return this.formatAmount(avgPrice);
             }
             return '';
           }),

@@ -158,7 +158,7 @@
       scale: 3,
       imageQuality: 0.92,
       pdfCompress: true,
-      imageCompression: 'FAST'
+      imageCompression: 'FAST',
     });
   }
 

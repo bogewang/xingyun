@@ -17,7 +17,8 @@ export function applyManualSheetAmount(
   const currentAmount = String(row.taxAmount ?? '');
   const initialAmount = sanitizeNonNegativeDecimalInput(currentAmount);
   const previousAmount = String(
-    row.lastValidTaxAmount ?? (initialAmount === '' && currentAmount !== '' ? autoAmount : currentAmount),
+    row.lastValidTaxAmount ??
+      (initialAmount === '' && currentAmount !== '' ? autoAmount : currentAmount),
   );
   row.taxAmount = sanitizeNonNegativeDecimalInput(amount, previousAmount);
   row.lastValidTaxAmount = row.taxAmount;

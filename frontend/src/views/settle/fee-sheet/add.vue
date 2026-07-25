@@ -107,27 +107,27 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import {DeleteOutlined, PlusOutlined} from '@ant-design/icons-vue';
-import * as api from '@/api/settle/fee';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {
-  add,
-  isEmpty,
-  isFloat,
-  isFloatGeZero,
-  isFloatGtZero,
-  isNumberPrecision,
-  uuid,
-} from '@/utils/utils';
-import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
-import SettleInItemSelector from '@/components/Selector/SettleInItemSelector.vue';
-import SettleOutItemSelector from '@/components/Selector/SettleOutItemSelector.vue';
-import {MANAGE_TYPE} from '@/enums/biz/manageType';
-import {SETTLE_FEE_SHEET_TYPE} from '@/enums/biz/settleFeeSheetType';
+  import { defineComponent, h } from 'vue';
+  import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue';
+  import * as api from '@/api/settle/fee';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    add,
+    isEmpty,
+    isFloat,
+    isFloatGeZero,
+    isFloatGtZero,
+    isNumberPrecision,
+    uuid,
+  } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
+  import SettleInItemSelector from '@/components/Selector/SettleInItemSelector.vue';
+  import SettleOutItemSelector from '@/components/Selector/SettleOutItemSelector.vue';
+  import { MANAGE_TYPE } from '@/enums/biz/manageType';
+  import { SETTLE_FEE_SHEET_TYPE } from '@/enums/biz/settleFeeSheetType';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddSupplierSettleFeeSheet',
     components: {
       SettleInItemSelector,

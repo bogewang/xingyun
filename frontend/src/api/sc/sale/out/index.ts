@@ -391,6 +391,53 @@ export function downloadQueryImportTemplate(): Promise<void> {
 }
 
 /**
+ * 成本重算
+ */
+export function refreshCostPrice(startDate: string, endDate: string): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/refreshCostPrice',
+      data: {
+        startDate,
+        endDate,
+      },
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.FORM_URLENCODED,
+    },
+  );
+}
+
+/**
+ * 月底成本重算 - 月加权平均法
+ */
+export function monthEndRecalculate(params: {
+  beginDate: string;
+  endDate: string;
+  scId?: string;
+}): Promise<{
+  updatedSheetCount: number;
+  updatedDetailCount: number;
+  notFilledCount: number;
+}> {
+  return defHttp.post<{
+    updatedSheetCount: number;
+    updatedDetailCount: number;
+    notFilledCount: number;
+  }>(
+    {
+      url: baseUrl + '/month-end/recalculate',
+      data: params,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/**
  * 销售出库查询页面导入并创建订单
  */
 export function importByQuery(data: { file: Blob }): Promise<string[]> {

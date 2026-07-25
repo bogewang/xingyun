@@ -102,7 +102,6 @@
           </j-form-item>
         </j-form>
       </j-border>
-
     </div>
     <template #footer>
       <div class="form-modal-footer">
@@ -117,17 +116,17 @@
   <order-print-dialog />
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/sc/sale/order';
-import {printMix} from '@/mixins/print.ts';
-import {add, getNumber, isFloatGeZero, mul} from '@/utils/utils';
-import {SALE_ORDER_STATUS} from '@/enums/biz/saleOrderStatus';
-import {PRINT_TYPE} from '@/enums/biz/printType';
-import OrderTimeLine from '@/components/OrderTimeLine';
-import PrintDialog from '/@/components/PrintDialog';
-import {createSuccess} from "@/hooks/web/msg";
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/sc/sale/order';
+  import { printMix } from '@/mixins/print.ts';
+  import { add, getNumber, isFloatGeZero, mul } from '@/utils/utils';
+  import { SALE_ORDER_STATUS } from '@/enums/biz/saleOrderStatus';
+  import { PRINT_TYPE } from '@/enums/biz/printType';
+  import OrderTimeLine from '@/components/OrderTimeLine';
+  import PrintDialog from '/@/components/PrintDialog';
+  import { createSuccess } from '@/hooks/web/msg';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       OrderTimeLine,
       OrderPrintDialog: PrintDialog,
@@ -286,7 +285,8 @@ export default defineComponent({
       },
       exportDetails() {
         this.loading = true;
-        api.exportDetail(this.buildQueryParams({}))
+        api
+          .exportDetail(this.buildQueryParams({}))
           .then(() => {
             createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
           })

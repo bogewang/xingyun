@@ -103,28 +103,28 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import moment from 'moment';
-import {SearchOutlined} from '@ant-design/icons-vue';
-import * as api from '@/api/customer-settle/check';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {
-  add,
-  dateTimeToDate,
-  formatDateTime,
-  getDateTimeWithMaxTime,
-  getDateTimeWithMinTime,
-  isEmpty,
-  isFloat,
-  isNumberPrecision,
-  uuid,
-} from '@/utils/utils';
-import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
-import {CUSTOMER_SETTLE_CHECK_SHEET_BIZ_TYPE} from '@/enums/biz/customerSettleCheckSheetBizType';
-import {CUSTOMER_SETTLE_CHECK_SHEET_CALC_TYPE} from '@/enums/biz/customerSettleCheckSheetCalcType';
+  import { defineComponent, h } from 'vue';
+  import moment from 'moment';
+  import { SearchOutlined } from '@ant-design/icons-vue';
+  import * as api from '@/api/customer-settle/check';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import {
+    add,
+    dateTimeToDate,
+    formatDateTime,
+    getDateTimeWithMaxTime,
+    getDateTimeWithMinTime,
+    isEmpty,
+    isFloat,
+    isNumberPrecision,
+    uuid,
+  } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
+  import { CUSTOMER_SETTLE_CHECK_SHEET_BIZ_TYPE } from '@/enums/biz/customerSettleCheckSheetBizType';
+  import { CUSTOMER_SETTLE_CHECK_SHEET_CALC_TYPE } from '@/enums/biz/customerSettleCheckSheetCalcType';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddCustomerSettleCheckSheet',
     components: {
       CustomerSelector,

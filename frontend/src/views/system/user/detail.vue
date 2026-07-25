@@ -44,12 +44,12 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/system/user';
-import {getEnumDesc} from '@/utils/enumUtil';
-import {GENDER} from '@/enums/biz/gender';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/system/user';
+  import { getEnumDesc } from '@/utils/enumUtil';
+  import { GENDER } from '@/enums/biz/gender';
 
-export default defineComponent({
+  export default defineComponent({
     // 使用组件
     components: {},
     props: {

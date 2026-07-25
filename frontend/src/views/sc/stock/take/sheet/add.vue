@@ -120,21 +120,21 @@
   </div>
 </template>
 <script>
-import {defineComponent, h} from 'vue';
-import BatchAddProduct from '@/views/sc/stock/take/sheet/batch-add-product.vue';
-import {DeleteOutlined, PlusOutlined} from '@ant-design/icons-vue';
-import * as planApi from '@/api/sc/stock/take/plan';
-import * as preApi from '@/api/sc/stock/take/pre';
-import * as api from '@/api/sc/stock/take/sheet';
-import {multiplePageMix} from '@/mixins/multiplePageMix';
-import {isEmpty, isFloat, isFloatGeZero, isNumberPrecision, uuid} from '@/utils/utils';
-import {createConfirm, createError, createSuccess} from '@/hooks/web/msg';
-import PreTakeStockSheetSelector from '@/components/Selector/PreTakeStockSheetSelector.vue';
-import TakeStockPlanSelector from '@/components/Selector/TakeStockPlanSelector.vue';
-import {TAKE_STOCK_PLAN_TYPE} from '@/enums/biz/takeStockPlanType';
-import {TAKE_STOCK_PLAN_STATUS} from '@/enums/biz/takeStockPlanStatus';
+  import { defineComponent, h } from 'vue';
+  import BatchAddProduct from '@/views/sc/stock/take/sheet/batch-add-product.vue';
+  import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue';
+  import * as planApi from '@/api/sc/stock/take/plan';
+  import * as preApi from '@/api/sc/stock/take/pre';
+  import * as api from '@/api/sc/stock/take/sheet';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { isEmpty, isFloat, isFloatGeZero, isNumberPrecision, uuid } from '@/utils/utils';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import PreTakeStockSheetSelector from '@/components/Selector/PreTakeStockSheetSelector.vue';
+  import TakeStockPlanSelector from '@/components/Selector/TakeStockPlanSelector.vue';
+  import { TAKE_STOCK_PLAN_TYPE } from '@/enums/biz/takeStockPlanType';
+  import { TAKE_STOCK_PLAN_STATUS } from '@/enums/biz/takeStockPlanStatus';
 
-export default defineComponent({
+  export default defineComponent({
     name: 'AddStockTakeSheet',
     components: {
       BatchAddProduct,

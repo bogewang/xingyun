@@ -6,11 +6,7 @@
     title="批量添加商品"
     :style="{ top: '20px' }"
   >
-    <div
-      v-if="visible"
-      v-permission="permissionCodes"
-      @keydown.enter.prevent="handleEnterSearch"
-    >
+    <div v-if="visible" v-permission="permissionCodes" @keydown.enter.prevent="handleEnterSearch">
       <vxe-grid
         v-if="visible"
         :id="gridId"

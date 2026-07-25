@@ -47,15 +47,15 @@
   </a-modal>
 </template>
 <script>
-import {defineComponent} from 'vue';
-import * as api from '@/api/system/user-group';
-import {generateCode} from '@/api/components';
-import {validCode} from '@/utils/validate';
-import {createSuccess} from '@/hooks/web/msg';
-import UserSelector from '@/components/Selector/UserSelector.vue';
-import {GENERATE_CODE_TYPE} from '@/enums/biz/generateCodeType';
+  import { defineComponent } from 'vue';
+  import * as api from '@/api/system/user-group';
+  import { generateCode } from '@/api/components';
+  import { validCode } from '@/utils/validate';
+  import { createSuccess } from '@/hooks/web/msg';
+  import UserSelector from '@/components/Selector/UserSelector.vue';
+  import { GENERATE_CODE_TYPE } from '@/enums/biz/generateCodeType';
 
-export default defineComponent({
+  export default defineComponent({
     components: {
       UserSelector,
     },
