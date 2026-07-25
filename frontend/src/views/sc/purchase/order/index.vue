@@ -263,7 +263,7 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { field: 'code', title: '单据号', width: 180, sortable: true },
-          { field: 'scCode', title: '仓库编号', width: 100 },
+          { field: 'scCode', title: '仓库编号1', width: 100 },
           { field: 'scName', title: '仓库名称', width: 120 },
           { field: 'supplierCode', title: '供应商编号', width: 100 },
           { field: 'supplierName', title: '供应商名称', width: 120 },
