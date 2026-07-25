@@ -187,7 +187,7 @@
         MinusCircleTwoTone,
         DeleteOutlined,
         isEmpty,
-        nextTick(),
+        nextTick,
         STOCK_ADJUST_SHEET_BIZ_TYPE,
       };
     },
