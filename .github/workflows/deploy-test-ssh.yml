@@ -30,6 +30,7 @@ jobs:
         run: |
           git fetch --no-tags --prune --no-recurse-submodules origin master
           git checkout master
+          git reset --hard origin/master
 
       - name: Setup Java
         uses: actions/setup-java@v4
