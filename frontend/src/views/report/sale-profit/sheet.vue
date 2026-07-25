@@ -132,8 +132,8 @@
       <a-modal
         v-model:open="costRefreshVisible"
         title="成本重算"
-        :confirm-loading="costRefreshLoading"
-        @ok="executeCostRefresh"
+        @ok="recalculate"
+        @cancel="costRefreshVisible = false"
       >
         <a-form layout="vertical">
           <a-form-item label="日期范围">
@@ -145,6 +145,27 @@
           </a-form-item>
         </a-form>
       </a-modal>
+
+      <!-- 成本重算进度遮罩 -->
+      <div v-if="recalculating" class="recalc-overlay">
+        <div class="recalc-overlay-inner">
+          <a-spin v-if="!recalcFailedDate" size="large" />
+          <div class="recalc-tip">{{ recalcLoadingTip }}</div>
+          <a-progress
+            v-if="!recalcFailedDate"
+            :percent="recalcProgressPercent"
+            status="active"
+            class="recalc-progress"
+          />
+          <div v-if="recalcFailedDate" class="recalc-error">
+            <a-alert type="error" :message="recalcErrorMsg" show-icon style="margin-bottom: 16px" />
+            <a-space>
+              <a-button type="primary" @click="retryRecalculate">从失败日期重试</a-button>
+              <a-button @click="cancelRecalculate">取消</a-button>
+            </a-space>
+          </div>
+        </div>
+      </div>
     </page-wrapper>
   </div>
 </template>
@@ -154,7 +175,7 @@
   import moment from 'moment';
   import { SearchOutlined, DownloadOutlined, SyncOutlined } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
-  import { monthEndRecalculate } from '@/api/sc/sale/out';
+  import { costRecalculateMixin } from '@/mixins/costRecalculateMixin';
   import { buildSortPageVo } from '@/utils/utils';
   import echarts from '/@/utils/lib/echarts';
   import Detail from '@/views/sc/sale/out/detail.vue';
@@ -169,6 +190,7 @@
 
   export default defineComponent({
     name: 'SaleProfitSheetReport',
+    mixins: [costRecalculateMixin],
     components: {
       Detail,
     },
@@ -194,7 +216,6 @@
         sheetProfitPieChart: null,
         sheetChartEmpty: false,
         costRefreshVisible: false,
-        costRefreshLoading: false,
         costRefreshDateRange: this.getDefaultOrderDateRange(),
         searchFormData: {
           code: '',
@@ -607,28 +628,6 @@
         this.costRefreshDateRange = this.getDefaultOrderDateRange();
         this.costRefreshVisible = true;
       },
-      executeCostRefresh() {
-        const [beginDate, endDate] = this.costRefreshDateRange || [];
-        if (!beginDate || !endDate) {
-          return;
-        }
-        this.costRefreshLoading = true;
-        monthEndRecalculate({
-          beginDate,
-          endDate,
-        })
-          .then((res) => {
-            createSuccess(
-              `重算完成：更新单据 ${res.updatedSheetCount} 条，明细 ${res.updatedDetailCount} 条` +
-                (res.notFilledCount > 0 ? `，${res.notFilledCount} 条未填充` : ''),
-            );
-            this.costRefreshVisible = false;
-            this.search();
-          })
-          .finally(() => {
-            this.costRefreshLoading = false;
-          });
-      },
       disposeSheetChart() {
         ['sheetAmountPieChart', 'sheetProfitPieChart'].forEach((key) => {
           if (this[key]) {
@@ -702,6 +701,41 @@
 
   .chart-empty {
     padding: 64px 0;
+  }
+
+  .recalc-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background: rgba(255, 255, 255, 0.85);
+  }
+
+  .recalc-overlay-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .recalc-tip {
+    margin-top: 24px;
+    color: #2f3f48;
+    font-size: 16px;
+  }
+
+  .recalc-progress {
+    margin-top: 16px;
+    width: 320px;
+  }
+
+  .recalc-error {
+    max-width: 420px;
+    text-align: center;
   }
 
   @media (max-width: 1400px) {

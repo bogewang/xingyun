@@ -438,6 +438,67 @@ export function monthEndRecalculate(params: {
 }
 
 /**
+ * 月底成本重算（启动）—— 计算并缓存全范围月加权均价
+ * @returns taskId 及 totalDays
+ */
+export function startMonthEndRecalculate(params: {
+  calcBeginDate: string;
+  calcEndDate: string;
+  scId?: string;
+}): Promise<{
+  taskId: string;
+  totalDays: number;
+}> {
+  return defHttp.post<{
+    taskId: string;
+    totalDays: number;
+  }>(
+    {
+      url: baseUrl + '/month-end/recalculate/start',
+      data: params,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/**
+ * 月底成本重算（逐天执行）—— 使用缓存的均价处理指定日期的单据
+ * @returns 当天执行结果，hasError=true 时表示失败
+ */
+export function stepMonthEndRecalculate(params: {
+  taskId: string;
+  processDate: string;
+}): Promise<{
+  updatedSheetCount: number;
+  updatedDetailCount: number;
+  notFilledCount: number;
+  processedDate: string;
+  hasError: boolean;
+  errorMsg?: string;
+}> {
+  return defHttp.post<{
+    updatedSheetCount: number;
+    updatedDetailCount: number;
+    notFilledCount: number;
+    processedDate: string;
+    hasError: boolean;
+    errorMsg?: string;
+  }>(
+    {
+      url: baseUrl + '/month-end/recalculate/step',
+      data: params,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/**
  * 销售出库查询页面导入并创建订单
  */
 export function importByQuery(data: { file: Blob }): Promise<string[]> {

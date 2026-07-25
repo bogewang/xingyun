@@ -64,6 +64,8 @@ import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import com.lframework.xingyun.sc.vo.sale.out.*;
 import com.lframework.xingyun.sc.vo.stock.AddProductStockVo;
 import com.lframework.xingyun.sc.vo.stock.SubProductStockVo;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -79,7 +81,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -91,6 +95,32 @@ public class SaleOutSheetServiceImpl extends
     private static final String COST_PRICE_SOURCE_USE_STOCK_PRICE_PM_KEY = "sale_out_cost_price_use_stock_price";
     private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER = DateTimeFormatter
             .ofPattern("yyyy-MM-dd");
+
+    /**
+     * 成本重算任务缓存（内存），key = taskId
+     */
+    private final ConcurrentHashMap<String, RecalculateTask> recalculateTaskCache = new ConcurrentHashMap<>();
+
+    /**
+     * 任务有效期（分钟）
+     */
+    private static final int TASK_EXPIRE_MINUTES = 30;
+
+    /**
+     * 成本重算任务（内部缓存模型）
+     */
+    @Data
+    @AllArgsConstructor
+    private static class RecalculateTask {
+        private String taskId;
+        private LocalDate calcBeginDate;
+        private LocalDate calcEndDate;
+        private String scId;
+        private Map<String, QueryReceiveSheetDetailDto> monthWtdAvgMap;
+        private Map<String, QueryReceiveSheetDetailDto> fallbackMap;
+        private int totalDays;
+        private LocalDateTime createdAt;
+    }
 
     @Autowired
     private SaleOutSheetDetailService saleOutSheetDetailService;
@@ -2223,6 +2253,115 @@ public class SaleOutSheetServiceImpl extends
         }
 
         // 4. 逐单据更新成本
+        return processSheetsWithCostPrice(sheets, monthWtdAvgMap, fallbackMap);
+    }
+
+
+    /**
+     * 月底成本重算（启动）—— 计算并缓存全范围月加权均价
+     * <p>
+     * 计算 calcBeginDate~calcEndDate 范围内的月加权均价及回退价格，
+     * 缓存到内存中并返回 taskId，供后续 step 调用逐天执行。
+     *
+     * @param vo 启动参数（calcBeginDate, calcEndDate, scId）
+     * @return 任务ID及总天数
+     */
+    @Override
+    public MonthEndRecalculateStartResult startMonthEndRecalculate(MonthEndRecalculateStartVo vo) {
+        LocalDate calcBeginDate = vo.getCalcBeginDate();
+        LocalDate calcEndDate = vo.getCalcEndDate();
+
+        log.info("成本重算启动, calcBeginDate: {}, calcEndDate: {}, scId: {}", calcBeginDate, calcEndDate, vo.getScId());
+
+        // 1. 计算月加权均价
+        Map<String, QueryReceiveSheetDetailDto> monthWtdAvgMap =
+                getCostPriceMapFromMonthWtdAvg(calcBeginDate, calcEndDate);
+
+        // 2. 回退方案：当月无采购的商品用最近一次采购价
+        Map<String, QueryReceiveSheetDetailDto> fallbackMap =
+                getCostPriceMapFromReceiveSheet(calcEndDate);
+
+        // 3. 构建缓存任务
+        String taskId = UUID.randomUUID().toString().replace("-", "");
+        int totalDays = (int) ChronoUnit.DAYS.between(calcBeginDate, calcEndDate) + 1;
+
+        RecalculateTask task = new RecalculateTask(
+                taskId, calcBeginDate, calcEndDate, vo.getScId(),
+                monthWtdAvgMap, fallbackMap, totalDays, LocalDateTime.now());
+        recalculateTaskCache.put(taskId, task);
+
+        // 清理过期任务
+        cleanExpiredTasks();
+
+        log.info("成本重算任务已创建, taskId: {}, totalDays: {}", taskId, totalDays);
+        return new MonthEndRecalculateStartResult(taskId, totalDays);
+    }
+
+    /**
+     * 月底成本重算（逐天执行）—— 使用缓存的均价处理指定日期的单据
+     *
+     * @param vo 执行参数（taskId, processDate）
+     * @return 当天执行结果（含 hasError 标识）
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public MonthEndRecalculateStepResult stepMonthEndRecalculate(MonthEndRecalculateStepVo vo) {
+        String taskId = vo.getTaskId();
+        LocalDate processDate = vo.getProcessDate();
+
+        // 1. 从缓存取任务
+        RecalculateTask task = recalculateTaskCache.get(taskId);
+        if (task == null) {
+            return new MonthEndRecalculateStepResult(0, 0, 0, processDate, true,
+                    "任务已过期，请重新发起成本重算");
+        }
+
+        // 2. 检查任务是否过期
+        if (ChronoUnit.MINUTES.between(task.getCreatedAt(), LocalDateTime.now()) > TASK_EXPIRE_MINUTES) {
+            recalculateTaskCache.remove(taskId);
+            return new MonthEndRecalculateStepResult(0, 0, 0, processDate, true,
+                    "任务已过期（超过" + TASK_EXPIRE_MINUTES + "分钟），请重新发起成本重算");
+        }
+
+        try {
+            // 3. 查询指定日期的销售出库单
+            List<SaleOutSheet> sheets = querySaleOutSheets(task.getScId(), processDate, processDate);
+
+            if (CollectionUtils.isEmpty(sheets)) {
+                log.info("成本重算 step：日期 {} 无销售出库单", processDate);
+                return new MonthEndRecalculateStepResult(0, 0, 0, processDate, false, null);
+            }
+
+            // 4. 使用缓存的均价更新单据
+            MonthEndRecalculateResult result = processSheetsWithCostPrice(
+                    sheets, task.getMonthWtdAvgMap(), task.getFallbackMap());
+
+            log.info("成本重算 step 完成, 日期: {}, 单据数: {}, 明细数: {}",
+                    processDate, result.getUpdatedSheetCount(), result.getUpdatedDetailCount());
+
+            return new MonthEndRecalculateStepResult(
+                    result.getUpdatedSheetCount(), result.getUpdatedDetailCount(),
+                    result.getNotFilledCount(), processDate, false, null);
+
+        } catch (Exception e) {
+            log.error("成本重算 step 失败, 日期: {}, taskId: {}", processDate, taskId, e);
+            return new MonthEndRecalculateStepResult(0, 0, 0, processDate, true, e.getMessage());
+        }
+    }
+
+    /**
+     * 用给定的成本单价逐单据更新成本（提取的公共方法）
+     *
+     * @param sheets          待更新单据列表
+     * @param monthWtdAvgMap  月加权均价表
+     * @param fallbackMap     回退采购价表
+     * @return 更新结果
+     */
+    private MonthEndRecalculateResult processSheetsWithCostPrice(
+            List<SaleOutSheet> sheets,
+            Map<String, QueryReceiveSheetDetailDto> monthWtdAvgMap,
+            Map<String, QueryReceiveSheetDetailDto> fallbackMap) {
+
         int detailCount = 0;
         int notFilledCount = 0;
         for (SaleOutSheet sheet : sheets) {
@@ -2275,9 +2414,18 @@ public class SaleOutSheetServiceImpl extends
             this.update(updateWrapper);
         }
 
-        log.info("月底成本重算完成, 单据数: {}, 明细数: {}, 未填充数: {}",
+        log.info("成本更新完成, 单据数: {}, 明细数: {}, 未填充数: {}",
                 sheets.size(), detailCount, notFilledCount);
         return new MonthEndRecalculateResult(sheets.size(), detailCount, notFilledCount);
+    }
+
+    /**
+     * 清理过期的缓存任务
+     */
+    private void cleanExpiredTasks() {
+        LocalDateTime threshold = LocalDateTime.now().minusMinutes(TASK_EXPIRE_MINUTES);
+        recalculateTaskCache.entrySet().removeIf(entry ->
+                entry.getValue().getCreatedAt().isBefore(threshold));
     }
 
     /**
