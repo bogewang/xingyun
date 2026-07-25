@@ -97,6 +97,12 @@ public class SaleOutProductVo implements BaseVo, Serializable {
     @ApiModelProperty("配送日期")
     private LocalDate actualDate;
 
+    /**
+     * 是否询价商品
+     */
+    @ApiModelProperty("是否询价商品")
+    private Boolean inquiryProduct;
+
     public BigDecimal getOrderNum() {
         return orderNum == null ? BigDecimal.ZERO : orderNum;
     }

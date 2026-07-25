@@ -144,6 +144,12 @@ public class ReceiveSheetImportModel implements ExcelModel {
   private String detailDescription;
 
   /**
+   * 是否询价商品
+   */
+  @ExcelIgnore
+  private Boolean inquiryProduct;
+
+  /**
    * 商品备注
    */
   @ExcelProperty("备注")

@@ -55,6 +55,11 @@ export interface SaleOutProductVo {
   description: string;
 
   /**
+   * 是否询价商品
+   */
+  inquiryProduct: boolean;
+
+  /**
    * 成本单价
    */
   costPrice: number;

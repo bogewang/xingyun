@@ -72,6 +72,12 @@ public class SaleOutSheetImportModel implements ExcelModel {
     private BigDecimal taxPrice;
 
     /**
+     * 是否询价商品
+     */
+    @ExcelIgnore
+    private Boolean inquiryProduct;
+
+    /**
      * 商品备注
      */
     @ExcelProperty("备注")

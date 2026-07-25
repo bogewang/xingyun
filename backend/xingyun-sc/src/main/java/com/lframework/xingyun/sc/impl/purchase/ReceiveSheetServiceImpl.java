@@ -948,6 +948,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
                 data.setProductId(product.getId());
                 data.setUnitId(unit.getId());
                 data.setSpec(product.getSpec());
+                data.setInquiryProduct(product.getInquiryProduct());
                 BigDecimal defaultPurchasePrice = productLatestPriceCacheService
                         .getLatestPurchasePrice(product.getId());
                 if (data.getPurchasePrice() == null) {

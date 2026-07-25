@@ -1988,6 +1988,7 @@ public class SaleOutSheetServiceImpl extends
                 data.setUnitId(unit.getId());
                 data.setSpec(product.getSpec());
                 data.setUnit(unit.getUnitName());
+                data.setInquiryProduct(product.getInquiryProduct());
                 data.setOriPrice(product.getSalePrice() == null ? BigDecimal.ZERO
                         : NumberUtil.mul(product.getSalePrice(), unit.getConversionRate()));
                 // 导入时，如果指定销售价，则以销售价为准
