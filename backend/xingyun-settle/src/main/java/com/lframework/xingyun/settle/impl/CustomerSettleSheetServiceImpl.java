@@ -25,6 +25,7 @@ import com.lframework.xingyun.settle.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleSheetFullDto;
 import com.lframework.xingyun.settle.entity.CustomerSettleSheet;
 import com.lframework.xingyun.settle.entity.CustomerSettleSheetDetail;
+import com.lframework.xingyun.settle.enums.CustomerSaleSettleBizType;
 import com.lframework.xingyun.settle.enums.CustomerSettleSheetStatus;
 import com.lframework.xingyun.settle.mappers.CustomerSettleSheetMapper;
 import com.lframework.xingyun.settle.service.CustomerSettleSheetDetailService;
@@ -237,14 +238,14 @@ public class CustomerSettleSheetServiceImpl extends
     if (!CollectionUtil.isEmpty(saleOutSheets)) {
       saleOutSheets.forEach(item -> {
         bizCodeMap.put(item.getId(), item.getCode());
-        bizTypeMap.put(item.getId(), 1);
+        bizTypeMap.put(item.getId(), CustomerSaleSettleBizType.OUT_SHEET.getCode());
       });
     }
     List<SaleReturn> saleReturns = saleReturnService.listByIds(bizIds);
     if (!CollectionUtil.isEmpty(saleReturns)) {
       saleReturns.forEach(item -> {
         bizCodeMap.put(item.getId(), item.getCode());
-        bizTypeMap.put(item.getId(), 2);
+        bizTypeMap.put(item.getId(), CustomerSaleSettleBizType.SALE_RETURN.getCode());
       });
     }
     result.getDetails().forEach(item -> {

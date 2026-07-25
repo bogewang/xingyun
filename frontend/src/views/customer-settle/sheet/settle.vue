@@ -102,7 +102,7 @@
   import { defineComponent } from 'vue';
   import * as api from '@/api/customer-settle/sheet';
   import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
-  import { CUSTOMER_SETTLE_CHECK_SHEET_BIZ_TYPE } from '@/enums/biz/customerSettleCheckSheetBizType';
+  import { CUSTOMER_SALE_SETTLE_BIZ_TYPE } from '@/enums/biz/customerSaleSettleBizType';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { createError, createSuccess } from '@/hooks/web/msg';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
@@ -122,7 +122,7 @@
       return {
         loading: false,
         SETTLE_STATUS,
-        CUSTOMER_SETTLE_CHECK_SHEET_BIZ_TYPE,
+        CUSTOMER_SALE_SETTLE_BIZ_TYPE,
         searchFormData: {
           customerId: this.$route.query.customerId ? String(this.$route.query.customerId) : '',
           bizType: Number(this.$route.query.bizType || 1),
@@ -153,7 +153,7 @@
             title: '单据类型',
             width: 120,
             formatter: ({ cellValue }: { cellValue: number }) =>
-              CUSTOMER_SETTLE_CHECK_SHEET_BIZ_TYPE.getDesc(cellValue) || '-',
+              CUSTOMER_SALE_SETTLE_BIZ_TYPE.getDesc(cellValue) || '-',
           },
           { field: 'totalAmount', title: '应收', width: 110, align: 'right' },
           { field: 'receivedAmount', title: '已收', width: 110, align: 'right' },

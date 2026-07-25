@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CUSTOMER_SALE_SETTLE_BIZ_TYPE } from '@/enums/biz/customerSaleSettleBizType';
 import {
   buildDirectSettlePayload,
   canDirectSettle,
@@ -7,6 +8,12 @@ import {
 } from './customerSettleWorkbench';
 
 describe('客户结算工作台', () => {
+  it('只展示可结算的销售出库和销售退货类型', () => {
+    expect(CUSTOMER_SALE_SETTLE_BIZ_TYPE.values()).toHaveLength(2);
+    expect(CUSTOMER_SALE_SETTLE_BIZ_TYPE.getDesc(1)).toBe('销售出库单');
+    expect(CUSTOMER_SALE_SETTLE_BIZ_TYPE.getDesc(2)).toBe('销售退单');
+  });
+
   it('拒绝勾选不同客户的单据', () => {
     expect(canDirectSettle([{ customerId: 'C1' }, { customerId: 'C2' }])).toBe(false);
   });

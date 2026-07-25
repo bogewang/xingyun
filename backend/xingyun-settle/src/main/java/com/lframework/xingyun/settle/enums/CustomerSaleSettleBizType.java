@@ -3,16 +3,18 @@ package com.lframework.xingyun.settle.enums;
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.lframework.starter.web.core.enums.BaseEnum;
 
-public enum CustomerSettleCheckSheetBizType implements BaseEnum<Integer> {
-  OUT_SHEET(1, "销售出库单"), SALE_RETURN(2, "销售退单"), SETTLE_FEE_SHEET(3, "客户费用单"), SETTLE_PRE_SHEET(4,
-      "客户预收款单");
+/**
+ * 客户销售结算业务类型。
+ */
+public enum CustomerSaleSettleBizType implements BaseEnum<Integer> {
+  OUT_SHEET(1, "销售出库单"), SALE_RETURN(2, "销售退单");
 
   @EnumValue
   private final Integer code;
 
   private final String desc;
 
-  CustomerSettleCheckSheetBizType(Integer code, String desc) {
+  CustomerSaleSettleBizType(Integer code, String desc) {
 
     this.code = code;
     this.desc = desc;

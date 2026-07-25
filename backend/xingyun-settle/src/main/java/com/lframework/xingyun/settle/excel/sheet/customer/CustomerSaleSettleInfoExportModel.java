@@ -5,7 +5,7 @@ import com.lframework.starter.web.core.components.excel.ExcelModel;
 import com.lframework.starter.web.core.utils.EnumUtil;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSaleSettleInfoBo;
-import com.lframework.xingyun.settle.enums.CustomerSettleCheckSheetBizType;
+import com.lframework.xingyun.settle.enums.CustomerSaleSettleBizType;
 import java.math.BigDecimal;
 import lombok.Data;
 
@@ -47,7 +47,7 @@ public class CustomerSaleSettleInfoExportModel implements ExcelModel {
   public CustomerSaleSettleInfoExportModel(CustomerSaleSettleInfoBo data) {
     this.customerName = data.getCustomerName();
     this.code = data.getCode();
-    this.bizType = EnumUtil.getDesc(CustomerSettleCheckSheetBizType.class, data.getBizType());
+    this.bizType = EnumUtil.getDesc(CustomerSaleSettleBizType.class, data.getBizType());
     this.totalAmount = data.getTotalAmount();
     this.receivedAmount = data.getReceivedAmount();
     this.settleAmount = data.getSettleAmount();

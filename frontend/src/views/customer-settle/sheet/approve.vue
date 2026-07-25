@@ -87,19 +87,7 @@
       >
         <!-- 单据号 列自定义内容 -->
         <template #bizCode_default="{ row }">
-          <span v-no-permission="['customer-settle:check-sheet:query']">{{ row.bizCode }}</span>
-          <a
-            v-permission="['customer-settle:check-sheet:query']"
-            type="link"
-            @click="
-              (e) => {
-                bizId = row.bizId;
-                $nextTick(() => $refs.viewSettleCheckSheetDetailDialog.openDialog());
-              }
-            "
-          >
-            {{ row.bizCode }}
-          </a>
+          <span>{{ row.bizCode }}</span>
         </template>
 
         <!-- 已收款金额 列自定义内容 -->
@@ -179,14 +167,11 @@
       </div>
     </div>
     <approve-refuse ref="approveRefuseDialog" @confirm="doApproveRefuse" />
-    <!-- 客户对账单详情 -->
-    <settle-check-sheet-detail :id="bizId" ref="viewSettleCheckSheetDetailDialog" />
   </div>
 </template>
 <script>
   import { defineComponent } from 'vue';
   import ApproveRefuse from '@/components/ApproveRefuse';
-  import SettleCheckSheetDetail from '@/views/customer-settle/check-sheet/detail.vue';
   import * as api from '@/api/customer-settle/sheet';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { add, isFloat, sub } from '@/utils/utils';
@@ -198,7 +183,6 @@
     name: 'ApproveCustomerSettleSheet',
     components: {
       ApproveRefuse,
-      SettleCheckSheetDetail,
       OrderTimeLine,
     },
     mixins: [multiplePageMix],
@@ -257,7 +241,6 @@
           { field: 'description', title: '备注', width: 260 },
         ],
         tableData: [],
-        bizId: '',
       };
     },
     computed: {},
