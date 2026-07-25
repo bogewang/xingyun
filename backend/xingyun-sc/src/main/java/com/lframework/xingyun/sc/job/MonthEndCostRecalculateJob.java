@@ -7,6 +7,7 @@ import com.lframework.xingyun.sc.vo.sale.out.MonthEndRecalculateVo;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 
@@ -25,6 +26,7 @@ import java.time.LocalDate;
  * </ul>
  */
 @Slf4j
+@Service
 public class MonthEndCostRecalculateJob extends QrtzJob {
 
     @Autowired
