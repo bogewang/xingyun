@@ -275,7 +275,7 @@ sudo /www/server/nginx/sbin/nginx -s reload
 提交 workflow 和文档：
 
 ```bash
-git add .github/workflows/deploy-test.yml deploy/systemd/xingyun-api-test.service docs/deploy/github-actions-test.md
+git add .github/workflows/deploy-test-ssh.yml deploy/systemd/xingyun-api-test.service docs/deploy/github-actions-test.md
 git commit -m "配置测试环境 GitHub Actions 自动部署"
 git push origin develop
 ```
