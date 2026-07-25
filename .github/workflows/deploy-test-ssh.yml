@@ -13,15 +13,10 @@ concurrency:
 jobs:
   deploy-test:
     name: Build and deploy test
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, deploy]
     environment: test
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: SSH Agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
