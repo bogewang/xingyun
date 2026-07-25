@@ -9,6 +9,7 @@ import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.starter.mq.core.utils.ExportTaskUtil;
 import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSettleBizItemBo;
+import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSaleSettleInfoBo;
 import com.lframework.xingyun.settle.bo.sheet.customer.GetCustomerSettleSheetBo;
 import com.lframework.xingyun.settle.bo.sheet.customer.QueryCustomerSettleSheetBo;
 import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleBizItemDto;
@@ -20,6 +21,7 @@ import com.lframework.xingyun.settle.vo.sheet.customer.ApprovePassCustomerSettle
 import com.lframework.xingyun.settle.vo.sheet.customer.ApproveRefuseCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.CreateCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleSheetVo;
+import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSaleSettleInfoVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerUnSettleBizItemVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.UpdateCustomerSettleSheetVo;
 import io.swagger.annotations.Api;
@@ -39,6 +41,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 客户结算单
@@ -49,10 +52,30 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RestController
 @RequestMapping("/customer/settle/sheet")
+@Slf4j
 public class CustomerSettleSheetController extends DefaultBaseController {
 
   @Autowired
   private CustomerSettleSheetService customerSettleSheetService;
+
+  /**
+   * 查询客户销售业务单据结算工作台信息。
+   *
+   * @param vo 查询条件
+   * @return 工作台分页数据
+   */
+  @ApiOperation("查询客户销售结算工作台")
+  @HasPermission({"customer-settle:sheet:query"})
+  @PostMapping("/sale-settle-infos")
+  public InvokeResult<PageResult<CustomerSaleSettleInfoBo>> querySaleSettleInfos(
+      @RequestBody @Valid QueryCustomerSaleSettleInfoVo vo) {
+    try {
+      return InvokeResultBuilder.success(customerSettleSheetService.querySaleSettleInfos(vo));
+    } catch (Exception e) {
+      log.error("查询客户结算工作台失败", e);
+      return InvokeResultBuilder.fail(e.getMessage(), null);
+    }
+  }
 
   /**
    * 客户结算单列表

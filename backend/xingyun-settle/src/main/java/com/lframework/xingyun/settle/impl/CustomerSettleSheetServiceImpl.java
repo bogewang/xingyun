@@ -24,11 +24,18 @@ import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTi
 import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
 import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineBizType;
 import com.lframework.xingyun.settle.components.code.GenerateCodeTypePool;
+import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSaleSettleInfoBo;
 import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleBizItemDto;
 import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleSheetFullDto;
 import com.lframework.xingyun.settle.entity.CustomerSettleCheckSheet;
 import com.lframework.xingyun.settle.entity.CustomerSettleSheet;
 import com.lframework.xingyun.settle.entity.CustomerSettleSheetDetail;
+import com.lframework.xingyun.basedata.entity.Customer;
+import com.lframework.xingyun.basedata.service.customer.CustomerService;
+import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
+import com.lframework.xingyun.sc.service.sale.SaleReturnService;
+import com.lframework.xingyun.sc.vo.sale.out.QuerySaleOutSheetVo;
+import com.lframework.xingyun.sc.vo.sale.returned.QuerySaleReturnVo;
 import com.lframework.xingyun.settle.enums.CustomerSettleSheetStatus;
 import com.lframework.xingyun.settle.enums.SettleOpLogType;
 import com.lframework.xingyun.settle.mappers.CustomerSettleSheetMapper;
@@ -40,6 +47,7 @@ import com.lframework.xingyun.settle.vo.sheet.customer.ApproveRefuseCustomerSett
 import com.lframework.xingyun.settle.vo.sheet.customer.CreateCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.CustomerSettleSheetItemVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleSheetVo;
+import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSaleSettleInfoVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerUnSettleBizItemVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.UpdateCustomerSettleSheetVo;
 import com.lframework.starter.web.core.annotations.oplog.OpLog;
@@ -47,7 +55,11 @@ import com.lframework.starter.web.core.utils.OpLogUtil;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,6 +77,140 @@ public class CustomerSettleSheetServiceImpl extends
 
   @Autowired
   private CustomerSettleCheckSheetService customerSettleCheckSheetService;
+
+  @Autowired
+  private SaleOutSheetService saleOutSheetService;
+
+  @Autowired
+  private SaleReturnService saleReturnService;
+
+  @Autowired
+  private CustomerService customerService;
+
+  /**
+   * 查询客户销售业务单据结算工作台信息。
+   *
+   * @param vo 查询条件
+   * @return 结算工作台分页数据
+   */
+  @Override
+  public PageResult<CustomerSaleSettleInfoBo> querySaleSettleInfos(
+      QueryCustomerSaleSettleInfoVo vo) {
+    List<CustomerSaleSettleInfoBo> results = new ArrayList<>();
+    if (vo.getBizType() == null || vo.getBizType() == 1) {
+      results.addAll(buildSaleOutSettleInfos(vo));
+    }
+    if (vo.getBizType() == null || vo.getBizType() == 2) {
+      results.addAll(buildSaleReturnSettleInfos(vo));
+    }
+    fillSettleAmounts(results);
+    int pageIndex = vo.getPageIndex() == null || vo.getPageIndex() < 1 ? 1 : vo.getPageIndex();
+    int pageSize = vo.getPageSize() == null || vo.getPageSize() < 1 ? 20 : vo.getPageSize();
+    int fromIndex = Math.min((pageIndex - 1) * pageSize, results.size());
+    int toIndex = Math.min(fromIndex + pageSize, results.size());
+    return PageResultUtil.newInstance(pageIndex, pageSize, results.size(),
+        results.subList(fromIndex, toIndex));
+  }
+
+  /**
+   * 构建销售出库单结算工作台信息。
+   *
+   * @param vo 查询条件
+   * @return 销售出库单工作台信息
+   */
+  private List<CustomerSaleSettleInfoBo> buildSaleOutSettleInfos(QueryCustomerSaleSettleInfoVo vo) {
+    QuerySaleOutSheetVo saleOutVo = new QuerySaleOutSheetVo();
+    saleOutVo.setCode(vo.getCode());
+    saleOutVo.setCustomerId(vo.getCustomerId());
+    return saleOutSheetService.query(saleOutVo).stream()
+        .map(sheet -> buildSettleInfo(sheet.getId(), 1, sheet.getCode(), sheet.getCustomerId(),
+            sheet.getTotalAmount(), sheet.getPaidAmount(), sheet.getSettleStatus() == null ? null
+                : sheet.getSettleStatus().getCode()))
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * 构建销售退货单结算工作台信息。
+   *
+   * @param vo 查询条件
+   * @return 销售退货单工作台信息
+   */
+  private List<CustomerSaleSettleInfoBo> buildSaleReturnSettleInfos(QueryCustomerSaleSettleInfoVo vo) {
+    QuerySaleReturnVo saleReturnVo = new QuerySaleReturnVo();
+    saleReturnVo.setCode(vo.getCode());
+    saleReturnVo.setCustomerId(vo.getCustomerId());
+    return saleReturnService.query(saleReturnVo).stream()
+        .map(sheet -> buildSettleInfo(sheet.getId(), 2, sheet.getCode(), sheet.getCustomerId(),
+            sheet.getTotalAmount(), BigDecimal.ZERO, sheet.getSettleStatus() == null ? null
+                : sheet.getSettleStatus().getCode()))
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * 创建单据基础结算信息。
+   *
+   * @param id 单据ID
+   * @param bizType 业务类型
+   * @param code 单号
+   * @param customerId 客户ID
+   * @param totalAmount 单据金额
+   * @param receivedAmount 已收金额
+   * @param settleStatus 结算状态
+   * @return 单据结算信息
+   */
+  private CustomerSaleSettleInfoBo buildSettleInfo(String id, int bizType, String code,
+      String customerId, BigDecimal totalAmount, BigDecimal receivedAmount, Integer settleStatus) {
+    CustomerSaleSettleInfoBo result = new CustomerSaleSettleInfoBo();
+    result.setId(id);
+    result.setBizType(bizType);
+    result.setCode(code);
+    result.setCustomerId(customerId);
+    result.setTotalAmount(totalAmount == null ? BigDecimal.ZERO : totalAmount);
+    result.setReceivedAmount(receivedAmount == null ? BigDecimal.ZERO : receivedAmount);
+    result.setSettleStatus(settleStatus);
+    return result;
+  }
+
+  /**
+   * 批量填充客户名称、已结算金额和未结算金额。
+   *
+   * @param results 工作台信息
+   */
+  private void fillSettleAmounts(List<CustomerSaleSettleInfoBo> results) {
+    if (CollectionUtil.isEmpty(results)) {
+      return;
+    }
+    Map<String, String> customerNameMap = customerService.listByIds(results.stream()
+            .map(CustomerSaleSettleInfoBo::getCustomerId).filter(StringUtil::isNotBlank)
+            .collect(Collectors.toSet()))
+        .stream().collect(Collectors.toMap(Customer::getId, Customer::getName, (a, b) -> a));
+    Map<String, BigDecimal> settleAmountMap = querySettleAmountMap(results.stream()
+        .map(CustomerSaleSettleInfoBo::getId).collect(Collectors.toList()));
+    results.forEach(item -> {
+      item.setCustomerName(customerNameMap.get(item.getCustomerId()));
+      BigDecimal settleAmount = settleAmountMap.getOrDefault(item.getId(), BigDecimal.ZERO);
+      item.setSettleAmount(settleAmount);
+      item.setUnSettleAmount(item.getTotalAmount().subtract(item.getReceivedAmount())
+          .subtract(settleAmount).max(BigDecimal.ZERO));
+    });
+  }
+
+  /**
+   * 按业务单据ID批量汇总客户结算明细金额。
+   *
+   * @param bizIds 业务单据ID
+   * @return 已结算金额映射
+   */
+  private Map<String, BigDecimal> querySettleAmountMap(Collection<String> bizIds) {
+    if (CollectionUtil.isEmpty(bizIds)) {
+      return Collections.emptyMap();
+    }
+    return customerSettleSheetDetailService.list(Wrappers.lambdaQuery(CustomerSettleSheetDetail.class)
+            .in(CustomerSettleSheetDetail::getBizId, bizIds))
+        .stream().collect(Collectors.groupingBy(CustomerSettleSheetDetail::getBizId,
+            Collectors.reducing(BigDecimal.ZERO, CustomerSettleSheetDetail::getPayAmount,
+                (left, right) -> left.add(right == null ? BigDecimal.ZERO : right))));
+  }
 
   @Override
   public PageResult<CustomerSettleSheet> query(Integer pageIndex, Integer pageSize,
