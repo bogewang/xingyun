@@ -115,6 +115,16 @@ public class CustomerSettleSheetFullDto implements BaseDto, Serializable {
     private String bizId;
 
     /**
+     * 业务单据号。
+     */
+    private String bizCode;
+
+    /**
+     * 明细排序号。
+     */
+    private Integer orderNo;
+
+    /**
      * 实付金额
      */
     private BigDecimal payAmount;

@@ -5,7 +5,7 @@ import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.vo.BaseVo;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -31,18 +31,11 @@ public class CreateCustomerSettleSheetVo implements BaseVo, Serializable {
   private List<CustomerSettleSheetItemVo> items;
 
   /**
-   * 起始日期
+   * 确认结算金额。
    */
-  @ApiModelProperty(value = "起始日期", required = true)
-  @NotNull(message = "起始日期不能为空！")
-  private LocalDate startDate;
-
-  /**
-   * 截止日期
-   */
-  @ApiModelProperty(value = "截止日期", required = true)
-  @NotNull(message = "截止日期不能为空！")
-  private LocalDate endDate;
+  @ApiModelProperty(value = "确认结算金额", required = true)
+  @NotNull(message = "确认结算金额不能为空！")
+  private BigDecimal settleAmount;
 
   /**
    * 备注
@@ -54,16 +47,12 @@ public class CreateCustomerSettleSheetVo implements BaseVo, Serializable {
 
     int orderNo = 1;
     for (CustomerSettleSheetItemVo item : this.items) {
-      if (StringUtil.isBlank(item.getId())) {
-        throw new InputErrorException("第" + orderNo + "行对账单不能为空！");
+      if (StringUtil.isBlank(item.getBizId())) {
+        throw new InputErrorException("第" + orderNo + "行业务单据不能为空！");
       }
 
-      if (item.getPayAmount() == null) {
-        throw new InputErrorException("第" + orderNo + "行实收金额不能为空！");
-      }
-
-      if (item.getDiscountAmount() == null) {
-        throw new InputErrorException("第" + orderNo + "行优惠金额不能为空！");
+      if (item.getBizType() == null || (item.getBizType() != 1 && item.getBizType() != 2)) {
+        throw new InputErrorException("第" + orderNo + "行业务类型不正确！");
       }
 
       orderNo++;

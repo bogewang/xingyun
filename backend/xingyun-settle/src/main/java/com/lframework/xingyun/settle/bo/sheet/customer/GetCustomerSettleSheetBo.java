@@ -9,9 +9,7 @@ import com.lframework.starter.web.core.bo.BaseBo;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.basedata.entity.Customer;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
-import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleBizItemDto;
 import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleSheetFullDto;
-import com.lframework.xingyun.settle.service.CustomerSettleSheetService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
 import io.swagger.annotations.ApiModelProperty;
 import java.math.BigDecimal;
@@ -255,16 +253,7 @@ public class GetCustomerSettleSheetBo extends BaseBo<CustomerSettleSheetFullDto>
 
     @Override
     protected void afterInit(CustomerSettleSheetFullDto.SheetDetailDto dto) {
-
-      CustomerSettleSheetService settleSheetService = ApplicationUtil.getBean(
-          CustomerSettleSheetService.class);
-      CustomerSettleBizItemDto item = settleSheetService.getBizItem(dto.getBizId());
-      this.bizCode = item.getCode();
-      this.approveTime = item.getApproveTime();
-      this.totalPayAmount = item.getTotalPayAmount();
-      this.totalPayedAmount = item.getTotalPayedAmount();
-      this.totalDiscountAmount = item.getTotalDiscountAmount();
-      this.totalUnPayAmount = item.getTotalUnPayAmount();
+      // 业务单据展示信息由结算记录详情查询批量补充，避免依赖已移除的客户对账单。
     }
   }
 }

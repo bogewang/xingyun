@@ -8,22 +8,16 @@ import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.starter.mq.core.utils.ExportTaskUtil;
-import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSettleBizItemBo;
 import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSaleSettleInfoBo;
 import com.lframework.xingyun.settle.bo.sheet.customer.GetCustomerSettleSheetBo;
 import com.lframework.xingyun.settle.bo.sheet.customer.QueryCustomerSettleSheetBo;
-import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleBizItemDto;
 import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleSheetFullDto;
 import com.lframework.xingyun.settle.entity.CustomerSettleSheet;
 import com.lframework.xingyun.settle.excel.sheet.customer.CustomerSettleSheetExportTaskWorker;
 import com.lframework.xingyun.settle.service.CustomerSettleSheetService;
-import com.lframework.xingyun.settle.vo.sheet.customer.ApprovePassCustomerSettleSheetVo;
-import com.lframework.xingyun.settle.vo.sheet.customer.ApproveRefuseCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.CreateCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSaleSettleInfoVo;
-import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerUnSettleBizItemVo;
-import com.lframework.xingyun.settle.vo.sheet.customer.UpdateCustomerSettleSheetVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -35,9 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -130,106 +122,19 @@ public class CustomerSettleSheetController extends DefaultBaseController {
   }
 
   /**
-   * 创建客户结算单
-   */
-  @ApiOperation("创建客户结算单")
-  @HasPermission({"customer-settle:sheet:add"})
-  @PostMapping
-  public InvokeResult<String> create(@RequestBody @Valid CreateCustomerSettleSheetVo vo) {
-
-    vo.validate();
-
-    String id = customerSettleSheetService.create(vo);
-
-    return InvokeResultBuilder.success(id);
-  }
-
-  /**
-   * 修改客户结算单
-   */
-  @ApiOperation("修改客户结算单")
-  @HasPermission({"customer-settle:sheet:modify"})
-  @PutMapping
-  public InvokeResult<Void> update(@RequestBody @Valid UpdateCustomerSettleSheetVo vo) {
-
-    vo.validate();
-
-    customerSettleSheetService.update(vo);
-
-    return InvokeResultBuilder.success();
-  }
-
-  /**
-   * 审核通过客户结算单
-   */
-  @ApiOperation("审核通过客户结算单")
-  @HasPermission({"customer-settle:sheet:approve"})
-  @PatchMapping("/approve/pass")
-  public InvokeResult<Void> approvePass(@RequestBody @Valid ApprovePassCustomerSettleSheetVo vo) {
-
-    customerSettleSheetService.approvePass(vo);
-
-    return InvokeResultBuilder.success();
-  }
-
-  /**
    * 直接审核通过客户结算单
    */
   @ApiOperation("直接审核通过客户结算单")
   @HasPermission({"customer-settle:sheet:approve"})
   @PostMapping("/approve/pass/direct")
   public InvokeResult<Void> directApprovePass(@RequestBody @Valid CreateCustomerSettleSheetVo vo) {
-
-    vo.validate();
-
-    customerSettleSheetService.directApprovePass(vo);
-
-    return InvokeResultBuilder.success();
-  }
-
-  /**
-   * 审核拒绝客户结算单
-   */
-  @ApiOperation("审核拒绝客户结算单")
-  @HasPermission({"customer-settle:sheet:approve"})
-  @PatchMapping("/approve/refuse")
-  public InvokeResult<Void> approveRefuse(
-      @RequestBody @Valid ApproveRefuseCustomerSettleSheetVo vo) {
-
-    customerSettleSheetService.approveRefuse(vo);
-
-    return InvokeResultBuilder.success();
-  }
-
-  /**
-   * 删除客户结算单
-   */
-  @ApiOperation("删除客户结算单")
-  @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
-  @HasPermission({"customer-settle:sheet:delete"})
-  @DeleteMapping
-  public InvokeResult<Void> deleteById(@NotBlank(message = "客户结算单ID不能为空！") String id) {
-
-    customerSettleSheetService.deleteById(id);
-
-    return InvokeResultBuilder.success();
-  }
-
-  /**
-   * 查询未结算的业务单据
-   */
-  @ApiOperation("查询未结算的业务单据")
-  @HasPermission({"customer-settle:sheet:add", "customer-settle:sheet:modify"})
-  @GetMapping("/unsettle-items")
-  public InvokeResult<List<CustomerSettleBizItemBo>> getUnSettleItems(
-      @Valid QueryCustomerUnSettleBizItemVo vo) {
-
-    List<CustomerSettleBizItemDto> results = customerSettleSheetService.getUnSettleBizItems(vo);
-    List<CustomerSettleBizItemBo> datas = CollectionUtil.emptyList();
-    if (!CollectionUtil.isEmpty(results)) {
-      datas = results.stream().map(CustomerSettleBizItemBo::new).collect(Collectors.toList());
+    try {
+      vo.validate();
+      customerSettleSheetService.directApprovePass(vo);
+      return InvokeResultBuilder.success();
+    } catch (Exception e) {
+      log.error("客户直接结算失败", e);
+      return InvokeResultBuilder.fail(e.getMessage(), null);
     }
-
-    return InvokeResultBuilder.success(datas);
   }
 }

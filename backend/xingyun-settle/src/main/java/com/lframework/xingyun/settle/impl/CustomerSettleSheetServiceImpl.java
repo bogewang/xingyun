@@ -1,71 +1,58 @@
 package com.lframework.xingyun.settle.impl;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.pagehelper.PageInfo;
-import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
-import com.lframework.starter.common.exceptions.impl.InputErrorException;
 import com.lframework.starter.common.utils.Assert;
 import com.lframework.starter.common.utils.CollectionUtil;
-import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
-import com.lframework.starter.web.core.components.security.AbstractUserDetails;
-import com.lframework.starter.web.core.components.security.SecurityUtil;
-import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
 import com.lframework.starter.web.core.components.resp.PageResult;
-import com.lframework.starter.web.inner.service.GenerateCodeService;
-import com.lframework.starter.web.core.utils.IdUtil;
+import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
 import com.lframework.starter.web.core.utils.PageHelperUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
-import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
-import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTimeLineBizType;
-import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTimeLineBizType;
-import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
-import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineBizType;
-import com.lframework.xingyun.settle.components.code.GenerateCodeTypePool;
-import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSaleSettleInfoBo;
-import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleBizItemDto;
-import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleSheetFullDto;
-import com.lframework.xingyun.settle.entity.CustomerSettleCheckSheet;
-import com.lframework.xingyun.settle.entity.CustomerSettleSheet;
-import com.lframework.xingyun.settle.entity.CustomerSettleSheetDetail;
+import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.xingyun.basedata.entity.Customer;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.entity.SaleReturn;
+import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
 import com.lframework.xingyun.sc.service.sale.SaleReturnService;
 import com.lframework.xingyun.sc.vo.sale.out.QuerySaleOutSheetVo;
 import com.lframework.xingyun.sc.vo.sale.returned.QuerySaleReturnVo;
+import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSaleSettleInfoBo;
+import com.lframework.xingyun.settle.components.code.GenerateCodeTypePool;
+import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleSheetFullDto;
+import com.lframework.xingyun.settle.entity.CustomerSettleSheet;
+import com.lframework.xingyun.settle.entity.CustomerSettleSheetDetail;
 import com.lframework.xingyun.settle.enums.CustomerSettleSheetStatus;
-import com.lframework.xingyun.settle.enums.SettleOpLogType;
 import com.lframework.xingyun.settle.mappers.CustomerSettleSheetMapper;
-import com.lframework.xingyun.settle.service.CustomerSettleCheckSheetService;
 import com.lframework.xingyun.settle.service.CustomerSettleSheetDetailService;
 import com.lframework.xingyun.settle.service.CustomerSettleSheetService;
-import com.lframework.xingyun.settle.vo.sheet.customer.ApprovePassCustomerSettleSheetVo;
-import com.lframework.xingyun.settle.vo.sheet.customer.ApproveRefuseCustomerSettleSheetVo;
+import com.lframework.xingyun.settle.utils.SettleAmountAllocationUtil;
 import com.lframework.xingyun.settle.vo.sheet.customer.CreateCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.CustomerSettleSheetItemVo;
-import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSaleSettleInfoVo;
-import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerUnSettleBizItemVo;
-import com.lframework.xingyun.settle.vo.sheet.customer.UpdateCustomerSettleSheetVo;
-import com.lframework.starter.web.core.annotations.oplog.OpLog;
-import com.lframework.starter.web.core.utils.OpLogUtil;
+import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleSheetVo;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 客户结算单服务实现。
+ */
 @Service
 public class CustomerSettleSheetServiceImpl extends
     BaseMpServiceImpl<CustomerSettleSheetMapper, CustomerSettleSheet>
@@ -76,9 +63,6 @@ public class CustomerSettleSheetServiceImpl extends
 
   @Autowired
   private GenerateCodeService generateCodeService;
-
-  @Autowired
-  private CustomerSettleCheckSheetService customerSettleCheckSheetService;
 
   @Autowired
   private SaleOutSheetService saleOutSheetService;
@@ -106,64 +90,51 @@ public class CustomerSettleSheetServiceImpl extends
     PageResult<CustomerSaleSettleInfoBo> result = vo.getBizType() == 1
         ? querySaleOutSettleInfos(pageIndex, pageSize, vo)
         : querySaleReturnSettleInfos(pageIndex, pageSize, vo);
-    List<CustomerSaleSettleInfoBo> results = result.getDatas();
-    fillSettleAmounts(results);
+    fillSettleAmounts(result.getDatas());
     return result;
   }
 
   /**
-   * 构建销售出库单结算工作台信息。
-   *
-   * @param vo 查询条件
-   * @return 销售出库单工作台信息
+   * 查询销售出库单结算工作台信息。
    */
   private PageResult<CustomerSaleSettleInfoBo> querySaleOutSettleInfos(int pageIndex, int pageSize,
       QueryCustomerSaleSettleInfoVo vo) {
     QuerySaleOutSheetVo saleOutVo = new QuerySaleOutSheetVo();
     saleOutVo.setCode(vo.getCode());
     saleOutVo.setCustomerId(vo.getCustomerId());
-    PageResult<SaleOutSheet> pageResult = saleOutSheetService.query(
-        pageIndex, pageSize, saleOutVo);
+    PageResult<SaleOutSheet> pageResult = saleOutSheetService.query(pageIndex, pageSize, saleOutVo);
     List<CustomerSaleSettleInfoBo> results = pageResult.getDatas().stream()
         .map(sheet -> buildSettleInfo(sheet.getId(), 1, sheet.getCode(), sheet.getCustomerId(),
-            sheet.getTotalAmount(), sheet.getPaidAmount(), sheet.getSettleStatus() == null ? null
-                : sheet.getSettleStatus().getCode()))
+            sheet.getTotalAmount(), sheet.getPaidAmount(), getSettleStatusCode(sheet.getSettleStatus())))
         .collect(Collectors.toList());
     return PageResultUtil.rebuild(pageResult, results);
   }
 
   /**
-   * 构建销售退货单结算工作台信息。
-   *
-   * @param vo 查询条件
-   * @return 销售退货单工作台信息
+   * 查询销售退货单结算工作台信息。
    */
   private PageResult<CustomerSaleSettleInfoBo> querySaleReturnSettleInfos(int pageIndex,
       int pageSize, QueryCustomerSaleSettleInfoVo vo) {
     QuerySaleReturnVo saleReturnVo = new QuerySaleReturnVo();
     saleReturnVo.setCode(vo.getCode());
     saleReturnVo.setCustomerId(vo.getCustomerId());
-    PageResult<SaleReturn> pageResult = saleReturnService.query(
-        pageIndex, pageSize, saleReturnVo);
+    PageResult<SaleReturn> pageResult = saleReturnService.query(pageIndex, pageSize, saleReturnVo);
     List<CustomerSaleSettleInfoBo> results = pageResult.getDatas().stream()
         .map(sheet -> buildSettleInfo(sheet.getId(), 2, sheet.getCode(), sheet.getCustomerId(),
-            sheet.getTotalAmount(), BigDecimal.ZERO, sheet.getSettleStatus() == null ? null
-                : sheet.getSettleStatus().getCode()))
+            sheet.getTotalAmount(), BigDecimal.ZERO, getSettleStatusCode(sheet.getSettleStatus())))
         .collect(Collectors.toList());
     return PageResultUtil.rebuild(pageResult, results);
   }
 
   /**
-   * 创建单据基础结算信息。
-   *
-   * @param id 单据ID
-   * @param bizType 业务类型
-   * @param code 单号
-   * @param customerId 客户ID
-   * @param totalAmount 单据金额
-   * @param receivedAmount 已收金额
-   * @param settleStatus 结算状态
-   * @return 单据结算信息
+   * 获取结算状态编码。
+   */
+  private Integer getSettleStatusCode(SettleStatus settleStatus) {
+    return settleStatus == null ? null : settleStatus.getCode();
+  }
+
+  /**
+   * 构建销售单据结算信息。
    */
   private CustomerSaleSettleInfoBo buildSettleInfo(String id, int bizType, String code,
       String customerId, BigDecimal totalAmount, BigDecimal receivedAmount, Integer settleStatus) {
@@ -172,16 +143,14 @@ public class CustomerSettleSheetServiceImpl extends
     result.setBizType(bizType);
     result.setCode(code);
     result.setCustomerId(customerId);
-    result.setTotalAmount(totalAmount == null ? BigDecimal.ZERO : totalAmount);
-    result.setReceivedAmount(receivedAmount == null ? BigDecimal.ZERO : receivedAmount);
+    result.setTotalAmount(amountOrZero(totalAmount));
+    result.setReceivedAmount(amountOrZero(receivedAmount));
     result.setSettleStatus(settleStatus);
     return result;
   }
 
   /**
-   * 批量填充客户名称、已结算金额和未结算金额。
-   *
-   * @param results 工作台信息
+   * 批量填充工作台结算金额。
    */
   private void fillSettleAmounts(List<CustomerSaleSettleInfoBo> results) {
     if (CollectionUtil.isEmpty(results)) {
@@ -203,10 +172,7 @@ public class CustomerSettleSheetServiceImpl extends
   }
 
   /**
-   * 按业务单据ID批量汇总客户结算明细金额。
-   *
-   * @param bizIds 业务单据ID
-   * @return 已结算金额映射
+   * 按业务单据批量汇总审核通过的客户结算金额。
    */
   private Map<String, BigDecimal> querySettleAmountMap(Collection<String> bizIds) {
     if (CollectionUtil.isEmpty(bizIds)) {
@@ -218,13 +184,14 @@ public class CustomerSettleSheetServiceImpl extends
     if (CollectionUtil.isEmpty(details)) {
       return Collections.emptyMap();
     }
-    List<String> approvedSheetIds = getBaseMapper().selectBatchIds(details.stream()
-            .map(CustomerSettleSheetDetail::getSheetId).collect(Collectors.toSet()))
-        .stream().filter(sheet -> sheet.getStatus() == CustomerSettleSheetStatus.APPROVE_PASS)
-        .map(CustomerSettleSheet::getId).collect(Collectors.toList());
-    if (CollectionUtil.isEmpty(approvedSheetIds)) {
+    List<CustomerSettleSheet> sheets = getBaseMapper().selectBatchIds(details.stream()
+        .map(CustomerSettleSheetDetail::getSheetId).collect(Collectors.toSet()));
+    if (CollectionUtil.isEmpty(sheets)) {
       return Collections.emptyMap();
     }
+    Set<String> approvedSheetIds = sheets.stream()
+        .filter(sheet -> sheet.getStatus() == CustomerSettleSheetStatus.APPROVE_PASS)
+        .map(CustomerSettleSheet::getId).collect(Collectors.toSet());
     return details.stream().filter(detail -> approvedSheetIds.contains(detail.getSheetId()))
         .filter(detail -> detail.getPayAmount() != null)
         .collect(Collectors.groupingBy(CustomerSettleSheetDetail::getBizId,
@@ -232,432 +199,319 @@ public class CustomerSettleSheetServiceImpl extends
                 BigDecimal::add)));
   }
 
+  /**
+   * 查询客户结算记录。
+   */
   @Override
   public PageResult<CustomerSettleSheet> query(Integer pageIndex, Integer pageSize,
       QueryCustomerSettleSheetVo vo) {
-
     Assert.greaterThanZero(pageIndex);
     Assert.greaterThanZero(pageSize);
-
     PageHelperUtil.startPage(pageIndex, pageSize);
-    List<CustomerSettleSheet> datas = this.query(vo);
-
-    return PageResultUtil.convert(new PageInfo<>(datas));
+    return PageResultUtil.convert(new PageInfo<>(query(vo)));
   }
 
+  /**
+   * 查询客户结算记录列表。
+   */
   @Override
   public List<CustomerSettleSheet> query(QueryCustomerSettleSheetVo vo) {
-
     return getBaseMapper().query(vo);
   }
 
+  /**
+   * 查询客户结算记录详情。
+   */
   @Override
   public CustomerSettleSheetFullDto getDetail(String id) {
-
-    return getBaseMapper().getDetail(id);
-  }
-
-  @OpLog(type = SettleOpLogType.class, name = "创建客户结算单，单号：{}", params = "#code")
-  @OrderTimeLineLog(type = CreateOrderTimeLineBizType.class, orderId = "#_result", name = "创建结算单")
-  @Transactional(rollbackFor = Exception.class)
-  @Override
-  public String create(CreateCustomerSettleSheetVo vo) {
-
-    CustomerSettleSheet sheet = new CustomerSettleSheet();
-
-    sheet.setId(IdUtil.getId());
-    sheet.setCode(generateCodeService.generate(GenerateCodeTypePool.CUSTOMER_SETTLE_SHEET));
-
-    this.create(sheet, vo);
-
-    sheet.setStatus(CustomerSettleSheetStatus.CREATED);
-
-    OpLogUtil.setVariable("code", sheet.getCode());
-    OpLogUtil.setExtra(vo);
-
-    getBaseMapper().insert(sheet);
-
-    return sheet.getId();
-  }
-
-  @OpLog(type = SettleOpLogType.class, name = "修改客户结算单，单号：{}", params = "#code")
-  @OrderTimeLineLog(type = UpdateOrderTimeLineBizType.class, orderId = "#vo.id", name = "修改结算单")
-  @Transactional(rollbackFor = Exception.class)
-  @Override
-  public void update(UpdateCustomerSettleSheetVo vo) {
-
-    CustomerSettleSheet sheet = getBaseMapper().selectById(vo.getId());
-    if (sheet == null) {
-      throw new DefaultClientException("客户结算单不存在！");
+    CustomerSettleSheetFullDto result = getBaseMapper().getDetail(id);
+    if (result == null || CollectionUtil.isEmpty(result.getDetails())) {
+      return result;
     }
-
-    if (sheet.getStatus() != CustomerSettleSheetStatus.CREATED
-        && sheet.getStatus() != CustomerSettleSheetStatus.APPROVE_REFUSE) {
-      if (sheet.getStatus() == CustomerSettleSheetStatus.APPROVE_PASS) {
-        throw new DefaultClientException("客户结算单已审核通过，无法修改！");
-      } else {
-        throw new DefaultClientException("客户结算单无法修改！");
-      }
+    Set<String> bizIds = result.getDetails().stream()
+        .map(CustomerSettleSheetFullDto.SheetDetailDto::getBizId)
+        .filter(StringUtil::isNotBlank).collect(Collectors.toSet());
+    Map<String, String> bizCodeMap = new HashMap<>();
+    List<SaleOutSheet> saleOutSheets = saleOutSheetService.listByIds(bizIds);
+    if (!CollectionUtil.isEmpty(saleOutSheets)) {
+      saleOutSheets.forEach(item -> bizCodeMap.put(item.getId(), item.getCode()));
     }
-
-    //将所有的单据的结算状态更新
-    Wrapper<CustomerSettleSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
-            CustomerSettleSheetDetail.class)
-        .eq(CustomerSettleSheetDetail::getSheetId, sheet.getId())
-        .orderByAsc(CustomerSettleSheetDetail::getOrderNo);
-    List<CustomerSettleSheetDetail> sheetDetails = customerSettleSheetDetailService.list(
-        queryDetailWrapper);
-    for (CustomerSettleSheetDetail sheetDetail : sheetDetails) {
-      this.setBizItemUnSettle(sheetDetail.getBizId());
+    List<SaleReturn> saleReturns = saleReturnService.listByIds(bizIds);
+    if (!CollectionUtil.isEmpty(saleReturns)) {
+      saleReturns.forEach(item -> bizCodeMap.put(item.getId(), item.getCode()));
     }
-
-    // 删除明细
-    Wrapper<CustomerSettleSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(
-            CustomerSettleSheetDetail.class)
-        .eq(CustomerSettleSheetDetail::getSheetId, sheet.getId());
-    customerSettleSheetDetailService.remove(deleteDetailWrapper);
-
-    this.create(sheet, vo);
-
-    sheet.setStatus(CustomerSettleSheetStatus.CREATED);
-
-    List<CustomerSettleSheetStatus> statusList = new ArrayList<>();
-    statusList.add(CustomerSettleSheetStatus.CREATED);
-    statusList.add(CustomerSettleSheetStatus.APPROVE_REFUSE);
-
-    Wrapper<CustomerSettleSheet> updateWrapper = Wrappers.lambdaUpdate(CustomerSettleSheet.class)
-        .set(CustomerSettleSheet::getApproveBy, null).set(CustomerSettleSheet::getApproveTime, null)
-        .set(CustomerSettleSheet::getRefuseReason, StringPool.EMPTY_STR)
-        .eq(CustomerSettleSheet::getId, sheet.getId())
-        .in(CustomerSettleSheet::getStatus, statusList);
-    if (getBaseMapper().updateAllColumn(sheet, updateWrapper) != 1) {
-      throw new DefaultClientException("客户结算单信息已过期，请刷新重试！");
-    }
-
-    OpLogUtil.setVariable("code", sheet.getCode());
-    OpLogUtil.setExtra(vo);
-  }
-
-  @OpLog(type = SettleOpLogType.class, name = "审核通过客户结算单，单号：{}", params = "#code")
-  @OrderTimeLineLog(type = ApprovePassOrderTimeLineBizType.class, orderId = "#vo.id", name = "审核通过")
-  @Transactional(rollbackFor = Exception.class)
-  @Override
-  public void approvePass(ApprovePassCustomerSettleSheetVo vo) {
-
-    CustomerSettleSheet sheet = getBaseMapper().selectById(vo.getId());
-    if (sheet == null) {
-      throw new DefaultClientException("客户结算单不存在！");
-    }
-
-    if (sheet.getStatus() != CustomerSettleSheetStatus.CREATED
-        && sheet.getStatus() != CustomerSettleSheetStatus.APPROVE_REFUSE) {
-      if (sheet.getStatus() == CustomerSettleSheetStatus.APPROVE_PASS) {
-        throw new DefaultClientException("客户结算单已审核通过，不允许继续执行审核！");
-      }
-      throw new DefaultClientException("客户结算单无法审核通过！");
-    }
-
-    sheet.setStatus(CustomerSettleSheetStatus.APPROVE_PASS);
-    sheet.setApproveBy(SecurityUtil.getCurrentUser().getId());
-    sheet.setApproveTime(LocalDateTime.now());
-    if (!StringUtil.isBlank(vo.getDescription())) {
-      sheet.setDescription(vo.getDescription());
-    }
-
-    List<CustomerSettleSheetStatus> statusList = new ArrayList<>();
-    statusList.add(CustomerSettleSheetStatus.CREATED);
-    statusList.add(CustomerSettleSheetStatus.APPROVE_REFUSE);
-
-    Wrapper<CustomerSettleSheet> updateWrapper = Wrappers.lambdaUpdate(CustomerSettleSheet.class)
-        .eq(CustomerSettleSheet::getId, sheet.getId())
-        .in(CustomerSettleSheet::getStatus, statusList);
-    if (getBaseMapper().updateAllColumn(sheet, updateWrapper) != 1) {
-      throw new DefaultClientException("客户结算单信息已过期，请刷新重试！");
-    }
-
-    Wrapper<CustomerSettleSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
-            CustomerSettleSheetDetail.class)
-        .eq(CustomerSettleSheetDetail::getSheetId, sheet.getId())
-        .orderByAsc(CustomerSettleSheetDetail::getOrderNo);
-    List<CustomerSettleSheetDetail> details = customerSettleSheetDetailService.list(
-        queryDetailWrapper);
-    for (CustomerSettleSheetDetail detail : details) {
-      customerSettleCheckSheetService.setSettleAmount(detail.getBizId(), detail.getPayAmount(),
-          detail.getDiscountAmount());
-    }
-
-    OpLogUtil.setVariable("code", sheet.getCode());
-    OpLogUtil.setExtra(vo);
-  }
-
-  @OrderTimeLineLog(type = ApprovePassOrderTimeLineBizType.class, orderId = "#_result", name = "直接审核通过")
-  @Transactional(rollbackFor = Exception.class)
-  @Override
-  public String directApprovePass(CreateCustomerSettleSheetVo vo) {
-
-    CustomerSettleSheetService thisService = getThis(this.getClass());
-
-    String id = thisService.create(vo);
-
-    ApprovePassCustomerSettleSheetVo approveVo = new ApprovePassCustomerSettleSheetVo();
-    approveVo.setId(id);
-
-    thisService.approvePass(approveVo);
-
-    return id;
-  }
-
-  @OpLog(type = SettleOpLogType.class, name = "审核拒绝客户结算单，单号：{}", params = "#code")
-  @OrderTimeLineLog(type = ApproveReturnOrderTimeLineBizType.class, orderId = "#vo.id", name = "审核拒绝，拒绝理由：{}", params = "#vo.refuseReason")
-  @Transactional(rollbackFor = Exception.class)
-  @Override
-  public void approveRefuse(ApproveRefuseCustomerSettleSheetVo vo) {
-
-    CustomerSettleSheet sheet = getBaseMapper().selectById(vo.getId());
-    if (sheet == null) {
-      throw new DefaultClientException("客户结算单不存在！");
-    }
-
-    if (sheet.getStatus() != CustomerSettleSheetStatus.CREATED) {
-      if (sheet.getStatus() == CustomerSettleSheetStatus.APPROVE_PASS) {
-        throw new DefaultClientException("客户结算单已审核通过，不允许继续执行审核！");
-      }
-      if (sheet.getStatus() == CustomerSettleSheetStatus.APPROVE_REFUSE) {
-        throw new DefaultClientException("客户结算单已审核拒绝，不允许继续执行审核！");
-      }
-      throw new DefaultClientException("客户结算单无法审核拒绝！");
-    }
-
-    sheet.setStatus(CustomerSettleSheetStatus.APPROVE_REFUSE);
-    sheet.setApproveBy(SecurityUtil.getCurrentUser().getId());
-    sheet.setApproveTime(LocalDateTime.now());
-    sheet.setRefuseReason(vo.getRefuseReason());
-
-    List<CustomerSettleSheetStatus> statusList = new ArrayList<>();
-    statusList.add(CustomerSettleSheetStatus.CREATED);
-    statusList.add(CustomerSettleSheetStatus.APPROVE_REFUSE);
-
-    Wrapper<CustomerSettleSheet> updateWrapper = Wrappers.lambdaUpdate(CustomerSettleSheet.class)
-        .eq(CustomerSettleSheet::getId, sheet.getId())
-        .in(CustomerSettleSheet::getStatus, statusList);
-    if (getBaseMapper().updateAllColumn(sheet, updateWrapper) != 1) {
-      throw new DefaultClientException("客户结算单信息已过期，请刷新重试！");
-    }
-
-    OpLogUtil.setVariable("code", sheet.getCode());
-    OpLogUtil.setExtra(vo);
-  }
-
-  @OpLog(type = SettleOpLogType.class, name = "删除客户结算单，单号：{}", params = "#code")
-  @OrderTimeLineLog(orderId = "#id", delete = true)
-  @Transactional(rollbackFor = Exception.class)
-  @Override
-  public void deleteById(String id) {
-
-    Assert.notBlank(id);
-    CustomerSettleSheet sheet = getBaseMapper().selectById(id);
-    if (sheet == null) {
-      throw new InputErrorException("客户结算单不存在！");
-    }
-
-    if (sheet.getStatus() != CustomerSettleSheetStatus.CREATED
-        && sheet.getStatus() != CustomerSettleSheetStatus.APPROVE_REFUSE) {
-
-      if (sheet.getStatus() == CustomerSettleSheetStatus.APPROVE_PASS) {
-        throw new DefaultClientException("“审核通过”的客户结算单不允许执行删除操作！");
-      }
-
-      throw new DefaultClientException("客户结算单无法删除！");
-    }
-
-    //将所有的单据的结算状态更新
-    Wrapper<CustomerSettleSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
-            CustomerSettleSheetDetail.class)
-        .eq(CustomerSettleSheetDetail::getSheetId, sheet.getId())
-        .orderByAsc(CustomerSettleSheetDetail::getOrderNo);
-    List<CustomerSettleSheetDetail> sheetDetails = customerSettleSheetDetailService.list(
-        queryDetailWrapper);
-    for (CustomerSettleSheetDetail sheetDetail : sheetDetails) {
-      this.setBizItemUnSettle(sheetDetail.getBizId());
-    }
-
-    // 删除明细
-    Wrapper<CustomerSettleSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(
-            CustomerSettleSheetDetail.class)
-        .eq(CustomerSettleSheetDetail::getSheetId, sheet.getId());
-    customerSettleSheetDetailService.remove(deleteDetailWrapper);
-
-    // 删除单据
-    getBaseMapper().deleteById(id);
-
-    OpLogUtil.setVariable("code", sheet.getCode());
-  }
-
-  @Override
-  public CustomerSettleBizItemDto getBizItem(String id) {
-
-    CustomerSettleCheckSheet checkSheet = customerSettleCheckSheetService.getById(id);
-
-    CustomerSettleBizItemDto result = new CustomerSettleBizItemDto();
-    result.setId(checkSheet.getId());
-    result.setCode(checkSheet.getCode());
-    result.setTotalPayAmount(checkSheet.getTotalPayAmount());
-    result.setTotalPayedAmount(checkSheet.getTotalPayedAmount());
-    result.setTotalDiscountAmount(checkSheet.getTotalDiscountAmount());
-    result.setTotalUnPayAmount(
-        NumberUtil.sub(checkSheet.getTotalPayAmount(), checkSheet.getTotalPayedAmount(),
-            checkSheet.getTotalDiscountAmount()));
-    result.setApproveTime(checkSheet.getApproveTime());
-
+    result.getDetails().forEach(item -> item.setBizCode(bizCodeMap.get(item.getBizId())));
     return result;
   }
 
+  /**
+   * 创建已审核的客户直接结算单，并同步业务单据结算状态。
+   *
+   * @param vo 直接结算请求
+   * @return 结算单ID
+   */
   @Transactional(rollbackFor = Exception.class)
   @Override
-  public void setBizItemUnSettle(String id) {
-
-    CustomerSettleCheckSheet item = customerSettleCheckSheetService.getById(id);
-    int count = customerSettleCheckSheetService.setUnSettle(id);
-    if (count != 1) {
-      throw new DefaultClientException("单号：" + item.getCode() + "已结算，业务无法进行！");
+  public String directApprovePass(CreateCustomerSettleSheetVo vo) {
+    List<DirectSettleBiz> bizItems = validateDirectSettle(vo);
+    BigDecimal totalUnSettleAmount = bizItems.stream().map(DirectSettleBiz::getUnSettleAmount)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+    if (vo.getSettleAmount().compareTo(totalUnSettleAmount) > 0) {
+      throw new DefaultClientException("确认结算金额不能大于所选单据的未结算总额！");
     }
+    List<BigDecimal> amounts = SettleAmountAllocationUtil.allocate(vo.getSettleAmount(), bizItems
+        .stream().map(DirectSettleBiz::getUnSettleAmount).collect(Collectors.toList()));
+
+    CustomerSettleSheet sheet = createApprovedSheet(vo);
+    List<CustomerSettleSheetDetail> details = new ArrayList<>();
+    for (int index = 0; index < bizItems.size(); index++) {
+      DirectSettleBiz biz = bizItems.get(index);
+      BigDecimal amount = amounts.get(index);
+      updateBizSettleStatus(biz, amount);
+      details.add(createDetail(sheet.getId(), biz.getBizId(), amount, index + 1));
+    }
+    if (!customerSettleSheetDetailService.saveBatch(details)) {
+      throw new DefaultClientException("保存客户结算单明细失败！");
+    }
+    return sheet.getId();
   }
 
-  @Transactional(rollbackFor = Exception.class)
-  @Override
-  public void setBizItemPartSettle(String id) {
-
-    CustomerSettleCheckSheet item = customerSettleCheckSheetService.getById(id);
-    int count = customerSettleCheckSheetService.setPartSettle(id);
-    if (count != 1) {
-      throw new DefaultClientException("单号：" + item.getCode() + "已结算，业务无法进行！");
+  /**
+   * 校验直接结算请求，并批量加载源单据。
+   */
+  private List<DirectSettleBiz> validateDirectSettle(CreateCustomerSettleSheetVo vo) {
+    if (vo == null || StringUtil.isBlank(vo.getCustomerId())) {
+      throw new DefaultClientException("客户不能为空！");
     }
-  }
-
-  @Transactional(rollbackFor = Exception.class)
-  @Override
-  public void setBizItemSettled(String id) {
-
-    CustomerSettleCheckSheet item = customerSettleCheckSheetService.getById(id);
-    int count = customerSettleCheckSheetService.setSettled(id);
-    if (count != 1) {
-      throw new DefaultClientException("单号：" + item.getCode() + "已结算，无法重复结算！");
+    if (vo.getSettleAmount() == null || vo.getSettleAmount().compareTo(BigDecimal.ZERO) <= 0) {
+      throw new DefaultClientException("确认结算金额必须大于0！");
     }
-  }
-
-  @Override
-  public List<CustomerSettleBizItemDto> getUnSettleBizItems(QueryCustomerUnSettleBizItemVo vo) {
-
-    List<CustomerSettleBizItemDto> results = new ArrayList<>();
-
-    List<CustomerSettleCheckSheet> sheetList = customerSettleCheckSheetService.getApprovedList(
-        vo.getCustomerId(),
-        vo.getStartTime(), vo.getEndTime());
-
-    if (!CollectionUtil.isEmpty(sheetList)) {
-      for (CustomerSettleCheckSheet item : sheetList) {
-        CustomerSettleBizItemDto result = new CustomerSettleBizItemDto();
-        result.setId(item.getId());
-        result.setCode(item.getCode());
-        result.setTotalPayAmount(item.getTotalPayAmount());
-        result.setTotalPayedAmount(item.getTotalPayedAmount());
-        result.setTotalDiscountAmount(item.getTotalDiscountAmount());
-        result.setTotalUnPayAmount(
-            NumberUtil.sub(item.getTotalPayAmount(), item.getTotalPayedAmount(),
-                item.getTotalDiscountAmount()));
-        result.setApproveTime(item.getApproveTime());
-
-        results.add(result);
+    if (CollectionUtil.isEmpty(vo.getItems())) {
+      throw new DefaultClientException("结算项目不能为空！");
+    }
+    Set<String> saleOutIds = new HashSet<>();
+    Set<String> saleReturnIds = new HashSet<>();
+    Set<String> itemKeys = new HashSet<>();
+    for (CustomerSettleSheetItemVo item : vo.getItems()) {
+      if (item == null || StringUtil.isBlank(item.getBizId())
+          || (item.getBizType() == null || (item.getBizType() != 1 && item.getBizType() != 2))) {
+        throw new DefaultClientException("业务单据参数不正确！");
+      }
+      if (!itemKeys.add(item.getBizType() + ":" + item.getBizId())) {
+        throw new DefaultClientException("业务单据不允许重复选择！");
+      }
+      if (item.getBizType() == 1) {
+        saleOutIds.add(item.getBizId());
+      } else {
+        saleReturnIds.add(item.getBizId());
       }
     }
-
+    Map<String, SaleOutSheet> saleOutMap = toSaleOutMap(saleOutIds);
+    Map<String, SaleReturn> saleReturnMap = toSaleReturnMap(saleReturnIds);
+    Map<String, BigDecimal> settledAmountMap = querySettleAmountMap(itemKeys.stream()
+        .map(key -> key.substring(key.indexOf(':') + 1)).collect(Collectors.toSet()));
+    List<DirectSettleBiz> results = new ArrayList<>();
+    for (CustomerSettleSheetItemVo item : vo.getItems()) {
+      DirectSettleBiz biz = item.getBizType() == 1
+          ? buildSaleOutBiz(item, saleOutMap.get(item.getBizId()), settledAmountMap)
+          : buildSaleReturnBiz(item, saleReturnMap.get(item.getBizId()), settledAmountMap);
+      if (!vo.getCustomerId().equals(biz.getCustomerId())) {
+        throw new DefaultClientException("所选业务单据必须属于同一客户！");
+      }
+      if (biz.getUnSettleAmount().compareTo(BigDecimal.ZERO) <= 0) {
+        throw new DefaultClientException("单号：" + biz.getCode() + "不存在可结算金额！");
+      }
+      results.add(biz);
+    }
     return results;
   }
 
-  private void create(CustomerSettleSheet sheet, CreateCustomerSettleSheetVo vo) {
+  /**
+   * 批量加载销售出库单。
+   */
+  private Map<String, SaleOutSheet> toSaleOutMap(Collection<String> ids) {
+    if (CollectionUtil.isEmpty(ids)) {
+      return Collections.emptyMap();
+    }
+    List<SaleOutSheet> sheets = saleOutSheetService.listByIds(ids);
+    return sheets == null ? Collections.emptyMap() : sheets.stream()
+        .collect(Collectors.toMap(SaleOutSheet::getId, sheet -> sheet, (a, b) -> a));
+  }
 
-    BigDecimal totalAmount = BigDecimal.ZERO;
-    BigDecimal totalDiscountAmount = BigDecimal.ZERO;
+  /**
+   * 批量加载销售退货单。
+   */
+  private Map<String, SaleReturn> toSaleReturnMap(Collection<String> ids) {
+    if (CollectionUtil.isEmpty(ids)) {
+      return Collections.emptyMap();
+    }
+    List<SaleReturn> sheets = saleReturnService.listByIds(ids);
+    return sheets == null ? Collections.emptyMap() : sheets.stream()
+        .collect(Collectors.toMap(SaleReturn::getId, sheet -> sheet, (a, b) -> a));
+  }
 
-    int orderNo = 1;
-    for (CustomerSettleSheetItemVo itemVo : vo.getItems()) {
-      CustomerSettleBizItemDto item = this.getBizItem(itemVo.getId());
-      if (item == null) {
-        throw new DefaultClientException("第" + orderNo + "行业务单据不存在！");
-      }
+  /**
+   * 构建销售出库单结算校验数据。
+   */
+  private DirectSettleBiz buildSaleOutBiz(CustomerSettleSheetItemVo item, SaleOutSheet sheet,
+      Map<String, BigDecimal> settledAmountMap) {
+    if (sheet == null) {
+      throw new DefaultClientException("销售出库单不存在！");
+    }
+    validateSettleStatus(sheet.getCode(), sheet.getSettleStatus());
+    return new DirectSettleBiz(item.getBizId(), item.getBizType(), sheet.getCode(),
+        sheet.getCustomerId(), amountOrZero(sheet.getTotalAmount()).subtract(
+            amountOrZero(sheet.getPaidAmount())).subtract(
+            settledAmountMap.getOrDefault(item.getBizId(), BigDecimal.ZERO)));
+  }
 
-      if (NumberUtil.lt(item.getTotalPayAmount(), 0)) {
-        if (NumberUtil.gt(itemVo.getPayAmount(), 0)) {
-          throw new DefaultClientException("第" + orderNo + "行实收金额不允许大于0！");
-        }
+  /**
+   * 构建销售退货单结算校验数据。
+   */
+  private DirectSettleBiz buildSaleReturnBiz(CustomerSettleSheetItemVo item, SaleReturn sheet,
+      Map<String, BigDecimal> settledAmountMap) {
+    if (sheet == null) {
+      throw new DefaultClientException("销售退货单不存在！");
+    }
+    validateSettleStatus(sheet.getCode(), sheet.getSettleStatus());
+    return new DirectSettleBiz(item.getBizId(), item.getBizType(), sheet.getCode(),
+        sheet.getCustomerId(), amountOrZero(sheet.getTotalAmount()).subtract(
+            settledAmountMap.getOrDefault(item.getBizId(), BigDecimal.ZERO)));
+  }
 
-        if (NumberUtil.gt(itemVo.getDiscountAmount(), 0)) {
-          throw new DefaultClientException("第" + orderNo + "行优惠金额不允许大于0！");
-        }
+  /**
+   * 校验业务单据处于可结算状态。
+   */
+  private void validateSettleStatus(String code, SettleStatus settleStatus) {
+    if (settleStatus != SettleStatus.UN_SETTLE && settleStatus != SettleStatus.PART_SETTLE) {
+      throw new DefaultClientException("单号：" + code + "不是待结算或部分结算状态！");
+    }
+  }
 
-        if (NumberUtil.equal(itemVo.getPayAmount(), 0) && NumberUtil.equal(
-            itemVo.getDiscountAmount(), 0)) {
-          throw new DefaultClientException("第" + orderNo + "行实收金额、优惠金额不能同时等于0！");
-        }
+  /**
+   * 创建已审核结算单主记录。
+   */
+  private CustomerSettleSheet createApprovedSheet(CreateCustomerSettleSheetVo vo) {
+    CustomerSettleSheet sheet = new CustomerSettleSheet();
+    sheet.setId(generateId());
+    sheet.setCode(generateCodeService.generate(GenerateCodeTypePool.CUSTOMER_SETTLE_SHEET));
+    sheet.setCustomerId(vo.getCustomerId());
+    sheet.setTotalAmount(vo.getSettleAmount());
+    sheet.setTotalDiscountAmount(BigDecimal.ZERO);
+    sheet.setDescription(StringUtil.isBlank(vo.getDescription()) ? "" : vo.getDescription());
+    sheet.setRefuseReason("");
+    sheet.setStatus(CustomerSettleSheetStatus.APPROVE_PASS);
+    sheet.setApproveTime(LocalDateTime.now());
+    if (getBaseMapper().insert(sheet) != 1) {
+      throw new DefaultClientException("保存客户结算单失败！");
+    }
+    return sheet;
+  }
 
-        if (NumberUtil.gt(item.getTotalUnPayAmount(),
-            NumberUtil.add(itemVo.getPayAmount(), itemVo.getDiscountAmount()))) {
-          throw new DefaultClientException("第" + orderNo + "行实收金额与优惠金额相加不允许小于未收款金额！");
-        }
-      } else if (NumberUtil.gt(item.getTotalPayAmount(), 0)) {
-        if (NumberUtil.lt(itemVo.getPayAmount(), 0)) {
-          throw new DefaultClientException("第" + orderNo + "行实收金额不允许小于0！");
-        }
+  /**
+   * 创建结算明细。
+   */
+  private CustomerSettleSheetDetail createDetail(String sheetId, String bizId, BigDecimal amount,
+      int orderNo) {
+    CustomerSettleSheetDetail detail = new CustomerSettleSheetDetail();
+    detail.setId(generateId());
+    detail.setSheetId(sheetId);
+    detail.setBizId(bizId);
+    detail.setPayAmount(amount);
+    detail.setDiscountAmount(BigDecimal.ZERO);
+    detail.setDescription("");
+    detail.setOrderNo(orderNo);
+    return detail;
+  }
 
-        if (NumberUtil.lt(itemVo.getDiscountAmount(), 0)) {
-          throw new DefaultClientException("第" + orderNo + "行优惠金额不允许小于0！");
-        }
+  /**
+   * 按分摊结果回写业务单据结算状态。
+   */
+  private void updateBizSettleStatus(DirectSettleBiz biz, BigDecimal amount) {
+    boolean settled = amount.compareTo(biz.getUnSettleAmount()) >= 0;
+    int count;
+    if (biz.getBizType() == 1) {
+      count = settled ? saleOutSheetService.setSettled(biz.getBizId())
+          : saleOutSheetService.setPartSettle(biz.getBizId());
+    } else {
+      count = settled ? saleReturnService.setSettled(biz.getBizId())
+          : saleReturnService.setPartSettle(biz.getBizId());
+    }
+    if (count != 1) {
+      throw new DefaultClientException("单号：" + biz.getCode() + "结算状态已变化，请刷新后重试！");
+    }
+  }
 
-        if (NumberUtil.equal(itemVo.getPayAmount(), 0) && NumberUtil.equal(
-            itemVo.getDiscountAmount(), 0)) {
-          throw new DefaultClientException("第" + orderNo + "行实收金额、优惠金额不能同时等于0！");
-        }
-        if (NumberUtil.lt(item.getTotalUnPayAmount(),
-            NumberUtil.add(itemVo.getPayAmount(), itemVo.getDiscountAmount()))) {
-          throw new DefaultClientException("第" + orderNo + "行实收金额与优惠金额相加不允许大于未收款金额！");
-        }
-      } else {
-        // 单据应收款等于0
-        if (!NumberUtil.equal(itemVo.getPayAmount(), 0) || !NumberUtil.equal(
-            itemVo.getDiscountAmount(), 0)) {
-          throw new DefaultClientException("第" + orderNo + "行实收金额、优惠金额必须同时等于0！");
-        }
-      }
+  /**
+   * 将空金额按零处理。
+   */
+  private BigDecimal amountOrZero(BigDecimal amount) {
+    return amount == null ? BigDecimal.ZERO : amount;
+  }
 
-      CustomerSettleSheetDetail detail = new CustomerSettleSheetDetail();
-      detail.setId(IdUtil.getId());
-      detail.setSheetId(sheet.getId());
-      detail.setBizId(itemVo.getId());
-      detail.setPayAmount(itemVo.getPayAmount());
-      detail.setDiscountAmount(itemVo.getDiscountAmount());
-      detail.setDescription(itemVo.getDescription());
-      detail.setOrderNo(orderNo);
+  /**
+   * 生成结算记录ID。
+   */
+  private String generateId() {
+    return UUID.randomUUID().toString().replace("-", "");
+  }
 
-      customerSettleSheetDetailService.save(detail);
+  /**
+   * 直接结算源单据。
+   */
+  private static class DirectSettleBiz {
 
-      totalAmount = NumberUtil.add(totalAmount, itemVo.getPayAmount());
-      totalDiscountAmount = NumberUtil.add(totalDiscountAmount, itemVo.getDiscountAmount());
+    private final String bizId;
+    private final Integer bizType;
+    private final String code;
+    private final String customerId;
+    private final BigDecimal unSettleAmount;
 
-      //将所有的单据的结算状态更新
-      this.setBizItemPartSettle(detail.getBizId());
-
-      orderNo++;
+    /**
+     * 创建源单据结算信息。
+     */
+    DirectSettleBiz(String bizId, Integer bizType, String code, String customerId,
+        BigDecimal unSettleAmount) {
+      this.bizId = bizId;
+      this.bizType = bizType;
+      this.code = code;
+      this.customerId = customerId;
+      this.unSettleAmount = unSettleAmount;
     }
 
-    AbstractUserDetails currentUser = SecurityUtil.getCurrentUser();
+    /**
+     * 获取业务单据ID。
+     */
+    String getBizId() {
+      return bizId;
+    }
 
-    sheet.setCustomerId(vo.getCustomerId());
-    sheet.setTotalAmount(totalAmount);
-    sheet.setTotalDiscountAmount(totalDiscountAmount);
-    sheet.setDescription(
-        StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
-    sheet.setRefuseReason(StringPool.EMPTY_STR);
-    sheet.setStartDate(vo.getStartDate());
-    sheet.setEndDate(vo.getEndDate());
+    /**
+     * 获取业务类型。
+     */
+    Integer getBizType() {
+      return bizType;
+    }
+
+    /**
+     * 获取业务单号。
+     */
+    String getCode() {
+      return code;
+    }
+
+    /**
+     * 获取客户ID。
+     */
+    String getCustomerId() {
+      return customerId;
+    }
+
+    /**
+     * 获取当前未结算金额。
+     */
+    BigDecimal getUnSettleAmount() {
+      return unSettleAmount;
+    }
   }
 }
