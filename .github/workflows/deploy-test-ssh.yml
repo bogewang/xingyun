@@ -1,20 +1,20 @@
-name: Deploy Prod
+name: Deploy Test
 
 on:
   push:
     branches:
-      - master1
+      - master
   workflow_dispatch:
 
 concurrency:
-  group: deploy-prod
+  group: deploy-test
   cancel-in-progress: true
 
 jobs:
-  deploy-prod:
-    name: Build and deploy prod
-    runs-on: [self-hosted, linux, x64, deploy]
-    environment: production
+  deploy-test:
+    name: Build and deploy test
+    runs-on: ubuntu-latest
+    environment: test
 
     steps:
       - name: SSH Agent
@@ -26,7 +26,7 @@ jobs:
         run: |
           git remote set-url origin git@github.com:bogewang/xingyun.git
 
-      - name: Fetch and update to latest master
+      - name: Fetch code
         run: |
           git fetch --no-tags --prune --no-recurse-submodules origin master
           git checkout master
@@ -38,11 +38,10 @@ jobs:
           distribution: temurin
           java-version: '8'
           cache: maven
-          overwrite-settings: false
 
       - name: Install jugg dependencies
         run: |
-          git clone --depth 1 --branch main git@github.com:bogewang/jugg.git "$RUNNER_TEMP/jugg"
+          git clone --depth 1 --branch main https://github.com/bogewang/jugg.git "$RUNNER_TEMP/jugg"
           mvn --settings "$GITHUB_WORKSPACE/.github/maven-settings.xml" -f "$RUNNER_TEMP/jugg/pom.xml" clean install -DskipTests
 
       - name: Build backend
@@ -73,13 +72,13 @@ jobs:
       - name: Prepare SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/deploy_key
+          echo "${{ secrets.TEST_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "${{ secrets.PROD_SSH_PORT }}" "${{ secrets.PROD_SSH_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "${{ secrets.TEST_SSH_PORT }}" "${{ secrets.TEST_SSH_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Prepare remote directories
         run: |
-          ssh -p "${{ secrets.PROD_SSH_PORT }}" -i ~/.ssh/deploy_key "${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}" '
+          ssh -p "${{ secrets.TEST_SSH_PORT }}" -i ~/.ssh/deploy_key "${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SSH_HOST }}" '
             set -e
             umask 0002
             mkdir -p /www/wwwroot/xingyun/data/tmp
@@ -91,12 +90,12 @@ jobs:
 
       - name: Upload artifacts
         run: |
-          scp -P "${{ secrets.PROD_SSH_PORT }}" -i ~/.ssh/deploy_key backend/xingyun-api/target/xingyun-api.jar "${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}:/www/wwwroot/xingyun/xingyun-api.jar.new"
-          scp -P "${{ secrets.PROD_SSH_PORT }}" -i ~/.ssh/deploy_key frontend-dist.tar.gz "${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}:/www/wwwroot/xingyun/frontend-dist.tar.gz"
+          scp -P "${{ secrets.TEST_SSH_PORT }}" -i ~/.ssh/deploy_key backend/xingyun-api/target/xingyun-api.jar "${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SSH_HOST }}:/www/wwwroot/xingyun/xingyun-api.jar.new"
+          scp -P "${{ secrets.TEST_SSH_PORT }}" -i ~/.ssh/deploy_key frontend-dist.tar.gz "${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SSH_HOST }}:/www/wwwroot/xingyun/frontend-dist.tar.gz"
 
-      - name: Restart prod services
+      - name: Restart test services
         run: |
-          ssh -p "${{ secrets.PROD_SSH_PORT }}" -i ~/.ssh/deploy_key "${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}" '
+          ssh -p "${{ secrets.TEST_SSH_PORT }}" -i ~/.ssh/deploy_key "${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SSH_HOST }}" '
             set -e
             umask 0002
             cd /www/wwwroot/xingyun
@@ -109,6 +108,6 @@ jobs:
             mv xingyun-api.jar.new xingyun-api.jar
             chmod 664 xingyun-api.jar frontend-dist.tar.gz
             chmod -R 775 dist
-            sudo /usr/bin/systemctl restart xingyun-api-prod
+            sudo /usr/bin/systemctl restart xingyun-api-test
             sudo /www/server/nginx/sbin/nginx -s reload
           '
