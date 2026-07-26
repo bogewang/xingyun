@@ -93,6 +93,16 @@ public interface SaleReturnService extends BaseMpService<SaleReturn> {
   int setUnSettle(String id);
 
   /**
+   * 按源单结算状态与结算版本号乐观锁设置为未结算。
+   *
+   * @param id 单据ID
+   * @param settleStatus 提交时读取到的结算状态
+   * @param settleVersion 提交时读取到的结算版本号
+   * @return 受影响行数
+   */
+  int setUnSettle(String id, SettleStatus settleStatus, Long settleVersion);
+
+  /**
    * 设置成结算中
    *
    * @param id

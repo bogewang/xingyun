@@ -1453,6 +1453,17 @@ public class SaleOutSheetServiceImpl extends
         return updateSettleStatus(id, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
     }
 
+    /**
+     * 按提交时源单版本设置为未结算，避免并发对账重复确认。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int setUnSettle(String id, SettleStatus settleStatus, Long settleVersion) {
+
+        return getBaseMapper().updateSettleStatusWithVersion(id, settleStatus,
+                SettleStatus.UN_SETTLE, settleVersion);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public int setPartSettle(String id) {
