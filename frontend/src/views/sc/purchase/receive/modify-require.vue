@@ -167,7 +167,7 @@
             placeholder="请输入商品编号/名称/SKU编号/简码"
             :options="row.productOptions"
             :dropdown-match-select-width="false"
-            :dropdown-style="{ width: '890px' }"
+            :dropdown-style="{ width: '1080px' }"
             placement="bottomLeft"
             @search="(e) => queryProduct(e, row)"
             @keydown="(e) => handleProductSelectKeydown(e, row, rowIndex)"
@@ -207,7 +207,7 @@
                     </template>
                   </vxe-column>
                   <vxe-column field="skuCode" title="商品SKU编号" width="120" />
-                  <vxe-column field="spec" title="规格" width="80" />
+                  <vxe-column field="spec" title="规格" width="120" />
                   <vxe-column
                     field="unit"
                     title="单位"

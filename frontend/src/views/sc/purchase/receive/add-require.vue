@@ -156,7 +156,7 @@
                       </span>
                     </template>
                   </vxe-column>
-                  <vxe-column field="spec" title="规格" width="80" />
+                  <vxe-column field="spec" title="规格" width="120" />
                   <vxe-column field="unit" title="单位" width="80" />
                   <vxe-column
                     field="purchasePrice"
