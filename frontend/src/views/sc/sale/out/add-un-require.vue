@@ -102,7 +102,7 @@
               placeholder="请输入商品编号/名称/SKU编号/简码"
               :options="row.productOptions"
               :dropdown-match-select-width="false"
-              :dropdown-style="{ width: '890px' }"
+              :dropdown-style="{ width: '1080px' }"
               placement="bottomLeft"
               @focus="() => handleProductInputFocus(row)"
               @search="(e) => queryProduct(e, row)"
@@ -140,7 +140,7 @@
                         </span>
                       </template>
                     </vxe-column>
-                    <vxe-column field="spec" title="规格" width="80" />
+                    <vxe-column field="spec" title="规格" width="120" />
                     <vxe-column field="unit" title="单位" width="80" />
                     <vxe-column field="stockNum" title="库存数量" width="100" align="right" />
                     <vxe-column
@@ -338,7 +338,7 @@
     isFloatGtZero,
     isNumberPrecision,
     mul,
-    PATTERN_IS_FLOAT_GT_ZERO,
+    PATTERN_IS_FLOAT,
     PATTERN_IS_PRICE,
     uuid,
   } from '@/utils/utils';
@@ -355,7 +355,6 @@
     clearManualSheetAmount,
     getSheetLineAmount,
   } from '@/utils/sheetAmountInput';
-  import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import {
     createConfirm,
     createError,
@@ -817,14 +816,14 @@
         );
       },
       taxPriceInput(row, value) {
-        row.taxPrice = sanitizeNonNegativeDecimalInput(value);
+        row.taxPrice = value;
         clearManualSheetAmount(row, 'outNum', 'taxPrice');
         syncConfirmAmount(row);
         this.calcSum();
       },
       /** 验收数量输入后同步验收金额 */
       confirmNumInput(row, value) {
-        row.confirmNum = sanitizeNonNegativeDecimalInput(value);
+        row.confirmNum = value;
         syncConfirmAmount(row);
         this.calcSum();
       },
@@ -834,7 +833,7 @@
         this.calcSum();
       },
       paidAmountInput(value) {
-        this.formData.paidAmount = sanitizeNonNegativeDecimalInput(value);
+        this.formData.paidAmount = value;
         this.paidAmountDirty = true;
       },
       outNumInput(row, value) {
@@ -843,7 +842,7 @@
           this.calcSum();
           return;
         }
-        row.outNum = sanitizeNonNegativeDecimalInput(value);
+        row.outNum = value;
         clearManualSheetAmount(row, 'outNum', 'taxPrice');
         this.calcSum();
       },
@@ -854,7 +853,7 @@
         let totalAmount = 0;
         this.tableData
           .filter((t) => {
-            return t.manualTaxAmount || (isFloatGeZero(t.taxPrice) && isFloatGeZero(t.outNum));
+            return t.manualTaxAmount || (isFloatGeZero(t.taxPrice) && isFloat(t.outNum));
           })
           .forEach((t) => {
             const num = parseFloat(t.outNum);
@@ -881,8 +880,8 @@
         }
 
         createPrompt('请输入出库数量', {
-          inputPattern: PATTERN_IS_FLOAT_GT_ZERO,
-          inputErrorMessage: '出库数量必须是数字并且大于0',
+          inputPattern: PATTERN_IS_FLOAT,
+          inputErrorMessage: '出库数量必须是数字',
           title: '批量录入数量',
           required: true,
         }).then(({ value }) => {
@@ -926,7 +925,7 @@
         if (Array.isArray(importData) && importData.length > 0) {
           this.tableData = importData.map((item) => {
             const importUnmatched = isEmpty(item.productId);
-            return Object.assign(this.emptyProduct(), item, {
+            const row = Object.assign(this.emptyProduct(), item, {
               id: uuid(),
               units: isEmpty(item.unitId)
                 ? []
@@ -944,6 +943,9 @@
               taxPrice: item.taxPrice,
               outNum: item.orderNum,
             });
+            // 导入后自动计算金额 = 数量 × 单价
+            clearManualSheetAmount(row, 'outNum', 'taxPrice');
+            return row;
           });
         } else {
           this.tableData = [];
@@ -969,18 +971,18 @@
           return false;
         }
 
-        if (!isFloatGeZero(this.formData.paidAmount)) {
-          createError('付款金额不允许小于0！');
-          return false;
-        }
+        // 付款金额允许负数，不再校验不小于0
 
         if (!isNumberPrecision(this.formData.paidAmount, 6)) {
           createError('付款金额最多允许6位小数！');
           return false;
         }
 
-        if (parseFloat(this.formData.paidAmount) > parseFloat(this.formData.totalAmount || 0)) {
-          createError('付款金额不允许大于含税总金额！');
+        if (
+          Math.abs(parseFloat(this.formData.paidAmount)) >
+          Math.abs(parseFloat(this.formData.totalAmount || 0))
+        ) {
+          createError('付款金额绝对值不允许大于含税总金额绝对值！');
           return false;
         }
 
@@ -1025,11 +1027,6 @@
           if (!isEmpty(product.outNum)) {
             if (!isFloat(product.outNum)) {
               createError('第' + (i + 1) + '行商品出库数量必须是数字！');
-              return false;
-            }
-
-            if (!isFloatGeZero(product.outNum)) {
-              createError('第' + (i + 1) + '行商品出库数量不允许小于0！');
               return false;
             }
 

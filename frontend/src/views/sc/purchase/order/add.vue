@@ -93,7 +93,7 @@
                   <vxe-column field="productCode" title="商品编号" width="120" />
                   <vxe-column field="productName" title="商品名称" min-width="200" />
                   <vxe-column field="skuCode" title="商品SKU编号" width="120" />
-                  <vxe-column field="spec" title="规格" width="80" />
+                  <vxe-column field="spec" title="规格" width="120" />
                   <vxe-column field="unit" title="单位" width="80" />
                   <vxe-column
                     field="purchasePrice"

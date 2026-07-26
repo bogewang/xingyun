@@ -96,7 +96,7 @@
 
         <!-- 含税金额 列自定义内容 -->
         <template #taxAmount_default="{ row }">
-          <span v-if="isFloatGeZero(row.taxPrice) && isFloatGeZero(row.outNum)">{{
+          <span v-if="isFloatGeZero(row.taxPrice) && isFloat(row.outNum)">{{
             getNumber(mul(row.taxPrice, row.outNum), 2)
           }}</span>
         </template>
@@ -171,7 +171,15 @@
   import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
   import * as api from '@/api/sc/sale/out';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import { isEmpty, isFloatGeZero, getNumber, mul, add, isFloatGtZero } from '@/utils/utils';
+  import {
+    isEmpty,
+    isFloat,
+    isFloatGeZero,
+    getNumber,
+    mul,
+    add,
+    isFloatGtZero,
+  } from '@/utils/utils';
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
@@ -187,6 +195,7 @@
     setup() {
       return {
         isEmpty,
+        isFloat,
         isFloatGeZero,
         getNumber,
         mul,
@@ -336,7 +345,7 @@
 
         this.tableData
           .filter((t) => {
-            return isFloatGeZero(t.taxPrice) && isFloatGeZero(t.outNum);
+            return isFloatGeZero(t.taxPrice) && isFloat(t.outNum);
           })
           .forEach((t) => {
             const num = parseFloat(t.outNum);

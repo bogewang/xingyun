@@ -1,4 +1,4 @@
-import { getNumber, isFloatGeZero, mul } from '@/utils/utils';
+import { getNumber, isFloat, isFloatGeZero, mul } from '@/utils/utils';
 
 export interface SaleOutProfitRow {
   taxPrice?: number | string | null;
@@ -40,7 +40,7 @@ export function calcSaleOutProfitAmount(row: SaleOutProfitRow): number {
  */
 export function calcSaleOutProfitRate(row: SaleOutProfitRow): string {
   const outAmount = getSaleOutAmount(row);
-  if (!outAmount || !isFloatGeZero(row?.costPrice) || !isFloatGeZero(row?.outNum)) {
+  if (!outAmount || !isFloatGeZero(row?.costPrice) || !isFloat(row?.outNum)) {
     return '0.00%';
   }
 
@@ -53,11 +53,7 @@ export function calcSaleOutProfitRate(row: SaleOutProfitRow): string {
  * @returns 是否负毛利
  */
 export function isSaleOutProfitNegative(row: SaleOutProfitRow): boolean {
-  if (
-    !isFloatGeZero(row?.taxPrice) ||
-    !isFloatGeZero(row?.costPrice) ||
-    !isFloatGeZero(row?.outNum)
-  ) {
+  if (!isFloatGeZero(row?.taxPrice) || !isFloatGeZero(row?.costPrice) || !isFloat(row?.outNum)) {
     return false;
   }
 

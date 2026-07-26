@@ -124,9 +124,7 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
 
         int orderNo = 1;
         if (this.paidAmount != null) {
-            if (NumberUtil.lt(this.paidAmount, BigDecimal.ZERO)) {
-                throw new InputErrorException("付款金额不允许小于0！");
-            }
+            // 付款金额允许负数，不再校验不小于0
 
             if (!NumberUtil.isNumberPrecision(this.paidAmount, 6)) {
                 throw new InputErrorException("付款金额最多允许6位小数！");
@@ -140,9 +138,7 @@ public class CreateSaleOutSheetVo implements BaseVo, Serializable {
             }
 
             if (product.getOrderNum() != null) {
-                if (NumberUtil.lt(product.getOrderNum(), BigDecimal.ZERO)) {
-                    throw new InputErrorException("第" + orderNo + "行商品销售数量不允许小于0！");
-                }
+                // 数量允许负数，不再校验不小于0
 
                 if (!NumberUtil.isNumberPrecision(product.getOrderNum(), 8)) {
                     throw new InputErrorException("第" + orderNo + "行商品销售数量最多允许8位小数！");
