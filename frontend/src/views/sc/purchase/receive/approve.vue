@@ -72,7 +72,7 @@
       >
         <!-- 含税金额 列自定义内容 -->
         <template #taxAmount_default="{ row }">
-          <span v-if="isFloatGeZero(row.purchasePrice) && isFloatGeZero(row.receiveNum)">{{
+          <span v-if="isFloatGeZero(row.purchasePrice) && isFloat(row.receiveNum)">{{
             getNumber(mul(row.purchasePrice, row.receiveNum), 2)
           }}</span>
         </template>
@@ -133,7 +133,7 @@
   import PurchaseOrderDetail from '@/views/sc/purchase/order/detail.vue';
   import * as api from '@/api/sc/purchase/receive';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import { isEmpty, isFloatGeZero, getNumber, mul, add } from '@/utils/utils';
+  import { isEmpty, isFloat, isFloatGeZero, getNumber, mul, add } from '@/utils/utils';
   import { createSuccess, createError, createConfirm } from '@/hooks/web/msg';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
@@ -153,6 +153,7 @@
     setup() {
       return {
         isEmpty,
+        isFloat,
         isFloatGeZero,
         getNumber,
         mul,
@@ -277,7 +278,7 @@
 
         this.tableData
           .filter((t) => {
-            return isFloatGeZero(t.purchasePrice) && isFloatGeZero(t.receiveNum);
+            return isFloatGeZero(t.purchasePrice) && isFloat(t.receiveNum);
           })
           .forEach((t) => {
             const num = parseFloat(t.receiveNum);

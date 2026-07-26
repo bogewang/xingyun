@@ -825,16 +825,14 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     private BigDecimal normalizeTotalAmount(BigDecimal totalAmount, BigDecimal detailTotalAmount) {
         BigDecimal actualTotalAmount = totalAmount == null ? detailTotalAmount : totalAmount;
-        if (NumberUtil.lt(actualTotalAmount, BigDecimal.ZERO)) {
-            throw new InputErrorException("折后金额不允许小于0！");
-        }
+        // 折后金额允许负数，不再校验不小于0
 
         if (!NumberUtil.isNumberPrecision(actualTotalAmount, 2)) {
             throw new InputErrorException("折后金额最多允许2位小数！");
         }
 
-        if (NumberUtil.gt(actualTotalAmount, detailTotalAmount)) {
-            throw new InputErrorException("折后金额不允许大于明细金额！");
+        if (NumberUtil.gt(actualTotalAmount.abs(), detailTotalAmount.abs())) {
+            throw new InputErrorException("折后金额绝对值不允许大于明细金额绝对值！");
         }
 
         return actualTotalAmount;
@@ -843,16 +841,14 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     private BigDecimal normalizePaidAmount(BigDecimal paidAmount, BigDecimal totalAmount) {
         // 未付款则=0
         BigDecimal actualPaidAmount = paidAmount == null ? BigDecimal.ZERO : paidAmount;
-        if (NumberUtil.lt(actualPaidAmount, BigDecimal.ZERO)) {
-            throw new InputErrorException("付款金额不允许小于0！");
-        }
+        // 付款金额允许负数，不再校验不小于0
 
         if (!NumberUtil.isNumberPrecision(actualPaidAmount, 6)) {
             throw new InputErrorException("付款金额最多允许6位小数！");
         }
 
-        if (NumberUtil.gt(actualPaidAmount, totalAmount)) {
-            throw new InputErrorException("付款金额不允许大于单据总金额！");
+        if (NumberUtil.gt(actualPaidAmount.abs(), totalAmount.abs())) {
+            throw new InputErrorException("付款金额绝对值不允许大于单据总金额绝对值！");
         }
 
         return actualPaidAmount;
@@ -964,9 +960,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     static List<String> validateImportNumbers(ReceiveSheetImportModel data) {
         List<String> errors = Lists.newArrayList();
         int rowIndex = data.getSeq();
-        if (data.getReceiveNum() != null && NumberUtil.lt(data.getReceiveNum(), BigDecimal.ZERO)) {
-            errors.add("第" + rowIndex + "行“数量”不允许小于0");
-        }
+        // 数量允许负数，不再校验不小于0
         if (data.getReceiveNum() != null && !NumberUtil.isNumberPrecision(data.getReceiveNum(), 8)) {
             errors.add("第" + rowIndex + "行“数量”最多允许8位小数");
         }

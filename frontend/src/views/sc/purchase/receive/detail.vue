@@ -50,10 +50,9 @@
                   :custom-config="{}"
                 >
                   <template #taxAmount_default="{ row }">
-                    <span
-                      v-if="isFloatGeZero(row.purchasePrice) && isFloatGeZero(row.receiveNum)"
-                      >{{ getNumber(mul(row.purchasePrice, row.receiveNum), 2) }}</span
-                    >
+                    <span v-if="isFloatGeZero(row.purchasePrice) && isFloat(row.receiveNum)">{{
+                      getNumber(mul(row.purchasePrice, row.receiveNum), 2)
+                    }}</span>
                   </template>
                   <template #inquiryProduct_default="{ row }">
                     <span :class="formatInquiryProduct(row.inquiryProduct).className">
@@ -107,7 +106,7 @@
   import * as api from '@/api/sc/purchase/receive';
   import { printMix } from '@/mixins/print.ts';
   import { previewReceiveSheetPrint } from './print';
-  import { add, getNumber, isEmpty, isFloatGeZero, mul, sub } from '@/utils/utils';
+  import { add, getNumber, isEmpty, isFloat, isFloatGeZero, mul, sub } from '@/utils/utils';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
   import PrintDialog from '/@/components/PrintDialog';
@@ -130,6 +129,7 @@
     setup() {
       return {
         isEmpty,
+        isFloat,
         isFloatGeZero,
         getNumber,
         mul,
@@ -271,7 +271,7 @@
 
         this.tableData
           .filter((t) => {
-            return isFloatGeZero(t.purchasePrice) && isFloatGeZero(t.receiveNum);
+            return isFloatGeZero(t.purchasePrice) && isFloat(t.receiveNum);
           })
           .forEach((t) => {
             const num = parseFloat(t.receiveNum);

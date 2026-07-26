@@ -60,7 +60,7 @@
                   </span>
                 </template>
                 <template #taxAmount_default="{ row }">
-                  <span v-if="isFloatGeZero(row.taxPrice) && isFloatGeZero(row.outNum)">{{
+                  <span v-if="isFloatGeZero(row.taxPrice) && isFloat(row.outNum)">{{
                     getNumber(mul(row.taxPrice, row.outNum), 2)
                   }}</span>
                 </template>
@@ -139,7 +139,7 @@
   import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
   import * as api from '@/api/sc/sale/out';
   import { printMix } from '@/mixins/print.ts';
-  import { add, getNumber, isEmpty, isFloatGeZero, mul, sub } from '@/utils/utils';
+  import { add, getNumber, isEmpty, isFloat, isFloatGeZero, mul, sub } from '@/utils/utils';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import { PRINT_TYPE } from '@/enums/biz/printType';
   import OrderTimeLine from '@/components/OrderTimeLine';
@@ -167,6 +167,7 @@
       const { hasPermission } = usePermission();
       return {
         isEmpty,
+        isFloat,
         isFloatGeZero,
         getNumber,
         mul,
@@ -347,7 +348,7 @@
 
         this.tableData
           .filter((t) => {
-            return isFloatGeZero(t.taxPrice) && isFloatGeZero(t.outNum);
+            return isFloatGeZero(t.taxPrice) && isFloat(t.outNum);
           })
           .forEach((t) => {
             const num = parseFloat(t.outNum);
@@ -363,7 +364,7 @@
         );
       },
       calcTaxAmount(row) {
-        if (!isFloatGeZero(row?.taxPrice) || !isFloatGeZero(row?.outNum)) {
+        if (!isFloatGeZero(row?.taxPrice) || !isFloat(row?.outNum)) {
           return 0;
         }
         return getNumber(mul(row.taxPrice, row.outNum), 2);

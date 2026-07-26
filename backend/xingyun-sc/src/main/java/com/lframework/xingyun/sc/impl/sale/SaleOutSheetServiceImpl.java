@@ -1266,8 +1266,8 @@ public class SaleOutSheetServiceImpl extends
             List<SaleOutSheetDetail> sheetDetails = saleOutSheetDetailService.getBySheetId(sheetId);
             SaleOutSheetAmtCalculator.calculateSheet(sheet, sheetDetails);
             BigDecimal paidAmount = sheet.getPaidAmount() == null ? BigDecimal.ZERO : sheet.getPaidAmount();
-            if (NumberUtil.gt(paidAmount, totalAmount)) {
-                throw new DefaultClientException("单据号：" + sheet.getCode() + " 的已付金额大于调整后的单据金额，不允许调整售价！");
+            if (NumberUtil.gt(paidAmount.abs(), totalAmount.abs())) {
+                throw new DefaultClientException("单据号：" + sheet.getCode() + " 的已付金额绝对值大于调整后的单据金额绝对值，不允许调整售价！");
             }
 
             LambdaUpdateWrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
@@ -1752,16 +1752,14 @@ public class SaleOutSheetServiceImpl extends
     private BigDecimal normalizePaidAmount(BigDecimal paidAmount, BigDecimal totalAmount) {
 
         BigDecimal actualPaidAmount = paidAmount == null ? BigDecimal.ZERO : paidAmount;
-        if (NumberUtil.lt(actualPaidAmount, BigDecimal.ZERO)) {
-            throw new InputErrorException("付款金额不允许小于0！");
-        }
+        // 付款金额允许负数，不再校验不小于0
 
         if (!NumberUtil.isNumberPrecision(actualPaidAmount, NumberUtil.AMT_PRECISION)) {
             throw new InputErrorException("付款金额最多允许6位小数！");
         }
 
-        if (NumberUtil.gt(actualPaidAmount, totalAmount)) {
-            throw new InputErrorException("付款金额不允许大于单据总金额！");
+        if (NumberUtil.gt(actualPaidAmount.abs(), totalAmount.abs())) {
+            throw new InputErrorException("付款金额绝对值不允许大于单据总金额绝对值！");
         }
 
         return actualPaidAmount;
@@ -2003,9 +2001,7 @@ public class SaleOutSheetServiceImpl extends
     static List<String> validateImportNumbers(SaleOutSheetImportModel data) {
         List<String> errors = Lists.newArrayList();
         int rowIndex = data.getSeq();
-        if (data.getOrderNum() != null && NumberUtil.lt(data.getOrderNum(), BigDecimal.ZERO)) {
-            errors.add("第" + rowIndex + "行“数量”不允许小于0");
-        }
+        // 数量允许负数，不再校验不小于0
         if (data.getOrderNum() != null && !NumberUtil.isNumberPrecision(data.getOrderNum(), 8)) {
             errors.add("第" + rowIndex + "行“数量”最多允许8位小数");
         }

@@ -1,4 +1,4 @@
-import { getNumber, isFloatGeZero, mul } from '@/utils/utils';
+import { getNumber, isFloat, isFloatGeZero, mul } from '@/utils/utils';
 
 type SheetRow = Record<string, unknown>;
 
@@ -9,7 +9,7 @@ export function getSheetTaxAmount(
 ): number | null {
   const price = row[priceField];
   const quantity = row[quantityField];
-  if (!isFloatGeZero(price) || !isFloatGeZero(quantity)) {
+  if (!isFloatGeZero(price) || !isFloat(quantity)) {
     return null;
   }
 
@@ -34,7 +34,7 @@ export function getSheetAmountCellClass(
     return 'sheet-zero-warning-cell';
   }
 
-  if (field === quantityField && isFloatGeZero(quantity) && Number(quantity) === 0) {
+  if (field === quantityField && isFloat(quantity) && Number(quantity) === 0) {
     return 'sheet-zero-warning-cell';
   }
 

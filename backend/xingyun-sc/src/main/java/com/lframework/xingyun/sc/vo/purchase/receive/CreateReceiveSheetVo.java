@@ -138,9 +138,7 @@ public class CreateReceiveSheetVo implements BaseVo, Serializable {
 
         int orderNo = 1;
         if (this.totalAmount != null) {
-            if (NumberUtil.lt(this.totalAmount, BigDecimal.ZERO)) {
-                throw new InputErrorException("折后金额不允许小于0！");
-            }
+            // 折后金额允许负数，不再校验不小于0
 
             if (!NumberUtil.isNumberPrecision(this.totalAmount, 2)) {
                 throw new InputErrorException("折后金额最多允许2位小数！");
@@ -148,9 +146,7 @@ public class CreateReceiveSheetVo implements BaseVo, Serializable {
         }
 
         if (this.paidAmount != null) {
-            if (NumberUtil.lt(this.paidAmount, BigDecimal.ZERO)) {
-                throw new InputErrorException("付款金额不允许小于0！");
-            }
+            // 付款金额允许负数，不再校验不小于0
 
             if (!NumberUtil.isNumberPrecision(this.paidAmount, 6)) {
                 throw new InputErrorException("付款金额最多允许6位小数！");
@@ -164,9 +160,7 @@ public class CreateReceiveSheetVo implements BaseVo, Serializable {
             }
 
             if (product.getReceiveNum() != null) {
-                if (NumberUtil.lt(product.getReceiveNum(), BigDecimal.ZERO)) {
-                    throw new InputErrorException("第" + orderNo + "行商品收货数量不允许小于0！");
-                }
+                // 数量允许负数，不再校验不小于0
 
                 if (!NumberUtil.isNumberPrecision(product.getReceiveNum(), 8)) {
                     throw new InputErrorException("第" + orderNo + "行商品收货数量最多允许8位小数！");
