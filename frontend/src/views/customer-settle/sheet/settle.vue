@@ -33,7 +33,11 @@
                 />
               </j-form-item>
               <j-form-item label="业务类型">
-                <a-select v-model:value="searchFormData.bizType" placeholder="请选择业务类型">
+                <a-select
+                  v-model:value="searchFormData.bizType"
+                  allow-clear
+                  placeholder="全部业务类型"
+                >
                   <a-select-option :value="1">销售出库单</a-select-option>
                   <a-select-option :value="2">销售退货单</a-select-option>
                 </a-select>
@@ -83,7 +87,6 @@
         <a-form-item label="结算金额">
           <a-input-number
             v-model:value="settleDialog.amount"
-            :min="0"
             :precision="2"
             style="width: 100%"
             placeholder="请输入结算金额"
@@ -112,6 +115,8 @@
     canDirectSettle,
     canSelectDirectSettleRow,
     getCustomerSettleBizListPath,
+    isDirectSettleAmountValid,
+    queryCustomerSettleWorkbenchPages,
   } from './customerSettleWorkbench';
 
   export default defineComponent({
@@ -125,7 +130,9 @@
         CUSTOMER_SALE_SETTLE_BIZ_TYPE,
         searchFormData: {
           customerId: this.$route.query.customerId ? String(this.$route.query.customerId) : '',
-          bizType: Number(this.$route.query.bizType || 1),
+          bizType: this.$route.query.bizType
+            ? Number(this.$route.query.bizType)
+            : undefined as number | undefined,
           code: this.$route.query.code ? String(this.$route.query.code) : '',
         },
         toolbarConfig: {
@@ -207,14 +214,17 @@
           ...buildSortPageVo(this.pagerConfig, []),
           customerId: this.searchFormData.customerId || undefined,
           code: this.searchFormData.code || undefined,
-          bizType: this.searchFormData.bizType,
+          bizType: this.searchFormData.bizType || undefined,
         };
       },
       /** 查询工作台数据。 */
       async loadList() {
         this.loading = true;
         try {
-          const res = await api.querySaleSettleInfos(this.buildQueryParams());
+          const res = await queryCustomerSettleWorkbenchPages(
+            this.buildQueryParams(),
+            api.querySaleSettleInfos as any,
+          );
           this.tableData = res?.datas || [];
           this.pagerConfig.total = res?.totalCount || 0;
           this.$nextTick(() => this.syncSelection());
@@ -277,7 +287,15 @@
       async exportList() {
         this.loading = true;
         try {
-          await api.exportSaleSettleInfos(this.buildQueryParams());
+          const params = this.buildQueryParams();
+          if (params.bizType) {
+            await api.exportSaleSettleInfos(params as any);
+          } else {
+            await Promise.all([
+              api.exportSaleSettleInfos({ ...params, bizType: 1 } as any),
+              api.exportSaleSettleInfos({ ...params, bizType: 2 } as any),
+            ]);
+          }
           createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
         } catch (err: any) {
           createError(err?.message || '创建导出任务失败，请稍后重试！');
@@ -301,8 +319,14 @@
           createError('勾选的单据不满足结算条件！');
           return;
         }
-        if (this.settleDialog.amount === undefined || this.settleDialog.amount <= 0) {
-          createError('结算金额必须大于0！');
+        if (
+          this.settleDialog.amount === undefined
+          || !isDirectSettleAmountValid(
+            this.settleDialog.amount,
+            this.selectedTotalUnSettleAmount,
+          )
+        ) {
+          createError('结算金额必须与所选单据未结算净额方向一致，且不能超出其范围！');
           return;
         }
 

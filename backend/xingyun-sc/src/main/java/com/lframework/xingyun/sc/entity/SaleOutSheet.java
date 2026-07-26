@@ -182,4 +182,9 @@ public class SaleOutSheet extends BaseEntity implements BaseDto {
    * 结算版本号
    */
   private Long settleVersion;
+
+  /**
+   * 结算交易占用ID
+   */
+  private String txId;
 }

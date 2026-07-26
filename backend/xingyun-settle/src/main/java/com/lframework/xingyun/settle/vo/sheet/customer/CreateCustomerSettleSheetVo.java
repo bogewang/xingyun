@@ -1,6 +1,6 @@
 package com.lframework.xingyun.settle.vo.sheet.customer;
 
-import com.lframework.starter.common.exceptions.impl.InputErrorException;
+import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.vo.BaseVo;
 import io.swagger.annotations.ApiModelProperty;
@@ -48,11 +48,11 @@ public class CreateCustomerSettleSheetVo implements BaseVo, Serializable {
     int orderNo = 1;
     for (CustomerSettleSheetItemVo item : this.items) {
       if (StringUtil.isBlank(item.getBizId())) {
-        throw new InputErrorException("第" + orderNo + "行业务单据不能为空！");
+        throw new DefaultClientException("第" + orderNo + "行业务单据不能为空！");
       }
 
       if (item.getBizType() == null || (item.getBizType() != 1 && item.getBizType() != 2)) {
-        throw new InputErrorException("第" + orderNo + "行业务类型不正确！");
+        throw new DefaultClientException("第" + orderNo + "行业务类型不正确！");
       }
 
       orderNo++;

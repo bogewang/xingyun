@@ -6,13 +6,20 @@ import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.Assert;
 import com.lframework.starter.common.utils.CollectionUtil;
 import com.lframework.starter.common.utils.StringUtil;
+import com.lframework.starter.web.core.annotations.oplog.OpLog;
+import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
 import com.lframework.starter.web.core.components.resp.PageResult;
+import com.lframework.starter.web.core.components.security.SecurityUtil;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
 import com.lframework.starter.web.core.utils.PageHelperUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
+import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTimeLineBizType;
+import com.lframework.starter.web.inner.entity.OrderTimeLine;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
+import com.lframework.starter.web.inner.service.OrderTimeLineService;
 import com.lframework.xingyun.basedata.entity.Customer;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
+import com.lframework.xingyun.core.components.timeline.ReceiveOrderTimeLineBizType;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.entity.SaleReturn;
 import com.lframework.xingyun.sc.enums.SettleStatus;
@@ -26,6 +33,7 @@ import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleSheetFullD
 import com.lframework.xingyun.settle.entity.CustomerSettleSheet;
 import com.lframework.xingyun.settle.entity.CustomerSettleSheetDetail;
 import com.lframework.xingyun.settle.enums.CustomerSaleSettleBizType;
+import com.lframework.xingyun.settle.enums.SettleOpLogType;
 import com.lframework.xingyun.settle.enums.CustomerSettleSheetStatus;
 import com.lframework.xingyun.settle.mappers.CustomerSettleSheetMapper;
 import com.lframework.xingyun.settle.service.CustomerSettleSheetDetailService;
@@ -36,6 +44,7 @@ import com.lframework.xingyun.settle.vo.sheet.customer.CustomerSettleSheetItemVo
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSaleSettleInfoVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleSheetVo;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -74,6 +83,12 @@ public class CustomerSettleSheetServiceImpl extends
   @Autowired
   private CustomerService customerService;
 
+  @Autowired
+  private OrderTimeLineService orderTimeLineService;
+
+  @Autowired
+  private ReceiveOrderTimeLineBizType receiveOrderTimeLineBizType;
+
   /**
    * 查询客户销售业务单据结算工作台信息。
    *
@@ -103,6 +118,7 @@ public class CustomerSettleSheetServiceImpl extends
     QuerySaleOutSheetVo saleOutVo = new QuerySaleOutSheetVo();
     saleOutVo.setCode(vo.getCode());
     saleOutVo.setCustomerId(vo.getCustomerId());
+    saleOutVo.setRequireTxIdNull(true);
     PageResult<SaleOutSheet> pageResult = saleOutSheetService.query(pageIndex, pageSize, saleOutVo);
     List<CustomerSaleSettleInfoBo> results = pageResult.getDatas().stream()
         .map(sheet -> buildSettleInfo(sheet.getId(), 1, sheet.getCode(), sheet.getCustomerId(),
@@ -119,10 +135,12 @@ public class CustomerSettleSheetServiceImpl extends
     QuerySaleReturnVo saleReturnVo = new QuerySaleReturnVo();
     saleReturnVo.setCode(vo.getCode());
     saleReturnVo.setCustomerId(vo.getCustomerId());
+    saleReturnVo.setRequireTxIdNull(true);
     PageResult<SaleReturn> pageResult = saleReturnService.query(pageIndex, pageSize, saleReturnVo);
     List<CustomerSaleSettleInfoBo> results = pageResult.getDatas().stream()
         .map(sheet -> buildSettleInfo(sheet.getId(), 2, sheet.getCode(), sheet.getCustomerId(),
-            sheet.getTotalAmount(), BigDecimal.ZERO, getSettleStatusCode(sheet.getSettleStatus())))
+            amountOrZero(sheet.getTotalAmount()).negate(), BigDecimal.ZERO,
+            getSettleStatusCode(sheet.getSettleStatus())))
         .collect(Collectors.toList());
     return PageResultUtil.rebuild(pageResult, results);
   }
@@ -168,7 +186,7 @@ public class CustomerSettleSheetServiceImpl extends
       BigDecimal settleAmount = settleAmountMap.getOrDefault(item.getId(), BigDecimal.ZERO);
       item.setSettleAmount(settleAmount);
       item.setUnSettleAmount(item.getTotalAmount().subtract(item.getReceivedAmount())
-          .subtract(settleAmount).max(BigDecimal.ZERO));
+          .subtract(settleAmount));
     });
   }
 
@@ -263,15 +281,17 @@ public class CustomerSettleSheetServiceImpl extends
    */
   @Transactional(rollbackFor = Exception.class)
   @Override
+  @OpLog(type = SettleOpLogType.class, name = "直接审核通过客户结算单，ID：{}",
+      params = "#_result", autoSaveParams = true)
+  @OrderTimeLineLog(type = ApprovePassOrderTimeLineBizType.class, orderId = "#_result",
+      name = "直接审核通过")
   public String directApprovePass(CreateCustomerSettleSheetVo vo) {
     List<DirectSettleBiz> bizItems = validateDirectSettle(vo);
     BigDecimal totalUnSettleAmount = bizItems.stream().map(DirectSettleBiz::getUnSettleAmount)
         .reduce(BigDecimal.ZERO, BigDecimal::add);
-    if (vo.getSettleAmount().compareTo(totalUnSettleAmount) > 0) {
-      throw new DefaultClientException("确认结算金额不能大于所选单据的未结算总额！");
-    }
-    List<BigDecimal> amounts = SettleAmountAllocationUtil.allocate(vo.getSettleAmount(), bizItems
-        .stream().map(DirectSettleBiz::getUnSettleAmount).collect(Collectors.toList()));
+    validateConfirmedAmount(vo.getSettleAmount(), totalUnSettleAmount);
+    List<BigDecimal> amounts = SettleAmountAllocationUtil.allocateSigned(vo.getSettleAmount(),
+        bizItems.stream().map(DirectSettleBiz::getUnSettleAmount).collect(Collectors.toList()));
 
     CustomerSettleSheet sheet = createApprovedSheet(vo);
     List<CustomerSettleSheetDetail> details = new ArrayList<>();
@@ -284,7 +304,23 @@ public class CustomerSettleSheetServiceImpl extends
     if (!customerSettleSheetDetailService.saveBatch(details)) {
       throw new DefaultClientException("保存客户结算单明细失败！");
     }
+    recordSaleSourceSettleTimeLine(sheet, details);
     return sheet.getId();
+  }
+
+  /**
+   * 校验确认金额与所选业务净额的方向及范围一致。
+   *
+   * @param confirmedAmount 确认金额
+   * @param totalUnSettleAmount 未结算净额
+   */
+  private void validateConfirmedAmount(BigDecimal confirmedAmount,
+      BigDecimal totalUnSettleAmount) {
+    if (totalUnSettleAmount.compareTo(BigDecimal.ZERO) == 0
+        || confirmedAmount.signum() != totalUnSettleAmount.signum()
+        || confirmedAmount.abs().compareTo(totalUnSettleAmount.abs()) > 0) {
+      throw new DefaultClientException("确认结算金额与所选单据未结算净额方向或范围不一致！");
+    }
   }
 
   /**
@@ -294,8 +330,8 @@ public class CustomerSettleSheetServiceImpl extends
     if (vo == null || StringUtil.isBlank(vo.getCustomerId())) {
       throw new DefaultClientException("客户不能为空！");
     }
-    if (vo.getSettleAmount() == null || vo.getSettleAmount().compareTo(BigDecimal.ZERO) <= 0) {
-      throw new DefaultClientException("确认结算金额必须大于0！");
+    if (vo.getSettleAmount() == null || vo.getSettleAmount().compareTo(BigDecimal.ZERO) == 0) {
+      throw new DefaultClientException("确认结算金额不能为0！");
     }
     if (vo.getSettleAmount().scale() > 2) {
       throw new DefaultClientException("确认结算金额最多保留两位小数！");
@@ -322,6 +358,9 @@ public class CustomerSettleSheetServiceImpl extends
     }
     Map<String, SaleOutSheet> saleOutMap = toSaleOutMap(saleOutIds);
     Map<String, SaleReturn> saleReturnMap = toSaleReturnMap(saleReturnIds);
+    if (saleOutMap.size() != saleOutIds.size() || saleReturnMap.size() != saleReturnIds.size()) {
+      throw new DefaultClientException("业务单据不存在或无权访问！");
+    }
     Map<String, BigDecimal> settledAmountMap = querySettleAmountMap(itemKeys.stream()
         .map(key -> key.substring(key.indexOf(':') + 1)).collect(Collectors.toSet()));
     List<DirectSettleBiz> results = new ArrayList<>();
@@ -332,7 +371,7 @@ public class CustomerSettleSheetServiceImpl extends
       if (!vo.getCustomerId().equals(biz.getCustomerId())) {
         throw new DefaultClientException("所选业务单据必须属于同一客户！");
       }
-      if (biz.getUnSettleAmount().compareTo(BigDecimal.ZERO) <= 0) {
+      if (biz.getUnSettleAmount().compareTo(BigDecimal.ZERO) == 0) {
         throw new DefaultClientException("单号：" + biz.getCode() + "不存在可结算金额！");
       }
       results.add(biz);
@@ -347,7 +386,10 @@ public class CustomerSettleSheetServiceImpl extends
     if (CollectionUtil.isEmpty(ids)) {
       return Collections.emptyMap();
     }
-    List<SaleOutSheet> sheets = saleOutSheetService.listByIds(ids);
+    QuerySaleOutSheetVo queryVo = new QuerySaleOutSheetVo();
+    queryVo.setIdList(new ArrayList<>(ids));
+    queryVo.setRequireTxIdNull(true);
+    List<SaleOutSheet> sheets = saleOutSheetService.query(queryVo);
     return sheets == null ? Collections.emptyMap() : sheets.stream()
         .collect(Collectors.toMap(SaleOutSheet::getId, sheet -> sheet, (a, b) -> a));
   }
@@ -359,7 +401,10 @@ public class CustomerSettleSheetServiceImpl extends
     if (CollectionUtil.isEmpty(ids)) {
       return Collections.emptyMap();
     }
-    List<SaleReturn> sheets = saleReturnService.listByIds(ids);
+    QuerySaleReturnVo queryVo = new QuerySaleReturnVo();
+    queryVo.setIdList(new ArrayList<>(ids));
+    queryVo.setRequireTxIdNull(true);
+    List<SaleReturn> sheets = saleReturnService.query(queryVo);
     return sheets == null ? Collections.emptyMap() : sheets.stream()
         .collect(Collectors.toMap(SaleReturn::getId, sheet -> sheet, (a, b) -> a));
   }
@@ -370,7 +415,10 @@ public class CustomerSettleSheetServiceImpl extends
   private DirectSettleBiz buildSaleOutBiz(CustomerSettleSheetItemVo item, SaleOutSheet sheet,
       Map<String, BigDecimal> settledAmountMap) {
     if (sheet == null) {
-      throw new DefaultClientException("销售出库单不存在！");
+      throw new DefaultClientException("业务单据不存在或无权访问！");
+    }
+    if (!StringUtil.isBlank(sheet.getTxId())) {
+      throw new DefaultClientException("单号：" + sheet.getCode() + "已被结算交易占用！");
     }
     validateSettleStatus(sheet.getCode(), sheet.getSettleStatus());
     return new DirectSettleBiz(item.getBizId(), item.getBizType(), sheet.getCode(),
@@ -386,12 +434,15 @@ public class CustomerSettleSheetServiceImpl extends
   private DirectSettleBiz buildSaleReturnBiz(CustomerSettleSheetItemVo item, SaleReturn sheet,
       Map<String, BigDecimal> settledAmountMap) {
     if (sheet == null) {
-      throw new DefaultClientException("销售退货单不存在！");
+      throw new DefaultClientException("业务单据不存在或无权访问！");
+    }
+    if (!StringUtil.isBlank(sheet.getTxId())) {
+      throw new DefaultClientException("单号：" + sheet.getCode() + "已被结算交易占用！");
     }
     validateSettleStatus(sheet.getCode(), sheet.getSettleStatus());
     return new DirectSettleBiz(item.getBizId(), item.getBizType(), sheet.getCode(),
         sheet.getCustomerId(), sheet.getSettleStatus(), sheet.getSettleVersion(),
-        amountOrZero(sheet.getTotalAmount()).subtract(
+        amountOrZero(sheet.getTotalAmount()).negate().subtract(
             settledAmountMap.getOrDefault(item.getBizId(), BigDecimal.ZERO)));
   }
 
@@ -417,6 +468,7 @@ public class CustomerSettleSheetServiceImpl extends
     sheet.setDescription(StringUtil.isBlank(vo.getDescription()) ? "" : vo.getDescription());
     sheet.setRefuseReason("");
     sheet.setStatus(CustomerSettleSheetStatus.APPROVE_PASS);
+    sheet.setApproveBy(getCurrentUserId());
     sheet.setApproveTime(LocalDateTime.now());
     if (getBaseMapper().insert(sheet) != 1) {
       throw new DefaultClientException("保存客户结算单失败！");
@@ -444,7 +496,7 @@ public class CustomerSettleSheetServiceImpl extends
    * 按分摊结果回写业务单据结算状态。
    */
   private void updateBizSettleStatus(DirectSettleBiz biz, BigDecimal amount) {
-    boolean settled = amount.compareTo(biz.getUnSettleAmount()) >= 0;
+    boolean settled = amount.abs().compareTo(biz.getUnSettleAmount().abs()) >= 0;
     int count;
     if (biz.getBizType() == 1) {
       count = settled ? saleOutSheetService.setSettled(biz.getBizId(), biz.getSettleStatus(),
@@ -472,6 +524,65 @@ public class CustomerSettleSheetServiceImpl extends
    */
   private String generateId() {
     return UUID.randomUUID().toString().replace("-", "");
+  }
+
+  /**
+   * 写入销售源单确认结算时间线。
+   *
+   * @param sheet 客户结算单
+   * @param details 结算明细
+   */
+  private void recordSaleSourceSettleTimeLine(CustomerSettleSheet sheet,
+      List<CustomerSettleSheetDetail> details) {
+    if (CollectionUtil.isEmpty(details)) {
+      return;
+    }
+    String description = StringUtil.isBlank(sheet.getDescription()) ? "无" : sheet.getDescription();
+    String createById = getCurrentUserId();
+    String createBy = getCurrentUserName();
+    LocalDateTime createTime = sheet.getApproveTime() == null
+        ? LocalDateTime.now() : sheet.getApproveTime();
+    List<OrderTimeLine> timeLines = details.stream().map(detail -> {
+      OrderTimeLine orderTimeLine = new OrderTimeLine();
+      orderTimeLine.setId(generateId());
+      orderTimeLine.setOrderId(detail.getBizId());
+      orderTimeLine.setBizType(receiveOrderTimeLineBizType.getCode());
+      orderTimeLine.setContent(String.format("确认结算，结算金额：%s，备注：%s",
+          formatAmount(detail.getPayAmount()), description));
+      orderTimeLine.setCreateById(createById);
+      orderTimeLine.setCreateBy(createBy);
+      orderTimeLine.setCreateTime(createTime);
+      return orderTimeLine;
+    }).collect(Collectors.toList());
+    orderTimeLineService.saveBatch(timeLines);
+  }
+
+  /**
+   * 获取当前用户 ID。
+   *
+   * @return 当前用户 ID
+   */
+  protected String getCurrentUserId() {
+    return SecurityUtil.getCurrentUser().getId();
+  }
+
+  /**
+   * 获取当前用户名称。
+   *
+   * @return 当前用户名称
+   */
+  protected String getCurrentUserName() {
+    return SecurityUtil.getCurrentUser().getName();
+  }
+
+  /**
+   * 将时间线金额格式化为两位小数。
+   *
+   * @param amount 金额
+   * @return 两位小数字符串
+   */
+  private String formatAmount(BigDecimal amount) {
+    return amount == null ? "0.00" : amount.setScale(2, RoundingMode.HALF_UP).toPlainString();
   }
 
   /**

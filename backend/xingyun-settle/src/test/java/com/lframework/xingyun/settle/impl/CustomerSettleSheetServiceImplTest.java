@@ -1,15 +1,26 @@
 package com.lframework.xingyun.settle.impl;
 
 import com.lframework.starter.web.core.components.resp.PageResult;
+import com.lframework.starter.web.core.annotations.oplog.OpLog;
+import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
+import com.lframework.starter.web.inner.entity.OrderTimeLine;
+import com.lframework.starter.web.inner.service.OrderTimeLineService;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
+import com.lframework.starter.web.core.components.security.DefaultUserDetails;
+import com.lframework.starter.web.core.components.security.SecurityUtil;
 import com.lframework.xingyun.basedata.entity.Customer;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
+import com.lframework.xingyun.core.components.timeline.ReceiveOrderTimeLineBizType;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.entity.SaleReturn;
+import com.lframework.xingyun.sc.enums.SaleOutSheetStatus;
+import com.lframework.xingyun.sc.enums.SaleReturnStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
 import com.lframework.xingyun.sc.service.sale.SaleReturnService;
+import com.lframework.xingyun.sc.vo.sale.out.QuerySaleOutSheetVo;
+import com.lframework.xingyun.sc.vo.sale.returned.QuerySaleReturnVo;
 import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSaleSettleInfoBo;
 import com.lframework.xingyun.settle.bo.sheet.customer.GetCustomerSettleSheetBo;
 import com.lframework.xingyun.settle.entity.CustomerSettleSheet;
@@ -29,14 +40,281 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 /**
  * 客户结算工作台服务测试。
  */
 public class CustomerSettleSheetServiceImplTest {
+
+  /**
+   * 工作台销售出库查询允许任意审核状态，但必须限制未被交易占用。
+   */
+  @Test
+  public void querySaleOutWorkbenchShouldAllowAnyStatusAndRequireUnoccupiedSources()
+      throws Exception {
+    CustomerSettleSheetServiceImpl service = directSettleService();
+    SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
+    CustomerService customerService = getField(service, "customerService");
+    Mockito.when(saleOutSheetService.query(Mockito.eq(1), Mockito.eq(20), Mockito.any()))
+        .thenReturn(PageResultUtil.newInstance(1, 20, 0, Collections.emptyList()));
+    Mockito.when(customerService.listByIds(Mockito.anyCollection()))
+        .thenReturn(Collections.emptyList());
+    QueryCustomerSaleSettleInfoVo vo = new QueryCustomerSaleSettleInfoVo();
+    vo.setBizType(1);
+    vo.setPageIndex(1);
+    vo.setPageSize(20);
+
+    service.querySaleSettleInfos(vo);
+
+    ArgumentCaptor<QuerySaleOutSheetVo> captor = ArgumentCaptor.forClass(
+        QuerySaleOutSheetVo.class);
+    Mockito.verify(saleOutSheetService).query(Mockito.eq(1), Mockito.eq(20), captor.capture());
+    Assert.assertNull(captor.getValue().getStatus());
+    Assert.assertEquals(Boolean.TRUE, captor.getValue().getRequireTxIdNull());
+  }
+
+  /**
+   * 工作台销售退货查询允许任意审核状态，但必须限制未被交易占用。
+   */
+  @Test
+  public void querySaleReturnWorkbenchShouldAllowAnyStatusAndRequireUnoccupiedSources()
+      throws Exception {
+    CustomerSettleSheetServiceImpl service = directSettleService();
+    SaleReturnService saleReturnService = getField(service, "saleReturnService");
+    CustomerService customerService = getField(service, "customerService");
+    Mockito.when(saleReturnService.query(Mockito.eq(1), Mockito.eq(20), Mockito.any()))
+        .thenReturn(PageResultUtil.newInstance(1, 20, 0, Collections.emptyList()));
+    Mockito.when(customerService.listByIds(Mockito.anyCollection()))
+        .thenReturn(Collections.emptyList());
+    QueryCustomerSaleSettleInfoVo vo = new QueryCustomerSaleSettleInfoVo();
+    vo.setBizType(2);
+    vo.setPageIndex(1);
+    vo.setPageSize(20);
+
+    service.querySaleSettleInfos(vo);
+
+    ArgumentCaptor<QuerySaleReturnVo> captor = ArgumentCaptor.forClass(QuerySaleReturnVo.class);
+    Mockito.verify(saleReturnService).query(Mockito.eq(1), Mockito.eq(20), captor.capture());
+    Assert.assertNull(captor.getValue().getStatus());
+    Assert.assertEquals(Boolean.TRUE, captor.getValue().getRequireTxIdNull());
+  }
+
+  /**
+   * 销售退货工作台金额必须按退款负方向展示。
+   */
+  @Test
+  public void querySaleReturnWorkbenchShouldExposeNegativeAmounts() throws Exception {
+    CustomerSettleSheetServiceImpl service = directSettleService();
+    SaleReturnService saleReturnService = getField(service, "saleReturnService");
+    CustomerService customerService = getField(service, "customerService");
+    SaleReturn saleReturn = saleReturn("return-1", "customer-1", "20",
+        SettleStatus.UN_SETTLE);
+    Mockito.when(saleReturnService.query(Mockito.eq(1), Mockito.eq(20), Mockito.any()))
+        .thenReturn(PageResultUtil.newInstance(1, 20, 1,
+            Collections.singletonList(saleReturn)));
+    Mockito.when(customerService.listByIds(Mockito.anyCollection()))
+        .thenReturn(Collections.emptyList());
+    QueryCustomerSaleSettleInfoVo vo = new QueryCustomerSaleSettleInfoVo();
+    vo.setBizType(2);
+    vo.setPageIndex(1);
+    vo.setPageSize(20);
+
+    PageResult<CustomerSaleSettleInfoBo> result = service.querySaleSettleInfos(vo);
+
+    Assert.assertEquals(new BigDecimal("-20"), result.getDatas().get(0).getTotalAmount());
+    Assert.assertEquals(new BigDecimal("-20"), result.getDatas().get(0).getUnSettleAmount());
+  }
+
+  /**
+   * 直接结算读取源单必须走带数据权限的查询，并统一拒绝不可见 ID。
+   */
+  @Test
+  public void directApprovePassShouldUsePermissionAwareSourceQueries() throws Exception {
+    CustomerSettleSheetServiceImpl service = directSettleService();
+    SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
+    CustomerSettleSheetDetailService detailService = getField(service,
+        "customerSettleSheetDetailService");
+    SaleOutSheet sheet = saleOutSheet("sale-1", "customer-1", "10", "0",
+        SettleStatus.UN_SETTLE);
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class)))
+        .thenReturn(Collections.singletonList(sheet));
+    Mockito.when(saleOutSheetService.setSettled("sale-1", SettleStatus.UN_SETTLE, 0L))
+        .thenReturn(1);
+    Mockito.when(detailService.saveBatch(Mockito.anyCollection())).thenReturn(true);
+
+    service.directApprovePass(directSettleVo("customer-1", "10", item("sale-1", 1)));
+
+    ArgumentCaptor<QuerySaleOutSheetVo> captor = ArgumentCaptor.forClass(
+        QuerySaleOutSheetVo.class);
+    Mockito.verify(saleOutSheetService).query(captor.capture());
+    Assert.assertEquals(Collections.singletonList("sale-1"), captor.getValue().getIdList());
+    Assert.assertNull(captor.getValue().getStatus());
+    Assert.assertEquals(Boolean.TRUE, captor.getValue().getRequireTxIdNull());
+    Mockito.verify(saleOutSheetService, Mockito.never()).listByIds(Mockito.anyCollection());
+  }
+
+  /**
+   * 数据权限查询未返回请求 ID 时，必须按不存在或无权访问统一拒绝。
+   */
+  @Test
+  public void directApprovePassShouldRejectInvisibleOrMissingSourceId() throws Exception {
+    CustomerSettleSheetServiceImpl service = directSettleService();
+    SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class)))
+        .thenReturn(Collections.emptyList());
+
+    try {
+      service.directApprovePass(directSettleVo("customer-1", "10", item("hidden-id", 1)));
+      Assert.fail("不可见或不存在的源单 ID 应被拒绝");
+    } catch (DefaultClientException e) {
+      Assert.assertEquals("业务单据不存在或无权访问！", e.getMessage());
+    }
+  }
+
+  /**
+   * 未审核销售源单也允许直接结算。
+   */
+  @Test
+  public void directApprovePassShouldAllowUnapprovedSource() throws Exception {
+    CustomerSettleSheetServiceImpl service = directSettleService();
+    SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
+    CustomerSettleSheetDetailService detailService = getField(service,
+        "customerSettleSheetDetailService");
+    SaleOutSheet sheet = saleOutSheet("sale-1", "customer-1", "10", "0",
+        SettleStatus.UN_SETTLE);
+    sheet.setStatus(SaleOutSheetStatus.CREATED);
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class)))
+        .thenReturn(Collections.singletonList(sheet));
+    Mockito.when(saleOutSheetService.setSettled("sale-1", SettleStatus.UN_SETTLE, 0L))
+        .thenReturn(1);
+    Mockito.when(detailService.saveBatch(Mockito.anyCollection())).thenReturn(true);
+
+    service.directApprovePass(directSettleVo("customer-1", "10", item("sale-1", 1)));
+
+    Mockito.verify(saleOutSheetService).setSettled("sale-1", SettleStatus.UN_SETTLE, 0L);
+  }
+
+  /**
+   * 即使查询依赖异常返回已被交易占用的源单，提交层仍必须拒绝。
+   */
+  @Test(expected = DefaultClientException.class)
+  public void directApprovePassShouldRejectOccupiedSource() throws Exception {
+    CustomerSettleSheetServiceImpl service = directSettleService();
+    SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
+    SaleOutSheet sheet = saleOutSheet("sale-1", "customer-1", "10", "0",
+        SettleStatus.UN_SETTLE);
+    sheet.setTxId("tx-1");
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class)))
+        .thenReturn(Collections.singletonList(sheet));
+
+    service.directApprovePass(directSettleVo("customer-1", "10", item("sale-1", 1)));
+  }
+
+  /**
+   * 销售退货可按负金额直接退款并保存负向结算明细。
+   */
+  @Test
+  public void directApprovePassShouldSettleSaleReturnAsNegativeRefund() throws Exception {
+    CustomerSettleSheetServiceImpl service = directSettleService();
+    SaleReturnService saleReturnService = getField(service, "saleReturnService");
+    CustomerSettleSheetDetailService detailService = getField(service,
+        "customerSettleSheetDetailService");
+    Mockito.when(saleReturnService.query(Mockito.any(QuerySaleReturnVo.class)))
+        .thenReturn(Collections.singletonList(
+            saleReturn("return-1", "customer-1", "20", SettleStatus.UN_SETTLE)));
+    Mockito.when(saleReturnService.setSettled("return-1", SettleStatus.UN_SETTLE, 0L))
+        .thenReturn(1);
+    Mockito.when(detailService.saveBatch(Mockito.anyCollection())).thenReturn(true);
+
+    service.directApprovePass(directSettleVo("customer-1", "-20", item("return-1", 2)));
+
+    ArgumentCaptor<Collection<CustomerSettleSheetDetail>> detailCaptor =
+        ArgumentCaptor.forClass(Collection.class);
+    Mockito.verify(detailService).saveBatch(detailCaptor.capture());
+    Assert.assertEquals(new BigDecimal("-20.00"),
+        detailCaptor.getValue().iterator().next().getPayAmount());
+  }
+
+  /**
+   * 销售单一百与退货二十混合结算时，净额必须为八十且保留各自方向。
+   */
+  @Test
+  public void directApprovePassShouldAllocateMixedSaleAndReturnToNetAmount() throws Exception {
+    CustomerSettleSheetServiceImpl service = directSettleService();
+    SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
+    SaleReturnService saleReturnService = getField(service, "saleReturnService");
+    CustomerSettleSheetDetailService detailService = getField(service,
+        "customerSettleSheetDetailService");
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class)))
+        .thenReturn(Collections.singletonList(
+            saleOutSheet("sale-1", "customer-1", "100", "0", SettleStatus.UN_SETTLE)));
+    Mockito.when(saleReturnService.query(Mockito.any(QuerySaleReturnVo.class)))
+        .thenReturn(Collections.singletonList(
+            saleReturn("return-1", "customer-1", "20", SettleStatus.UN_SETTLE)));
+    Mockito.when(saleOutSheetService.setSettled("sale-1", SettleStatus.UN_SETTLE, 0L))
+        .thenReturn(1);
+    Mockito.when(saleReturnService.setSettled("return-1", SettleStatus.UN_SETTLE, 0L))
+        .thenReturn(1);
+    Mockito.when(detailService.saveBatch(Mockito.anyCollection())).thenReturn(true);
+
+    service.directApprovePass(directSettleVo("customer-1", "80", item("sale-1", 1),
+        item("return-1", 2)));
+
+    ArgumentCaptor<Collection<CustomerSettleSheetDetail>> detailCaptor =
+        ArgumentCaptor.forClass(Collection.class);
+    Mockito.verify(detailService).saveBatch(detailCaptor.capture());
+    List<CustomerSettleSheetDetail> details = Arrays.asList(
+        detailCaptor.getValue().toArray(new CustomerSettleSheetDetail[0]));
+    Assert.assertEquals(new BigDecimal("100.00"), details.get(0).getPayAmount());
+    Assert.assertEquals(new BigDecimal("-20.00"), details.get(1).getPayAmount());
+    Assert.assertEquals(new BigDecimal("80.00"), details.stream()
+        .map(CustomerSettleSheetDetail::getPayAmount).reduce(BigDecimal.ZERO, BigDecimal::add));
+  }
+
+  /**
+   * 直审必须写入审批人、客户结算操作日志契约及每张销售源单时间线。
+   */
+  @Test
+  public void directApprovePassShouldWriteApprovalAndLogContracts() throws Exception {
+    CustomerSettleSheetServiceImpl service = directSettleService();
+    SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
+    CustomerSettleSheetDetailService detailService = getField(service,
+        "customerSettleSheetDetailService");
+    CustomerSettleSheetMapper mapper = getField(service, "baseMapper");
+    OrderTimeLineService orderTimeLineService = Mockito.mock(OrderTimeLineService.class);
+    injectField(service, "orderTimeLineService", orderTimeLineService);
+    injectField(service, "receiveOrderTimeLineBizType", new ReceiveOrderTimeLineBizType());
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class)))
+        .thenReturn(Collections.singletonList(
+            saleOutSheet("sale-1", "customer-1", "10", "0", SettleStatus.UN_SETTLE)));
+    Mockito.when(saleOutSheetService.setSettled("sale-1", SettleStatus.UN_SETTLE, 0L))
+        .thenReturn(1);
+    Mockito.when(detailService.saveBatch(Mockito.anyCollection())).thenReturn(true);
+
+    service.directApprovePass(directSettleVo("customer-1", "10", item("sale-1", 1)));
+
+    ArgumentCaptor<CustomerSettleSheet> sheetCaptor = ArgumentCaptor.forClass(
+        CustomerSettleSheet.class);
+    Mockito.verify(mapper).insert(sheetCaptor.capture());
+    Assert.assertEquals("user-1", sheetCaptor.getValue().getApproveBy());
+    Mockito.verify(orderTimeLineService).saveBatch(Mockito.argThat(
+        lines -> lines.size() == 1
+            && lines.stream().allMatch(line -> "sale-1".equals(line.getOrderId())
+                && line.getContent().contains("确认结算")
+                && line.getContent().contains("10.00"))));
+    Mockito.verify(orderTimeLineService, Mockito.never()).save(Mockito.any(OrderTimeLine.class));
+    Assert.assertNotNull(CustomerSettleSheetServiceImpl.class
+        .getMethod("directApprovePass", CreateCustomerSettleSheetVo.class)
+        .getAnnotation(OpLog.class));
+    Assert.assertNotNull(CustomerSettleSheetServiceImpl.class
+        .getMethod("directApprovePass", CreateCustomerSettleSheetVo.class)
+        .getAnnotation(OrderTimeLineLog.class));
+  }
 
   /**
    * 源单版本变化后，第二次按同一旧余额结算必须失败且不得再次保存明细。
@@ -50,7 +328,7 @@ public class CustomerSettleSheetServiceImplTest {
     SaleOutSheet sheet = saleOutSheet("sale-1", "customer-1", "100", "0",
         SettleStatus.UN_SETTLE);
     sheet.setSettleVersion(0L);
-    Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class))).thenReturn(
         Collections.singletonList(sheet));
     Mockito.when(saleOutSheetService.setPartSettle(Mockito.eq("sale-1"),
         Mockito.eq(SettleStatus.UN_SETTLE), Mockito.eq(0L))).thenReturn(1, 0);
@@ -78,7 +356,7 @@ public class CustomerSettleSheetServiceImplTest {
         "customerSettleSheetDetailService");
     SaleOutSheet sheet = saleOutSheet("sale-1", "customer-1", "10", "0",
         SettleStatus.UN_SETTLE);
-    Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class))).thenReturn(
         Collections.singletonList(sheet));
     Mockito.when(saleOutSheetService.setPartSettle(Mockito.eq("sale-1"),
         Mockito.eq(SettleStatus.UN_SETTLE), Mockito.eq(0L))).thenReturn(1);
@@ -154,7 +432,7 @@ public class CustomerSettleSheetServiceImplTest {
   public void directApprovePassShouldRejectDifferentCustomers() throws Exception {
     CustomerSettleSheetServiceImpl service = directSettleService();
     SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
-    Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class))).thenReturn(
         Collections.singletonList(saleOutSheet("sale-1", "customer-2", "10", "0",
             SettleStatus.UN_SETTLE)));
 
@@ -162,11 +440,15 @@ public class CustomerSettleSheetServiceImplTest {
   }
 
   /**
-   * 直接结算金额必须为非负数。
+   * 销售出库结算金额不能使用退款负方向。
    */
   @Test(expected = DefaultClientException.class)
   public void directApprovePassShouldRejectNegativeSettleAmount() throws Exception {
     CustomerSettleSheetServiceImpl service = directSettleService();
+    SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class))).thenReturn(
+        Collections.singletonList(saleOutSheet("sale-1", "customer-1", "10", "0",
+            SettleStatus.UN_SETTLE)));
 
     service.directApprovePass(directSettleVo("customer-1", "-0.01", item("sale-1", 1)));
   }
@@ -178,7 +460,7 @@ public class CustomerSettleSheetServiceImplTest {
   public void directApprovePassShouldRejectSettledBizItem() throws Exception {
     CustomerSettleSheetServiceImpl service = directSettleService();
     SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
-    Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class))).thenReturn(
         Collections.singletonList(saleOutSheet("sale-1", "customer-1", "10", "0",
             SettleStatus.SETTLED)));
 
@@ -192,7 +474,7 @@ public class CustomerSettleSheetServiceImplTest {
   public void directApprovePassShouldRejectAmountGreaterThanUnSettleTotal() throws Exception {
     CustomerSettleSheetServiceImpl service = directSettleService();
     SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
-    Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class))).thenReturn(
         Collections.singletonList(saleOutSheet("sale-1", "customer-1", "10", "0",
             SettleStatus.UN_SETTLE)));
     Mockito.when(saleOutSheetService.setSettled(Mockito.eq("sale-1"),
@@ -213,7 +495,7 @@ public class CustomerSettleSheetServiceImplTest {
     SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
     CustomerSettleSheetDetailService detailService = getField(service,
         "customerSettleSheetDetailService");
-    Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class))).thenReturn(
         Collections.singletonList(saleOutSheet("sale-1", "customer-1", "10", "0",
             SettleStatus.UN_SETTLE)));
     Mockito.when(saleOutSheetService.setSettled(Mockito.eq("sale-1"),
@@ -238,7 +520,8 @@ public class CustomerSettleSheetServiceImplTest {
     SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
     CustomerSettleSheetDetailService detailService = getField(service,
         "customerSettleSheetDetailService");
-    Mockito.when(saleOutSheetService.listByIds(Mockito.anyCollection())).thenReturn(Arrays.asList(
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class))).thenReturn(
+        Arrays.asList(
         saleOutSheet("sale-1", "customer-1", "10", "0", SettleStatus.UN_SETTLE),
         saleOutSheet("sale-2", "customer-1", "20", "0", SettleStatus.UN_SETTLE)));
     Mockito.when(saleOutSheetService.setPartSettle(Mockito.anyString(),
@@ -357,10 +640,17 @@ public class CustomerSettleSheetServiceImplTest {
    */
   private CustomerSettleSheetServiceImpl directSettleService() throws Exception {
     CustomerSettleSheetServiceImpl service = new CustomerSettleSheetServiceImpl();
+    DefaultUserDetails currentUser = new DefaultUserDetails();
+    currentUser.setId("user-1");
+    currentUser.setName("测试用户");
+    SecurityUtil.setCurrentUser(currentUser);
     injectField(service, "saleOutSheetService", Mockito.mock(SaleOutSheetService.class));
     injectField(service, "saleReturnService", Mockito.mock(SaleReturnService.class));
     injectField(service, "customerSettleSheetDetailService", Mockito.mock(
         CustomerSettleSheetDetailService.class));
+    injectField(service, "customerService", Mockito.mock(CustomerService.class));
+    injectField(service, "orderTimeLineService", Mockito.mock(OrderTimeLineService.class));
+    injectField(service, "receiveOrderTimeLineBizType", new ReceiveOrderTimeLineBizType());
     CustomerSettleSheetMapper mapper = Mockito.mock(CustomerSettleSheetMapper.class);
     Mockito.when(mapper.insert(Mockito.any(CustomerSettleSheet.class))).thenReturn(1);
     injectField(service, "baseMapper", mapper);
@@ -380,6 +670,23 @@ public class CustomerSettleSheetServiceImplTest {
     sheet.setCustomerId(customerId);
     sheet.setTotalAmount(new BigDecimal(totalAmount));
     sheet.setPaidAmount(new BigDecimal(paidAmount));
+    sheet.setStatus(SaleOutSheetStatus.APPROVE_PASS);
+    sheet.setSettleStatus(settleStatus);
+    sheet.setSettleVersion(0L);
+    return sheet;
+  }
+
+  /**
+   * 创建销售退货单测试数据。
+   */
+  private SaleReturn saleReturn(String id, String customerId, String totalAmount,
+      SettleStatus settleStatus) {
+    SaleReturn sheet = new SaleReturn();
+    sheet.setId(id);
+    sheet.setCode(id);
+    sheet.setCustomerId(customerId);
+    sheet.setTotalAmount(new BigDecimal(totalAmount));
+    sheet.setStatus(SaleReturnStatus.APPROVE_PASS);
     sheet.setSettleStatus(settleStatus);
     sheet.setSettleVersion(0L);
     return sheet;
@@ -399,6 +706,8 @@ public class CustomerSettleSheetServiceImplTest {
 
     assertVersionUpdateContract(saleOutMapper);
     assertVersionUpdateContract(saleReturnMapper);
+    assertCustomerSettleSourceQueryContract(saleOutMapper);
+    assertCustomerSettleSourceQueryContract(saleReturnMapper);
   }
 
   /**
@@ -417,11 +726,25 @@ public class CustomerSettleSheetServiceImplTest {
    * 验证 Mapper SQL 使用结算状态和数值版本作为更新条件，并递增版本。
    */
   private void assertVersionUpdateContract(String mapperXml) {
-    Assert.assertTrue(mapperXml.contains("id=\"updateSettleStatusWithVersion\""));
-    Assert.assertTrue(mapperXml.contains("settle_version = settle_version + 1"));
-    Assert.assertTrue(mapperXml.contains("WHERE id = #{id}"));
-    Assert.assertTrue(mapperXml.contains("settle_status = #{expectedStatus}"));
-    Assert.assertTrue(mapperXml.contains("settle_version = #{settleVersion}"));
+    String updateSql = mapperXml.substring(mapperXml.indexOf(
+        "id=\"updateSettleStatusWithVersion\""));
+    Assert.assertTrue(updateSql.contains("settle_version = settle_version + 1"));
+    Assert.assertTrue(updateSql.contains("WHERE id = #{id}"));
+    Assert.assertTrue(updateSql.contains("settle_status = #{expectedStatus}"));
+    Assert.assertTrue(updateSql.contains("settle_version = #{settleVersion}"));
+    Assert.assertFalse(updateSql.contains("status = 3"));
+    Assert.assertTrue(updateSql.contains("tx_id IS NULL"));
+  }
+
+  /**
+   * 验证客户结算源单专用查询不限制审核状态，但仍排除被交易占用的单据。
+   */
+  private void assertCustomerSettleSourceQueryContract(String mapperXml) {
+    int start = mapperXml.indexOf("<select id=\"getApprovedList\"");
+    int end = mapperXml.indexOf("</select>", start);
+    String querySql = mapperXml.substring(start, end);
+    Assert.assertFalse(querySql.contains("status = 3"));
+    Assert.assertTrue(querySql.contains("tx_id IS NULL"));
   }
 
   /**

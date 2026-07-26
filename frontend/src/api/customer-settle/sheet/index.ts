@@ -5,11 +5,6 @@ import { QueryCustomerSettleSheetVo } from '@/api/customer-settle/sheet/model/qu
 import { QueryCustomerSettleSheetBo } from '@/api/customer-settle/sheet/model/queryCustomerSettleSheetBo';
 import { GetCustomerSettleSheetBo } from '@/api/customer-settle/sheet/model/getCustomerSettleSheetBo';
 import { CreateCustomerSettleSheetVo } from '@/api/customer-settle/sheet/model/createCustomerSettleSheetVo';
-import { UpdateCustomerSettleSheetVo } from '@/api/customer-settle/sheet/model/updateCustomerSettleSheetVo';
-import { ApprovePassCustomerSettleSheetVo } from '@/api/customer-settle/sheet/model/approvePassCustomerSettleSheetVo';
-import { ApproveRefuseCustomerSettleSheetVo } from '@/api/customer-settle/sheet/model/approveRefuseCustomerSettleSheetVo';
-import { CustomerSettleBizItemBo } from '@/api/customer-settle/sheet/model/customerSettleBizItemBo';
-import { QueryCustomerUnSettleBizItemVo } from '@/api/customer-settle/sheet/model/queryCustomerUnSettleBizItemVo';
 import { QueryCustomerSaleSettleInfoVo } from '@/api/customer-settle/sheet/model/queryCustomerSaleSettleInfoVo';
 import { CustomerSaleSettleInfoBo } from '@/api/customer-settle/sheet/model/customerSaleSettleInfoBo';
 
@@ -46,23 +41,7 @@ export function exportSaleSettleInfos(data: QueryCustomerSaleSettleInfoVo): Prom
   );
 }
 
-/** 导出客户结算记录。 */
-export function exportRecord(data: QueryCustomerSettleSheetVo): Promise<void> {
-  return defHttp.post<void>(
-    {
-      url: baseUrl + '/export-record',
-      data,
-    },
-    {
-      region,
-      contentType: ContentTypeEnum.JSON,
-    },
-  );
-}
-
-/**
- * 订单列表
- */
+/** 查询客户结算记录。 */
 export function query(
   params: QueryCustomerSettleSheetVo,
 ): Promise<PageResult<QueryCustomerSettleSheetBo>> {
@@ -77,32 +56,26 @@ export function query(
   );
 }
 
-/**
- * 导出
- */
-export function exportList(data: QueryCustomerSettleSheetVo): Promise<void> {
+/** 导出客户结算记录。 */
+export function exportRecord(data: QueryCustomerSettleSheetVo): Promise<void> {
   return defHttp.post<void>(
     {
-      url: baseUrl + '/export',
+      url: baseUrl + '/export-record',
       data,
     },
     {
       region,
-      contentType: ContentTypeEnum.FORM_URLENCODED,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }
 
-/**
- * 查询详情
- */
+/** 查询客户结算记录详情。 */
 export function get(id: string): Promise<GetCustomerSettleSheetBo> {
   return defHttp.get<GetCustomerSettleSheetBo>(
     {
       url: baseUrl,
-      params: {
-        id,
-      },
+      params: { id },
     },
     {
       region,
@@ -110,77 +83,7 @@ export function get(id: string): Promise<GetCustomerSettleSheetBo> {
   );
 }
 
-/**
- * 新增
- */
-export function create(data: CreateCustomerSettleSheetVo): Promise<void> {
-  return defHttp.post<void>(
-    {
-      url: baseUrl,
-      data,
-    },
-    {
-      region,
-      contentType: ContentTypeEnum.JSON,
-    },
-  );
-}
-
-/**
- * 修改
- */
-export function update(data: UpdateCustomerSettleSheetVo): Promise<void> {
-  return defHttp.put<void>(
-    {
-      url: baseUrl,
-      data,
-    },
-    {
-      region,
-      contentType: ContentTypeEnum.JSON,
-    },
-  );
-}
-
-/**
- * 审核通过
- */
-export function approvePass(data: ApprovePassCustomerSettleSheetVo): Promise<void> {
-  return defHttp.patch<void>(
-    {
-      url: baseUrl + '/approve/pass',
-      data,
-    },
-    {
-      region,
-      contentType: ContentTypeEnum.JSON,
-    },
-  );
-}
-
-/**
- * 批量审核通过
- */
-export function batchApprovePass(
-  data: ApprovePassCustomerSettleSheetVo,
-  showError: boolean = false,
-): Promise<void> {
-  return defHttp.patch<void>(
-    {
-      url: baseUrl + '/approve/pass',
-      data,
-    },
-    {
-      hiddenError: !showError,
-      region,
-      contentType: ContentTypeEnum.JSON,
-    },
-  );
-}
-
-/**
- * 直接审核通过
- */
+/** 直接审核通过客户结算单。 */
 export function directApprovePass(data: CreateCustomerSettleSheetVo): Promise<void> {
   return defHttp.post<void>(
     {
@@ -190,96 +93,6 @@ export function directApprovePass(data: CreateCustomerSettleSheetVo): Promise<vo
     {
       region,
       contentType: ContentTypeEnum.JSON,
-    },
-  );
-}
-
-/**
- * 审核拒绝
- */
-export function approveRefuse(data: ApproveRefuseCustomerSettleSheetVo): Promise<void> {
-  return defHttp.patch<void>(
-    {
-      url: baseUrl + '/approve/refuse',
-      data,
-    },
-    {
-      region,
-      contentType: ContentTypeEnum.JSON,
-    },
-  );
-}
-
-/**
- * 批量审核拒绝
- */
-export function batchApproveRefuse(
-  data: ApproveRefuseCustomerSettleSheetVo,
-  showError: boolean = false,
-): Promise<void> {
-  return defHttp.patch<void>(
-    {
-      url: baseUrl + '/approve/refuse',
-      data,
-    },
-    {
-      hiddenError: !showError,
-      region,
-      contentType: ContentTypeEnum.JSON,
-    },
-  );
-}
-
-/**
- * 删除
- */
-export function deleteById(id: string): Promise<void> {
-  return defHttp.delete<void>(
-    {
-      url: baseUrl,
-      data: {
-        id,
-      },
-    },
-    {
-      region,
-      contentType: ContentTypeEnum.FORM_URLENCODED,
-    },
-  );
-}
-
-/**
- * 批量删除
- */
-export function batchDelete(id: string, showError: boolean = false): Promise<void> {
-  return defHttp.delete<void>(
-    {
-      url: baseUrl,
-      data: {
-        id,
-      },
-    },
-    {
-      hiddenError: !showError,
-      region,
-      contentType: ContentTypeEnum.FORM_URLENCODED,
-    },
-  );
-}
-
-/**
- * 查询未结算的业务单据
- */
-export function getUnSettleItems(
-  params: QueryCustomerUnSettleBizItemVo,
-): Promise<CustomerSettleBizItemBo[]> {
-  return defHttp.get<CustomerSettleBizItemBo[]>(
-    {
-      url: baseUrl + '/unsettle-items',
-      params,
-    },
-    {
-      region,
     },
   );
 }

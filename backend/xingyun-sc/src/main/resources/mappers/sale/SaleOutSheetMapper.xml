@@ -304,6 +304,9 @@
                 <if test="vo.settleStatus != null">
                     AND s.settle_status = #{vo.settleStatus}
                 </if>
+                <if test="vo.requireTxIdNull != null and vo.requireTxIdNull">
+                    AND s.tx_id IS NULL
+                </if>
                 <if test="vo.fullyPaid != null">
                     <choose>
                         <when test="vo.fullyPaid">
@@ -1219,7 +1222,6 @@
         AND s.approve_time <= #{endTime}
         ]]>
     </if>
-    AND s.status = 3
     AND s.settle_status = #{settleStatus}
     AND s.tx_id IS NULL
     ORDER BY s.approve_time DESC
@@ -1231,5 +1233,6 @@
     WHERE id = #{id}
       AND settle_status = #{expectedStatus}
       AND settle_version = #{settleVersion}
+      AND tx_id IS NULL
   </update>
 </mapper>

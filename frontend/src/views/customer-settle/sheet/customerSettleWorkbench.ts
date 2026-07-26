@@ -6,6 +6,20 @@ export interface DirectSettleRow {
   settleStatus?: number | string;
 }
 
+/** 客户结算工作台分页结果。 */
+export interface CustomerSettleWorkbenchPage<T extends DirectSettleRow = DirectSettleRow> {
+  pageIndex: number;
+  pageSize: number;
+  totalCount: number;
+  datas: T[] | null;
+  [key: string]: unknown;
+}
+
+/** 客户结算工作台查询函数。 */
+export type CustomerSettleWorkbenchQuery<T extends DirectSettleRow = DirectSettleRow> = (
+  params: Record<string, unknown> & { bizType: number },
+) => Promise<CustomerSettleWorkbenchPage<T>>;
+
 /** 判断勾选的单据是否允许直接结算。 */
 export function canDirectSettle(rows: DirectSettleRow[]): boolean {
   if (!rows.length) {
@@ -39,6 +53,39 @@ export function buildDirectSettlePayload(
     settleAmount,
     description: description || undefined,
     items: selectedRows.map(({ id, bizType }) => ({ bizId: id, bizType })),
+  };
+}
+
+/** 判断确认金额与所选业务净额的方向及范围是否一致。 */
+export function isDirectSettleAmountValid(amount: number, totalUnSettleAmount: number): boolean {
+  if (!Number.isFinite(amount) || !Number.isFinite(totalUnSettleAmount)) {
+    return false;
+  }
+  if (amount === 0 || totalUnSettleAmount === 0) {
+    return false;
+  }
+  return Math.sign(amount) === Math.sign(totalUnSettleAmount)
+    && Math.abs(amount) <= Math.abs(totalUnSettleAmount);
+}
+
+/** 查询单一业务类型，或并行查询并合并销售出库与销售退货。 */
+export async function queryCustomerSettleWorkbenchPages<T extends DirectSettleRow>(
+  params: Record<string, unknown> & { bizType?: number },
+  query: CustomerSettleWorkbenchQuery<T>,
+): Promise<CustomerSettleWorkbenchPage<T>> {
+  if (params.bizType === 1 || params.bizType === 2) {
+    return query({ ...params, bizType: params.bizType });
+  }
+  const baseParams = { ...params };
+  delete baseParams.bizType;
+  const [saleOutPage, saleReturnPage] = await Promise.all([
+    query({ ...baseParams, bizType: 1 }),
+    query({ ...baseParams, bizType: 2 }),
+  ]);
+  return {
+    ...saleOutPage,
+    totalCount: Number(saleOutPage.totalCount || 0) + Number(saleReturnPage.totalCount || 0),
+    datas: [...(saleOutPage.datas || []), ...(saleReturnPage.datas || [])],
   };
 }
 
