@@ -83,7 +83,7 @@ public String directApprovePass(CreateCustomerSettleCheckSheetVo vo) {
 }
 ```
 
-`allocateDifference` 先以每条原金额初始化结果，再使用 `SettleAmountAllocationUtil.allocate(checkAmount.subtract(baseTotal), bases)` 取得差额并逐项相加；校验每条结果非负且总额等于 `checkAmount`。`validateAndLoad` 批量查询源单，要求状态为 `UN_CHECK_BILL`、客户和类型一致、金额正数。
+`allocateDifference` 使用 `SettleAmountAllocationUtil.allocate(checkAmount, bases)` 取得已分摊差额后的最终金额；该工具内部计算“确认总额减基数合计”的差额。校验每条结果非负且总额等于 `checkAmount`。`validateAndLoad` 批量查询源单，要求状态为 `UN_CHECK_BILL`、客户和类型一致、金额正数。
 
 - [ ] **Step 4: 运行测试确认通过**
 
