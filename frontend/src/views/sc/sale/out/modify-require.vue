@@ -263,7 +263,7 @@
         <!-- 剩余出库数量 列自定义内容 -->
         <template #remainNum_default="{ row }">
           <span v-if="isEmpty(row.remainNum)">-</span>
-          <span v-else-if="isFloatGeZero(row.outNum)">{{
+          <span v-else-if="isFloat(row.outNum)">{{
             Math.max(0, sub(row.remainNum, row.outNum))
           }}</span>
           <span v-else>{{ row.remainNum }}</span>
@@ -419,7 +419,7 @@
     isFloat,
     isFloatGtZero,
     isNumberPrecision,
-    PATTERN_IS_FLOAT_GE_ZERO,
+    PATTERN_IS_FLOAT,
   } from '@/utils/utils';
   import {
     buildVisibleSelectOptions,
@@ -434,7 +434,6 @@
     clearManualSheetAmount,
     getSheetLineAmount,
   } from '@/utils/sheetAmountInput';
-  import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import {
     getInlineProductSelectRowClass,
     handleEmptyProductInputEnter,
@@ -939,7 +938,7 @@
       },
       /** 验收数量输入后同步验收金额 */
       confirmNumInput(row, value) {
-        row.confirmNum = sanitizeNonNegativeDecimalInput(value);
+        row.confirmNum = value;
         syncConfirmAmount(row);
         this.calcSum();
       },
@@ -975,11 +974,11 @@
         this.calcSum();
       },
       paidAmountInput(value) {
-        this.formData.paidAmount = sanitizeNonNegativeDecimalInput(value);
+        this.formData.paidAmount = value;
         this.paidAmountDirty = true;
       },
       costPriceInput(row, value) {
-        row.costPrice = sanitizeNonNegativeDecimalInput(value);
+        row.costPrice = value;
         row.manualInputCost = !isEmpty(row.costPrice);
         this.calcSum();
       },
@@ -989,7 +988,7 @@
           this.calcSum();
           return;
         }
-        row.outNum = sanitizeNonNegativeDecimalInput(value);
+        row.outNum = value;
         clearManualSheetAmount(row, 'outNum', 'taxPrice');
         this.calcSum();
       },
@@ -1003,7 +1002,7 @@
         let totalAmount = 0;
         this.tableData
           .filter((t) => {
-            return t.manualTaxAmount || (isFloatGeZero(t.taxPrice) && isFloatGeZero(t.outNum));
+            return t.manualTaxAmount || (isFloatGeZero(t.taxPrice) && isFloat(t.outNum));
           })
           .forEach((t) => {
             const num = parseFloat(t.outNum);
@@ -1030,8 +1029,8 @@
         }
 
         createPrompt('请输入出库数量', {
-          inputPattern: PATTERN_IS_FLOAT_GE_ZERO,
-          inputErrorMessage: '出库数量必须是数字并且不小于0',
+          inputPattern: PATTERN_IS_FLOAT,
+          inputErrorMessage: '出库数量必须是数字',
           title: '批量录入数量',
           required: true,
         }).then(({ value }) => {
@@ -1088,18 +1087,18 @@
           return false;
         }
 
-        if (!isFloatGeZero(this.formData.paidAmount)) {
-          createError('付款金额不允许小于0！');
-          return false;
-        }
+        // 付款金额允许负数，不再校验不小于0
 
         if (!isNumberPrecision(this.formData.paidAmount, 6)) {
           createError('付款金额最多允许6位小数！');
           return false;
         }
 
-        if (parseFloat(this.formData.paidAmount) > parseFloat(this.formData.totalAmount || 0)) {
-          createError('付款金额不允许大于含税总金额！');
+        if (
+          Math.abs(parseFloat(this.formData.paidAmount)) >
+          Math.abs(parseFloat(this.formData.totalAmount || 0))
+        ) {
+          createError('付款金额绝对值不允许大于含税总金额绝对值！');
           return false;
         }
 
@@ -1159,18 +1158,6 @@
             }
 
             if (product.isFixed) {
-              if (!isFloatGeZero(product.outNum)) {
-                createError('第' + (i + 1) + '行商品出库数量不允许小于0！');
-                return false;
-              }
-            } else {
-              if (!isFloatGeZero(product.outNum)) {
-                createError('第' + (i + 1) + '行商品出库数量不允许小于0！');
-                return false;
-              }
-            }
-
-            if (product.isFixed) {
               if (product.outNum > product.remainNum) {
                 createError(
                   '第' +
@@ -1189,7 +1176,10 @@
           }
         }
 
-        if (validTableData.filter((item) => isFloatGtZero(item.outNum)).length === 0) {
+        if (
+          validTableData.filter((item) => isFloat(item.outNum) && Number(item.outNum) !== 0)
+            .length === 0
+        ) {
           createError('销售订单中的商品必须全部或部分出库！');
           return false;
         }

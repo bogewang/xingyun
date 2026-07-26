@@ -198,7 +198,7 @@
         <!-- 剩余收货数量 列自定义内容 -->
         <template #remainNum_default="{ row }">
           <span v-if="isEmpty(row.remainNum)">-</span>
-          <span v-else-if="isFloatGeZero(row.receiveNum)">{{
+          <span v-else-if="isFloat(row.receiveNum)">{{
             Math.max(0, sub(row.remainNum, row.receiveNum))
           }}</span>
           <span v-else>{{ row.remainNum }}</span>
@@ -319,7 +319,7 @@
     isFloatGtZero,
     isNumberPrecision,
     mul,
-    PATTERN_IS_FLOAT_GE_ZERO,
+    PATTERN_IS_FLOAT,
     sub,
     uuid,
   } from '@/utils/utils';
@@ -336,7 +336,6 @@
     clearManualSheetAmount,
     getSheetLineAmount,
   } from '@/utils/sheetAmountInput';
-  import { sanitizeNonNegativeDecimalInput } from '@/utils/numberInput';
   import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
   import {
     getInlineProductSelectRowClass,
@@ -773,7 +772,7 @@
         return getSheetAmountCellClass(row, column.field, 'purchasePrice', 'receiveNum');
       },
       paidAmountInput(value) {
-        this.formData.paidAmount = sanitizeNonNegativeDecimalInput(value);
+        this.formData.paidAmount = value;
         this.paidAmountDirty = true;
       },
       receiveNumInput(row, value) {
@@ -782,7 +781,7 @@
           this.calcSum();
           return;
         }
-        row.receiveNum = sanitizeNonNegativeDecimalInput(value);
+        row.receiveNum = value;
         clearManualSheetAmount(row, 'receiveNum', 'purchasePrice');
         this.calcSum();
       },
@@ -792,9 +791,7 @@
         let totalAmount = 0;
         this.tableData
           .filter((t) => {
-            return (
-              t.manualTaxAmount || (isFloatGeZero(t.purchasePrice) && isFloatGeZero(t.receiveNum))
-            );
+            return t.manualTaxAmount || (isFloatGeZero(t.purchasePrice) && isFloat(t.receiveNum));
           })
           .forEach((t) => {
             const num = parseFloat(t.receiveNum);
@@ -818,8 +815,8 @@
         }
 
         createPrompt('请输入收货数量', {
-          inputPattern: PATTERN_IS_FLOAT_GE_ZERO,
-          inputErrorMessage: '收货数量必须是数字并且不小于0',
+          inputPattern: PATTERN_IS_FLOAT,
+          inputErrorMessage: '收货数量必须是数字',
           title: '批量录入数量',
           required: true,
         }).then(({ value }) => {
@@ -876,18 +873,18 @@
           return false;
         }
 
-        if (!isFloatGeZero(this.formData.paidAmount)) {
-          createError('付款金额不允许小于0！');
-          return false;
-        }
+        // 付款金额允许负数，不再校验不小于0
 
         if (!isNumberPrecision(this.formData.paidAmount, 6)) {
           createError('付款金额最多允许6位小数！');
           return false;
         }
 
-        if (parseFloat(this.formData.paidAmount) > parseFloat(this.formData.totalAmount || 0)) {
-          createError('付款金额不允许大于含税总金额！');
+        if (
+          Math.abs(parseFloat(this.formData.paidAmount)) >
+          Math.abs(parseFloat(this.formData.totalAmount || 0))
+        ) {
+          createError('付款金额绝对值不允许大于含税总金额绝对值！');
           return false;
         }
 
@@ -924,18 +921,6 @@
               return false;
             }
 
-            if (product.isFixed) {
-              if (!isFloatGeZero(product.receiveNum)) {
-                createError('第' + (i + 1) + '行商品收货数量不允许小于0！');
-                return false;
-              }
-            } else {
-              if (!isFloatGeZero(product.receiveNum)) {
-                createError('第' + (i + 1) + '行商品收货数量不允许小于0！');
-                return false;
-              }
-            }
-
             if (!isNumberPrecision(product.receiveNum, 8)) {
               createError('第' + (i + 1) + '行商品收货数量最多允许8位小数！');
               return false;
@@ -960,7 +945,10 @@
           }
         }
 
-        if (validTableData.filter((item) => isFloatGtZero(item.receiveNum)).length === 0) {
+        if (
+          validTableData.filter((item) => isFloat(item.receiveNum) && Number(item.receiveNum) !== 0)
+            .length === 0
+        ) {
           createError('采购订单中的商品必须全部或部分收货！');
           return false;
         }

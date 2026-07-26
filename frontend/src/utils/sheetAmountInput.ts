@@ -1,7 +1,5 @@
 import { div, getNumber, mul } from '@/utils/utils';
 
-import { sanitizeNonNegativeDecimalInput } from './numberInput';
-
 type SheetAmountRow = Record<string, any>;
 
 /**
@@ -13,19 +11,13 @@ export function applyManualSheetAmount(
   quantityField: string,
   priceField: string,
 ): void {
-  const autoAmount = getNumber(mul(row[quantityField] || 0, row[priceField] || 0), 2);
-  const currentAmount = String(row.taxAmount ?? '');
-  const initialAmount = sanitizeNonNegativeDecimalInput(currentAmount);
-  const previousAmount = String(
-    row.lastValidTaxAmount ??
-      (initialAmount === '' && currentAmount !== '' ? autoAmount : currentAmount),
-  );
-  row.taxAmount = sanitizeNonNegativeDecimalInput(amount, previousAmount);
+  row.taxAmount = String(amount ?? '');
   row.lastValidTaxAmount = row.taxAmount;
   row.manualTaxAmount = true;
 
   const quantity = Number(row[quantityField]);
-  if (quantity > 0 && row.taxAmount !== '') {
+  // 数量非零且为有效数字时反算单价，支持负数
+  if (quantity !== 0 && Number.isFinite(quantity) && row.taxAmount !== '') {
     row[priceField] = getNumber(div(row.taxAmount, quantity), 6);
   }
 }
@@ -64,7 +56,7 @@ export function getSheetLineAmount(
 
   const amount = getNumber(mul(row[quantityField] || 0, row[priceField] || 0), 2);
   if (row.lastValidTaxAmount === undefined) {
-    const initialAmount = sanitizeNonNegativeDecimalInput(row.taxAmount, String(amount));
+    const initialAmount = String(row.taxAmount ?? '');
     row.lastValidTaxAmount = initialAmount === '' ? String(amount) : initialAmount;
   }
 
