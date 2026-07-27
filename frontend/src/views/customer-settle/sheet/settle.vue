@@ -168,6 +168,7 @@
 
 <script lang="ts">
   import { defineComponent, markRaw } from 'vue';
+  import moment from 'moment';
   import * as checkApi from '@/api/customer-settle/check';
   import * as api from '@/api/customer-settle/sheet';
   import { requestCustomerSelectOptions } from '@/utils/labelSelect';
@@ -252,8 +253,16 @@
             width: 100,
             slots: { default: 'settleStatus_default' },
           },
-          { field: 'checkTime', title: '对账时间', width: 170 },
-          { field: 'settleTime', title: '结算时间', width: 170 },
+          {
+            field: 'checkTime', title: '对账时间', width: 170,
+            formatter: ({ cellValue }: { cellValue: string }) =>
+              cellValue ? moment(cellValue).format('YYYY-MM-DD HH:mm:ss') : '-',
+          },
+          {
+            field: 'settleTime', title: '结算时间', width: 170,
+            formatter: ({ cellValue }: { cellValue: string }) =>
+              cellValue ? moment(cellValue).format('YYYY-MM-DD HH:mm:ss') : '-',
+          },
           { field: 'description', title: '单据备注', minWidth: 180 },
           { field: 'checkDescription', title: '对账备注', minWidth: 180 },
           { field: 'settleDescription', title: '结算备注', minWidth: 180 },
