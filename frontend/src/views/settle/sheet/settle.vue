@@ -89,9 +89,9 @@
         </template>
 
         <template #code_default="{ row }">
-          <a-button type="link" size="small" @click="openDetail(row.id)">
+          <a class="settle-sheet-code" @click="openDetail(row.id, $event)">
             {{ row.code || '-' }}
-          </a-button>
+          </a>
         </template>
 
         <template #settleStatus_default="{ row }">
@@ -512,7 +512,11 @@
       syncSelection() {
         this.selectedRows = this.$refs.grid?.getCheckboxRecords?.() || [];
       },
-      openDetail(id) {
+      /** 打开收货单详情；文本被选中时不触发打开。 */
+      openDetail(id, event) {
+        if (event && window.getSelection?.()?.toString()) {
+          return;
+        }
         this.currentId = id;
         this.$nextTick(() => this.$refs.detailDialog.openDialog());
       },
@@ -713,5 +717,9 @@
     color: #8c8c8c;
     font-size: 12px;
     line-height: 1.5;
+  }
+
+  .settle-sheet-code {
+    user-select: text;
   }
 </style>

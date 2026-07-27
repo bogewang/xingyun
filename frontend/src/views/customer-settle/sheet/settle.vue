@@ -94,9 +94,9 @@
         </template>
 
         <template #code_default="{ row }">
-          <a-button type="link" size="small" @click="openBizDetail(row)">{{
-            row.code || '-'
-          }}</a-button>
+          <a class="settle-sheet-code" @click="openBizDetail(row, $event)">
+            {{ row.code || '-' }}
+          </a>
         </template>
 
         <template #settleStatus_default="{ row }">
@@ -491,8 +491,11 @@
           query: { customerId: this.customerId },
         });
       },
-      /** 打开关联销售单据详情。 */
-      openBizDetail(row: any) {
+      /** 打开关联销售单据详情；文本被选中时不触发打开。 */
+      openBizDetail(row: any, event?: MouseEvent) {
+        if (event && window.getSelection?.()?.toString()) {
+          return;
+        }
         const path = getCustomerSettleBizListPath(row.bizType);
         if (!path) {
           createError('业务类型不正确，无法跳转关联单据！');
@@ -616,5 +619,8 @@
   }
   .status-text--muted {
     color: #8c8c8c;
+  }
+  .settle-sheet-code {
+    user-select: text;
   }
 </style>
