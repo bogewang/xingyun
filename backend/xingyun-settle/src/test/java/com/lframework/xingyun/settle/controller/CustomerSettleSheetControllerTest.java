@@ -11,14 +11,19 @@ import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.starter.web.core.components.security.UserTokenResolver;
 import com.lframework.starter.mq.core.service.MqProducerService;
 import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSaleSettleInfoBo;
+import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSettleOverviewBo;
 import com.lframework.xingyun.settle.entity.CustomerSettleSheet;
 import com.lframework.xingyun.settle.excel.sheet.customer.CustomerSaleSettleInfoExportTaskWorker;
+import com.lframework.xingyun.settle.excel.sheet.customer.CustomerSettleOverviewExportTaskWorker;
+import com.lframework.xingyun.settle.excel.sheet.customer.CustomerSettleOverviewExportModel;
 import com.lframework.xingyun.settle.excel.sheet.customer.CustomerSettleSheetExportTaskWorker;
 import com.lframework.xingyun.settle.service.CustomerSettleSheetService;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSaleSettleInfoVo;
+import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleOverviewVo;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Assert;
@@ -174,6 +179,99 @@ public class CustomerSettleSheetControllerTest {
     InvokeResult<?> response = controller.querySaleSettleInfos(vo);
 
     Assert.assertSame(expected, response.getData());
+  }
+
+  /**
+   * 查询客户结算总览时，应调用服务并保留分页结果。
+   */
+  @Test
+  public void shouldQuerySettleOverviews() throws Exception {
+    initializeApplicationContext();
+    CustomerSettleSheetService customerSettleSheetService = Mockito.mock(
+        CustomerSettleSheetService.class);
+    CustomerSettleSheetController controller = new CustomerSettleSheetController();
+    injectField(controller, "customerSettleSheetService", customerSettleSheetService);
+    QueryCustomerSettleOverviewVo vo = new QueryCustomerSettleOverviewVo();
+    PageResult<CustomerSettleOverviewBo> expected = PageResultUtil.newInstance(1, 20, 0,
+        Collections.emptyList());
+    Mockito.when(customerSettleSheetService.querySettleOverviews(vo)).thenReturn(expected);
+
+    InvokeResult<PageResult<CustomerSettleOverviewBo>> response = controller.querySettleOverviews(vo);
+
+    Assert.assertEquals(InvokeResultBuilder.success().getCode(), response.getCode());
+    Assert.assertSame(expected, response.getData());
+    Mockito.verify(customerSettleSheetService).querySettleOverviews(vo);
+  }
+
+  /**
+   * 导出客户结算总览时，应创建总览导出任务。
+   */
+  @Test
+  public void shouldCreateCustomerSettleOverviewExportTask() {
+    MqProducerService mqProducerService = initializeApplicationContext();
+    CustomerSettleSheetController controller = new CustomerSettleSheetController();
+
+    InvokeResult<Void> response = controller.exportSettleOverviews(
+        new QueryCustomerSettleOverviewVo());
+
+    Assert.assertEquals(InvokeResultBuilder.success().getCode(), response.getCode());
+    Mockito.verify(mqProducerService).addExportTask(Mockito.argThat(task ->
+        CustomerSettleOverviewExportTaskWorker.class.getName().equals(task.getReqClassName())));
+  }
+
+  /**
+   * 客户结算总览导出任务应委托总览查询。
+   */
+  @Test
+  public void shouldQuerySettleOverviewsWhenExporting() {
+    CustomerSettleSheetService customerSettleSheetService = Mockito.mock(
+        CustomerSettleSheetService.class);
+    initializeServiceApplicationContext(customerSettleSheetService);
+    QueryCustomerSettleOverviewVo params = new QueryCustomerSettleOverviewVo();
+    PageResult<CustomerSettleOverviewBo> expected = PageResultUtil.newInstance(2, 50, 0,
+        Collections.emptyList());
+    Mockito.when(customerSettleSheetService.querySettleOverviews(params)).thenReturn(expected);
+
+    PageResult<CustomerSettleOverviewBo> actual = new CustomerSettleOverviewExportTaskWorker()
+        .getDataList(2, 50, params);
+
+    Assert.assertSame(expected, actual);
+    Assert.assertEquals(Integer.valueOf(2), params.getPageIndex());
+    Assert.assertEquals(Integer.valueOf(50), params.getPageSize());
+    Mockito.verify(customerSettleSheetService).querySettleOverviews(params);
+  }
+
+  /**
+   * 总览导出模型应包含客户字段及四种结算状态的数量、金额。
+   */
+  @Test
+  public void shouldExportCustomerFieldsAndAllOverviewStatistics() {
+    CustomerSettleOverviewBo overview = new CustomerSettleOverviewBo();
+    overview.setCustomerId("customer-1");
+    overview.setCustomerCode("C001");
+    overview.setCustomerName("客户一");
+    overview.setUnCheckCount(1);
+    overview.setUnCheckAmount(new BigDecimal("10.00"));
+    overview.setUnSettleCount(2);
+    overview.setUnSettleAmount(new BigDecimal("20.00"));
+    overview.setPartSettleCount(3);
+    overview.setPartSettleAmount(new BigDecimal("30.00"));
+    overview.setSettledCount(4);
+    overview.setSettledAmount(new BigDecimal("40.00"));
+
+    CustomerSettleOverviewExportModel model = new CustomerSettleOverviewExportModel(overview);
+
+    Assert.assertEquals("customer-1", model.getCustomerId());
+    Assert.assertEquals("C001", model.getCustomerCode());
+    Assert.assertEquals("客户一", model.getCustomerName());
+    Assert.assertEquals(Integer.valueOf(1), model.getUnCheckCount());
+    Assert.assertEquals(new BigDecimal("10.00"), model.getUnCheckAmount());
+    Assert.assertEquals(Integer.valueOf(2), model.getUnSettleCount());
+    Assert.assertEquals(new BigDecimal("20.00"), model.getUnSettleAmount());
+    Assert.assertEquals(Integer.valueOf(3), model.getPartSettleCount());
+    Assert.assertEquals(new BigDecimal("30.00"), model.getPartSettleAmount());
+    Assert.assertEquals(Integer.valueOf(4), model.getSettledCount());
+    Assert.assertEquals(new BigDecimal("40.00"), model.getSettledAmount());
   }
 
   /**

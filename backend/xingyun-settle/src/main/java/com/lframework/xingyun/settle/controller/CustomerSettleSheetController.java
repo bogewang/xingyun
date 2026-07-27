@@ -9,16 +9,22 @@ import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.starter.mq.core.utils.ExportTaskUtil;
 import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSaleSettleInfoBo;
+import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSettleOverviewBo;
 import com.lframework.xingyun.settle.bo.sheet.customer.GetCustomerSettleSheetBo;
 import com.lframework.xingyun.settle.bo.sheet.customer.QueryCustomerSettleSheetBo;
 import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleSheetFullDto;
 import com.lframework.xingyun.settle.entity.CustomerSettleSheet;
 import com.lframework.xingyun.settle.excel.sheet.customer.CustomerSaleSettleInfoExportTaskWorker;
+import com.lframework.xingyun.settle.excel.sheet.customer.CustomerSettleOverviewExportTaskWorker;
 import com.lframework.xingyun.settle.excel.sheet.customer.CustomerSettleSheetExportTaskWorker;
 import com.lframework.xingyun.settle.service.CustomerSettleSheetService;
+import com.lframework.xingyun.settle.vo.sheet.customer.ApprovePassCustomerSettleSheetVo;
+import com.lframework.xingyun.settle.vo.sheet.customer.ApproveRefuseCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.CreateCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSaleSettleInfoVo;
+import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleOverviewVo;
+import com.lframework.xingyun.settle.vo.sheet.customer.UpdateCustomerSettleSheetVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -30,7 +36,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -66,6 +74,45 @@ public class CustomerSettleSheetController extends DefaultBaseController {
       return InvokeResultBuilder.success(customerSettleSheetService.querySaleSettleInfos(vo));
     } catch (Exception e) {
       log.error("查询客户结算工作台失败", e);
+      return InvokeResultBuilder.fail(e.getMessage(), null);
+    }
+  }
+
+  /**
+   * 查询客户结算总览。
+   *
+   * @param vo 查询条件
+   * @return 客户结算总览分页数据
+   */
+  @ApiOperation("查询客户结算总览")
+  @HasPermission({"customer-settle:sheet:query"})
+  @PostMapping("/settle-overviews")
+  public InvokeResult<PageResult<CustomerSettleOverviewBo>> querySettleOverviews(
+      @RequestBody @Valid QueryCustomerSettleOverviewVo vo) {
+    try {
+      return InvokeResultBuilder.success(customerSettleSheetService.querySettleOverviews(vo));
+    } catch (Exception e) {
+      log.error("查询客户结算总览失败", e);
+      return InvokeResultBuilder.fail(e.getMessage(), null);
+    }
+  }
+
+  /**
+   * 导出客户结算总览。
+   *
+   * @param vo 查询条件
+   * @return 导出任务创建结果
+   */
+  @ApiOperation("导出客户结算总览")
+  @HasPermission({"customer-settle:sheet:export"})
+  @PostMapping("/export-settle-overviews")
+  public InvokeResult<Void> exportSettleOverviews(
+      @RequestBody @Valid QueryCustomerSettleOverviewVo vo) {
+    try {
+      ExportTaskUtil.exportTask("客户结算总览", CustomerSettleOverviewExportTaskWorker.class, vo);
+      return InvokeResultBuilder.success();
+    } catch (Exception e) {
+      log.error("导出客户结算总览失败", e);
       return InvokeResultBuilder.fail(e.getMessage(), null);
     }
   }
@@ -161,6 +208,50 @@ public class CustomerSettleSheetController extends DefaultBaseController {
   }
 
   /**
+   * 创建客户结算单
+   */
+  @ApiOperation("创建客户结算单")
+  @HasPermission({"customer-settle:sheet:add"})
+  @PostMapping
+  public InvokeResult<String> create(@RequestBody @Valid CreateCustomerSettleSheetVo vo) {
+
+    vo.validate();
+
+    String id = customerSettleSheetService.create(vo);
+
+    return InvokeResultBuilder.success(id);
+  }
+
+  /**
+   * 修改客户结算单
+   */
+  @ApiOperation("修改客户结算单")
+  @HasPermission({"customer-settle:sheet:modify"})
+  @PutMapping
+  public InvokeResult<Void> update(@RequestBody @Valid UpdateCustomerSettleSheetVo vo) {
+
+    vo.validate();
+
+    customerSettleSheetService.update(vo);
+
+    return InvokeResultBuilder.success();
+  }
+
+  /**
+   * 审核通过客户结算单
+   */
+  @ApiOperation("审核通过客户结算单")
+  @HasPermission({"customer-settle:sheet:approve"})
+  @PatchMapping("/approve/pass")
+  public InvokeResult<Void> approvePass(
+      @RequestBody @Valid ApprovePassCustomerSettleSheetVo vo) {
+
+    customerSettleSheetService.approvePass(vo);
+
+    return InvokeResultBuilder.success();
+  }
+
+  /**
    * 直接审核通过客户结算单
    */
   @ApiOperation("直接审核通过客户结算单")
@@ -175,5 +266,34 @@ public class CustomerSettleSheetController extends DefaultBaseController {
       log.error("客户直接结算失败", e);
       return InvokeResultBuilder.fail(e.getMessage(), null);
     }
+  }
+
+  /**
+   * 审核拒绝客户结算单
+   */
+  @ApiOperation("审核拒绝客户结算单")
+  @HasPermission({"customer-settle:sheet:approve"})
+  @PatchMapping("/approve/refuse")
+  public InvokeResult<Void> approveRefuse(
+      @RequestBody @Valid ApproveRefuseCustomerSettleSheetVo vo) {
+
+    customerSettleSheetService.approveRefuse(vo);
+
+    return InvokeResultBuilder.success();
+  }
+
+  /**
+   * 删除客户结算单
+   */
+  @ApiOperation("删除客户结算单")
+  @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
+  @HasPermission({"customer-settle:sheet:delete"})
+  @DeleteMapping
+  public InvokeResult<Void> deleteById(
+      @NotBlank(message = "客户结算单ID不能为空！") String id) {
+
+    customerSettleSheetService.deleteById(id);
+
+    return InvokeResultBuilder.success();
   }
 }
