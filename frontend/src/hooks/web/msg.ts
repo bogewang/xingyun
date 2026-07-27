@@ -93,6 +93,7 @@ export const createPrompt = function (
     required,
     confirmOnEnter,
     autoFocus,
+    target,
   }: {
     inputPattern: RegExp;
     inputErrorMessage: string;
@@ -101,11 +102,12 @@ export const createPrompt = function (
     required?: boolean;
     confirmOnEnter?: boolean;
     autoFocus?: boolean;
+    target?: HTMLElement;
   },
 ): Promise<{ value: string }> {
   return new Promise<{ value: string }>((resolve) => {
     const datas: { text: string } = {
-      text: '',
+      text: inputValue || '',
     };
     const change = (e) => {
       datas.text = e.target.value;
@@ -121,14 +123,31 @@ export const createPrompt = function (
         ?.querySelector<HTMLButtonElement>('.ant-modal-confirm-btns .ant-btn-primary')
         ?.click();
     };
+
+    // 根据target元素位置计算弹窗偏移
+    let modalStyle: Record<string, string> | undefined;
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      modalStyle = { top: `${rect.bottom + 8}px` };
+    }
+
+    const wrapClass = ['prompt-wrap'];
+    if (autoFocus) {
+      wrapClass.push('prompt-auto-focus-wrap');
+    }
+    if (target) {
+      wrapClass.push('prompt-positioned');
+    }
+
     Modal.confirm({
       title: title,
       content: createVNode('div', null, [
-        createVNode(Input, { onInput: change, onPressEnter: pressEnter }),
+        createVNode(Input, { value: datas.text, onInput: change, onPressEnter: pressEnter }),
       ]),
       icon: createVNode(ExclamationCircleOutlined),
       autoFocusButton: autoFocus ? null : 'ok',
-      wrapClassName: autoFocus ? 'prompt-auto-focus-wrap' : undefined,
+      wrapClassName: wrapClass.join(' '),
+      style: modalStyle,
       okText: '确定',
       cancelText: '取消',
       onOk() {
