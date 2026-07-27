@@ -26,10 +26,15 @@
           <j-border>
             <j-form bordered @collapse="$refs.grid.refreshColumn()" @keyup.enter="search">
               <j-form-item label="客户">
-                <customer-selector
+                <a-select
                   v-model:value="searchFormData.customerId"
                   allow-clear
+                  show-search
+                  :filter-option="false"
+                  :options="customerOptions"
                   placeholder="请选择客户"
+                  @focus="loadCustomerOptions()"
+                  @search="loadCustomerOptions"
                   @change="search"
                 />
               </j-form-item>
@@ -165,7 +170,7 @@
   import { defineComponent, markRaw } from 'vue';
   import * as checkApi from '@/api/customer-settle/check';
   import * as api from '@/api/customer-settle/sheet';
-  import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
+  import { requestCustomerSelectOptions } from '@/utils/labelSelect';
   import { CUSTOMER_SALE_SETTLE_BIZ_TYPE } from '@/enums/biz/customerSaleSettleBizType';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { createError, createSuccess } from '@/hooks/web/msg';
@@ -184,7 +189,6 @@
   /** 单客户结算明细页面。 */
   export default defineComponent({
     name: 'CustomerSettleDetail',
-    components: { CustomerSelector },
     mixins: [multiplePageMix],
     data() {
       const routeQuery = this.$route.query || {};
@@ -202,6 +206,7 @@
           settleStatus: undefined as number | undefined,
         },
         orderDateRange: [] as string[],
+        customerOptions: [] as Array<{ label: string; value: string }> ,
         toolbarConfig: {
           refresh: { queryMethod: () => this.loadList() },
           slots: { buttons: 'toolbar_buttons' },
@@ -313,9 +318,14 @@
       },
     },
     created() {
+      this.loadCustomerOptions();
       this.handleRouteQueryChange(this.$route.query || {}, {});
     },
     methods: {
+      /** 加载客户下拉选项。 */
+      async loadCustomerOptions(keyword = '') {
+        this.customerOptions = await requestCustomerSelectOptions(keyword);
+      },
       /** 清空无效路由或客户切换前遗留的表格和勾选状态。 */
       clearRouteData() {
         this.tableData = [];

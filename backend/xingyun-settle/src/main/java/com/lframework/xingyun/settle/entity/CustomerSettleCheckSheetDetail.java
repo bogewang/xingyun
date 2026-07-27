@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.lframework.starter.web.core.dto.BaseDto;
 import com.lframework.starter.web.core.entity.BaseEntity;
 import com.lframework.xingyun.settle.enums.CustomerSettleCheckSheetBizType;
+import com.lframework.xingyun.settle.enums.SettleCheckSheetCalcType;
 import java.math.BigDecimal;
 import lombok.Data;
 
@@ -27,6 +28,9 @@ public class CustomerSettleCheckSheetDetail extends BaseEntity implements BaseDt
 
   /** 业务类型。 */
   private CustomerSettleCheckSheetBizType bizType;
+
+  /** 计算方式。 */
+  private SettleCheckSheetCalcType calcType;
 
   /** 最终对账金额。 */
   private BigDecimal payAmount;

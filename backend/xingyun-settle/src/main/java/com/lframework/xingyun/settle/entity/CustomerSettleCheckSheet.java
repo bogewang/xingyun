@@ -1,5 +1,7 @@
 package com.lframework.xingyun.settle.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.lframework.starter.web.core.dto.BaseDto;
 import com.lframework.starter.web.core.entity.BaseEntity;
@@ -32,8 +34,40 @@ public class CustomerSettleCheckSheet extends BaseEntity implements BaseDto {
   /** 确认对账金额。 */
   private BigDecimal totalPayAmount;
 
+  /** 已结算金额。 */
+  private BigDecimal totalPayedAmount;
+
+  /**
+   *
+   */
+  private BigDecimal totalDiscountAmount;
+
   /** 备注。 */
   private String description;
+
+  /** 创建人ID。 */
+  @TableField(fill = FieldFill.INSERT)
+  private String createById;
+
+  /** 创建人。 */
+  @TableField(fill = FieldFill.INSERT)
+  private String createBy;
+
+  /** 创建时间。 */
+  @TableField(fill = FieldFill.INSERT)
+  private LocalDateTime createTime;
+
+  /** 修改人ID。 */
+  @TableField(fill = FieldFill.INSERT_UPDATE)
+  private String updateById;
+
+  /** 修改人。 */
+  @TableField(fill = FieldFill.INSERT_UPDATE)
+  private String updateBy;
+
+  /** 修改时间。 */
+  @TableField(fill = FieldFill.INSERT_UPDATE)
+  private LocalDateTime updateTime;
 
   /** 确认人。 */
   private String approveBy;

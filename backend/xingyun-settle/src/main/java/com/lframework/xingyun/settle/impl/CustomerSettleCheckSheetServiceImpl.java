@@ -14,9 +14,10 @@ import com.lframework.xingyun.sc.vo.sale.returned.QuerySaleReturnVo;
 import com.lframework.xingyun.settle.entity.CustomerSettleCheckSheet;
 import com.lframework.xingyun.settle.entity.CustomerSettleCheckSheetDetail;
 import com.lframework.xingyun.settle.enums.CustomerSettleCheckSheetBizType;
+import com.lframework.xingyun.settle.enums.SettleCheckSheetCalcType;
 import com.lframework.xingyun.settle.enums.CustomerSettleCheckSheetStatus;
-import com.lframework.xingyun.settle.mappers.CustomerSettleCheckSheetDetailMapper;
 import com.lframework.xingyun.settle.mappers.CustomerSettleCheckSheetMapper;
+import com.lframework.xingyun.settle.service.CustomerSettleCheckSheetDetailService;
 import com.lframework.xingyun.settle.service.CustomerSettleCheckSheetService;
 import com.lframework.xingyun.settle.utils.SettleAmountAllocationUtil;
 import com.lframework.xingyun.settle.vo.check.customer.CreateCustomerSettleCheckSheetVo;
@@ -45,7 +46,7 @@ public class CustomerSettleCheckSheetServiceImpl extends
     implements CustomerSettleCheckSheetService {
 
   @Autowired
-  private CustomerSettleCheckSheetDetailMapper customerSettleCheckSheetDetailMapper;
+  private CustomerSettleCheckSheetDetailService customerSettleCheckSheetDetailService;
 
   @Autowired
   private SaleOutSheetService saleOutSheetService;
@@ -75,7 +76,7 @@ public class CustomerSettleCheckSheetServiceImpl extends
     }
     List<CustomerSettleCheckSheetDetail> details = createDetails(sheet, bizItems,
         allocatedAmounts);
-    if (customerSettleCheckSheetDetailMapper.insertBatch(details) != details.size()) {
+    if (!customerSettleCheckSheetDetailService.saveBatch(details)) {
       throw new DefaultClientException("保存客户对账单明细失败！");
     }
     updateSourceSettleStatus(bizItems, bizType);
@@ -245,7 +246,9 @@ public class CustomerSettleCheckSheetServiceImpl extends
     sheet.setTotalAmount(bizItems.stream().map(CheckBiz::getOriginalAmount)
         .reduce(BigDecimal.ZERO, BigDecimal::add));
     sheet.setTotalPayAmount(vo.getCheckAmount());
-    sheet.setDescription(StringUtil.isBlank(vo.getDescription()) ? "" : vo.getDescription());
+    sheet.setTotalPayedAmount(BigDecimal.ZERO);
+    sheet.setTotalDiscountAmount(BigDecimal.ZERO);
+    sheet.setDescription(vo.getDescription());
     sheet.setApproveBy(SecurityUtil.getCurrentUser() == null ? null
         : SecurityUtil.getCurrentUser().getId());
     sheet.setApproveTime(LocalDateTime.now());
@@ -270,6 +273,7 @@ public class CustomerSettleCheckSheetServiceImpl extends
       detail.setSheetId(sheet.getId());
       detail.setBizId(bizItems.get(index).getBizId());
       detail.setBizType(bizItems.get(index).getBizType());
+      detail.setCalcType(SettleCheckSheetCalcType.ADD);
       detail.setPayAmount(allocatedAmounts.get(index));
       detail.setDescription(sheet.getDescription());
       detail.setOrderNo(index + 1);
