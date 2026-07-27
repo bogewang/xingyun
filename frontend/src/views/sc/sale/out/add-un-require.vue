@@ -457,7 +457,7 @@
             width: 120,
             slots: { default: 'inquiryProduct_default' },
           },
-          { field: 'spec', title: '规格', width: 80 },
+          { field: 'spec', title: '规格', width: 120 },
           { field: 'unit', title: '单位', width: 90, slots: { default: 'unit_default' } },
           {
             field: 'stockNum',
