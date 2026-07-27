@@ -90,7 +90,7 @@
             slots: { default: 'action_default' },
           },
           { field: 'customerCode', title: '客户编号', width: 130, fixed: 'left' },
-          { field: 'customerName', title: '客户名称', minWidth: 160, fixed: 'left' },
+          { field: 'customerName', title: '客户名称', width: 160, fixed: 'left' },
           {
             title: '待对账',
             children: [

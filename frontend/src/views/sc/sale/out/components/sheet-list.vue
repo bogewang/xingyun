@@ -45,6 +45,17 @@
                     <a-select-option :value="false">未补全</a-select-option>
                   </a-select>
                 </j-form-item>
+                <j-form-item label="结算状态">
+                  <a-select v-model:value="searchFormData.settleStatus" placeholder="全部" allow-clear>
+                    <a-select-option
+                      v-for="item in SETTLE_STATUS.values()"
+                      :key="item.code"
+                      :value="item.code"
+                    >
+                      {{ item.desc }}
+                    </a-select-option>
+                  </a-select>
+                </j-form-item>
 
                 <j-form-item label="客户">
                   <a-select
@@ -193,8 +204,13 @@
 
           <!-- 单据号 列自定义内容 -->
           <template #code_default="{ row }">
-            <a v-permission="['sale:out:modify']" @click="openModifyDialog(row)">{{ row.code }}</a>
-            <span v-no-permission="['sale:out:modify']">{{ row.code }}</span>
+            <a
+              v-if="hasPermission('sale:out:modify', false) && !isSettleLocked(row)"
+              @click="openModifyDialog(row)"
+            >
+              {{ row.code }}
+            </a>
+            <span v-else>{{ row.code }}</span>
           </template>
 
           <!-- 总利润 列自定义内容 -->
@@ -450,6 +466,12 @@
           { field: 'confirmAmt', title: '验收金额', align: 'right', width: 100 },
           { field: 'paidAmount', title: '已付金额', align: 'right', width: 80 },
           { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 80 },
+          {
+            field: 'settleStatus',
+            title: '结算状态',
+            width: 100,
+            formatter: ({ cellValue }) => SETTLE_STATUS.getDesc(cellValue) || '-',
+          },
           {
             field: 'totalProfit',
             title: '总利润',
@@ -742,6 +764,10 @@
         });
       },
       openModifyDialog(row) {
+        if (this.isSettleLocked(row)) {
+          createError('销售出库单已对账或已结算，无法修改！');
+          return;
+        }
         if (!isEmpty(row.saleOrderId)) {
           this.openChildPage('/sale/out/modify/require/' + row.id);
         } else {
@@ -997,6 +1023,10 @@
         this.id = id;
         this.$nextTick(() => this.$refs.viewDialog.openDialog());
       },
+      /** 判断销售出库单是否已进入对账或结算流程。 */
+      isSettleLocked(row) {
+        return [0, 1, 3].includes(Number(row.settleStatus));
+      },
       createActions(row) {
         return [
           {
@@ -1035,8 +1065,9 @@
             label: '修改',
             ifShow: () => {
               return (
-                SALE_OUT_SHEET_STATUS.CREATED.equalsCode(row.status) ||
-                SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(row.status)
+                (SALE_OUT_SHEET_STATUS.CREATED.equalsCode(row.status) ||
+                  SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(row.status)) &&
+                !this.isSettleLocked(row)
               );
             },
             onClick: () => {
@@ -1046,6 +1077,7 @@
           {
             permission: ['sale:out:modify'],
             label: '修改备注',
+            ifShow: () => !this.isSettleLocked(row),
             onClick: () => {
               this.openDescriptionDialog(row);
             },

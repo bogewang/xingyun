@@ -1106,6 +1106,10 @@ public class SaleOutSheetServiceImpl extends
         }
 
         checkApproveStatus(sheet, "销售出库单已审核通过，无法修改！", "销售出库单无法修改！");
+        if (Arrays.asList(SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE,
+                SettleStatus.SETTLED).contains(sheet.getSettleStatus())) {
+            throw new DefaultClientException("销售出库单已对账或已结算，无法修改！");
+        }
 
         String oldCustomerId = sheet.getCustomerId();
         List<SaleOutSheetDetail> oldDetails = getSheetDetails(sheet.getId());
@@ -1195,6 +1199,10 @@ public class SaleOutSheetServiceImpl extends
         SaleOutSheet sheet = getBaseMapper().selectById(vo.getId());
         if (sheet == null) {
             throw new InputErrorException("销售出库单不存在！");
+        }
+        if (Arrays.asList(SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE,
+                SettleStatus.SETTLED).contains(sheet.getSettleStatus())) {
+            throw new DefaultClientException("销售出库单已对账或已结算，无法修改！");
         }
 
         Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
