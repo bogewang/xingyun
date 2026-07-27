@@ -19,3 +19,7 @@ update tbl_sale_out_sheet set settle_status = 7 where settle_status = 0;
 
 ALTER TABLE customer_settle_check_sheet modify start_date date COMMENT '起始日期';
 ALTER TABLE customer_settle_check_sheet modify end_date date COMMENT '截止日期';
+
+
+ALTER TABLE customer_settle_sheet modify start_date date COMMENT '起始日期';
+ALTER TABLE customer_settle_sheet modify end_date date COMMENT '截止日期';
