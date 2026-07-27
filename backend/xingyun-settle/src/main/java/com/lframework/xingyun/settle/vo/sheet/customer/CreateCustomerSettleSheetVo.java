@@ -6,6 +6,7 @@ import com.lframework.starter.web.core.vo.BaseVo;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -31,6 +32,18 @@ public class CreateCustomerSettleSheetVo implements BaseVo, Serializable {
   private List<CustomerSettleSheetItemVo> items;
 
   /**
+   * 起始日期
+   */
+  @ApiModelProperty(value = "起始日期")
+  private LocalDate startDate;
+
+  /**
+   * 截止日期
+   */
+  @ApiModelProperty(value = "截止日期")
+  private LocalDate endDate;
+
+  /**
    * 确认结算金额。
    */
   @ApiModelProperty(value = "确认结算金额", required = true)
@@ -43,6 +56,9 @@ public class CreateCustomerSettleSheetVo implements BaseVo, Serializable {
   @ApiModelProperty("备注")
   private String description;
 
+  /**
+   * 校验结算项字段完整性。
+   */
   public void validate() {
 
     int orderNo = 1;
@@ -53,6 +69,10 @@ public class CreateCustomerSettleSheetVo implements BaseVo, Serializable {
 
       if (item.getBizType() == null || (item.getBizType() != 1 && item.getBizType() != 2)) {
         throw new DefaultClientException("第" + orderNo + "行业务类型不正确！");
+      }
+
+      if (item.getUnSettleAmount() == null) {
+        throw new DefaultClientException("第" + orderNo + "行未结算金额不能为空！");
       }
 
       orderNo++;

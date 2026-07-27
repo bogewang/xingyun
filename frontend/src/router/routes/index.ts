@@ -603,7 +603,15 @@ export const SettleRoute: AppRouteRecordRaw = {
       component: () => import('/@/views/settle/check-sheet/approve.vue'),
     },
     {
-      path: 'supplier/sheet/settle',
+      path: 'supplier/sheet',
+      name: 'SupplierSettleSummary',
+      component: () => import('/@/views/settle/sheet/index.vue'),
+      meta: {
+        title: '供应商结算汇总',
+      },
+    },
+    {
+      path: 'supplier/settle',
       name: 'AddSupplierSettleSheet',
       component: () => import('/@/views/settle/sheet/settle.vue'),
       meta: {
@@ -645,23 +653,15 @@ export const CustomerSettleRoute: AppRouteRecordRaw = {
     {
       path: 'customer/sheet',
       name: 'CustomerSettleOverview',
-      component: () => import('/@/views/customer-settle/sheet/settle.vue'),
+      component: () => import('/@/views/customer-settle/sheet/index.vue'),
       meta: {
         title: '客户结算',
       },
     },
     {
-      path: 'customer/sheet-detail',
+      path: 'customer/settle',
       name: 'CustomerSettleDetail',
-      component: () => import('/@/views/customer-settle/sheet/detail.vue'),
-      meta: {
-        title: '客户结算明细',
-      },
-    },
-    {
-      path: 'customer/sheet/settle',
-      name: 'CustomerSettleWorkbenchLegacy',
-      redirect: '/settle/customer/sheet',
+      component: () => import('/@/views/customer-settle/sheet/settle.vue'),
       meta: {
         title: '客户结算',
       },

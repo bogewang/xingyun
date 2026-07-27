@@ -791,7 +791,7 @@
             label: '结算',
             onClick: () => {
               this.openChildPage({
-                path: '/settle/supplier/sheet/settle',
+                path: '/settle/supplier/settle',
                 query: {
                   supplierId: row.supplierId || '',
                   code: row.code || '',

@@ -1,8 +1,11 @@
 package com.lframework.xingyun.settle.bo.sheet.customer;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -33,6 +36,16 @@ public class CustomerSaleSettleInfoBo implements Serializable {
 
   @ApiModelProperty("已收金额")
   private BigDecimal receivedAmount;
+
+  @ApiModelProperty("已对账金额")
+  private BigDecimal checkAmount;
+
+  @ApiModelProperty("对账时间")
+  @JsonSerialize(using = ToStringSerializer.class)
+  private LocalDateTime checkTime;
+
+  @ApiModelProperty("对账备注")
+  private String checkDescription;
 
   @ApiModelProperty("已结算金额")
   private BigDecimal settleAmount;

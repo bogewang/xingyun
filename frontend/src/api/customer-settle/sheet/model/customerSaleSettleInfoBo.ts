@@ -21,6 +21,15 @@ export interface CustomerSaleSettleInfoBo {
   /** 已收金额。 */
   receivedAmount: number;
 
+  /** 已对账金额。 */
+  checkAmount?: number;
+
+  /** 对账时间。 */
+  checkTime?: string;
+
+  /** 对账备注。 */
+  checkDescription?: string;
+
   /** 已结算金额。 */
   settleAmount: number;
 

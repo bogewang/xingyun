@@ -554,6 +554,10 @@ public class CustomerSettleSheetServiceImplTest {
     injectField(service, "customerSettleSheetDetailService", detailService);
     injectField(service, "customerService", customerService);
     injectField(service, "baseMapper", mapper);
+    injectField(service, "customerSettleCheckSheetDetailMapper",
+        Mockito.mock(com.lframework.xingyun.settle.mappers.CustomerSettleCheckSheetDetailMapper.class));
+    injectField(service, "customerSettleCheckSheetMapper",
+        Mockito.mock(com.lframework.xingyun.settle.mappers.CustomerSettleCheckSheetMapper.class));
 
     QueryCustomerSaleSettleInfoVo vo = new QueryCustomerSaleSettleInfoVo();
     vo.setBizType(1);
@@ -602,6 +606,10 @@ public class CustomerSettleSheetServiceImplTest {
     injectField(service, "customerSettleSheetDetailService", detailService);
     injectField(service, "customerService", customerService);
     injectField(service, "baseMapper", mapper);
+    injectField(service, "customerSettleCheckSheetDetailMapper",
+        Mockito.mock(com.lframework.xingyun.settle.mappers.CustomerSettleCheckSheetDetailMapper.class));
+    injectField(service, "customerSettleCheckSheetMapper",
+        Mockito.mock(com.lframework.xingyun.settle.mappers.CustomerSettleCheckSheetMapper.class));
 
     QueryCustomerSaleSettleInfoVo vo = new QueryCustomerSaleSettleInfoVo();
     vo.setBizType(1);
@@ -653,9 +661,24 @@ public class CustomerSettleSheetServiceImplTest {
     injectField(service, "receiveOrderTimeLineBizType", new ReceiveOrderTimeLineBizType());
     CustomerSettleSheetMapper mapper = Mockito.mock(CustomerSettleSheetMapper.class);
     Mockito.when(mapper.insert(Mockito.any(CustomerSettleSheet.class))).thenReturn(1);
+    // approvePass 需要通过 selectById 查询已创建的结算单
+    Mockito.when(mapper.selectById(Mockito.anyString())).thenAnswer(invocation -> {
+      CustomerSettleSheet sheet = new CustomerSettleSheet();
+      sheet.setId(invocation.getArgument(0));
+      sheet.setCode("CS-001");
+      sheet.setStatus(CustomerSettleSheetStatus.CREATED);
+      return sheet;
+    });
+    // approvePass 中的 updateAllColumn 乐观锁更新
+    Mockito.when(mapper.updateAllColumn(Mockito.any(), Mockito.any())).thenReturn(1);
     injectField(service, "baseMapper", mapper);
     injectField(service, "generateCodeService", Mockito.mock(
         com.lframework.starter.web.inner.service.GenerateCodeService.class));
+    // 新增的对账明细查询
+    injectField(service, "customerSettleCheckSheetDetailMapper",
+        Mockito.mock(com.lframework.xingyun.settle.mappers.CustomerSettleCheckSheetDetailMapper.class));
+    injectField(service, "customerSettleCheckSheetMapper",
+        Mockito.mock(com.lframework.xingyun.settle.mappers.CustomerSettleCheckSheetMapper.class));
     return service;
   }
 

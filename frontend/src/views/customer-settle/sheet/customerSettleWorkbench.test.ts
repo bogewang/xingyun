@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { reactive } from 'vue';
 import { CUSTOMER_SALE_SETTLE_BIZ_TYPE } from '@/enums/biz/customerSaleSettleBizType';
 import {
   buildCustomerDetailQuery,
@@ -10,7 +13,7 @@ import {
   queryCustomerSettleWorkbenchPages,
   validateCustomerDetailRoute,
 } from './customerSettleWorkbench';
-import CustomerSettleDetail from './detail.vue';
+import CustomerSettleDetail from './settle.vue';
 import * as sheetApi from '@/api/customer-settle/sheet';
 
 vi.mock('@/mixins/multiplePageMix', () => ({
@@ -59,6 +62,23 @@ function createLoadListContext(customerId: string) {
 }
 
 describe('客户结算工作台', () => {
+  it('状态枚举在响应式页面数据中仍可解析状态文案', () => {
+    const pageData = (CustomerSettleDetail as any).data.call({
+      $route: { query: { customerId: 'C1' } },
+    });
+    const reactivePageData = reactive(pageData);
+
+    expect(() => reactivePageData.SETTLE_STATUS.getDesc(0)).not.toThrow();
+  });
+
+  it('详情页根节点不使用会直接删除 DOM 的权限指令', () => {
+    const detailSource = readFileSync(resolve(__dirname, 'settle.vue'), 'utf8');
+
+    expect(detailSource).not.toContain(
+      '<div v-permission="[\'customer-settle:sheet:query\']" class="customer-settle-detail">',
+    );
+  });
+
   it('固定路由客户并拒绝缺失客户参数的详情页请求', () => {
     expect(buildCustomerDetailQuery({ customerId: 'C1' }, { customerId: 'C2' })).toMatchObject({
       customerId: 'C1',
@@ -121,6 +141,7 @@ describe('客户结算工作台', () => {
     const search = vi.fn();
     const clearRouteData = vi.fn();
     const context = {
+      $route: { name: 'CustomerSettleDetail' },
       routeError: undefined,
       search,
       clearRouteData,
@@ -136,6 +157,19 @@ describe('客户结算工作台', () => {
     expect(context.routeError).toBe('客户参数不能为空！');
     expect(clearRouteData).toHaveBeenCalledTimes(2);
     expect(search).toHaveBeenCalledTimes(1);
+  });
+
+  it('切换到其他页签时不校验客户结算路由参数', () => {
+    const handleRouteQueryChange = vi.fn();
+    const routeWatcher = (CustomerSettleDetail as any).watch['$route.query'];
+    const context = {
+      $route: { name: 'SupplierSettleSummary' },
+      handleRouteQueryChange,
+    };
+
+    routeWatcher.handler.call(context, {}, { customerId: 'C1' });
+
+    expect(handleRouteQueryChange).not.toHaveBeenCalled();
   });
 
   it('未指定业务类型时并行查询销售出库和退货并保留混合选单类型', async () => {

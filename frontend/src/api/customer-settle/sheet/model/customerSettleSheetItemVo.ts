@@ -4,4 +4,13 @@ export interface CustomerSettleSheetItemVo {
 
   /** 业务类型：1-销售出库单，2-销售退货单。 */
   bizType: number;
+
+  /** 未结算金额。 */
+  unSettleAmount?: number;
+
+  /** 对账金额。 */
+  checkAmount?: number;
+
+  /** 结算金额。 */
+  settleAmount?: number;
 }

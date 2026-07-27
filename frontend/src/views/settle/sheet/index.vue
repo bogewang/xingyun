@@ -207,7 +207,7 @@
       },
       handleToolbarSettle() {
         this.openChildPage({
-          path: '/settle/supplier/sheet/settle',
+          path: '/settle/supplier/settle',
           query: {
             startTime: this.searchFormData.orderStartTime || '',
             endTime: this.searchFormData.orderEndTime || '',
@@ -216,7 +216,7 @@
       },
       handleSettle(row) {
         this.openChildPage({
-          path: '/settle/supplier/sheet/settle',
+          path: '/settle/supplier/settle',
           query: {
             supplierId: row.supplierId,
             startTime: this.searchFormData.orderStartTime || '',
