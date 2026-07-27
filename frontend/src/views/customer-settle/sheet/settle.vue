@@ -450,6 +450,11 @@
       syncSelection() {
         this.selectedRows = (this.$refs.grid as any)?.getCheckboxRecords?.() || [];
       },
+      /** 清空表格勾选状态，避免刷新后保留已不可选的旧行。 */
+      clearSelection() {
+        this.selectedRows = [];
+        (this.$refs.grid as any)?.clearCheckboxRow?.();
+      },
       /** 限制只能选择当前客户待对账、待结算或部分结算的单据。 */
       canCheckRow(row: any): boolean {
         return (
@@ -530,6 +535,7 @@
           });
           createSuccess('确认对账成功！');
           this.checkDialog.visible = false;
+          this.clearSelection();
           this.search();
         } catch (err: any) {
           createError(err?.message || '确认对账失败，请稍后重试！');
@@ -567,6 +573,7 @@
           });
           createSuccess('结算成功！');
           this.settleDialog.visible = false;
+          this.clearSelection();
           this.search();
         } catch (err: any) {
           createError(err?.message || '结算失败，请稍后重试！');
