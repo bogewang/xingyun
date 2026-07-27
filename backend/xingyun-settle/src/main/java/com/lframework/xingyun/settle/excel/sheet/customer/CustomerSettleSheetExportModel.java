@@ -33,13 +33,13 @@ public class CustomerSettleSheetExportModel extends BaseBo<CustomerSettleSheet> 
   /**
    * 客户编号
    */
-  @ApiModelProperty("客户编号")
+  @ExcelProperty("客户编号")
   private String customerCode;
 
   /**
    * 客户名称
    */
-  @ApiModelProperty("客户名称")
+  @ExcelProperty("客户名称")
   private String customerName;
 
   /**

@@ -4,7 +4,6 @@ import com.lframework.starter.web.core.vo.PageVo;
 import com.lframework.starter.web.core.components.validation.IsEnum;
 import com.lframework.xingyun.settle.enums.CustomerSaleSettleBizType;
 import io.swagger.annotations.ApiModelProperty;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import lombok.Data;
 
@@ -32,7 +31,6 @@ public class QueryCustomerSaleSettleInfoVo extends PageVo {
   private LocalDate orderDateEnd;
 
   @ApiModelProperty("业务类型：1-销售出库单，2-销售退货单")
-  @NotNull(message = "业务类型不能为空！")
   @IsEnum(message = "业务类型不正确！", enumClass = CustomerSaleSettleBizType.class)
   private Integer bizType;
 }

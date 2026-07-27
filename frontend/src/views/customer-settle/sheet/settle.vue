@@ -510,15 +510,7 @@
         if (!this.ensureValidRoute()) return;
         this.loading = true;
         try {
-          const params = this.buildQueryParams();
-          if (params.bizType) {
-            await api.exportSaleSettleInfos(params as any);
-          } else {
-            await Promise.all([
-              api.exportSaleSettleInfos({ ...params, bizType: 1 } as any),
-              api.exportSaleSettleInfos({ ...params, bizType: 2 } as any),
-            ]);
-          }
+          await api.exportSaleSettleInfos(this.buildQueryParams() as any);
           createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
         } catch (err: any) {
           createError(err?.message || '创建导出任务失败，请稍后重试！');

@@ -239,14 +239,26 @@ public class CustomerSettleSheetServiceImpl extends
   @Override
   public PageResult<CustomerSaleSettleInfoBo> querySaleSettleInfos(
       QueryCustomerSaleSettleInfoVo vo) {
-    if (vo.getBizType() == null || (vo.getBizType() != 1 && vo.getBizType() != 2)) {
+    if (vo.getBizType() != null && vo.getBizType() != 1 && vo.getBizType() != 2) {
       throw new DefaultClientException("业务类型不正确！");
     }
     int pageIndex = vo.getPageIndex() == null || vo.getPageIndex() < 1 ? 1 : vo.getPageIndex();
     int pageSize = vo.getPageSize() == null || vo.getPageSize() < 1 ? 20 : vo.getPageSize();
-    PageResult<CustomerSaleSettleInfoBo> result = vo.getBizType() == 1
-        ? querySaleOutSettleInfos(pageIndex, pageSize, vo)
-        : querySaleReturnSettleInfos(pageIndex, pageSize, vo);
+    PageResult<CustomerSaleSettleInfoBo> result;
+    if (vo.getBizType() == null) {
+      PageResult<CustomerSaleSettleInfoBo> saleOutResult = querySaleOutSettleInfos(pageIndex,
+          pageSize, vo);
+      PageResult<CustomerSaleSettleInfoBo> saleReturnResult = querySaleReturnSettleInfos(
+          pageIndex, pageSize, vo);
+      List<CustomerSaleSettleInfoBo> datas = new ArrayList<>(saleOutResult.getDatas());
+      datas.addAll(saleReturnResult.getDatas());
+      result = PageResultUtil.newInstance(pageIndex, pageSize,
+          saleOutResult.getTotalCount() + saleReturnResult.getTotalCount(), datas);
+    } else {
+      result = vo.getBizType() == 1
+          ? querySaleOutSettleInfos(pageIndex, pageSize, vo)
+          : querySaleReturnSettleInfos(pageIndex, pageSize, vo);
+    }
     fillSettleAmounts(result.getDatas());
     return result;
   }
