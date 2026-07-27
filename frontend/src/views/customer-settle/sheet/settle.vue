@@ -94,7 +94,7 @@
         </template>
 
         <template #code_default="{ row }">
-          <a-button type="link" size="small" @click="openBizList(row)">{{
+          <a-button type="link" size="small" @click="openBizDetail(row)">{{
             row.code || '-'
           }}</a-button>
         </template>
@@ -163,6 +163,8 @@
         </a-form-item>
       </a-form>
     </a-modal>
+    <sale-out-detail :id="currentBizId" ref="saleOutDetailDialog" />
+    <sale-return-detail :id="currentBizId" ref="saleReturnDetailDialog" />
   </div>
 </template>
 
@@ -172,6 +174,8 @@
   import * as checkApi from '@/api/customer-settle/check';
   import * as api from '@/api/customer-settle/sheet';
   import { requestCustomerSelectOptions } from '@/utils/labelSelect';
+  import SaleOutDetail from '@/views/sc/sale/out/detail.vue';
+  import SaleReturnDetail from '@/views/sc/sale/return/detail.vue';
   import { CUSTOMER_SALE_SETTLE_BIZ_TYPE } from '@/enums/biz/customerSaleSettleBizType';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { createError, createSuccess } from '@/hooks/web/msg';
@@ -190,11 +194,13 @@
   /** 单客户结算明细页面。 */
   export default defineComponent({
     name: 'CustomerSettleDetail',
+    components: { SaleOutDetail, SaleReturnDetail },
     mixins: [multiplePageMix],
     data() {
       const routeQuery = this.$route.query || {};
       return {
         loading: false,
+        currentBizId: '',
         routeError: validateCustomerDetailRoute(routeQuery),
         SETTLE_STATUS: markRaw(SETTLE_STATUS),
         CUSTOMER_SALE_SETTLE_BIZ_TYPE: markRaw(CUSTOMER_SALE_SETTLE_BIZ_TYPE),
@@ -485,14 +491,19 @@
           query: { customerId: this.customerId },
         });
       },
-      /** 跳转到关联的销售单据列表。 */
-      openBizList(row: any) {
+      /** 打开关联销售单据详情。 */
+      openBizDetail(row: any) {
         const path = getCustomerSettleBizListPath(row.bizType);
         if (!path) {
           createError('业务类型不正确，无法跳转关联单据！');
           return;
         }
-        this.openChildPage({ path, query: { code: row.code || '' } });
+        this.currentBizId = row.id;
+        this.$nextTick(() => {
+          const detailRef = row.bizType === 1
+            ? this.$refs.saleOutDetailDialog : this.$refs.saleReturnDetailDialog;
+          (detailRef as any)?.openDialog?.();
+        });
       },
       /** 提交当前固定客户的工作台导出任务。 */
       async exportList() {
