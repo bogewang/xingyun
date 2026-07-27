@@ -60,6 +60,12 @@ public class CreateSettleSheetVo implements BaseVo, Serializable {
   @NotNull(message = "结算金额不能为空！")
   private BigDecimal settleAmount;
 
+  /**
+   * 结算状态：1-部分结算，3-已结算
+   */
+  @ApiModelProperty("结算状态：1-部分结算，3-已结算")
+  private Integer settleStatus;
+
   public void validate() {
 
     Assert.notNull(settleAmount, "结算金额不能为空！");

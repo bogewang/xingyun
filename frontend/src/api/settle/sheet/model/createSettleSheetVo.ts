@@ -25,4 +25,14 @@ export interface CreateSettleSheetVo {
    * 备注
    */
   description: string;
+
+  /**
+   * 结算状态：1-部分结算，3-已结算
+   */
+  settleStatus?: number;
+
+  /**
+   * 结算金额
+   */
+  settleAmount?: number;
 }

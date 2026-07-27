@@ -24,6 +24,7 @@ import com.lframework.starter.web.inner.service.OrderTimeLineService;
 import com.lframework.xingyun.core.components.timeline.ReceiveOrderTimeLineBizType;
 import com.lframework.xingyun.sc.bo.purchase.receive.QueryReceiveSheetBo;
 import com.lframework.xingyun.sc.entity.ReceiveSheet;
+import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.service.purchase.ReceiveSheetService;
 import com.lframework.xingyun.sc.vo.purchase.receive.QueryReceiveSheetVo;
 import com.lframework.xingyun.settle.bo.sheet.ReceiveSheetSettleInfoBo;
@@ -252,6 +253,10 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
 
         // 计算未结算金额
         BigDecimal unSettleAmt = NumberUtil.sub(NumberUtil.sub(totalAmount, result.getPaidAmount()), settleAmount);
+        if (result.getSettleStatus() != null
+                && result.getSettleStatus() == SettleStatus.SETTLED.getCode()) {
+            unSettleAmt = BigDecimal.ZERO;
+        }
         result.setUnSettleAmount(unSettleAmt);
     }
 
@@ -390,8 +395,13 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
                 .eq(SettleSheetDetail::getSheetId, sheet.getId())
                 .orderByAsc(SettleSheetDetail::getOrderNo);
         List<SettleSheetDetail> details = settleSheetDetailService.list(queryDetailWrapper);
+        SettleStatus targetSettleStatus = resolveApproveSettleStatus(vo, details.size());
         for (SettleSheetDetail detail : details) {
-            this.setBizItemSettled(detail.getBizId());
+            if (targetSettleStatus == SettleStatus.PART_SETTLE) {
+                this.setBizItemPartSettle(detail.getBizId());
+            } else {
+                this.setBizItemSettled(detail.getBizId());
+            }
         }
 
         this.recordReceiveSheetSettleTimeLine(sheet, details);
@@ -411,10 +421,33 @@ public class SettleSheetServiceImpl extends BaseMpServiceImpl<SettleSheetMapper,
 
         ApprovePassSettleSheetVo approveVo = new ApprovePassSettleSheetVo();
         approveVo.setId(id);
+        approveVo.setSettleStatus(vo.getSettleStatus());
 
         thisService.approvePass(approveVo);
 
         return id;
+    }
+
+    /**
+     * 解析审核通过后业务单据的结算状态。
+     *
+     * @param vo 审核通过参数
+     * @param detailCount 结算明细数量
+     * @return 目标结算状态
+     */
+    private SettleStatus resolveApproveSettleStatus(ApprovePassSettleSheetVo vo, int detailCount) {
+        SettleStatus targetStatus = SettleStatus.SETTLED;
+        if (vo.getSettleStatus() != null) {
+            if (vo.getSettleStatus().equals(SettleStatus.PART_SETTLE.getCode())) {
+                targetStatus = SettleStatus.PART_SETTLE;
+            } else if (!vo.getSettleStatus().equals(SettleStatus.SETTLED.getCode())) {
+                throw new DefaultClientException("结算状态不正确！");
+            }
+        }
+        if (detailCount > 1 && targetStatus == SettleStatus.PART_SETTLE) {
+            throw new DefaultClientException("多条单据结算时必须全部视为已结算！");
+        }
+        return targetStatus;
     }
 
     @OpLog(type = SettleOpLogType.class, name = "审核拒绝供应商结算单，单号：{}", params = "#code")

@@ -143,11 +143,29 @@
             :precision="2"
             style="width: 100%"
             placeholder="请输入结算金额"
+            @change="handleSettleAmountChange"
           />
           <div class="amount-tip"
             >选中单据未结算总额：{{ formatAmount(selectedTotalUnSettleAmount) }}</div
           >
         </a-form-item>
+        <a-form-item v-if="shouldConfirmPartialSettle">
+          <a-checkbox :checked="settleDialog.fullSettleConfirmed" @change="selectFullSettle">
+            完全结算
+          </a-checkbox>
+          <a-checkbox :checked="settleDialog.partialSettleConfirmed" @change="selectPartialSettle">
+            部分结算
+          </a-checkbox>
+          <div class="amount-tip">
+            剩余未结算金额：{{ formatAmount(partialSettleRemainingAmount) }}
+          </div>
+        </a-form-item>
+        <a-alert
+          v-else-if="shouldShowMultiFullSettleTip"
+          type="warning"
+          show-icon
+          message="已选择多条单据，将全部视为已结算。"
+        />
         <a-form-item label="备注">
           <a-textarea
             v-model:value.trim="settleDialog.description"
@@ -178,7 +196,6 @@
   import { normalizeSettleQueryResult } from './settleQueryResult';
   import {
     buildSortPageVo,
-    dateTimeToDate,
     getDateTimeWithMaxTime,
     getDateTimeWithMinTime,
     isEmpty,
@@ -322,6 +339,8 @@
           loading: false,
           amount: undefined,
           description: '',
+          partialSettleConfirmed: false,
+          fullSettleConfirmed: false,
         },
       };
     },
@@ -357,6 +376,24 @@
           (status) =>
             SETTLE_STATUS.UN_SETTLE.equalsCode(status) ||
             SETTLE_STATUS.PART_SETTLE.equalsCode(status),
+        );
+      },
+      shouldConfirmPartialSettle() {
+        return (
+          this.selectedCount === 1 &&
+          Number(this.settleDialog.amount || 0).toFixed(2) !==
+            Number(this.selectedTotalUnSettleAmount || 0).toFixed(2)
+        );
+      },
+      partialSettleRemainingAmount() {
+        return (
+          Number(this.selectedTotalUnSettleAmount || 0) - Number(this.settleDialog.amount || 0)
+        );
+      },
+      shouldShowMultiFullSettleTip() {
+        return (
+          this.selectedCount > 1 &&
+          Number(this.settleDialog.amount || 0) < Number(this.selectedTotalUnSettleAmount || 0)
         );
       },
     },
@@ -633,7 +670,33 @@
 
         this.settleDialog.amount = Number(this.selectedTotalUnSettleAmount.toFixed(2));
         this.settleDialog.description = '';
+        this.settleDialog.partialSettleConfirmed = false;
+        this.settleDialog.fullSettleConfirmed = false;
         this.settleDialog.visible = true;
+      },
+      /** 结算金额变化时，金额不足默认选择部分结算。 */
+      handleSettleAmountChange(amount) {
+        if (
+          this.selectedCount === 1 &&
+          Number(amount || 0) < Number(this.selectedTotalUnSettleAmount || 0)
+        ) {
+          this.settleDialog.partialSettleConfirmed = true;
+          this.settleDialog.fullSettleConfirmed = false;
+        }
+      },
+      /** 选择完全结算。 */
+      selectFullSettle(event) {
+        this.settleDialog.fullSettleConfirmed = event.target.checked;
+        if (event.target.checked) {
+          this.settleDialog.partialSettleConfirmed = false;
+        }
+      },
+      /** 选择部分结算。 */
+      selectPartialSettle(event) {
+        this.settleDialog.partialSettleConfirmed = event.target.checked;
+        if (event.target.checked) {
+          this.settleDialog.fullSettleConfirmed = false;
+        }
       },
       buildSettleItems(records) {
         const orderedRecords = this.tableData.filter((item) =>
@@ -659,6 +722,14 @@
           createError('未生成有效的结算明细，请检查选择的单据！');
           return;
         }
+        if (
+          this.shouldConfirmPartialSettle &&
+          !this.settleDialog.partialSettleConfirmed &&
+          !this.settleDialog.fullSettleConfirmed
+        ) {
+          createError('结算金额与对账金额不一致，请选择“完全结算”或“部分结算”！');
+          return;
+        }
 
         const supplierId = this.selectedRows[0].supplierId;
         this.settleDialog.loading = true;
@@ -668,6 +739,8 @@
             description: this.settleDialog.description || '',
             items,
             settleAmount: amount,
+            settleStatus:
+              this.shouldConfirmPartialSettle && this.settleDialog.partialSettleConfirmed ? 1 : 3,
           });
           createSuccess('结算完成！');
           this.settleDialog.visible = false;
