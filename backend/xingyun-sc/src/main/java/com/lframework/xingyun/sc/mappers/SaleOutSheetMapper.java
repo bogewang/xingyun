@@ -41,6 +41,7 @@ public interface SaleOutSheetMapper extends BaseMapper<SaleOutSheet> {
    */
   @Sorts({
       @Sort(value = "code", alias = "s", autoParse = true),
+      @Sort(value = "orderDate", alias = "s", autoParse = true),
       @Sort(value = "createTime", alias = "s", autoParse = true),
       @Sort(value = "approveTime", alias = "s", autoParse = true),
   })
