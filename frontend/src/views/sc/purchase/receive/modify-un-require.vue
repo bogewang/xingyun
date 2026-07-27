@@ -857,7 +857,9 @@
         return getSheetAmountCellClass(row, column.field, 'purchasePrice', 'receiveNum');
       },
       getTableRowClassName({ row }) {
-        return this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
+        return !isEmpty(row.productCode) && this.hasWarningAmount(row)
+          ? 'sheet-price-warning-row'
+          : '';
       },
       receiveNumInput(row, value) {
         if (value === undefined) {

@@ -1010,7 +1010,9 @@
         return isSaleOutProfitNegative(row);
       },
       getTableRowClassName({ row }) {
-        return this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
+        return !isEmpty(row.productCode) && this.hasWarningAmount(row)
+          ? 'sheet-price-warning-row'
+          : '';
       },
       // 批量录入数量
       batchInputOutNum() {

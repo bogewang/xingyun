@@ -738,7 +738,7 @@
         if (this.isImportUnmatchedProduct(row)) {
           classNames.push('receive-import-unmatched-row');
         }
-        if (this.hasWarningAmount(row)) {
+        if (!isEmpty(row.productCode) && this.hasWarningAmount(row)) {
           classNames.push('sheet-price-warning-row');
         }
         return classNames.join(' ');
