@@ -336,6 +336,7 @@ public class CustomerSettleSheetServiceImpl extends
         .map(CustomerSaleSettleInfoBo::getId).collect(Collectors.toList());
     // 查询已审核结算明细汇总
     Map<String, BigDecimal> settleAmountMap = querySettleAmountMap(bizIds);
+    Map<String, String> settleDescriptionMap = querySettleDescriptionMap(bizIds);
     // 查询对账明细
     Map<String, CustomerSettleCheckSheetDetail> checkDetailMap = queryCheckDetailMap(bizIds);
     // 查询对账单
@@ -345,6 +346,7 @@ public class CustomerSettleSheetServiceImpl extends
       item.setCustomerName(customerNameMap.get(item.getCustomerId()));
       BigDecimal settleAmount = settleAmountMap.getOrDefault(item.getId(), BigDecimal.ZERO);
       item.setSettleAmount(settleAmount);
+      item.setSettleDescription(settleDescriptionMap.get(item.getId()));
       // 填充对账信息
       fillCheckInfo(item, checkDetailMap.get(item.getId()), checkSheetMap);
       // 计算未结算金额：如果有对账金额，以对账金额为基数；否则以单据金额为基数
@@ -446,6 +448,26 @@ public class CustomerSettleSheetServiceImpl extends
         .collect(Collectors.groupingBy(CustomerSettleSheetDetail::getBizId,
             Collectors.reducing(BigDecimal.ZERO, CustomerSettleSheetDetail::getPayAmount,
                 BigDecimal::add)));
+  }
+
+  /** 按业务单据查询最近一张审核通过结算单的备注。 */
+  private Map<String, String> querySettleDescriptionMap(Collection<String> bizIds) {
+    if (CollectionUtil.isEmpty(bizIds)) {
+      return Collections.emptyMap();
+    }
+    List<CustomerSettleSheetDetail> details = customerSettleSheetDetailService.list(
+        Wrappers.lambdaQuery(CustomerSettleSheetDetail.class)
+            .in(CustomerSettleSheetDetail::getBizId, bizIds));
+    if (CollectionUtil.isEmpty(details)) {
+      return Collections.emptyMap();
+    }
+    Map<String, CustomerSettleSheet> sheetMap = getBaseMapper().selectBatchIds(details.stream()
+            .map(CustomerSettleSheetDetail::getSheetId).collect(Collectors.toSet()))
+        .stream().filter(sheet -> sheet.getStatus() == CustomerSettleSheetStatus.APPROVE_PASS)
+        .collect(Collectors.toMap(CustomerSettleSheet::getId, Function.identity(), (a, b) -> a));
+    return details.stream().filter(detail -> sheetMap.containsKey(detail.getSheetId()))
+        .collect(Collectors.toMap(CustomerSettleSheetDetail::getBizId,
+            detail -> sheetMap.get(detail.getSheetId()).getDescription(), (a, b) -> b));
   }
 
   /**

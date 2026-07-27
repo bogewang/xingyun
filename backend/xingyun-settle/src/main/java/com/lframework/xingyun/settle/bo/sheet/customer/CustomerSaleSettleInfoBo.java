@@ -61,6 +61,9 @@ public class CustomerSaleSettleInfoBo implements Serializable {
   @ApiModelProperty("已结算金额")
   private BigDecimal settleAmount;
 
+  @ApiModelProperty("结算备注")
+  private String settleDescription;
+
   @ApiModelProperty("未结算金额")
   private BigDecimal unSettleAmount;
 

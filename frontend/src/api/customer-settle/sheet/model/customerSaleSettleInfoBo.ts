@@ -39,6 +39,9 @@ export interface CustomerSaleSettleInfoBo {
   /** 已结算金额。 */
   settleAmount: number;
 
+  /** 结算备注。 */
+  settleDescription?: string;
+
   /** 结算时间。 */
   settleTime?: string;
 

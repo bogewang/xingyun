@@ -256,6 +256,7 @@
           { field: 'settleTime', title: '结算时间', width: 170 },
           { field: 'description', title: '单据备注', minWidth: 180 },
           { field: 'checkDescription', title: '对账备注', minWidth: 180 },
+          { field: 'settleDescription', title: '结算备注', minWidth: 180 },
         ],
         checkDialog: {
           visible: false,
