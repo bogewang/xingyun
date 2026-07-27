@@ -25,20 +25,12 @@
                 <j-form-item label="供应商">
                   <supplier-selector v-model:value="searchFormData.supplierId" />
                 </j-form-item>
-                <j-form-item label="单据日期" :content-nest="false">
-                  <div class="date-range-container">
-                    <a-date-picker
-                      v-model:value="searchFormData.orderStartTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 00:00:00"
-                    />
-                    <span class="date-split">至</span>
-                    <a-date-picker
-                      v-model:value="searchFormData.orderEndTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 23:59:59"
-                    />
-                  </div>
+                <j-form-item label="单据日期">
+                  <a-range-picker
+                    v-model:value="orderDateRange"
+                    value-format="YYYY-MM-DD"
+                    :placeholder="['开始日期', '结束日期']"
+                  />
                 </j-form-item>
               </j-form>
             </j-border>
@@ -67,7 +59,6 @@
   import * as api from '@/api/settle/sheet';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { createError, createSuccess } from '@/hooks/web/msg';
-  import { formatDateTime, getDateTimeWithMaxTime, getDateTimeWithMinTime } from '@/utils/utils';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
 
   export default defineComponent({
@@ -81,9 +72,11 @@
         loading: false,
         searchFormData: {
           supplierId: '',
-          orderStartTime: formatDateTime(getDateTimeWithMinTime(moment().subtract(3, 'M'))),
-          orderEndTime: formatDateTime(getDateTimeWithMaxTime(moment())),
         },
+        orderDateRange: [
+          moment().subtract(3, 'M').format('YYYY-MM-DD'),
+          moment().format('YYYY-MM-DD'),
+        ],
         toolbarConfig: {
           refresh: {
             queryMethod: () => this.search(),
@@ -186,8 +179,10 @@
       buildQueryParams() {
         return {
           supplierId: this.searchFormData.supplierId || undefined,
-          orderStartTime: this.searchFormData.orderStartTime || undefined,
-          orderEndTime: this.searchFormData.orderEndTime || undefined,
+          orderStartTime: this.orderDateRange?.[0]
+            ? `${this.orderDateRange[0]} 00:00:00`
+            : undefined,
+          orderEndTime: this.orderDateRange?.[1] ? `${this.orderDateRange[1]} 23:59:59` : undefined,
         };
       },
       search() {
@@ -209,8 +204,8 @@
         this.openChildPage({
           path: '/settle/supplier/settle',
           query: {
-            startTime: this.searchFormData.orderStartTime || '',
-            endTime: this.searchFormData.orderEndTime || '',
+            startTime: this.orderDateRange?.[0] ? `${this.orderDateRange[0]} 00:00:00` : '',
+            endTime: this.orderDateRange?.[1] ? `${this.orderDateRange[1]} 23:59:59` : '',
           },
         });
       },
@@ -219,8 +214,8 @@
           path: '/settle/supplier/settle',
           query: {
             supplierId: row.supplierId,
-            startTime: this.searchFormData.orderStartTime || '',
-            endTime: this.searchFormData.orderEndTime || '',
+            startTime: this.orderDateRange?.[0] ? `${this.orderDateRange[0]} 00:00:00` : '',
+            endTime: this.orderDateRange?.[1] ? `${this.orderDateRange[1]} 23:59:59` : '',
           },
         });
       },

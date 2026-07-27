@@ -37,6 +37,7 @@ public interface ReceiveSheetMapper extends BaseMapper<ReceiveSheet> {
    */
   @Sorts({
       @Sort(value = "code", alias = "r", autoParse = true),
+      @Sort(value = "orderDate", alias = "r", autoParse = true),
       @Sort(value = "createTime", alias = "r", autoParse = true),
       @Sort(value = "approveTime", alias = "r", autoParse = true),
   })
