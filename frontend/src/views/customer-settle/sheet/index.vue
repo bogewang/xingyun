@@ -29,6 +29,21 @@
                   placeholder="请选择客户"
                 />
               </j-form-item>
+              <j-form-item label="单据日期" :content-nest="false">
+                <div class="date-range-container">
+                  <a-date-picker
+                    v-model:value="searchFormData.orderStartTime"
+                    placeholder=""
+                    value-format="YYYY-MM-DD 00:00:00"
+                  />
+                  <span class="date-split">至</span>
+                  <a-date-picker
+                    v-model:value="searchFormData.orderEndTime"
+                    placeholder=""
+                    value-format="YYYY-MM-DD 23:59:59"
+                  />
+                </div>
+              </j-form-item>
             </j-form>
           </j-border>
         </template>
@@ -53,11 +68,17 @@
 
 <script lang="ts">
   import { defineComponent } from 'vue';
+  import moment from 'moment';
   import * as api from '@/api/customer-settle/sheet';
   import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
   import { createError, createSuccess } from '@/hooks/web/msg';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import { buildSortPageVo } from '@/utils/utils';
+  import {
+    buildSortPageVo,
+    formatDateTime,
+    getDateTimeWithMaxTime,
+    getDateTimeWithMinTime,
+  } from '@/utils/utils';
 
   /** 客户结算总览页面。 */
   export default defineComponent({
@@ -69,6 +90,8 @@
         loading: false,
         searchFormData: {
           customerId: this.$route.query.customerId ? String(this.$route.query.customerId) : '',
+          orderStartTime: formatDateTime(getDateTimeWithMinTime(moment().subtract(3, 'M'))),
+          orderEndTime: formatDateTime(getDateTimeWithMaxTime(moment())),
         },
         toolbarConfig: {
           refresh: { queryMethod: () => this.loadList() },
@@ -158,6 +181,8 @@
         return {
           ...buildSortPageVo(this.pagerConfig, []),
           customerId: this.searchFormData.customerId || undefined,
+          orderStartTime: this.searchFormData.orderStartTime || undefined,
+          orderEndTime: this.searchFormData.orderEndTime || undefined,
         };
       },
       /** 查询客户结算总览。 */
@@ -197,7 +222,11 @@
       openDetailPage(row: { customerId: string }) {
         this.openChildPage({
           path: '/settle/customer/settle',
-          query: { customerId: row.customerId },
+          query: {
+            customerId: row.customerId,
+            startTime: this.searchFormData.orderStartTime || '',
+            endTime: this.searchFormData.orderEndTime || '',
+          },
         });
       },
       /** 创建客户结算总览导出任务。 */
@@ -215,3 +244,15 @@
     },
   });
 </script>
+
+<style scoped lang="less">
+  .date-range-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .date-split {
+    color: #8c8c8c;
+  }
+</style>

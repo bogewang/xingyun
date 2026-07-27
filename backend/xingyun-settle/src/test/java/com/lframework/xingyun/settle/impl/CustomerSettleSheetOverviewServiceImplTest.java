@@ -14,6 +14,8 @@ import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSettleOverviewBo;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleOverviewVo;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -105,6 +107,41 @@ public class CustomerSettleSheetOverviewServiceImplTest {
     Assert.assertEquals(Boolean.TRUE, saleReturnCaptor.getValue().getRequireTxIdNull());
     Assert.assertEquals("customer-1", saleOutCaptor.getValue().getCustomerId());
     Assert.assertEquals("customer-1", saleReturnCaptor.getValue().getCustomerId());
+  }
+
+  /**
+   * 总览源单查询应透传单据日期范围。
+   */
+  @Test
+  public void shouldPassOrderDateRangeToSourceSheetQueries() throws Exception {
+    CustomerSettleSheetServiceImpl service = overviewService();
+    SaleOutSheetService saleOutSheetService = getField(service, "saleOutSheetService");
+    SaleReturnService saleReturnService = getField(service, "saleReturnService");
+    CustomerService customerService = getField(service, "customerService");
+    Mockito.when(saleOutSheetService.query(Mockito.any(QuerySaleOutSheetVo.class)))
+        .thenReturn(Collections.emptyList());
+    Mockito.when(saleReturnService.query(Mockito.any(QuerySaleReturnVo.class)))
+        .thenReturn(Collections.emptyList());
+    Mockito.when(customerService.listByIds(Mockito.anyCollection()))
+        .thenReturn(Collections.emptyList());
+    QueryCustomerSettleOverviewVo vo = queryVo(1, 20);
+    LocalDateTime startTime = LocalDateTime.of(2026, 7, 1, 0, 0, 0);
+    LocalDateTime endTime = LocalDateTime.of(2026, 7, 31, 23, 59, 59);
+    vo.setOrderStartTime(startTime);
+    vo.setOrderEndTime(endTime);
+
+    service.querySettleOverviews(vo);
+
+    ArgumentCaptor<QuerySaleOutSheetVo> saleOutCaptor = ArgumentCaptor.forClass(
+        QuerySaleOutSheetVo.class);
+    ArgumentCaptor<QuerySaleReturnVo> saleReturnCaptor = ArgumentCaptor.forClass(
+        QuerySaleReturnVo.class);
+    Mockito.verify(saleOutSheetService).query(saleOutCaptor.capture());
+    Mockito.verify(saleReturnService).query(saleReturnCaptor.capture());
+    Assert.assertEquals(LocalDate.of(2026, 7, 1), saleOutCaptor.getValue().getOrderDateStart());
+    Assert.assertEquals(LocalDate.of(2026, 7, 31), saleOutCaptor.getValue().getOrderDateEnd());
+    Assert.assertEquals(startTime, saleReturnCaptor.getValue().getCreateStartTime());
+    Assert.assertEquals(endTime, saleReturnCaptor.getValue().getCreateEndTime());
   }
 
   /**

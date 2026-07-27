@@ -153,6 +153,9 @@ public class CustomerSettleSheetServiceImpl extends
   private QuerySaleOutSheetVo buildSaleOutOverviewQuery(QueryCustomerSettleOverviewVo vo) {
     QuerySaleOutSheetVo query = new QuerySaleOutSheetVo();
     query.setCustomerId(vo.getCustomerId());
+    query.setOrderDateStart(
+        vo.getOrderStartTime() == null ? null : vo.getOrderStartTime().toLocalDate());
+    query.setOrderDateEnd(vo.getOrderEndTime() == null ? null : vo.getOrderEndTime().toLocalDate());
     query.setRequireTxIdNull(true);
     return query;
   }
@@ -163,6 +166,8 @@ public class CustomerSettleSheetServiceImpl extends
   private QuerySaleReturnVo buildSaleReturnOverviewQuery(QueryCustomerSettleOverviewVo vo) {
     QuerySaleReturnVo query = new QuerySaleReturnVo();
     query.setCustomerId(vo.getCustomerId());
+    query.setCreateStartTime(vo.getOrderStartTime());
+    query.setCreateEndTime(vo.getOrderEndTime());
     query.setRequireTxIdNull(true);
     return query;
   }
