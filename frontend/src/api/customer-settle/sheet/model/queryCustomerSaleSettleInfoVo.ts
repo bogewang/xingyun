@@ -10,4 +10,13 @@ export interface QueryCustomerSaleSettleInfoVo extends SortPageVo {
 
   /** 业务类型：1-销售出库单，2-销售退货单。 */
   bizType: number;
+
+  /** 结算状态。 */
+  settleStatus?: number;
+
+  /** 单据起始日期。 */
+  orderDateStart?: string;
+
+  /** 单据截止日期。 */
+  orderDateEnd?: string;
 }

@@ -15,6 +15,12 @@ export interface CustomerSaleSettleInfoBo {
   /** 客户名称。 */
   customerName: string;
 
+  /** 单据日期。 */
+  orderDate?: string;
+
+  /** 单据备注。 */
+  description?: string;
+
   /** 应收金额。 */
   totalAmount: number;
 
@@ -32,6 +38,9 @@ export interface CustomerSaleSettleInfoBo {
 
   /** 已结算金额。 */
   settleAmount: number;
+
+  /** 结算时间。 */
+  settleTime?: string;
 
   /** 未结算金额。 */
   unSettleAmount: number;

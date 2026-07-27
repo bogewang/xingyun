@@ -64,6 +64,7 @@ import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleSheetV
 import com.lframework.xingyun.settle.vo.sheet.customer.UpdateCustomerSettleSheetVo;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -258,11 +259,16 @@ public class CustomerSettleSheetServiceImpl extends
     QuerySaleOutSheetVo saleOutVo = new QuerySaleOutSheetVo();
     saleOutVo.setCode(vo.getCode());
     saleOutVo.setCustomerId(vo.getCustomerId());
+    saleOutVo.setSettleStatus(vo.getSettleStatus());
+    saleOutVo.setOrderDateStart(vo.getOrderDateStart());
+    saleOutVo.setOrderDateEnd(vo.getOrderDateEnd());
     saleOutVo.setRequireTxIdNull(true);
     PageResult<SaleOutSheet> pageResult = saleOutSheetService.query(pageIndex, pageSize, saleOutVo);
     List<CustomerSaleSettleInfoBo> results = pageResult.getDatas().stream()
         .map(sheet -> buildSettleInfo(sheet.getId(), 1, sheet.getCode(), sheet.getCustomerId(),
-            sheet.getTotalAmount(), sheet.getPaidAmount(), getSettleStatusCode(sheet.getSettleStatus())))
+            sheet.getTotalAmount(), sheet.getPaidAmount(), getSettleStatusCode(sheet.getSettleStatus()),
+            sheet.getOrderDate() == null && sheet.getCreateTime() != null
+                ? sheet.getCreateTime().toLocalDate() : sheet.getOrderDate(), sheet.getDescription()))
         .collect(Collectors.toList());
     return PageResultUtil.rebuild(pageResult, results);
   }
@@ -275,12 +281,16 @@ public class CustomerSettleSheetServiceImpl extends
     QuerySaleReturnVo saleReturnVo = new QuerySaleReturnVo();
     saleReturnVo.setCode(vo.getCode());
     saleReturnVo.setCustomerId(vo.getCustomerId());
+    saleReturnVo.setSettleStatus(vo.getSettleStatus());
+    saleReturnVo.setCreateStartTime(vo.getOrderDateStart() == null ? null : vo.getOrderDateStart().atStartOfDay());
+    saleReturnVo.setCreateEndTime(vo.getOrderDateEnd() == null ? null : vo.getOrderDateEnd().plusDays(1).atStartOfDay().minusNanos(1));
     saleReturnVo.setRequireTxIdNull(true);
     PageResult<SaleReturn> pageResult = saleReturnService.query(pageIndex, pageSize, saleReturnVo);
     List<CustomerSaleSettleInfoBo> results = pageResult.getDatas().stream()
         .map(sheet -> buildSettleInfo(sheet.getId(), 2, sheet.getCode(), sheet.getCustomerId(),
             amountOrZero(sheet.getTotalAmount()).negate(), BigDecimal.ZERO,
-            getSettleStatusCode(sheet.getSettleStatus())))
+            getSettleStatusCode(sheet.getSettleStatus()), sheet.getCreateTime() == null
+                ? null : sheet.getCreateTime().toLocalDate(), sheet.getDescription()))
         .collect(Collectors.toList());
     return PageResultUtil.rebuild(pageResult, results);
   }
@@ -296,12 +306,15 @@ public class CustomerSettleSheetServiceImpl extends
    * 构建销售单据结算信息。
    */
   private CustomerSaleSettleInfoBo buildSettleInfo(String id, int bizType, String code,
-      String customerId, BigDecimal totalAmount, BigDecimal receivedAmount, Integer settleStatus) {
+      String customerId, BigDecimal totalAmount, BigDecimal receivedAmount, Integer settleStatus,
+      LocalDate orderDate, String description) {
     CustomerSaleSettleInfoBo result = new CustomerSaleSettleInfoBo();
     result.setId(id);
     result.setBizType(bizType);
     result.setCode(code);
     result.setCustomerId(customerId);
+    result.setOrderDate(orderDate);
+    result.setDescription(description);
     result.setTotalAmount(amountOrZero(totalAmount));
     result.setReceivedAmount(amountOrZero(receivedAmount));
     result.setSettleStatus(settleStatus);

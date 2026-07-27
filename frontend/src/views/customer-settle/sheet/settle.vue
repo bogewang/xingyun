@@ -35,11 +35,19 @@
                   <a-select-option :value="2">销售退货单</a-select-option>
                 </a-select>
               </j-form-item>
-              <j-form-item label="单据号">
+              <j-form-item label="状态">
+                <a-select v-model:value="searchFormData.settleStatus" allow-clear placeholder="全部状态">
+                  <a-select-option v-for="item in SETTLE_STATUS.values()" :key="item.code" :value="item.code">{{ item.desc }}</a-select-option>
+                </a-select>
+              </j-form-item>
+              <j-form-item label="单据日期">
+                <a-range-picker v-model:value="orderDateRange" value-format="YYYY-MM-DD" :placeholder="['开始日期', '结束日期']" />
+              </j-form-item>
+              <j-form-item label="关键字">
                 <a-input
                   v-model:value.trim="searchFormData.code"
                   allow-clear
-                  placeholder="请输入单据号"
+                  placeholder="销售单号/销售退货单号"
                 />
               </j-form-item>
             </j-form>
@@ -180,7 +188,9 @@
             ? Number(routeQuery.bizType)
             : (undefined as number | undefined),
           code: routeQuery.code ? String(routeQuery.code) : '',
+          settleStatus: undefined as number | undefined,
         },
+        orderDateRange: [] as string[],
         toolbarConfig: {
           refresh: { queryMethod: () => this.loadList() },
           slots: { buttons: 'toolbar_buttons' },
@@ -200,6 +210,7 @@
         tableColumn: [
           { type: 'checkbox', width: 45, fixed: 'left' },
           { type: 'seq', title: '序号', width: 60, fixed: 'left' },
+          { field: 'customerName', title: '客户', minWidth: 120 },
           {
             field: 'code',
             title: '销售单/销售退货单',
@@ -213,6 +224,7 @@
             formatter: ({ cellValue }: { cellValue: number }) =>
               CUSTOMER_SALE_SETTLE_BIZ_TYPE.getDesc(cellValue) || '-',
           },
+          { field: 'orderDate', title: '单据日期', width: 120 },
           { field: 'totalAmount', title: '应收', width: 110, align: 'right' },
           { field: 'receivedAmount', title: '已收', width: 110, align: 'right' },
           { field: 'checkAmount', title: '对账金额', width: 110, align: 'right' },
@@ -224,6 +236,10 @@
             width: 100,
             slots: { default: 'settleStatus_default' },
           },
+          { field: 'checkTime', title: '对账时间', width: 170 },
+          { field: 'settleTime', title: '结算时间', width: 170 },
+          { field: 'description', title: '单据备注', minWidth: 180 },
+          { field: 'checkDescription', title: '对账备注', minWidth: 180 },
         ],
         checkDialog: {
           visible: false,
@@ -360,6 +376,9 @@
           ...buildSortPageVo(this.pagerConfig, []),
           code: this.searchFormData.code || undefined,
           bizType: this.searchFormData.bizType || undefined,
+          settleStatus: this.searchFormData.settleStatus,
+          orderDateStart: this.orderDateRange?.[0] || undefined,
+          orderDateEnd: this.orderDateRange?.[1] || undefined,
         });
       },
       /** 查询当前固定客户的工作台数据。 */

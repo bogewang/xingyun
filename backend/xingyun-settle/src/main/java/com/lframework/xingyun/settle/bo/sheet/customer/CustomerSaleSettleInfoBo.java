@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import lombok.Data;
 
 /**
@@ -30,6 +31,16 @@ public class CustomerSaleSettleInfoBo implements Serializable {
 
   @ApiModelProperty("客户名称")
   private String customerName;
+
+  @ApiModelProperty("单据日期")
+  private LocalDate orderDate;
+
+  @ApiModelProperty("单据备注")
+  private String description;
+
+  @ApiModelProperty("结算时间")
+  @JsonSerialize(using = ToStringSerializer.class)
+  private LocalDateTime settleTime;
 
   @ApiModelProperty("单据金额")
   private BigDecimal totalAmount;

@@ -5,6 +5,7 @@ import com.lframework.starter.web.core.components.validation.IsEnum;
 import com.lframework.xingyun.settle.enums.CustomerSaleSettleBizType;
 import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
 import lombok.Data;
 
 /**
@@ -20,6 +21,15 @@ public class QueryCustomerSaleSettleInfoVo extends PageVo {
 
   @ApiModelProperty("客户ID")
   private String customerId;
+
+  @ApiModelProperty("结算状态")
+  private Integer settleStatus;
+
+  @ApiModelProperty("单据起始日期")
+  private LocalDate orderDateStart;
+
+  @ApiModelProperty("单据截止日期")
+  private LocalDate orderDateEnd;
 
   @ApiModelProperty("业务类型：1-销售出库单，2-销售退货单")
   @NotNull(message = "业务类型不能为空！")
