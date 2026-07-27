@@ -970,6 +970,7 @@ public class CustomerSettleSheetServiceImpl extends
     validateConfirmedAmount(vo.getSettleAmount(), totalUnSettleAmount);
     List<BigDecimal> amounts = SettleAmountAllocationUtil.allocateSigned(vo.getSettleAmount(),
         bizItems.stream().map(DirectSettleBiz::getUnSettleAmount).collect(Collectors.toList()));
+    SettleStatus targetSettleStatus = resolveDirectSettleStatus(vo, bizItems);
 
     // 创建已审核的结算单
     CustomerSettleSheet sheet = new CustomerSettleSheet();
@@ -993,7 +994,7 @@ public class CustomerSettleSheetServiceImpl extends
     for (int index = 0; index < bizItems.size(); index++) {
       DirectSettleBiz biz = bizItems.get(index);
       BigDecimal amount = amounts.get(index);
-      boolean settled = amount.abs().compareTo(biz.getUnSettleAmount().abs()) >= 0;
+      boolean settled = targetSettleStatus == SettleStatus.SETTLED;
       if (biz.getBizType() == 1) {
         int count = settled
             ? saleOutSheetService.setSettled(biz.getBizId(), biz.getSettleStatus(),
@@ -1028,6 +1029,29 @@ public class CustomerSettleSheetServiceImpl extends
     }
     recordSaleSourceSettleTimeLine(sheet, details);
     return sheet.getId();
+  }
+
+  /**
+   * 校验并确定直接结算后的业务单据结算状态。
+   */
+  private SettleStatus resolveDirectSettleStatus(CreateCustomerSettleSheetVo vo,
+      List<DirectSettleBiz> bizItems) {
+    SettleStatus targetStatus = SettleStatus.SETTLED;
+    if (vo.getSettleStatus() != null) {
+      if (vo.getSettleStatus().equals(SettleStatus.PART_SETTLE.getCode())) {
+        targetStatus = SettleStatus.PART_SETTLE;
+      } else if (!vo.getSettleStatus().equals(SettleStatus.SETTLED.getCode())) {
+        throw new DefaultClientException("结算状态不正确！");
+      }
+    }
+    if (bizItems.size() > 1 && targetStatus != SettleStatus.SETTLED) {
+      throw new DefaultClientException("多条单据结算时必须全部视为已结算！");
+    }
+    if (bizItems.size() == 1 && targetStatus == SettleStatus.PART_SETTLE
+        && vo.getSettleAmount().abs().compareTo(bizItems.get(0).getUnSettleAmount().abs()) == 0) {
+      throw new DefaultClientException("结算金额与对账金额一致，请按完全结算处理！");
+    }
+    return targetStatus;
   }
 
   /**

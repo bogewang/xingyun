@@ -57,6 +57,12 @@ public class CreateCustomerSettleSheetVo implements BaseVo, Serializable {
   private String description;
 
   /**
+   * 本次结算后的业务单据结算状态。
+   */
+  @ApiModelProperty("结算状态：1-部分结算，3-已结算")
+  private Integer settleStatus;
+
+  /**
    * 校验结算项字段完整性。
    */
   public void validate() {

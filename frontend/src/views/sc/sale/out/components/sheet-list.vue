@@ -453,7 +453,7 @@
         tableColumn: [
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
-          { field: 'orderDate', title: '订单日期', width: 120 },
+          { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
           {
             field: 'code',
             title: '单据号',

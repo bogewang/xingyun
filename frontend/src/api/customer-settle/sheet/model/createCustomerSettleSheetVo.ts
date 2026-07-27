@@ -14,4 +14,7 @@ export interface CreateCustomerSettleSheetVo {
 
   /** 备注。 */
   description?: string;
+
+  /** 结算状态：1-部分结算，3-已结算。 */
+  settleStatus?: number;
 }
