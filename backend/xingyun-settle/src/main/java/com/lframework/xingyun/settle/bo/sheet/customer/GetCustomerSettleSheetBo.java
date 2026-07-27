@@ -156,8 +156,12 @@ public class GetCustomerSettleSheetBo extends BaseBo<CustomerSettleSheetFullDto>
       this.approveBy = userService.findById(dto.getApproveBy()).getName();
     }
 
-    this.startTime = DateUtil.toLocalDateTime(dto.getStartDate());
-    this.endTime = DateUtil.toLocalDateTimeMax(dto.getEndDate());
+    if (dto.getStartDate() != null) {
+      this.startTime = DateUtil.toLocalDateTime(dto.getStartDate());
+    }
+    if (dto.getEndDate() != null) {
+      this.endTime = DateUtil.toLocalDateTimeMax(dto.getEndDate());
+    }
 
     if (!CollectionUtil.isEmpty(dto.getDetails())) {
       this.details = dto.getDetails().stream().map(SheetDetailBo::new)
