@@ -517,7 +517,7 @@
         if (!this.ensureValidRoute()) return;
         const amount = Number(this.checkDialog.amount);
         if (!this.canConfirmCheck || !isDirectSettleAmountValid(amount, this.selectedTotalAmount)) {
-          createError('对账金额必须与所选单据应收净额方向一致，且不能超出其范围！');
+          createError('对账金额必须与所选单据应收净额方向一致，且不能为零！');
           return;
         }
         this.checkDialog.loading = true;
@@ -556,7 +556,7 @@
           !this.canConfirmSettle ||
           !isDirectSettleAmountValid(amount, this.selectedTotalUnSettleAmount)
         ) {
-          createError('结算金额必须与所选单据未结算净额方向一致，且不能超出其范围！');
+          createError('结算金额必须与所选单据未结算净额方向一致，且不能为零！');
           return;
         }
         this.settleDialog.loading = true;

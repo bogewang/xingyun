@@ -87,10 +87,7 @@ export function isDirectSettleAmountValid(amount: number, totalUnSettleAmount: n
   if (amount === 0 || totalUnSettleAmount === 0) {
     return false;
   }
-  return (
-    Math.sign(amount) === Math.sign(totalUnSettleAmount) &&
-    Math.abs(amount) <= Math.abs(totalUnSettleAmount)
-  );
+  return Math.sign(amount) === Math.sign(totalUnSettleAmount);
 }
 
 /** 查询单一业务类型，或并行查询并合并销售出库与销售退货。 */

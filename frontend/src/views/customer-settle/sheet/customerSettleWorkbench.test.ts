@@ -212,9 +212,11 @@ describe('客户结算工作台', () => {
     ]);
   });
 
-  it('允许退货负数退款并拒绝零金额或方向不一致', () => {
+  it('允许同方向的对账或结算金额增减，并拒绝零金额或方向不一致', () => {
     expect(isDirectSettleAmountValid(-20, -20)).toBe(true);
     expect(isDirectSettleAmountValid(-10, -20)).toBe(true);
+    expect(isDirectSettleAmountValid(-30, -20)).toBe(true);
+    expect(isDirectSettleAmountValid(30, 20)).toBe(true);
     expect(isDirectSettleAmountValid(0, -20)).toBe(false);
     expect(isDirectSettleAmountValid(10, -20)).toBe(false);
   });

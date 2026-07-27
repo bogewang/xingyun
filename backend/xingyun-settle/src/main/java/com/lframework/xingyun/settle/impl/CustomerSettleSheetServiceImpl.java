@@ -352,8 +352,13 @@ public class CustomerSettleSheetServiceImpl extends
       // 计算未结算金额：如果有对账金额，以对账金额为基数；否则以单据金额为基数
       BigDecimal baseAmount = item.getCheckAmount() != null
           ? item.getCheckAmount() : amountOrZero(item.getTotalAmount());
-      item.setUnSettleAmount(baseAmount.subtract(amountOrZero(item.getReceivedAmount()))
-          .subtract(settleAmount));
+      BigDecimal unSettleAmount = baseAmount.subtract(amountOrZero(item.getReceivedAmount()))
+          .subtract(settleAmount);
+      if (item.getSettleStatus() != null
+          && item.getSettleStatus() == SettleStatus.SETTLED.getCode()) {
+        unSettleAmount = BigDecimal.ZERO;
+      }
+      item.setUnSettleAmount(unSettleAmount);
     });
   }
 
@@ -526,7 +531,7 @@ public class CustomerSettleSheetServiceImpl extends
   }
 
   /**
-   * 校验确认金额与所选业务净额的方向及范围一致。
+   * 校验确认金额与所选业务净额方向一致。
    *
    * @param confirmedAmount 确认金额
    * @param totalUnSettleAmount 未结算净额
@@ -534,9 +539,8 @@ public class CustomerSettleSheetServiceImpl extends
   private void validateConfirmedAmount(BigDecimal confirmedAmount,
       BigDecimal totalUnSettleAmount) {
     if (totalUnSettleAmount.compareTo(BigDecimal.ZERO) == 0
-        || confirmedAmount.signum() != totalUnSettleAmount.signum()
-        || confirmedAmount.abs().compareTo(totalUnSettleAmount.abs()) > 0) {
-      throw new DefaultClientException("确认结算金额与所选单据未结算净额方向或范围不一致！");
+        || confirmedAmount.signum() != totalUnSettleAmount.signum()) {
+      throw new DefaultClientException("确认结算金额与所选单据未结算净额方向不一致！");
     }
   }
 
