@@ -120,4 +120,10 @@ public class CustomerSettleSheet extends BaseEntity implements BaseDto {
      * 拒绝原因
      */
     private String refuseReason;
+
+    /**
+     * 关联业务单据数量，仅用于列表展示。
+     */
+    @TableField(exist = false)
+    private Integer detailCount;
 }

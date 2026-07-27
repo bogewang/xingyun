@@ -112,6 +112,12 @@ public class QueryCustomerSettleSheetBo extends BaseBo<CustomerSettleSheet> {
   @ApiModelProperty("状态")
   private Integer status;
 
+  /**
+   * 关联业务单据数量。
+   */
+  @ApiModelProperty("关联业务单据数量")
+  private Integer detailCount;
+
   public QueryCustomerSettleSheetBo() {
 
   }

@@ -427,8 +427,25 @@
         batchRefuseReason: '',
       };
     },
-    created() {},
+    watch: {
+      '$route.query': {
+        handler() {
+          this.applyRouteQuery();
+          this.$nextTick(() => this.search());
+        },
+      },
+    },
+    created() {
+      this.applyRouteQuery();
+    },
     methods: {
+      /** 应用路由携带的筛选条件。 */
+      applyRouteQuery() {
+        const { code } = this.$route.query || {};
+        if (code !== undefined) {
+          this.searchFormData.code = Array.isArray(code) ? code[0] || '' : code || '';
+        }
+      },
       // 列表发生查询时的事件
       search() {
         this.$refs.grid.commitProxy('reload');
@@ -733,6 +750,7 @@
         ];
       },
       onRefreshPage() {
+        this.applyRouteQuery();
         this.search();
       },
     },

@@ -535,7 +535,10 @@
         return this.$refs.importerContainer;
       },
       applyRouteQuery() {
-        const { orderDateStart, orderDateEnd } = this.$route.query || {};
+        const { code, orderDateStart, orderDateEnd } = this.$route.query || {};
+        if (code !== undefined) {
+          this.searchFormData.code = Array.isArray(code) ? code[0] || '' : code || '';
+        }
         if (orderDateStart || orderDateEnd) {
           this.orderDateRange = [orderDateStart || orderDateEnd, orderDateEnd || orderDateStart];
         }
@@ -1064,6 +1067,7 @@
         ];
       },
       onRefreshPage() {
+        this.applyRouteQuery();
         this.search();
       },
       /**

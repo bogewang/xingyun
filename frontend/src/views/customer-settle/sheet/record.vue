@@ -22,7 +22,17 @@
           <j-border>
             <j-form bordered @collapse="$refs.grid.refreshColumn()" @keyup.enter="search">
               <j-form-item label="客户">
-                <customer-selector v-model:value="searchFormData.customerId" allow-clear />
+                <a-select
+                  v-model:value="searchFormData.customerId"
+                  allow-clear
+                  show-search
+                  :filter-option="false"
+                  :options="customerOptions"
+                  placeholder="请选择客户"
+                  @focus="loadCustomerOptions()"
+                  @search="loadCustomerOptions"
+                  @change="search"
+                />
               </j-form-item>
               <j-form-item label="结算日期" :content-nest="false">
                 <div class="date-range-container">
@@ -51,7 +61,7 @@
 
         <template #biz_default="{ row }">
           <a v-if="!row.isDetailRow" @click="toggleDetailRow(row)">
-            {{ expandedRowIds.includes(row.id) ? '收起明细' : '展开明细' }}
+            {{ expandedRowIds.includes(row.id) ? '收起明细' : `共${row.detailCount || 0}单` }}
           </a>
         </template>
 
@@ -76,7 +86,7 @@
   import { defineComponent } from 'vue';
   import moment from 'moment';
   import * as api from '@/api/customer-settle/sheet';
-  import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
+  import { requestCustomerSelectOptions } from '@/utils/labelSelect';
   import { createError, createSuccess } from '@/hooks/web/msg';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { buildSortPageVo, getDateTimeWithMaxTime, getDateTimeWithMinTime } from '@/utils/utils';
@@ -84,7 +94,6 @@
 
   export default defineComponent({
     name: 'CustomerSettleSheetRecord',
-    components: { CustomerSelector },
     mixins: [multiplePageMix],
     data() {
       const routeQuery = this.$route.query || {};
@@ -101,6 +110,7 @@
           code: routeQuery.code ? String(routeQuery.code) : '',
         },
         dateRange: [startTime, endTime],
+        customerOptions: [] as Array<{ label: string; value: string }>,
         toolbarConfig: {
           refresh: { queryMethod: () => this.loadList() },
           slots: { buttons: 'toolbar_buttons' },
@@ -128,9 +138,14 @@
       };
     },
     created() {
+      this.loadCustomerOptions();
       this.search();
     },
     methods: {
+      /** 加载客户下拉选项。 */
+      async loadCustomerOptions(keyword = '') {
+        this.customerOptions = await requestCustomerSelectOptions(keyword);
+      },
       /** 格式化金额。 */
       formatAmount(value: number): string {
         return Number(value || 0).toFixed(2);

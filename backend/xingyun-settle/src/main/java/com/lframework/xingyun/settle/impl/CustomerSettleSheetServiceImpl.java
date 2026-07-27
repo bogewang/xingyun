@@ -506,7 +506,28 @@ public class CustomerSettleSheetServiceImpl extends
     Assert.greaterThanZero(pageIndex);
     Assert.greaterThanZero(pageSize);
     PageHelperUtil.startPage(pageIndex, pageSize);
-    return PageResultUtil.convert(new PageInfo<>(query(vo)));
+    List<CustomerSettleSheet> sheets = query(vo);
+    fillDetailCounts(sheets);
+    return PageResultUtil.convert(new PageInfo<>(sheets));
+  }
+
+  /**
+   * 批量填充客户结算单关联业务单据数量。
+   *
+   * @param sheets 客户结算单列表
+   */
+  private void fillDetailCounts(List<CustomerSettleSheet> sheets) {
+    if (CollectionUtil.isEmpty(sheets)) {
+      return;
+    }
+    List<String> sheetIds = sheets.stream().map(CustomerSettleSheet::getId)
+        .collect(Collectors.toList());
+    Map<String, Long> countMap = customerSettleSheetDetailService.list(
+            Wrappers.lambdaQuery(CustomerSettleSheetDetail.class)
+                .in(CustomerSettleSheetDetail::getSheetId, sheetIds))
+        .stream().collect(Collectors.groupingBy(CustomerSettleSheetDetail::getSheetId,
+            Collectors.counting()));
+    sheets.forEach(sheet -> sheet.setDetailCount(countMap.getOrDefault(sheet.getId(), 0L).intValue()));
   }
 
   /**
