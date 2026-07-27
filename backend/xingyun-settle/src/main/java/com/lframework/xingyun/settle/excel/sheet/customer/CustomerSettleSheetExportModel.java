@@ -33,13 +33,13 @@ public class CustomerSettleSheetExportModel extends BaseBo<CustomerSettleSheet> 
   /**
    * 客户编号
    */
-  @ApiModelProperty("客户编号")
+  @ExcelProperty("客户编号")
   private String customerCode;
 
   /**
    * 客户名称
    */
-  @ApiModelProperty("客户名称")
+  @ExcelProperty("客户名称")
   private String customerName;
 
   /**
@@ -125,6 +125,7 @@ public class CustomerSettleSheetExportModel extends BaseBo<CustomerSettleSheet> 
     this.setTotalAmount(dto.getTotalAmount());
     this.setTotalDiscountAmount(dto.getTotalDiscountAmount());
     this.setCreateTime(DateUtil.toDate(dto.getCreateTime()));
+    this.setCreateBy(dto.getCreateBy());
     this.setStatus(EnumUtil.getDesc(CustomerSettleSheetStatus.class, dto.getStatus()));
     if (approveBy != null) {
       this.setApproveBy(approveBy.getName());

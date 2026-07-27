@@ -142,5 +142,14 @@ public class SaleReturn extends BaseEntity implements BaseDto {
    */
   private SettleStatus settleStatus;
 
+  /**
+   * 结算版本号
+   */
+  private Long settleVersion;
+
+  /**
+   * 结算交易占用ID
+   */
+  private String txId;
 
 }

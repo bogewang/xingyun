@@ -6,6 +6,7 @@ import com.lframework.xingyun.sc.enums.SaleReturnStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import io.swagger.annotations.ApiModelProperty;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.Data;
 
 @Data
@@ -18,6 +19,12 @@ public class QuerySaleReturnVo extends SortPageVo {
    */
   @ApiModelProperty("单号")
   private String code;
+
+  /**
+   * 单据ID列表
+   */
+  @ApiModelProperty("单据ID列表")
+  private List<String> idList;
 
   /**
    * 客户ID
@@ -92,4 +99,10 @@ public class QuerySaleReturnVo extends SortPageVo {
   @ApiModelProperty("结算状态")
   @IsEnum(message = "结算状态格式不正确！", enumClass = SettleStatus.class)
   private Integer settleStatus;
+
+  /**
+   * 是否仅查询未被结算交易占用的单据
+   */
+  @ApiModelProperty("是否仅查询未被结算交易占用的单据")
+  private Boolean requireTxIdNull;
 }

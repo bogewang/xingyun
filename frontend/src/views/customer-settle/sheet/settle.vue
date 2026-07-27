@@ -1,0 +1,694 @@
+<template>
+  <div class="customer-settle-detail">
+    <page-wrapper v-if="!routeError" content-full-height fixed-height dense>
+      <vxe-grid
+        id="CustomerSettleDetail"
+        ref="grid"
+        auto-resize
+        resizable
+        show-overflow
+        show-footer
+        highlight-hover-row
+        row-id="id"
+        :data="tableData"
+        :columns="tableColumn"
+        :toolbar-config="toolbarConfig"
+        :pager-config="pagerConfig"
+        :checkbox-config="checkboxConfig"
+        :footer-method="footerMethod"
+        :loading="loading"
+        height="auto"
+        @checkbox-change="syncSelection"
+        @checkbox-all="syncSelection"
+        @page-change="handlePageChange"
+      >
+        <template #form>
+          <j-border>
+            <j-form bordered @collapse="$refs.grid.refreshColumn()" @keyup.enter="search">
+              <j-form-item label="客户">
+                <a-select
+                  v-model:value="searchFormData.customerId"
+                  allow-clear
+                  show-search
+                  :filter-option="false"
+                  :options="customerOptions"
+                  placeholder="请选择客户"
+                  @focus="loadCustomerOptions()"
+                  @search="loadCustomerOptions"
+                  @change="search"
+                />
+              </j-form-item>
+              <j-form-item label="业务类型">
+                <a-select
+                  v-model:value="searchFormData.bizType"
+                  allow-clear
+                  placeholder="全部业务类型"
+                >
+                  <a-select-option :value="1">销售出库单</a-select-option>
+                  <a-select-option :value="2">销售退货单</a-select-option>
+                </a-select>
+              </j-form-item>
+              <j-form-item label="状态">
+                <a-select v-model:value="searchFormData.settleStatus" allow-clear placeholder="全部状态">
+                  <a-select-option v-for="item in SETTLE_STATUS.values()" :key="item.code" :value="item.code">{{ item.desc }}</a-select-option>
+                </a-select>
+              </j-form-item>
+              <j-form-item label="单据日期">
+                <a-range-picker v-model:value="orderDateRange" value-format="YYYY-MM-DD" :placeholder="['开始日期', '结束日期']" />
+              </j-form-item>
+              <j-form-item label="关键字">
+                <a-input
+                  v-model:value.trim="searchFormData.code"
+                  allow-clear
+                  placeholder="销售单号/销售退货单号"
+                />
+              </j-form-item>
+            </j-form>
+          </j-border>
+        </template>
+
+        <template #toolbar_buttons>
+          <a-space>
+            <a-button type="primary" @click="search">查询</a-button>
+            <a-button @click="openRecordPage">结算记录</a-button>
+            <a-button v-permission="['customer-settle:sheet:export']" @click="exportList"
+              >导出</a-button
+            >
+            <a-button
+              v-permission="['customer-settle:sheet:approve']"
+              type="primary"
+              :disabled="!canConfirmCheck"
+              @click="openCheckDialog"
+            >
+              确认对账
+            </a-button>
+            <a-button
+              v-permission="['customer-settle:sheet:approve']"
+              type="primary"
+              :disabled="!canConfirmSettle"
+              @click="openSettleDialog"
+            >
+              确认结算
+            </a-button>
+          </a-space>
+        </template>
+
+        <template #code_default="{ row }">
+          <a class="settle-sheet-code" @click="openBizDetail(row, $event)">
+            {{ row.code || '-' }}
+          </a>
+        </template>
+
+        <template #settleStatus_default="{ row }">
+          <span :class="['status-text', getStatusClass(row.settleStatus)]">
+            {{ SETTLE_STATUS.getDesc(row.settleStatus) || '-' }}
+          </span>
+        </template>
+      </vxe-grid>
+    </page-wrapper>
+    <a-result v-else status="error" :title="routeError" />
+
+    <a-modal
+      v-model:open="checkDialog.visible"
+      title="确认对账"
+      :confirm-loading="checkDialog.loading"
+      @ok="submitCheck"
+    >
+      <a-form layout="vertical">
+        <a-form-item label="对账金额">
+          <a-input-number
+            v-model:value="checkDialog.amount"
+            :precision="2"
+            style="width: 100%"
+            placeholder="请输入对账金额"
+          />
+          <div class="amount-tip">选中单据应收总额：{{ formatAmount(selectedTotalAmount) }}</div>
+        </a-form-item>
+        <a-form-item label="备注">
+          <a-textarea
+            v-model:value.trim="checkDialog.description"
+            :rows="4"
+            maxlength="200"
+            placeholder="请输入备注"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+
+    <a-modal
+      v-model:open="settleDialog.visible"
+      title="确认结算"
+      :confirm-loading="settleDialog.loading"
+      @ok="submitSettle"
+    >
+      <a-form layout="vertical">
+        <a-form-item label="结算金额">
+          <a-input-number
+            v-model:value="settleDialog.amount"
+            :precision="2"
+            style="width: 100%"
+            placeholder="请输入结算金额"
+            @change="handleSettleAmountChange"
+          />
+          <div class="amount-tip"
+            >选中单据未结算总额：{{ formatAmount(selectedTotalUnSettleAmount) }}</div
+          >
+        </a-form-item>
+        <a-form-item v-if="shouldConfirmPartialSettle">
+          <a-checkbox
+            :checked="settleDialog.fullSettleConfirmed"
+            @change="selectFullSettle"
+          >
+            完全结算
+          </a-checkbox>
+          <a-checkbox
+            :checked="settleDialog.partialSettleConfirmed"
+            @change="selectPartialSettle"
+          >
+            部分结算
+          </a-checkbox>
+          <div class="amount-tip">
+            剩余未结算金额：{{ formatAmount(partialSettleRemainingAmount) }}
+          </div>
+        </a-form-item>
+        <a-alert
+          v-else-if="shouldShowMultiFullSettleTip"
+          type="warning"
+          show-icon
+          message="已选择多条单据，将全部视为已结算。"
+        />
+        <a-form-item label="备注">
+          <a-textarea
+            v-model:value.trim="settleDialog.description"
+            :rows="4"
+            maxlength="200"
+            placeholder="请输入备注"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+    <sale-out-detail :id="currentBizId" ref="saleOutDetailDialog" />
+    <sale-return-detail :id="currentBizId" ref="saleReturnDetailDialog" />
+  </div>
+</template>
+
+<script lang="ts">
+  import { defineComponent, markRaw } from 'vue';
+  import moment from 'moment';
+  import * as checkApi from '@/api/customer-settle/check';
+  import * as api from '@/api/customer-settle/sheet';
+  import { requestCustomerSelectOptions } from '@/utils/labelSelect';
+  import SaleOutDetail from '@/views/sc/sale/out/detail.vue';
+  import SaleReturnDetail from '@/views/sc/sale/return/detail.vue';
+  import { CUSTOMER_SALE_SETTLE_BIZ_TYPE } from '@/enums/biz/customerSaleSettleBizType';
+  import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
+  import { createError, createSuccess } from '@/hooks/web/msg';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { buildSortPageVo } from '@/utils/utils';
+  import {
+    buildCustomerDetailQuery,
+    buildDirectSettlePayload,
+    canDirectSettle,
+    getCustomerSettleBizListPath,
+    isDirectSettleAmountValid,
+    queryCustomerSettleWorkbenchPages,
+    validateCustomerDetailRoute,
+  } from './customerSettleWorkbench';
+
+  /** 单客户结算明细页面。 */
+  export default defineComponent({
+    name: 'CustomerSettleDetail',
+    components: { SaleOutDetail, SaleReturnDetail },
+    mixins: [multiplePageMix],
+    data() {
+      const routeQuery = this.$route.query || {};
+      return {
+        loading: false,
+        currentBizId: '',
+        routeError: validateCustomerDetailRoute(routeQuery),
+        SETTLE_STATUS: markRaw(SETTLE_STATUS),
+        CUSTOMER_SALE_SETTLE_BIZ_TYPE: markRaw(CUSTOMER_SALE_SETTLE_BIZ_TYPE),
+        searchFormData: {
+          customerId: routeQuery.customerId ? String(routeQuery.customerId) : '',
+          bizType: routeQuery.bizType
+            ? Number(routeQuery.bizType)
+            : (undefined as number | undefined),
+          code: routeQuery.code ? String(routeQuery.code) : '',
+          settleStatus: undefined as number | undefined,
+        },
+        orderDateRange: [] as string[],
+        customerOptions: [] as Array<{ label: string; value: string }> ,
+        toolbarConfig: {
+          refresh: { queryMethod: () => this.loadList() },
+          slots: { buttons: 'toolbar_buttons' },
+        },
+        pagerConfig: {
+          currentPage: 1,
+          pageSize: 20,
+          total: 0,
+          layouts: ['PrevPage', 'JumpNumber', 'NextPage', 'Sizes', 'Total'],
+        },
+        checkboxConfig: {
+          checkMethod: ({ row }: { row: any }) => this.canCheckRow(row),
+        },
+        loadRequestSequence: 0,
+        tableData: [] as any[],
+        selectedRows: [] as any[],
+        tableColumn: [
+          { type: 'checkbox', width: 45, fixed: 'left' },
+          { type: 'seq', title: '序号', width: 60, fixed: 'left' },
+          { field: 'customerName', title: '客户', minWidth: 120 },
+          {
+            field: 'code',
+            title: '销售单/销售退货单',
+            width: 180,
+            slots: { default: 'code_default' },
+          },
+          {
+            field: 'bizType',
+            title: '单据类型',
+            width: 120,
+            formatter: ({ cellValue }: { cellValue: number }) =>
+              CUSTOMER_SALE_SETTLE_BIZ_TYPE.getDesc(cellValue) || '-',
+          },
+          { field: 'orderDate', title: '单据日期', width: 120 },
+          { field: 'totalAmount', title: '应收', width: 110, align: 'right' },
+          { field: 'receivedAmount', title: '已收', width: 110, align: 'right' },
+          { field: 'checkAmount', title: '对账金额', width: 110, align: 'right' },
+          { field: 'settleAmount', title: '已结算', width: 110, align: 'right' },
+          { field: 'unSettleAmount', title: '未结算', width: 110, align: 'right' },
+          {
+            field: 'settleStatus',
+            title: '状态',
+            width: 100,
+            slots: { default: 'settleStatus_default' },
+          },
+          {
+            field: 'checkTime', title: '对账时间', width: 170,
+            formatter: ({ cellValue }: { cellValue: string }) =>
+              cellValue ? moment(cellValue).format('YYYY-MM-DD HH:mm:ss') : '-',
+          },
+          {
+            field: 'settleTime', title: '结算时间', width: 170,
+            formatter: ({ cellValue }: { cellValue: string }) =>
+              cellValue ? moment(cellValue).format('YYYY-MM-DD HH:mm:ss') : '-',
+          },
+          { field: 'description', title: '单据备注', minWidth: 180 },
+          { field: 'checkDescription', title: '对账备注', minWidth: 180 },
+          { field: 'settleDescription', title: '结算备注', minWidth: 180 },
+        ],
+        checkDialog: {
+          visible: false,
+          loading: false,
+          amount: undefined as number | undefined,
+          description: '',
+        },
+        settleDialog: {
+          visible: false,
+          loading: false,
+          amount: undefined as number | undefined,
+          description: '',
+          partialSettleConfirmed: false,
+          fullSettleConfirmed: false,
+        },
+      };
+    },
+    computed: {
+      /** 获取由路由固定的客户 ID。 */
+      customerId(): string {
+        return String(this.searchFormData.customerId || '').trim();
+      },
+      /** 计算选中单据的应收总额。 */
+      selectedTotalAmount(): number {
+        return this.selectedRows.reduce((total, item) => total + Number(item.totalAmount || 0), 0);
+      },
+      /** 计算选中单据的未结算总额。 */
+      selectedTotalUnSettleAmount(): number {
+        return this.selectedRows.reduce(
+          (total, item) => total + Number(item.unSettleAmount || 0),
+          0,
+        );
+      },
+      /** 判断当前勾选是否均为待对账单据。 */
+      canConfirmCheck(): boolean {
+        return (
+          this.selectedRows.length > 0 &&
+          this.selectedRows.every(
+            (item) =>
+              item.customerId === this.customerId &&
+              [7, '7', 'UN_CHECK_BILL'].includes(item.settleStatus),
+          )
+        );
+      },
+      /** 判断当前勾选是否可直接结算。 */
+      canConfirmSettle(): boolean {
+        return (
+          this.selectedRows.every((item) => item.customerId === this.customerId) &&
+          canDirectSettle(this.selectedRows)
+        );
+      },
+      shouldConfirmPartialSettle(): boolean {
+        return this.selectedRows.length === 1 &&
+          Number(this.settleDialog.amount || 0).toFixed(2) !==
+            Number(this.selectedTotalUnSettleAmount || 0).toFixed(2);
+      },
+      partialSettleRemainingAmount(): number {
+        return Number(this.selectedTotalUnSettleAmount || 0) - Number(this.settleDialog.amount || 0);
+      },
+      shouldShowMultiFullSettleTip(): boolean {
+        return this.selectedRows.length > 1 &&
+          Number(this.settleDialog.amount || 0) < Number(this.selectedTotalUnSettleAmount || 0);
+      },
+    },
+    watch: {
+      /** 路由查询参数变化时同步固定客户状态。 */
+      '$route.query': {
+        handler(routeQuery, previousRouteQuery) {
+          if (this.$route.name !== 'CustomerSettleDetail') {
+            return;
+          }
+          this.handleRouteQueryChange(routeQuery || {}, previousRouteQuery || {});
+        },
+      },
+    },
+    created() {
+      this.loadCustomerOptions();
+      this.handleRouteQueryChange(this.$route.query || {}, {});
+    },
+    methods: {
+      /** 加载客户下拉选项。 */
+      async loadCustomerOptions(keyword = '') {
+        this.customerOptions = await requestCustomerSelectOptions(keyword);
+      },
+      /** 清空无效路由或客户切换前遗留的表格和勾选状态。 */
+      clearRouteData() {
+        this.tableData = [];
+        this.selectedRows = [];
+        this.pagerConfig.total = 0;
+        this.checkDialog.visible = false;
+        this.settleDialog.visible = false;
+        (this.$refs.grid as any)?.clearCheckboxRow?.();
+      },
+      /** 每个请求入口重新校验路由客户参数。 */
+      ensureValidRoute(showError = true): boolean {
+        this.routeError = validateCustomerDetailRoute({ customerId: this.customerId });
+        if (!this.routeError) {
+          return true;
+        }
+        this.clearRouteData();
+        if (showError) {
+          createError(this.routeError);
+        }
+        return false;
+      },
+      /** 处理组件复用时的路由客户切换。 */
+      handleRouteQueryChange(
+        routeQuery: Record<string, unknown>,
+        previousRouteQuery: Record<string, unknown>,
+      ) {
+        this.routeError = validateCustomerDetailRoute(routeQuery);
+        if (this.routeError) {
+          this.clearRouteData();
+          createError(this.routeError);
+          return;
+        }
+        const customerId = String(routeQuery.customerId || '').trim();
+        const previousCustomerId = String(previousRouteQuery.customerId || '').trim();
+        if (customerId !== previousCustomerId) {
+          this.searchFormData.customerId = customerId;
+          this.clearRouteData();
+          this.search();
+        }
+      },
+      /** 格式化金额。 */
+      formatAmount(value: number): string {
+        return Number(value || 0).toFixed(2);
+      },
+      /** 汇总指定金额列。 */
+      sumByField(data: any[], field: string): number {
+        return (data || []).reduce((total, item) => total + Number(item[field] || 0), 0);
+      },
+      /** 生成表格合计行。 */
+      footerMethod({ columns, data }: { columns: any[]; data: any[] }) {
+        const amountFields = [
+          'totalAmount',
+          'receivedAmount',
+          'checkAmount',
+          'settleAmount',
+          'unSettleAmount',
+        ];
+        return [
+          columns.map((column) => {
+            if (column.type === 'seq') return '合计';
+            return amountFields.includes(column.field)
+              ? this.formatAmount(this.sumByField(data, column.field))
+              : '';
+          }),
+        ];
+      },
+      /** 生成由路由客户限定的工作台查询条件。 */
+      buildQueryParams() {
+        return buildCustomerDetailQuery({ customerId: this.customerId }, {
+          ...buildSortPageVo(this.pagerConfig, []),
+          code: this.searchFormData.code || undefined,
+          bizType: this.searchFormData.bizType || undefined,
+          settleStatus: this.searchFormData.settleStatus,
+          orderDateStart: this.orderDateRange?.[0] || undefined,
+          orderDateEnd: this.orderDateRange?.[1] || undefined,
+        });
+      },
+      /** 查询当前固定客户的工作台数据。 */
+      async loadList() {
+        const requestSequence = ++this.loadRequestSequence;
+        if (!this.ensureValidRoute()) return;
+        this.loading = true;
+        try {
+          const res = await queryCustomerSettleWorkbenchPages(
+            this.buildQueryParams(),
+            api.querySaleSettleInfos as any,
+          );
+          if (requestSequence === this.loadRequestSequence && !this.routeError) {
+            this.tableData = res?.datas || [];
+            this.pagerConfig.total = res?.totalCount || 0;
+            this.$nextTick(() => {
+              if (requestSequence === this.loadRequestSequence) {
+                this.syncSelection();
+              }
+            });
+          }
+        } catch (err: any) {
+          if (requestSequence !== this.loadRequestSequence) return;
+          this.tableData = [];
+          this.selectedRows = [];
+          this.pagerConfig.total = 0;
+          createError(err?.message || '查询客户结算单据失败，请稍后重试！');
+        } finally {
+          if (requestSequence === this.loadRequestSequence) {
+            this.loading = false;
+          }
+        }
+      },
+      /** 重置到首页并查询。 */
+      search() {
+        this.pagerConfig.currentPage = 1;
+        this.loadList();
+      },
+      /** 处理分页切换。 */
+      handlePageChange({ currentPage, pageSize }: { currentPage: number; pageSize: number }) {
+        this.pagerConfig.currentPage = currentPage;
+        this.pagerConfig.pageSize = pageSize;
+        this.loadList();
+      },
+      /** 同步表格勾选数据。 */
+      syncSelection() {
+        this.selectedRows = (this.$refs.grid as any)?.getCheckboxRecords?.() || [];
+      },
+      /** 清空表格勾选状态，避免刷新后保留已不可选的旧行。 */
+      clearSelection() {
+        this.selectedRows = [];
+        (this.$refs.grid as any)?.clearCheckboxRow?.();
+      },
+      /** 限制只能选择当前客户待对账、待结算或部分结算的单据。 */
+      canCheckRow(row: any): boolean {
+        return (
+          row.customerId === this.customerId && [7, 0, 1, '7', '0', '1'].includes(row.settleStatus)
+        );
+      },
+      /** 返回状态对应的展示样式。 */
+      getStatusClass(status: number): string {
+        if (SETTLE_STATUS.UN_CHECK_BILL.equalsCode(status)) return 'status-text--warning';
+        if (SETTLE_STATUS.UN_SETTLE.equalsCode(status)) return 'status-text--primary';
+        if (SETTLE_STATUS.PART_SETTLE.equalsCode(status)) return 'status-text--processing';
+        if (SETTLE_STATUS.SETTLED.equalsCode(status)) return 'status-text--success';
+        return 'status-text--muted';
+      },
+      /** 跳转到当前客户的结算记录。 */
+      openRecordPage() {
+        this.openChildPage({
+          path: '/settle/customer/sheet-record',
+          query: { customerId: this.customerId },
+        });
+      },
+      /** 打开关联销售单据详情；文本被选中时不触发打开。 */
+      openBizDetail(row: any, event?: MouseEvent) {
+        if (event && window.getSelection?.()?.toString()) {
+          return;
+        }
+        const path = getCustomerSettleBizListPath(row.bizType);
+        if (!path) {
+          createError('业务类型不正确，无法跳转关联单据！');
+          return;
+        }
+        this.currentBizId = row.id;
+        this.$nextTick(() => {
+          const detailRef = row.bizType === 1
+            ? this.$refs.saleOutDetailDialog : this.$refs.saleReturnDetailDialog;
+          (detailRef as any)?.openDialog?.();
+        });
+      },
+      /** 提交当前固定客户的工作台导出任务。 */
+      async exportList() {
+        if (!this.ensureValidRoute()) return;
+        this.loading = true;
+        try {
+          await api.exportSaleSettleInfos(this.buildQueryParams() as any);
+          createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+        } catch (err: any) {
+          createError(err?.message || '创建导出任务失败，请稍后重试！');
+        } finally {
+          this.loading = false;
+        }
+      },
+      /** 打开确认对账弹窗。 */
+      openCheckDialog() {
+        if (!this.ensureValidRoute()) return;
+        if (!this.canConfirmCheck) {
+          createError('请勾选状态为“待对账”的单据！');
+          return;
+        }
+        this.checkDialog.amount = Number(this.selectedTotalAmount.toFixed(2));
+        this.checkDialog.description = '';
+        this.checkDialog.visible = true;
+      },
+      /** 提交当前固定客户的对账单。 */
+      async submitCheck() {
+        if (!this.ensureValidRoute()) return;
+        const amount = Number(this.checkDialog.amount);
+        if (!this.canConfirmCheck || !isDirectSettleAmountValid(amount, this.selectedTotalAmount)) {
+          createError('对账金额必须与所选单据应收净额方向一致，且不能为零！');
+          return;
+        }
+        this.checkDialog.loading = true;
+        try {
+          await checkApi.directApprovePass({
+            customerId: this.customerId,
+            checkAmount: amount,
+            description: this.checkDialog.description || undefined,
+            items: this.selectedRows.map(({ id, bizType }) => ({ bizId: id, bizType })),
+          });
+          createSuccess('确认对账成功！');
+          this.checkDialog.visible = false;
+          this.clearSelection();
+          this.search();
+        } catch (err: any) {
+          createError(err?.message || '确认对账失败，请稍后重试！');
+        } finally {
+          this.checkDialog.loading = false;
+        }
+      },
+      /** 打开直接结算弹窗。 */
+      openSettleDialog() {
+        if (!this.ensureValidRoute()) return;
+        if (!this.canConfirmSettle) {
+          createError('请勾选状态为“待结算”或“部分结算”的单据！');
+          return;
+        }
+        this.settleDialog.amount = Number(this.selectedTotalUnSettleAmount.toFixed(2));
+        this.settleDialog.description = '';
+        this.settleDialog.partialSettleConfirmed = false;
+        this.settleDialog.fullSettleConfirmed = false;
+        this.settleDialog.visible = true;
+      },
+      /** 结算金额变化时，金额不足默认选择部分结算。 */
+      handleSettleAmountChange(amount: number | null) {
+        if (this.selectedRows.length === 1 &&
+          Number(amount || 0) < Number(this.selectedTotalUnSettleAmount || 0)) {
+          this.settleDialog.partialSettleConfirmed = true;
+          this.settleDialog.fullSettleConfirmed = false;
+        }
+      },
+      /** 选择完全结算。 */
+      selectFullSettle(event: { target: { checked: boolean } }) {
+        this.settleDialog.fullSettleConfirmed = event.target.checked;
+        if (event.target.checked) {
+          this.settleDialog.partialSettleConfirmed = false;
+        }
+      },
+      /** 选择部分结算。 */
+      selectPartialSettle(event: { target: { checked: boolean } }) {
+        this.settleDialog.partialSettleConfirmed = event.target.checked;
+        if (event.target.checked) {
+          this.settleDialog.fullSettleConfirmed = false;
+        }
+      },
+      /** 提交当前固定客户的直接结算。 */
+      async submitSettle() {
+        if (!this.ensureValidRoute()) return;
+        const amount = Number(this.settleDialog.amount);
+        if (
+          !this.canConfirmSettle ||
+          !isDirectSettleAmountValid(amount, this.selectedTotalUnSettleAmount)
+        ) {
+          createError('结算金额必须与所选单据未结算净额方向一致，且不能为零！');
+          return;
+        }
+        if (this.shouldConfirmPartialSettle &&
+          !this.settleDialog.partialSettleConfirmed && !this.settleDialog.fullSettleConfirmed) {
+          createError('结算金额与对账金额不一致，请选择“完全结算”或“部分结算”！');
+          return;
+        }
+        this.settleDialog.loading = true;
+        try {
+          await api.directApprovePass({
+            ...buildDirectSettlePayload(this.selectedRows, amount, this.settleDialog.description),
+            customerId: this.customerId,
+            settleStatus: this.settleDialog.partialSettleConfirmed ? 1 : 3,
+          });
+          createSuccess('结算成功！');
+          this.settleDialog.visible = false;
+          this.clearSelection();
+          this.search();
+        } catch (err: any) {
+          createError(err?.message || '结算失败，请稍后重试！');
+        } finally {
+          this.settleDialog.loading = false;
+        }
+      },
+    },
+  });
+</script>
+
+<style scoped lang="less">
+  .amount-tip {
+    margin-top: 8px;
+    color: #8c8c8c;
+  }
+  .status-text--warning {
+    color: #fa8c16;
+  }
+  .status-text--primary {
+    color: #1677ff;
+  }
+  .status-text--processing {
+    color: #fa8c16;
+  }
+  .status-text--success {
+    color: #52c41a;
+  }
+  .status-text--muted {
+    color: #8c8c8c;
+  }
+  .settle-sheet-code {
+    user-select: text;
+  }
+</style>

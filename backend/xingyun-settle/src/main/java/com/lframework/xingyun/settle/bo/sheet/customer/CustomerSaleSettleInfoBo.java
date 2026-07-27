@@ -1,0 +1,72 @@
+package com.lframework.xingyun.settle.bo.sheet.customer;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import io.swagger.annotations.ApiModelProperty;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.LocalDate;
+import lombok.Data;
+
+/**
+ * 客户销售业务单据结算工作台信息。
+ */
+@Data
+public class CustomerSaleSettleInfoBo implements Serializable {
+
+  private static final long serialVersionUID = 1L;
+
+  @ApiModelProperty("单据ID")
+  private String id;
+
+  @ApiModelProperty("业务类型")
+  private Integer bizType;
+
+  @ApiModelProperty("单号")
+  private String code;
+
+  @ApiModelProperty("客户ID")
+  private String customerId;
+
+  @ApiModelProperty("客户名称")
+  private String customerName;
+
+  @ApiModelProperty("单据日期")
+  private LocalDate orderDate;
+
+  @ApiModelProperty("单据备注")
+  private String description;
+
+  @ApiModelProperty("结算时间")
+  @JsonSerialize(using = ToStringSerializer.class)
+  private LocalDateTime settleTime;
+
+  @ApiModelProperty("单据金额")
+  private BigDecimal totalAmount;
+
+  @ApiModelProperty("已收金额")
+  private BigDecimal receivedAmount;
+
+  @ApiModelProperty("已对账金额")
+  private BigDecimal checkAmount;
+
+  @ApiModelProperty("对账时间")
+  @JsonSerialize(using = ToStringSerializer.class)
+  private LocalDateTime checkTime;
+
+  @ApiModelProperty("对账备注")
+  private String checkDescription;
+
+  @ApiModelProperty("已结算金额")
+  private BigDecimal settleAmount;
+
+  @ApiModelProperty("结算备注")
+  private String settleDescription;
+
+  @ApiModelProperty("未结算金额")
+  private BigDecimal unSettleAmount;
+
+  @ApiModelProperty("结算状态")
+  private Integer settleStatus;
+}

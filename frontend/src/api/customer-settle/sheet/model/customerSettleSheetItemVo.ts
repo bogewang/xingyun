@@ -1,21 +1,16 @@
 export interface CustomerSettleSheetItemVo {
-  /**
-   * 单据ID
-   */
-  id: string;
+  /** 业务单据 ID。 */
+  bizId: string;
 
-  /**
-   * 实收金额
-   */
-  payAmount: number;
+  /** 业务类型：1-销售出库单，2-销售退货单。 */
+  bizType: number;
 
-  /**
-   * 优惠金额
-   */
-  discountAmount: number;
+  /** 未结算金额。 */
+  unSettleAmount?: number;
 
-  /**
-   * 备注
-   */
-  description: string;
+  /** 对账金额。 */
+  checkAmount?: number;
+
+  /** 结算金额。 */
+  settleAmount?: number;
 }

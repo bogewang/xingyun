@@ -1,10 +1,11 @@
 package com.lframework.xingyun.settle.vo.sheet.customer;
 
-import com.lframework.starter.common.exceptions.impl.InputErrorException;
+import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.vo.BaseVo;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import javax.validation.constraints.NotEmpty;
@@ -33,16 +34,21 @@ public class CreateCustomerSettleSheetVo implements BaseVo, Serializable {
   /**
    * 起始日期
    */
-  @ApiModelProperty(value = "起始日期", required = true)
-  @NotNull(message = "起始日期不能为空！")
+  @ApiModelProperty(value = "起始日期")
   private LocalDate startDate;
 
   /**
    * 截止日期
    */
-  @ApiModelProperty(value = "截止日期", required = true)
-  @NotNull(message = "截止日期不能为空！")
+  @ApiModelProperty(value = "截止日期")
   private LocalDate endDate;
+
+  /**
+   * 确认结算金额。
+   */
+  @ApiModelProperty(value = "确认结算金额", required = true)
+  @NotNull(message = "确认结算金额不能为空！")
+  private BigDecimal settleAmount;
 
   /**
    * 备注
@@ -50,20 +56,29 @@ public class CreateCustomerSettleSheetVo implements BaseVo, Serializable {
   @ApiModelProperty("备注")
   private String description;
 
+  /**
+   * 本次结算后的业务单据结算状态。
+   */
+  @ApiModelProperty("结算状态：1-部分结算，3-已结算")
+  private Integer settleStatus;
+
+  /**
+   * 校验结算项字段完整性。
+   */
   public void validate() {
 
     int orderNo = 1;
     for (CustomerSettleSheetItemVo item : this.items) {
-      if (StringUtil.isBlank(item.getId())) {
-        throw new InputErrorException("第" + orderNo + "行对账单不能为空！");
+      if (StringUtil.isBlank(item.getBizId())) {
+        throw new DefaultClientException("第" + orderNo + "行业务单据不能为空！");
       }
 
-      if (item.getPayAmount() == null) {
-        throw new InputErrorException("第" + orderNo + "行实收金额不能为空！");
+      if (item.getBizType() == null || (item.getBizType() != 1 && item.getBizType() != 2)) {
+        throw new DefaultClientException("第" + orderNo + "行业务类型不正确！");
       }
 
-      if (item.getDiscountAmount() == null) {
-        throw new InputErrorException("第" + orderNo + "行优惠金额不能为空！");
+      if (item.getUnSettleAmount() == null) {
+        throw new DefaultClientException("第" + orderNo + "行未结算金额不能为空！");
       }
 
       orderNo++;

@@ -52,6 +52,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -397,36 +398,71 @@ public class SaleReturnServiceImpl extends
   @Override
   public int setUnSettle(String id) {
 
-    Wrapper<SaleReturn> updateWrapper = Wrappers.lambdaUpdate(SaleReturn.class)
-        .set(SaleReturn::getSettleStatus, SettleStatus.UN_SETTLE).eq(SaleReturn::getId, id)
-        .eq(SaleReturn::getSettleStatus, SettleStatus.PART_SETTLE);
-    int count = getBaseMapper().update(updateWrapper);
+    return updateSettleStatus(id, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
+  }
 
-    return count;
+  /**
+   * 按提交时源单版本设置为未结算，避免并发对账重复确认。
+   */
+  @Transactional(rollbackFor = Exception.class)
+  @Override
+  public int setUnSettle(String id, SettleStatus settleStatus, Long settleVersion) {
+
+    return getBaseMapper().updateSettleStatusWithVersion(id, settleStatus,
+        SettleStatus.UN_SETTLE, settleVersion);
   }
 
   @Transactional(rollbackFor = Exception.class)
   @Override
   public int setPartSettle(String id) {
 
-    Wrapper<SaleReturn> updateWrapper = Wrappers.lambdaUpdate(SaleReturn.class)
-        .set(SaleReturn::getSettleStatus, SettleStatus.PART_SETTLE).eq(SaleReturn::getId, id)
-        .in(SaleReturn::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
-    int count = getBaseMapper().update(updateWrapper);
+    return updateSettleStatus(id, SettleStatus.PART_SETTLE, SettleStatus.UN_SETTLE,
+        SettleStatus.PART_SETTLE);
+  }
 
-    return count;
+  /**
+   * 按提交时源单版本设置为部分结算，避免并发结算重复占用余额。
+   */
+  @Transactional(rollbackFor = Exception.class)
+  @Override
+  public int setPartSettle(String id, SettleStatus settleStatus, Long settleVersion) {
+
+    return getBaseMapper().updateSettleStatusWithVersion(id, settleStatus,
+        SettleStatus.PART_SETTLE, settleVersion);
   }
 
   @Transactional(rollbackFor = Exception.class)
   @Override
   public int setSettled(String id) {
 
-    Wrapper<SaleReturn> updateWrapper = Wrappers.lambdaUpdate(SaleReturn.class)
-        .set(SaleReturn::getSettleStatus, SettleStatus.SETTLED).eq(SaleReturn::getId, id)
-        .in(SaleReturn::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
-    int count = getBaseMapper().update(updateWrapper);
+    return updateSettleStatus(id, SettleStatus.SETTLED, SettleStatus.UN_SETTLE,
+        SettleStatus.PART_SETTLE);
+  }
 
-    return count;
+  /**
+   * 按提交时源单版本设置为已结算，避免并发结算重复占用余额。
+   */
+  @Transactional(rollbackFor = Exception.class)
+  @Override
+  public int setSettled(String id, SettleStatus settleStatus, Long settleVersion) {
+
+    return getBaseMapper().updateSettleStatusWithVersion(id, settleStatus,
+        SettleStatus.SETTLED, settleVersion);
+  }
+
+  /**
+   * 按当前结算状态和版本号原子回写历史结算入口的状态。
+   */
+  private int updateSettleStatus(String id, SettleStatus targetStatus,
+      SettleStatus... allowedStatuses) {
+
+    SaleReturn sheet = getById(id);
+    if (sheet == null || !Arrays.asList(allowedStatuses).contains(sheet.getSettleStatus())) {
+      return 0;
+    }
+    Long settleVersion = sheet.getSettleVersion() == null ? 0L : sheet.getSettleVersion();
+    return getBaseMapper().updateSettleStatusWithVersion(id, sheet.getSettleStatus(),
+        targetStatus, settleVersion);
   }
 
   @Override

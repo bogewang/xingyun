@@ -485,6 +485,10 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
             throw new DefaultClientException("采购收货单无法删除！");
         }
+        if (Arrays.asList(SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE,
+                SettleStatus.SETTLED).contains(sheet.getSettleStatus())) {
+            throw new DefaultClientException("采购收货单已对账或已结算，不允许执行删除操作！");
+        }
 
         if (hasStockSynced(sheet.getId())) {
             rollbackStock(sheet, receiveSheetDetailService.getBySheetId(sheet.getId()));

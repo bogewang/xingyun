@@ -28,6 +28,7 @@
         <result column="status" property="status"/>
         <result column="refuse_reason" property="refuseReason"/>
         <result column="settle_status" property="settleStatus"/>
+        <result column="settle_version" property="settleVersion"/>
     </resultMap>
 
     <resultMap id="SaleOutSheetFullDto" type="com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto">
@@ -135,7 +136,8 @@
             s.approve_time,
             s.status,
             s.refuse_reason,
-            s.settle_status
+            s.settle_status,
+            s.settle_version
         FROM tbl_sale_out_sheet AS s
         LEFT JOIN tbl_sale_order AS o ON o.id = s.sale_order_id
     </sql>
@@ -301,6 +303,9 @@
                 </if>
                 <if test="vo.settleStatus != null">
                     AND s.settle_status = #{vo.settleStatus}
+                </if>
+                <if test="vo.requireTxIdNull != null and vo.requireTxIdNull">
+                    AND s.tx_id IS NULL
                 </if>
                 <if test="vo.fullyPaid != null">
                     <choose>
@@ -1217,9 +1222,17 @@
         AND s.approve_time <= #{endTime}
         ]]>
     </if>
-    AND s.status = 3
     AND s.settle_status = #{settleStatus}
     AND s.tx_id IS NULL
     ORDER BY s.approve_time DESC
   </select>
+  <update id="updateSettleStatusWithVersion">
+    UPDATE tbl_sale_out_sheet
+    SET settle_status = #{targetStatus},
+        settle_version = settle_version + 1
+    WHERE id = #{id}
+      AND settle_status = #{expectedStatus}
+      AND settle_version = #{settleVersion}
+      AND tx_id IS NULL
+  </update>
 </mapper>

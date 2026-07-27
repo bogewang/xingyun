@@ -6,23 +6,15 @@ export interface CreateCustomerSettleSheetVo {
    */
   customerId: string;
 
-  /**
-   * 项目
-   */
+  /** 项目。 */
   items: CustomerSettleSheetItemVo[];
 
-  /**
-   * 起始日期
-   */
-  startDate: string;
+  /** 确认结算金额。 */
+  settleAmount: number;
 
-  /**
-   * 截止日期
-   */
-  endDate: string;
+  /** 备注。 */
+  description?: string;
 
-  /**
-   * 备注
-   */
-  description: string;
+  /** 结算状态：1-部分结算，3-已结算。 */
+  settleStatus?: number;
 }

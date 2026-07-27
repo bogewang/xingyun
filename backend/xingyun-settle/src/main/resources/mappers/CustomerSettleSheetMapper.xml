@@ -45,6 +45,7 @@
               property="details">
       <id column="detail_id" property="id"/>
       <result column="detail_biz_id" property="bizId"/>
+      <result column="detail_order_no" property="orderNo"/>
       <result column="detail_pay_amount" property="payAmount"/>
       <result column="detail_discount_amount" property="discountAmount"/>
       <result column="detail_description" property="description"/>
@@ -116,6 +117,7 @@
            s.refuse_reason,
            d.id              AS detail_id,
            d.biz_id          AS detail_biz_id,
+           d.order_no        AS detail_order_no,
            d.pay_amount      AS detail_pay_amount,
            d.discount_amount AS detail_discount_amount,
            d.description     AS detail_description
