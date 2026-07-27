@@ -25,6 +25,14 @@
         <template #form>
           <j-border>
             <j-form bordered @collapse="$refs.grid.refreshColumn()" @keyup.enter="search">
+              <j-form-item label="客户">
+                <customer-selector
+                  v-model:value="searchFormData.customerId"
+                  allow-clear
+                  placeholder="请选择客户"
+                  @change="search"
+                />
+              </j-form-item>
               <j-form-item label="业务类型">
                 <a-select
                   v-model:value="searchFormData.bizType"
@@ -157,6 +165,7 @@
   import { defineComponent, markRaw } from 'vue';
   import * as checkApi from '@/api/customer-settle/check';
   import * as api from '@/api/customer-settle/sheet';
+  import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
   import { CUSTOMER_SALE_SETTLE_BIZ_TYPE } from '@/enums/biz/customerSaleSettleBizType';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { createError, createSuccess } from '@/hooks/web/msg';
@@ -175,6 +184,7 @@
   /** 单客户结算明细页面。 */
   export default defineComponent({
     name: 'CustomerSettleDetail',
+    components: { CustomerSelector },
     mixins: [multiplePageMix],
     data() {
       const routeQuery = this.$route.query || {};
@@ -184,6 +194,7 @@
         SETTLE_STATUS: markRaw(SETTLE_STATUS),
         CUSTOMER_SALE_SETTLE_BIZ_TYPE: markRaw(CUSTOMER_SALE_SETTLE_BIZ_TYPE),
         searchFormData: {
+          customerId: routeQuery.customerId ? String(routeQuery.customerId) : '',
           bizType: routeQuery.bizType
             ? Number(routeQuery.bizType)
             : (undefined as number | undefined),
@@ -258,7 +269,7 @@
     computed: {
       /** 获取由路由固定的客户 ID。 */
       customerId(): string {
-        return String(this.$route.query.customerId || '').trim();
+        return String(this.searchFormData.customerId || '').trim();
       },
       /** 计算选中单据的应收总额。 */
       selectedTotalAmount(): number {
@@ -316,7 +327,7 @@
       },
       /** 每个请求入口重新校验路由客户参数。 */
       ensureValidRoute(showError = true): boolean {
-        this.routeError = validateCustomerDetailRoute(this.$route.query || {});
+        this.routeError = validateCustomerDetailRoute({ customerId: this.customerId });
         if (!this.routeError) {
           return true;
         }
@@ -340,6 +351,7 @@
         const customerId = String(routeQuery.customerId || '').trim();
         const previousCustomerId = String(previousRouteQuery.customerId || '').trim();
         if (customerId !== previousCustomerId) {
+          this.searchFormData.customerId = customerId;
           this.clearRouteData();
           this.search();
         }
@@ -372,7 +384,7 @@
       },
       /** 生成由路由客户限定的工作台查询条件。 */
       buildQueryParams() {
-        return buildCustomerDetailQuery(this.$route.query || {}, {
+        return buildCustomerDetailQuery({ customerId: this.customerId }, {
           ...buildSortPageVo(this.pagerConfig, []),
           code: this.searchFormData.code || undefined,
           bizType: this.searchFormData.bizType || undefined,

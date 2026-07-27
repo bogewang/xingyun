@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -143,6 +145,7 @@ describe('客户结算工作台', () => {
     const context = {
       $route: { name: 'CustomerSettleDetail' },
       routeError: undefined,
+      searchFormData: { customerId: 'C1' },
       search,
       clearRouteData,
       handleRouteQueryChange: (CustomerSettleDetail as any).methods.handleRouteQueryChange,
@@ -152,6 +155,7 @@ describe('客户结算工作台', () => {
     routeWatcher.handler.call(context, { customerId: 'C2' }, { customerId: 'C1' });
     expect(clearRouteData).toHaveBeenCalledTimes(1);
     expect(search).toHaveBeenCalledTimes(1);
+    expect(context.searchFormData.customerId).toBe('C2');
 
     routeWatcher.handler.call(context, {}, { customerId: 'C2' });
     expect(context.routeError).toBe('客户参数不能为空！');
