@@ -598,6 +598,10 @@
           SETTLE_STATUS.UN_CHECK_BILL.equalsCode(row.settleStatus)
         );
       },
+      /** 判断采购收货单是否已进入对账或结算流程。 */
+      isSettleLocked(row) {
+        return [0, 1, 3].includes(Number(row.settleStatus));
+      },
       openDescriptionDialog(row) {
         this.descriptionModal = {
           visible: true,
@@ -655,6 +659,10 @@
         for (let i = 0; i < records.length; i++) {
           if (PURCHASE_ORDER_STATUS.APPROVE_PASS.equalsCode(records[i].status)) {
             createError('第' + (i + 1) + '个采购收货单已审核通过，不允许执行删除操作！');
+            return;
+          }
+          if (this.isSettleLocked(records[i])) {
+            createError('第' + (i + 1) + '个采购收货单已对账或已结算，不允许执行删除操作！');
             return;
           }
         }
@@ -847,8 +855,9 @@
             danger: true,
             ifShow: () => {
               return (
-                PURCHASE_ORDER_STATUS.CREATED.equalsCode(row.status) ||
-                PURCHASE_ORDER_STATUS.APPROVE_REFUSE.equalsCode(row.status)
+                (PURCHASE_ORDER_STATUS.CREATED.equalsCode(row.status) ||
+                  PURCHASE_ORDER_STATUS.APPROVE_REFUSE.equalsCode(row.status)) &&
+                !this.isSettleLocked(row)
               );
             },
             onClick: () => {

@@ -1423,6 +1423,10 @@ public class SaleOutSheetServiceImpl extends
         }
 
         checkApproveStatus(sheet, "“审核通过”的销售出库单不允许执行删除操作！", "销售出库单无法删除！");
+        if (Arrays.asList(SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE,
+                SettleStatus.SETTLED).contains(sheet.getSettleStatus())) {
+            throw new DefaultClientException("销售出库单已对账或已结算，不允许执行删除操作！");
+        }
 
         if (hasStockSynced(sheet.getId())) {
             // 查询销售出库单明细

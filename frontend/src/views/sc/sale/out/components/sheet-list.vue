@@ -833,6 +833,10 @@
             createError('第' + (i + 1) + '个销售出库单已审核通过，不允许执行删除操作！');
             return;
           }
+          if (this.isSettleLocked(records[i])) {
+            createError('第' + (i + 1) + '个销售出库单已对账或已结算，不允许执行删除操作！');
+            return;
+          }
         }
 
         this.batchHandleDatas = records;
@@ -1088,8 +1092,9 @@
             danger: true,
             ifShow: () => {
               return (
-                SALE_OUT_SHEET_STATUS.CREATED.equalsCode(row.status) ||
-                SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(row.status)
+                (SALE_OUT_SHEET_STATUS.CREATED.equalsCode(row.status) ||
+                  SALE_OUT_SHEET_STATUS.APPROVE_REFUSE.equalsCode(row.status)) &&
+                !this.isSettleLocked(row)
               );
             },
             onClick: () => {
