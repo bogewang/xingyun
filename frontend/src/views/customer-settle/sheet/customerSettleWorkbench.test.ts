@@ -10,6 +10,19 @@ import {
   queryCustomerSettleWorkbenchPages,
   validateCustomerDetailRoute,
 } from './customerSettleWorkbench';
+import CustomerSettleDetail from './detail.vue';
+
+vi.mock('@/mixins/multiplePageMix', () => ({
+  multiplePageMix: {},
+}));
+
+vi.mock('@/hooks/web/msg', () => ({
+  createError: vi.fn(),
+  createSuccess: vi.fn(),
+}));
+
+vi.mock('@/api/customer-settle/check', () => ({}));
+vi.mock('@/api/customer-settle/sheet', () => ({}));
 
 describe('客户结算工作台', () => {
   it('固定路由客户并拒绝缺失客户参数的详情页请求', () => {
@@ -53,8 +66,8 @@ describe('客户结算工作台', () => {
     expect(
       buildDirectSettlePayload(
         [
-          { id: 'S1', customerId: 'C1', bizType: 1 },
-          { id: 'S2', customerId: 'C1', bizType: 2 },
+          { id: 'S1', customerId: 'C1', bizType: 1, unSettleAmount: 60, checkAmount: 50 },
+          { id: 'S2', customerId: 'C1', bizType: 2, unSettleAmount: -20, checkAmount: -10 },
         ],
         88.5,
         '',
@@ -64,10 +77,31 @@ describe('客户结算工作台', () => {
       settleAmount: 88.5,
       description: undefined,
       items: [
-        { bizId: 'S1', bizType: 1, unSettleAmount: 0, checkAmount: 0 },
-        { bizId: 'S2', bizType: 2, unSettleAmount: 0, checkAmount: 0 },
+        { bizId: 'S1', bizType: 1, unSettleAmount: 60, checkAmount: 50 },
+        { bizId: 'S2', bizType: 2, unSettleAmount: -20, checkAmount: -10 },
       ],
     });
+  });
+
+  it('路由客户变更时清空旧数据并重新查询，缺失客户参数时阻断请求', () => {
+    const search = vi.fn();
+    const clearRouteData = vi.fn();
+    const context = {
+      routeError: undefined,
+      search,
+      clearRouteData,
+      handleRouteQueryChange: (CustomerSettleDetail as any).methods.handleRouteQueryChange,
+    };
+    const routeWatcher = (CustomerSettleDetail as any).watch['$route.query'];
+
+    routeWatcher.handler.call(context, { customerId: 'C2' }, { customerId: 'C1' });
+    expect(clearRouteData).toHaveBeenCalledTimes(1);
+    expect(search).toHaveBeenCalledTimes(1);
+
+    routeWatcher.handler.call(context, {}, { customerId: 'C2' });
+    expect(context.routeError).toBe('客户参数不能为空！');
+    expect(clearRouteData).toHaveBeenCalledTimes(2);
+    expect(search).toHaveBeenCalledTimes(1);
   });
 
   it('未指定业务类型时并行查询销售出库和退货并保留混合选单类型', async () => {

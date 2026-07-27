@@ -258,22 +258,72 @@
       canConfirmCheck(): boolean {
         return (
           this.selectedRows.length > 0 &&
-          this.selectedRows.every((item) => [7, '7', 'UN_CHECK_BILL'].includes(item.settleStatus))
+          this.selectedRows.every(
+            (item) =>
+              item.customerId === this.customerId &&
+              [7, '7', 'UN_CHECK_BILL'].includes(item.settleStatus),
+          )
         );
       },
       /** 判断当前勾选是否可直接结算。 */
       canConfirmSettle(): boolean {
-        return canDirectSettle(this.selectedRows);
+        return (
+          this.selectedRows.every((item) => item.customerId === this.customerId) &&
+          canDirectSettle(this.selectedRows)
+        );
+      },
+    },
+    watch: {
+      /** 路由查询参数变化时同步固定客户状态。 */
+      '$route.query': {
+        handler(routeQuery, previousRouteQuery) {
+          this.handleRouteQueryChange(routeQuery || {}, previousRouteQuery || {});
+        },
       },
     },
     created() {
-      if (this.routeError) {
-        createError(this.routeError);
-        return;
-      }
-      this.search();
+      this.handleRouteQueryChange(this.$route.query || {}, {});
     },
     methods: {
+      /** 清空无效路由或客户切换前遗留的表格和勾选状态。 */
+      clearRouteData() {
+        this.tableData = [];
+        this.selectedRows = [];
+        this.pagerConfig.total = 0;
+        this.checkDialog.visible = false;
+        this.settleDialog.visible = false;
+        (this.$refs.grid as any)?.clearCheckboxRow?.();
+      },
+      /** 每个请求入口重新校验路由客户参数。 */
+      ensureValidRoute(showError = true): boolean {
+        this.routeError = validateCustomerDetailRoute(this.$route.query || {});
+        if (!this.routeError) {
+          return true;
+        }
+        this.clearRouteData();
+        if (showError) {
+          createError(this.routeError);
+        }
+        return false;
+      },
+      /** 处理组件复用时的路由客户切换。 */
+      handleRouteQueryChange(
+        routeQuery: Record<string, unknown>,
+        previousRouteQuery: Record<string, unknown>,
+      ) {
+        this.routeError = validateCustomerDetailRoute(routeQuery);
+        if (this.routeError) {
+          this.clearRouteData();
+          createError(this.routeError);
+          return;
+        }
+        const customerId = String(routeQuery.customerId || '').trim();
+        const previousCustomerId = String(previousRouteQuery.customerId || '').trim();
+        if (customerId !== previousCustomerId) {
+          this.clearRouteData();
+          this.search();
+        }
+      },
       /** 格式化金额。 */
       formatAmount(value: number): string {
         return Number(value || 0).toFixed(2);
@@ -310,16 +360,19 @@
       },
       /** 查询当前固定客户的工作台数据。 */
       async loadList() {
-        if (this.routeError) return;
+        if (!this.ensureValidRoute()) return;
+        const requestCustomerId = this.customerId;
         this.loading = true;
         try {
           const res = await queryCustomerSettleWorkbenchPages(
             this.buildQueryParams(),
             api.querySaleSettleInfos as any,
           );
-          this.tableData = res?.datas || [];
-          this.pagerConfig.total = res?.totalCount || 0;
-          this.$nextTick(() => this.syncSelection());
+          if (this.customerId === requestCustomerId && !this.routeError) {
+            this.tableData = res?.datas || [];
+            this.pagerConfig.total = res?.totalCount || 0;
+            this.$nextTick(() => this.syncSelection());
+          }
         } catch (err: any) {
           this.tableData = [];
           this.selectedRows = [];
@@ -376,6 +429,7 @@
       },
       /** 提交当前固定客户的工作台导出任务。 */
       async exportList() {
+        if (!this.ensureValidRoute()) return;
         this.loading = true;
         try {
           const params = this.buildQueryParams();
@@ -396,6 +450,7 @@
       },
       /** 打开确认对账弹窗。 */
       openCheckDialog() {
+        if (!this.ensureValidRoute()) return;
         if (!this.canConfirmCheck) {
           createError('请勾选状态为“待对账”的单据！');
           return;
@@ -406,6 +461,7 @@
       },
       /** 提交当前固定客户的对账单。 */
       async submitCheck() {
+        if (!this.ensureValidRoute()) return;
         const amount = Number(this.checkDialog.amount);
         if (!this.canConfirmCheck || !isDirectSettleAmountValid(amount, this.selectedTotalAmount)) {
           createError('对账金额必须与所选单据应收净额方向一致，且不能超出其范围！');
@@ -430,6 +486,7 @@
       },
       /** 打开直接结算弹窗。 */
       openSettleDialog() {
+        if (!this.ensureValidRoute()) return;
         if (!this.canConfirmSettle) {
           createError('请勾选状态为“待结算”或“部分结算”的单据！');
           return;
@@ -440,6 +497,7 @@
       },
       /** 提交当前固定客户的直接结算。 */
       async submitSettle() {
+        if (!this.ensureValidRoute()) return;
         const amount = Number(this.settleDialog.amount);
         if (
           !this.canConfirmSettle ||

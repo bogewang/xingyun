@@ -4,6 +4,8 @@ export interface DirectSettleRow {
   customerId?: string;
   bizType?: number;
   settleStatus?: number | string;
+  unSettleAmount?: number;
+  checkAmount?: number;
 }
 
 /** 校验客户结算明细页的固定客户路由参数。 */
@@ -68,7 +70,7 @@ export function buildDirectSettlePayload(
     customerId: selectedRows[0].customerId,
     settleAmount,
     description: description || undefined,
-    items: selectedRows.map((row: any) => ({
+    items: selectedRows.map((row) => ({
       bizId: row.id,
       bizType: row.bizType,
       unSettleAmount: Number(row.unSettleAmount || 0),
