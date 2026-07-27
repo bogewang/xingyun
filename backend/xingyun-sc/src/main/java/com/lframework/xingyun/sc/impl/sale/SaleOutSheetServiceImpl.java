@@ -1793,7 +1793,7 @@ public class SaleOutSheetServiceImpl extends
      */
     private SettleStatus getInitSettleStatus(Customer customer) {
 
-        return SettleStatus.UN_SETTLE;
+        return SettleStatus.UN_CHECK_BILL;
     }
 
     private BigDecimal normalizePaidAmount(BigDecimal paidAmount, BigDecimal totalAmount) {

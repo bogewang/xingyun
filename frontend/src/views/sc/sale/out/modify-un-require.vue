@@ -58,7 +58,9 @@
           <!-- 工具栏 -->
           <template #toolbar_buttons>
             <a-space>
-              <a-button type="primary" :icon="h(PlusOutlined)" @click="addProduct">新增</a-button>
+              <a-button type="primary" :icon="h(PlusOutlined)" @click="clickAddProduct($event)"
+                >新增</a-button
+              >
               <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
               <a-button :icon="h(PlusOutlined)" @click="openBatchAddProductDialog"
                 >批量添加商品
@@ -363,6 +365,7 @@
     isNumberPrecision,
     uuid,
     PATTERN_IS_FLOAT,
+    PATTERN_IS_INTEGER_GT_ZERO,
     PATTERN_IS_PRICE,
   } from '@/utils/utils';
   import {
@@ -488,7 +491,7 @@
             width: 120,
             slots: { default: 'inquiryProduct_default' },
           },
-          { field: 'spec', title: '规格', width: 80 },
+          { field: 'spec', title: '规格', width: 120 },
           { field: 'unit', title: '单位', width: 50, slots: { default: 'unit_default' } },
 
           {
@@ -761,6 +764,24 @@
         this.tableData.push(this.emptyProduct());
         this.focusProductRow(this.tableData.length - 1);
       },
+      // 新增商品（弹窗输入行数）
+      clickAddProduct(event) {
+        createPrompt('请输入新增行数', {
+          inputPattern: PATTERN_IS_INTEGER_GT_ZERO,
+          inputErrorMessage: '新增行数必须为正整数',
+          title: '新增行数',
+          inputValue: '10',
+          required: true,
+          target: event.currentTarget,
+        }).then(({ value }) => {
+          const numRows = parseInt(value, 10);
+          const startIndex = this.tableData.length;
+          for (let i = 0; i < numRows; i++) {
+            this.tableData.push(this.emptyProduct());
+          }
+          this.focusProductRow(startIndex);
+        });
+      },
       insertProduct(index) {
         const insertedIndex = index + 1;
         this.tableData.splice(insertedIndex, 0, this.emptyProduct());
@@ -989,7 +1010,9 @@
         return isSaleOutProfitNegative(row);
       },
       getTableRowClassName({ row }) {
-        return this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
+        return !isEmpty(row.productCode) && this.hasWarningAmount(row)
+          ? 'sheet-price-warning-row'
+          : '';
       },
       // 批量录入数量
       batchInputOutNum() {
