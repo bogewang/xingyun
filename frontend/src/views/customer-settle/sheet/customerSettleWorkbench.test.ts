@@ -11,6 +11,7 @@ import {
   validateCustomerDetailRoute,
 } from './customerSettleWorkbench';
 import CustomerSettleDetail from './detail.vue';
+import * as sheetApi from '@/api/customer-settle/sheet';
 
 vi.mock('@/mixins/multiplePageMix', () => ({
   multiplePageMix: {},
@@ -22,7 +23,40 @@ vi.mock('@/hooks/web/msg', () => ({
 }));
 
 vi.mock('@/api/customer-settle/check', () => ({}));
-vi.mock('@/api/customer-settle/sheet', () => ({}));
+vi.mock('@/api/customer-settle/sheet', () => ({
+  querySaleSettleInfos: vi.fn(),
+}));
+
+/** 创建可由测试控制完成时机的异步请求。 */
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((currentResolve, currentReject) => {
+    resolve = currentResolve;
+    reject = currentReject;
+  });
+  return { promise, resolve, reject };
+}
+
+/** 创建用于调用详情页加载方法的最小组件上下文。 */
+function createLoadListContext(customerId: string) {
+  const context = {
+    $route: { query: { customerId } },
+    $refs: { grid: { getCheckboxRecords: vi.fn(() => []) } },
+    $nextTick: (callback: () => void) => callback(),
+    customerId,
+    routeError: undefined as string | undefined,
+    loading: false,
+    loadRequestSequence: 0,
+    tableData: [] as any[],
+    selectedRows: [] as any[],
+    pagerConfig: { total: 0 },
+    ensureValidRoute: vi.fn(() => true),
+    buildQueryParams: vi.fn(() => ({ pageIndex: 1, pageSize: 20, bizType: 1 })),
+    syncSelection: vi.fn(),
+  };
+  return context;
+}
 
 describe('客户结算工作台', () => {
   it('固定路由客户并拒绝缺失客户参数的详情页请求', () => {
@@ -151,5 +185,64 @@ describe('客户结算工作台', () => {
     expect(getCustomerSettleBizListPath(1)).toBe('/sale/out');
     expect(getCustomerSettleBizListPath(2)).toBe('/sale/return');
     expect(getCustomerSettleBizListPath(3)).toBeUndefined();
+  });
+
+  it('旧客户请求失败时不清空新客户已加载的数据或关闭其加载状态', async () => {
+    const previousRequest = createDeferred<any>();
+    const currentRequest = createDeferred<any>();
+    vi.mocked(sheetApi.querySaleSettleInfos)
+      .mockReturnValueOnce(previousRequest.promise as any)
+      .mockReturnValueOnce(currentRequest.promise as any);
+    const context = createLoadListContext('C1');
+    const loadList = (CustomerSettleDetail as any).methods.loadList;
+
+    const previousLoad = loadList.call(context);
+    context.customerId = 'C2';
+    context.$route.query.customerId = 'C2';
+    const currentLoad = loadList.call(context);
+
+    context.tableData = [{ id: 'C2-EXISTING' }];
+    context.selectedRows = [{ id: 'C2-SELECTED' }];
+    previousRequest.reject(new Error('旧请求失败'));
+    await previousLoad;
+
+    expect(context.tableData).toEqual([{ id: 'C2-EXISTING' }]);
+    expect(context.selectedRows).toEqual([{ id: 'C2-SELECTED' }]);
+    expect(context.loading).toBe(true);
+
+    currentRequest.resolve({ datas: [{ id: 'C2-NEW' }], totalCount: 1 });
+    await currentLoad;
+    expect(context.tableData).toEqual([{ id: 'C2-NEW' }]);
+    expect(context.pagerConfig.total).toBe(1);
+    expect(context.loading).toBe(false);
+  });
+
+  it('C1 到 C2 再到 C1 时仅最后一次 C1 请求可以写入数据', async () => {
+    const firstC1Request = createDeferred<any>();
+    const c2Request = createDeferred<any>();
+    const lastC1Request = createDeferred<any>();
+    vi.mocked(sheetApi.querySaleSettleInfos)
+      .mockReturnValueOnce(firstC1Request.promise as any)
+      .mockReturnValueOnce(c2Request.promise as any)
+      .mockReturnValueOnce(lastC1Request.promise as any);
+    const context = createLoadListContext('C1');
+    const loadList = (CustomerSettleDetail as any).methods.loadList;
+
+    const firstC1Load = loadList.call(context);
+    context.customerId = 'C2';
+    context.$route.query.customerId = 'C2';
+    const c2Load = loadList.call(context);
+    context.customerId = 'C1';
+    context.$route.query.customerId = 'C1';
+    const lastC1Load = loadList.call(context);
+
+    lastC1Request.resolve({ datas: [{ id: 'C1-LATEST' }], totalCount: 1 });
+    await lastC1Load;
+    firstC1Request.resolve({ datas: [{ id: 'C1-STALE' }], totalCount: 1 });
+    c2Request.resolve({ datas: [{ id: 'C2-STALE' }], totalCount: 1 });
+    await Promise.all([firstC1Load, c2Load]);
+
+    expect(context.tableData).toEqual([{ id: 'C1-LATEST' }]);
+    expect(context.pagerConfig.total).toBe(1);
   });
 });

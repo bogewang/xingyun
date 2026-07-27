@@ -194,6 +194,7 @@
         checkboxConfig: {
           checkMethod: ({ row }: { row: any }) => this.canCheckRow(row),
         },
+        loadRequestSequence: 0,
         tableData: [] as any[],
         selectedRows: [] as any[],
         tableColumn: [
@@ -360,26 +361,29 @@
       },
       /** 查询当前固定客户的工作台数据。 */
       async loadList() {
+        const requestSequence = ++this.loadRequestSequence;
         if (!this.ensureValidRoute()) return;
-        const requestCustomerId = this.customerId;
         this.loading = true;
         try {
           const res = await queryCustomerSettleWorkbenchPages(
             this.buildQueryParams(),
             api.querySaleSettleInfos as any,
           );
-          if (this.customerId === requestCustomerId && !this.routeError) {
+          if (requestSequence === this.loadRequestSequence && !this.routeError) {
             this.tableData = res?.datas || [];
             this.pagerConfig.total = res?.totalCount || 0;
             this.$nextTick(() => this.syncSelection());
           }
         } catch (err: any) {
+          if (requestSequence !== this.loadRequestSequence) return;
           this.tableData = [];
           this.selectedRows = [];
           this.pagerConfig.total = 0;
           createError(err?.message || '查询客户结算单据失败，请稍后重试！');
         } finally {
-          this.loading = false;
+          if (requestSequence === this.loadRequestSequence) {
+            this.loading = false;
+          }
         }
       },
       /** 重置到首页并查询。 */
