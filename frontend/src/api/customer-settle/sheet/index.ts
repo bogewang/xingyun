@@ -7,9 +7,41 @@ import { GetCustomerSettleSheetBo } from '@/api/customer-settle/sheet/model/getC
 import { CreateCustomerSettleSheetVo } from '@/api/customer-settle/sheet/model/createCustomerSettleSheetVo';
 import { QueryCustomerSaleSettleInfoVo } from '@/api/customer-settle/sheet/model/queryCustomerSaleSettleInfoVo';
 import { CustomerSaleSettleInfoBo } from '@/api/customer-settle/sheet/model/customerSaleSettleInfoBo';
+import { CustomerSettleOverviewBo } from '@/api/customer-settle/sheet/model/customerSettleOverviewBo';
+import { QueryCustomerSettleOverviewVo } from '@/api/customer-settle/sheet/model/queryCustomerSettleOverviewVo';
 
 const baseUrl = '/customer/settle/sheet';
 const region = 'cloud-api';
+
+/** 查询客户结算总览。 */
+export function querySettleOverviews(
+  data: QueryCustomerSettleOverviewVo,
+): Promise<PageResult<CustomerSettleOverviewBo>> {
+  return defHttp.post<PageResult<CustomerSettleOverviewBo>>(
+    {
+      url: baseUrl + '/settle-overviews',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/** 导出客户结算总览。 */
+export function exportSettleOverviews(data: QueryCustomerSettleOverviewVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/export-settle-overviews',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
 
 /** 查询客户销售结算工作台。 */
 export function querySaleSettleInfos(

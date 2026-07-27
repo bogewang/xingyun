@@ -644,10 +644,18 @@ export const CustomerSettleRoute: AppRouteRecordRaw = {
   children: [
     {
       path: 'customer/sheet',
-      name: 'CustomerSettleWorkbench',
+      name: 'CustomerSettleOverview',
       component: () => import('/@/views/customer-settle/sheet/settle.vue'),
       meta: {
         title: '客户结算',
+      },
+    },
+    {
+      path: 'customer/sheet-detail',
+      name: 'CustomerSettleDetail',
+      component: () => import('/@/views/customer-settle/sheet/detail.vue'),
+      meta: {
+        title: '客户结算明细',
       },
     },
     {
