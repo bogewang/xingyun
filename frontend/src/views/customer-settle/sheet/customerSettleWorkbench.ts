@@ -6,6 +6,25 @@ export interface DirectSettleRow {
   settleStatus?: number | string;
 }
 
+/** 校验客户结算明细页的固定客户路由参数。 */
+export function validateCustomerDetailRoute(
+  routeQuery: Record<string, unknown>,
+): string | undefined {
+  const customerId = String(routeQuery.customerId || '').trim();
+  return customerId ? undefined : '客户参数不能为空！';
+}
+
+/** 使用路由客户 ID 覆盖页面中的客户查询条件。 */
+export function buildCustomerDetailQuery<T extends Record<string, unknown>>(
+  routeQuery: Record<string, unknown>,
+  pageQuery: T,
+): T & { customerId: string } {
+  return {
+    ...pageQuery,
+    customerId: String(routeQuery.customerId || '').trim(),
+  };
+}
+
 /** 客户结算工作台分页结果。 */
 export interface CustomerSettleWorkbenchPage<T extends DirectSettleRow = DirectSettleRow> {
   pageIndex: number;
@@ -36,10 +55,7 @@ export function canSelectDirectSettleRow(
   row: DirectSettleRow,
   selectedRows: DirectSettleRow[],
 ): boolean {
-  return canDirectSettle([
-    ...selectedRows.filter((item) => item.id !== row.id),
-    row,
-  ]);
+  return canDirectSettle([...selectedRows.filter((item) => item.id !== row.id), row]);
 }
 
 /** 构造直接结算接口请求。 */
@@ -52,7 +68,12 @@ export function buildDirectSettlePayload(
     customerId: selectedRows[0].customerId,
     settleAmount,
     description: description || undefined,
-    items: selectedRows.map(({ id, bizType }) => ({ bizId: id, bizType })),
+    items: selectedRows.map((row: any) => ({
+      bizId: row.id,
+      bizType: row.bizType,
+      unSettleAmount: Number(row.unSettleAmount || 0),
+      checkAmount: Number(row.checkAmount || 0),
+    })),
   };
 }
 
@@ -64,8 +85,10 @@ export function isDirectSettleAmountValid(amount: number, totalUnSettleAmount: n
   if (amount === 0 || totalUnSettleAmount === 0) {
     return false;
   }
-  return Math.sign(amount) === Math.sign(totalUnSettleAmount)
-    && Math.abs(amount) <= Math.abs(totalUnSettleAmount);
+  return (
+    Math.sign(amount) === Math.sign(totalUnSettleAmount) &&
+    Math.abs(amount) <= Math.abs(totalUnSettleAmount)
+  );
 }
 
 /** 查询单一业务类型，或并行查询并合并销售出库与销售退货。 */

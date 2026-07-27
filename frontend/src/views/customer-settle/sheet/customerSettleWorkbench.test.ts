@@ -1,15 +1,24 @@
 import { describe, expect, it, vi } from 'vitest';
 import { CUSTOMER_SALE_SETTLE_BIZ_TYPE } from '@/enums/biz/customerSaleSettleBizType';
 import {
+  buildCustomerDetailQuery,
   buildDirectSettlePayload,
   canDirectSettle,
   canSelectDirectSettleRow,
   getCustomerSettleBizListPath,
   isDirectSettleAmountValid,
   queryCustomerSettleWorkbenchPages,
+  validateCustomerDetailRoute,
 } from './customerSettleWorkbench';
 
 describe('客户结算工作台', () => {
+  it('固定路由客户并拒绝缺失客户参数的详情页请求', () => {
+    expect(buildCustomerDetailQuery({ customerId: 'C1' }, { customerId: 'C2' })).toMatchObject({
+      customerId: 'C1',
+    });
+    expect(validateCustomerDetailRoute({})).toBe('客户参数不能为空！');
+  });
+
   it('只展示可结算的销售出库和销售退货类型', () => {
     expect(CUSTOMER_SALE_SETTLE_BIZ_TYPE.values()).toHaveLength(2);
     expect(CUSTOMER_SALE_SETTLE_BIZ_TYPE.getDesc(1)).toBe('销售出库单');
@@ -33,16 +42,10 @@ describe('客户结算工作台', () => {
     const selectedRows = [{ id: 'S1', customerId: 'C1', settleStatus: 0 }];
 
     expect(
-      canSelectDirectSettleRow(
-        { id: 'S2', customerId: 'C2', settleStatus: 0 },
-        selectedRows,
-      ),
+      canSelectDirectSettleRow({ id: 'S2', customerId: 'C2', settleStatus: 0 }, selectedRows),
     ).toBe(false);
     expect(
-      canSelectDirectSettleRow(
-        { id: 'S3', customerId: 'C1', settleStatus: 3 },
-        selectedRows,
-      ),
+      canSelectDirectSettleRow({ id: 'S3', customerId: 'C1', settleStatus: 3 }, selectedRows),
     ).toBe(false);
   });
 
@@ -61,8 +64,8 @@ describe('客户结算工作台', () => {
       settleAmount: 88.5,
       description: undefined,
       items: [
-        { bizId: 'S1', bizType: 1 },
-        { bizId: 'S2', bizType: 2 },
+        { bizId: 'S1', bizType: 1, unSettleAmount: 0, checkAmount: 0 },
+        { bizId: 'S2', bizType: 2, unSettleAmount: 0, checkAmount: 0 },
       ],
     });
   });
@@ -82,10 +85,7 @@ describe('客户结算工作台', () => {
       ],
     }));
 
-    const result = await queryCustomerSettleWorkbenchPages(
-      { pageIndex: 1, pageSize: 20 },
-      query,
-    );
+    const result = await queryCustomerSettleWorkbenchPages({ pageIndex: 1, pageSize: 20 }, query);
 
     expect(query).toHaveBeenCalledTimes(2);
     expect(query).toHaveBeenNthCalledWith(1, { pageIndex: 1, pageSize: 20, bizType: 1 });
@@ -94,13 +94,15 @@ describe('客户结算工作台', () => {
     expect(result.datas.map((item) => item.bizType)).toEqual([1, 2]);
     expect(
       buildDirectSettlePayload(
-        result.datas as Required<Pick<(typeof result.datas)[number], 'id' | 'customerId' | 'bizType'>>[],
+        result.datas as Required<
+          Pick<(typeof result.datas)[number], 'id' | 'customerId' | 'bizType'>
+        >[],
         80,
         '',
       ).items,
     ).toEqual([
-      { bizId: 'S1', bizType: 1 },
-      { bizId: 'R1', bizType: 2 },
+      { bizId: 'S1', bizType: 1, unSettleAmount: 0, checkAmount: 0 },
+      { bizId: 'R1', bizType: 2, unSettleAmount: 0, checkAmount: 0 },
     ]);
   });
 
