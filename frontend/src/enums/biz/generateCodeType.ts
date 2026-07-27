@@ -38,18 +38,6 @@ GENERATE_CODE_TYPE.set('SETTLE_FEE_SHEET', new BaseEnumItem<number, string>(301,
 GENERATE_CODE_TYPE.set('SETTLE_PRE_SHEET', new BaseEnumItem<number, string>(302, '供应商付款单号'));
 GENERATE_CODE_TYPE.set('SETTLE_SHEET', new BaseEnumItem<number, string>(303, '供应商结算单号'));
 GENERATE_CODE_TYPE.set(
-  'CUSTOMER_SETTLE_CHECK_SHEET',
-  new BaseEnumItem<number, string>(304, '客户对账单号'),
-);
-GENERATE_CODE_TYPE.set(
-  'CUSTOMER_SETTLE_FEE_SHEET',
-  new BaseEnumItem<number, string>(305, '客户费用单号'),
-);
-GENERATE_CODE_TYPE.set(
-  'CUSTOMER_SETTLE_PRE_SHEET',
-  new BaseEnumItem<number, string>(306, '客户预付款单号'),
-);
-GENERATE_CODE_TYPE.set(
   'CUSTOMER_SETTLE_SHEET',
   new BaseEnumItem<number, string>(307, '客户结算单号'),
 );

@@ -6,10 +6,8 @@ import com.lframework.xingyun.settle.mappers.CustomerSettleCheckSheetDetailMappe
 import com.lframework.xingyun.settle.service.CustomerSettleCheckSheetDetailService;
 import org.springframework.stereotype.Service;
 
+/** 客户对账单明细服务实现。 */
 @Service
 public class CustomerSettleCheckSheetDetailServiceImpl
-        extends
-        BaseMpServiceImpl<CustomerSettleCheckSheetDetailMapper, CustomerSettleCheckSheetDetail>
-        implements CustomerSettleCheckSheetDetailService {
-
-}
+    extends BaseMpServiceImpl<CustomerSettleCheckSheetDetailMapper, CustomerSettleCheckSheetDetail>
+    implements CustomerSettleCheckSheetDetailService {}

@@ -8,19 +8,22 @@ import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.starter.mq.core.utils.ExportTaskUtil;
-import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSettleBizItemBo;
+import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSaleSettleInfoBo;
+import com.lframework.xingyun.settle.bo.sheet.customer.CustomerSettleOverviewBo;
 import com.lframework.xingyun.settle.bo.sheet.customer.GetCustomerSettleSheetBo;
 import com.lframework.xingyun.settle.bo.sheet.customer.QueryCustomerSettleSheetBo;
-import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleBizItemDto;
 import com.lframework.xingyun.settle.dto.sheet.customer.CustomerSettleSheetFullDto;
 import com.lframework.xingyun.settle.entity.CustomerSettleSheet;
+import com.lframework.xingyun.settle.excel.sheet.customer.CustomerSaleSettleInfoExportTaskWorker;
+import com.lframework.xingyun.settle.excel.sheet.customer.CustomerSettleOverviewExportTaskWorker;
 import com.lframework.xingyun.settle.excel.sheet.customer.CustomerSettleSheetExportTaskWorker;
 import com.lframework.xingyun.settle.service.CustomerSettleSheetService;
 import com.lframework.xingyun.settle.vo.sheet.customer.ApprovePassCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.ApproveRefuseCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.CreateCustomerSettleSheetVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleSheetVo;
-import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerUnSettleBizItemVo;
+import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSaleSettleInfoVo;
+import com.lframework.xingyun.settle.vo.sheet.customer.QueryCustomerSettleOverviewVo;
 import com.lframework.xingyun.settle.vo.sheet.customer.UpdateCustomerSettleSheetVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -39,6 +42,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 客户结算单
@@ -49,10 +53,88 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RestController
 @RequestMapping("/customer/settle/sheet")
+@Slf4j
 public class CustomerSettleSheetController extends DefaultBaseController {
 
   @Autowired
   private CustomerSettleSheetService customerSettleSheetService;
+
+  /**
+   * 查询客户销售业务单据结算工作台信息。
+   *
+   * @param vo 查询条件
+   * @return 工作台分页数据
+   */
+  @ApiOperation("查询客户销售结算工作台")
+  @HasPermission({"customer-settle:sheet:query"})
+  @PostMapping("/sale-settle-infos")
+  public InvokeResult<PageResult<CustomerSaleSettleInfoBo>> querySaleSettleInfos(
+      @RequestBody @Valid QueryCustomerSaleSettleInfoVo vo) {
+    try {
+      return InvokeResultBuilder.success(customerSettleSheetService.querySaleSettleInfos(vo));
+    } catch (Exception e) {
+      log.error("查询客户结算工作台失败", e);
+      return InvokeResultBuilder.fail(e.getMessage(), null);
+    }
+  }
+
+  /**
+   * 查询客户结算总览。
+   *
+   * @param vo 查询条件
+   * @return 客户结算总览分页数据
+   */
+  @ApiOperation("查询客户结算总览")
+  @HasPermission({"customer-settle:sheet:query"})
+  @PostMapping("/settle-overviews")
+  public InvokeResult<PageResult<CustomerSettleOverviewBo>> querySettleOverviews(
+      @RequestBody @Valid QueryCustomerSettleOverviewVo vo) {
+    try {
+      return InvokeResultBuilder.success(customerSettleSheetService.querySettleOverviews(vo));
+    } catch (Exception e) {
+      log.error("查询客户结算总览失败", e);
+      return InvokeResultBuilder.fail(e.getMessage(), null);
+    }
+  }
+
+  /**
+   * 导出客户结算总览。
+   *
+   * @param vo 查询条件
+   * @return 导出任务创建结果
+   */
+  @ApiOperation("导出客户结算总览")
+  @HasPermission({"customer-settle:sheet:export"})
+  @PostMapping("/export-settle-overviews")
+  public InvokeResult<Void> exportSettleOverviews(
+      @RequestBody @Valid QueryCustomerSettleOverviewVo vo) {
+    try {
+      ExportTaskUtil.exportTask("客户结算总览", CustomerSettleOverviewExportTaskWorker.class, vo);
+      return InvokeResultBuilder.success();
+    } catch (Exception e) {
+      log.error("导出客户结算总览失败", e);
+      return InvokeResultBuilder.fail(e.getMessage(), null);
+    }
+  }
+
+  /**
+   * 导出客户销售结算工作台信息。
+   *
+   * @param vo 查询条件
+   * @return 导出任务创建结果
+   */
+  @ApiOperation("导出客户销售结算工作台")
+  @HasPermission({"customer-settle:sheet:export"})
+  @PostMapping("/export-sale-settle-infos")
+  public InvokeResult<Void> exportSaleSettleInfos(@RequestBody @Valid QueryCustomerSaleSettleInfoVo vo) {
+    try {
+      ExportTaskUtil.exportTask("客户结算工作台", CustomerSaleSettleInfoExportTaskWorker.class, vo);
+      return InvokeResultBuilder.success();
+    } catch (Exception e) {
+      log.error("导出客户结算工作台失败", e);
+      return InvokeResultBuilder.fail(e.getMessage(), null);
+    }
+  }
 
   /**
    * 客户结算单列表
@@ -87,6 +169,25 @@ public class CustomerSettleSheetController extends DefaultBaseController {
     ExportTaskUtil.exportTask("客户结算单信息", CustomerSettleSheetExportTaskWorker.class, vo);
 
     return InvokeResultBuilder.success();
+  }
+
+  /**
+   * 导出客户结算记录。
+   *
+   * @param vo 查询条件
+   * @return 导出任务创建结果
+   */
+  @ApiOperation("导出客户结算记录")
+  @HasPermission({"customer-settle:sheet:export"})
+  @PostMapping("/export-record")
+  public InvokeResult<Void> exportRecord(@RequestBody @Valid QueryCustomerSettleSheetVo vo) {
+    try {
+      ExportTaskUtil.exportTask("客户结算记录", CustomerSettleSheetExportTaskWorker.class, vo);
+      return InvokeResultBuilder.success();
+    } catch (Exception e) {
+      log.error("导出客户结算记录失败", e);
+      return InvokeResultBuilder.fail(e.getMessage(), null);
+    }
   }
 
   /**
@@ -142,7 +243,8 @@ public class CustomerSettleSheetController extends DefaultBaseController {
   @ApiOperation("审核通过客户结算单")
   @HasPermission({"customer-settle:sheet:approve"})
   @PatchMapping("/approve/pass")
-  public InvokeResult<Void> approvePass(@RequestBody @Valid ApprovePassCustomerSettleSheetVo vo) {
+  public InvokeResult<Void> approvePass(
+      @RequestBody @Valid ApprovePassCustomerSettleSheetVo vo) {
 
     customerSettleSheetService.approvePass(vo);
 
@@ -156,12 +258,14 @@ public class CustomerSettleSheetController extends DefaultBaseController {
   @HasPermission({"customer-settle:sheet:approve"})
   @PostMapping("/approve/pass/direct")
   public InvokeResult<Void> directApprovePass(@RequestBody @Valid CreateCustomerSettleSheetVo vo) {
-
-    vo.validate();
-
-    customerSettleSheetService.directApprovePass(vo);
-
-    return InvokeResultBuilder.success();
+    try {
+      vo.validate();
+      customerSettleSheetService.directApprovePass(vo);
+      return InvokeResultBuilder.success();
+    } catch (Exception e) {
+      log.error("客户直接结算失败", e);
+      return InvokeResultBuilder.fail(e.getMessage(), null);
+    }
   }
 
   /**
@@ -185,28 +289,11 @@ public class CustomerSettleSheetController extends DefaultBaseController {
   @ApiImplicitParam(value = "ID", name = "id", paramType = "query", required = true)
   @HasPermission({"customer-settle:sheet:delete"})
   @DeleteMapping
-  public InvokeResult<Void> deleteById(@NotBlank(message = "客户结算单ID不能为空！") String id) {
+  public InvokeResult<Void> deleteById(
+      @NotBlank(message = "客户结算单ID不能为空！") String id) {
 
     customerSettleSheetService.deleteById(id);
 
     return InvokeResultBuilder.success();
-  }
-
-  /**
-   * 查询未结算的业务单据
-   */
-  @ApiOperation("查询未结算的业务单据")
-  @HasPermission({"customer-settle:sheet:add", "customer-settle:sheet:modify"})
-  @GetMapping("/unsettle-items")
-  public InvokeResult<List<CustomerSettleBizItemBo>> getUnSettleItems(
-      @Valid QueryCustomerUnSettleBizItemVo vo) {
-
-    List<CustomerSettleBizItemDto> results = customerSettleSheetService.getUnSettleBizItems(vo);
-    List<CustomerSettleBizItemBo> datas = CollectionUtil.emptyList();
-    if (!CollectionUtil.isEmpty(results)) {
-      datas = results.stream().map(CustomerSettleBizItemBo::new).collect(Collectors.toList());
-    }
-
-    return InvokeResultBuilder.success(datas);
   }
 }

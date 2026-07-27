@@ -11,6 +11,16 @@ export function getAllParentPath<T = Recordable>(treeData: T[], path: string) {
   return (menuList || []).map((item) => item.path);
 }
 
+/**
+ * 获取当前应高亮的末级菜单路径。
+ *
+ * 父级路径只用于展开菜单，不能同时作为选中项。
+ */
+export function getActiveMenuPath<T = Recordable>(treeData: T[], path: string) {
+  const paths = getAllParentPath(treeData, path);
+  return paths.length ? paths[paths.length - 1] : undefined;
+}
+
 // 路径处理
 function joinParentPath(menus: Menu[], parentPath = '') {
   for (let index = 0; index < menus.length; index++) {

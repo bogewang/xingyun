@@ -6,13 +6,16 @@ import java.io.Serializable;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 
+/**
+ * 客户结算单审核通过请求。
+ */
 @Data
 public class ApprovePassCustomerSettleSheetVo implements BaseVo, Serializable {
 
   private static final long serialVersionUID = 1L;
 
   /**
-   * ID
+   * 结算单ID
    */
   @ApiModelProperty(value = "ID", required = true)
   @NotNull(message = "ID不能为空！")

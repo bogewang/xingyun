@@ -14,24 +14,30 @@ public class CustomerSettleSheetItemVo implements BaseVo, Serializable {
   /**
    * 单据ID
    */
-  @ApiModelProperty("单据ID")
-  private String id;
+  @ApiModelProperty("业务单据ID")
+  private String bizId;
 
   /**
-   * 实收金额
+   * 业务类型，1-销售出库单，2-销售退货单。
    */
-  @ApiModelProperty("实收金额")
-  private BigDecimal payAmount;
+  @ApiModelProperty("业务类型")
+  private Integer bizType;
 
   /**
-   * 优惠金额
+   * 未结算金额
    */
-  @ApiModelProperty("优惠金额")
-  private BigDecimal discountAmount;
+  @ApiModelProperty("未结算金额")
+  private BigDecimal unSettleAmount;
 
   /**
-   * 备注
+   * 对账金额
    */
-  @ApiModelProperty("备注")
-  private String description;
+  @ApiModelProperty("对账金额")
+  private BigDecimal checkAmount;
+
+  /**
+   * 结算金额
+   */
+  @ApiModelProperty("结算金额")
+  private BigDecimal settleAmount;
 }

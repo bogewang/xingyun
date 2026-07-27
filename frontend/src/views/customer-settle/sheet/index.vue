@@ -1,479 +1,217 @@
 <template>
-  <div>
-    <div v-permission="['customer-settle:sheet:query']">
-      <page-wrapper content-full-height fixed-height>
-        <!-- 数据列表 -->
-        <vxe-grid
-          id="CustomerSettleSheet"
-          ref="grid"
-          resizable
-          show-overflow
-          highlight-hover-row
-          keep-source
-          row-id="id"
-          :proxy-config="proxyConfig"
-          :columns="tableColumn"
-          :toolbar-config="toolbarConfig"
-          :custom-config="{}"
-          :pager-config="{}"
-          :loading="loading"
-          height="auto"
-        >
-          <template #form>
-            <j-border>
-              <j-form bordered @collapse="$refs.grid.refreshColumn()">
-                <j-form-item label="单据号">
-                  <a-input v-model:value="searchFormData.code" allow-clear />
-                </j-form-item>
-                <j-form-item label="客户">
-                  <customer-selector v-model:value="searchFormData.customerId" />
-                </j-form-item>
-                <j-form-item label="操作人">
-                  <user-selector v-model:value="searchFormData.createBy" />
-                </j-form-item>
-                <j-form-item label="操作日期" :content-nest="false">
-                  <div class="date-range-container">
-                    <a-date-picker
-                      v-model:value="searchFormData.createStartTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 00:00:00"
-                    />
-                    <span class="date-split">至</span>
-                    <a-date-picker
-                      v-model:value="searchFormData.createEndTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 23:59:59"
-                    />
-                  </div>
-                </j-form-item>
-                <j-form-item label="审核人">
-                  <user-selector v-model:value="searchFormData.approveBy" />
-                </j-form-item>
-                <j-form-item label="审核日期" :content-nest="false">
-                  <div class="date-range-container">
-                    <a-date-picker
-                      v-model:value="searchFormData.approveStartTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 00:00:00"
-                    />
-                    <span class="date-split">至</span>
-                    <a-date-picker
-                      v-model:value="searchFormData.approveEndTime"
-                      placeholder=""
-                      value-format="YYYY-MM-DD 23:59:59"
-                    />
-                  </div>
-                </j-form-item>
-                <j-form-item label="状态">
-                  <a-select v-model:value="searchFormData.status" placeholder="全部" allow-clear>
-                    <a-select-option
-                      v-for="item in CUSTOMER_SETTLE_SHEET_STATUS.values()"
-                      :key="item.code"
-                      :value="item.code"
-                      >{{ item.desc }}</a-select-option
-                    >
-                  </a-select>
-                </j-form-item>
-              </j-form>
-            </j-border>
-          </template>
-          <!-- 工具栏 -->
-          <template #toolbar_buttons>
-            <a-space>
-              <a-button type="primary" :icon="h(SearchOutlined)" @click="search">查询</a-button>
-              <a-button
-                v-permission="['customer-settle:sheet:add']"
-                type="primary"
-                :icon="h(PlusOutlined)"
-                @click="openChildPage('/settle/customer/sheet/add')"
-                >新增</a-button
-              >
-              <a-button
-                v-permission="['customer-settle:sheet:approve']"
-                :icon="h(CheckOutlined)"
-                @click="batchApprovePass"
-                >审核通过</a-button
-              >
-              <a-button
-                v-permission="['customer-settle:sheet:approve']"
-                :icon="h(CloseOutlined)"
-                @click="batchApproveRefuse"
-                >审核拒绝</a-button
-              >
-              <a-button
-                v-permission="['customer-settle:sheet:delete']"
-                danger
-                :icon="h(DeleteOutlined)"
-                @click="batchDelete"
-                >批量删除</a-button
-              >
-              <a-button
-                v-permission="['customer-settle:sheet:export']"
-                :icon="h(DownloadOutlined)"
-                @click="exportList"
-                >导出</a-button
-              >
-            </a-space>
-          </template>
+  <div v-permission="['customer-settle:sheet:query']" class="customer-settle-overview">
+    <page-wrapper content-full-height fixed-height dense>
+      <vxe-grid
+        id="CustomerSettleOverview"
+        ref="grid"
+        auto-resize
+        resizable
+        show-overflow
+        show-footer
+        highlight-hover-row
+        row-id="customerId"
+        :data="tableData"
+        :columns="tableColumn"
+        :toolbar-config="toolbarConfig"
+        :pager-config="pagerConfig"
+        :footer-method="footerMethod"
+        :loading="loading"
+        height="auto"
+        @page-change="handlePageChange"
+      >
+        <template #form>
+          <j-border>
+            <j-form bordered @collapse="$refs.grid.refreshColumn()" @keyup.enter="search">
+              <j-form-item label="客户">
+                <customer-selector
+                  v-model:value="searchFormData.customerId"
+                  allow-clear
+                  placeholder="请选择客户"
+                />
+              </j-form-item>
+            </j-form>
+          </j-border>
+        </template>
 
-          <!-- 操作 列自定义内容 -->
-          <template #action_default="{ row }">
-            <table-action outside :actions="createActions(row)" />
-          </template>
-        </vxe-grid>
-      </page-wrapper>
+        <template #toolbar_buttons>
+          <a-space>
+            <a-button type="primary" @click="search">查询</a-button>
+            <a-button @click="openRecordPage">结算记录</a-button>
+            <a-button v-permission="['customer-settle:sheet:export']" @click="exportList">
+              导出
+            </a-button>
+          </a-space>
+        </template>
 
-      <!-- 查看窗口 -->
-      <detail :id="id" ref="viewDialog" />
-
-      <approve-refuse ref="approveRefuseDialog" @confirm="doApproveRefuse" />
-
-      <!-- 批量操作 -->
-      <batch-handler
-        ref="batchApprovePassHandlerDialog"
-        :table-column="[
-          { field: 'code', title: '单据号', width: 180 },
-          { field: 'customerCode', title: '客户编号', width: 100 },
-          { field: 'customerName', title: '客户名称', width: 120 },
-        ]"
-        title="审核通过"
-        :tableData="batchHandleDatas"
-        :handle-fn="doBatchApprovePass"
-        @confirm="search"
-      />
-      <batch-handler
-        ref="batchApproveRefuseHandlerDialog"
-        :table-column="[
-          { field: 'code', title: '单据号', width: 180 },
-          { field: 'customerCode', title: '客户编号', width: 100 },
-          { field: 'customerName', title: '客户名称', width: 120 },
-        ]"
-        title="审核拒绝"
-        :tableData="batchHandleDatas"
-        :handle-fn="doBatchApproveRefuse"
-        @confirm="search"
-      />
-      <batch-handler
-        ref="batchDeleteHandlerDialog"
-        :table-column="[
-          { field: 'code', title: '单据号', width: 180 },
-          { field: 'customerCode', title: '客户编号', width: 100 },
-          { field: 'customerName', title: '客户名称', width: 120 },
-        ]"
-        title="批量删除"
-        :tableData="batchHandleDatas"
-        :handle-fn="doBatchDelete"
-        @confirm="search"
-      />
-    </div>
+        <template #action_default="{ row }">
+          <a-button type="link" size="small" @click="openDetailPage(row)">结算</a-button>
+        </template>
+      </vxe-grid>
+    </page-wrapper>
   </div>
 </template>
 
-<script>
-  import { h, defineComponent } from 'vue';
-  import Detail from './detail.vue';
-  import ApproveRefuse from '@/components/ApproveRefuse';
-  import moment from 'moment';
-  import {
-    SearchOutlined,
-    PlusOutlined,
-    CheckOutlined,
-    CloseOutlined,
-    DeleteOutlined,
-    DownloadOutlined,
-  } from '@ant-design/icons-vue';
+<script lang="ts">
+  import { defineComponent } from 'vue';
   import * as api from '@/api/customer-settle/sheet';
-  import { multiplePageMix } from '@/mixins/multiplePageMix';
-  import {
-    isEmpty,
-    formatDateTime,
-    getDateTimeWithMinTime,
-    getDateTimeWithMaxTime,
-    buildSortPageVo,
-  } from '@/utils/utils';
-  import { createError, createSuccess, createConfirm } from '@/hooks/web/msg';
   import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
-  import UserSelector from '@/components/Selector/UserSelector.vue';
-  import { CUSTOMER_SETTLE_SHEET_STATUS } from '@/enums/biz/customerSettleSheetStatus';
-  import BatchHandler from '@/components/BatchHandler';
+  import { createError, createSuccess } from '@/hooks/web/msg';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { buildSortPageVo } from '@/utils/utils';
 
+  /** 客户结算总览页面。 */
   export default defineComponent({
-    name: 'CustomerSettleSheet',
-    components: {
-      Detail,
-      CustomerSelector,
-      ApproveRefuse,
-      UserSelector,
-      BatchHandler,
-    },
+    name: 'CustomerSettleOverview',
+    components: { CustomerSelector },
     mixins: [multiplePageMix],
-    setup() {
-      return {
-        h,
-        SearchOutlined,
-        PlusOutlined,
-        CheckOutlined,
-        CloseOutlined,
-        DeleteOutlined,
-        DownloadOutlined,
-        CUSTOMER_SETTLE_SHEET_STATUS,
-      };
-    },
     data() {
       return {
         loading: false,
-        // 当前行数据
-        id: '',
-        // 查询列表的查询条件
         searchFormData: {
-          code: '',
-          customerId: '',
-          createBy: '',
-          createStartTime: formatDateTime(getDateTimeWithMinTime(moment().subtract(1, 'M'))),
-          createEndTime: formatDateTime(getDateTimeWithMaxTime(moment())),
-          approveBy: '',
-          approveStartTime: '',
-          approveEndTime: '',
-          status: undefined,
+          customerId: this.$route.query.customerId ? String(this.$route.query.customerId) : '',
         },
-        // 工具栏配置
         toolbarConfig: {
-          // 自定义左侧工具栏
-          slots: {
-            buttons: 'toolbar_buttons',
-          },
+          refresh: { queryMethod: () => this.loadList() },
+          slots: { buttons: 'toolbar_buttons' },
         },
-        // 列表数据配置
+        pagerConfig: {
+          currentPage: 1,
+          pageSize: 20,
+          total: 0,
+          layouts: ['PrevPage', 'JumpNumber', 'NextPage', 'Sizes', 'Total'],
+        },
+        tableData: [] as any[],
         tableColumn: [
-          { type: 'checkbox', width: 45 },
-          { field: 'code', title: '单据号', width: 180, sortable: true },
-          { field: 'customerCode', title: '客户编号', width: 100 },
-          { field: 'customerName', title: '客户名称', width: 120 },
-          { field: 'totalAmount', title: '实收总金额', align: 'right', width: 100 },
-          { field: 'totalDiscountAmount', title: '优惠总金额', align: 'right', width: 100 },
-          { field: 'createTime', title: '操作时间', width: 170, sortable: true },
-          { field: 'createBy', title: '操作人', width: 100 },
+          { type: 'seq', title: '序号', width: 60, fixed: 'left' },
           {
-            field: 'status',
-            title: '状态',
+            title: '操作',
             width: 100,
-            formatter: ({ cellValue }) => {
-              return CUSTOMER_SETTLE_SHEET_STATUS.getDesc(cellValue);
-            },
+            fixed: 'left',
+            slots: { default: 'action_default' },
           },
-          { field: 'approveTime', title: '审核时间', width: 170, sortable: true },
-          { field: 'approveBy', title: '审核人', width: 100 },
-          { field: 'description', title: '备注', width: 200 },
-          { title: '操作', width: 200, fixed: 'right', slots: { default: 'action_default' } },
+          { field: 'customerCode', title: '客户编号', width: 130, fixed: 'left' },
+          { field: 'customerName', title: '客户名称', width: 160, fixed: 'left' },
+          {
+            title: '待对账',
+            children: [
+              { field: 'unCheckCount', title: '单据数', width: 90, align: 'right' },
+              { field: 'unCheckAmount', title: '金额', width: 120, align: 'right' },
+            ],
+          },
+          {
+            title: '待结算',
+            children: [
+              { field: 'unSettleCount', title: '单据数', width: 90, align: 'right' },
+              { field: 'unSettleAmount', title: '金额', width: 120, align: 'right' },
+            ],
+          },
+          {
+            title: '部分结算',
+            children: [
+              { field: 'partSettleCount', title: '单据数', width: 90, align: 'right' },
+              { field: 'partSettleAmount', title: '金额', width: 120, align: 'right' },
+            ],
+          },
+          {
+            title: '已结算',
+            children: [
+              { field: 'settledCount', title: '单据数', width: 90, align: 'right' },
+              { field: 'settledAmount', title: '金额', width: 120, align: 'right' },
+            ],
+          },
         ],
-        // 请求接口配置
-        proxyConfig: {
-          props: {
-            // 响应结果列表字段
-            result: 'datas',
-            // 响应结果总条数字段
-            total: 'totalCount',
-          },
-          ajax: {
-            // 查询接口
-            query: ({ page, sorts }) => {
-              return api.query(this.buildQueryParams(page, sorts));
-            },
-          },
-        },
-        batchHandleDatas: [],
-        batchRefuseReason: '',
       };
     },
-    created() {},
+    created() {
+      this.search();
+    },
     methods: {
-      // 列表发生查询时的事件
-      search() {
-        this.$refs.grid.commitProxy('reload');
+      /** 格式化金额。 */
+      formatAmount(value: number): string {
+        return Number(value || 0).toFixed(2);
       },
-      // 查询前构建查询参数结构
-      buildQueryParams(page, sorts) {
-        return {
-          ...buildSortPageVo(page, sorts),
-          ...this.buildSearchFormData(),
-        };
+      /** 汇总指定列。 */
+      sumByField(data: any[], field: string): number {
+        return (data || []).reduce((total, item) => total + Number(item[field] || 0), 0);
       },
-      // 查询前构建具体的查询参数
-      buildSearchFormData() {
-        return {
-          code: this.searchFormData.code,
-          customerId: this.searchFormData.customerId,
-          createBy: this.searchFormData.createBy,
-          createStartTime: this.searchFormData.createStartTime,
-          createEndTime: this.searchFormData.createEndTime,
-          approveBy: this.searchFormData.approveBy,
-          approveStartTime: this.searchFormData.approveStartTime,
-          approveEndTime: this.searchFormData.approveEndTime,
-          status: this.searchFormData.status,
-        };
-      },
-      // 删除订单
-      deleteOrder(row) {
-        createConfirm('对选中的结算单执行删除操作？').then(() => {
-          this.loading = true;
-          api
-            .deleteById(row.id)
-            .then(() => {
-              createSuccess('删除成功！');
-              this.search();
-            })
-            .finally(() => {
-              this.loading = false;
-            });
-        });
-      },
-      doBatchDelete(row) {
-        return api.batchDelete(row.id);
-      },
-      // 批量删除
-      batchDelete() {
-        const records = this.$refs.grid.getCheckboxRecords();
-        if (isEmpty(records)) {
-          createError('请选择要执行操作的结算单！');
-          return;
-        }
-
-        for (let i = 0; i < records.length; i++) {
-          if (CUSTOMER_SETTLE_SHEET_STATUS.APPROVE_PASS.equalsCode(records[i].status)) {
-            createError('第' + (i + 1) + '个结算单已审核通过，不允许执行删除操作！');
-            return;
-          }
-        }
-
-        this.batchHandleDatas = records;
-
-        this.$refs.batchDeleteHandlerDialog.openDialog();
-      },
-      doBatchApprovePass(row) {
-        return api.batchApprovePass({
-          id: row.id,
-        });
-      },
-      // 批量审核通过
-      batchApprovePass() {
-        const records = this.$refs.grid.getCheckboxRecords();
-        if (isEmpty(records)) {
-          createError('请选择要执行操作的结算单！');
-          return;
-        }
-
-        for (let i = 0; i < records.length; i++) {
-          if (CUSTOMER_SETTLE_SHEET_STATUS.APPROVE_PASS.equalsCode(records[i].status)) {
-            createError('第' + (i + 1) + '个结算单已审核通过，不允许继续执行审核！');
-            return;
-          }
-        }
-
-        this.batchHandleDatas = records;
-
-        this.$refs.batchApprovePassHandlerDialog.openDialog();
-      },
-      // 批量审核拒绝
-      batchApproveRefuse() {
-        const records = this.$refs.grid.getCheckboxRecords();
-        if (isEmpty(records)) {
-          createError('请选择要执行操作的结算单！');
-          return;
-        }
-
-        for (let i = 0; i < records.length; i++) {
-          if (CUSTOMER_SETTLE_SHEET_STATUS.APPROVE_PASS.equalsCode(records[i].status)) {
-            createError('第' + (i + 1) + '个结算单已审核通过，不允许继续执行审核！');
-            return;
-          }
-
-          if (CUSTOMER_SETTLE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(records[i].status)) {
-            createError('第' + (i + 1) + '个结算单已审核拒绝，不允许继续执行审核！');
-            return;
-          }
-        }
-
-        this.$refs.approveRefuseDialog.openDialog();
-      },
-      doBatchApproveRefuse(row) {
-        return api.batchApproveRefuse({
-          id: row.id,
-          refuseReason: this.batchRefuseReason,
-        });
-      },
-      doApproveRefuse(reason) {
-        this.batchHandleDatas = this.$refs.grid.getCheckboxRecords();
-
-        this.batchRefuseReason = reason;
-
-        this.$refs.batchApproveRefuseHandlerDialog.openDialog();
-      },
-      exportList() {
-        this.loading = true;
-        api
-          .exportList(this.buildQueryParams({}))
-          .then(() => {
-            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
-          })
-          .finally(() => {
-            this.loading = false;
-          });
-      },
-      createActions(row) {
+      /** 生成总览表格合计行。 */
+      footerMethod({ columns, data }: { columns: any[]; data: any[] }) {
+        const countFields = ['unCheckCount', 'unSettleCount', 'partSettleCount', 'settledCount'];
+        const amountFields = [
+          'unCheckAmount',
+          'unSettleAmount',
+          'partSettleAmount',
+          'settledAmount',
+        ];
         return [
-          {
-            label: '查看',
-            onClick: () => {
-              this.id = row.id;
-              this.$nextTick(() => this.$refs.viewDialog.openDialog());
-            },
-          },
-          {
-            permission: ['customer-settle:sheet:approve'],
-            label: '审核',
-            ifShow: () => {
-              return (
-                CUSTOMER_SETTLE_SHEET_STATUS.CREATED.equalsCode(row.status) ||
-                CUSTOMER_SETTLE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(row.status)
-              );
-            },
-            onClick: () => {
-              this.openChildPage('/settle/customer/sheet/approve/' + row.id);
-            },
-          },
-          {
-            permission: ['customer-settle:sheet:modify'],
-            label: '修改',
-            ifShow: () => {
-              return (
-                CUSTOMER_SETTLE_SHEET_STATUS.CREATED.equalsCode(row.status) ||
-                CUSTOMER_SETTLE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(row.status)
-              );
-            },
-            onClick: () => {
-              this.openChildPage('/settle/customer/sheet/modify/' + row.id);
-            },
-          },
-          {
-            permission: ['customer-settle:sheet:delete'],
-            label: '删除',
-            danger: true,
-            ifShow: () => {
-              return (
-                CUSTOMER_SETTLE_SHEET_STATUS.CREATED.equalsCode(row.status) ||
-                CUSTOMER_SETTLE_SHEET_STATUS.APPROVE_REFUSE.equalsCode(row.status)
-              );
-            },
-            onClick: () => {
-              this.deleteOrder(row);
-            },
-          },
+          columns.map((column) => {
+            if (column.type === 'seq') return '合计';
+            if (countFields.includes(column.field)) return this.sumByField(data, column.field);
+            return amountFields.includes(column.field)
+              ? this.formatAmount(this.sumByField(data, column.field))
+              : '';
+          }),
         ];
       },
-      onRefreshPage() {
-        this.search();
+      /** 生成总览查询条件。 */
+      buildQueryParams() {
+        return {
+          ...buildSortPageVo(this.pagerConfig, []),
+          customerId: this.searchFormData.customerId || undefined,
+        };
+      },
+      /** 查询客户结算总览。 */
+      async loadList() {
+        this.loading = true;
+        try {
+          const res = await api.querySettleOverviews(this.buildQueryParams());
+          this.tableData = res?.datas || [];
+          this.pagerConfig.total = res?.totalCount || 0;
+        } catch (err: any) {
+          this.tableData = [];
+          this.pagerConfig.total = 0;
+          createError(err?.message || '查询客户结算总览失败，请稍后重试！');
+        } finally {
+          this.loading = false;
+        }
+      },
+      /** 重置分页并查询。 */
+      search() {
+        this.pagerConfig.currentPage = 1;
+        this.loadList();
+      },
+      /** 处理分页切换。 */
+      handlePageChange({ currentPage, pageSize }: { currentPage: number; pageSize: number }) {
+        this.pagerConfig.currentPage = currentPage;
+        this.pagerConfig.pageSize = pageSize;
+        this.loadList();
+      },
+      /** 打开客户结算记录。 */
+      openRecordPage() {
+        this.openChildPage({
+          path: '/settle/customer/sheet-record',
+          query: { customerId: this.searchFormData.customerId || '' },
+        });
+      },
+      /** 打开指定客户的结算明细。 */
+      openDetailPage(row: { customerId: string }) {
+        this.openChildPage({
+          path: '/settle/customer/settle',
+          query: { customerId: row.customerId },
+        });
+      },
+      /** 创建客户结算总览导出任务。 */
+      async exportList() {
+        this.loading = true;
+        try {
+          await api.exportSettleOverviews(this.buildQueryParams());
+          createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+        } catch (err: any) {
+          createError(err?.message || '创建导出任务失败，请稍后重试！');
+        } finally {
+          this.loading = false;
+        }
       },
     },
   });
 </script>
-<style scoped></style>

@@ -149,7 +149,7 @@
           { field: 'code', title: '结算单号', width: 180, fixed: 'left' },
           { field: 'recordTime', title: '结算时间', width: 180, fixed: 'left' },
           { field: 'createBy', title: '操作人', width: 120, fixed: 'left' },
-          { field: 'supplierName', title: '供应商名称', minWidth: 100, fixed: 'left' },
+          { field: 'supplierName', title: '供应商名称', width: 100, fixed: 'left' },
           {
             field: 'bizCodeText',
             title: '货单号',

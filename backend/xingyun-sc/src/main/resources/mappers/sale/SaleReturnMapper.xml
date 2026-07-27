@@ -20,6 +20,7 @@
         <result column="approve_time" property="approveTime"/>
         <result column="status" property="status"/>
         <result column="settle_status" property="settleStatus"/>
+        <result column="settle_version" property="settleVersion"/>
     </resultMap>
 
     <resultMap id="SaleReturnFullDto" type="com.lframework.xingyun.sc.dto.sale.returned.SaleReturnFullDto">
@@ -79,7 +80,8 @@
             r.approve_by,
             r.approve_time,
             r.status,
-            r.settle_status
+            r.settle_status,
+            r.settle_version
         FROM tbl_sale_return AS r
         LEFT JOIN tbl_sale_out_sheet AS s ON s.id = r.out_sheet_id
     </sql>
@@ -142,6 +144,12 @@
                 <if test="vo.settleStatus != null">
                     AND r.settle_status = #{vo.settleStatus}
                 </if>
+                <if test="vo.idList != null and vo.idList.size() > 0">
+                    AND r.id IN <foreach collection="vo.idList" open="(" separator="," close=")" item="item">#{item}</foreach>
+                </if>
+                <if test="vo.requireTxIdNull != null and vo.requireTxIdNull">
+                    AND r.tx_id IS NULL
+                </if>
             </if>
         </where>
         ORDER BY r.create_time DESC
@@ -162,9 +170,17 @@
             AND r.approve_time <= #{endTime}
         ]]>
         </if>
-        AND r.status = 3
         AND r.settle_status = #{settleStatus}
         AND r.tx_id IS NULL
         ORDER BY r.approve_time DESC
     </select>
+    <update id="updateSettleStatusWithVersion">
+        UPDATE tbl_sale_return
+        SET settle_status = #{targetStatus},
+            settle_version = settle_version + 1
+        WHERE id = #{id}
+          AND settle_status = #{expectedStatus}
+          AND settle_version = #{settleVersion}
+          AND tx_id IS NULL
+    </update>
 </mapper>

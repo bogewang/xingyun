@@ -603,7 +603,15 @@ export const SettleRoute: AppRouteRecordRaw = {
       component: () => import('/@/views/settle/check-sheet/approve.vue'),
     },
     {
-      path: 'supplier/sheet/settle',
+      path: 'supplier/sheet',
+      name: 'SupplierSettleSummary',
+      component: () => import('/@/views/settle/sheet/index.vue'),
+      meta: {
+        title: '供应商结算汇总',
+      },
+    },
+    {
+      path: 'supplier/settle',
       name: 'AddSupplierSettleSheet',
       component: () => import('/@/views/settle/sheet/settle.vue'),
       meta: {
@@ -643,100 +651,28 @@ export const CustomerSettleRoute: AppRouteRecordRaw = {
   component: LAYOUT,
   children: [
     {
-      path: 'customer/fee-sheet/add',
-      name: 'AddCustomerSettleFeeSheet',
-      component: () => import('/@/views/customer-settle/fee-sheet/add.vue'),
+      path: 'customer/sheet',
+      name: 'CustomerSettleOverview',
+      component: () => import('/@/views/customer-settle/sheet/index.vue'),
       meta: {
-        title: '新增客户费用单',
+        title: '客户结算汇总',
       },
     },
     {
-      path: 'customer/fee-sheet/modify/:id',
-      name: 'ModifyCustomerSettleFeeSheet',
+      path: 'customer/settle',
+      name: 'CustomerSettleDetail',
+      component: () => import('/@/views/customer-settle/sheet/settle.vue'),
       meta: {
-        title: '修改客户费用单',
-      },
-      component: () => import('/@/views/customer-settle/fee-sheet/modify.vue'),
-    },
-    {
-      path: 'customer/fee-sheet/approve/:id',
-      name: 'ApproveCustomerSettleFeeSheet',
-      meta: {
-        title: '审核客户费用单',
-      },
-      component: () => import('/@/views/customer-settle/fee-sheet/approve.vue'),
-    },
-    {
-      path: 'customer/pre-sheet/add',
-      name: 'AddCustomerSettlePreSheet',
-      component: () => import('/@/views/customer-settle/pre-sheet/add.vue'),
-      meta: {
-        title: '新增客户预付款单',
+        title: '客户结算',
       },
     },
     {
-      path: 'customer/pre-sheet/modify/:id',
-      name: 'ModifyCustomerSettlePreSheet',
+      path: 'customer/sheet-record',
+      name: 'CustomerSettleSheetRecord',
+      component: () => import('/@/views/customer-settle/sheet/record.vue'),
       meta: {
-        title: '修改客户预付款单',
+        title: '客户结算记录',
       },
-      component: () => import('/@/views/customer-settle/pre-sheet/modify.vue'),
-    },
-    {
-      path: 'customer/pre-sheet/approve/:id',
-      name: 'ApproveCustomerSettlePreSheet',
-      meta: {
-        title: '审核客户预付款单',
-      },
-      component: () => import('/@/views/customer-settle/pre-sheet/approve.vue'),
-    },
-    {
-      path: 'customer/check-sheet/add',
-      name: 'AddCustomerSettleCheckSheet',
-      component: () => import('/@/views/customer-settle/check-sheet/add.vue'),
-      meta: {
-        title: '新增客户对账单',
-      },
-    },
-    {
-      path: 'customer/check-sheet/modify/:id',
-      name: 'ModifyCustomerSettleCheckSheet',
-      meta: {
-        title: '修改客户对账单',
-      },
-      component: () => import('/@/views/customer-settle/check-sheet/modify.vue'),
-    },
-    {
-      path: 'customer/check-sheet/approve/:id',
-      name: 'ApproveCustomerSettleCheckSheet',
-      meta: {
-        title: '审核客户对账单',
-      },
-      component: () => import('/@/views/customer-settle/check-sheet/approve.vue'),
-    },
-    {
-      path: 'customer/sheet/add',
-      name: 'AddCustomerSettleSheet',
-      component: () => import('/@/views/customer-settle/sheet/add.vue'),
-      meta: {
-        title: '新增客户结算单',
-      },
-    },
-    {
-      path: 'customer/sheet/modify/:id',
-      name: 'ModifyCustomerSettleSheet',
-      meta: {
-        title: '修改客户结算单',
-      },
-      component: () => import('/@/views/customer-settle/sheet/modify.vue'),
-    },
-    {
-      path: 'customer/sheet/approve/:id',
-      name: 'ApproveCustomerSettleSheet',
-      meta: {
-        title: '审核客户结算单',
-      },
-      component: () => import('/@/views/customer-settle/sheet/approve.vue'),
     },
   ],
 };

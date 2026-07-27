@@ -3,136 +3,78 @@ package com.lframework.xingyun.settle.entity;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.lframework.starter.web.core.entity.BaseEntity;
 import com.lframework.starter.web.core.dto.BaseDto;
-import com.lframework.xingyun.sc.enums.SettleStatus;
+import com.lframework.starter.web.core.entity.BaseEntity;
 import com.lframework.xingyun.settle.enums.CustomerSettleCheckSheetStatus;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
- * <p>
- *
- * </p>
- *
- * @author zmj
- * @since 2021-12-02
+ * 客户对账单。
  */
 @Data
 @TableName("customer_settle_check_sheet")
 public class CustomerSettleCheckSheet extends BaseEntity implements BaseDto {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    private String id;
+  /** 对账单ID。 */
+  private String id;
 
-    /**
-     * 单号
-     */
-    private String code;
+  /** 对账单编号。 */
+  private String code;
 
-    /**
-     * 客户ID
-     */
-    private String customerId;
+  /** 客户ID。 */
+  private String customerId;
 
-    /**
-     * 总金额
-     */
-    private BigDecimal totalAmount;
+  /** 业务单据原始金额合计。 */
+  private BigDecimal totalAmount;
 
-    /**
-     * 应付金额
-     */
-    private BigDecimal totalPayAmount;
+  /** 确认对账金额。 */
+  private BigDecimal totalPayAmount;
 
-    /**
-     * 已付金额
-     */
-    private BigDecimal totalPayedAmount;
+  /** 已结算金额。 */
+  private BigDecimal totalPayedAmount;
 
-    /**
-     * 已优惠金额
-     */
-    private BigDecimal totalDiscountAmount;
+  /**
+   *
+   */
+  private BigDecimal totalDiscountAmount;
 
-    /**
-     * 起始时间
-     */
-    private LocalDate startDate;
+  /** 备注。 */
+  private String description;
 
-    /**
-     * 截止日期
-     */
-    private LocalDate endDate;
+  /** 创建人ID。 */
+  @TableField(fill = FieldFill.INSERT)
+  private String createById;
 
-    /**
-     * 备注
-     */
-    private String description;
+  /** 创建人。 */
+  @TableField(fill = FieldFill.INSERT)
+  private String createBy;
 
-    /**
-     * 创建人ID 新增时赋值
-     */
-    @TableField(fill = FieldFill.INSERT)
-    private String createById;
+  /** 创建时间。 */
+  @TableField(fill = FieldFill.INSERT)
+  private LocalDateTime createTime;
 
-    /**
-     * 创建人 新增时赋值
-     */
-    @TableField(fill = FieldFill.INSERT)
-    private String createBy;
+  /** 修改人ID。 */
+  @TableField(fill = FieldFill.INSERT_UPDATE)
+  private String updateById;
 
-    /**
-     * 创建时间 新增时赋值
-     */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
+  /** 修改人。 */
+  @TableField(fill = FieldFill.INSERT_UPDATE)
+  private String updateBy;
 
-    /**
-     * 修改人 新增和修改时赋值
-     */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private String updateBy;
+  /** 修改时间。 */
+  @TableField(fill = FieldFill.INSERT_UPDATE)
+  private LocalDateTime updateTime;
 
-    /**
-     * 修改人ID 新增和修改时赋值
-     */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private String updateById;
+  /** 确认人。 */
+  private String approveBy;
 
-    /**
-     * 修改时间 新增和修改时赋值
-     */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updateTime;
+  /** 确认时间。 */
+  private LocalDateTime approveTime;
 
-    /**
-     * 审核人
-     */
-    private String approveBy;
-
-    /**
-     * 审核时间
-     */
-    private LocalDateTime approveTime;
-
-    /**
-     * 状态
-     */
-    private CustomerSettleCheckSheetStatus status;
-
-    /**
-     * 拒绝原因
-     */
-    private String refuseReason;
-
-    /**
-     * 结算状态
-     */
-    private SettleStatus settleStatus;
-
-
+  /** 对账单状态。 */
+  private CustomerSettleCheckSheetStatus status;
 }

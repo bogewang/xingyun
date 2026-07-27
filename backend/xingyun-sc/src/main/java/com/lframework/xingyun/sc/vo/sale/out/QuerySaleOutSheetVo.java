@@ -122,6 +122,12 @@ public class QuerySaleOutSheetVo extends SortPageVo {
   private Integer settleStatus;
 
   /**
+   * 是否仅查询未被结算交易占用的单据
+   */
+  @ApiModelProperty("是否仅查询未被结算交易占用的单据")
+  private Boolean requireTxIdNull;
+
+  /**
    * 是否已付完
    */
   @ApiModelProperty("是否已付完")

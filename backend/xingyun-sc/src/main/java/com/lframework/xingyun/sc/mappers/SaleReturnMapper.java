@@ -59,4 +59,18 @@ public interface SaleReturnMapper extends BaseMapper<SaleReturn> {
   List<SaleReturn> getApprovedList(@Param("customerId") String customerId,
       @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime,
       @Param("settleStatus") SettleStatus settleStatus);
+
+  /**
+   * 按结算状态和版本号原子更新结算状态。
+   *
+   * @param id 单据ID
+   * @param expectedStatus 预期结算状态
+   * @param targetStatus 目标结算状态
+   * @param settleVersion 预期结算版本号
+   * @return 受影响行数
+   */
+  int updateSettleStatusWithVersion(@Param("id") String id,
+      @Param("expectedStatus") SettleStatus expectedStatus,
+      @Param("targetStatus") SettleStatus targetStatus,
+      @Param("settleVersion") Long settleVersion);
 }

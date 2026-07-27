@@ -52,6 +52,32 @@ public class SettleAmountAllocationUtilTest {
   }
 
   /**
+   * 验证正向销售与负向退货按净额混合分摊时保留各自方向。
+   */
+  @Test
+  public void allocateSignedShouldKeepMixedSaleAndReturnDirections() {
+    List<BigDecimal> result = SettleAmountAllocationUtil.allocateSigned(
+        new BigDecimal("80.00"),
+        Arrays.asList(new BigDecimal("100.00"), new BigDecimal("-20.00")));
+
+    Assert.assertEquals(Arrays.asList(new BigDecimal("100.00"), new BigDecimal("-20.00")),
+        result);
+    Assert.assertEquals(new BigDecimal("80.00"), sum(result));
+  }
+
+  /**
+   * 验证纯退货可按负金额执行部分退款。
+   */
+  @Test
+  public void allocateSignedShouldSupportNegativeRefund() {
+    List<BigDecimal> result = SettleAmountAllocationUtil.allocateSigned(
+        new BigDecimal("-10.00"),
+        Arrays.asList(new BigDecimal("-20.00")));
+
+    Assert.assertEquals(Arrays.asList(new BigDecimal("-10.00")), result);
+  }
+
+  /**
    * 汇总分摊金额。
    *
    * @param amounts 分摊金额

@@ -23,4 +23,10 @@ public class ApprovePassSettleSheetVo implements BaseVo, Serializable {
    */
   @ApiModelProperty("备注")
   private String description;
+
+  /**
+   * 结算状态：1-部分结算，3-已结算，仅供直接结算链路使用
+   */
+  @ApiModelProperty("结算状态：1-部分结算，3-已结算")
+  private Integer settleStatus;
 }

@@ -1106,6 +1106,10 @@ public class SaleOutSheetServiceImpl extends
         }
 
         checkApproveStatus(sheet, "销售出库单已审核通过，无法修改！", "销售出库单无法修改！");
+        if (Arrays.asList(SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE,
+                SettleStatus.SETTLED).contains(sheet.getSettleStatus())) {
+            throw new DefaultClientException("销售出库单已对账或已结算，无法修改！");
+        }
 
         String oldCustomerId = sheet.getCustomerId();
         List<SaleOutSheetDetail> oldDetails = getSheetDetails(sheet.getId());
@@ -1195,6 +1199,10 @@ public class SaleOutSheetServiceImpl extends
         SaleOutSheet sheet = getBaseMapper().selectById(vo.getId());
         if (sheet == null) {
             throw new InputErrorException("销售出库单不存在！");
+        }
+        if (Arrays.asList(SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE,
+                SettleStatus.SETTLED).contains(sheet.getSettleStatus())) {
+            throw new DefaultClientException("销售出库单已对账或已结算，无法修改！");
         }
 
         Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
@@ -1415,6 +1423,10 @@ public class SaleOutSheetServiceImpl extends
         }
 
         checkApproveStatus(sheet, "“审核通过”的销售出库单不允许执行删除操作！", "销售出库单无法删除！");
+        if (Arrays.asList(SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE,
+                SettleStatus.SETTLED).contains(sheet.getSettleStatus())) {
+            throw new DefaultClientException("销售出库单已对账或已结算，不允许执行删除操作！");
+        }
 
         if (hasStockSynced(sheet.getId())) {
             // 查询销售出库单明细
@@ -1450,36 +1462,71 @@ public class SaleOutSheetServiceImpl extends
     @Override
     public int setUnSettle(String id) {
 
-        Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
-                .set(SaleOutSheet::getSettleStatus, SettleStatus.UN_SETTLE).eq(SaleOutSheet::getId, id)
-                .eq(SaleOutSheet::getSettleStatus, SettleStatus.PART_SETTLE);
-        int count = getBaseMapper().update(updateWrapper);
+        return updateSettleStatus(id, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
+    }
 
-        return count;
+    /**
+     * 按提交时源单版本设置为未结算，避免并发对账重复确认。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int setUnSettle(String id, SettleStatus settleStatus, Long settleVersion) {
+
+        return getBaseMapper().updateSettleStatusWithVersion(id, settleStatus,
+                SettleStatus.UN_SETTLE, settleVersion);
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public int setPartSettle(String id) {
 
-        Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
-                .set(SaleOutSheet::getSettleStatus, SettleStatus.PART_SETTLE).eq(SaleOutSheet::getId, id)
-                .in(SaleOutSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
-        int count = getBaseMapper().update(updateWrapper);
+        return updateSettleStatus(id, SettleStatus.PART_SETTLE, SettleStatus.UN_SETTLE,
+                SettleStatus.PART_SETTLE);
+    }
 
-        return count;
+    /**
+     * 按提交时源单版本设置为部分结算，避免并发结算重复占用余额。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int setPartSettle(String id, SettleStatus settleStatus, Long settleVersion) {
+
+        return getBaseMapper().updateSettleStatusWithVersion(id, settleStatus,
+                SettleStatus.PART_SETTLE, settleVersion);
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public int setSettled(String id) {
 
-        Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
-                .set(SaleOutSheet::getSettleStatus, SettleStatus.SETTLED).eq(SaleOutSheet::getId, id)
-                .in(SaleOutSheet::getSettleStatus, SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE);
-        int count = getBaseMapper().update(updateWrapper);
+        return updateSettleStatus(id, SettleStatus.SETTLED, SettleStatus.UN_SETTLE,
+                SettleStatus.PART_SETTLE);
+    }
 
-        return count;
+    /**
+     * 按提交时源单版本设置为已结算，避免并发结算重复占用余额。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int setSettled(String id, SettleStatus settleStatus, Long settleVersion) {
+
+        return getBaseMapper().updateSettleStatusWithVersion(id, settleStatus,
+                SettleStatus.SETTLED, settleVersion);
+    }
+
+    /**
+     * 按当前结算状态和版本号原子回写历史结算入口的状态。
+     */
+    private int updateSettleStatus(String id, SettleStatus targetStatus,
+            SettleStatus... allowedStatuses) {
+
+        SaleOutSheet sheet = getById(id);
+        if (sheet == null || !Arrays.asList(allowedStatuses).contains(sheet.getSettleStatus())) {
+            return 0;
+        }
+        Long settleVersion = sheet.getSettleVersion() == null ? 0L : sheet.getSettleVersion();
+        return getBaseMapper().updateSettleStatusWithVersion(id, sheet.getSettleStatus(),
+                targetStatus, settleVersion);
     }
 
     @Override

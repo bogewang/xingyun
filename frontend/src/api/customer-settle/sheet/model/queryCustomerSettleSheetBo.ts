@@ -73,4 +73,9 @@ export interface QueryCustomerSettleSheetBo {
    * 状态
    */
   status: number;
+
+  /**
+   * 关联业务单据数量
+   */
+  detailCount: number;
 }

@@ -1,794 +1,423 @@
 package com.lframework.xingyun.settle.impl;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.github.pagehelper.PageInfo;
-import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
-import com.lframework.starter.common.exceptions.impl.DefaultSysException;
-import com.lframework.starter.common.exceptions.impl.InputErrorException;
-import com.lframework.starter.common.utils.Assert;
-import com.lframework.starter.common.utils.CollectionUtil;
-import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
-import com.lframework.starter.web.core.components.security.AbstractUserDetails;
-import com.lframework.starter.web.core.components.security.SecurityUtil;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
-import com.lframework.starter.web.core.components.resp.PageResult;
-import com.lframework.starter.web.inner.service.GenerateCodeService;
-import com.lframework.starter.web.core.utils.EnumUtil;
-import com.lframework.starter.web.core.utils.IdUtil;
-import com.lframework.starter.web.core.utils.PageHelperUtil;
-import com.lframework.starter.web.core.utils.PageResultUtil;
-import com.lframework.starter.web.core.annotations.timeline.OrderTimeLineLog;
-import com.lframework.starter.web.inner.components.timeline.ApprovePassOrderTimeLineBizType;
-import com.lframework.starter.web.inner.components.timeline.ApproveReturnOrderTimeLineBizType;
-import com.lframework.starter.web.inner.components.timeline.CreateOrderTimeLineBizType;
-import com.lframework.starter.web.inner.components.timeline.UpdateOrderTimeLineBizType;
+import com.lframework.starter.web.core.components.security.SecurityUtil;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.entity.SaleReturn;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
 import com.lframework.xingyun.sc.service.sale.SaleReturnService;
-import com.lframework.xingyun.settle.components.code.GenerateCodeTypePool;
-import com.lframework.xingyun.settle.dto.check.customer.CustomerSettleCheckBizItemDto;
-import com.lframework.xingyun.settle.dto.check.customer.CustomerSettleCheckSheetFullDto;
+import com.lframework.xingyun.sc.vo.sale.out.QuerySaleOutSheetVo;
+import com.lframework.xingyun.sc.vo.sale.returned.QuerySaleReturnVo;
 import com.lframework.xingyun.settle.entity.CustomerSettleCheckSheet;
 import com.lframework.xingyun.settle.entity.CustomerSettleCheckSheetDetail;
-import com.lframework.xingyun.settle.entity.CustomerSettleFeeSheet;
-import com.lframework.xingyun.settle.entity.CustomerSettlePreSheet;
 import com.lframework.xingyun.settle.enums.CustomerSettleCheckSheetBizType;
-import com.lframework.xingyun.settle.enums.CustomerSettleCheckSheetCalcType;
+import com.lframework.xingyun.settle.enums.SettleCheckSheetCalcType;
 import com.lframework.xingyun.settle.enums.CustomerSettleCheckSheetStatus;
-import com.lframework.xingyun.settle.enums.CustomerSettleFeeSheetType;
-import com.lframework.xingyun.settle.enums.SettleOpLogType;
 import com.lframework.xingyun.settle.mappers.CustomerSettleCheckSheetMapper;
 import com.lframework.xingyun.settle.service.CustomerSettleCheckSheetDetailService;
 import com.lframework.xingyun.settle.service.CustomerSettleCheckSheetService;
-import com.lframework.xingyun.settle.service.CustomerSettleFeeSheetService;
-import com.lframework.xingyun.settle.service.CustomerSettlePreSheetService;
-import com.lframework.xingyun.settle.vo.check.customer.ApprovePassCustomerSettleCheckSheetVo;
-import com.lframework.xingyun.settle.vo.check.customer.ApproveRefuseCustomerSettleCheckSheetVo;
+import com.lframework.xingyun.settle.utils.SettleAmountAllocationUtil;
 import com.lframework.xingyun.settle.vo.check.customer.CreateCustomerSettleCheckSheetVo;
 import com.lframework.xingyun.settle.vo.check.customer.CustomerSettleCheckSheetItemVo;
-import com.lframework.xingyun.settle.vo.check.customer.QueryCustomerSettleCheckSheetVo;
-import com.lframework.xingyun.settle.vo.check.customer.QueryCustomerUnCheckBizItemVo;
-import com.lframework.xingyun.settle.vo.check.customer.UpdateCustomerSettleCheckSheetVo;
-import com.lframework.starter.web.core.annotations.oplog.OpLog;
-import com.lframework.starter.web.core.utils.OpLogUtil;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 客户对账单服务实现。
+ */
 @Service
 public class CustomerSettleCheckSheetServiceImpl extends
-        BaseMpServiceImpl<CustomerSettleCheckSheetMapper, CustomerSettleCheckSheet>
-        implements CustomerSettleCheckSheetService {
+    BaseMpServiceImpl<CustomerSettleCheckSheetMapper, CustomerSettleCheckSheet>
+    implements CustomerSettleCheckSheetService {
 
-    @Autowired
-    private CustomerSettleCheckSheetDetailService customerSettleCheckSheetDetailService;
+  @Autowired
+  private CustomerSettleCheckSheetDetailService customerSettleCheckSheetDetailService;
 
-    @Autowired
-    private GenerateCodeService generateCodeService;
+  @Autowired
+  private SaleOutSheetService saleOutSheetService;
 
-    @Autowired
-    private SaleOutSheetService saleOutSheetService;
+  @Autowired
+  private SaleReturnService saleReturnService;
 
-    @Autowired
-    private SaleReturnService saleReturnService;
+  /**
+   * 直接确认客户对账单，并在一个事务内保存明细和回写源单状态。
+   *
+   * @param vo 客户对账确认请求
+   * @return 已确认对账单ID
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public String directApprovePass(CreateCustomerSettleCheckSheetVo vo) {
+    validateRequest(vo);
+    CustomerSettleCheckSheetBizType bizType = resolveBizType(vo.getItems());
+    List<CheckBiz> bizItems = loadBizItems(vo, bizType);
+    List<BigDecimal> allocatedAmounts = SettleAmountAllocationUtil.allocate(vo.getCheckAmount(),
+        bizItems.stream().map(CheckBiz::getOriginalAmount).collect(Collectors.toList()));
+    validateAllocatedAmounts(vo.getCheckAmount(), allocatedAmounts);
 
-    @Autowired
-    private CustomerSettleFeeSheetService customerSettleFeeSheetService;
+    CustomerSettleCheckSheet sheet = createConfirmedSheet(vo, bizItems);
+    if (getBaseMapper().insert(sheet) != 1) {
+      throw new DefaultClientException("保存客户对账单失败！");
+    }
+    List<CustomerSettleCheckSheetDetail> details = createDetails(sheet, bizItems,
+        allocatedAmounts);
+    if (!customerSettleCheckSheetDetailService.saveBatch(details)) {
+      throw new DefaultClientException("保存客户对账单明细失败！");
+    }
+    updateSourceSettleStatus(bizItems, bizType);
+    return sheet.getId();
+  }
 
-    @Autowired
-    private CustomerSettlePreSheetService customerSettlePreSheetService;
+  /**
+   * 校验确认请求基础参数。
+   *
+   * @param vo 客户对账确认请求
+   */
+  private void validateRequest(CreateCustomerSettleCheckSheetVo vo) {
+    if (vo == null || StringUtil.isBlank(vo.getCustomerId())) {
+      throw new DefaultClientException("客户不能为空！");
+    }
+    if (vo.getCheckAmount() == null || vo.getCheckAmount().compareTo(BigDecimal.ZERO) <= 0) {
+      throw new DefaultClientException("确认对账金额必须大于0！");
+    }
+    if (vo.getCheckAmount().scale() > 2) {
+      throw new DefaultClientException("确认对账金额最多保留两位小数！");
+    }
+    if (vo.getItems() == null || vo.getItems().isEmpty()) {
+      throw new DefaultClientException("对账业务项不能为空！");
+    }
+  }
 
-    @Override
-    public PageResult<CustomerSettleCheckSheet> query(Integer pageIndex, Integer pageSize,
-            QueryCustomerSettleCheckSheetVo vo) {
+  /**
+   * 解析并校验同批业务类型。
+   *
+   * @param items 对账业务项
+   * @return 统一业务类型
+   */
+  private CustomerSettleCheckSheetBizType resolveBizType(
+      List<CustomerSettleCheckSheetItemVo> items) {
+    CustomerSettleCheckSheetBizType result = null;
+    Set<String> bizIds = new HashSet<>();
+    for (CustomerSettleCheckSheetItemVo item : items) {
+      if (item == null || StringUtil.isBlank(item.getBizId()) || item.getBizType() == null) {
+        throw new DefaultClientException("业务单据参数不正确！");
+      }
+      CustomerSettleCheckSheetBizType bizType = getBizType(item.getBizType());
+      if (result != null && result != bizType) {
+        throw new DefaultClientException("同批对账业务单据类型必须一致！");
+      }
+      if (!bizIds.add(item.getBizId())) {
+        throw new DefaultClientException("业务单据不允许重复选择！");
+      }
+      result = bizType;
+    }
+    return result;
+  }
 
-        Assert.greaterThanZero(pageIndex);
-        Assert.greaterThanZero(pageSize);
+  /**
+   * 根据请求业务类型加载并校验源单据。
+   *
+   * @param vo 客户对账确认请求
+   * @param bizType 统一业务类型
+   * @return 有序的源单据对账数据
+   */
+  private List<CheckBiz> loadBizItems(CreateCustomerSettleCheckSheetVo vo,
+      CustomerSettleCheckSheetBizType bizType) {
+    List<String> bizIds = vo.getItems().stream().map(CustomerSettleCheckSheetItemVo::getBizId)
+        .collect(Collectors.toList());
+    Map<String, CheckBiz> bizMap = bizType == CustomerSettleCheckSheetBizType.OUT_SHEET
+        ? loadSaleOutBizMap(bizIds) : loadSaleReturnBizMap(bizIds);
+    if (bizMap.size() != bizIds.size()) {
+      throw new DefaultClientException("业务单据不存在！");
+    }
+    List<CheckBiz> results = new ArrayList<>();
+    for (String bizId : bizIds) {
+      CheckBiz biz = bizMap.get(bizId);
+      validateBiz(vo.getCustomerId(), biz);
+      biz.setBizType(bizType);
+      results.add(biz);
+    }
+    return results;
+  }
 
-        PageHelperUtil.startPage(pageIndex, pageSize);
-        List<CustomerSettleCheckSheet> datas = this.query(vo);
+  /**
+   * 批量加载销售出库单。
+   *
+   * @param bizIds 销售出库单ID
+   * @return 按ID索引的业务单据
+   */
+  private Map<String, CheckBiz> loadSaleOutBizMap(Collection<String> bizIds) {
+    QuerySaleOutSheetVo queryVo = new QuerySaleOutSheetVo();
+    queryVo.setIdList(new ArrayList<>(bizIds));
+    queryVo.setRequireTxIdNull(true);
+    List<SaleOutSheet> sheets = saleOutSheetService.query(queryVo);
+    Map<String, CheckBiz> results = new HashMap<>();
+    if (sheets != null) {
+      for (SaleOutSheet sheet : sheets) {
+        results.put(sheet.getId(), new CheckBiz(sheet.getId(), sheet.getCustomerId(),
+            sheet.getTotalAmount(), sheet.getSettleStatus(), sheet.getSettleVersion()));
+      }
+    }
+    return results;
+  }
 
-        return PageResultUtil.convert(new PageInfo<>(datas));
+  /**
+   * 批量加载销售退货单。
+   *
+   * @param bizIds 销售退货单ID
+   * @return 按ID索引的业务单据
+   */
+  private Map<String, CheckBiz> loadSaleReturnBizMap(Collection<String> bizIds) {
+    QuerySaleReturnVo queryVo = new QuerySaleReturnVo();
+    queryVo.setIdList(new ArrayList<>(bizIds));
+    queryVo.setRequireTxIdNull(true);
+    List<SaleReturn> sheets = saleReturnService.query(queryVo);
+    Map<String, CheckBiz> results = new HashMap<>();
+    if (sheets != null) {
+      for (SaleReturn sheet : sheets) {
+        results.put(sheet.getId(), new CheckBiz(sheet.getId(), sheet.getCustomerId(),
+            sheet.getTotalAmount(), sheet.getSettleStatus(), sheet.getSettleVersion()));
+      }
+    }
+    return results;
+  }
+
+  /**
+   * 校验源单据属于当前客户且可以对账。
+   *
+   * @param customerId 客户ID
+   * @param biz 源单据数据
+   */
+  private void validateBiz(String customerId, CheckBiz biz) {
+    if (biz == null || !customerId.equals(biz.getCustomerId())) {
+      throw new DefaultClientException("业务单据不存在或不属于当前客户！");
+    }
+    if (biz.getSettleStatus() != SettleStatus.UN_CHECK_BILL) {
+      throw new DefaultClientException("业务单据不是待对账状态！");
+    }
+    if (biz.getOriginalAmount() == null || biz.getOriginalAmount().compareTo(BigDecimal.ZERO) <= 0) {
+      throw new DefaultClientException("业务单据金额必须大于0！");
+    }
+  }
+
+  /**
+   * 校验分摊结果金额合法且合计准确。
+   *
+   * @param checkAmount 确认对账金额
+   * @param allocatedAmounts 分摊结果
+   */
+  private void validateAllocatedAmounts(BigDecimal checkAmount, List<BigDecimal> allocatedAmounts) {
+    if (allocatedAmounts.isEmpty() || allocatedAmounts.stream()
+        .anyMatch(amount -> amount == null || amount.compareTo(BigDecimal.ZERO) < 0)
+        || allocatedAmounts.stream().reduce(BigDecimal.ZERO, BigDecimal::add)
+        .compareTo(checkAmount) != 0) {
+      throw new DefaultClientException("对账金额分摊结果不正确！");
+    }
+  }
+
+  /**
+   * 创建已确认客户对账单主记录。
+   *
+   * @param vo 客户对账确认请求
+   * @param bizItems 源单据数据
+   * @return 客户对账单
+   */
+  private CustomerSettleCheckSheet createConfirmedSheet(CreateCustomerSettleCheckSheetVo vo,
+      List<CheckBiz> bizItems) {
+    CustomerSettleCheckSheet sheet = new CustomerSettleCheckSheet();
+    sheet.setId(generateId());
+    sheet.setCode(generateId());
+    sheet.setCustomerId(vo.getCustomerId());
+    sheet.setTotalAmount(bizItems.stream().map(CheckBiz::getOriginalAmount)
+        .reduce(BigDecimal.ZERO, BigDecimal::add));
+    sheet.setTotalPayAmount(vo.getCheckAmount());
+    sheet.setTotalPayedAmount(BigDecimal.ZERO);
+    sheet.setTotalDiscountAmount(BigDecimal.ZERO);
+    sheet.setDescription(vo.getDescription());
+    sheet.setApproveBy(SecurityUtil.getCurrentUser() == null ? null
+        : SecurityUtil.getCurrentUser().getId());
+    sheet.setApproveTime(LocalDateTime.now());
+    sheet.setStatus(CustomerSettleCheckSheetStatus.CONFIRMED);
+    return sheet;
+  }
+
+  /**
+   * 创建客户对账单明细。
+   *
+   * @param sheet 客户对账单
+   * @param bizItems 源单据数据
+   * @param allocatedAmounts 分摊后的最终对账金额
+   * @return 客户对账单明细
+   */
+  private List<CustomerSettleCheckSheetDetail> createDetails(CustomerSettleCheckSheet sheet,
+      List<CheckBiz> bizItems, List<BigDecimal> allocatedAmounts) {
+    List<CustomerSettleCheckSheetDetail> results = new ArrayList<>();
+    for (int index = 0; index < bizItems.size(); index++) {
+      CustomerSettleCheckSheetDetail detail = new CustomerSettleCheckSheetDetail();
+      detail.setId(generateId());
+      detail.setSheetId(sheet.getId());
+      detail.setBizId(bizItems.get(index).getBizId());
+      detail.setBizType(bizItems.get(index).getBizType());
+      detail.setCalcType(SettleCheckSheetCalcType.ADD);
+      detail.setPayAmount(allocatedAmounts.get(index));
+      detail.setDescription(sheet.getDescription());
+      detail.setOrderNo(index + 1);
+      results.add(detail);
+    }
+    return results;
+  }
+
+  /**
+   * 以源单状态与版本号乐观锁回写为未结算。
+   *
+   * @param bizItems 源单据数据
+   * @param bizType 业务类型
+   */
+  private void updateSourceSettleStatus(List<CheckBiz> bizItems,
+      CustomerSettleCheckSheetBizType bizType) {
+    for (CheckBiz biz : bizItems) {
+      int count = bizType == CustomerSettleCheckSheetBizType.OUT_SHEET
+          ? saleOutSheetService.setUnSettle(biz.getBizId(), biz.getSettleStatus(),
+              biz.getSettleVersion())
+          : saleReturnService.setUnSettle(biz.getBizId(), biz.getSettleStatus(),
+              biz.getSettleVersion());
+      if (count != 1) {
+        throw new DefaultClientException("业务单据状态已变化，请刷新后重试！");
+      }
+    }
+  }
+
+  /**
+   * 解析客户对账业务类型。
+   *
+   * @param bizType 业务类型编码
+   * @return 客户对账业务类型
+   */
+  private CustomerSettleCheckSheetBizType getBizType(Integer bizType) {
+    if (CustomerSettleCheckSheetBizType.OUT_SHEET.getCode().equals(bizType)) {
+      return CustomerSettleCheckSheetBizType.OUT_SHEET;
+    }
+    if (CustomerSettleCheckSheetBizType.SALE_RETURN.getCode().equals(bizType)) {
+      return CustomerSettleCheckSheetBizType.SALE_RETURN;
+    }
+    throw new DefaultClientException("业务类型不正确！");
+  }
+
+  /**
+   * 生成不含连接符的ID。
+   *
+   * @return 唯一ID
+   */
+  private String generateId() {
+    return UUID.randomUUID().toString().replace("-", "");
+  }
+
+  /**
+   * 客户对账源单据数据。
+   */
+  private static class CheckBiz {
+
+    private final String bizId;
+    private final String customerId;
+    private final BigDecimal originalAmount;
+    private final SettleStatus settleStatus;
+    private final Long settleVersion;
+    private CustomerSettleCheckSheetBizType bizType;
+
+    /**
+     * 创建客户对账源单据数据。
+     *
+     * @param bizId 业务单据ID
+     * @param customerId 客户ID
+     * @param originalAmount 原始金额
+     * @param settleStatus 源单结算状态
+     * @param settleVersion 源单结算版本号
+     */
+    CheckBiz(String bizId, String customerId, BigDecimal originalAmount,
+        SettleStatus settleStatus, Long settleVersion) {
+      this.bizId = bizId;
+      this.customerId = customerId;
+      this.originalAmount = originalAmount;
+      this.settleStatus = settleStatus;
+      this.settleVersion = settleVersion == null ? 0L : settleVersion;
     }
 
-    @Override
-    public List<CustomerSettleCheckSheet> query(QueryCustomerSettleCheckSheetVo vo) {
-
-      return getBaseMapper().query(vo);
+    /**
+     * 获取业务单据ID。
+     *
+     * @return 业务单据ID
+     */
+    String getBizId() {
+      return bizId;
     }
 
-    @Override
-    public CustomerSettleCheckSheetFullDto getDetail(String id) {
-
-        return getBaseMapper().getDetail(id);
+    /**
+     * 获取客户ID。
+     *
+     * @return 客户ID
+     */
+    String getCustomerId() {
+      return customerId;
     }
 
-    @OpLog(type = SettleOpLogType.class, name = "创建客户对账单，单号：{}", params = "#code")
-    @OrderTimeLineLog(type = CreateOrderTimeLineBizType.class, orderId = "#_result", name = "创建对账单")
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public String create(CreateCustomerSettleCheckSheetVo vo) {
-
-        CustomerSettleCheckSheet sheet = new CustomerSettleCheckSheet();
-
-        sheet.setId(IdUtil.getId());
-        sheet.setCode(
-                generateCodeService.generate(GenerateCodeTypePool.CUSTOMER_SETTLE_CHECK_SHEET));
-
-        this.create(sheet, vo);
-
-        sheet.setStatus(CustomerSettleCheckSheetStatus.CREATED);
-
-        OpLogUtil.setVariable("code", sheet.getCode());
-        OpLogUtil.setExtra(vo);
-
-        getBaseMapper().insert(sheet);
-
-        return sheet.getId();
+    /**
+     * 获取原始金额。
+     *
+     * @return 原始金额
+     */
+    BigDecimal getOriginalAmount() {
+      return originalAmount;
     }
 
-    @OpLog(type = SettleOpLogType.class, name = "修改客户对账单，单号：{}", params = "#code")
-    @OrderTimeLineLog(type = UpdateOrderTimeLineBizType.class, orderId = "#vo.id", name = "修改对账单")
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public void update(UpdateCustomerSettleCheckSheetVo vo) {
-
-        CustomerSettleCheckSheet sheet = getBaseMapper().selectById(vo.getId());
-        if (sheet == null) {
-            throw new DefaultClientException("客户对账单不存在！");
-        }
-
-        if (sheet.getStatus() != CustomerSettleCheckSheetStatus.CREATED
-                && sheet.getStatus() != CustomerSettleCheckSheetStatus.APPROVE_REFUSE) {
-            if (sheet.getStatus() == CustomerSettleCheckSheetStatus.APPROVE_PASS) {
-                throw new DefaultClientException("客户对账单已审核通过，无法修改！");
-            } else {
-                throw new DefaultClientException("客户对账单无法修改！");
-            }
-        }
-
-        //将所有的单据的结算状态更新
-        Wrapper<CustomerSettleCheckSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
-                        CustomerSettleCheckSheetDetail.class)
-                .eq(CustomerSettleCheckSheetDetail::getSheetId, sheet.getId())
-                .orderByAsc(CustomerSettleCheckSheetDetail::getOrderNo);
-        List<CustomerSettleCheckSheetDetail> sheetDetails = customerSettleCheckSheetDetailService.list(
-                queryDetailWrapper);
-        for (CustomerSettleCheckSheetDetail sheetDetail : sheetDetails) {
-            this.setBizItemUnSettle(sheetDetail.getBizId(), sheetDetail.getBizType());
-        }
-
-        // 删除明细
-        Wrapper<CustomerSettleCheckSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(
-                        CustomerSettleCheckSheetDetail.class)
-                .eq(CustomerSettleCheckSheetDetail::getSheetId, sheet.getId());
-        customerSettleCheckSheetDetailService.remove(deleteDetailWrapper);
-
-        this.create(sheet, vo);
-
-        sheet.setStatus(CustomerSettleCheckSheetStatus.CREATED);
-
-        List<CustomerSettleCheckSheetStatus> statusList = new ArrayList<>();
-        statusList.add(CustomerSettleCheckSheetStatus.CREATED);
-        statusList.add(CustomerSettleCheckSheetStatus.APPROVE_REFUSE);
-
-        Wrapper<CustomerSettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(
-                        CustomerSettleCheckSheet.class)
-                .set(CustomerSettleCheckSheet::getApproveBy, null)
-                .set(CustomerSettleCheckSheet::getApproveTime, null)
-                .set(CustomerSettleCheckSheet::getRefuseReason, StringPool.EMPTY_STR)
-                .eq(CustomerSettleCheckSheet::getId, sheet.getId())
-                .in(CustomerSettleCheckSheet::getStatus, statusList);
-        if (getBaseMapper().updateAllColumn(sheet, updateWrapper) != 1) {
-            throw new DefaultClientException("客户对账单信息已过期，请刷新重试！");
-        }
-
-        OpLogUtil.setVariable("code", sheet.getCode());
-        OpLogUtil.setExtra(vo);
+    /**
+     * 获取源单结算状态。
+     *
+     * @return 源单结算状态
+     */
+    SettleStatus getSettleStatus() {
+      return settleStatus;
     }
 
-    @OpLog(type = SettleOpLogType.class, name = "审核通过客户对账单，单号：{}", params = "#code")
-    @OrderTimeLineLog(type = ApprovePassOrderTimeLineBizType.class, orderId = "#vo.id", name = "审核通过")
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public void approvePass(ApprovePassCustomerSettleCheckSheetVo vo) {
-
-        CustomerSettleCheckSheet sheet = getBaseMapper().selectById(vo.getId());
-        if (sheet == null) {
-            throw new DefaultClientException("客户对账单不存在！");
-        }
-
-        if (sheet.getStatus() != CustomerSettleCheckSheetStatus.CREATED
-                && sheet.getStatus() != CustomerSettleCheckSheetStatus.APPROVE_REFUSE) {
-            if (sheet.getStatus() == CustomerSettleCheckSheetStatus.APPROVE_PASS) {
-                throw new DefaultClientException("客户对账单已审核通过，不允许继续执行审核！");
-            }
-            throw new DefaultClientException("客户对账单无法审核通过！");
-        }
-
-        sheet.setStatus(CustomerSettleCheckSheetStatus.APPROVE_PASS);
-        sheet.setApproveBy(SecurityUtil.getCurrentUser().getId());
-        sheet.setApproveTime(LocalDateTime.now());
-        if (!StringUtil.isBlank(vo.getDescription())) {
-            sheet.setDescription(vo.getDescription());
-        }
-
-        List<CustomerSettleCheckSheetStatus> statusList = new ArrayList<>();
-        statusList.add(CustomerSettleCheckSheetStatus.CREATED);
-        statusList.add(CustomerSettleCheckSheetStatus.APPROVE_REFUSE);
-
-        Wrapper<CustomerSettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(
-                        CustomerSettleCheckSheet.class)
-                .eq(CustomerSettleCheckSheet::getId, sheet.getId())
-                .in(CustomerSettleCheckSheet::getStatus, statusList);
-        if (getBaseMapper().updateAllColumn(sheet, updateWrapper) != 1) {
-            throw new DefaultClientException("客户对账单信息已过期，请刷新重试！");
-        }
-
-        OpLogUtil.setVariable("code", sheet.getCode());
-        OpLogUtil.setExtra(vo);
+    /**
+     * 获取源单结算版本号。
+     *
+     * @return 源单结算版本号
+     */
+    Long getSettleVersion() {
+      return settleVersion;
     }
 
-    @OrderTimeLineLog(type = ApprovePassOrderTimeLineBizType.class, orderId = "#_result", name = "直接审核通过")
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public String directApprovePass(CreateCustomerSettleCheckSheetVo vo) {
-
-        CustomerSettleCheckSheetService thisService = getThis(this.getClass());
-
-        String id = thisService.create(vo);
-
-        ApprovePassCustomerSettleCheckSheetVo approveVo = new ApprovePassCustomerSettleCheckSheetVo();
-        approveVo.setId(id);
-
-        thisService.approvePass(approveVo);
-
-        return id;
+    /**
+     * 获取业务类型。
+     *
+     * @return 业务类型
+     */
+    CustomerSettleCheckSheetBizType getBizType() {
+      return bizType;
     }
 
-    @OpLog(type = SettleOpLogType.class, name = "审核拒绝客户对账单，单号：{}", params = "#code")
-    @OrderTimeLineLog(type = ApproveReturnOrderTimeLineBizType.class, orderId = "#vo.id", name = "审核拒绝，拒绝理由：{}", params = "#vo.refuseReason")
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public void approveRefuse(ApproveRefuseCustomerSettleCheckSheetVo vo) {
-
-        CustomerSettleCheckSheet sheet = getBaseMapper().selectById(vo.getId());
-        if (sheet == null) {
-            throw new DefaultClientException("客户对账单不存在！");
-        }
-
-        if (sheet.getStatus() != CustomerSettleCheckSheetStatus.CREATED) {
-            if (sheet.getStatus() == CustomerSettleCheckSheetStatus.APPROVE_PASS) {
-                throw new DefaultClientException("客户对账单已审核通过，不允许继续执行审核！");
-            }
-            if (sheet.getStatus() == CustomerSettleCheckSheetStatus.APPROVE_REFUSE) {
-                throw new DefaultClientException("客户对账单已审核拒绝，不允许继续执行审核！");
-            }
-            throw new DefaultClientException("客户对账单无法审核拒绝！");
-        }
-
-        sheet.setStatus(CustomerSettleCheckSheetStatus.APPROVE_REFUSE);
-        sheet.setApproveBy(SecurityUtil.getCurrentUser().getId());
-        sheet.setApproveTime(LocalDateTime.now());
-        sheet.setRefuseReason(vo.getRefuseReason());
-
-        List<CustomerSettleCheckSheetStatus> statusList = new ArrayList<>();
-        statusList.add(CustomerSettleCheckSheetStatus.CREATED);
-        statusList.add(CustomerSettleCheckSheetStatus.APPROVE_REFUSE);
-
-        Wrapper<CustomerSettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(
-                        CustomerSettleCheckSheet.class)
-                .eq(CustomerSettleCheckSheet::getId, sheet.getId())
-                .in(CustomerSettleCheckSheet::getStatus, statusList);
-        if (getBaseMapper().updateAllColumn(sheet, updateWrapper) != 1) {
-            throw new DefaultClientException("客户对账单信息已过期，请刷新重试！");
-        }
-
-        OpLogUtil.setVariable("code", sheet.getCode());
-        OpLogUtil.setExtra(vo);
+    /**
+     * 设置业务类型。
+     *
+     * @param bizType 业务类型
+     */
+    void setBizType(CustomerSettleCheckSheetBizType bizType) {
+      this.bizType = bizType;
     }
-
-    @OpLog(type = SettleOpLogType.class, name = "删除客户对账单，单号：{}", params = "#code")
-    @OrderTimeLineLog(orderId = "#id", delete = true)
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public void deleteById(String id) {
-
-        Assert.notBlank(id);
-        CustomerSettleCheckSheet sheet = getBaseMapper().selectById(id);
-        if (sheet == null) {
-            throw new InputErrorException("客户对账单不存在！");
-        }
-
-        if (sheet.getStatus() != CustomerSettleCheckSheetStatus.CREATED
-                && sheet.getStatus() != CustomerSettleCheckSheetStatus.APPROVE_REFUSE) {
-
-            if (sheet.getStatus() == CustomerSettleCheckSheetStatus.APPROVE_PASS) {
-                throw new DefaultClientException("“审核通过”的客户对账单不允许执行删除操作！");
-            }
-
-            throw new DefaultClientException("客户对账单无法删除！");
-        }
-
-        //将所有的单据的结算状态更新
-        Wrapper<CustomerSettleCheckSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
-                        CustomerSettleCheckSheetDetail.class)
-                .eq(CustomerSettleCheckSheetDetail::getSheetId, sheet.getId())
-                .orderByAsc(CustomerSettleCheckSheetDetail::getOrderNo);
-        List<CustomerSettleCheckSheetDetail> sheetDetails = customerSettleCheckSheetDetailService.list(
-                queryDetailWrapper);
-        for (CustomerSettleCheckSheetDetail sheetDetail : sheetDetails) {
-            this.setBizItemUnSettle(sheetDetail.getBizId(), sheetDetail.getBizType());
-        }
-
-        // 删除明细
-        Wrapper<CustomerSettleCheckSheetDetail> deleteDetailWrapper = Wrappers.lambdaQuery(
-                        CustomerSettleCheckSheetDetail.class)
-                .eq(CustomerSettleCheckSheetDetail::getSheetId, sheet.getId());
-        customerSettleCheckSheetDetailService.remove(deleteDetailWrapper);
-
-        // 删除单据
-        getBaseMapper().deleteById(id);
-
-        OpLogUtil.setVariable("code", sheet.getCode());
-    }
-
-    @Override
-    public CustomerSettleCheckBizItemDto getBizItem(String id,
-            CustomerSettleCheckSheetBizType bizType) {
-
-        CustomerSettleCheckBizItemDto result = new CustomerSettleCheckBizItemDto();
-
-        switch (bizType) {
-            case OUT_SHEET: {
-                SaleOutSheet outSheet = saleOutSheetService.getById(id);
-
-                result.setId(outSheet.getId());
-                result.setCode(outSheet.getCode());
-                result.setTotalAmount(outSheet.getTotalAmount());
-                result.setApproveTime(outSheet.getApproveTime());
-                result.setCalcType(CustomerSettleCheckSheetCalcType.ADD);
-                break;
-            }
-            case SALE_RETURN: {
-                SaleReturn saleReturn = saleReturnService.getById(id);
-
-                result.setId(saleReturn.getId());
-                result.setCode(saleReturn.getCode());
-                result.setTotalAmount(saleReturn.getTotalAmount());
-                result.setApproveTime(saleReturn.getApproveTime());
-                result.setCalcType(CustomerSettleCheckSheetCalcType.SUB);
-                break;
-            }
-            case SETTLE_FEE_SHEET: {
-                CustomerSettleFeeSheet feeSheet = customerSettleFeeSheetService.getById(id);
-
-                result.setId(feeSheet.getId());
-                result.setCode(feeSheet.getCode());
-                result.setTotalAmount(feeSheet.getTotalAmount());
-                result.setApproveTime(feeSheet.getApproveTime());
-                result.setCalcType(feeSheet.getSheetType() == CustomerSettleFeeSheetType.RECEIVE ?
-                        CustomerSettleCheckSheetCalcType.ADD :
-                        CustomerSettleCheckSheetCalcType.SUB);
-                break;
-            }
-            case SETTLE_PRE_SHEET: {
-                CustomerSettlePreSheet preSheet = customerSettlePreSheetService.getById(id);
-
-                result.setId(preSheet.getId());
-                result.setCode(preSheet.getCode());
-                result.setTotalAmount(preSheet.getTotalAmount());
-                result.setApproveTime(preSheet.getApproveTime());
-                result.setCalcType(CustomerSettleCheckSheetCalcType.SUB);
-                break;
-            }
-            default: {
-                throw new DefaultSysException("未知的CustomerSettleCheckSheetBizType");
-            }
-        }
-
-        result.setBizType(bizType);
-        if (result.getCalcType() == CustomerSettleCheckSheetCalcType.SUB) {
-            result.setTotalAmount(result.getTotalAmount().negate());
-        }
-
-        return result;
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public void setBizItemUnSettle(String id, CustomerSettleCheckSheetBizType bizType) {
-
-        CustomerSettleCheckBizItemDto item = this.getBizItem(id, bizType);
-
-        switch (bizType) {
-            case OUT_SHEET: {
-                int count = saleOutSheetService.setUnSettle(id);
-                if (count != 1) {
-                    throw new DefaultClientException(
-                            "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，业务无法进行！");
-                }
-                break;
-            }
-            case SALE_RETURN: {
-                int count = saleReturnService.setUnSettle(id);
-                if (count != 1) {
-                    throw new DefaultClientException(
-                            "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，业务无法进行！");
-                }
-                break;
-            }
-            case SETTLE_FEE_SHEET: {
-                int count = customerSettleFeeSheetService.setUnSettle(id);
-                if (count != 1) {
-                    throw new DefaultClientException(
-                            "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，业务无法进行！");
-                }
-                break;
-            }
-            case SETTLE_PRE_SHEET: {
-                int count = customerSettlePreSheetService.setUnSettle(id);
-                if (count != 1) {
-                    throw new DefaultClientException(
-                            "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，业务无法进行！");
-                }
-                break;
-            }
-            default: {
-                throw new DefaultSysException("未知的CustomerSettleCheckSheetBizType");
-            }
-        }
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public void setBizItemPartSettle(String id, CustomerSettleCheckSheetBizType bizType) {
-
-        CustomerSettleCheckBizItemDto item = this.getBizItem(id, bizType);
-
-        switch (bizType) {
-            case OUT_SHEET: {
-                int count = saleOutSheetService.setPartSettle(id);
-                if (count != 1) {
-                    throw new DefaultClientException(
-                            "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，业务无法进行！");
-                }
-                break;
-            }
-            case SALE_RETURN: {
-                int count = saleReturnService.setPartSettle(id);
-                if (count != 1) {
-                    throw new DefaultClientException(
-                            "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，业务无法进行！");
-                }
-                break;
-            }
-            case SETTLE_FEE_SHEET: {
-                int count = customerSettleFeeSheetService.setPartSettle(id);
-                if (count != 1) {
-                    throw new DefaultClientException(
-                            "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，业务无法进行！");
-                }
-                break;
-            }
-            case SETTLE_PRE_SHEET: {
-                int count = customerSettlePreSheetService.setPartSettle(id);
-                if (count != 1) {
-                    throw new DefaultClientException(
-                            "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，业务无法进行！");
-                }
-                break;
-            }
-            default: {
-                throw new DefaultSysException("未知的CustomerSettleCheckSheetBizType");
-            }
-        }
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public void setBizItemSettled(String id, CustomerSettleCheckSheetBizType bizType) {
-
-        CustomerSettleCheckBizItemDto item = this.getBizItem(id, bizType);
-
-        switch (bizType) {
-            case OUT_SHEET: {
-                int count = saleOutSheetService.setSettled(id);
-                if (count != 1) {
-                    throw new DefaultClientException(
-                            "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，无法重复结算！");
-                }
-                break;
-            }
-            case SALE_RETURN: {
-                int count = saleReturnService.setSettled(id);
-                if (count != 1) {
-                    throw new DefaultClientException(
-                            "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，无法重复结算！");
-                }
-                break;
-            }
-            case SETTLE_FEE_SHEET: {
-                int count = customerSettleFeeSheetService.setSettled(id);
-                if (count != 1) {
-                    throw new DefaultClientException(
-                            "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，无法重复结算！");
-                }
-                break;
-            }
-            case SETTLE_PRE_SHEET: {
-                int count = customerSettlePreSheetService.setSettled(id);
-                if (count != 1) {
-                    throw new DefaultClientException(
-                            "单号：" + item.getCode() + "，" + bizType.getDesc() + "已结算，无法重复结算！");
-                }
-                break;
-            }
-            default: {
-                throw new DefaultSysException("未知的CustomerSettleCheckSheetBizType");
-            }
-        }
-    }
-
-    @Override
-    public List<CustomerSettleCheckBizItemDto> getUnCheckBizItems(
-            QueryCustomerUnCheckBizItemVo vo) {
-
-        List<CustomerSettleCheckBizItemDto> results = new ArrayList<>();
-
-        List<SaleOutSheet> outSheetList = saleOutSheetService.getApprovedList(vo.getCustomerId(),
-                vo.getStartTime(),
-                vo.getEndTime(), SettleStatus.UN_SETTLE);
-
-        List<SaleReturn> saleReturnList = saleReturnService.getApprovedList(vo.getCustomerId(),
-                vo.getStartTime(), vo.getEndTime(), SettleStatus.UN_SETTLE);
-
-        List<CustomerSettleFeeSheet> feeSheetList = customerSettleFeeSheetService.getApprovedList(
-                vo.getCustomerId(), vo.getStartTime(),
-                vo.getEndTime(), SettleStatus.UN_SETTLE);
-
-        List<CustomerSettlePreSheet> preSheetList = customerSettlePreSheetService.getApprovedList(
-                vo.getCustomerId(), vo.getStartTime(),
-                vo.getEndTime(), SettleStatus.UN_SETTLE);
-
-        if (!CollectionUtil.isEmpty(outSheetList)) {
-            for (SaleOutSheet item : outSheetList) {
-                CustomerSettleCheckBizItemDto result = new CustomerSettleCheckBizItemDto();
-                result.setId(item.getId());
-                result.setCode(item.getCode());
-                result.setTotalAmount(item.getTotalAmount());
-                result.setApproveTime(item.getApproveTime());
-                result.setBizType(CustomerSettleCheckSheetBizType.OUT_SHEET);
-                result.setCalcType(CustomerSettleCheckSheetCalcType.ADD);
-
-                results.add(result);
-            }
-        }
-
-        if (!CollectionUtil.isEmpty(saleReturnList)) {
-            for (SaleReturn item : saleReturnList) {
-                CustomerSettleCheckBizItemDto result = new CustomerSettleCheckBizItemDto();
-                result.setId(item.getId());
-                result.setCode(item.getCode());
-                result.setTotalAmount(item.getTotalAmount());
-                result.setApproveTime(item.getApproveTime());
-                result.setBizType(CustomerSettleCheckSheetBizType.SALE_RETURN);
-                result.setCalcType(CustomerSettleCheckSheetCalcType.SUB);
-
-                results.add(result);
-            }
-        }
-
-        if (!CollectionUtil.isEmpty(feeSheetList)) {
-            for (CustomerSettleFeeSheet item : feeSheetList) {
-                CustomerSettleCheckBizItemDto result = new CustomerSettleCheckBizItemDto();
-                result.setId(item.getId());
-                result.setCode(item.getCode());
-                result.setTotalAmount(item.getTotalAmount());
-                result.setApproveTime(item.getApproveTime());
-                result.setBizType(CustomerSettleCheckSheetBizType.SETTLE_FEE_SHEET);
-                result.setCalcType(item.getSheetType() == CustomerSettleFeeSheetType.RECEIVE ?
-                        CustomerSettleCheckSheetCalcType.ADD :
-                        CustomerSettleCheckSheetCalcType.SUB);
-
-                results.add(result);
-            }
-        }
-
-        if (!CollectionUtil.isEmpty(preSheetList)) {
-            for (CustomerSettlePreSheet item : preSheetList) {
-                CustomerSettleCheckBizItemDto result = new CustomerSettleCheckBizItemDto();
-                result.setId(item.getId());
-                result.setCode(item.getCode());
-                result.setTotalAmount(item.getTotalAmount());
-                result.setApproveTime(item.getApproveTime());
-                result.setBizType(CustomerSettleCheckSheetBizType.SETTLE_PRE_SHEET);
-                result.setCalcType(CustomerSettleCheckSheetCalcType.SUB);
-
-                results.add(result);
-            }
-        }
-
-        results.stream().filter(t -> t.getCalcType() == CustomerSettleCheckSheetCalcType.SUB)
-                .forEach(t -> t.setTotalAmount(t.getTotalAmount().negate()));
-
-        return results;
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public int setUnSettle(String id) {
-
-        Wrapper<CustomerSettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(
-                        CustomerSettleCheckSheet.class)
-                .set(CustomerSettleCheckSheet::getSettleStatus, SettleStatus.UN_SETTLE)
-                .eq(CustomerSettleCheckSheet::getId, id)
-                .eq(CustomerSettleCheckSheet::getSettleStatus, SettleStatus.PART_SETTLE);
-        int count = getBaseMapper().update(updateWrapper);
-
-        return count;
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public int setPartSettle(String id) {
-
-        Wrapper<CustomerSettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(
-                        CustomerSettleCheckSheet.class)
-                .set(CustomerSettleCheckSheet::getSettleStatus, SettleStatus.PART_SETTLE)
-                .eq(CustomerSettleCheckSheet::getId, id)
-                .in(CustomerSettleCheckSheet::getSettleStatus, SettleStatus.UN_SETTLE,
-                        SettleStatus.PART_SETTLE);
-        int count = getBaseMapper().update(updateWrapper);
-
-        return count;
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public int setSettled(String id) {
-
-        Wrapper<CustomerSettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(
-                        CustomerSettleCheckSheet.class)
-                .set(CustomerSettleCheckSheet::getSettleStatus, SettleStatus.SETTLED)
-                .eq(CustomerSettleCheckSheet::getId, id)
-                .in(CustomerSettleCheckSheet::getSettleStatus, SettleStatus.UN_SETTLE,
-                        SettleStatus.PART_SETTLE);
-        int count = getBaseMapper().update(updateWrapper);
-
-        //将所有的单据的结算状态更新
-        Wrapper<CustomerSettleCheckSheetDetail> queryDetailWrapper = Wrappers.lambdaQuery(
-                        CustomerSettleCheckSheetDetail.class)
-                .eq(CustomerSettleCheckSheetDetail::getSheetId, id)
-                .orderByAsc(CustomerSettleCheckSheetDetail::getOrderNo);
-        List<CustomerSettleCheckSheetDetail> sheetDetails = customerSettleCheckSheetDetailService.list(
-                queryDetailWrapper);
-        for (CustomerSettleCheckSheetDetail sheetDetail : sheetDetails) {
-            this.setBizItemSettled(sheetDetail.getBizId(), sheetDetail.getBizType());
-        }
-
-        return count;
-    }
-
-    @Override
-    public List<CustomerSettleCheckSheet> getApprovedList(String customerId,
-            LocalDateTime startTime, LocalDateTime endTime) {
-
-        return getBaseMapper().getApprovedList(customerId, startTime, endTime);
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public void setSettleAmount(String id, BigDecimal totalPayedAmount,
-            BigDecimal totalDiscountAmount) {
-
-        CustomerSettleCheckSheet checkSheet = getBaseMapper().selectById(id);
-        BigDecimal remainTotalPayAmount = NumberUtil.sub(checkSheet.getTotalPayAmount(),
-                checkSheet.getTotalPayedAmount(), checkSheet.getTotalDiscountAmount(),
-                totalPayedAmount,
-                totalDiscountAmount);
-        BigDecimal totalPayAmount = NumberUtil.sub(checkSheet.getTotalPayAmount(),
-                checkSheet.getTotalPayedAmount(),
-                checkSheet.getTotalDiscountAmount());
-        if (NumberUtil.lt(checkSheet.getTotalPayAmount(), 0)) {
-            if (NumberUtil.gt(remainTotalPayAmount, 0)) {
-                throw new DefaultClientException(
-                        "对账单：" + checkSheet.getCode() + "，剩余收款金额为" + totalPayAmount + "元，本次收款金额为"
-                                + NumberUtil.add(
-                                totalPayedAmount, totalDiscountAmount) + "元，无法结算！");
-            }
-        }
-        if (NumberUtil.gt(checkSheet.getTotalPayAmount(), 0)) {
-            if (NumberUtil.lt(remainTotalPayAmount, 0)) {
-                throw new DefaultClientException(
-                        "对账单：" + checkSheet.getCode() + "，剩余收款金额为" + totalPayAmount + "元，本次收款金额为"
-                                + NumberUtil.add(
-                                totalPayedAmount, totalDiscountAmount) + "元，无法结算！");
-            }
-        }
-        Wrapper<CustomerSettleCheckSheet> updateWrapper = Wrappers.lambdaUpdate(
-                        CustomerSettleCheckSheet.class)
-                .set(CustomerSettleCheckSheet::getTotalPayedAmount,
-                        NumberUtil.add(totalPayedAmount, checkSheet.getTotalPayedAmount()))
-                .set(CustomerSettleCheckSheet::getTotalDiscountAmount,
-                        NumberUtil.add(totalDiscountAmount, checkSheet.getTotalDiscountAmount()))
-                .eq(CustomerSettleCheckSheet::getId, id)
-                .eq(CustomerSettleCheckSheet::getTotalPayedAmount, checkSheet.getTotalPayedAmount())
-                .eq(CustomerSettleCheckSheet::getTotalDiscountAmount,
-                        checkSheet.getTotalDiscountAmount());
-        if (getBaseMapper().update(updateWrapper) != 1) {
-            throw new DefaultClientException("结账单：" + checkSheet.getCode() + "，信息已过期，请刷新重试！");
-        }
-
-        if (NumberUtil.equal(remainTotalPayAmount, 0)) {
-            this.setSettled(id);
-        }
-    }
-
-    private void create(CustomerSettleCheckSheet sheet, CreateCustomerSettleCheckSheetVo vo) {
-
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        BigDecimal totalPayAmount = BigDecimal.ZERO;
-
-        int orderNo = 0;
-        for (CustomerSettleCheckSheetItemVo itemVo : vo.getItems()) {
-            orderNo++;
-            CustomerSettleCheckBizItemDto item = this.getBizItem(itemVo.getId(),
-                    EnumUtil.getByCode(CustomerSettleCheckSheetBizType.class, itemVo.getBizType()));
-            if (item == null) {
-                throw new DefaultClientException("第" + orderNo + "行业务单据不存在！");
-            }
-            CustomerSettleCheckSheetDetail detail = new CustomerSettleCheckSheetDetail();
-
-            detail.setId(IdUtil.getId());
-            detail.setSheetId(sheet.getId());
-            detail.setBizId(itemVo.getId());
-            detail.setBizType(
-                    EnumUtil.getByCode(CustomerSettleCheckSheetBizType.class, itemVo.getBizType()));
-            detail.setCalcType(item.getCalcType());
-            if (item.getCalcType() == CustomerSettleCheckSheetCalcType.ADD) {
-                if (NumberUtil.lt(itemVo.getPayAmount(), BigDecimal.ZERO)) {
-                    throw new DefaultClientException("第" + orderNo + "行业务单据应收金额不允许小于0！");
-                }
-            } else {
-                if (NumberUtil.gt(itemVo.getPayAmount(), BigDecimal.ZERO)) {
-                    throw new DefaultClientException("第" + orderNo + "行业务单据应收金额不允许大于0！");
-                }
-            }
-            detail.setPayAmount(itemVo.getPayAmount());
-            detail.setDescription(itemVo.getDescription());
-            detail.setOrderNo(orderNo);
-
-            customerSettleCheckSheetDetailService.save(detail);
-
-            totalAmount = NumberUtil.add(totalAmount, item.getTotalAmount());
-            totalPayAmount = NumberUtil.add(totalPayAmount, itemVo.getPayAmount());
-
-            //将所有的单据的结算状态更新
-            this.setBizItemPartSettle(detail.getBizId(), detail.getBizType());
-        }
-
-        AbstractUserDetails currentUser = SecurityUtil.getCurrentUser();
-
-        sheet.setCustomerId(vo.getCustomerId());
-        sheet.setTotalAmount(totalAmount);
-        sheet.setTotalPayAmount(totalPayAmount);
-        sheet.setTotalPayedAmount(BigDecimal.ZERO);
-        sheet.setTotalDiscountAmount(BigDecimal.ZERO);
-        sheet.setDescription(StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR
-                : vo.getDescription());
-        sheet.setRefuseReason(StringPool.EMPTY_STR);
-        sheet.setSettleStatus(SettleStatus.UN_SETTLE);
-        sheet.setStartDate(vo.getStartDate());
-        sheet.setEndDate(vo.getEndDate());
-    }
+  }
 }
