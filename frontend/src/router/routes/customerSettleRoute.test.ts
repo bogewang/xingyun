@@ -21,6 +21,7 @@ describe('客户结算路由', () => {
     );
 
     expect(overview?.path).toBe('customer/sheet');
+    expect(overview?.meta?.title).toBe('客户结算汇总');
   });
 
   it('使用 /sheet 作为供应商结算汇总路径、/settle 作为具体结算路径', () => {

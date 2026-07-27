@@ -655,7 +655,7 @@ export const CustomerSettleRoute: AppRouteRecordRaw = {
       name: 'CustomerSettleOverview',
       component: () => import('/@/views/customer-settle/sheet/index.vue'),
       meta: {
-        title: '客户结算',
+        title: '客户结算汇总',
       },
     },
     {
