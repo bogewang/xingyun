@@ -372,7 +372,11 @@
           if (requestSequence === this.loadRequestSequence && !this.routeError) {
             this.tableData = res?.datas || [];
             this.pagerConfig.total = res?.totalCount || 0;
-            this.$nextTick(() => this.syncSelection());
+            this.$nextTick(() => {
+              if (requestSequence === this.loadRequestSequence) {
+                this.syncSelection();
+              }
+            });
           }
         } catch (err: any) {
           if (requestSequence !== this.loadRequestSequence) return;

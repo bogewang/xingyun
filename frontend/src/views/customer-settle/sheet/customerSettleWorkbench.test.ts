@@ -245,4 +245,31 @@ describe('客户结算工作台', () => {
     expect(context.tableData).toEqual([{ id: 'C1-LATEST' }]);
     expect(context.pagerConfig.total).toBe(1);
   });
+
+  it('新路由请求开始后，旧请求的 nextTick 不同步勾选状态', async () => {
+    const previousRequest = createDeferred<any>();
+    const currentRequest = createDeferred<any>();
+    vi.mocked(sheetApi.querySaleSettleInfos)
+      .mockReturnValueOnce(previousRequest.promise as any)
+      .mockReturnValueOnce(currentRequest.promise as any);
+    const context = createLoadListContext('C1');
+    const nextTickCallbacks: Array<() => void> = [];
+    context.$nextTick = (callback: () => void) => nextTickCallbacks.push(callback);
+    const loadList = (CustomerSettleDetail as any).methods.loadList;
+
+    const previousLoad = loadList.call(context);
+    previousRequest.resolve({ datas: [{ id: 'C1-OLD' }], totalCount: 1 });
+    await previousLoad;
+
+    context.customerId = 'C2';
+    context.$route.query.customerId = 'C2';
+    const currentLoad = loadList.call(context);
+
+    nextTickCallbacks.shift()?.();
+
+    expect(context.syncSelection).not.toHaveBeenCalled();
+
+    currentRequest.resolve({ datas: [{ id: 'C2-NEW' }], totalCount: 1 });
+    await currentLoad;
+  });
 });
