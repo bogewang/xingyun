@@ -32,7 +32,7 @@
   import { useDesign } from '/@/hooks/web/useDesign';
   import { getCurrentParentPath } from '/@/router/menus';
   import { listenerRouteChange } from '/@/logics/mitt/routeChange';
-  import { getAllParentPath } from '/@/router/helper/menuHelper';
+  import { getActiveMenuPath } from '/@/router/helper/menuHelper';
 
   export default defineComponent({
     name: 'BasicMenu',
@@ -143,8 +143,8 @@
           const parentPath = await getCurrentParentPath(path);
           menuState.selectedKeys = [parentPath];
         } else {
-          const parentPaths = await getAllParentPath(props.items, path);
-          menuState.selectedKeys = parentPaths;
+          const activeMenuPath = await getActiveMenuPath(props.items, path);
+          menuState.selectedKeys = activeMenuPath ? [activeMenuPath] : [];
         }
       }
 
