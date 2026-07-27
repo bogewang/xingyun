@@ -130,7 +130,7 @@
           { field: 'code', title: '结算单号', width: 180, fixed: 'left' },
           { field: 'createTime', title: '结算时间', width: 180 },
           { field: 'createBy', title: '操作人', width: 120 },
-          { field: 'customerName', title: '客户名称', minWidth: 140 },
+          { field: 'customerName', title: '客户名称', width: 140 },
           { field: 'biz', title: '关联单据', width: 100, slots: { default: 'biz_default' } },
           { field: 'totalAmount', title: '结算金额', width: 120, align: 'right' },
           { field: 'description', title: '备注', minWidth: 240, slots: { default: 'description_default' } },
