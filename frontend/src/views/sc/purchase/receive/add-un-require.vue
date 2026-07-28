@@ -94,84 +94,17 @@
           </template>
 
           <template #productName_default="{ row, rowIndex }">
-            <a-auto-complete
-              v-if="isEmpty(row.productId) || row.editingProduct"
+            <InlineProductSelect
               :ref="'productInputRef' + rowIndex"
-              v-model:value="row.productQuery"
-              placeholder="请输入商品编号/名称/SKU编号/简码"
-              :options="row.productOptions"
-              :dropdown-match-select-width="false"
-              :dropdown-style="{ width: '1080px' }"
-              placement="bottomLeft"
-              @focus="() => handleProductInputFocus(row)"
-              @search="(e) => queryProduct(e, row)"
-              @keydown="(e) => handleProductSelectKeydown(e, row, rowIndex)"
-            >
-              <!-- 自定义下拉框内容 -->
-              <template #dropdownRender>
-                <div v-if="!isEmpty(row.products)" @mousedown.prevent @click.stop>
-                  <vxe-table
-                    :data="row.products"
-                    max-height="360"
-                    class="cursor-pointer"
-                    highlight-hover-row
-                    show-overflow
-                    :row-config="{ isHover: true }"
-                    :row-class-name="({ row: product }) => getProductSelectRowClass(row, product)"
-                    @cell-click="({ row: product }) => handleSelectProduct(rowIndex, product)"
-                  >
-                    <vxe-column type="seq" title="序号" width="60" />
-                    <vxe-column field="productName" title="商品名称" min-width="200">
-                      <template #default="{ row: product }">
-                        <span>{{ product.productName }}</span>
-                        <span v-if="product.hotLevel" class="inline-product-hot-stars">
-                          <StarTwoTone
-                            v-for="star in product.hotLevel"
-                            :key="star"
-                            two-tone-color="#faad14"
-                          />
-                        </span>
-                      </template>
-                    </vxe-column>
-                    <vxe-column field="inquiryProduct" title="是否询价商品" width="120">
-                      <template #default="{ row: product }">
-                        <span :class="formatInquiryProduct(product.inquiryProduct).className">
-                          {{ formatInquiryProduct(product.inquiryProduct).text }}
-                        </span>
-                      </template>
-                    </vxe-column>
-                    <vxe-column field="spec" title="规格" width="120" />
-                    <vxe-column field="unit" title="单位" width="80" />
-                    <vxe-column field="stockNum" title="库存数量" width="140" align="right" />
-                    <vxe-column
-                      field="latestPurchasePrice"
-                      title="最新采购价（元）"
-                      width="140"
-                      align="right"
-                    />
-                    <vxe-column
-                      field="purchasePrice"
-                      title="参考采购价（元）"
-                      width="140"
-                      align="right"
-                    />
-                  </vxe-table>
-                  <div
-                    class="inline-product-select-add"
-                    @mousedown.prevent
-                    @click.stop="openProductAddPage"
-                  >
-                    + 新增商品
-                  </div>
-                </div>
-              </template>
-            </a-auto-complete>
-            <span
-              v-else
-              style="color: #1677ff; cursor: pointer"
-              @click="enableProductEdit(rowIndex)"
-              >{{ row.productName }}</span
-            >
+              :row="row"
+              :row-index="rowIndex"
+              biz-type="purchase"
+              mode="unrequire"
+              :sc-id="formData.scId"
+              @select="handleSelectProduct"
+              @add-product="addProduct"
+              @open-add-product-page="openChildPage('/product/info/add')"
+            />
           </template>
 
           <!-- 采购价 列自定义内容 -->
@@ -312,12 +245,11 @@
     NumberOutlined,
     PlusCircleTwoTone,
     PlusOutlined,
-    StarTwoTone,
   } from '@ant-design/icons-vue';
   import ReceiveSheetImporter from '@/components/Importor/ReceiveSheetImporter.vue';
   import * as api from '@/api/sc/purchase/receive';
-  import * as saleApi from '@/api/sc/sale/order';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import InlineProductSelect from '@/views/sc/shared/inline-product-select.vue';
   import {
     add,
     formatDate,
@@ -353,13 +285,7 @@
     createSuccess,
     createSuccessAutoClose,
   } from '@/hooks/web/msg';
-  import {
-    getInlineProductSelectRowClass,
-    handleEmptyProductInputEnter,
-    handleInlineProductSelectKeydown,
-    resetInlineProductSelect,
-    setInlineProductSelectProducts,
-  } from '@/utils/inlineProductSelect';
+  import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
   import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import JFormItem from '@/components/JFormItem';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
@@ -373,7 +299,7 @@
       BatchAddProduct,
       ReceiveSheetImporter,
       SupplierSelector,
-      StarTwoTone,
+      InlineProductSelect,
     },
     mixins: [multiplePageMix],
     setup() {
@@ -382,7 +308,6 @@
         formatInquiryProduct,
         PlusOutlined,
         PlusCircleTwoTone,
-        StarTwoTone,
         DeleteOutlined,
         MinusCircleTwoTone,
         NumberOutlined,
@@ -444,7 +369,7 @@
             slots: { default: 'inquiryProduct_default' },
           },
           { field: 'spec', title: '规格', width: 80 },
-          { field: 'unit', title: '单位', width: 90, slots: { default: 'unit_default' } },
+          { field: 'unit', title: '单位', width: 80, slots: { default: 'unit_default' } },
           { field: 'stockNum', title: '库存数量', align: 'right', width: 140 },
           {
             field: 'receiveNum',
@@ -618,46 +543,6 @@
         this.tableData = this.tableData.filter((item) => item.id !== row.id);
         this.calcSum();
       },
-      enableProductEdit(index) {
-        this.tableData[index].editingProduct = true;
-        this.tableData[index].productQuery = '';
-        this.tableData[index].products = [];
-        this.tableData[index].productOptions = [];
-        resetInlineProductSelect(this.tableData[index]);
-        this.$nextTick(() => {
-          const productInputRef = this.$refs['productInputRef' + index];
-          if (productInputRef) {
-            productInputRef.focus();
-          }
-        });
-      },
-      // 搜索商品
-      queryProduct(queryString, row) {
-        if (isEmpty(queryString)) {
-          row.products = [];
-          row.productOptions = [];
-          resetInlineProductSelect(row);
-          return;
-        }
-
-        saleApi.searchSaleProducts(this.formData.scId, queryString).then((res) => {
-          setInlineProductSelectProducts(row, res);
-          row.productOptions = res.map((item) => {
-            return {
-              value: item.productId,
-              label: item.productCode + ' ' + item.productName,
-            };
-          });
-        });
-      },
-      handleProductInputFocus(row) {
-        const keyword = row.productQuery || row.productName;
-        if (isEmpty(keyword)) {
-          return;
-        }
-
-        this.queryProduct(keyword, row);
-      },
       focusRowInput(refName, index) {
         return focusTableInput(this, refName, index);
       },
@@ -712,18 +597,6 @@
           this.calcSum();
         }
       },
-      handleProductSelectKeydown(event, row, rowIndex) {
-        if (handleEmptyProductInputEnter(event, row, this.addProduct)) {
-          return;
-        }
-
-        handleInlineProductSelectKeydown(event, row, rowIndex, this.handleSelectProduct, () =>
-          this.$nextTick(),
-        );
-      },
-      getProductSelectRowClass(row, product) {
-        return getInlineProductSelectRowClass(row, product);
-      },
       isImportUnmatchedProduct(row) {
         return row.importUnmatched && isEmpty(row.productId);
       },
@@ -742,9 +615,6 @@
           classNames.push('sheet-price-warning-row');
         }
         return classNames.join(' ');
-      },
-      openProductAddPage() {
-        this.openChildPage('/product/info/add');
       },
       // 删除商品
       delProduct() {
