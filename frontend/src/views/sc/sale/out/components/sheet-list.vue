@@ -35,6 +35,19 @@
                 <j-form-item label="商品名称">
                   <a-input v-model:value="searchFormData.productName" allow-clear />
                 </j-form-item>
+                <j-form-item label="客户">
+                  <a-select
+                    v-model:value="searchFormData.customerId"
+                    allow-clear
+                    show-search
+                    :filter-option="filterSelectOption"
+                    :options="customerOptions"
+                    placeholder="请选择客户"
+                    @focus="loadCustomerOptions()"
+                    @search="loadCustomerOptions"
+                    @change="onCustomerChange"
+                  />
+                </j-form-item>
                 <j-form-item label="成本状态">
                   <a-select
                     v-model:value="searchFormData.fillAllCost"
@@ -57,19 +70,7 @@
                   </a-select>
                 </j-form-item>
 
-                <j-form-item label="客户">
-                  <a-select
-                    v-model:value="searchFormData.customerId"
-                    allow-clear
-                    show-search
-                    :filter-option="filterSelectOption"
-                    :options="customerOptions"
-                    placeholder="请选择客户"
-                    @focus="loadCustomerOptions()"
-                    @search="loadCustomerOptions"
-                    @change="onCustomerChange"
-                  />
-                </j-form-item>
+
 
                 <j-form-item label="单据号">
                   <a-input v-model:value="searchFormData.code" allow-clear />
