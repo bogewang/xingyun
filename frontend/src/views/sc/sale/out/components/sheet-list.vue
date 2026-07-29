@@ -498,7 +498,7 @@
           { field: 'createTime', title: '操作时间', width: 150, sortable: true },
           { field: 'createBy', title: '操作人', width: 80 },
           { field: 'description', title: '备注', width: 200 },
-          { title: '操作', minWidth: 300, fixed: 'right', slots: { default: 'action_default' } },
+          { title: '操作', minWidth: 400, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
         proxyConfig: {
