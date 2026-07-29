@@ -324,7 +324,12 @@ public class SaleOutSheetServiceImpl extends
                                 .map(SaleOutSheetDetail::getBusinessNum)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
                         String format = outNum.setScale(1, RoundingMode.HALF_UP).toString();
-                        bo.setOrderNum(String.format("%s%s", format, outDetails.get(0).getUnitName()));
+                        String unitName = outDetails.get(0).getUnitName();
+                        // 添加备注
+                        if (StringUtils.isNotBlank(outDetails.get(0).getDescription())) {
+                            unitName = String.format("%s（%s）", unitName, outDetails.get(0).getDescription());
+                        }
+                        bo.setOrderNum(String.format("%s%s", format, unitName));
                         bo.setOrderDate(item.getOrderDate().toString());
                         bo.setCategoryId(product.getCategoryId());
 
