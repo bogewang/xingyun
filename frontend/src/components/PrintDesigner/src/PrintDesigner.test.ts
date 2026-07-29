@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import PrintDesigner from './PrintDesigner.vue';
@@ -9,15 +9,15 @@ vi.mock('@/api/base-data/print-template', () => ({
   getFieldDesc: vi.fn(),
 }));
 
-const templateData = { data: { pages: [] } };
+const templateData = { pages: [], canvasSize: { width: 210, height: 297 } };
 const testData = { orderNo: 'SO-001' };
 
 class TestPrintDesignerElement extends HTMLElement {
-  loadTemplateData = vi.fn();
+  loadTemplateData = vi.fn(() => true);
   getTemplateData = vi.fn(() => templateData);
-  setTestData = vi.fn();
+  setTestData = vi.fn(() => Promise.resolve());
   getTestData = vi.fn(() => testData);
-  setVariables = vi.fn();
+  setVariables = vi.fn(() => Promise.resolve());
   print = vi.fn();
 }
 
@@ -44,7 +44,7 @@ describe('PrintDesigner', () => {
       },
     });
 
-    await wrapper.vm.$nextTick();
+    await flushPromises();
 
     expect(wrapper.find('print-designer').exists()).toBe(true);
 

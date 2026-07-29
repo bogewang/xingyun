@@ -12,8 +12,11 @@
         <a-button class="print-template-field-doc-btn" size="small" @click="openFieldDoc">
           模板字段说明
         </a-button>
-        <a-button type="primary" size="small" @click="saveTemp">保存模板</a-button>
+        <a-button type="primary" size="small" :disabled="!designerReady" @click="saveTemp">
+          保存模板
+        </a-button>
       </div>
+      <a-alert v-if="designerError" type="error" show-icon :message="designerError" />
       <div ref="designerMount" class="print-designer-mount" />
     </template>
     <a-modal
@@ -126,12 +129,16 @@
       const fieldDocLoading = ref(false);
       const fieldDocRows = ref<FieldDocRow[]>([]);
       const hasLegacyTemplate = computed(() => isLegacyTemplate(props.tempValue));
+      const designerReady = ref(false);
+      const designerError = ref('');
 
       /**
        * 在 PrintDot 元素可用后加载模板与示例数据。
        */
       async function initializeDesigner() {
         await nextTick();
+        designerReady.value = false;
+        designerError.value = '';
 
         if (hasLegacyTemplate.value) {
           designerRef.value = undefined;
@@ -153,10 +160,19 @@
         designerRef.value = designer;
 
         if (isPrintDotTemplate(props.tempValue)) {
-          designer.loadTemplateData(props.tempValue);
+          const templateLoaded = designer.loadTemplateData(props.tempValue);
+          if (!templateLoaded) {
+            designerError.value = '加载打印模板失败！';
+            return;
+          }
         }
 
-        designer.setTestData(toPrintDotVariables(props.demoData));
+        try {
+          await designer.setTestData(toPrintDotVariables(props.demoData));
+          designerReady.value = true;
+        } catch {
+          designerError.value = '加载打印测试数据失败！';
+        }
       }
 
       /**
@@ -164,7 +180,7 @@
        */
       function saveTemp() {
         const designer = designerRef.value;
-        if (!designer || hasLegacyTemplate.value) {
+        if (!designer || hasLegacyTemplate.value || !designerReady.value) {
           return;
         }
 
@@ -175,6 +191,10 @@
        * 调用 PrintDot 浏览器打印，供需要即时查看的业务侧使用。
        */
       function previewTemp() {
+        if (!designerReady.value) {
+          return undefined;
+        }
+
         return designerRef.value?.print({ mode: 'browser' });
       }
 
@@ -216,6 +236,8 @@
       return {
         designerRef,
         designerMount,
+        designerError,
+        designerReady,
         fieldDocColumns,
         fieldDocLoading,
         fieldDocRows,

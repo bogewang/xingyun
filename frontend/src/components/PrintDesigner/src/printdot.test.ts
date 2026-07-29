@@ -3,8 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { isPrintDotTemplate, toPrintDotVariables } from './printdot';
 
 describe('PrintDot 模板适配', () => {
-  it('接受包含 data 字段的 PrintDot 模板', () => {
-    expect(isPrintDotTemplate({ data: {} })).toBe(true);
+  it('接受顶层包含 pages 和 canvasSize 的 PrintDot 模板', () => {
+    expect(isPrintDotTemplate({ pages: [], canvasSize: { width: 210, height: 297 } })).toBe(true);
+  });
+
+  it('拒绝错误嵌套在 data 字段中的旧适配模板', () => {
+    expect(isPrintDotTemplate({ data: { pages: [] } })).toBe(false);
   });
 
   it('拒绝旧版 panels 模板', () => {

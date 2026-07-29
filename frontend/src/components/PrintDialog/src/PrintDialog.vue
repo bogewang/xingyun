@@ -136,8 +136,12 @@
         throw new Error('PrintDot 预览组件未正确初始化');
       }
 
-      designer.loadTemplateData(templateJson);
-      designer.setVariables(toPrintDotVariables(state.printData));
+      const templateLoaded = designer.loadTemplateData(templateJson);
+      if (!templateLoaded) {
+        throw new Error('PrintDot 模板加载失败');
+      }
+
+      await designer.setVariables(toPrintDotVariables(state.printData));
       previewReady.value = true;
       return true;
     } catch {

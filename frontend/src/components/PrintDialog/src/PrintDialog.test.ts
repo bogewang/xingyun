@@ -19,15 +19,15 @@ vi.mock('@/hooks/web/msg', () => ({
   createError,
 }));
 
-const templateData = { data: { pages: [] } };
+const templateData = { pages: [], canvasSize: { width: 210, height: 297 } };
 const printData = { orderNo: 'SO-001' };
 
 class TestPrintDesignerElement extends HTMLElement {
-  loadTemplateData = vi.fn();
+  loadTemplateData = vi.fn(() => true);
   getTemplateData = vi.fn(() => templateData);
-  setTestData = vi.fn();
+  setTestData = vi.fn(() => Promise.resolve());
   getTestData = vi.fn(() => ({}));
-  setVariables = vi.fn();
+  setVariables = vi.fn(() => Promise.resolve());
   print = vi.fn(() => Promise.resolve());
 }
 
@@ -134,7 +134,9 @@ describe('PrintDialog', () => {
     designer.loadTemplateData.mockImplementationOnce(() => {
       throw new Error('load failed');
     });
-    getSetting.mockResolvedValue({ templateJson: { data: { pages: [{ id: 'new' }] } } });
+    getSetting.mockResolvedValue({
+      templateJson: { pages: [{ id: 'new' }], canvasSize: { width: 210, height: 297 } },
+    });
 
     await (
       wrapper.vm as unknown as { handleTemplateChange: (id: string) => Promise<void> }
@@ -144,6 +146,42 @@ describe('PrintDialog', () => {
     expect((wrapper.vm as unknown as { selectedTemplateId: string }).selectedTemplateId).toBe(
       'current',
     );
+    expect(createError).toHaveBeenCalledWith('加载打印模板失败！');
+  });
+
+  it('模板加载返回 false 时不允许打印', async () => {
+    const wrapper = mountDialog();
+    openPrintDialog({ templateJson: templateData, printData });
+
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+
+    const designer = wrapper.find('print-designer').element as TestPrintDesignerElement;
+    designer.loadTemplateData.mockReturnValue(false);
+
+    await (wrapper.vm as unknown as { showPreview: () => Promise<boolean> }).showPreview();
+    await (wrapper.vm as unknown as { handlePrint: () => Promise<void> }).handlePrint();
+
+    expect((wrapper.vm as unknown as { previewReady: boolean }).previewReady).toBe(false);
+    expect(designer.print).not.toHaveBeenCalled();
+    expect(createError).toHaveBeenCalledWith('加载打印模板失败！');
+  });
+
+  it('变量注入失败时不允许打印', async () => {
+    const wrapper = mountDialog();
+    openPrintDialog({ templateJson: templateData, printData });
+
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+
+    const designer = wrapper.find('print-designer').element as TestPrintDesignerElement;
+    designer.setVariables.mockRejectedValueOnce(new Error('variables failed'));
+
+    await (wrapper.vm as unknown as { showPreview: () => Promise<boolean> }).showPreview();
+    await (wrapper.vm as unknown as { handlePrint: () => Promise<void> }).handlePrint();
+
+    expect((wrapper.vm as unknown as { previewReady: boolean }).previewReady).toBe(false);
+    expect(designer.print).not.toHaveBeenCalled();
     expect(createError).toHaveBeenCalledWith('加载打印模板失败！');
   });
 });
