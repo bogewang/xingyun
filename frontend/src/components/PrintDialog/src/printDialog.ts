@@ -1,5 +1,4 @@
 import { reactive, readonly } from 'vue';
-import type { PrintTemplateJson } from '@/components/PrintDesigner/src/printUtils';
 
 export interface PrintTemplateOption {
   id: string;
@@ -8,7 +7,7 @@ export interface PrintTemplateOption {
 }
 
 export interface PrintDialogPayload {
-  templateJson: PrintTemplateJson;
+  templateJson: unknown;
   printData: unknown;
   title?: string;
   bizType?: string;
@@ -19,7 +18,7 @@ export interface PrintDialogPayload {
 
 export interface PrintDialogState {
   open: boolean;
-  templateJson: PrintTemplateJson;
+  templateJson: unknown;
   printData: unknown;
   title: string;
   bizType: string;

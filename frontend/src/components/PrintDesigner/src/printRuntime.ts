@@ -1,5 +1,4 @@
 import { openPrintDialog } from '/@/components/PrintDialog';
-import { normalizePrintData, normalizeTemplate } from './printUtils';
 import type { PrintDialogPayload } from '/@/components/PrintDialog';
 
 export interface PrintRuntimePreviewOptions
@@ -17,8 +16,8 @@ export interface PrintRuntimeApi {
 /**
  * 运行时打印预览入口。
  *
- * 将外部传入的模板和业务数据规范化后写入全局预览弹窗状态，
- * 由 `PrintDialog` 负责实际创建 vg-print 模板实例并展示。
+ * 将外部传入的模板和业务数据原样写入全局预览弹窗状态，
+ * 由 `PrintDialog` 负责验证 PrintDot 模板并展示预览。
  */
 function preview(templateJson: unknown, data: unknown, options: PrintRuntimePreviewOptions = {}) {
   openPrintDialog({
@@ -27,8 +26,8 @@ function preview(templateJson: unknown, data: unknown, options: PrintRuntimePrev
     templateId: options.templateId,
     templateList: options.templateList || [],
     enableTemplateSwitch: options.enableTemplateSwitch === true,
-    templateJson: normalizeTemplate(templateJson),
-    printData: normalizePrintData(data),
+    templateJson,
+    printData: data,
   });
 }
 
