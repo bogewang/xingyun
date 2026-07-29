@@ -33,6 +33,17 @@ class SaleOutSheetProfitTrendSqlTest {
         "SUM(CASE WHEN IFNULL(d.confirm_amt, 0) != 0 THEN d.confirm_amt ELSE d.tax_amount END), 0) AS salesAmount"));
   }
 
+  /** 验证商品利润报表使用验收金额反推销售成本，避免正成本显示为负数。 */
+  @Test
+  void shouldUseConfirmAmountWhenCalculatingProductProfitCost() throws IOException {
+    String mapperXml = readMapperXml();
+    String productSql = getQuerySql(mapperXml, "queryProductProfit");
+
+    assertTrue(productSql.contains(
+        "SUM(CASE WHEN IFNULL(d.confirm_amt, 0) != 0 THEN d.confirm_amt ELSE d.tax_amount END\n"
+            + "                - IFNULL(d.total_profit, 0))"));
+  }
+
   /** 验证结算状态和未付金额筛选统一按验收金额计算应收金额。 */
   @Test
   void shouldUseConfirmAmountForSettlementAndUnpaidFilters() throws IOException {
