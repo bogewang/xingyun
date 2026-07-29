@@ -1,5 +1,6 @@
 package com.lframework.xingyun.sc.mappers;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -30,6 +31,29 @@ class SaleOutSheetProfitTrendSqlTest {
         "SUM(CASE WHEN IFNULL(s.confirm_amt, 0) != 0 THEN s.confirm_amt ELSE s.total_amount END)"));
     assertTrue(trendSql.contains(
         "SUM(CASE WHEN IFNULL(d.confirm_amt, 0) != 0 THEN d.confirm_amt ELSE d.tax_amount END), 0) AS salesAmount"));
+  }
+
+  /** 验证结算状态和未付金额筛选统一按验收金额计算应收金额。 */
+  @Test
+  void shouldUseConfirmAmountForSettlementAndUnpaidFilters() throws IOException {
+    String mapperXml = readMapperXml();
+
+    assertTrue(mapperXml.contains(
+        "(CASE WHEN IFNULL(s.confirm_amt, 0) != 0 THEN s.confirm_amt ELSE s.total_amount END) &lt;= IFNULL(s.paid_amount, 0)"));
+    assertTrue(mapperXml.contains(
+        "(CASE WHEN IFNULL(s.confirm_amt, 0) != 0 THEN s.confirm_amt ELSE s.total_amount END) &gt; IFNULL(s.paid_amount, 0)"));
+    assertTrue(mapperXml.contains(
+        "(CASE WHEN IFNULL(s1.confirm_amt, 0) != 0 THEN s1.confirm_amt ELSE s1.total_amount END) &lt;= IFNULL(s1.paid_amount, 0)"));
+    assertTrue(mapperXml.contains(
+        "((CASE WHEN IFNULL(s.confirm_amt, 0) != 0 THEN s.confirm_amt ELSE s.total_amount END) - IFNULL(s.paid_amount, 0)) &gt;= #{vo.unpaidAmountStart}"));
+    assertFalse(mapperXml.contains(
+        "AND IFNULL(s.total_amount, 0) &lt;= IFNULL(s.paid_amount, 0)"));
+    assertFalse(mapperXml.contains(
+        "AND IFNULL(s.total_amount, 0) &gt; IFNULL(s.paid_amount, 0)"));
+    assertFalse(mapperXml.contains(
+        "AND IFNULL(s1.total_amount, 0) &lt;= IFNULL(s1.paid_amount, 0)"));
+    assertFalse(mapperXml.contains(
+        "AND IFNULL(s1.total_amount, 0) &gt; IFNULL(s1.paid_amount, 0)"));
   }
 
   /** 读取 Mapper 文件内容。 */

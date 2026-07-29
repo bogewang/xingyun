@@ -48,6 +48,9 @@
                     @change="onCustomerChange"
                   />
                 </j-form-item>
+                <j-form-item label="单据号">
+                  <a-input v-model:value="searchFormData.code" allow-clear />
+                </j-form-item>
                 <j-form-item label="成本状态">
                   <a-select
                     v-model:value="searchFormData.fillAllCost"
@@ -59,7 +62,11 @@
                   </a-select>
                 </j-form-item>
                 <j-form-item label="结算状态">
-                  <a-select v-model:value="searchFormData.settleStatus" placeholder="全部" allow-clear>
+                  <a-select
+                    v-model:value="searchFormData.settleStatus"
+                    placeholder="全部"
+                    allow-clear
+                  >
                     <a-select-option
                       v-for="item in SETTLE_STATUS.values()"
                       :key="item.code"
@@ -68,12 +75,6 @@
                       {{ item.desc }}
                     </a-select-option>
                   </a-select>
-                </j-form-item>
-
-
-
-                <j-form-item label="单据号">
-                  <a-input v-model:value="searchFormData.code" allow-clear />
                 </j-form-item>
                 <j-form-item label="操作人">
                   <a-select
@@ -223,7 +224,7 @@
           </template>
 
           <template #profit_rate="{ row }">
-            {{ calcProfitRate(row.totalProfit, row.totalAmount, row.confirmAmt) }}
+            {{ calcProfitRate(row.totalAmount, row.confirmAmt, row.totalCost) }}
           </template>
 
           <template #fillAllCost_default="{ row }">
@@ -307,22 +308,38 @@
       <order-print-dialog />
 
       <!-- 月底成本重算弹窗 -->
-      <a-modal
-        v-model:open="costRecalculateVisible"
-        title="月底成本重算"
-        :confirm-loading="costRecalculateLoading"
-        @ok="executeCostRecalculate"
-      >
+      <a-modal v-model:open="costRefreshVisible" title="月底成本重算" @ok="recalculate">
         <a-form layout="vertical">
           <a-form-item label="时间范围">
             <a-range-picker
-              v-model:value="costRecalculateDateRange"
+              v-model:value="costRefreshDateRange"
               value-format="YYYY-MM-DD"
               :placeholder="['开始日期', '结束日期']"
             />
           </a-form-item>
         </a-form>
       </a-modal>
+
+      <!-- 成本重算进度遮罩 -->
+      <div v-if="recalculating" class="recalc-overlay">
+        <div class="recalc-overlay-inner">
+          <a-spin v-if="!recalcFailedDate" size="large" />
+          <div class="recalc-tip">{{ recalcLoadingTip }}</div>
+          <a-progress
+            v-if="!recalcFailedDate"
+            :percent="recalcProgressPercent"
+            status="active"
+            class="recalc-progress"
+          />
+          <div v-if="recalcFailedDate" class="recalc-error">
+            <a-alert type="error" :message="recalcErrorMsg" show-icon style="margin-bottom: 16px" />
+            <a-space>
+              <a-button type="primary" @click="retryRecalculate">从失败日期重试</a-button>
+              <a-button @click="cancelRecalculate">取消</a-button>
+            </a-space>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -375,7 +392,8 @@
     buildMarketBuySummary2Params,
     buildMarketBuySummaryParams,
   } from './saleOutMarketBuySummary';
-  import { calcSaleOutProfitRateByProfit } from './saleOutProfit';
+  import { calcSaleOutProfitRateByCost } from './saleOutProfit';
+  import { costRecalculateMixin } from '@/mixins/costRecalculateMixin';
 
   export default defineComponent({
     name: 'SaleOutSheetSheetList',
@@ -387,7 +405,7 @@
       OrderPrintDialog: PrintDialog,
       SaleOutSheetQueryImporter,
     },
-    mixins: [multiplePageMix, printMix, gridCollapseHeightMix],
+    mixins: [multiplePageMix, printMix, gridCollapseHeightMix, costRecalculateMixin],
     setup() {
       const { hasPermission } = usePermission();
       return {
@@ -525,9 +543,8 @@
           description: '',
         },
         // 月底成本重算
-        costRecalculateVisible: false,
-        costRecalculateLoading: false,
-        costRecalculateDateRange: [],
+        costRefreshVisible: false,
+        costRefreshDateRange: [],
       };
     },
     computed: {
@@ -572,9 +589,15 @@
         const paidAmount = this.sumByField(data, 'paidAmount');
         const unpaidAmount = this.sumByField(data, 'unpaidAmount');
         const totalProfit = this.sumByField(data, 'totalProfit');
+        const totalCost = this.sumByField(data, 'totalCost');
         const totalNum = this.sumByField(data, 'totalNum');
         const confirmNum = this.sumByField(data, 'confirmNum');
         const confirmAmt = this.sumByField(data, 'confirmAmt');
+        const totalProfitBaseAmount = (data || []).reduce((total, item) => {
+          const confirmAmount = Number(item?.confirmAmt || 0);
+          const saleAmount = Number(item?.totalAmount || 0);
+          return total + (confirmAmount !== 0 ? confirmAmount : saleAmount);
+        }, 0);
 
         return [
           columns.map((column) => {
@@ -603,7 +626,7 @@
 
             if (column.field === 'profitRate') {
               return this.canViewProfit
-                ? this.calcProfitRate(totalProfit, totalAmount, confirmAmt)
+                ? this.calcProfitRate(totalProfitBaseAmount, 0, totalCost)
                 : '';
             }
 
@@ -633,8 +656,8 @@
       formatQuantity(value) {
         return this.toFixedNumber(value, 2, true);
       },
-      calcProfitRate(profit, amount, confirmAmt) {
-        return calcSaleOutProfitRateByProfit(profit, amount, confirmAmt);
+      calcProfitRate(amount, confirmAmt, totalCost) {
+        return calcSaleOutProfitRateByCost(amount, confirmAmt, totalCost);
       },
       toFixedNumber(value, digits = 2, trimZero = false) {
         const text = Number(value || 0).toFixed(digits);
@@ -1119,34 +1142,46 @@
           const day = String(d.getDate()).padStart(2, '0');
           return `${year}-${month}-${day}`;
         };
-        this.costRecalculateDateRange = [formatDate(firstDay), formatDate(now)];
-        this.costRecalculateVisible = true;
-      },
-      /**
-       * 执行月底成本重算
-       */
-      executeCostRecalculate() {
-        const [beginDate, endDate] = this.costRecalculateDateRange || [];
-        if (!beginDate || !endDate) {
-          return;
-        }
-        this.costRecalculateLoading = true;
-        api
-          .monthEndRecalculate({ beginDate, endDate })
-          .then((res) => {
-            createSuccess(
-              `重算完成：更新单据 ${res.updatedSheetCount} 条，明细 ${res.updatedDetailCount} 条` +
-                (res.notFilledCount > 0 ? `，${res.notFilledCount} 条未填充` : ''),
-            );
-            this.costRecalculateVisible = false;
-            this.search();
-          })
-          .finally(() => {
-            this.costRecalculateLoading = false;
-          });
+        this.costRefreshDateRange = [formatDate(firstDay), formatDate(now)];
+        this.costRefreshVisible = true;
       },
     },
   });
 </script>
 
-<style scoped></style>
+<style scoped>
+  .recalc-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 9999;
+    background: rgba(255, 255, 255, 0.85);
+  }
+
+  .recalc-overlay-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .recalc-tip {
+    margin-top: 24px;
+    color: #2f3f48;
+    font-size: 16px;
+  }
+
+  .recalc-progress {
+    width: 320px;
+    margin-top: 16px;
+  }
+
+  .recalc-error {
+    max-width: 420px;
+    text-align: center;
+  }
+</style>

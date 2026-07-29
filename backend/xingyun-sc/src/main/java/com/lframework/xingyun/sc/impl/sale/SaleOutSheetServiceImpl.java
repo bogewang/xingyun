@@ -2187,7 +2187,7 @@ public class SaleOutSheetServiceImpl extends
             return BigDecimal.ZERO;
         }
 
-        return saleDetail.getConfirmNum() == null
+        return saleDetail.getConfirmNum() == null || saleDetail.getConfirmNum().compareTo(BigDecimal.ZERO) == 0
                 ? NumberUtil.getDefaultValue(saleDetail.getOrderNum())
                 : saleDetail.getConfirmNum();
     }

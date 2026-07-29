@@ -51,6 +51,21 @@ export function calcSaleOutProfitRateByProfit(
   return `${((Number(profit || 0) / baseAmount) * 100).toFixed(2)}%`;
 }
 
+/** 根据前端金额和成本计算毛利率，验收金额为零时使用销售金额作为基数。 */
+export function calcSaleOutProfitRateByCost(
+  saleAmount: number | string | null | undefined,
+  confirmAmt: number | string | null | undefined,
+  costAmount: number | string | null | undefined,
+): string {
+  const confirmAmount = Number(confirmAmt || 0);
+  const baseAmount = confirmAmount !== 0 ? confirmAmount : Number(saleAmount || 0);
+  if (!baseAmount) {
+    return '0.00%';
+  }
+
+  return `${(((baseAmount - Number(costAmount || 0)) / baseAmount) * 100).toFixed(2)}%`;
+}
+
 /**
  * 计算销售出库明细利润额，利润按验收金额减出库成本。
  * @param row 销售出库明细行
@@ -63,21 +78,18 @@ export function calcSaleOutProfitAmount(row: SaleOutProfitRow): number {
 }
 
 /**
- * 计算销售出库明细毛利率，利润按验收金额减出库成本，分母按出库金额。
+ * 计算销售出库明细毛利率，按售价与成本单价计算。
  * @param row 销售出库明细行
  * @returns 毛利率文本
  */
 export function calcSaleOutProfitRate(row: SaleOutProfitRow): string {
-  if (row?.totalProfit !== null && row?.totalProfit !== undefined && row?.totalProfit !== '') {
-    return calcSaleOutProfitRateByProfit(row.totalProfit, getSaleOutAmount(row), row.confirmAmt);
-  }
-
-  const baseAmount = getSaleOutProfitBaseAmount(row);
-  if (!baseAmount || !isFloatGeZero(row?.costPrice) || !isFloat(row?.outNum)) {
+  const salePrice = Number(row?.taxPrice || 0);
+  const costPrice = Number(row?.costPrice || 0);
+  if (!salePrice || !Number.isFinite(salePrice) || !Number.isFinite(costPrice)) {
     return '0.00%';
   }
 
-  return `${((calcSaleOutProfitAmount(row) / baseAmount) * 100).toFixed(2)}%`;
+  return `${(((salePrice - costPrice) / salePrice) * 100).toFixed(2)}%`;
 }
 
 /**
