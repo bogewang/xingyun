@@ -156,7 +156,7 @@
         </template>
         <template #profitRate_default="{ row }">
           <span :style="{ color: Number(row.totalProfit || 0) < 0 ? '#f5222d' : undefined }">
-            {{ calcProfitRate(row.totalProfit, row.taxAmount) }}
+            {{ calcProfitRate(row.totalProfit, row.taxAmount, row.confirmAmt) }}
           </span>
         </template>
       </vxe-grid>
@@ -224,7 +224,7 @@
           </a-space>
         </template>
         <template #profitRate_default="{ row }">
-          {{ calcProfitRate(row.totalProfit, row.taxAmount) }}
+          {{ calcProfitRate(row.totalProfit, row.taxAmount, row.confirmAmt) }}
         </template>
         <template #costAmount_default="{ row }">
           {{ formatAmount(calcCostAmount(row)) }}
@@ -317,6 +317,7 @@
   import { createError, createSuccess, createSuccessAutoClose } from '@/hooks/web/msg';
   import { usePermission } from '/@/hooks/web/usePermission';
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
+  import { calcSaleOutProfitRateByProfit } from './saleOutProfit';
 
   const createDefaultSearchFormData = () => ({
     code: '',
@@ -648,7 +649,9 @@
               return this.canViewProfit ? this.formatAmount(totalProfit) : '';
             }
             if (column.field === 'profitRate') {
-              return this.canViewProfit ? this.calcProfitRate(totalProfit, taxAmount) : '';
+              return this.canViewProfit
+                ? this.calcProfitRate(totalProfit, taxAmount, confirmAmt)
+                : '';
             }
             return '';
           }),
@@ -693,12 +696,8 @@
 
         return 0;
       },
-      calcProfitRate(profit, amount) {
-        const totalAmount = Number(amount || 0);
-        if (!totalAmount) {
-          return '0.00%';
-        }
-        return `${((Number(profit || 0) / totalAmount) * 100).toFixed(2)}%`;
+      calcProfitRate(profit, amount, confirmAmt) {
+        return calcSaleOutProfitRateByProfit(profit, amount, confirmAmt);
       },
       search() {
         this.$refs.grid.commitProxy('reload');
