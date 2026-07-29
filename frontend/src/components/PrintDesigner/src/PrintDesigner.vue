@@ -1,20 +1,21 @@
 <template>
   <div class="print-designer-shell">
-    <FullDesigner
-      ref="designerRef"
-      :initial-template="normalizedTemplate"
-      :initial-print-data="normalizedPrintData"
-      default-lang="cn"
-      @save="handleSave"
-    >
-      <template #headerLeft>
-        <div class="print-designer-header-left">
-          <a-button class="print-template-field-doc-btn" size="small" @click="openFieldDoc">
-            模板字段说明
-          </a-button>
-        </div>
-      </template>
-    </FullDesigner>
+    <a-alert
+      v-if="hasLegacyTemplate"
+      type="warning"
+      show-icon
+      message="请先迁移模板"
+      description="当前模板仍是旧版 vg-print 格式，无法在 PrintDot 中加载或编辑。请手动迁移后再保存。"
+    />
+    <template v-else>
+      <div class="print-designer-toolbar">
+        <a-button class="print-template-field-doc-btn" size="small" @click="openFieldDoc">
+          模板字段说明
+        </a-button>
+        <a-button type="primary" size="small" @click="saveTemp">保存模板</a-button>
+      </div>
+      <div ref="designerMount" class="print-designer-mount" />
+    </template>
     <a-modal
       v-model:open="fieldDocVisible"
       title="模板字段说明"
@@ -48,35 +49,14 @@
 </template>
 
 <script lang="ts">
-  import { computed, defineComponent, nextTick, onMounted, ref } from 'vue';
-  import { FullDesigner, hiprint } from 'vg-print';
+  import { computed, defineComponent, nextTick, onMounted, ref, watch } from 'vue';
   import * as printTemplateApi from '@/api/base-data/print-template';
   import type { PrintTemplateColumnDescription } from '@/api/base-data/print-template/model/printTemplateColumnDescription';
   import {
-    createEmptyTemplate,
-    normalizeDemoData,
-    normalizePrintData,
-    normalizeTemplate,
-    type PrintDemoData,
-    type PrintTemplateJson,
-  } from './printUtils';
-
-  hiprint.register({ authKey: 'eyJrIjoiZ21jNTc2MDMzNyJ9' });
-
-  const IMPORTED_TEMPLATE_STORAGE_KEY = 'xingyun-print-imported-templates';
-
-  type SavePayload = {
-    template?: PrintTemplateJson;
-    data?: PrintDemoData;
-  };
-
-  type DesignerTemplateItem = {
-    tempId: string;
-    name: string;
-    desc: string;
-    template: PrintTemplateJson;
-    testData?: PrintDemoData;
-  };
+    isPrintDotTemplate,
+    toPrintDotVariables,
+    type PrintDesignerElement,
+  } from './printdot';
 
   type FieldDocRow = {
     path: string;
@@ -104,6 +84,9 @@
     },
   ];
 
+  /**
+   * 将后端字段说明转换为表格展示行。
+   */
   function mapFieldDocRows(data: PrintTemplateColumnDescription[] = []): FieldDocRow[] {
     return data.map((item) => ({
       path: item.columnName,
@@ -113,73 +96,18 @@
   }
 
   /**
-   * 根据导入文件名生成模板列表中的显示名称。
+   * 判断模板是否仍为旧版 vg-print 的 panels 格式。
    */
-  function buildImportedTemplateName(fileName: string) {
-    return fileName.replace(/\.json$/i, '') || '导入模板';
-  }
-
-  /**
-   * 从浏览器本地缓存读取用户导入过的模板。
-   */
-  function loadImportedTemplates(): DesignerTemplateItem[] {
-    try {
-      const raw = window.localStorage.getItem(IMPORTED_TEMPLATE_STORAGE_KEY);
-      if (!raw) {
-        return [];
-      }
-
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * 将导入模板保存到浏览器本地缓存。
-   */
-  function saveImportedTemplates(templates: DesignerTemplateItem[]) {
-    try {
-      window.localStorage.setItem(IMPORTED_TEMPLATE_STORAGE_KEY, JSON.stringify(templates));
-    } catch {
-      // 忽略本地缓存异常，避免影响导入主流程。
-    }
-  }
-
-  /**
-   * 合并设计器内置模板与本地导入模板。
-   *
-   * 以 `tempId` 去重，保证用户导入模板在刷新后仍能出现在模板列表中。
-   */
-  function mergeTemplateList(
-    currentList: DesignerTemplateItem[] = [],
-    importedList: DesignerTemplateItem[] = [],
-  ) {
-    const merged = new Map<string, DesignerTemplateItem>();
-
-    currentList.forEach((item) => {
-      if (item?.tempId) {
-        merged.set(item.tempId, item);
-      }
-    });
-
-    importedList.forEach((item) => {
-      if (item?.tempId) {
-        merged.set(item.tempId, item);
-      }
-    });
-
-    return Array.from(merged.values());
+  function isLegacyTemplate(value: unknown): boolean {
+    return !!value && typeof value === 'object' && 'panels' in value;
   }
 
   export default defineComponent({
     name: 'PrintDesigner',
-    components: { FullDesigner },
     props: {
       tempValue: {
         type: Object,
-        default: () => createEmptyTemplate(),
+        default: null,
       },
       demoData: {
         type: [Array, Object, String],
@@ -192,47 +120,74 @@
     },
     emits: ['save'],
     setup(props, { emit, expose }) {
-      const designerRef = ref<any>(null);
+      const designerMount = ref<HTMLElement>();
+      const designerRef = ref<PrintDesignerElement>();
       const fieldDocVisible = ref(false);
       const fieldDocLoading = ref(false);
       const fieldDocRows = ref<FieldDocRow[]>([]);
-      let importPatched = false;
-
-      const normalizedTemplate = computed(() => normalizeTemplate(props.tempValue));
-      const normalizedPrintData = computed(() => normalizePrintData(props.demoData));
+      const hasLegacyTemplate = computed(() => isLegacyTemplate(props.tempValue));
 
       /**
-       * 接收设计器保存事件，并向业务页面输出规范化模板。
+       * 在 PrintDot 元素可用后加载模板与示例数据。
        */
-      function handleSave(payload?: SavePayload) {
-        emit(
-          'save',
-          payload?.template || createEmptyTemplate(),
-          normalizeDemoData(payload?.data ?? props.demoData),
-        );
+      async function initializeDesigner() {
+        await nextTick();
+
+        if (hasLegacyTemplate.value) {
+          designerRef.value = undefined;
+          return;
+        }
+
+        const mount = designerMount.value;
+        if (!mount) {
+          return;
+        }
+
+        let designer = mount.querySelector<PrintDesignerElement>('print-designer');
+        if (!designer) {
+          designer = document.createElement('print-designer') as PrintDesignerElement;
+          designer.lang = 'zh';
+          mount.append(designer);
+        }
+
+        designerRef.value = designer;
+
+        if (isPrintDotTemplate(props.tempValue)) {
+          designer.loadTemplateData(props.tempValue);
+        }
+
+        designer.setTestData(toPrintDotVariables(props.demoData));
       }
 
       /**
-       * 触发设计器保存动作，供父组件通过组件实例调用。
+       * 从 PrintDot 元素读取模板和测试数据，并保持既有的保存事件契约。
        */
       function saveTemp() {
-        designerRef.value?.save();
+        const designer = designerRef.value;
+        if (!designer || hasLegacyTemplate.value) {
+          return;
+        }
+
+        emit('save', designer.getTemplateData(), designer.getTestData());
       }
 
       /**
-       * 触发设计器内置预览动作，使用当前示例数据查看模板效果。
+       * 调用 PrintDot 浏览器打印，供需要即时查看的业务侧使用。
        */
       function previewTemp() {
-        designerRef.value?.preView();
+        return designerRef.value?.print({ mode: 'browser' });
       }
 
       /**
-       * 返回底层设计器实例，便于业务侧按需扩展调用。
+       * 返回 PrintDot Web Component 实例，便于业务侧按需扩展调用。
        */
       function getDesigner() {
         return designerRef.value;
       }
 
+      /**
+       * 查询并显示当前业务类型可绑定的模板字段说明。
+       */
       async function openFieldDoc() {
         fieldDocVisible.value = true;
 
@@ -249,112 +204,25 @@
         }
       }
 
-      /**
-       * 增强设计器的本地模板导入能力。
-       *
-       * vg-print 默认导入流程不会持久化到项目业务列表，这里拦截上传选择、
-       * 解析 JSON 模板、写入本地缓存，并把导入模板合并回设计器模板列表。
-       */
-      function patchTemplateImport() {
-        const designer = designerRef.value;
+      onMounted(initializeDesigner);
 
-        if (!designer || importPatched) {
-          return;
-        }
-
-        const originalOnLocalTemplates =
-          typeof designer.onLocalTemplates === 'function'
-            ? designer.onLocalTemplates.bind(designer)
-            : null;
-        const originalOnTemplateFileSelected =
-          typeof designer.onTemplateFileSelected === 'function'
-            ? designer.onTemplateFileSelected.bind(designer)
-            : null;
-
-        designer.onLocalTemplates = (templates: DesignerTemplateItem[]) => {
-          if (originalOnLocalTemplates) {
-            originalOnLocalTemplates(templates);
-          }
-
-          designer.templateList = mergeTemplateList(designer.templateList, loadImportedTemplates());
-        };
-
-        designer.handleUploadTemplate = () => {
-          const input = designer.$refs?.uploadTplInput as HTMLInputElement | undefined;
-          if (input?.click) {
-            input.value = '';
-            input.click();
-          }
-        };
-
-        designer.onTemplateFileSelected = async (event: Event) => {
-          const input = event?.target as HTMLInputElement | null;
-          const file = input?.files?.[0];
-
-          if (!file) {
-            return;
-          }
-
-          try {
-            const content = await file.text();
-            const parsedContent = JSON.parse(content);
-
-            if (!Array.isArray((parsedContent as { panels?: unknown[] }).panels)) {
-              designer.$message?.warning?.('选中的文件不是有效的模板文件');
-              return;
-            }
-
-            const parsedTemplate = normalizeTemplate(parsedContent);
-            const templateItem: DesignerTemplateItem = {
-              tempId: `imported:${file.name}`,
-              name: buildImportedTemplateName(file.name),
-              desc: '导入模板',
-              template: parsedTemplate,
-              testData: designer.printDataVar,
-            };
-
-            const importedTemplates = mergeTemplateList(loadImportedTemplates(), [templateItem]);
-            saveImportedTemplates(importedTemplates);
-            designer.templateList = mergeTemplateList(designer.templateList, importedTemplates);
-
-            if (typeof designer.applyTemplateItem === 'function') {
-              await designer.applyTemplateItem(templateItem);
-            } else if (originalOnTemplateFileSelected) {
-              await originalOnTemplateFileSelected(event);
-            }
-
-            designer.$message?.success?.('模板导入成功');
-          } catch (error) {
-            designer.$message?.error?.(`模板导入失败: ${String(error)}`);
-          } finally {
-            if (input) {
-              input.value = '';
-            }
-          }
-        };
-
-        designer.templateList = mergeTemplateList(designer.templateList, loadImportedTemplates());
-        importPatched = true;
-      }
-
-      onMounted(() => {
-        nextTick(() => {
-          patchTemplateImport();
-        });
-      });
+      watch(
+        () => [props.tempValue, props.demoData],
+        () => initializeDesigner(),
+      );
 
       expose({ getDesigner, previewTemp, saveTemp });
 
       return {
         designerRef,
+        designerMount,
         fieldDocColumns,
         fieldDocLoading,
         fieldDocRows,
         fieldDocVisible,
-        handleSave,
-        normalizedPrintData,
-        normalizedTemplate,
+        hasLegacyTemplate,
         openFieldDoc,
+        saveTemp,
       };
     },
   });
@@ -362,15 +230,18 @@
 
 <style lang="scss">
   .print-designer-shell {
+    display: flex;
+    flex-direction: column;
     width: 100%;
     height: 100%;
   }
 
-  .print-designer-header-left {
+  .print-designer-toolbar {
     display: flex;
+    gap: 8px;
     align-items: center;
-    gap: 12px;
-    color: #fff;
+    padding: 8px 12px;
+    background: #001529;
   }
 
   .print-field-docs__summary {
@@ -389,15 +260,9 @@
   }
 
   .print-template-field-doc-btn.ant-btn {
-    height: 28px;
-    padding: 0 10px;
     color: #fff !important;
-    font-size: 12px;
-    line-height: 26px;
     background: transparent !important;
-    border: 1px solid rgb(255 255 255 / 75%) !important;
-    border-radius: 3px;
-    box-shadow: none;
+    border-color: rgb(255 255 255 / 75%) !important;
   }
 
   .print-template-field-doc-btn.ant-btn:hover,
@@ -407,7 +272,14 @@
     border-color: #fff !important;
   }
 
-  .print-designer-shell :deep(.designer-page) {
+  .print-designer-mount {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .print-designer-mount > print-designer {
+    display: block;
+    width: 100%;
     height: 100%;
   }
 </style>

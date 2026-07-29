@@ -13,11 +13,9 @@
       v-permission="['base-data:print-template:query']"
       v-loading="loading"
     >
-      <!-- 继续复用业务层组件名，但内部实现已经替换为 vg-print。 -->
       <print-designer
         ref="designer"
         :temp-value="value"
-        :widget-options="widgets"
         :demo-data="demoData"
         :biz-type="formData.bizType"
         @save="submit"
@@ -35,26 +33,6 @@
   import { createSuccess } from '@/hooks/web/msg';
   import { normalizeDemoData } from '@/components/PrintDesigner/src/printUtils';
   import PrintDesigner from '@/components/PrintDesigner';
-
-  /**
-   * 创建新的空模板结构。
-   *
-   * 功能:
-   * 返回符合 vg-print 新设计器要求的最小模板对象。
-   *
-   * 参数:
-   * 无。
-   *
-   * 返回值:
-   * {Object} 返回带有空 `panels` 数组的模板对象。
-   *
-   * 异常:
-   * 无显式抛出异常。
-   */
-  function createEmptyTemplate() {
-    // 返回最小可用模板结构，确保新设计器可以稳定初始化。
-    return { panels: [] };
-  }
 
   export default defineComponent({
     // 定义组件名称，便于调试与组件树识别。
@@ -98,7 +76,7 @@
           name: [{ required: true, message: '请输入名称' }],
         },
         // 保存当前模板数据，供新设计器直接加载。
-        value: createEmptyTemplate(),
+        value: null,
         // 保留组件配置列表字段，便于后续扩展接口返回值。
         widgets: [],
         // 保存设计器预览用的示例打印数据。
@@ -193,7 +171,7 @@
           bizType: '',
         };
         // 回退到空模板，避免显示上一条记录的数据。
-        this.value = createEmptyTemplate();
+        this.value = null;
         // 先卸载设计器，等待新数据准备完成后再重新渲染。
         this.inited = false;
       },
@@ -285,17 +263,8 @@
             // 保存设置详情，供提交和回显复用。
             this.formData = setting;
 
-            /*
-             * 整体思路:
-             * 1. 新组件只识别 vg-print 的 `panels` 模板结构。
-             * 2. 需求明确说明不需要兼容旧模板，因此不再尝试转换旧 tempItems 数据。
-             * 3. 后端没有新模板时，直接回退到空模板，让用户从新设计器重新编辑。
-             */
-            // 如果接口返回的是新模板结构，则直接回填；否则使用空模板。
-            this.value =
-              this.formData.templateJson && Array.isArray(this.formData.templateJson.panels)
-                ? this.formData.templateJson
-                : createEmptyTemplate();
+            // 不生成旧版 panels 空模板；由 PrintDot 以空画布开始设计。
+            this.value = this.formData.templateJson || null;
 
             // 保留模板组件列表结果，便于后续页面能力扩展。
             this.widgets = (templateComp || []).map((item) => item.compJson);
