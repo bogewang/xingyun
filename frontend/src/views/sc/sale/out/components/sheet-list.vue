@@ -223,7 +223,7 @@
           </template>
 
           <template #profit_rate="{ row }">
-            {{ calcProfitRate(row.totalProfit, row.totalAmount) }}
+            {{ calcProfitRate(row.totalProfit, row.totalAmount, row.confirmAmt) }}
           </template>
 
           <template #fillAllCost_default="{ row }">
@@ -375,6 +375,7 @@
     buildMarketBuySummary2Params,
     buildMarketBuySummaryParams,
   } from './saleOutMarketBuySummary';
+  import { calcSaleOutProfitRateByProfit } from './saleOutProfit';
 
   export default defineComponent({
     name: 'SaleOutSheetSheetList',
@@ -601,7 +602,9 @@
             }
 
             if (column.field === 'profitRate') {
-              return this.canViewProfit ? this.calcProfitRate(totalProfit, totalAmount) : '';
+              return this.canViewProfit
+                ? this.calcProfitRate(totalProfit, totalAmount, confirmAmt)
+                : '';
             }
 
             if (column.field === 'totalNum') {
@@ -630,12 +633,8 @@
       formatQuantity(value) {
         return this.toFixedNumber(value, 2, true);
       },
-      calcProfitRate(profit, amount) {
-        const amountNumber = Number(amount || 0);
-        if (!amountNumber) {
-          return '0.00%';
-        }
-        return `${this.toFixedNumber((Number(profit || 0) / amountNumber) * 100)}%`;
+      calcProfitRate(profit, amount, confirmAmt) {
+        return calcSaleOutProfitRateByProfit(profit, amount, confirmAmt);
       },
       toFixedNumber(value, digits = 2, trimZero = false) {
         const text = Number(value || 0).toFixed(digits);

@@ -4,8 +4,10 @@ export interface SaleOutProfitRow {
   taxPrice?: number | string | null;
   taxAmount?: number | string | null;
   outNum?: number | string | null;
+  confirmNum?: number | string | null;
   confirmAmt?: number | string | null;
   costPrice?: number | string | null;
+  totalProfit?: number | string | null;
 }
 
 /**
@@ -22,14 +24,41 @@ export function getSaleOutAmount(row: SaleOutProfitRow): number {
   return Number(getNumber(mul(row?.taxPrice || 0, row?.outNum || 0), 2));
 }
 
+/** 获取毛利计算基数，验收金额非零时优先使用验收金额。 */
+export function getSaleOutProfitBaseAmount(row: SaleOutProfitRow): number {
+  const confirmAmt = Number(row?.confirmAmt);
+  return Number.isFinite(confirmAmt) && confirmAmt !== 0 ? confirmAmt : getSaleOutAmount(row);
+}
+
+/** 获取成本计算数量，验收数量非零时优先使用验收数量。 */
+export function getSaleOutCostQuantity(row: SaleOutProfitRow): number {
+  const confirmNum = Number(row?.confirmNum);
+  return Number.isFinite(confirmNum) && confirmNum !== 0 ? confirmNum : Number(row?.outNum || 0);
+}
+
+/** 根据后端返回的利润计算毛利率。 */
+export function calcSaleOutProfitRateByProfit(
+  profit: number | string | null | undefined,
+  saleAmount: number | string | null | undefined,
+  confirmAmt: number | string | null | undefined,
+): string {
+  const confirmAmount = Number(confirmAmt || 0);
+  const baseAmount = confirmAmount !== 0 ? confirmAmount : Number(saleAmount || 0);
+  if (!baseAmount) {
+    return '0.00%';
+  }
+
+  return `${((Number(profit || 0) / baseAmount) * 100).toFixed(2)}%`;
+}
+
 /**
  * 计算销售出库明细利润额，利润按验收金额减出库成本。
  * @param row 销售出库明细行
  * @returns 利润额
  */
 export function calcSaleOutProfitAmount(row: SaleOutProfitRow): number {
-  const amt = getSaleOutAmount(row);
-  const costAmount = Number(getNumber(mul(row?.costPrice || 0, row?.outNum || 0), 2));
+  const amt = getSaleOutProfitBaseAmount(row);
+  const costAmount = Number(getNumber(mul(row?.costPrice || 0, getSaleOutCostQuantity(row)), 2));
   return amt - costAmount;
 }
 
@@ -39,12 +68,16 @@ export function calcSaleOutProfitAmount(row: SaleOutProfitRow): number {
  * @returns 毛利率文本
  */
 export function calcSaleOutProfitRate(row: SaleOutProfitRow): string {
-  const outAmount = getSaleOutAmount(row);
-  if (!outAmount || !isFloatGeZero(row?.costPrice) || !isFloat(row?.outNum)) {
+  if (row?.totalProfit !== null && row?.totalProfit !== undefined && row?.totalProfit !== '') {
+    return calcSaleOutProfitRateByProfit(row.totalProfit, getSaleOutAmount(row), row.confirmAmt);
+  }
+
+  const baseAmount = getSaleOutProfitBaseAmount(row);
+  if (!baseAmount || !isFloatGeZero(row?.costPrice) || !isFloat(row?.outNum)) {
     return '0.00%';
   }
 
-  return `${((calcSaleOutProfitAmount(row) / outAmount) * 100).toFixed(2)}%`;
+  return `${((calcSaleOutProfitAmount(row) / baseAmount) * 100).toFixed(2)}%`;
 }
 
 /**
@@ -55,6 +88,10 @@ export function calcSaleOutProfitRate(row: SaleOutProfitRow): string {
 export function isSaleOutProfitNegative(row: SaleOutProfitRow): boolean {
   if (!isFloatGeZero(row?.taxPrice) || !isFloatGeZero(row?.costPrice) || !isFloat(row?.outNum)) {
     return false;
+  }
+
+  if (row?.totalProfit !== null && row?.totalProfit !== undefined && row?.totalProfit !== '') {
+    return Number(row.totalProfit) < 0;
   }
 
   return calcSaleOutProfitAmount(row) < 0;

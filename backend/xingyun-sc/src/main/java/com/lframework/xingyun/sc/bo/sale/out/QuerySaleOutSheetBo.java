@@ -223,7 +223,7 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
         this.status = dto.getStatus().getCode();
         this.settleStatus = dto.getSettleStatus().getCode();
         this.paidAmount = dto.getPaidAmount() == null ? BigDecimal.ZERO : dto.getPaidAmount();
-        this.unpaidAmount = NumberUtil.sub(dto.getTotalAmount(), this.paidAmount);
+        this.unpaidAmount = calculateUnpaidAmount(dto.getTotalAmount(), dto.getConfirmAmt(), this.paidAmount);
 
         if (!StringUtil.isBlank(dto.getSaleOrderId())) {
             SaleOrderService saleOrderService = ApplicationUtil.getBean(SaleOrderService.class);
@@ -232,5 +232,15 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
         }
         this.confirmNum = dto.getConfirmNum();
         this.confirmAmt = dto.getConfirmAmt();
+    }
+
+    /** 验收金额非零时，未付金额按验收金额减已付金额计算。 */
+    static BigDecimal calculateUnpaidAmount(BigDecimal totalAmount, BigDecimal confirmAmt,
+            BigDecimal paidAmount) {
+        BigDecimal actualConfirmAmt = confirmAmt == null ? BigDecimal.ZERO : confirmAmt;
+        BigDecimal receivableAmount = actualConfirmAmt.compareTo(BigDecimal.ZERO) == 0
+                ? (totalAmount == null ? BigDecimal.ZERO : totalAmount)
+                : actualConfirmAmt;
+        return NumberUtil.sub(receivableAmount, paidAmount == null ? BigDecimal.ZERO : paidAmount);
     }
 }

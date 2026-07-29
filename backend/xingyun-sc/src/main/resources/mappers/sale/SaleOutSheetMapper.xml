@@ -310,7 +310,7 @@
                 <if test="vo.fullyPaid != null">
                     <choose>
                         <when test="vo.fullyPaid">
-                            AND IFNULL(s.total_amount, 0) &lt;= IFNULL(s.paid_amount, 0)
+                            AND (CASE WHEN IFNULL(s.confirm_amt, 0) != 0 THEN s.confirm_amt ELSE s.total_amount END) &lt;= IFNULL(s.paid_amount, 0)
                         </when>
                         <otherwise>
                             AND IFNULL(s.total_amount, 0) &gt; IFNULL(s.paid_amount, 0)
@@ -340,10 +340,10 @@
                     AND IFNULL(s.paid_amount, 0) &lt;= #{vo.paidAmountEnd}
                 </if>
                 <if test="vo.unpaidAmountStart != null">
-                    AND (IFNULL(s.total_amount, 0) - IFNULL(s.paid_amount, 0)) &gt;= #{vo.unpaidAmountStart}
+                    AND ((CASE WHEN IFNULL(s.confirm_amt, 0) != 0 THEN s.confirm_amt ELSE s.total_amount END) - IFNULL(s.paid_amount, 0)) &gt;= #{vo.unpaidAmountStart}
                 </if>
                 <if test="vo.unpaidAmountEnd != null">
-                    AND (IFNULL(s.total_amount, 0) - IFNULL(s.paid_amount, 0)) &lt;= #{vo.unpaidAmountEnd}
+                    AND ((CASE WHEN IFNULL(s.confirm_amt, 0) != 0 THEN s.confirm_amt ELSE s.total_amount END) - IFNULL(s.paid_amount, 0)) &lt;= #{vo.unpaidAmountEnd}
                 </if>
                 <if test="vo.idList != null and vo.idList.size() > 0">
                     AND s.id IN <foreach collection="vo.idList" open="(" separator="," close=")" item="item">#{item}</foreach>
@@ -452,8 +452,9 @@
     <select id="queryProfitSummary" resultType="com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo">
         SELECT
             COUNT(1) AS saleCount,
-            IFNULL(SUM(IFNULL(s.total_amount, 0)), 0) AS salesAmount,
-            IFNULL(SUM(IFNULL(s.total_amount, 0) - IFNULL(s.total_profit, 0)), 0) AS salesCost,
+            IFNULL(SUM(CASE WHEN IFNULL(s.confirm_amt, 0) != 0 THEN s.confirm_amt ELSE s.total_amount END), 0) AS salesAmount,
+            IFNULL(SUM(CASE WHEN IFNULL(s.confirm_amt, 0) != 0 THEN s.confirm_amt ELSE s.total_amount END
+                - IFNULL(s.total_profit, 0)), 0) AS salesCost,
             IFNULL(SUM(IFNULL(s.total_profit, 0)), 0) AS salesProfit,
             0 AS otherIncome,
             0 AS otherExpense,
@@ -555,8 +556,9 @@
     <select id="queryProductProfitSummary" resultType="com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitSummaryBo">
         SELECT
             IFNULL(SUM(IFNULL(d.order_num, 0)), 0) AS saleNum,
-            IFNULL(SUM(IFNULL(d.tax_amount, 0)), 0) AS salesAmount,
-            IFNULL(SUM(IFNULL(d.tax_amount, 0) - IFNULL(d.total_profit, 0)), 0) AS salesCost,
+            IFNULL(SUM(CASE WHEN IFNULL(d.confirm_amt, 0) != 0 THEN d.confirm_amt ELSE d.tax_amount END), 0) AS salesAmount,
+            IFNULL(SUM(CASE WHEN IFNULL(d.confirm_amt, 0) != 0 THEN d.confirm_amt ELSE d.tax_amount END
+                - IFNULL(d.total_profit, 0)), 0) AS salesCost,
             IFNULL(SUM(IFNULL(d.total_profit, 0)), 0) AS salesProfit,
             0 AS otherIncome,
             0 AS otherExpense,
@@ -743,11 +745,12 @@
     <select id="queryProfitTrend" resultType="com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProfitTrendDto">
         SELECT
             s.order_date AS orderDate,
-            IFNULL(SUM(IFNULL(d.tax_amount, 0)), 0) AS salesAmount,
+            IFNULL(SUM(CASE WHEN IFNULL(d.confirm_amt, 0) != 0 THEN d.confirm_amt ELSE d.tax_amount END), 0) AS salesAmount,
             IFNULL(SUM(IFNULL(d.total_profit, 0)), 0) AS salesProfit,
             CASE
-                WHEN IFNULL(SUM(IFNULL(d.tax_amount, 0)), 0) = 0 THEN 0
-                ELSE IFNULL(SUM(IFNULL(d.total_profit, 0)), 0) / SUM(IFNULL(d.tax_amount, 0)) * 100
+                WHEN IFNULL(SUM(CASE WHEN IFNULL(d.confirm_amt, 0) != 0 THEN d.confirm_amt ELSE d.tax_amount END), 0) = 0 THEN 0
+                ELSE IFNULL(SUM(IFNULL(d.total_profit, 0)), 0) /
+                    SUM(CASE WHEN IFNULL(d.confirm_amt, 0) != 0 THEN d.confirm_amt ELSE d.tax_amount END) * 100
             END AS profitRate
         FROM tbl_sale_out_sheet AS s
         INNER JOIN tbl_sale_out_sheet_detail AS d ON d.sheet_id = s.id

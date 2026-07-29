@@ -132,6 +132,7 @@
   import * as echarts from 'echarts';
   import { debounce } from '@/utils';
   import * as api from '@/api/sc/sale/out';
+  import { getSaleOutProfitBaseAmount } from '@/views/sc/sale/out/components/saleOutProfit';
   import {
     buildVisibleSelectOptions,
     filterSelectOption,
@@ -140,7 +141,7 @@
   } from '@/utils/searchSelect';
   import { requestCustomerSelectOptions } from '@/utils/labelSelect';
 
-  const TREND_SERIES_NAMES = ['销售金额', '利润', '毛利率'];
+  const TREND_SERIES_NAMES = ['验收金额', '利润', '毛利率'];
 
   export default defineComponent({
     name: 'SaleTrendReport',
@@ -199,7 +200,7 @@
           },
           {
             key: 'salesAmount',
-            title: '销售额',
+            title: '验收金额',
             value: this.formatCurrency(this.summary.salesAmount),
           },
           { key: 'salesCost', title: '成本', value: this.formatCurrency(this.summary.salesCost) },
@@ -488,7 +489,7 @@
         (this.detailDatas || []).forEach((detail) => {
           const name = this.formatDetailProductLabel(detail);
           const current = dataMap[name] || { salesAmount: 0, salesProfit: 0 };
-          current.salesAmount += this.toNumber(detail.taxAmount);
+          current.salesAmount += getSaleOutProfitBaseAmount(detail);
           current.salesProfit += this.toNumber(detail.totalProfit);
           dataMap[name] = current;
         });
