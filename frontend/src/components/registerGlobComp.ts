@@ -1,4 +1,6 @@
 import type { App } from 'vue';
+import 'vue-print-designer';
+import 'vue-print-designer/style.css';
 import { h } from 'vue';
 import Antd, { Empty } from 'ant-design-vue';
 import VXETable from 'vxe-table';

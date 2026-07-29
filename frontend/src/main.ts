@@ -1,13 +1,9 @@
 import 'uno.css';
 import 'ant-design-vue/dist/reset.css';
-import 'vg-print/style.css';
 import '@/design/index.less';
 import '@/components/VxeTable/src/css/index.scss';
 // Register icon sprite
 import 'virtual:svg-icons-register';
-import { io } from 'socket.io-client';
-import { setSocketIo, hiprint } from 'vg-print';
-
 import { createApp } from 'vue';
 
 import { registerGlobComp } from '@/components/registerGlobComp';
@@ -58,14 +54,5 @@ async function bootstrap() {
 
   app.mount('#app');
 }
-
-hiprint.init({
-  host: 'http://localhost:17521',
-  token: 'eyJrIjoiZ21jNTc2MDMzNyJ9',
-});
-
-// disAutoConnect() // 注入不自动链接，需要关闭自动链接
-// 关键：先把 window.autoConnect 置 false
-setSocketIo(io); // 再注入 io（这一步不会触发连接了）
 
 bootstrap();

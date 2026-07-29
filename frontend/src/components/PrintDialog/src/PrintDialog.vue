@@ -82,7 +82,7 @@
    */
   function getTemplateError(templateJson: unknown) {
     if (templateJson && typeof templateJson === 'object' && 'panels' in templateJson) {
-      return '当前打印模板仍是旧版 vg-print 格式，请先迁移模板！';
+      return '当前打印模板仍是旧版 panels 格式，请先迁移模板！';
     }
 
     return '打印模板格式无效，无法加载打印预览！';

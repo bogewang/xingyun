@@ -7,7 +7,7 @@ describe('PrintDot 模板适配', () => {
     expect(isPrintDotTemplate({ data: {} })).toBe(true);
   });
 
-  it('拒绝旧版 vg-print 的 panels 模板', () => {
+  it('拒绝旧版 panels 模板', () => {
     expect(isPrintDotTemplate({ panels: [] })).toBe(false);
   });
 

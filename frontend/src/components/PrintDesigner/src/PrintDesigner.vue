@@ -5,7 +5,7 @@
       type="warning"
       show-icon
       message="请先迁移模板"
-      description="当前模板仍是旧版 vg-print 格式，无法在 PrintDot 中加载或编辑。请手动迁移后再保存。"
+      description="当前模板仍是旧版 panels 格式，无法在 PrintDot 中加载或编辑。请手动迁移后再保存。"
     />
     <template v-else>
       <div class="print-designer-toolbar">
@@ -96,7 +96,7 @@
   }
 
   /**
-   * 判断模板是否仍为旧版 vg-print 的 panels 格式。
+   * 判断模板是否仍为旧版 panels 格式。
    */
   function isLegacyTemplate(value: unknown): boolean {
     return !!value && typeof value === 'object' && 'panels' in value;
