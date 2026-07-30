@@ -28,6 +28,12 @@ public class PrintSaleOrderBo extends BaseBo<SaleOrderFullDto> {
     private String customerName;
 
     /**
+     * 客户简称
+     */
+    @ApiModelProperty("客户简称")
+    private String customerNickName;
+
+    /**
      * 客户备注
      */
     @ApiModelProperty("客户备注")
