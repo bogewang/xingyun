@@ -141,6 +141,7 @@
               v-model:value="row.outNum"
               class="number-input"
               @input="(e) => outNumInput(row, e.target.value)"
+              @keydown="stopGridDeleteFromInput"
             />
           </template>
 
@@ -305,7 +306,7 @@
     createSuccessAutoClose,
   } from '@/hooks/web/msg';
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
-  import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
+  import { shouldAddProductByEnter, stopGridDeleteFromInput } from '@/utils/productAddShortcut';
   import { useUserStoreWithOut } from '/@/store/modules/user';
   import { buildUnrequiredSaleOutProducts } from './components/saleOutProductParams';
   import { syncConfirmAmount, sumConfirmFields } from './components/saleOutConfirm';
@@ -339,6 +340,7 @@
         getNumber,
         mul,
         formatInquiryProduct,
+        stopGridDeleteFromInput,
       };
     },
     data() {
