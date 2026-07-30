@@ -20,6 +20,10 @@ export interface PrintSaleOrderBo {
    */
   customerName: string;
   /**
+   * 客户昵称
+   */
+  customerNickName: string;
+  /**
    * 客户备注
    */
   customerDescription: string;
