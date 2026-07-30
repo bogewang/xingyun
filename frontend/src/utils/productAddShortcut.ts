@@ -31,3 +31,14 @@ export function shouldAddProductByEnter(event: KeyboardEvent) {
 
   return !target.closest(FORM_CONTROL_SELECTOR);
 }
+
+/**
+ * 阻止数量输入框的删除键冒泡到 VXE 表格。
+ *
+ * VXE 表格会处理 Del 键，导致数量输入框的小键盘 Del 误触发表格删除行为。
+ */
+export function stopGridDeleteFromInput(event: KeyboardEvent) {
+  if (event.key === 'Delete') {
+    event.stopPropagation();
+  }
+}
