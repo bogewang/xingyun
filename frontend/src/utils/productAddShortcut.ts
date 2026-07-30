@@ -33,13 +33,12 @@ export function shouldAddProductByEnter(event: KeyboardEvent) {
 }
 
 /**
- * 阻止数量输入框的小键盘删除/小数点键冒泡到 VXE 表格。
+ * 阻止数量输入框的删除键冒泡到 VXE 表格。
  *
- * 小键盘小数点在不同 NumLock、浏览器组合下可能上报为 Delete、Decimal 或 NumpadDecimal，
- * 冒泡后会误触发表格删除行为。这里只停止冒泡，不阻止输入框录入小数点。
+ * VXE 表格会处理 Del 键，导致数量输入框的小键盘 Del 误触发表格删除行为。
  */
 export function stopGridDeleteFromInput(event: KeyboardEvent) {
-  if (event.key === 'Delete' || event.key === 'Decimal' || event.code === 'NumpadDecimal') {
+  if (event.key === 'Delete') {
     event.stopPropagation();
   }
 }

@@ -3,19 +3,6 @@ import { readFileSync } from 'node:fs';
 import { stopGridDeleteFromInput } from '../productAddShortcut';
 
 describe('表格输入框删除键处理', () => {
-  it('小键盘小数点作为首个输入时不会冒泡到表格', () => {
-    const event = {
-      key: '.',
-      code: 'NumpadDecimal',
-      keyCode: 110,
-      stopPropagation: vi.fn(),
-    } as unknown as KeyboardEvent;
-
-    stopGridDeleteFromInput(event);
-
-    expect(event.stopPropagation).toHaveBeenCalledOnce();
-  });
-
   it('小键盘 Del 在数量输入框中不会冒泡到表格', () => {
     const event = {
       key: 'Delete',
