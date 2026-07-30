@@ -310,12 +310,9 @@
   import { useUserStoreWithOut } from '/@/store/modules/user';
   import { buildUnrequiredSaleOutProducts } from './components/saleOutProductParams';
   import { syncConfirmAmount, sumConfirmFields } from './components/saleOutConfirm';
+  import { isSaleOutStockEnough } from './components/saleOutStock';
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
-  import {
-    calculateUnitPrice,
-    calculateUnitStockNum,
-    getUnitConversionRate,
-  } from '@/utils/productUnitConversion';
+  import { calculateUnitPrice, calculateUnitStockNum } from '@/utils/productUnitConversion';
 
   export default defineComponent({
     name: 'AddSaleOutSheetUnRequire',
@@ -748,6 +745,9 @@
           return;
         }
         row.outNum = value;
+        if (!Number.isFinite(Number(value))) {
+          return;
+        }
         clearManualSheetAmount(row, 'outNum', 'taxPrice');
         this.calcSum();
       },
@@ -1035,18 +1035,7 @@
       },
       // 检查库存数量
       checkStockNum(row) {
-        const checkArr = this.tableData
-          .filter((item) => item.productId === row.productId)
-          .map((item) => mul(item.outNum || 0, getUnitConversionRate(item)));
-        if (isEmpty(checkArr)) {
-          checkArr.push(0);
-        }
-        const totalOutNum = checkArr.reduce((total, item) => {
-          const outNum = isFloatGtZero(item) ? item : 0;
-          return add(total, outNum);
-        }, 0);
-
-        return totalOutNum <= (row.baseStockNum ?? mul(row.stockNum || 0, row.conversionRate || 1));
+        return isSaleOutStockEnough(this.tableData, row);
       },
     },
   });

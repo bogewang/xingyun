@@ -45,12 +45,15 @@
 
 // 可编辑控件保留自身边框，并与表格单元格边界贴齐，方便区分可编辑内容。
 .vxe-table--body-wrapper {
-  .vxe-body--column:has(> :is(.vxe-cell, .vxe-tree-cell) > :is(.ant-input, .ant-input-affix-wrapper, .ant-input-number, .ant-picker, .ant-select)) {
+  .vxe-body--column:has(> :is(.vxe-cell, .vxe-tree-cell) > :is(.ant-input, .ant-input-affix-wrapper, .ant-input-number, .ant-picker, .ant-select)),
+  .vxe-body--column:has(> :is(.vxe-cell, .vxe-tree-cell) > .inline-product-select > .ant-select) {
     padding: 0;
   }
 
   .vxe-cell:has(> :is(.ant-input, .ant-input-affix-wrapper, .ant-input-number, .ant-picker, .ant-select)),
-  .vxe-tree-cell:has(> :is(.ant-input, .ant-input-affix-wrapper, .ant-input-number, .ant-picker, .ant-select)) {
+  .vxe-tree-cell:has(> :is(.ant-input, .ant-input-affix-wrapper, .ant-input-number, .ant-picker, .ant-select)),
+  .vxe-cell:has(> .inline-product-select > .ant-select),
+  .vxe-tree-cell:has(> .inline-product-select > .ant-select) {
     padding: 0;
   }
 
@@ -61,6 +64,7 @@
     & > .ant-input-number,
     & > .ant-picker,
     & > .ant-select .ant-select-selector,
+    & > .inline-product-select > .ant-select .ant-select-selector,
     & > .ant-cascader-picker .ant-input,
     & > .ant-calendar-picker .ant-calendar-picker-input,
     & > .ant-time-picker .ant-time-picker-input {
@@ -68,7 +72,8 @@
       background: transparent;
     }
 
-    & > .ant-select {
+    & > .ant-select,
+    & > .inline-product-select > .ant-select {
       height: 32px;
 
       .ant-select-selector {
