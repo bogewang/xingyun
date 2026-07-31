@@ -513,7 +513,7 @@
           inputPattern: PATTERN_IS_INTEGER_GT_ZERO,
           inputErrorMessage: '新增行数必须为正整数',
           title: '新增行数',
-          inputValue: '10',
+          inputValue: '50',
           required: true,
           target: event.currentTarget,
         }).then(({ value }) => {

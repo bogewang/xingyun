@@ -50,6 +50,8 @@ final class SaleOutSheetMarketBuySummaryFormatter {
    */
   static String formatCustomerDetail(String customerName, String unit, BigDecimal orderNum,
       Collection<String> descriptions) {
+    unit = formatUnit(unit);
+
     Set<String> distinctDescriptions = distinctDescriptions(descriptions);
     BigDecimal quantity = orderNum == null ? BigDecimal.ZERO : orderNum;
     if (quantity.compareTo(BigDecimal.ZERO) == 0 && distinctDescriptions.isEmpty()) {
@@ -110,6 +112,15 @@ final class SaleOutSheetMarketBuySummaryFormatter {
     return String.join("+", texts);
   }
 
+  public static String formatUnit(String unit) {
+    if (StringUtils.isBlank(unit)) {
+      return "";
+    }
+
+    return unit.replaceAll("千克", "kg").replaceAll("公斤", "kg");
+
+  }
+
   /**
    * 格式化总重量，将数量和单位拼接为“数量单位”。
    *
@@ -122,7 +133,7 @@ final class SaleOutSheetMarketBuySummaryFormatter {
       return "";
     }
 
-    return formatNumber(total) + (StringUtils.isBlank(unit) ? "" : unit);
+    return formatNumber(total) + formatUnit(unit);
   }
 
   /**
