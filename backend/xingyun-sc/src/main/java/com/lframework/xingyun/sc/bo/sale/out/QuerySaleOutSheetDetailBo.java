@@ -75,11 +75,17 @@ public class QuerySaleOutSheetDetailBo extends BaseBo<QuerySaleOutSheetDetailDto
   @ApiModelProperty("出库数量")
   private BigDecimal orderNum;
 
+  @ApiModelProperty("验收数量")
+  private BigDecimal confirmNum;
+
   @ApiModelProperty("销售价")
   private BigDecimal taxPrice;
 
   @ApiModelProperty("销售金额")
   private BigDecimal taxAmount;
+
+  @ApiModelProperty("验收金额")
+  private BigDecimal confirmAmt;
 
   @ApiModelProperty("成本价")
   private BigDecimal costPrice;

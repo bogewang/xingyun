@@ -50,6 +50,7 @@ public class SaleOutSheetConverter {
 
         PrintSaleOrderBo res = BeanUtil.copyProperties(data, PrintSaleOrderBo.class);
         res.setCustomerName(customer.getName());
+        res.setCustomerNickName(customer.getNickName());
         res.setCustomerDescription(customer.getDescription());
         res.setOrderDate(DateUtil.formatDate(data.getOrderDate(), "yyyy-MM-dd"));
         res.setPaidAmount(data.getPaidAmount() == null ? BigDecimal.ZERO : data.getPaidAmount());
@@ -80,6 +81,12 @@ public class SaleOutSheetConverter {
                         orderDetailBo.setProductName(product.getName());
                         orderDetailBo.setSpec(product.getSpec());
                         orderDetailBo.setUnit(item.getUnitName());
+                    }
+                    if (orderDetailBo.getConfirmNum() != null && orderDetailBo.getConfirmNum().compareTo(BigDecimal.ZERO) == 0) {
+                        orderDetailBo.setConfirmNum(null);
+                    }
+                    if (orderDetailBo.getConfirmAmt() != null && orderDetailBo.getConfirmAmt().compareTo(BigDecimal.ZERO) == 0) {
+                        orderDetailBo.setConfirmAmt(null);
                     }
                     return orderDetailBo;
                 })
