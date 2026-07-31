@@ -86,6 +86,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static com.lframework.xingyun.sc.impl.sale.SaleOutSheetMarketBuySummaryFormatter.formatUnit;
+
 @Service
 @Slf4j
 public class SaleOutSheetServiceImpl extends
@@ -394,6 +396,7 @@ public class SaleOutSheetServiceImpl extends
             Map<String, String> map = new LinkedHashMap<>();
             map.put("date", SaleOutSheetMarketBuySummaryFormatter.formatOrderDate(row.orderDate));
             map.put("productName", row.productName);
+            map.put("spec", row.spec);
             map.put("category", row.categoryName);
             map.put("total", SaleOutSheetMarketBuySummaryFormatter.formatTotalWithUnit(
                     row.total, row.unit));
@@ -443,7 +446,9 @@ public class SaleOutSheetServiceImpl extends
             map.put("date", SaleOutSheetMarketBuySummaryFormatter.formatOrderDate(row.orderDate));
             map.put("category", row.categoryName);
             map.put("productName", row.productName);
-            map.put("unit", row.unit);
+            map.put("spec", row.spec);
+
+            map.put("unit", formatUnit(row.unit));
             for (String customerId : customerNameMap.keySet()) {
                 SummaryCell cell = row.cells.get(customerId);
                 map.put("customer-" + customerId, cell == null ? StringPool.EMPTY_STR
@@ -715,6 +720,7 @@ public class SaleOutSheetServiceImpl extends
         headerMap.put("date", "日期");
         headerMap.put("category", "分类名称");
         headerMap.put("productName", "商品名称");
+        headerMap.put("spec", "规格");
         headerMap.put("total", "总重量");
         headerMap.put("detail", "明细数量");
         return headerMap;
@@ -732,6 +738,7 @@ public class SaleOutSheetServiceImpl extends
         headerMap.put("date", "日期");
         headerMap.put("category", "分类");
         headerMap.put("productName", "商品名称");
+        headerMap.put("spec", "规格");
         headerMap.put("unit", "单位");
         for (Map.Entry<String, String> customer : customerNameMap.entrySet()) {
             headerMap.put("customer-" + customer.getKey(), customer.getValue());
@@ -840,6 +847,7 @@ public class SaleOutSheetServiceImpl extends
             SummaryRow row = summaryMap.computeIfAbsent(summaryKey,
                     key -> new SummaryRow(sheet.getOrderDate(), getCategoryName(product, categoryMap),
                             product.getName(),
+                            product.getSpec(),
                             productUnitNameMap.getOrDefault(product.getUnit(), product.getUnit())));
 
             // 同一客户的数量累加，备注去重并保留原始出现顺序。
@@ -963,17 +971,19 @@ public class SaleOutSheetServiceImpl extends
         private LocalDate orderDate;
         private String categoryName;
         private String productName;
+        private String spec;
         private String unit;
         private BigDecimal total = BigDecimal.ZERO;
 
         // key: customerId，value: 当前商品在该客户下的汇总数量与备注。
         private Map<String, SummaryCell> cells = new HashMap<>();
 
-        private SummaryRow(LocalDate orderDate, String categoryName, String productName,
+        private SummaryRow(LocalDate orderDate, String categoryName, String productName, String spec,
                 String unit) {
             this.orderDate = orderDate;
             this.categoryName = categoryName;
             this.productName = productName;
+            this.spec = spec;
             this.unit = unit;
         }
     }
