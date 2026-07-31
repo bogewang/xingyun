@@ -58,9 +58,9 @@ final class SaleOutSheetMarketBuySummaryFormatter {
       return "";
     }
 
-    StringBuilder result = new StringBuilder("(")
+    StringBuilder result = new StringBuilder("【")
         .append(defaultString(customerName))
-        .append(")");
+        .append("】");
     if (quantity.compareTo(BigDecimal.ZERO) != 0) {
       result.append(formatNumber(quantity));
       if (StringUtils.isNotBlank(unit)) {
