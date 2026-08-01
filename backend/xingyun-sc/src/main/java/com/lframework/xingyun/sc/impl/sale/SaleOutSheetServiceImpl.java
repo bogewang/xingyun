@@ -1852,7 +1852,7 @@ public class SaleOutSheetServiceImpl extends
             throw new DefaultClientException("商品明细为赠品，不允许调整售价！");
         }
 
-        if (detail.getSettleStatus() != SettleStatus.UN_SETTLE) {
+        if (detail.getSettleStatus() != SettleStatus.UN_CHECK_BILL) {
             throw new DefaultClientException("仅支持调整未结算的商品明细售价！");
         }
     }
