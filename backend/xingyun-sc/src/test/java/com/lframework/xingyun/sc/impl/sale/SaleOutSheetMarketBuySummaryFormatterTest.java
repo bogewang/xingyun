@@ -1,11 +1,16 @@
 package com.lframework.xingyun.sc.impl.sale;
 
 import com.lframework.xingyun.basedata.entity.Customer;
+import com.lframework.xingyun.basedata.entity.Product;
+import com.lframework.xingyun.sc.entity.SaleOutSheet;
+import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +19,48 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 class SaleOutSheetMarketBuySummaryFormatterTest {
+
+  /**
+   * 验证同一客户的多条商品明细保留各自数量与备注的对应关系。
+   */
+  @Test
+  void buildMarketBuySummaryDetailShouldKeepQuantityMatchedWithEachRemark() throws Exception {
+    SaleOutSheet sheet = new SaleOutSheet();
+    sheet.setId("sheet-1");
+    sheet.setCustomerId("customer-1");
+    sheet.setOrderDate(LocalDate.of(2026, 8, 1));
+
+    Product product = new Product();
+    product.setId("product-1");
+    product.setName("五花肉");
+    product.setUnit("unit-1");
+
+    List<SaleOutSheetDetail> details = Arrays.asList(
+        createDetail("3", "去皮，切片"),
+        createDetail("3", "整块"),
+        createDetail("2.5", "切块"));
+    Map<String, SaleOutSheet> sheetMap = Collections.singletonMap(sheet.getId(), sheet);
+    Map<String, Product> productMap = Collections.singletonMap(product.getId(), product);
+    Map<String, String> unitMap = Collections.singletonMap(product.getUnit(), "kg");
+
+    SaleOutSheetServiceImpl service = new SaleOutSheetServiceImpl();
+    Method buildSummaryRows = SaleOutSheetServiceImpl.class.getDeclaredMethod(
+        "buildSummaryRows", List.class, Map.class, Map.class, Map.class, Map.class);
+    buildSummaryRows.setAccessible(true);
+    List<?> rows = (List<?>) buildSummaryRows.invoke(service, details, sheetMap, productMap,
+        new HashMap<>(), unitMap);
+
+    Class<?> summaryRowClass = Class.forName(
+        SaleOutSheetServiceImpl.class.getName() + "$SummaryRow");
+    Method buildDetail = SaleOutSheetServiceImpl.class.getDeclaredMethod(
+        "buildMarketBuySummaryDetail", summaryRowClass, LinkedHashMap.class);
+    buildDetail.setAccessible(true);
+    LinkedHashMap<String, String> customers = new LinkedHashMap<>();
+    customers.put("customer-1", "17灶");
+
+    Assert.assertEquals(buildDetail.invoke(service, rows.get(0), customers),
+        "【17灶】8.5/kg（3/去皮，切片；3/整块；2.5/切块）");
+  }
 
   /**
    * 验证动态客户列只保留数量和去重后的备注，不包含客户名称或单位。
@@ -190,5 +237,21 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
 
     Assert.assertTrue(earlierCategory.compareTo(laterProduct) < 0);
     Assert.assertTrue(laterProduct.compareTo(laterCategory) < 0);
+  }
+
+  /**
+   * 创建买菜汇总测试明细。
+   *
+   * @param orderNum 数量
+   * @param description 备注
+   * @return 销售出库明细
+   */
+  private SaleOutSheetDetail createDetail(String orderNum, String description) {
+    SaleOutSheetDetail detail = new SaleOutSheetDetail();
+    detail.setSheetId("sheet-1");
+    detail.setProductId("product-1");
+    detail.setOrderNum(new BigDecimal(orderNum));
+    detail.setDescription(description);
+    return detail;
   }
 }

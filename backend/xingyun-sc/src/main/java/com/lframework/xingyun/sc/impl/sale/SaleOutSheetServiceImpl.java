@@ -856,6 +856,10 @@ public class SaleOutSheetServiceImpl extends
             cell.orderNum = NumberUtil.add(cell.orderNum, orderNum);
             if (StringUtils.isNotBlank(detail.getDescription())) {
                 cell.descriptions.add(detail.getDescription());
+                cell.quantityByDescription.merge(detail.getDescription(), orderNum, NumberUtil::add);
+            } else {
+                cell.quantityWithoutDescription = NumberUtil.add(
+                        cell.quantityWithoutDescription, orderNum);
             }
             row.total = NumberUtil.add(row.total, orderNum);
         }
@@ -943,17 +947,18 @@ public class SaleOutSheetServiceImpl extends
      */
     private String buildMarketBuySummaryDetail(SummaryRow row,
             LinkedHashMap<String, String> customerNameMap) {
-        List<SaleOutSheetMarketBuySummaryFormatter.CustomerDetail> details = new ArrayList<>();
+        List<String> details = new ArrayList<>();
         for (Map.Entry<String, String> customer : customerNameMap.entrySet()) {
             SummaryCell cell = row.cells.get(customer.getKey());
             if (cell == null) {
                 continue;
             }
 
-            details.add(new SaleOutSheetMarketBuySummaryFormatter.CustomerDetail(
-                    customer.getValue(), row.unit, cell.orderNum, cell.descriptions));
+            details.add(SaleOutSheetMarketBuySummaryFormatter.formatCustomerDetailByDescription(
+                    customer.getValue(), row.unit, cell.quantityWithoutDescription,
+                    cell.quantityByDescription));
         }
-        return SaleOutSheetMarketBuySummaryFormatter.mergeCustomerDetails(details);
+        return details.stream().filter(StringUtils::isNotBlank).collect(Collectors.joining("+"));
     }
 
     /**
@@ -990,6 +995,12 @@ public class SaleOutSheetServiceImpl extends
 
     private static class SummaryCell {
         private BigDecimal orderNum = BigDecimal.ZERO;
+
+        // 无备注的数量单独汇总，保持原有“数量/单位”的展示方式。
+        private BigDecimal quantityWithoutDescription = BigDecimal.ZERO;
+
+        // key: 备注，value: 对应数量；按备注首次出现顺序输出。
+        private Map<String, BigDecimal> quantityByDescription = new LinkedHashMap<>();
 
         // 使用 LinkedHashSet 去重并保持备注原始顺序，导出时展示更稳定。
         private Set<String> descriptions = new LinkedHashSet<>();

@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
@@ -90,6 +91,58 @@ final class SaleOutSheetMarketBuySummaryFormatter {
       result.append(formatNumber(quantity));
     }
     appendDescriptions(result, remarks);
+    return result.toString();
+  }
+
+  /**
+   * 按备注分别格式化同一客户的商品数量，保留数量与备注的对应关系。
+   *
+   * @param customerName 客户展示名称
+   * @param unit 商品单位
+   * @param quantityWithoutDescription 无备注数量
+   * @param quantityByDescription 各备注对应的汇总数量
+   * @return 客户明细文本
+   */
+  static String formatCustomerDetailByDescription(String customerName, String unit,
+      BigDecimal quantityWithoutDescription, Map<String, BigDecimal> quantityByDescription) {
+    BigDecimal plainQuantity = quantityWithoutDescription == null
+        ? BigDecimal.ZERO : quantityWithoutDescription;
+    BigDecimal totalQuantity = plainQuantity;
+    List<String> descriptionDetails = new ArrayList<>();
+
+    if (quantityByDescription != null) {
+      for (Map.Entry<String, BigDecimal> entry : quantityByDescription.entrySet()) {
+        if (StringUtils.isBlank(entry.getKey())) {
+          continue;
+        }
+
+        BigDecimal quantity = entry.getValue() == null ? BigDecimal.ZERO : entry.getValue();
+        totalQuantity = totalQuantity.add(quantity);
+        StringBuilder detail = new StringBuilder();
+        if (quantity.compareTo(BigDecimal.ZERO) != 0) {
+          detail.append(formatNumber(quantity)).append('/');
+        }
+        detail.append(entry.getKey());
+        descriptionDetails.add(detail.toString());
+      }
+    }
+
+    if (totalQuantity.compareTo(BigDecimal.ZERO) == 0 && descriptionDetails.isEmpty()) {
+      return "";
+    }
+    StringBuilder result = new StringBuilder("【")
+        .append(defaultString(customerName))
+        .append("】");
+    if (totalQuantity.compareTo(BigDecimal.ZERO) != 0) {
+      result.append(formatNumber(totalQuantity));
+      String formattedUnit = formatUnit(unit);
+      if (StringUtils.isNotBlank(formattedUnit)) {
+        result.append('/').append(formattedUnit);
+      }
+    }
+    if (!descriptionDetails.isEmpty()) {
+      result.append('（').append(String.join("；", descriptionDetails)).append('）');
+    }
     return result.toString();
   }
 
