@@ -145,6 +145,7 @@
               v-model:value="row.outNum"
               class="number-input"
               @input="(e) => outNumInput(row, e.target.value)"
+              @keydown="stopGridDeleteFromInput"
             />
           </template>
 
@@ -316,7 +317,7 @@
     getSheetLineAmount,
   } from '@/utils/sheetAmountInput';
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
-  import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
+  import { shouldAddProductByEnter, stopGridDeleteFromInput } from '@/utils/productAddShortcut';
   import { requestCustomerSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
@@ -329,11 +330,8 @@
     sumConfirmFields,
   } from './components/saleOutConfirm';
   import { calcSaleOutProfitRate, isSaleOutProfitNegative } from './components/saleOutProfit';
-  import {
-    calculateUnitPrice,
-    calculateUnitStockNum,
-    getUnitConversionRate,
-  } from '@/utils/productUnitConversion';
+  import { isSaleOutStockEnough } from './components/saleOutStock';
+  import { calculateUnitPrice, calculateUnitStockNum } from '@/utils/productUnitConversion';
 
   export default defineComponent({
     name: 'ModifySaleOutSheetUnRequire',
@@ -357,6 +355,7 @@
         isFloatGeZero,
         mul,
         formatInquiryProduct,
+        stopGridDeleteFromInput,
         hasCostPrice: (row) =>
           row &&
           row.costPrice !== null &&
@@ -842,6 +841,9 @@
           return;
         }
         row.outNum = value;
+        if (String(value).trim() === '' || !Number.isFinite(Number(value))) {
+          return;
+        }
         clearManualSheetAmount(row, 'outNum', 'taxPrice');
         this.calcSum();
       },
@@ -1116,18 +1118,7 @@
       },
       // 检查库存数量
       checkStockNum(row) {
-        const checkArr = this.tableData
-          .filter((item) => item.productId === row.productId)
-          .map((item) => mul(item.outNum || 0, getUnitConversionRate(item)));
-        if (isEmpty(checkArr)) {
-          checkArr.push(0);
-        }
-        const totalOutNum = checkArr.reduce((total, item) => {
-          const outNum = isFloatGtZero(item) ? item : 0;
-          return add(total, outNum);
-        }, 0);
-
-        return totalOutNum <= (row.baseStockNum ?? mul(row.stockNum || 0, row.conversionRate || 1));
+        return isSaleOutStockEnough(this.tableData, row);
       },
     },
   });
