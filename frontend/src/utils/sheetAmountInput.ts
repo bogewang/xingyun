@@ -3,6 +3,16 @@ import { div, getNumber, mul } from '@/utils/utils';
 type SheetAmountRow = Record<string, any>;
 
 /**
+ * 按数量和单价计算单行金额，并四舍五入到两位小数。
+ */
+export function calculateSheetLineAmount(
+  quantity: string | number | null | undefined,
+  price: string | number | null | undefined,
+): number {
+  return getNumber(mul(quantity || 0, price || 0), 2);
+}
+
+/**
  * 应用用户输入的手工金额，并在数量有效时反算单价。
  */
 export function applyManualSheetAmount(
@@ -31,7 +41,7 @@ export function clearManualSheetAmount(
   priceField: string,
 ): void {
   delete row.manualTaxAmount;
-  row.taxAmount = getNumber(mul(row[quantityField] || 0, row[priceField] || 0), 2);
+  row.taxAmount = calculateSheetLineAmount(row[quantityField], row[priceField]);
   row.lastValidTaxAmount = String(row.taxAmount);
 }
 
@@ -54,7 +64,7 @@ export function getSheetLineAmount(
     }
   }
 
-  const amount = getNumber(mul(row[quantityField] || 0, row[priceField] || 0), 2);
+  const amount = calculateSheetLineAmount(row[quantityField], row[priceField]);
   if (row.lastValidTaxAmount === undefined) {
     const initialAmount = String(row.taxAmount ?? '');
     row.lastValidTaxAmount = initialAmount === '' ? String(amount) : initialAmount;

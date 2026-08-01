@@ -165,7 +165,7 @@
             />
           </template>
           <template #confirmAmt_default="{ row }"
-            ><span>{{ row.confirmAmt }}</span></template
+            ><span>{{ formatConfirmAmount(row.confirmAmt) }}</span></template
           >
 
           <template #costPrice_default="{ row, rowIndex }">
@@ -214,7 +214,11 @@
             <a-input v-model:value="formData.confirmNum" class="number-input" readonly />
           </j-form-item>
           <j-form-item label="验收金额" :span="8">
-            <a-input v-model:value="formData.confirmAmt" class="number-input" readonly />
+            <a-input
+              :value="formatConfirmAmount(formData.confirmAmt)"
+              class="number-input"
+              readonly
+            />
           </j-form-item>
           <j-form-item label="付款金额" :span="8">
             <a-input
@@ -325,6 +329,7 @@
   import OrderTimeLine from '@/components/OrderTimeLine';
   import { useUserStoreWithOut } from '/@/store/modules/user';
   import {
+    formatConfirmAmount,
     normalizeConfirmNum,
     syncConfirmAmount,
     sumConfirmFields,
@@ -355,6 +360,7 @@
         isFloatGeZero,
         mul,
         formatInquiryProduct,
+        formatConfirmAmount,
         stopGridDeleteFromInput,
         hasCostPrice: (row) =>
           row &&

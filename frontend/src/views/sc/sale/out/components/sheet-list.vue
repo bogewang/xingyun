@@ -483,7 +483,13 @@
           },
           { field: 'customerName', title: '客户名称', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
-          { field: 'confirmAmt', title: '验收金额', align: 'right', width: 100 },
+          {
+            field: 'confirmAmt',
+            title: '验收金额',
+            align: 'right',
+            width: 100,
+            formatter: ({ cellValue }) => this.formatAmount(cellValue),
+          },
           { field: 'paidAmount', title: '已付金额', align: 'right', width: 80 },
           { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 80 },
           {

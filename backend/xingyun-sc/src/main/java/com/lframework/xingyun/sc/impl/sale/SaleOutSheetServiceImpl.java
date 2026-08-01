@@ -1281,8 +1281,10 @@ public class SaleOutSheetServiceImpl extends
             validateBatchUpdatePriceDetail(detail);
 
             detail.setTaxPrice(vo.getTaxPrice());
-            detail.setTaxAmount(NumberUtil.calculateAmount(vo.getTaxPrice(), detail.getOrderNum()));
-            detail.setConfirmAmt(NumberUtil.calculateAmount(vo.getTaxPrice(), detail.getConfirmNum()));
+            detail.setTaxAmount(SaleOutSheetAmtCalculator.calculateLineAmount(vo.getTaxPrice(),
+                    detail.getBusinessNum()));
+            detail.setConfirmAmt(SaleOutSheetAmtCalculator.calculateLineAmount(vo.getTaxPrice(),
+                    detail.getConfirmNum()));
 
             saleOutSheetDetailService.updateById(detail);
 
@@ -1619,8 +1621,10 @@ public class SaleOutSheetServiceImpl extends
         detail.setOrderNo(productVo.getSeq());
         detail.setActualDate(productVo.getActualDate());
         detail.setSettleStatus(this.getInitSettleStatus(customer));
-        detail.setTaxAmount(NumberUtil.calculateAmount(price, detail.getBusinessNum()));
-        detail.setConfirmAmt(NumberUtil.calculateAmount(price, detail.getConfirmNum()));
+        detail.setTaxAmount(SaleOutSheetAmtCalculator.calculateLineAmount(price,
+                detail.getBusinessNum()));
+        detail.setConfirmAmt(SaleOutSheetAmtCalculator.calculateLineAmount(price,
+                detail.getConfirmNum()));
         return detail;
     }
 

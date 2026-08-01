@@ -1,4 +1,5 @@
-import { add, getNumber, isEmpty, mul } from '@/utils/utils';
+import { add, getNumber, isEmpty } from '@/utils/utils';
+import { calculateSheetLineAmount } from '@/utils/sheetAmountInput';
 
 export interface SaleOutConfirmRow {
   confirmNum?: number | string | null;
@@ -16,14 +17,14 @@ export function normalizeConfirmNum(confirmNum?: number | string | null): number
 }
 
 /**
- * 计算单行验收金额，空值按 0 处理并保留六位小数。
+ * 计算单行验收金额，空值按 0 处理。
  * @param row 验收行数据
  * @returns 单行验收金额
  */
 export function getConfirmAmount(row: SaleOutConfirmRow): number {
   const confirmNum = normalizeConfirmNum(row?.confirmNum);
   const taxPrice = isEmpty(row?.taxPrice) ? 0 : row.taxPrice;
-  return getNumber(mul(confirmNum, taxPrice), 6);
+  return calculateSheetLineAmount(confirmNum, taxPrice);
 }
 
 /**
@@ -35,6 +36,16 @@ export function syncConfirmAmount(row: SaleOutConfirmRow): number {
   const confirmAmt = getConfirmAmount(row);
   row.confirmAmt = confirmAmt;
   return confirmAmt;
+}
+
+/**
+ * 将验收金额格式化为两位小数，供金额字段展示使用。
+ * @param confirmAmt 验收金额
+ * @returns 两位小数的验收金额文本
+ */
+export function formatConfirmAmount(confirmAmt?: number | string | null): string {
+  const amount = Number(confirmAmt ?? 0);
+  return Number.isFinite(amount) ? amount.toFixed(2) : '0.00';
 }
 
 /**
