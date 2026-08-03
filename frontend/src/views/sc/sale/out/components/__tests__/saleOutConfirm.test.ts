@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { calculateSheetLineAmount } from '@/utils/sheetAmountInput';
 import {
+  formatConfirmAmount,
   getConfirmAmount,
   normalizeConfirmNum,
   sumConfirmFields,
@@ -8,7 +10,16 @@ import {
 
 describe('saleOutConfirm', () => {
   it('calculates amount from confirm quantity and tax price', () => {
-    expect(getConfirmAmount({ confirmNum: 1.234567, taxPrice: 2.345678 })).toBe(2.895897);
+    expect(getConfirmAmount({ confirmNum: 1.234567, taxPrice: 2.345678 })).toBe(2.9);
+  });
+
+  it('uses the same line amount rule when quantities are equal', () => {
+    const quantity = 1.004;
+    const taxPrice = 1;
+
+    expect(getConfirmAmount({ confirmNum: quantity, taxPrice })).toBe(
+      calculateSheetLineAmount(quantity, taxPrice),
+    );
   });
 
   it('normalizes confirm quantity to number for payloads', () => {
@@ -30,6 +41,25 @@ describe('saleOutConfirm', () => {
     expect(row.confirmAmt).toBe(4);
     expect(row.confirmNum).toBe(1.25);
     expect(row.taxPrice).toBe(3.2);
+  });
+
+  it('rounds each acceptance amount to two decimals before summing', () => {
+    const rows = [
+      { confirmNum: 1.004, taxPrice: 1, confirmAmt: null },
+      { confirmNum: 1.004, taxPrice: 1, confirmAmt: null },
+    ];
+
+    rows.forEach((row) => syncConfirmAmount(row));
+
+    expect(rows.map((row) => row.confirmAmt)).toEqual([1, 1]);
+    expect(sumConfirmFields(rows).confirmAmt).toBe(2);
+  });
+
+  it('formats acceptance amount with two decimal places for display', () => {
+    expect(formatConfirmAmount(2.895897)).toBe('2.90');
+    expect(formatConfirmAmount(4)).toBe('4.00');
+    expect(formatConfirmAmount(null)).toBe('0.00');
+    expect(formatConfirmAmount('invalid')).toBe('0.00');
   });
 
   it('sums detail acceptance fields and treats empty values as zero', () => {

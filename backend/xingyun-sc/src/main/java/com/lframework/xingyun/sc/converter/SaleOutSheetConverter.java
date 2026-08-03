@@ -90,6 +90,8 @@ public class SaleOutSheetConverter {
                     }
                     return orderDetailBo;
                 })
+                .sorted(Comparator.comparing(PrintSaleOrderBo.OrderDetailBo::getCategoryName)
+                        .thenComparing(PrintSaleOrderBo.OrderDetailBo::getProductName))
                 .collect(Collectors.toList());
     }
 }

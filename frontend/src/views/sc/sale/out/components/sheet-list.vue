@@ -307,6 +307,24 @@
       />
       <order-print-dialog />
 
+      <!-- 标签打印分类选择弹窗 -->
+      <a-modal
+        v-model:open="tagPrintModal.visible"
+        title="标签打印 - 选择商品分类"
+        :confirm-loading="tagPrintModal.loading"
+        @ok="doTagPrintWithCategory"
+        @cancel="closeTagPrintModal"
+      >
+        <a-tree
+          v-if="tagPrintModal.treeShow"
+          v-model:checkedKeys="tagPrintModal.checkedCategoryIds"
+          checkable
+          default-expand-all
+          :tree-data="tagPrintModal.categoryTreeData"
+          :field-names="{ children: 'children', title: 'name', key: 'id' }"
+        />
+      </a-modal>
+
       <!-- 月底成本重算弹窗 -->
       <a-modal v-model:open="costRefreshVisible" title="月底成本重算" @ok="recalculate">
         <a-form layout="vertical">
@@ -363,10 +381,11 @@
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
   import * as configApi from '@/api/sc/sale/config';
+  import * as categoryApi from '@/api/base-data/product/category';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
   import { printMix } from '@/mixins/print.ts';
-  import { buildSortPageVo, isEmpty } from '@/utils/utils';
+  import { buildSortPageVo, isEmpty, toArrayTree } from '@/utils/utils';
   import {
     buildVisibleSelectOptions,
     filterSelectOption,
@@ -483,7 +502,13 @@
           },
           { field: 'customerName', title: '客户名称', width: 120 },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
-          { field: 'confirmAmt', title: '验收金额', align: 'right', width: 100 },
+          {
+            field: 'confirmAmt',
+            title: '验收金额',
+            align: 'right',
+            width: 100,
+            formatter: ({ cellValue }) => this.formatAmount(cellValue),
+          },
           { field: 'paidAmount', title: '已付金额', align: 'right', width: 80 },
           { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 80 },
           {
@@ -541,6 +566,15 @@
           loading: false,
           id: '',
           description: '',
+        },
+        // 标签打印分类选择弹窗
+        tagPrintModal: {
+          visible: false,
+          loading: false,
+          categoryTreeData: [],
+          checkedCategoryIds: [],
+          treeShow: false,
+          pendingRecords: [],
         },
         // 月底成本重算
         costRefreshVisible: false,
@@ -1005,15 +1039,50 @@
           createError('请选择要打印标签的销售出库单！');
           return;
         }
-        this.loading = true;
+        // 缓存选中记录，打开分类选择弹窗
+        this.tagPrintModal.pendingRecords = records;
+        this.openTagPrintModal();
+      },
+      /** 打开标签打印分类选择弹窗 */
+      openTagPrintModal() {
+        this.tagPrintModal.visible = true;
+        this.tagPrintModal.treeShow = false;
+        this.tagPrintModal.checkedCategoryIds = [];
+        // 从Redis缓存加载上次勾选的分类
+        api.getTagPrintCategoryCache().then((cached) => {
+          if (cached && cached.length > 0) {
+            this.tagPrintModal.checkedCategoryIds = cached;
+          }
+        });
+        // 加载商品分类树
+        categoryApi.query().then((res) => {
+          this.tagPrintModal.categoryTreeData = toArrayTree(res);
+          this.tagPrintModal.treeShow = true;
+        });
+      },
+      /** 关闭标签打印分类选择弹窗 */
+      closeTagPrintModal() {
+        this.tagPrintModal.visible = false;
+        this.tagPrintModal.pendingRecords = [];
+      },
+      /** 确认标签打印（携带分类筛选，并缓存勾选的分类到Redis） */
+      async doTagPrintWithCategory() {
+        // 缓存勾选的分类到Redis
+        api.saveTagPrintCategoryCache(this.tagPrintModal.checkedCategoryIds);
+        this.tagPrintModal.loading = true;
         try {
           const res = await api.tagPrint({
             ...this.buildQueryParams({}, {}),
-            idList: records.map((item) => item.id),
+            idList: this.tagPrintModal.pendingRecords.map((item) => item.id),
+            categoryIdList:
+              this.tagPrintModal.checkedCategoryIds.length > 0
+                ? this.tagPrintModal.checkedCategoryIds
+                : undefined,
           });
+          this.tagPrintModal.visible = false;
           await this.vgPrintPreview(PRINT_TYPE.SALE_TAG.code, res);
         } finally {
-          this.loading = false;
+          this.tagPrintModal.loading = false;
         }
       },
       // 按勾选单据导出买菜汇总

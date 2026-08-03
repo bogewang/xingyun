@@ -93,7 +93,6 @@ import static com.lframework.xingyun.sc.impl.sale.SaleOutSheetMarketBuySummaryFo
 public class SaleOutSheetServiceImpl extends
         BaseMpServiceImpl<SaleOutSheetMapper, SaleOutSheet> implements SaleOutSheetService {
 
-    private final List<String> NO_NEED_PRINT = Lists.newArrayList("调料干杂");
     private static final String COST_PRICE_SOURCE_USE_STOCK_PRICE_PM_KEY = "sale_out_cost_price_use_stock_price";
     private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER = DateTimeFormatter
             .ofPattern("yyyy-MM-dd");
@@ -288,11 +287,6 @@ public class SaleOutSheetServiceImpl extends
             return Lists.newArrayList();
         }
 
-        List<String> noNeedPrint = productCategoryService.getAllProductCategories().stream()
-                .filter(item -> NO_NEED_PRINT.contains(item.getName()))
-                .map(ProductCategory::getId)
-                .collect(Collectors.toList());
-
         List<PrintSaleTagBo> res = Lists.newArrayList();
         result.getDatas().forEach(item -> {
             Customer customer = customerService.findById(item.getCustomerId());
@@ -302,9 +296,15 @@ public class SaleOutSheetServiceImpl extends
                     .map(SaleOutSheetDetail::getProductId)
                     .collect(Collectors.toList());
             // 组装成打印数据；
-            // 按商品汇总
+            // 按商品汇总，排除不需要打印的分类；若指定了分类筛选则只保留选中分类的商品
             Map<String, Product> productMap = productService.getBaseMapper().selectBatchIds(productIds).stream()
-                    .filter(product -> !noNeedPrint.contains(product.getCategoryId()))
+                    .filter(product -> {
+                        // 如果指定了分类筛选，只保留选中分类的商品
+                        if (CollectionUtils.isNotEmpty(vo.getCategoryIdList())) {
+                            return vo.getCategoryIdList().contains(product.getCategoryId());
+                        }
+                        return true;
+                    })
                     .collect(Collectors.toMap(Product::getId, r -> r, (v1, v2) -> v2));
 
             Map<String, List<SaleOutSheetDetail>> map = details.stream()
@@ -856,6 +856,10 @@ public class SaleOutSheetServiceImpl extends
             cell.orderNum = NumberUtil.add(cell.orderNum, orderNum);
             if (StringUtils.isNotBlank(detail.getDescription())) {
                 cell.descriptions.add(detail.getDescription());
+                cell.quantityByDescription.merge(detail.getDescription(), orderNum, NumberUtil::add);
+            } else {
+                cell.quantityWithoutDescription = NumberUtil.add(
+                        cell.quantityWithoutDescription, orderNum);
             }
             row.total = NumberUtil.add(row.total, orderNum);
         }
@@ -943,17 +947,18 @@ public class SaleOutSheetServiceImpl extends
      */
     private String buildMarketBuySummaryDetail(SummaryRow row,
             LinkedHashMap<String, String> customerNameMap) {
-        List<SaleOutSheetMarketBuySummaryFormatter.CustomerDetail> details = new ArrayList<>();
+        List<String> details = new ArrayList<>();
         for (Map.Entry<String, String> customer : customerNameMap.entrySet()) {
             SummaryCell cell = row.cells.get(customer.getKey());
             if (cell == null) {
                 continue;
             }
 
-            details.add(new SaleOutSheetMarketBuySummaryFormatter.CustomerDetail(
-                    customer.getValue(), row.unit, cell.orderNum, cell.descriptions));
+            details.add(SaleOutSheetMarketBuySummaryFormatter.formatCustomerDetailByDescription(
+                    customer.getValue(), row.unit, cell.quantityWithoutDescription,
+                    cell.quantityByDescription));
         }
-        return SaleOutSheetMarketBuySummaryFormatter.mergeCustomerDetails(details);
+        return details.stream().filter(StringUtils::isNotBlank).collect(Collectors.joining("+"));
     }
 
     /**
@@ -990,6 +995,12 @@ public class SaleOutSheetServiceImpl extends
 
     private static class SummaryCell {
         private BigDecimal orderNum = BigDecimal.ZERO;
+
+        // 无备注的数量单独汇总，保持原有“数量/单位”的展示方式。
+        private BigDecimal quantityWithoutDescription = BigDecimal.ZERO;
+
+        // key: 备注，value: 对应数量；按备注首次出现顺序输出。
+        private Map<String, BigDecimal> quantityByDescription = new LinkedHashMap<>();
 
         // 使用 LinkedHashSet 去重并保持备注原始顺序，导出时展示更稳定。
         private Set<String> descriptions = new LinkedHashSet<>();
@@ -1270,8 +1281,10 @@ public class SaleOutSheetServiceImpl extends
             validateBatchUpdatePriceDetail(detail);
 
             detail.setTaxPrice(vo.getTaxPrice());
-            detail.setTaxAmount(NumberUtil.calculateAmount(vo.getTaxPrice(), detail.getOrderNum()));
-            detail.setConfirmAmt(NumberUtil.calculateAmount(vo.getTaxPrice(), detail.getConfirmNum()));
+            detail.setTaxAmount(SaleOutSheetAmtCalculator.calculateLineAmount(vo.getTaxPrice(),
+                    detail.getBusinessNum()));
+            detail.setConfirmAmt(SaleOutSheetAmtCalculator.calculateLineAmount(vo.getTaxPrice(),
+                    detail.getConfirmNum()));
 
             saleOutSheetDetailService.updateById(detail);
 
@@ -1608,8 +1621,10 @@ public class SaleOutSheetServiceImpl extends
         detail.setOrderNo(productVo.getSeq());
         detail.setActualDate(productVo.getActualDate());
         detail.setSettleStatus(this.getInitSettleStatus(customer));
-        detail.setTaxAmount(NumberUtil.calculateAmount(price, detail.getBusinessNum()));
-        detail.setConfirmAmt(NumberUtil.calculateAmount(price, detail.getConfirmNum()));
+        detail.setTaxAmount(SaleOutSheetAmtCalculator.calculateLineAmount(price,
+                detail.getBusinessNum()));
+        detail.setConfirmAmt(SaleOutSheetAmtCalculator.calculateLineAmount(price,
+                detail.getConfirmNum()));
         return detail;
     }
 
@@ -1837,7 +1852,7 @@ public class SaleOutSheetServiceImpl extends
             throw new DefaultClientException("商品明细为赠品，不允许调整售价！");
         }
 
-        if (detail.getSettleStatus() != SettleStatus.UN_SETTLE) {
+        if (detail.getSettleStatus() != SettleStatus.UN_CHECK_BILL) {
             throw new DefaultClientException("仅支持调整未结算的商品明细售价！");
         }
     }

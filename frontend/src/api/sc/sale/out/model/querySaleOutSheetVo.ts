@@ -130,4 +130,9 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
    * 是否仅查询多价格商品
    */
   onlyMultiPrice: boolean;
+
+  /**
+   * 商品分类ID列表
+   */
+  categoryIdList: string[];
 }

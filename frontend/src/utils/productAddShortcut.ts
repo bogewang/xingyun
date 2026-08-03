@@ -33,11 +33,17 @@ export function shouldAddProductByEnter(event: KeyboardEvent) {
 }
 
 /**
- * 阻止数量输入框的删除键冒泡到 VXE 表格。
+ * 阻止数量输入框中会被 VXE 表格接管的按键冒泡。
  *
- * VXE 表格会处理 Del 键，导致数量输入框的小键盘 Del 误触发表格删除行为。
+ * Delete 仍保留输入框本身的删除行为；空格不是合法数量，需要同时阻止输入和冒泡。
  */
 export function stopGridDeleteFromInput(event: KeyboardEvent) {
+  if (event.key === ' ') {
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+
   if (event.key === 'Delete') {
     event.stopPropagation();
   }

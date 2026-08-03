@@ -67,6 +67,9 @@
               </a-button>
               <a-button :icon="h(NumberOutlined)" @click="batchInputOutNum">批量录入数量</a-button>
               <a-button :icon="h(EditOutlined)" @click="batchInputTaxPrice">批量调整价格</a-button>
+              <a-button :icon="h(CheckSquareOutlined)" @click="batchFillConfirmNum"
+                >一键补齐验收数量</a-button
+              >
             </a-space>
           </template>
 
@@ -145,6 +148,7 @@
               v-model:value="row.outNum"
               class="number-input"
               @input="(e) => outNumInput(row, e.target.value)"
+              @keydown="stopGridDeleteFromInput"
             />
           </template>
 
@@ -164,7 +168,7 @@
             />
           </template>
           <template #confirmAmt_default="{ row }"
-            ><span>{{ row.confirmAmt }}</span></template
+            ><span>{{ formatConfirmAmount(row.confirmAmt) }}</span></template
           >
 
           <template #costPrice_default="{ row, rowIndex }">
@@ -213,7 +217,11 @@
             <a-input v-model:value="formData.confirmNum" class="number-input" readonly />
           </j-form-item>
           <j-form-item label="验收金额" :span="8">
-            <a-input v-model:value="formData.confirmAmt" class="number-input" readonly />
+            <a-input
+              :value="formatConfirmAmount(formData.confirmAmt)"
+              class="number-input"
+              readonly
+            />
           </j-form-item>
           <j-form-item label="付款金额" :span="8">
             <a-input
@@ -280,6 +288,7 @@
     MinusCircleTwoTone,
     NumberOutlined,
     EditOutlined,
+    CheckSquareOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
   import * as sysParameterApi from '@/api/system/parameter';
@@ -316,7 +325,7 @@
     getSheetLineAmount,
   } from '@/utils/sheetAmountInput';
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
-  import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
+  import { shouldAddProductByEnter, stopGridDeleteFromInput } from '@/utils/productAddShortcut';
   import { requestCustomerSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
@@ -324,16 +333,14 @@
   import OrderTimeLine from '@/components/OrderTimeLine';
   import { useUserStoreWithOut } from '/@/store/modules/user';
   import {
+    formatConfirmAmount,
     normalizeConfirmNum,
     syncConfirmAmount,
     sumConfirmFields,
   } from './components/saleOutConfirm';
   import { calcSaleOutProfitRate, isSaleOutProfitNegative } from './components/saleOutProfit';
-  import {
-    calculateUnitPrice,
-    calculateUnitStockNum,
-    getUnitConversionRate,
-  } from '@/utils/productUnitConversion';
+  import { isSaleOutStockEnough } from './components/saleOutStock';
+  import { calculateUnitPrice, calculateUnitStockNum } from '@/utils/productUnitConversion';
 
   export default defineComponent({
     name: 'ModifySaleOutSheetUnRequire',
@@ -353,10 +360,13 @@
         MinusCircleTwoTone,
         NumberOutlined,
         EditOutlined,
+        CheckSquareOutlined,
         isEmpty,
         isFloatGeZero,
         mul,
         formatInquiryProduct,
+        formatConfirmAmount,
+        stopGridDeleteFromInput,
         hasCostPrice: (row) =>
           row &&
           row.costPrice !== null &&
@@ -842,6 +852,9 @@
           return;
         }
         row.outNum = value;
+        if (String(value).trim() === '' || !Number.isFinite(Number(value))) {
+          return;
+        }
         clearManualSheetAmount(row, 'outNum', 'taxPrice');
         this.calcSum();
       },
@@ -926,6 +939,15 @@
             this.taxPriceInput(t, value);
           });
         });
+      },
+      // 一键补齐验收数量：将每行验收数量设为出库数量，自动计算验收金额及汇总
+      batchFillConfirmNum() {
+        this.tableData.forEach((row) => {
+          if (!isEmpty(row.productId)) {
+            row.confirmNum = row.outNum;
+          }
+        });
+        this.calcSum();
       },
       // 批量新增商品
       batchAddProduct(productList) {
@@ -1116,18 +1138,7 @@
       },
       // 检查库存数量
       checkStockNum(row) {
-        const checkArr = this.tableData
-          .filter((item) => item.productId === row.productId)
-          .map((item) => mul(item.outNum || 0, getUnitConversionRate(item)));
-        if (isEmpty(checkArr)) {
-          checkArr.push(0);
-        }
-        const totalOutNum = checkArr.reduce((total, item) => {
-          const outNum = isFloatGtZero(item) ? item : 0;
-          return add(total, outNum);
-        }, 0);
-
-        return totalOutNum <= (row.baseStockNum ?? mul(row.stockNum || 0, row.conversionRate || 1));
+        return isSaleOutStockEnough(this.tableData, row);
       },
     },
   });

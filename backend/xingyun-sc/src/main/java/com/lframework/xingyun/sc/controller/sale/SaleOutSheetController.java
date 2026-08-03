@@ -53,12 +53,17 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.lframework.starter.web.core.components.security.SecurityUtil;
+import com.lframework.starter.web.core.utils.JsonUtil;
+import org.springframework.data.redis.core.StringRedisTemplate;
+
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -75,6 +80,11 @@ public class SaleOutSheetController extends DefaultBaseController {
 
     @Autowired
     private SaleOutSheetService saleOutSheetService;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    private static final String TAG_PRINT_CATEGORY_CACHE_KEY = "sale:out:tagPrint:category:";
 
     /**
      * 打印
@@ -301,6 +311,39 @@ public class SaleOutSheetController extends DefaultBaseController {
         List<PrintSaleTagBo> data = saleOutSheetService.tagPrint(vo);
 
         return InvokeResultBuilder.success(data);
+    }
+
+    /**
+     * 获取标签打印分类缓存
+     */
+    @ApiOperation("获取标签打印分类缓存")
+    @HasPermission({ "sale:out:query" })
+    @GetMapping("/tagPrint/category/cache")
+    public InvokeResult<List<String>> getTagPrintCategoryCache() {
+
+        String userId = SecurityUtil.getCurrentUser().getId();
+        String key = TAG_PRINT_CATEGORY_CACHE_KEY + userId;
+        String cached = stringRedisTemplate.opsForValue().get(key);
+        if (cached == null || cached.isEmpty()) {
+            return InvokeResultBuilder.success(null);
+        }
+        List<String> categoryIds = JsonUtil.parseList(cached, String.class);
+        return InvokeResultBuilder.success(categoryIds);
+    }
+
+    /**
+     * 保存标签打印分类缓存
+     */
+    @ApiOperation("保存标签打印分类缓存")
+    @HasPermission({ "sale:out:query" })
+    @PostMapping("/tagPrint/category/cache")
+    public InvokeResult<Void> saveTagPrintCategoryCache(@RequestBody List<String> categoryIds) {
+
+        String userId = SecurityUtil.getCurrentUser().getId();
+        String key = TAG_PRINT_CATEGORY_CACHE_KEY + userId;
+        String value = JsonUtil.toJsonString(categoryIds);
+        stringRedisTemplate.opsForValue().set(key, value, 30, TimeUnit.DAYS);
+        return InvokeResultBuilder.success();
     }
 
     /**
