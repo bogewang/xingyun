@@ -222,6 +222,36 @@ export function tagPrint(params: TagPrintParams): Promise<PrintSaleTagBo[]> {
 }
 
 /**
+ * 获取标签打印分类缓存
+ */
+export function getTagPrintCategoryCache(): Promise<string[]> {
+  return defHttp.get<string[]>(
+    {
+      url: baseUrl + '/tagPrint/category/cache',
+    },
+    {
+      region,
+    },
+  );
+}
+
+/**
+ * 保存标签打印分类缓存
+ */
+export function saveTagPrintCategoryCache(categoryIds: string[]): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/tagPrint/category/cache',
+      data: categoryIds,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/**
  * 买菜汇总导出
  */
 export function exportMarketBuySummary(params: MarketBuySummaryParams): Promise<void> {

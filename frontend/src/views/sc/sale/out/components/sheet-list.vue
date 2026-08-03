@@ -1048,6 +1048,12 @@
         this.tagPrintModal.visible = true;
         this.tagPrintModal.treeShow = false;
         this.tagPrintModal.checkedCategoryIds = [];
+        // 从Redis缓存加载上次勾选的分类
+        api.getTagPrintCategoryCache().then((cached) => {
+          if (cached && cached.length > 0) {
+            this.tagPrintModal.checkedCategoryIds = cached;
+          }
+        });
         // 加载商品分类树
         categoryApi.query().then((res) => {
           this.tagPrintModal.categoryTreeData = toArrayTree(res);
@@ -1059,8 +1065,10 @@
         this.tagPrintModal.visible = false;
         this.tagPrintModal.pendingRecords = [];
       },
-      /** 确认标签打印（携带分类筛选） */
+      /** 确认标签打印（携带分类筛选，并缓存勾选的分类到Redis） */
       async doTagPrintWithCategory() {
+        // 缓存勾选的分类到Redis
+        api.saveTagPrintCategoryCache(this.tagPrintModal.checkedCategoryIds);
         this.tagPrintModal.loading = true;
         try {
           const res = await api.tagPrint({
