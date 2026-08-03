@@ -180,4 +180,10 @@ public class QuerySaleOutSheetVo extends SortPageVo {
    */
   @ApiModelProperty("是否仅查询多价格商品")
   private Boolean onlyMultiPrice;
+
+  /**
+   * 商品分类ID列表
+   */
+  @ApiModelProperty("商品分类ID列表")
+  private List<String> categoryIdList;
 }

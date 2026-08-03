@@ -93,7 +93,6 @@ import static com.lframework.xingyun.sc.impl.sale.SaleOutSheetMarketBuySummaryFo
 public class SaleOutSheetServiceImpl extends
         BaseMpServiceImpl<SaleOutSheetMapper, SaleOutSheet> implements SaleOutSheetService {
 
-    private final List<String> NO_NEED_PRINT = Lists.newArrayList("调料干杂");
     private static final String COST_PRICE_SOURCE_USE_STOCK_PRICE_PM_KEY = "sale_out_cost_price_use_stock_price";
     private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER = DateTimeFormatter
             .ofPattern("yyyy-MM-dd");
@@ -288,11 +287,6 @@ public class SaleOutSheetServiceImpl extends
             return Lists.newArrayList();
         }
 
-        List<String> noNeedPrint = productCategoryService.getAllProductCategories().stream()
-                .filter(item -> NO_NEED_PRINT.contains(item.getName()))
-                .map(ProductCategory::getId)
-                .collect(Collectors.toList());
-
         List<PrintSaleTagBo> res = Lists.newArrayList();
         result.getDatas().forEach(item -> {
             Customer customer = customerService.findById(item.getCustomerId());
@@ -302,9 +296,15 @@ public class SaleOutSheetServiceImpl extends
                     .map(SaleOutSheetDetail::getProductId)
                     .collect(Collectors.toList());
             // 组装成打印数据；
-            // 按商品汇总
+            // 按商品汇总，排除不需要打印的分类；若指定了分类筛选则只保留选中分类的商品
             Map<String, Product> productMap = productService.getBaseMapper().selectBatchIds(productIds).stream()
-                    .filter(product -> !noNeedPrint.contains(product.getCategoryId()))
+                    .filter(product -> {
+                        // 如果指定了分类筛选，只保留选中分类的商品
+                        if (CollectionUtils.isNotEmpty(vo.getCategoryIdList())) {
+                            return vo.getCategoryIdList().contains(product.getCategoryId());
+                        }
+                        return true;
+                    })
                     .collect(Collectors.toMap(Product::getId, r -> r, (v1, v2) -> v2));
 
             Map<String, List<SaleOutSheetDetail>> map = details.stream()

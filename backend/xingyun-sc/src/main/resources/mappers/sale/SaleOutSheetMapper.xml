@@ -445,6 +445,15 @@
                 <if test="vo.idList != null and vo.idList.size() > 0">
                     AND s.id IN <foreach collection="vo.idList" open="(" separator="," close=")" item="item">#{item}</foreach>
                 </if>
+                <if test="vo.categoryIdList != null and vo.categoryIdList.size() > 0">
+                    AND EXISTS (
+                        SELECT 1
+                        FROM tbl_sale_out_sheet_detail AS sd
+                        INNER JOIN base_data_product AS g ON g.id = sd.product_id
+                        WHERE sd.sheet_id = s.id
+                        AND g.category_id IN <foreach collection="vo.categoryIdList" open="(" separator="," close=")" item="item">#{item}</foreach>
+                    )
+                </if>
             </if>
         </where>
         ORDER BY s.create_time desc, s.order_date DESC, s.id DESC
