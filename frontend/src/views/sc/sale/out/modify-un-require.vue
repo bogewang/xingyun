@@ -67,6 +67,9 @@
               </a-button>
               <a-button :icon="h(NumberOutlined)" @click="batchInputOutNum">批量录入数量</a-button>
               <a-button :icon="h(EditOutlined)" @click="batchInputTaxPrice">批量调整价格</a-button>
+              <a-button :icon="h(CheckSquareOutlined)" @click="batchFillConfirmNum"
+                >一键补齐验收数量</a-button
+              >
             </a-space>
           </template>
 
@@ -285,6 +288,7 @@
     MinusCircleTwoTone,
     NumberOutlined,
     EditOutlined,
+    CheckSquareOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
   import * as sysParameterApi from '@/api/system/parameter';
@@ -356,6 +360,7 @@
         MinusCircleTwoTone,
         NumberOutlined,
         EditOutlined,
+        CheckSquareOutlined,
         isEmpty,
         isFloatGeZero,
         mul,
@@ -934,6 +939,15 @@
             this.taxPriceInput(t, value);
           });
         });
+      },
+      // 一键补齐验收数量：将每行验收数量设为出库数量，自动计算验收金额及汇总
+      batchFillConfirmNum() {
+        this.tableData.forEach((row) => {
+          if (!isEmpty(row.productId)) {
+            row.confirmNum = row.outNum;
+          }
+        });
+        this.calcSum();
       },
       // 批量新增商品
       batchAddProduct(productList) {
