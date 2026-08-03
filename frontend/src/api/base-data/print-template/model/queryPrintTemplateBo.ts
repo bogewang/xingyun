@@ -43,4 +43,9 @@ export interface QueryPrintTemplateBo {
    * 修改时间
    */
   updateTime: string;
+
+  /**
+   * 是否默认模板
+   */
+  isDefault?: boolean;
 }

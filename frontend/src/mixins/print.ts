@@ -78,7 +78,9 @@ export async function vgPrintPreview(
     return;
   }
 
-  const templateId = templateList[0].id;
+  // 优先选择默认模板，否则选择第一个
+  const defaultTemplate = templateList.find((item) => item.isDefault);
+  const templateId = (defaultTemplate || templateList[0]).id;
   const templateJson = await getTemplateJson(templateId);
 
   if (!templateJson) {

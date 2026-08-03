@@ -96,4 +96,9 @@ public class PrintTemplate extends BaseEntity implements BaseDto {
    */
   @TableField(fill = FieldFill.INSERT_UPDATE)
   private LocalDateTime updateTime;
+
+  /**
+   * 是否默认模板（同一业务类型下仅允许一个默认）
+   */
+  private Boolean isDefault;
 }

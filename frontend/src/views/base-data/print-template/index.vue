@@ -157,7 +157,16 @@
               return PRINT_TYPE.getDesc(cellValue) || cellValue;
             },
           },
-          { title: '操作', width: 360, fixed: 'right', slots: { default: 'action_default' } },
+          {
+            field: 'isDefault',
+            title: '默认模板',
+            width: 90,
+            align: 'center',
+            formatter: ({ cellValue }) => {
+              return cellValue ? '默认' : '';
+            },
+          },
+          { title: '操作', width: 440, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -217,6 +226,19 @@
         this.batchHandleDatas = records;
         this.$refs.batchDeleteHandlerDialog.openDialog();
       },
+      /** 设为默认模板 */
+      setDefault(id) {
+        this.loading = true;
+        api
+          .setDefault(id)
+          .then(() => {
+            createSuccess('已设为默认模板！');
+            this.search();
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
       deleteRow(id) {
         createConfirm('是否确定删除该打印模板？').then(() => {
           this.loading = true;
@@ -246,6 +268,16 @@
       },
       createActions(row) {
         return [
+          {
+            permission: ['base-data:print-template:modify'],
+            label: '设为默认',
+            ifShow: () => {
+              return !row.isDefault;
+            },
+            onClick: () => {
+              this.setDefault(row.id);
+            },
+          },
           {
             permission: ['base-data:print-template:modify'],
             label: '修改',

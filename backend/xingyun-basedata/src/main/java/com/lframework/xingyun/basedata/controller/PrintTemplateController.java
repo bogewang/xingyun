@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -109,6 +110,19 @@ public class PrintTemplateController extends DefaultBaseController {
         printTemplateService.deleteById(id);
 
         printTemplateService.cleanCacheByKey(id);
+
+        return InvokeResultBuilder.success();
+    }
+
+    /**
+     * 设为默认模板
+     */
+    @ApiOperation("设为默认模板")
+    @HasPermission({"base-data:print-template:modify"})
+    @PatchMapping("/default")
+    public InvokeResult<Void> setDefault(@NotNull(message = "ID不能为空！") Integer id) {
+
+        printTemplateService.setDefault(id);
 
         return InvokeResultBuilder.success();
     }

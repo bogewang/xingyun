@@ -189,6 +189,25 @@ export function getFieldDesc(bizType?: string | number): Promise<PrintTemplateCo
 }
 
 /**
+ * 设为默认模板
+ * @param id
+ */
+export function setDefault(id: string): Promise<void> {
+  return defHttp.patch<void>(
+    {
+      url: baseUrl + '/default',
+      data: {
+        id,
+      },
+    },
+    {
+      contentType: ContentTypeEnum.FORM_URLENCODED,
+      region,
+    },
+  );
+}
+
+/**
  * 根据ID删除
  * @param id
  */

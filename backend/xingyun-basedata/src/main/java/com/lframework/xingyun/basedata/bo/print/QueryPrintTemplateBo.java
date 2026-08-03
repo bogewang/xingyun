@@ -67,6 +67,12 @@ public class QueryPrintTemplateBo extends BaseBo<PrintTemplate> {
   @JsonFormat(pattern = StringPool.DATE_TIME_PATTERN)
   private LocalDateTime updateTime;
 
+  /**
+   * 是否默认模板
+   */
+  @ApiModelProperty("是否默认模板")
+  private Boolean isDefault;
+
   public QueryPrintTemplateBo() {
 
   }

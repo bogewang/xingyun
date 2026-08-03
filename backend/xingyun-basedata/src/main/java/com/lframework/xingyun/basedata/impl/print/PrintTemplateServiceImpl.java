@@ -209,6 +209,28 @@ public class PrintTemplateServiceImpl extends
 
     }
 
+    @OpLog(type = BaseDataOpLogType.class, name = "设为默认打印模板，ID：{}", params = {"#id"})
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void setDefault(Integer id) {
+        PrintTemplate data = getById(id);
+        if (data == null) {
+            throw new DefaultClientException("打印模板不存在！");
+        }
+
+        // 将同一业务类型下的其他模板取消默认
+        Wrapper<PrintTemplate> clearWrapper = Wrappers.lambdaUpdate(PrintTemplate.class)
+                .eq(PrintTemplate::getBizType, data.getBizType())
+                .set(PrintTemplate::getIsDefault, false);
+        getBaseMapper().update(clearWrapper);
+
+        // 设置当前模板为默认
+        Wrapper<PrintTemplate> setWrapper = Wrappers.lambdaUpdate(PrintTemplate.class)
+                .eq(PrintTemplate::getId, id)
+                .set(PrintTemplate::getIsDefault, true);
+        getBaseMapper().update(setWrapper);
+    }
+
     @Override
     public List<PrintTemplateColumnDescription> getFieldDesc() {
         return getFieldDesc(null);

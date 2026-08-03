@@ -97,4 +97,11 @@ public interface PrintTemplateService extends BaseMpService<PrintTemplate> {
      * @return 模板字段说明
      */
     List<PrintTemplateColumnDescription> getFieldDesc(String bizType);
+
+    /**
+     * 设为默认模板（同一业务类型下仅允许一个默认）
+     *
+     * @param id 模板ID
+     */
+    void setDefault(Integer id);
 }

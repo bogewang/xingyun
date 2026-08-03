@@ -16,7 +16,8 @@
             tb.create_time,
             tb.update_by,
             tb.update_by_id,
-            tb.update_time
+            tb.update_time,
+            tb.is_default
         FROM tbl_print_template AS tb
     </sql>
     <select id="query" resultType="com.lframework.xingyun.basedata.entity.PrintTemplate">
