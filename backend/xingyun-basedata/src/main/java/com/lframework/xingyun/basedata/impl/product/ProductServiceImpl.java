@@ -695,7 +695,7 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         Map<String, Unit> availableUnitsByName = units.stream().filter(unit -> Boolean.TRUE.equals(unit.getAvailable()))
                 .filter(unit -> StringUtil.isNotBlank(unit.getName())).collect(Collectors.toMap(
                         unit -> unit.getName().trim(), unit -> unit, (a, b) -> a));
-        list = filterDisabledDuplicateImportRows(list, disabledProducts, availableProducts, unitNamesById);
+        list = resolveDisabledDuplicateImportRows(list, disabledProducts, availableProducts, unitNamesById);
         this.check(list, importRowIndexes, unitNamesById);
         ProductImportPersistBatch persistBatch = this.buildProducts(list, availableUnitsByName);
 
@@ -1369,49 +1369,42 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     }
 
     /**
-     * 过滤与停用商品名称、规格、单位完全匹配的导入行。
-     *
-     * @param importRows 商品导入行
-     * @param disabledProducts 停用商品列表
-     * @return 未匹配停用商品的导入行
-     */
-    static List<ProductImportModel> filterDisabledDuplicateImportRows(List<ProductImportModel> importRows,
-            List<Product> disabledProducts) {
-        Map<String, String> unitNames = disabledProducts.stream().collect(Collectors.toMap(Product::getUnit,
-                Product::getUnit, (a, b) -> a));
-        return filterDisabledDuplicateImportRows(importRows, disabledProducts, Collections.emptyList(), unitNames);
-    }
-
-    /**
-     * 过滤仅与停用商品匹配且未与启用商品匹配的导入行。
+     * 将仅与停用商品匹配的导入行关联到原商品，供后续更新并重新启用。
      *
      * @param importRows 商品导入行
      * @param disabledProducts 停用商品列表
      * @param availableProducts 启用商品列表
      * @param unitNamesById 单位 ID 与名称映射
-     * @return 未被过滤的商品导入行
+     * @return 已关联既有商品的导入行
      */
-    static List<ProductImportModel> filterDisabledDuplicateImportRows(List<ProductImportModel> importRows,
+    static List<ProductImportModel> resolveDisabledDuplicateImportRows(List<ProductImportModel> importRows,
             List<Product> disabledProducts, List<Product> availableProducts, Map<String, String> unitNamesById) {
         if (CollectionUtil.isEmpty(importRows) || CollectionUtil.isEmpty(disabledProducts)) {
             return importRows;
         }
 
-        Set<String> disabledProductKeys = disabledProducts.stream()
+        Map<String, Product> disabledProductsByKey = disabledProducts.stream()
                 .filter(product -> Boolean.FALSE.equals(product.getAvailable()))
-                .map(product -> buildNameSpecUnitKey(product.getName(), product.getSpec(),
-                        unitNamesById.get(product.getUnit())))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toMap(product -> buildNameSpecUnitKey(product.getName(), product.getSpec(),
+                        unitNamesById.get(product.getUnit())), product -> product, (a, b) -> a));
         Set<String> availableProductKeys = availableProducts.stream()
                 .filter(product -> Boolean.TRUE.equals(product.getAvailable()))
                 .map(product -> buildNameSpecUnitKey(product.getName(), product.getSpec(),
                         unitNamesById.get(product.getUnit())))
                 .collect(Collectors.toSet());
-        disabledProductKeys.removeAll(availableProductKeys);
-        return importRows.stream()
-                .filter(row -> !disabledProductKeys.contains(
-                        buildNameSpecUnitKey(row.getName(), row.getSpec(), row.getUnit())))
-                .collect(Collectors.toList());
+        availableProductKeys.forEach(disabledProductsByKey::remove);
+        importRows.forEach(row -> {
+            if (row.getId() != null) {
+                return;
+            }
+            Product disabledProduct = disabledProductsByKey.get(buildNameSpecUnitKey(row.getName(), row.getSpec(),
+                    row.getUnit()));
+            if (disabledProduct != null) {
+                row.setId(disabledProduct.getId());
+                row.setExistingInquiryProduct(disabledProduct.getInquiryProduct());
+            }
+        });
+        return importRows;
     }
 
     /**

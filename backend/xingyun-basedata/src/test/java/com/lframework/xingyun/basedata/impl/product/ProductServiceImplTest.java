@@ -56,20 +56,26 @@ class ProductServiceImplTest {
   }
 
   @Test
-  void shouldFilterImportRowsMatchingDisabledProductByTrimmedNameSpecAndUnit() {
+  void shouldResolveImportRowToDisabledProductByTrimmedNameSpecAndUnit() {
     Product disabledProduct = new Product();
+    disabledProduct.setId("product-disabled");
     disabledProduct.setName("  可乐  ");
     disabledProduct.setSpec("500ml");
     disabledProduct.setUnit("unit-bottle");
     disabledProduct.setAvailable(Boolean.FALSE);
+    disabledProduct.setInquiryProduct(Boolean.TRUE);
+    ProductImportModel disabledRow = importModel("可乐", "500ml", "瓶");
     ProductImportModel unrelatedRow = importModel("雪碧", "500ml", "瓶");
     Map<String, String> unitNames = Collections.singletonMap("unit-bottle", "瓶");
 
-    List<ProductImportModel> result = ProductServiceImpl.filterDisabledDuplicateImportRows(
-        Arrays.asList(importModel("可乐", "500ml", "瓶"), unrelatedRow),
+    List<ProductImportModel> result = ProductServiceImpl.resolveDisabledDuplicateImportRows(
+        Arrays.asList(disabledRow, unrelatedRow),
         Collections.singletonList(disabledProduct), Collections.<Product>emptyList(), unitNames);
 
-    Assert.assertEquals(result, Collections.singletonList(unrelatedRow));
+    Assert.assertEquals(result, Arrays.asList(disabledRow, unrelatedRow));
+    Assert.assertEquals(disabledRow.getId(), "product-disabled");
+    Assert.assertTrue(disabledRow.getExistingInquiryProduct());
+    Assert.assertNull(unrelatedRow.getId());
   }
 
   @Test
@@ -86,11 +92,12 @@ class ProductServiceImplTest {
     disabledProduct.setAvailable(Boolean.FALSE);
     ProductImportModel importRow = importModel("可乐", "500ml", "瓶");
 
-    List<ProductImportModel> result = ProductServiceImpl.filterDisabledDuplicateImportRows(
+    List<ProductImportModel> result = ProductServiceImpl.resolveDisabledDuplicateImportRows(
         Collections.singletonList(importRow), Collections.singletonList(disabledProduct),
         Collections.singletonList(availableProduct), Collections.singletonMap("unit-bottle", "瓶"));
 
     Assert.assertEquals(result, Collections.singletonList(importRow));
+    Assert.assertNull(importRow.getId());
   }
 
   @Test
@@ -103,7 +110,7 @@ class ProductServiceImplTest {
 
   @Test(expectedExceptions = DefaultClientException.class,
       expectedExceptionsMessageRegExp = "第3行“询价商品”只能填写“是”或“否”")
-  void shouldReportOriginalExcelRowIndexAfterFilteringDisabledRow() {
+  void shouldReportOriginalExcelRowIndexAfterResolvingDisabledRow() {
     ProductImportModel disabledRow = importModel("可乐", "500ml", "瓶");
     ProductImportModel invalidRow = importModel("雪碧", "500ml", "瓶");
     Product disabledProduct = new Product();
@@ -114,11 +121,11 @@ class ProductServiceImplTest {
     Map<ProductImportModel, Integer> rowIndexes = ProductServiceImpl.buildImportRowIndexes(
         Arrays.asList(disabledRow, invalidRow));
 
-    List<ProductImportModel> filteredRows = ProductServiceImpl.filterDisabledDuplicateImportRows(
+    List<ProductImportModel> resolvedRows = ProductServiceImpl.resolveDisabledDuplicateImportRows(
         Arrays.asList(disabledRow, invalidRow), Collections.singletonList(disabledProduct),
         Collections.<Product>emptyList(), Collections.singletonMap("unit-bottle", "瓶"));
 
-    Assert.assertEquals(filteredRows, Collections.singletonList(invalidRow));
+    Assert.assertEquals(resolvedRows, Arrays.asList(disabledRow, invalidRow));
     ProductServiceImpl.parseInquiryProduct("错误值", ProductServiceImpl.getImportRowIndex(rowIndexes, invalidRow, 0));
   }
 

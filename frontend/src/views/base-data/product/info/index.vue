@@ -16,6 +16,8 @@
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
           :pager-config="{
+            pageSize: 50,
+            pageSizes: [50, 100, 500, 1000],
             layouts: ['Home', 'PrevPage', 'Jump', 'PageCount', 'NextPage', 'End', 'Sizes', 'Total'],
           }"
           :loading="loading"
@@ -446,11 +448,6 @@
               this.id = row.id;
               this.$nextTick(() => this.$refs.viewDialog.openDialog());
             },
-          },
-          {
-            permission: ['base-data:product:info:add'],
-            label: '新增',
-            onClick: () => this.openChildPage('/product/info/add'),
           },
           {
             permission: ['base-data:product:info:modify'],
