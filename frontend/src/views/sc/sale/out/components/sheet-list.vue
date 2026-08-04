@@ -235,7 +235,15 @@
 
           <!-- 操作 列自定义内容 -->
           <template #action_default="{ row }">
-            <table-action outside :actions="createActions(row)" />
+            <table-action
+              outside
+              :actions="createActions(row)"
+              :drop-down-actions="createMoreActions(row)"
+            >
+              <template #more>
+                <a-button type="link" size="small">更多<DownOutlined /></a-button>
+              </template>
+            </table-action>
           </template>
         </vxe-grid>
       </page-wrapper>
@@ -398,6 +406,7 @@
     CloudUploadOutlined,
     DeleteOutlined,
     DownloadOutlined,
+    DownOutlined,
     PlusOutlined,
     PrinterOutlined,
     SearchOutlined,
@@ -460,6 +469,7 @@
         CloudUploadOutlined,
         DeleteOutlined,
         DownloadOutlined,
+        DownOutlined,
         PrinterOutlined,
         SyncOutlined,
         isEmpty,
@@ -566,7 +576,7 @@
           { field: 'createTime', title: '操作时间', width: 150, sortable: true },
           { field: 'createBy', title: '操作人', width: 80 },
           { field: 'description', title: '备注', width: 200 },
-          { title: '操作', minWidth: 480, fixed: 'right', slots: { default: 'action_default' } },
+          { title: '操作', minWidth: 300, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -1222,12 +1232,6 @@
             },
           },
           {
-            label: '打印',
-            onClick: () => {
-              this.printOrder(row);
-            },
-          },
-          {
             label: '浏览器打印',
             onClick: () => {
               this.openBrowserPrintDialog(row);
@@ -1244,6 +1248,19 @@
             },
             onClick: () => {
               this.openChildPage('/sale/out/approve/' + row.id);
+            },
+          },
+        ];
+      },
+      /**
+       * 创建行内“更多”菜单操作，保留原有权限和业务状态限制。
+       */
+      createMoreActions(row) {
+        return [
+          {
+            label: '打印',
+            onClick: () => {
+              this.printOrder(row);
             },
           },
           {
