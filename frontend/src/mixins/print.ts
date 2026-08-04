@@ -10,6 +10,11 @@ import type { PrintTemplateOption } from '@/components/PrintDialog';
 
 type PrintBizType = string | number;
 
+export interface PrintTemplateSelection {
+  templateId: string;
+  templateList: PrintTemplateOption[];
+}
+
 interface PrintMixinInstance extends ComponentPublicInstance {
   $printRuntimeApi?: PrintRuntimeApi;
 }
@@ -59,6 +64,26 @@ async function getTemplateJson(templateId: string) {
 }
 
 /**
+ * 加载指定业务类型的打印模板选项，并返回默认选中的模板。
+ */
+export async function getPrintTemplateSelection(
+  type: PrintBizType,
+): Promise<PrintTemplateSelection | undefined> {
+  const templateList = await queryTemplateByBizType(toBizType(type));
+
+  if (!templateList.length) {
+    createError('未找到当前业务类型的打印模板！');
+    return undefined;
+  }
+
+  const defaultTemplate = templateList.find((item) => item.isDefault);
+  return {
+    templateId: (defaultTemplate || templateList[0]).id,
+    templateList: toTemplateOptions(templateList),
+  };
+}
+
+/**
  * 订单打印预览入口。
  *
  * 根据业务类型查找模板，加载首个模板配置，并打开运行时预览弹窗；
@@ -103,8 +128,40 @@ export async function vgPrintPreview(
   });
 }
 
+/**
+ * 浏览器打印入口。
+ *
+ * 按用户选中的模板加载配置，然后直接调起浏览器的系统打印对话框。
+ */
+export async function vgBrowserPrint(
+  this: PrintMixinInstance,
+  printData: unknown,
+  templateId: string,
+) {
+  if (!templateId) {
+    createError('请选择打印模板！');
+    return;
+  }
+
+  const templateJson = await getTemplateJson(templateId);
+  if (!templateJson) {
+    createError('未找到打印模板配置！');
+    return;
+  }
+
+  const browserPrint = this.$printRuntimeApi?.browserPrint;
+  if (typeof browserPrint !== 'function') {
+    createError('浏览器打印组件未正确初始化！');
+    return;
+  }
+
+  browserPrint(templateJson, printData);
+}
+
 export const printMix = {
   methods: {
+    getPrintTemplateSelection,
+    vgBrowserPrint,
     vgPrintPreview,
   },
 };

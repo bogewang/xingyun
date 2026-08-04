@@ -307,6 +307,30 @@
       />
       <order-print-dialog />
 
+      <!-- 浏览器打印模板选择弹窗 -->
+      <a-modal
+        v-model:open="browserPrintModal.visible"
+        title="浏览器打印"
+        ok-text="确认"
+        :confirm-loading="browserPrintModal.loading"
+        @ok="confirmBrowserPrint"
+        @cancel="closeBrowserPrintDialog"
+      >
+        <a-form layout="vertical">
+          <a-form-item label="打印模板" required>
+            <a-select v-model:value="browserPrintModal.templateId" placeholder="请选择打印模板">
+              <a-select-option
+                v-for="item in browserPrintModal.templateList"
+                :key="item.id"
+                :value="item.id"
+              >
+                {{ item.name }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+        </a-form>
+      </a-modal>
+
       <!-- 标签打印分类选择弹窗 -->
       <a-modal
         v-model:open="tagPrintModal.visible"
@@ -542,7 +566,7 @@
           { field: 'createTime', title: '操作时间', width: 150, sortable: true },
           { field: 'createBy', title: '操作人', width: 80 },
           { field: 'description', title: '备注', width: 200 },
-          { title: '操作', minWidth: 400, fixed: 'right', slots: { default: 'action_default' } },
+          { title: '操作', minWidth: 480, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -566,6 +590,14 @@
           loading: false,
           id: '',
           description: '',
+        },
+        // 浏览器打印模板选择弹窗
+        browserPrintModal: {
+          visible: false,
+          loading: false,
+          templateId: '',
+          templateList: [],
+          printData: undefined,
         },
         // 标签打印分类选择弹窗
         tagPrintModal: {
@@ -1033,6 +1065,58 @@
           this.loading = false;
         }
       },
+      /**
+       * 加载当前销售出库单及可用模板，打开浏览器打印模板选择弹窗。
+       */
+      async openBrowserPrintDialog(row) {
+        this.loading = true;
+
+        try {
+          const [res, templateSelection] = await Promise.all([
+            api.print(row.id),
+            this.getPrintTemplateSelection(PRINT_TYPE.SALE_OUT.code),
+          ]);
+          if (!templateSelection) {
+            return;
+          }
+
+          this.browserPrintModal.printData = this.buildPrintData(res);
+          this.browserPrintModal.templateId = templateSelection.templateId;
+          this.browserPrintModal.templateList = templateSelection.templateList;
+          this.browserPrintModal.visible = true;
+        } finally {
+          this.loading = false;
+        }
+      },
+      /**
+       * 使用弹窗内选中的模板调起浏览器打印。
+       */
+      async confirmBrowserPrint() {
+        if (!this.browserPrintModal.templateId) {
+          createError('请选择打印模板！');
+          return;
+        }
+
+        this.browserPrintModal.loading = true;
+        try {
+          await this.vgBrowserPrint(
+            this.browserPrintModal.printData,
+            this.browserPrintModal.templateId,
+          );
+          this.closeBrowserPrintDialog();
+        } finally {
+          this.browserPrintModal.loading = false;
+        }
+      },
+      /**
+       * 关闭浏览器打印模板选择弹窗并清理当前单据数据。
+       */
+      closeBrowserPrintDialog() {
+        this.browserPrintModal.visible = false;
+        this.browserPrintModal.templateId = '';
+        this.browserPrintModal.templateList = [];
+        this.browserPrintModal.printData = undefined;
+      },
       async tagPrint() {
         const records = this.$refs.grid.getCheckboxRecords();
         if (isEmpty(records)) {
@@ -1141,6 +1225,12 @@
             label: '打印',
             onClick: () => {
               this.printOrder(row);
+            },
+          },
+          {
+            label: '浏览器打印',
+            onClick: () => {
+              this.openBrowserPrintDialog(row);
             },
           },
           {

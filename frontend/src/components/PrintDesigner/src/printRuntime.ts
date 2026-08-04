@@ -1,4 +1,5 @@
 import { openPrintDialog } from '/@/components/PrintDialog';
+import { createTemplate, printBrowser as printTemplateInBrowser } from 'vg-print';
 import { normalizePrintData, normalizeTemplate } from './printUtils';
 import type { PrintDialogPayload } from '/@/components/PrintDialog';
 
@@ -12,6 +13,7 @@ export interface PrintRuntimePreviewOptions
 
 export interface PrintRuntimeApi {
   preview: (templateJson: unknown, data: unknown, options?: PrintRuntimePreviewOptions) => void;
+  browserPrint: (templateJson: unknown, data: unknown) => void;
 }
 
 /**
@@ -32,8 +34,20 @@ function preview(templateJson: unknown, data: unknown, options: PrintRuntimePrev
   });
 }
 
+/**
+ * 使用浏览器打印当前模板和业务数据。
+ *
+ * 与预览弹窗共用相同的数据和模板标准化逻辑，直接调起系统打印对话框，
+ * 不依赖本地打印客户端。
+ */
+function browserPrint(templateJson: unknown, data: unknown) {
+  const template = createTemplate(normalizeTemplate(templateJson));
+  printTemplateInBrowser(template, normalizePrintData(data));
+}
+
 const printRuntime: PrintRuntimeApi = {
   preview,
+  browserPrint,
 };
 
 export default printRuntime;
