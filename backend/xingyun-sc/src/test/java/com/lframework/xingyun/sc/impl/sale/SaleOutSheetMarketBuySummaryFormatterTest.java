@@ -73,7 +73,7 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
     customers.put("customer-1", "17灶");
 
     Assert.assertEquals(buildDetail.invoke(service, rows.get(0), customers),
-        "【17灶】8.5/kg（3/去皮，切片；3/整块；2.5/切块）");
+        "【17灶】8.5kg（3/去皮，切片；3/整块；2.5/切块）");
   }
 
   /**

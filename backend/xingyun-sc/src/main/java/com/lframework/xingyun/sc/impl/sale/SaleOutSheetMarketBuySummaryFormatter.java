@@ -138,7 +138,7 @@ final class SaleOutSheetMarketBuySummaryFormatter {
       result.append(formatNumber(totalQuantity));
       String formattedUnit = formatUnit(unit);
       if (StringUtils.isNotBlank(formattedUnit)) {
-        result.append('/').append(formattedUnit);
+        result.append(formattedUnit);
       }
     }
     if (!descriptionDetails.isEmpty()) {
