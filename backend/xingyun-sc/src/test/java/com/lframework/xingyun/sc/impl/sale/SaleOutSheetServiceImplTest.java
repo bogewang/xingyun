@@ -1,10 +1,15 @@
 package com.lframework.xingyun.sc.impl.sale;
 
+import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
+import com.lframework.xingyun.sc.vo.sale.out.SaleOutProductVo;
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -111,6 +116,52 @@ class SaleOutSheetServiceImplTest {
     detail.setConfirmNum(BigDecimal.ZERO);
 
     Assert.assertEquals(SaleOutSheetServiceImpl.resolveCostNum(detail), BigDecimal.ZERO);
+  }
+
+  /**
+   * 验证保存销售出库单前先按商品类别、商品名称排序。
+   */
+  @Test
+  void sortProductsForSaveShouldOrderByCategoryThenProductName() {
+    Product categoryBProduct = createProduct("product-1", "商品A", "category-b");
+    Product categoryAProductB = createProduct("product-2", "商品B", "category-a");
+    Product categoryAProductA = createProduct("product-3", "商品A", "category-a");
+    Map<String, Product> productMap = new HashMap<>();
+    productMap.put(categoryBProduct.getId(), categoryBProduct);
+    productMap.put(categoryAProductB.getId(), categoryAProductB);
+    productMap.put(categoryAProductA.getId(), categoryAProductA);
+    Map<String, String> categoryNameMap = new HashMap<>();
+    categoryNameMap.put("category-a", "类别A");
+    categoryNameMap.put("category-b", "类别B");
+
+    List<SaleOutProductVo> sortedProducts = SaleOutSheetServiceImpl.sortProductsForSave(
+        Arrays.asList(createProductVo("product-1", 1), createProductVo("product-2", 2),
+            createProductVo("product-3", 3)), productMap, categoryNameMap);
+
+    Assert.assertEquals(sortedProducts.get(0).getProductId(), "product-3");
+    Assert.assertEquals(sortedProducts.get(1).getProductId(), "product-2");
+    Assert.assertEquals(sortedProducts.get(2).getProductId(), "product-1");
+  }
+
+  /**
+   * 创建商品测试数据。
+   */
+  private Product createProduct(String id, String name, String categoryId) {
+    Product product = new Product();
+    product.setId(id);
+    product.setName(name);
+    product.setCategoryId(categoryId);
+    return product;
+  }
+
+  /**
+   * 创建销售出库商品行测试数据。
+   */
+  private SaleOutProductVo createProductVo(String productId, int seq) {
+    SaleOutProductVo productVo = new SaleOutProductVo();
+    productVo.setProductId(productId);
+    productVo.setSeq(seq);
+    return productVo;
   }
 
   private SaleOutSheetImportModel createModel(BigDecimal orderNum, BigDecimal taxPrice,

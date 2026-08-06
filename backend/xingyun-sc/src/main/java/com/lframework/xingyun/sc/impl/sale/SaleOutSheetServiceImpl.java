@@ -1574,19 +1574,35 @@ public class SaleOutSheetServiceImpl extends
         sheet.setCustomerId(vo.getCustomerId());
         sheet.setOrderDate(vo.getOrderDate());
 
+        List<String> productIds = vo.getProducts().stream()
+                .map(SaleOutProductVo::getProductId)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<String, Product> productMap = productService.getBaseMapper().selectBatchIds(productIds)
+                .stream()
+                .collect(Collectors.toMap(Product::getId, item -> item));
+        Map<String, String> categoryNameMap = productCategoryService.getAllProductCategories()
+                .stream()
+                .collect(Collectors.toMap(ProductCategory::getId, ProductCategory::getName));
+        List<SaleOutProductVo> sortedProducts = sortProductsForSave(vo.getProducts(), productMap,
+                categoryNameMap);
+
         List<SaleOutSheetDetail> details = new ArrayList<>(vo.getProducts().size());
-        for (SaleOutProductVo productVo : vo.getProducts()) {
-            Product product = productService.findById(productVo.getProductId());
+        int orderNo = 1;
+        for (SaleOutProductVo productVo : sortedProducts) {
+            Product product = productMap.get(productVo.getProductId());
             Assert.notNull(product, "第" + productVo.getSeq() + "行商品不存在！");
 
-            SaleOutSheetDetail detail = buildDetail(sheet, productVo, product, customer);
-
-            saleOutSheetDetailService.save(detail);
+            SaleOutSheetDetail detail = buildDetail(sheet, productVo, product, customer, orderNo++);
+            details.add(detail);
+        }
+        saleOutSheetDetailService.saveBatch(details);
+        for (SaleOutSheetDetail detail : details) {
+            Product product = productMap.get(detail.getProductId());
             updateProductPrice(product, detail);
             productLatestPriceCacheService.updateLatestPrice(product.getId(),
                     toBasePrice(detail.getTaxPrice(), detail.getConversionRate()),
                     null);
-            details.add(detail);
         }
         sheet.setDescription(vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(customer));
@@ -1594,10 +1610,68 @@ public class SaleOutSheetServiceImpl extends
         sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), sheet.getTotalAmount()));
     }
 
+    /**
+     * 按商品类别名称、商品名称和原始行号对销售出库商品排序。
+     *
+     * @param products 商品行
+     * @param productMap 商品信息
+     * @param categoryNameMap 商品类别名称
+     * @return 排序后的商品行副本
+     */
+    static List<SaleOutProductVo> sortProductsForSave(List<SaleOutProductVo> products,
+            Map<String, Product> productMap, Map<String, String> categoryNameMap) {
+        List<SaleOutProductVo> sortedProducts = new ArrayList<>(products);
+        Comparator<String> textComparator = Comparator.nullsLast(String::compareTo);
+        sortedProducts.sort(Comparator
+                .comparing((SaleOutProductVo item) -> getCategoryName(item, productMap,
+                        categoryNameMap), textComparator)
+                .thenComparing(item -> getProductName(item, productMap), textComparator)
+                .thenComparing(SaleOutProductVo::getSeq, Comparator.nullsLast(Integer::compareTo)));
+        return sortedProducts;
+    }
+
+    /**
+     * 获取商品行对应的类别名称。
+     *
+     * @param productVo 商品行
+     * @param productMap 商品信息
+     * @param categoryNameMap 商品类别名称
+     * @return 类别名称
+     */
+    private static String getCategoryName(SaleOutProductVo productVo,
+            Map<String, Product> productMap, Map<String, String> categoryNameMap) {
+        Product product = productMap.get(productVo.getProductId());
+        return product == null ? null : categoryNameMap.get(product.getCategoryId());
+    }
+
+    /**
+     * 获取商品行对应的商品名称。
+     *
+     * @param productVo 商品行
+     * @param productMap 商品信息
+     * @return 商品名称
+     */
+    private static String getProductName(SaleOutProductVo productVo,
+            Map<String, Product> productMap) {
+        Product product = productMap.get(productVo.getProductId());
+        return product == null ? null : product.getName();
+    }
+
+    /**
+     * 创建销售出库明细。
+     *
+     * @param sheet 销售出库单
+     * @param productVo 商品行
+     * @param product 商品信息
+     * @param customer 客户信息
+     * @param orderNo 排序序号
+     * @return 销售出库明细
+     */
     private SaleOutSheetDetail buildDetail(SaleOutSheet sheet,
                                            SaleOutProductVo productVo,
                                            Product product,
-                                           Customer customer) {
+                                           Customer customer,
+                                           int orderNo) {
         ProductUnit unit = resolveUnit(product, productVo.getUnitId(), productVo.getUnit());
         BigDecimal baseNum = NumberUtil.mul(productVo.getOrderNum(), unit.getConversionRate());
         BigDecimal price = productVo.getTaxPrice() == null ? NumberUtil.mul(getDefaultSalePrice(product), unit.getConversionRate()) : productVo.getTaxPrice();
@@ -1618,7 +1692,7 @@ public class SaleOutSheetServiceImpl extends
         detail.setDiscountRate(productVo.getDiscountRate());
         detail.setTaxRate(product.getSaleTaxRate());
         detail.setDescription(productVo.getDescription());
-        detail.setOrderNo(productVo.getSeq());
+        detail.setOrderNo(orderNo);
         detail.setActualDate(productVo.getActualDate());
         detail.setSettleStatus(this.getInitSettleStatus(customer));
         detail.setTaxAmount(SaleOutSheetAmtCalculator.calculateLineAmount(price,
