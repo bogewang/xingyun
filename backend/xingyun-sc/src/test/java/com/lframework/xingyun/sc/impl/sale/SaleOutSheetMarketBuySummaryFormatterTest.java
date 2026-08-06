@@ -21,6 +21,20 @@ import org.testng.annotations.Test;
 class SaleOutSheetMarketBuySummaryFormatterTest {
 
   /**
+   * 验证备注已包含拆分数量时，不在括号内重复追加明细总数。
+   */
+  @Test
+  void formatCustomerDetailShouldNotRepeatQuantityBeforeDetailedDescription() {
+    Map<String, BigDecimal> quantityByDescription = new LinkedHashMap<>();
+    quantityByDescription.put("0.5沫/1沫/0.5片/0.5片", new BigDecimal("2.5"));
+
+    String result = SaleOutSheetMarketBuySummaryFormatter.formatCustomerDetailByDescription(
+        "17灶", "kg", BigDecimal.ZERO, quantityByDescription);
+
+    Assert.assertEquals(result, "【17灶】2.5kg（0.5沫/1沫/0.5片/0.5片）");
+  }
+
+  /**
    * 验证同一客户的多条商品明细保留各自数量与备注的对应关系。
    */
   @Test

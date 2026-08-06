@@ -119,7 +119,8 @@ final class SaleOutSheetMarketBuySummaryFormatter {
         BigDecimal quantity = entry.getValue() == null ? BigDecimal.ZERO : entry.getValue();
         totalQuantity = totalQuantity.add(quantity);
         StringBuilder detail = new StringBuilder();
-        if (quantity.compareTo(BigDecimal.ZERO) != 0) {
+        if (quantity.compareTo(BigDecimal.ZERO) != 0
+            && !startsWithQuantity(entry.getKey())) {
           detail.append(formatNumber(quantity)).append('/');
         }
         detail.append(entry.getKey());
@@ -231,6 +232,17 @@ final class SaleOutSheetMarketBuySummaryFormatter {
     }
 
     result.append('（').append(String.join("；", descriptions)).append('）');
+  }
+
+  /**
+   * 判断备注是否已使用数字开头描述数量，避免重复追加该条明细数量。
+   *
+   * @param description 商品备注
+   * @return 数字开头时返回 true
+   */
+  private static boolean startsWithQuantity(String description) {
+    String value = StringUtils.trimToEmpty(description);
+    return StringUtils.isNotEmpty(value) && Character.isDigit(value.charAt(0));
   }
 
   /**
