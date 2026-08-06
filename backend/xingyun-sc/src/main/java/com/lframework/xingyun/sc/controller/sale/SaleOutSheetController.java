@@ -631,6 +631,23 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
+     * 同步询价商品销售价。
+     */
+    @ApiOperation("同步询价商品销售价")
+    @HasPermission({ "sale:out:approve" })
+    @PatchMapping("/inquiry-price/sync")
+    public InvokeResult<Void> syncInquirySalePrice(
+            @RequestBody @Valid SyncInquirySalePriceVo vo) {
+        try {
+            saleOutSheetService.syncInquirySalePrice(vo);
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("同步询价商品销售价出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
+    }
+
+    /**
      * 审核通过
      */
     @ApiOperation("审核通过")

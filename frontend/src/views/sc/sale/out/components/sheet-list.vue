@@ -142,6 +142,12 @@
               >
               <a-button
                 v-permission="['sale:out:approve']"
+                :icon="h(SyncOutlined)"
+                @click="openInquiryPriceSync"
+                >同步询价到销售表</a-button
+              >
+              <a-button
+                v-permission="['sale:out:approve']"
                 :icon="h(CheckOutlined)"
                 @click="batchApprovePass"
                 >审核通过</a-button
@@ -276,6 +282,26 @@
           :rows="4"
           allow-clear
         />
+      </a-modal>
+
+      <a-modal
+        v-model:open="inquiryPriceSyncModal.visible"
+        title="同步询价到销售表"
+        ok-text="同步"
+        :confirm-loading="inquiryPriceSyncModal.loading"
+        @ok="submitInquiryPriceSync"
+        @cancel="closeInquiryPriceSync"
+      >
+        <a-form layout="vertical">
+          <a-form-item label="销售出库订单日期" required>
+            <a-range-picker
+              v-model:value="inquiryPriceSyncModal.dateRange"
+              value-format="YYYY-MM-DD"
+              :placeholder="['开始日期', '结束日期']"
+              style="width: 100%"
+            />
+          </a-form-item>
+        </a-form>
       </a-modal>
 
       <!-- 批量操作 -->
@@ -601,6 +627,11 @@
           id: '',
           description: '',
         },
+        inquiryPriceSyncModal: {
+          visible: false,
+          loading: false,
+          dateRange: this.getDefaultOrderDateRange(),
+        },
         // 浏览器打印模板选择弹窗
         browserPrintModal: {
           visible: false,
@@ -861,6 +892,41 @@
             this.openChildPage('/sale/out/add/un-require');
           }
         });
+      },
+      // 打开询价商品售价同步窗口
+      openInquiryPriceSync() {
+        this.inquiryPriceSyncModal = {
+          visible: true,
+          loading: false,
+          dateRange: this.getDefaultOrderDateRange(),
+        };
+      },
+      // 关闭询价商品售价同步窗口
+      closeInquiryPriceSync() {
+        this.inquiryPriceSyncModal.visible = false;
+        this.inquiryPriceSyncModal.loading = false;
+      },
+      // 按销售出库订单日期同步询价商品售价及金额
+      submitInquiryPriceSync() {
+        const dateRange = this.inquiryPriceSyncModal.dateRange;
+        if (!dateRange?.[0] || !dateRange?.[1]) {
+          createError('请选择完整的销售出库订单日期范围！');
+          return;
+        }
+        this.inquiryPriceSyncModal.loading = true;
+        api
+          .syncInquirySalePrice({
+            startDate: dateRange[0],
+            endDate: dateRange[1],
+          })
+          .then(() => {
+            createSuccess('询价商品售价同步成功！');
+            this.closeInquiryPriceSync();
+            this.search();
+          })
+          .finally(() => {
+            this.inquiryPriceSyncModal.loading = false;
+          });
       },
       openModifyDialog(row) {
         if (this.isSettleLocked(row)) {

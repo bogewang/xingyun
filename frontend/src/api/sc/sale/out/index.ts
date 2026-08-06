@@ -20,6 +20,7 @@ import { UpdateSaleOutSheetDescriptionVo } from '@/api/sc/sale/out/model/updateS
 import { ApprovePassSaleOutSheetVo } from '@/api/sc/sale/out/model/approvePassSaleOutSheetVo';
 import { ApproveRefuseSaleOutSheetVo } from '@/api/sc/sale/out/model/approveRefuseSaleOutSheetVo';
 import { BatchUpdateSaleOutSheetPriceVo } from '@/api/sc/sale/out/model/batchUpdateSaleOutSheetPriceVo';
+import { SyncInquirySalePriceVo } from '@/api/sc/sale/out/model/syncInquirySalePriceVo';
 import { PrintSaleOrderBo } from '@/api/sc/sale/order/model/printSaleOrderBo';
 import { PrintSaleTagBo } from '@/api/sc/sale/order/model/PrintSaleTagBo';
 
@@ -498,10 +499,7 @@ export function startMonthEndRecalculate(params: {
  * 月底成本重算（逐天执行）—— 使用缓存的均价处理指定日期的单据
  * @returns 当天执行结果，hasError=true 时表示失败
  */
-export function stepMonthEndRecalculate(params: {
-  taskId: string;
-  processDate: string;
-}): Promise<{
+export function stepMonthEndRecalculate(params: { taskId: string; processDate: string }): Promise<{
   updatedSheetCount: number;
   updatedDetailCount: number;
   notFilledCount: number;
@@ -683,6 +681,22 @@ export function batchUpdatePrice(data: BatchUpdateSaleOutSheetPriceVo): Promise<
   return defHttp.patch<void>(
     {
       url: baseUrl + '/price',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/**
+ * 按订单日期同步询价商品销售价
+ */
+export function syncInquirySalePrice(data: SyncInquirySalePriceVo): Promise<void> {
+  return defHttp.patch<void>(
+    {
+      url: baseUrl + '/inquiry-price/sync',
       data,
     },
     {
