@@ -84,6 +84,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.lframework.xingyun.sc.impl.sale.SaleOutSheetMarketBuySummaryFormatter.formatUnit;
@@ -1322,6 +1323,198 @@ public class SaleOutSheetServiceImpl extends
         customerIds.forEach(this::adjustCustomerAmount);
 
         OpLogUtil.setExtra(vo);
+    }
+
+    /**
+     * 按销售出库订单日期同步询价商品售价及相关金额。
+     *
+     * @param vo 日期范围
+     */
+    @OpLog(type = SaleOpLogType.class, name = "同步询价商品销售价")
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void syncInquirySalePrice(SyncInquirySalePriceVo vo) {
+        if (vo.getStartDate().isAfter(vo.getEndDate())) {
+            throw new DefaultClientException("订单开始日期不能晚于结束日期！");
+        }
+
+        List<SaleOutSheet> sheets = this.list(Wrappers.lambdaQuery(SaleOutSheet.class)
+                .between(SaleOutSheet::getOrderDate, vo.getStartDate(), vo.getEndDate()));
+        if (CollectionUtils.isEmpty(sheets)) {
+            throw new DefaultClientException("所选订单日期范围内没有销售出库单！");
+        }
+
+        List<String> sheetIds = sheets.stream().map(SaleOutSheet::getId).collect(Collectors.toList());
+        List<SaleOutSheetDetail> details = saleOutSheetDetailService.list(
+                Wrappers.lambdaQuery(SaleOutSheetDetail.class)
+                        .in(SaleOutSheetDetail::getSheetId, sheetIds));
+        if (CollectionUtils.isEmpty(details)) {
+            throw new DefaultClientException("所选销售出库单没有商品明细！");
+        }
+
+        Set<String> productIds = details.stream().map(SaleOutSheetDetail::getProductId)
+                .filter(StringUtils::isNotBlank).collect(Collectors.toSet());
+        Map<String, Product> inquiryProductMap = productService.list(
+                        Wrappers.lambdaQuery(Product.class)
+                                .in(Product::getId, productIds)
+                                .eq(Product::getInquiryProduct, Boolean.TRUE))
+                .stream().collect(Collectors.toMap(Product::getId, item -> item));
+
+        List<SaleOutSheetDetail> changedDetails = details.stream()
+                .filter(item -> inquiryProductMap.containsKey(item.getProductId()))
+                .filter(item -> !Boolean.TRUE.equals(item.getIsGift()))
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(changedDetails)) {
+            throw new DefaultClientException("所选订单日期范围内没有可同步的询价商品明细！");
+        }
+
+        for (SaleOutSheetDetail detail : changedDetails) {
+            if (detail.getSettleStatus() != SettleStatus.UN_CHECK_BILL) {
+                throw new DefaultClientException("仅支持同步未对账、未结算的销售出库明细！");
+            }
+
+            Product product = inquiryProductMap.get(detail.getProductId());
+            validateInquirySalePrice(product);
+            applyInquirySalePrice(detail, product.getSalePrice());
+        }
+        if (!saleOutSheetDetailService.updateBatchById(changedDetails)) {
+            throw new DefaultClientException("询价商品明细金额更新失败，请重试！");
+        }
+
+        Map<String, List<SaleOutSheetDetail>> detailMap = details.stream()
+                .collect(Collectors.groupingBy(SaleOutSheetDetail::getSheetId));
+        Set<String> customerIds = new LinkedHashSet<>();
+        for (SaleOutSheet sheet : sheets) {
+            List<SaleOutSheetDetail> sheetDetails = detailMap.getOrDefault(sheet.getId(), Collections.emptyList());
+            BigDecimal totalAmount = sumDetailAmount(sheetDetails, SaleOutSheetDetail::getTaxAmount);
+            BigDecimal confirmAmt = sumDetailAmount(sheetDetails, SaleOutSheetDetail::getConfirmAmt);
+            BigDecimal totalProfit = sumDetailAmount(sheetDetails, SaleOutSheetDetail::getTotalProfit);
+            BigDecimal paidAmount = NumberUtil.getDefaultValue(sheet.getPaidAmount());
+            if (NumberUtil.gt(paidAmount.abs(), totalAmount.abs())) {
+                throw new DefaultClientException("单据号：" + sheet.getCode()
+                        + " 的已付金额绝对值大于同步后的单据金额绝对值，不允许同步售价！");
+            }
+
+            sheet.setTotalAmount(totalAmount);
+            sheet.setConfirmAmt(confirmAmt);
+            sheet.setTotalProfit(totalProfit);
+            customerIds.add(sheet.getCustomerId());
+        }
+        if (!this.updateBatchById(sheets)) {
+            throw new DefaultClientException("销售出库单金额更新失败，请重试！");
+        }
+
+        adjustCustomerAmounts(customerIds);
+        OpLogUtil.setExtra(vo);
+    }
+
+    /**
+     * 校验询价商品销售价。
+     *
+     * @param product 询价商品
+     */
+    private void validateInquirySalePrice(Product product) {
+        if (product == null || product.getSalePrice() == null) {
+            throw new DefaultClientException("询价商品销售价不能为空！");
+        }
+        if (NumberUtil.lt(product.getSalePrice(), BigDecimal.ZERO)) {
+            throw new DefaultClientException("询价商品销售价不允许小于0！");
+        }
+        if (!NumberUtil.isNumberPrecision(product.getSalePrice(), 6)) {
+            throw new DefaultClientException("询价商品销售价最多允许6位小数！");
+        }
+    }
+
+    /**
+     * 将商品销售价应用到销售出库明细并重算金额、利润。
+     *
+     * @param detail   销售出库明细
+     * @param salePrice 商品销售价
+     */
+    static void applyInquirySalePrice(SaleOutSheetDetail detail, BigDecimal salePrice) {
+        detail.setTaxPrice(salePrice);
+        detail.setTaxAmount(SaleOutSheetAmtCalculator.calculateLineAmount(salePrice,
+                detail.getBusinessNum()));
+        detail.setConfirmAmt(SaleOutSheetAmtCalculator.calculateLineAmount(salePrice,
+                detail.getConfirmNum()));
+        detail.setTotalProfit(calculateSyncedProfit(detail));
+    }
+
+    /**
+     * 使用同步后的销售金额和原成本计算明细利润。
+     *
+     * @param detail 销售出库明细
+     * @return 明细利润，成本为空时返回空
+     */
+    static BigDecimal calculateSyncedProfit(SaleOutSheetDetail detail) {
+        if (detail == null || detail.getCostPrice() == null) {
+            return null;
+        }
+        BigDecimal costAmount = NumberUtil.calculateAmount(detail.getCostPrice(), resolveCostNum(detail));
+        BigDecimal incomeAmount = detail.getConfirmAmt() != null
+                && detail.getConfirmAmt().compareTo(BigDecimal.ZERO) > 0
+                ? detail.getConfirmAmt() : NumberUtil.getDefaultValue(detail.getTaxAmount());
+        return NumberUtil.getNumber(NumberUtil.sub(incomeAmount, costAmount), NumberUtil.AMT_PRECISION);
+    }
+
+    /**
+     * 汇总明细金额字段。
+     *
+     * @param details 明细列表
+     * @param getter  金额字段读取器
+     * @return 汇总金额
+     */
+    private BigDecimal sumDetailAmount(List<SaleOutSheetDetail> details,
+            Function<SaleOutSheetDetail, BigDecimal> getter) {
+        return details.stream().map(getter).map(NumberUtil::getDefaultValue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * 批量刷新客户已付和未付金额。
+     *
+     * @param customerIds 客户ID集合
+     */
+    private void adjustCustomerAmounts(Set<String> customerIds) {
+        Set<String> validCustomerIds = customerIds.stream().filter(StringUtils::isNotBlank)
+                .collect(Collectors.toSet());
+        if (CollectionUtils.isEmpty(validCustomerIds)) {
+            return;
+        }
+
+        List<SaleOutSheet> customerSheets = this.list(Wrappers.lambdaQuery(SaleOutSheet.class)
+                .in(SaleOutSheet::getCustomerId, validCustomerIds));
+        Map<String, List<SaleOutSheet>> customerSheetMap = customerSheets.stream()
+                .collect(Collectors.groupingBy(SaleOutSheet::getCustomerId));
+        List<Customer> customers = new ArrayList<>();
+        for (String customerId : validCustomerIds) {
+            List<SaleOutSheet> currentSheets = customerSheetMap.getOrDefault(customerId,
+                    Collections.emptyList());
+            BigDecimal paidAmount = sumSheetAmount(currentSheets, SaleOutSheet::getPaidAmount);
+            BigDecimal totalAmount = sumSheetAmount(currentSheets, SaleOutSheet::getTotalAmount);
+
+            Customer customer = new Customer();
+            customer.setId(customerId);
+            customer.setPaidAmount(paidAmount);
+            customer.setUnpaidAmount(NumberUtil.sub(totalAmount, paidAmount));
+            customers.add(customer);
+        }
+        if (!customerService.updateBatchById(customers)) {
+            throw new DefaultClientException("客户金额更新失败，请重试！");
+        }
+    }
+
+    /**
+     * 汇总销售出库单金额字段。
+     *
+     * @param sheets 销售出库单列表
+     * @param getter 金额字段读取器
+     * @return 汇总金额
+     */
+    private BigDecimal sumSheetAmount(List<SaleOutSheet> sheets,
+            Function<SaleOutSheet, BigDecimal> getter) {
+        return sheets.stream().map(getter).map(NumberUtil::getDefaultValue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @OpLog(type = SaleOpLogType.class, name = "审核通过销售出库单，单号：{}", params = "#code")
