@@ -127,6 +127,9 @@ final class SaleOutSheetMarketBuySummaryFormatter {
         descriptionDetails.add(detail.toString());
       }
     }
+    if (plainQuantity.compareTo(BigDecimal.ZERO) != 0 && !descriptionDetails.isEmpty()) {
+      descriptionDetails.add(0, formatNumber(plainQuantity));
+    }
 
     if (totalQuantity.compareTo(BigDecimal.ZERO) == 0 && descriptionDetails.isEmpty()) {
       return "";

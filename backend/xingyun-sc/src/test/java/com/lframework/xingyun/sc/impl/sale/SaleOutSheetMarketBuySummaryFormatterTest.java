@@ -77,6 +77,49 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
   }
 
   /**
+   * 验证同一客户同时存在无备注和有备注明细时，括号内保留无备注数量。
+   */
+  @Test
+  void buildMarketBuySummaryDetailShouldIncludeQuantityWithoutDescriptionWhenMixedRemarks()
+      throws Exception {
+    SaleOutSheet sheet = new SaleOutSheet();
+    sheet.setId("sheet-1");
+    sheet.setCustomerId("customer-1");
+    sheet.setOrderDate(LocalDate.of(2026, 8, 6));
+
+    Product product = new Product();
+    product.setId("product-1");
+    product.setName("前后腿肉");
+    product.setUnit("unit-1");
+
+    List<SaleOutSheetDetail> details = Arrays.asList(
+        createDetail("1", null),
+        createDetail("1", "肉沫"),
+        createDetail("1", "肉丝"));
+    Map<String, SaleOutSheet> sheetMap = Collections.singletonMap(sheet.getId(), sheet);
+    Map<String, Product> productMap = Collections.singletonMap(product.getId(), product);
+    Map<String, String> unitMap = Collections.singletonMap(product.getUnit(), "kg");
+
+    SaleOutSheetServiceImpl service = new SaleOutSheetServiceImpl();
+    Method buildSummaryRows = SaleOutSheetServiceImpl.class.getDeclaredMethod(
+        "buildSummaryRows", List.class, Map.class, Map.class, Map.class, Map.class);
+    buildSummaryRows.setAccessible(true);
+    List<?> rows = (List<?>) buildSummaryRows.invoke(service, details, sheetMap, productMap,
+        new HashMap<>(), unitMap);
+
+    Class<?> summaryRowClass = Class.forName(
+        SaleOutSheetServiceImpl.class.getName() + "$SummaryRow");
+    Method buildDetail = SaleOutSheetServiceImpl.class.getDeclaredMethod(
+        "buildMarketBuySummaryDetail", summaryRowClass, LinkedHashMap.class);
+    buildDetail.setAccessible(true);
+    LinkedHashMap<String, String> customers = new LinkedHashMap<>();
+    customers.put("customer-1", "14灶");
+
+    Assert.assertEquals(buildDetail.invoke(service, rows.get(0), customers),
+        "【14灶】3kg（1；1/肉沫；1/肉丝）");
+  }
+
+  /**
    * 验证动态客户列只保留数量和去重后的备注，不包含客户名称或单位。
    */
   @Test
@@ -133,7 +176,7 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
     String result = SaleOutSheetMarketBuySummaryFormatter.formatCustomerDetail(
         "绿春56", "公斤", new BigDecimal("3.5"), descriptions);
 
-    Assert.assertEquals(result, "(绿春56)3.5/公斤（送老张；分两袋）");
+    Assert.assertEquals(result, "【绿春56】3.5/kg（送老张；分两袋）");
   }
 
   /**
@@ -151,7 +194,7 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
 
     String result = SaleOutSheetMarketBuySummaryFormatter.mergeCustomerDetails(details);
 
-    Assert.assertEquals(result, "(绿春56)1.5/公斤+(平河57)2/公斤（上午送达）");
+    Assert.assertEquals(result, "【绿春56】1.5/kg+【平河57】2/kg（上午送达）");
   }
 
   /**
@@ -162,7 +205,7 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
     String result = SaleOutSheetMarketBuySummaryFormatter.formatCustomerDetail(
         "客户", "个", BigDecimal.ZERO, Collections.singletonList("补送"));
 
-    Assert.assertEquals(result, "(客户)（补送）");
+    Assert.assertEquals(result, "【客户】（补送）");
   }
 
   /**
@@ -173,14 +216,15 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
     Map<String, String> headers = SaleOutSheetServiceImpl.buildMarketBuySummaryHeaders();
     Map<String, String> expectedHeaders = new LinkedHashMap<>();
     expectedHeaders.put("date", "日期");
-    expectedHeaders.put("productName", "商品名称");
     expectedHeaders.put("category", "分类名称");
+    expectedHeaders.put("productName", "商品名称");
+    expectedHeaders.put("spec", "规格");
     expectedHeaders.put("total", "总重量");
     expectedHeaders.put("detail", "明细数量");
 
     Assert.assertEquals(headers, expectedHeaders);
     Assert.assertEquals(new ArrayList<>(headers.keySet()), Arrays.asList(
-        "date", "productName", "category", "total", "detail"));
+        "date", "category", "productName", "spec", "total", "detail"));
   }
 
   /**
@@ -195,10 +239,10 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
     Map<String, String> headers = SaleOutSheetServiceImpl.buildMarketBuySummary2Headers(customers);
 
     Assert.assertEquals(new ArrayList<>(headers.keySet()), Arrays.asList(
-        "date", "category", "productName", "unit", "customer-customer-1",
+        "date", "category", "productName", "spec", "unit", "customer-customer-1",
         "customer-customer-2", "total"));
     Assert.assertEquals(new ArrayList<>(headers.values()), Arrays.asList(
-        "日期", "分类", "商品名称", "单位", "机关A", "机关B", "总计"));
+        "日期", "分类", "商品名称", "规格", "单位", "机关A", "机关B", "总计"));
   }
 
   /**
@@ -208,7 +252,7 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
   void formatTotalWithUnitShouldAppendUnitAfterQuantity() {
     Assert.assertEquals(
         SaleOutSheetMarketBuySummaryFormatter.formatTotalWithUnit(
-            new BigDecimal("6.00"), "公斤"), "6公斤");
+            new BigDecimal("6.00"), "公斤"), "6kg");
     Assert.assertEquals(
         SaleOutSheetMarketBuySummaryFormatter.formatTotalWithUnit(
             new BigDecimal("6.00"), ""), "6");
