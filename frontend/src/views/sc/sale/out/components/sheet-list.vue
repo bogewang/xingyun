@@ -140,12 +140,7 @@
                 @click="openAddDialog"
                 >新增</a-button
               >
-              <a-button
-                v-permission="['sale:out:approve']"
-                :icon="h(SyncOutlined)"
-                @click="openInquiryPriceSync"
-                >同步询价到销售表</a-button
-              >
+
               <a-button
                 v-permission="['sale:out:approve']"
                 :icon="h(CheckOutlined)"
@@ -206,6 +201,12 @@
                 :icon="h(PrinterOutlined)"
                 @click="tagPrint"
                 >标签打印</a-button
+              >
+              <a-button
+                v-permission="['sale:out:approve']"
+                :icon="h(SyncOutlined)"
+                @click="openInquiryPriceSync"
+              >同步询价到销售表</a-button
               >
             </a-space>
           </template>
