@@ -50,7 +50,7 @@
           <!-- 工具栏 -->
           <template #toolbar_buttons>
             <a-space>
-              <a-button type="primary" :icon="h(PlusOutlined)" @click="clickAddProduct($event)"
+              <a-button type="primary" :icon="h(PlusOutlined)" @click="clickAddProduct"
                 >新增</a-button
               >
               <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
@@ -281,7 +281,6 @@
     isNumberPrecision,
     mul,
     PATTERN_IS_FLOAT,
-    PATTERN_IS_INTEGER_GT_ZERO,
     PATTERN_IS_PRICE,
     uuid,
   } from '@/utils/utils';
@@ -568,27 +567,17 @@
           }
         });
       },
-      // 新增商品（弹窗输入行数）
-      clickAddProduct(event) {
-        createPrompt('请输入新增行数', {
-          inputPattern: PATTERN_IS_INTEGER_GT_ZERO,
-          inputErrorMessage: '新增行数必须为正整数',
-          title: '新增行数',
-          inputValue: '50',
-          required: true,
-          target: event.currentTarget,
-        }).then(({ value }) => {
-          const numRows = parseInt(value, 10);
-          const startIndex = this.tableData.length;
-          for (let i = 0; i < numRows; i++) {
-            this.tableData.push(this.emptyProduct());
+      // 固定新增50行商品
+      clickAddProduct() {
+        const startIndex = this.tableData.length;
+        for (let i = 0; i < 50; i++) {
+          this.tableData.push(this.emptyProduct());
+        }
+        this.$nextTick(() => {
+          const productInputRef = this.$refs['productInputRef' + startIndex];
+          if (productInputRef) {
+            productInputRef.focus();
           }
-          this.$nextTick(() => {
-            const productInputRef = this.$refs['productInputRef' + startIndex];
-            if (productInputRef) {
-              productInputRef.focus();
-            }
-          });
         });
       },
       insertProduct(index) {
