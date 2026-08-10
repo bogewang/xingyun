@@ -60,6 +60,12 @@ public class QuerySaleOutSheetVo extends SortPageVo {
   private String customerId;
 
   /**
+   * 客户ID列表
+   */
+  @ApiModelProperty("客户ID列表")
+  private List<String> customerIdList;
+
+  /**
    * 仓库ID
    */
   @ApiModelProperty("仓库ID")

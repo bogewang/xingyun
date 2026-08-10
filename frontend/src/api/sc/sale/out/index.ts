@@ -60,6 +60,9 @@ export function query(params: QuerySaleOutSheetVo): Promise<PageResult<QuerySale
     {
       url: baseUrl + '/query',
       params,
+      paramsSerializer: {
+        indexes: null,
+      },
     },
     {
       region,
@@ -74,6 +77,9 @@ export function queryDetail(
     {
       url: baseUrl + '/query/detail',
       params,
+      paramsSerializer: {
+        indexes: null,
+      },
     },
     {
       region,

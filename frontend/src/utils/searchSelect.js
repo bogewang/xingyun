@@ -13,12 +13,22 @@ export function mergeSelectOptionMap(optionMap, options) {
 }
 
 export function normalizeSelectValue(value, optionMap) {
+  if (Array.isArray(value)) {
+    return value.filter((item) => !!optionMap[item]);
+  }
+
   return value && optionMap[value] ? value : undefined;
 }
 
 export function buildVisibleSelectOptions(selectedValue, optionMap, searchOptions) {
-  const selectedOptions =
-    selectedValue && optionMap[selectedValue] ? [optionMap[selectedValue]] : [];
+  const selectedValues = Array.isArray(selectedValue)
+    ? selectedValue
+    : selectedValue
+    ? [selectedValue]
+    : [];
+  const selectedOptions = selectedValues
+    .filter((value) => !!optionMap[value])
+    .map((value) => optionMap[value]);
   const visibleOptionMap = {};
 
   [...selectedOptions, ...searchOptions].forEach((option) => {

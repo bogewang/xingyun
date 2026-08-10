@@ -37,7 +37,9 @@
                 </j-form-item>
                 <j-form-item label="客户">
                   <a-select
-                    v-model:value="searchFormData.customerId"
+                    v-model:value="searchFormData.customerIdList"
+                    mode="multiple"
+                    :max-tag-count="'responsive'"
                     allow-clear
                     show-search
                     :filter-option="filterSelectOption"
@@ -536,7 +538,7 @@
           code: '',
           productName: '',
           scId: '',
-          customerId: undefined,
+          customerIdList: [],
           createBy: undefined,
           approveBy: undefined,
           status: undefined,
@@ -803,7 +805,7 @@
           code: '',
           productName: '',
           scId: '',
-          customerId: undefined,
+          customerIdList: [],
           createBy: undefined,
           approveBy: undefined,
           status: undefined,
@@ -830,7 +832,7 @@
       // 查询前构建具体的查询参数
       buildSearchFormData() {
         const params = Object.assign({}, this.searchFormData, {
-          customerId: this.searchFormData.customerId,
+          customerIdList: this.searchFormData.customerIdList,
           scId: this.searchFormData.scId,
           createBy: this.searchFormData.createBy,
           orderDateStart: this.orderDateRange?.[0] || '',
@@ -872,7 +874,7 @@
           this.requestCustomerOptions,
           'customerOptionMap',
           'customerOptions',
-          'customerId',
+          'customerIdList',
         );
       },
       async loadCreateByOptions(keyword = '') {
@@ -897,7 +899,10 @@
         return normalizeSelectValue(value, optionMap);
       },
       onCustomerChange(value) {
-        this.searchFormData.customerId = this.normalizeSelectValue(value, this.customerOptionMap);
+        this.searchFormData.customerIdList = this.normalizeSelectValue(
+          value,
+          this.customerOptionMap,
+        );
       },
       onCreateByChange(value) {
         this.searchFormData.createBy = this.normalizeSelectValue(value, this.createByOptionMap);

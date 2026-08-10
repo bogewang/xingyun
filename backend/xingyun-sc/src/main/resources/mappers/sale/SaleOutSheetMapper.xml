@@ -267,6 +267,9 @@
                 <if test="vo.customerId != null and vo.customerId != ''">
                     AND s.customer_id = #{vo.customerId}
                 </if>
+                <if test="vo.customerIdList != null and vo.customerIdList.size() > 0">
+                    AND s.customer_id IN <foreach collection="vo.customerIdList" open="(" separator="," close=")" item="item">#{item}</foreach>
+                </if>
                 <if test="vo.scId != null and vo.scId != ''">
                     AND s.sc_id = #{vo.scId}
                 </if>
@@ -379,6 +382,9 @@
                 </if>
                 <if test="vo.customerId != null and vo.customerId != ''">
                     AND s.customer_id = #{vo.customerId}
+                </if>
+                <if test="vo.customerIdList != null and vo.customerIdList.size() > 0">
+                    AND s.customer_id IN <foreach collection="vo.customerIdList" open="(" separator="," close=")" item="item">#{item}</foreach>
                 </if>
                 <if test="vo.scId != null and vo.scId != ''">
                     AND s.sc_id = #{vo.scId}
