@@ -48,6 +48,12 @@ public class QuerySaleOutSheetVo extends SortPageVo {
   private List<String> idList;
 
   /**
+   * 买菜汇总是否按日期汇总
+   */
+  @ApiModelProperty("买菜汇总是否按日期汇总")
+  private Boolean groupByDate;
+
+  /**
    * 客户ID
    */
   @ApiModelProperty("客户ID")

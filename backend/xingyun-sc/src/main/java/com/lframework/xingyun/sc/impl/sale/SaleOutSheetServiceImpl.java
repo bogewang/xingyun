@@ -368,7 +368,8 @@ public class SaleOutSheetServiceImpl extends
     public void marketBuySummary(QuerySaleOutSheetVo vo) {
         validateMarketBuySummaryIds(vo);
 
-        Map<String, String> headerMap = buildMarketBuySummaryHeaders();
+        boolean groupByDate = Boolean.TRUE.equals(vo.getGroupByDate());
+        Map<String, String> headerMap = buildMarketBuySummaryHeaders(groupByDate);
 
         List<SaleOutSheet> sheets = this.query(vo);
         if (CollectionUtils.isEmpty(sheets)) {
@@ -390,12 +391,14 @@ public class SaleOutSheetServiceImpl extends
         Map<String, ProductCategory> categoryMap = buildCategoryMap(productMap);
         Map<String, String> productUnitNameMap = buildProductUnitNameMap(productMap);
         List<SummaryRow> summaryRows = buildSummaryRows(details, sheetMap, productMap, categoryMap,
-                productUnitNameMap);
+                productUnitNameMap, groupByDate);
 
         List<Map<String, String>> data = new ArrayList<>();
         for (SummaryRow row : summaryRows) {
             Map<String, String> map = new LinkedHashMap<>();
-            map.put("date", SaleOutSheetMarketBuySummaryFormatter.formatOrderDate(row.orderDate));
+            if (groupByDate) {
+                map.put("date", SaleOutSheetMarketBuySummaryFormatter.formatOrderDate(row.orderDate));
+            }
             map.put("productName", row.productName);
             map.put("spec", row.spec);
             map.put("category", row.categoryName);
@@ -714,17 +717,29 @@ public class SaleOutSheetServiceImpl extends
     /**
      * 生成买菜汇总固定表头，保证导出列顺序稳定。
      *
+     * @param groupByDate 是否按日期汇总
      * @return 买菜汇总表头
      */
-    static Map<String, String> buildMarketBuySummaryHeaders() {
+    static Map<String, String> buildMarketBuySummaryHeaders(boolean groupByDate) {
         Map<String, String> headerMap = new LinkedHashMap<>();
-        headerMap.put("date", "日期");
+        if (groupByDate) {
+            headerMap.put("date", "日期");
+        }
         headerMap.put("category", "分类名称");
         headerMap.put("productName", "商品名称");
         headerMap.put("spec", "规格");
         headerMap.put("total", "总重量");
         headerMap.put("detail", "明细数量");
         return headerMap;
+    }
+
+    /**
+     * 生成默认不按日期汇总的买菜汇总表头。
+     *
+     * @return 买菜汇总表头
+     */
+    static Map<String, String> buildMarketBuySummaryHeaders() {
+        return buildMarketBuySummaryHeaders(false);
     }
 
     /**
@@ -835,6 +850,26 @@ public class SaleOutSheetServiceImpl extends
             Map<String, Product> productMap,
             Map<String, ProductCategory> categoryMap,
             Map<String, String> productUnitNameMap) {
+        return buildSummaryRows(details, sheetMap, productMap, categoryMap, productUnitNameMap, true);
+    }
+
+    /**
+     * 将原始出库明细按指定日期维度聚合成导出行。
+     *
+     * @param details 出库明细
+     * @param sheetMap 出库单映射
+     * @param productMap 商品映射
+     * @param categoryMap 商品分类映射
+     * @param productUnitNameMap 商品单位名称映射
+     * @param groupByDate 是否按日期汇总
+     * @return 汇总行
+     */
+    private List<SummaryRow> buildSummaryRows(List<SaleOutSheetDetail> details,
+            Map<String, SaleOutSheet> sheetMap,
+            Map<String, Product> productMap,
+            Map<String, ProductCategory> categoryMap,
+            Map<String, String> productUnitNameMap,
+            boolean groupByDate) {
         Map<String, SummaryRow> summaryMap = new LinkedHashMap<>();
         for (SaleOutSheetDetail detail : details) {
             SaleOutSheet sheet = sheetMap.get(detail.getSheetId());
@@ -843,8 +878,9 @@ public class SaleOutSheetServiceImpl extends
                 continue;
             }
 
-            // 每个日期和商品汇总成一行，行内再按客户拆分单元格数据。
-            String summaryKey = buildMarketBuySummaryRowKey(sheet.getOrderDate(), product.getId());
+            // 根据导出选项按商品或“日期 + 商品”汇总，行内再按客户拆分单元格数据。
+            String summaryKey = buildMarketBuySummaryRowKey(
+                    sheet.getOrderDate(), product.getId(), groupByDate);
             SummaryRow row = summaryMap.computeIfAbsent(summaryKey,
                     key -> new SummaryRow(sheet.getOrderDate(), getCategoryName(product, categoryMap),
                             product.getName(),
@@ -879,6 +915,22 @@ public class SaleOutSheetServiceImpl extends
      * @return 日期和商品组合键
      */
     static String buildMarketBuySummaryRowKey(LocalDate orderDate, String productId) {
+        return buildMarketBuySummaryRowKey(orderDate, productId, true);
+    }
+
+    /**
+     * 根据日期汇总选项构造买菜汇总行键。
+     *
+     * @param orderDate 订单日期
+     * @param productId 商品ID
+     * @param groupByDate 是否按日期汇总
+     * @return 汇总行键
+     */
+    static String buildMarketBuySummaryRowKey(LocalDate orderDate, String productId,
+            boolean groupByDate) {
+        if (!groupByDate) {
+            return String.valueOf(productId);
+        }
         return String.valueOf(orderDate) + '\u0000' + String.valueOf(productId);
     }
 

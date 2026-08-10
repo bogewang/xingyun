@@ -206,7 +206,7 @@
                 v-permission="['sale:out:approve']"
                 :icon="h(SyncOutlined)"
                 @click="openInquiryPriceSync"
-              >同步询价到销售表</a-button
+                >同步询价到销售表</a-button
               >
             </a-space>
           </template>
@@ -384,6 +384,19 @@
         />
       </a-modal>
 
+      <!-- 买菜汇总选项弹窗 -->
+      <a-modal
+        v-model:open="marketBuySummaryModal.visible"
+        title="买菜汇总"
+        :confirm-loading="marketBuySummaryModal.loading"
+        @ok="confirmMarketBuySummary"
+        @cancel="closeMarketBuySummaryModal"
+      >
+        <a-checkbox v-model:checked="marketBuySummaryModal.groupByDate">
+          是否按日期汇总
+        </a-checkbox>
+      </a-modal>
+
       <!-- 月底成本重算弹窗 -->
       <a-modal v-model:open="costRefreshVisible" title="月底成本重算" @ok="recalculate">
         <a-form layout="vertical">
@@ -508,6 +521,13 @@
     data() {
       return {
         loading: false,
+        // 买菜汇总导出选项
+        marketBuySummaryModal: {
+          visible: false,
+          loading: false,
+          groupByDate: false,
+          pendingRecords: [],
+        },
         // 当前行数据
         id: '',
         saleOrderId: '',
@@ -1254,10 +1274,32 @@
           return;
         }
 
+        this.marketBuySummaryModal.pendingRecords = records;
+        this.marketBuySummaryModal.groupByDate = false;
+        this.marketBuySummaryModal.visible = true;
+      },
+      /** 确认买菜汇总导出，并根据勾选项决定是否按日期分组。 */
+      async confirmMarketBuySummary() {
+        this.marketBuySummaryModal.loading = true;
         this.loading = true;
-        api.exportMarketBuySummary(buildMarketBuySummaryParams(records)).finally(() => {
+        try {
+          await api.exportMarketBuySummary(
+            buildMarketBuySummaryParams(
+              this.marketBuySummaryModal.pendingRecords,
+              this.marketBuySummaryModal.groupByDate,
+            ),
+          );
+          this.closeMarketBuySummaryModal();
+        } finally {
+          this.marketBuySummaryModal.loading = false;
           this.loading = false;
-        });
+        }
+      },
+      /** 关闭买菜汇总选项弹窗并清理已暂存的单据。 */
+      closeMarketBuySummaryModal() {
+        this.marketBuySummaryModal.visible = false;
+        this.marketBuySummaryModal.groupByDate = false;
+        this.marketBuySummaryModal.pendingRecords = [];
       },
       // 按勾选单据导出买菜汇总2
       marketBuySummary2() {

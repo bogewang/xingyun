@@ -209,13 +209,12 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
   }
 
   /**
-   * 验证买菜汇总使用固定的单列表头。
+   * 验证买菜汇总默认使用不含日期的固定单列表头。
    */
   @Test
   void buildMarketBuySummaryHeadersShouldUseOneDetailColumn() {
     Map<String, String> headers = SaleOutSheetServiceImpl.buildMarketBuySummaryHeaders();
     Map<String, String> expectedHeaders = new LinkedHashMap<>();
-    expectedHeaders.put("date", "日期");
     expectedHeaders.put("category", "分类名称");
     expectedHeaders.put("productName", "商品名称");
     expectedHeaders.put("spec", "规格");
@@ -224,7 +223,7 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
 
     Assert.assertEquals(headers, expectedHeaders);
     Assert.assertEquals(new ArrayList<>(headers.keySet()), Arrays.asList(
-        "date", "category", "productName", "spec", "total", "detail"));
+        "category", "productName", "spec", "total", "detail"));
   }
 
   /**

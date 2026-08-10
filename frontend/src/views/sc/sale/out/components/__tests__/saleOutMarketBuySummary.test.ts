@@ -6,7 +6,7 @@ import {
 } from '../saleOutMarketBuySummary';
 
 describe('买菜汇总请求参数', () => {
-  it('根据勾选单据构建单据ID筛选条件', () => {
+  it('买菜汇总默认不按日期汇总', () => {
     expect(
       buildMarketBuySummaryParams([
         { id: 'sheet-1', code: 'SO-001' },
@@ -14,6 +14,14 @@ describe('买菜汇总请求参数', () => {
       ]),
     ).toEqual({
       idList: ['sheet-1', 'sheet-2'],
+      groupByDate: false,
+    });
+  });
+
+  it('买菜汇总勾选后按日期汇总', () => {
+    expect(buildMarketBuySummaryParams([{ id: 'sheet-1' }], true)).toEqual({
+      idList: ['sheet-1'],
+      groupByDate: true,
     });
   });
 
