@@ -8,13 +8,14 @@ import { GetCustomerBo } from '@/api/base-data/customer/model/getCustomerBo';
 import { QueryCustomerVo } from '@/api/base-data/customer/model/queryCustomerVo';
 import { QueryCustomerBo } from '@/api/base-data/customer/model/queryCustomerBo';
 import { SelectorBo } from '@/api/common/SelectorBo';
+import { CustomerSelectorBo } from '@/api/base-data/customer/model/customerSelectorBo';
 
 const baseUrl = '/basedata/customer';
 const selectorBaseUrl = '/selector';
 const region = 'cloud-api';
 
-export function selector(params: QueryCustomerSelectorVo): Promise<PageResult<SelectorBo>> {
-  return defHttp.get<PageResult<SelectorBo>>(
+export function selector(params: QueryCustomerSelectorVo): Promise<PageResult<CustomerSelectorBo>> {
+  return defHttp.get<PageResult<CustomerSelectorBo>>(
     {
       url: selectorBaseUrl + '/customer',
       params,

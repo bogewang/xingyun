@@ -94,7 +94,7 @@
             }"
             :radio-config="_radioConfig"
             :checkbox-config="_checkboxConfig"
-            :pager-config="{}"
+            :pager-config="{ pageSize }"
             :loading="loading"
             @cell-dblclick="() => !multiple && doSelect()"
           >
@@ -123,12 +123,10 @@
   import { defineComponent } from 'vue';
   import { isEmpty, isPromise, uuid } from '@/utils/utils';
   import { SearchOutlined } from '@ant-design/icons-vue';
-  import AvailableTag from '@/components/Tag/AvailableTag.vue';
 
   export default defineComponent({
     components: {
       SearchOutlined,
-      AvailableTag,
     },
     props: {
       value: { type: [String, Array], required: true },
@@ -137,6 +135,7 @@
         default: '60%',
       },
       multiple: { type: Boolean, default: false },
+      pageSize: { type: Number, default: 10 },
       placeholder: { type: String, default: '' },
       title: { type: String, default: '选择' },
       columnOption: {
@@ -236,6 +235,7 @@
         if (this.multiple) {
           return {
             trigger: 'row',
+            checkRowKeys: this.selectValue,
           };
         }
         return {};

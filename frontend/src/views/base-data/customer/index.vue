@@ -32,6 +32,9 @@
               <j-form-item label="昵称">
                 <a-input v-model:value="searchFormData.nickName" allow-clear />
               </j-form-item>
+              <j-form-item label="备注">
+                <a-input v-model:value="searchFormData.description" allow-clear />
+              </j-form-item>
             </j-form>
           </j-border>
         </template>
@@ -146,7 +149,12 @@
         id: '',
         ids: [],
         // 查询列表的查询条件
-        searchFormData: {},
+        searchFormData: {
+          code: '',
+          name: '',
+          nickName: '',
+          description: '',
+        },
         // 工具栏配置
         toolbarConfig: {
           // 自定义左侧工具栏

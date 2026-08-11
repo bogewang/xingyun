@@ -75,6 +75,9 @@
                 <if test="vo.nickName != null and vo.nickName != ''">
                     AND nick_name LIKE CONCAT('%', #{vo.nickName}, '%')
                 </if>
+                <if test="vo.description != null and vo.description != ''">
+                    AND description LIKE CONCAT('%', #{vo.description}, '%')
+                </if>
             </if>
             AND available = TRUE
         </where>
@@ -94,9 +97,19 @@
                 <if test="vo.nickName != null and vo.nickName != ''">
                     AND nick_name LIKE CONCAT('%', #{vo.nickName}, '%')
                 </if>
+                <if test="vo.description != null and vo.description != ''">
+                    AND description LIKE CONCAT('%', #{vo.description}, '%')
+                </if>
             </if>
             AND available = TRUE
         </where>
-        ORDER BY code
+        <choose>
+            <when test="vo != null and vo.orderByDescription != null and vo.orderByDescription">
+                ORDER BY IFNULL(description, ''), code
+            </when>
+            <otherwise>
+                ORDER BY code
+            </otherwise>
+        </choose>
     </select>
 </mapper>

@@ -15,6 +15,7 @@ import com.lframework.starter.web.core.controller.DefaultBaseController;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.starter.web.inner.vo.system.QuerySelectorVo;
 import com.lframework.xingyun.basedata.bo.address.AddressSelectorBo;
+import com.lframework.xingyun.basedata.bo.customer.CustomerSelectorBo;
 import com.lframework.xingyun.basedata.bo.logistics.company.LogisticsCompanySelectorBo;
 import com.lframework.xingyun.basedata.bo.member.MemberSelectorBo;
 import com.lframework.xingyun.basedata.bo.paytype.PayTypeSelectorBo;
@@ -346,16 +347,19 @@ public class BaseDataSelectorController extends DefaultBaseController {
    */
   @ApiOperation("客户")
   @GetMapping("/customer")
-  public InvokeResult<PageResult<SelectorBo>> customerSelector(@Valid QuerySelectorVo vo) {
+  public InvokeResult<PageResult<CustomerSelectorBo>> customerSelector(
+      @Valid QueryCustomerSelectorVo vo) {
 
-    QueryCustomerSelectorVo customerSelectorVo = QueryCustomerSelectorVo.builder().name(vo.getLabel()).build();
-    PageResult<Customer> pageResult = customerService.selector(getPageIndex(vo), getPageSize(vo), customerSelectorVo);
+    if (StringUtil.isNotBlank(vo.getLabel())) {
+      vo.setName(vo.getLabel());
+    }
+    PageResult<Customer> pageResult = customerService.selector(getPageIndex(vo), getPageSize(vo), vo);
 
     List<Customer> datas = pageResult.getDatas();
-    List<SelectorBo> results = null;
+    List<CustomerSelectorBo> results = null;
 
     if (!CollectionUtil.isEmpty(datas)) {
-      results = datas.stream().map(item -> SelectorBo.builder().value(item.getId()).label(item.getName()).build()).collect(Collectors.toList());
+      results = datas.stream().map(CustomerSelectorBo::new).collect(Collectors.toList());
     }
 
     return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
