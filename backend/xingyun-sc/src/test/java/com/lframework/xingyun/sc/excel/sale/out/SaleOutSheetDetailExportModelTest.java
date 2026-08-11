@@ -14,6 +14,20 @@ import org.junit.jupiter.api.Test;
 class SaleOutSheetDetailExportModelTest {
 
   /**
+   * 验证商品备注二映射到销售出库明细导出列。
+  */
+  @Test
+  void shouldMapProductRemark2ForDetailExport() throws IOException {
+    String modelSource = readSource(
+        "src/main/java/com/lframework/xingyun/sc/excel/sale/out/"
+            + "SaleOutSheetDetailExportModel.java");
+
+    Assertions.assertTrue(modelSource.contains("@ExcelProperty(\"备注二\")"));
+    Assertions.assertTrue(
+        modelSource.contains("setProductRemark2(dto.getProductRemark2())"));
+  }
+
+  /**
    * 验证询价商品标识为空时导出“否”。
    */
   @Test
