@@ -52,6 +52,12 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
     @ExcelProperty("备注")
     private String description;
 
+    /**
+     * 商品备注二。
+     */
+    @ExcelProperty("备注二")
+    private String productRemark2;
+
     @ExcelProperty("销售额")
     private BigDecimal taxAmount;
 
@@ -107,6 +113,7 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
 
         this.setProductCode(dto.getProductCode());
         this.setProductName(dto.getProductName());
+        this.setProductRemark2(dto.getProductRemark2());
         // this.setShortName(dto.gets);
         this.setSpec(dto.getSpec());
         this.setUnit(dto.getUnit());
