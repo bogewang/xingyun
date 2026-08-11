@@ -28,4 +28,10 @@ public class QueryCustomerVo extends SortPageVo implements BaseVo, Serializable 
    */
   @ApiModelProperty("昵称")
   private String nickName;
+
+  /**
+   * 备注
+   */
+  @ApiModelProperty("备注")
+  private String description;
 }

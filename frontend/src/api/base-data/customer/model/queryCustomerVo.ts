@@ -15,4 +15,9 @@ export interface QueryCustomerVo extends SortPageVo {
    * 昵称
    */
   nickName: string;
+
+  /**
+   * 备注
+   */
+  description: string;
 }

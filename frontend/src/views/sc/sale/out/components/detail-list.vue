@@ -51,18 +51,11 @@
                 </a-select>
               </j-form-item>
               <j-form-item label="客户">
-                <a-select
+                <customer-selector
                   v-model:value="searchFormData.customerIdList"
-                  mode="multiple"
-                  :max-tag-count="'responsive'"
-                  allow-clear
-                  show-search
-                  :filter-option="filterSelectOption"
-                  :options="customerOptions"
+                  multiple
+                  show-description-filter
                   placeholder="请选择客户"
-                  @focus="loadCustomerOptions()"
-                  @search="loadCustomerOptions"
-                  @change="onCustomerChange"
                 />
               </j-form-item>
               <j-form-item label="单据号">
@@ -313,7 +306,8 @@
     mergeSelectOptionMap,
     normalizeSelectValue,
   } from '@/utils/searchSelect';
-  import { requestCustomerSelectOptions, requestUserSelectOptions } from '@/utils/labelSelect';
+  import { requestUserSelectOptions } from '@/utils/labelSelect';
+  import CustomerSelector from '@/components/Selector/CustomerSelector.vue';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import { createError, createSuccess, createSuccessAutoClose } from '@/hooks/web/msg';
@@ -342,6 +336,7 @@
     components: {
       Detail,
       SaleOrderDetail,
+      CustomerSelector,
     },
     mixins: [gridCollapseHeightMix, multiplePageMix],
     setup() {
@@ -387,8 +382,6 @@
         searchFormData: createDefaultSearchFormData(),
         orderDateRange: [],
         approveDateRange: [],
-        customerOptions: [],
-        customerOptionMap: {},
         createByOptions: [],
         createByOptionMap: {},
         approveByOptions: [],
@@ -910,20 +903,8 @@
           options,
         );
       },
-      async requestCustomerOptions(keyword = '') {
-        return requestCustomerSelectOptions(keyword);
-      },
       async requestUserOptions(keyword = '') {
         return requestUserSelectOptions(keyword);
-      },
-      async loadCustomerOptions(keyword = '') {
-        await this.updateSelectOptions(
-          keyword,
-          this.requestCustomerOptions,
-          'customerOptionMap',
-          'customerOptions',
-          'customerIdList',
-        );
       },
       async loadCreateByOptions(keyword = '') {
         await this.updateSelectOptions(
@@ -945,12 +926,6 @@
       },
       normalizeSelectValue(value, optionMap) {
         return normalizeSelectValue(value, optionMap);
-      },
-      onCustomerChange(value) {
-        this.searchFormData.customerIdList = this.normalizeSelectValue(
-          value,
-          this.customerOptionMap,
-        );
       },
       onCreateByChange(value) {
         this.searchFormData.createBy = this.normalizeSelectValue(value, this.createByOptionMap);
