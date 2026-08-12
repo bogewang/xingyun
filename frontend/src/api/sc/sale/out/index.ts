@@ -21,6 +21,7 @@ import { ApprovePassSaleOutSheetVo } from '@/api/sc/sale/out/model/approvePassSa
 import { ApproveRefuseSaleOutSheetVo } from '@/api/sc/sale/out/model/approveRefuseSaleOutSheetVo';
 import { BatchUpdateSaleOutSheetPriceVo } from '@/api/sc/sale/out/model/batchUpdateSaleOutSheetPriceVo';
 import { SyncInquirySalePriceVo } from '@/api/sc/sale/out/model/syncInquirySalePriceVo';
+import { MergeSaleOutSheetVo } from '@/api/sc/sale/out/model/mergeSaleOutSheetVo';
 import { PrintSaleOrderBo } from '@/api/sc/sale/order/model/printSaleOrderBo';
 import { PrintSaleTagBo } from '@/api/sc/sale/order/model/PrintSaleTagBo';
 
@@ -655,6 +656,22 @@ export function update(data: UpdateSaleOutSheetVo): Promise<void> {
   return defHttp.put<void>(
     {
       url: baseUrl,
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/**
+ * 合并订单
+ */
+export function merge(data: MergeSaleOutSheetVo): Promise<string> {
+  return defHttp.patch<string>(
+    {
+      url: baseUrl + '/merge',
       data,
     },
     {
