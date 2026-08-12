@@ -358,7 +358,7 @@
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80, slots: { default: 'unit_default' } },
           { field: 'categoryName', title: '商品分类', width: 80 },
-          { field: 'stockNum', title: '库存数量', align: 'right', width: 140 },
+          { field: 'stockNum', title: '库存数量', align: 'right', width: 80 },
           {
             field: 'receiveNum',
             title: '数量',
@@ -383,19 +383,20 @@
           {
             field: 'productionDate',
             title: '生产日期',
-            width: 120,
+            width: 80,
             slots: { default: 'productionDate_default' },
           },
-          {
-            field: 'productRemark',
-            title: '商品备注',
-            width: 200,
-          },
+
           {
             field: 'description',
             title: '备注',
             width: 200,
             slots: { default: 'description_default' },
+          },
+          {
+            field: 'productRemark',
+            title: '商品备注',
+            width: 200,
           },
         ],
         tableData: [],

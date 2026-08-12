@@ -453,16 +453,17 @@
             width: 100,
             slots: { default: 'taxPrice_default' },
           },
-          {
-            field: 'productRemark',
-            title: '商品备注',
-            width: 200,
-          },
+
           {
             field: 'description',
             title: '备注',
             width: 200,
             slots: { default: 'description_default' },
+          },
+          {
+            field: 'productRemark',
+            title: '商品备注',
+            width: 200,
           },
           {
             field: 'taxAmount',
@@ -475,14 +476,14 @@
             field: 'confirmNum',
             title: '验收数量',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'confirmNum_default' },
           },
           {
             field: 'confirmAmt',
             title: '验收金额',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'confirmAmt_default' },
           },
           { field: 'categoryName', title: '商品分类', width: 80 },
@@ -491,7 +492,7 @@
             field: 'costPrice',
             title: '成本单价',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'costPrice_default' },
           },
           {
