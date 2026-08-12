@@ -456,6 +456,12 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
         private String description;
 
         /**
+         * 商品备注
+         */
+        @ApiModelProperty("商品备注")
+        private String productRemark;
+
+        /**
          * 销售订单明细ID
          */
         @ApiModelProperty("销售订单明细ID")
@@ -527,6 +533,7 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
             this.spec = product.getSpec();
             this.categoryName = product.getCategoryName();
             this.brandName = product.getBrandName();
+            this.productRemark = product.getRemark();
 
             ProductStockService productStockService = ApplicationUtil.getBean(
                     ProductStockService.class);

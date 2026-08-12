@@ -67,6 +67,27 @@ class SaleProductInquiryProductContractTest {
   }
 
   /**
+   * 验证商品联想和批量列表 SQL 均选择并映射商品备注。
+   */
+  @Test
+  void shouldSelectRemarkForSearchAndListEndpoints() throws IOException {
+    Configuration configuration = parseSaleOrderMapper();
+    ResultMapping remarkMapping = configuration
+        .getResultMap("com.lframework.xingyun.sc.mappers.SaleOrderMapper.SaleProductDto")
+        .getResultMappings()
+        .stream()
+        .filter(mapping -> "remark".equals(mapping.getProperty()))
+        .findFirst()
+        .orElseThrow(AssertionError::new);
+
+    assertEquals("remark", remarkMapping.getColumn());
+    assertTrue(buildSql(configuration, "querySaleByCondition",
+        searchParameters()).contains("g.remark"));
+    assertTrue(buildSql(configuration, "querySaleList",
+        listParameters()).contains("g.remark"));
+  }
+
+  /**
    * 验证 true 和 false 能从销售商品 DTO 原样贯通到 API BO。
    */
   @Test
@@ -80,6 +101,25 @@ class SaleProductInquiryProductContractTest {
 
         assertTrue(new SaleProductBo("sc-1", inquiryProduct).getInquiryProduct());
         assertFalse(new SaleProductBo("sc-1", normalProduct).getInquiryProduct());
+      } finally {
+        new ApplicationUtil().setApplicationContext(originalApplicationContext);
+      }
+    }
+  }
+
+  /**
+   * 验证商品备注能从销售商品 DTO 贯通到 API BO。
+   */
+  @Test
+  void shouldPropagateRemarkFromDtoToBo() throws ReflectiveOperationException {
+    synchronized (ApplicationUtil.class) {
+      ApplicationContext originalApplicationContext = getApplicationContext();
+      new ApplicationUtil().setApplicationContext(createApplicationContext());
+      try {
+        SaleProductDto product = createProduct(false);
+        product.setRemark("易碎品");
+
+        assertEquals("易碎品", new SaleProductBo("sc-1", product).getRemark());
       } finally {
         new ApplicationUtil().setApplicationContext(originalApplicationContext);
       }

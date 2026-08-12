@@ -92,6 +92,7 @@
         <result column="purchase_price" property="purchasePrice"/>
         <result column="tax_rate" property="taxRate"/>
         <result column="inquiry_product" property="inquiryProduct"/>
+        <result column="remark" property="remark"/>
         <result column="available" property="available"/>
     </resultMap>
 
@@ -172,6 +173,7 @@
             g.purchase_price,
             g.tax_rate,
             g.inquiry_product,
+            g.remark,
             g.available
         FROM base_data_product AS g
         LEFT JOIN base_data_product_category AS c ON c.id = g.category_id

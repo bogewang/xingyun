@@ -95,6 +95,11 @@ export interface SaleProductBo {
   inquiryProduct: boolean | null;
 
   /**
+   * 备注
+   */
+  remark: string;
+
+  /**
    * 仓库ID
    */
   scId: string;

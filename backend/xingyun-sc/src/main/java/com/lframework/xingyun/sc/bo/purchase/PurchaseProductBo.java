@@ -114,6 +114,12 @@ public class PurchaseProductBo extends BaseBo<PurchaseProductDto> {
     private BigDecimal taxRate;
 
     /**
+     * 商品备注
+     */
+    @ApiModelProperty("商品备注")
+    private String remark;
+
+    /**
      * 仓库ID
      */
     @ApiModelProperty(value = "仓库ID", hidden = true)

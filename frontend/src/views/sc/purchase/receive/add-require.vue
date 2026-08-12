@@ -398,6 +398,11 @@
             slots: { default: 'productionDate_default' },
           },
           {
+            field: 'productRemark',
+            title: '商品备注',
+            width: 200,
+          },
+          {
             field: 'description',
             title: '备注',
             width: 200,
@@ -536,6 +541,7 @@
           : product.purchasePrice;
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
+          productRemark: product.remark,
           purchasePrice,
           editingProduct: false,
           productQuery: '',

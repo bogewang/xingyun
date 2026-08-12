@@ -539,6 +539,11 @@
           },
           { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           {
+            field: 'productRemark',
+            title: '商品备注',
+            width: 200,
+          },
+          {
             field: 'description',
             title: '备注',
             width: 200,
@@ -737,6 +742,7 @@
         const baseUnit = product.units?.find((item) => item.baseUnit);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
+          productRemark: product.remark,
           oriPrice: product.salePrice,
           // 如果行内已有有效的价格(>0)，则保留原价格，不被最新售价覆盖
           taxPrice: isFloatGtZero(this.tableData[index].taxPrice)

@@ -232,6 +232,7 @@
             width: 100,
             formatter: ({ cellValue }) => SETTLE_STATUS.getDesc(cellValue),
           },
+          { field: 'productRemark', title: '商品备注', width: 200 },
           { field: 'description', title: '备注', width: 200 },
           { field: 'productionDate', title: '生产日期', width: 120 },
         ],

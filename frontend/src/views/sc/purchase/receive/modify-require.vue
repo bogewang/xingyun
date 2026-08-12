@@ -468,6 +468,11 @@
             slots: { default: 'productionDate_default' },
           },
           {
+            field: 'productRemark',
+            title: '商品备注',
+            width: 200,
+          },
+          {
             field: 'description',
             title: '备注',
             width: 200,
@@ -682,6 +687,7 @@
         const baseUnit = product.units?.find((item) => item.baseUnit);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
+          productRemark: product.remark,
           purchasePrice,
           basePurchasePrice: purchasePrice,
           baseStockNum: product.stockNum,

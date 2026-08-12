@@ -259,6 +259,7 @@
           { field: 'confirmNum', title: '验收数量', align: 'right', width: 100 },
           { field: 'confirmAmt', title: '验收金额', align: 'right', width: 120 },
           { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
+          { field: 'productRemark', title: '商品备注', width: 200 },
           { field: 'description', title: '备注', width: 200 },
         ],
         tableData: [],
