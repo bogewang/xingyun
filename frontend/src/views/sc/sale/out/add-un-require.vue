@@ -201,13 +201,8 @@
               <a-button type="primary" @click="setPaid">已付款</a-button>
             </a-space>
           </j-form-item>
-        </j-form>
-      </j-border>
-
-      <j-border>
-        <j-form bordered label-width="140px">
-          <j-form-item label="备注" :span="24" :content-nest="false">
-            <a-textarea v-model:value.trim="formData.description" maxlength="200" />
+          <j-form-item label="备注" :span="4" :content-nest="false">
+            <a-input v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>

@@ -45,7 +45,7 @@
        */
       labelWidth: {
         type: String,
-        default: '100px',
+        default: '80px',
       },
       enableCollapse: {
         type: Boolean,
