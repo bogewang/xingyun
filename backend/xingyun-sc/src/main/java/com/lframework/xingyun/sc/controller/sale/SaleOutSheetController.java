@@ -600,6 +600,24 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
+     * 合并订单
+     */
+    @ApiOperation("合并订单")
+    @HasPermission({ "sale:out:modify" })
+    @PatchMapping("/merge")
+    public InvokeResult<String> merge(@RequestBody @Valid MergeSaleOutSheetVo vo) {
+
+        try {
+            String id = saleOutSheetService.merge(vo);
+
+            return InvokeResultBuilder.success(id);
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    /**
      * 修改备注
      */
     @ApiOperation("修改备注")

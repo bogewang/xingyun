@@ -155,6 +155,7 @@
                 @click="batchDelete"
                 >批量删除</a-button
               >
+
               <a-button
                 v-permission="['sale:out:add']"
                 :icon="h(CloudUploadOutlined)"
@@ -202,6 +203,12 @@
                 :icon="h(SyncOutlined)"
                 @click="openInquiryPriceSync"
                 >同步询价到销售表</a-button
+              >
+              <a-button
+                v-permission="['sale:out:modify']"
+                :icon="h(MergeCellsOutlined)"
+                @click="mergeOrders"
+              >合并订单</a-button
               >
             </a-space>
           </template>
@@ -442,6 +449,7 @@
     DeleteOutlined,
     DownloadOutlined,
     DownOutlined,
+    MergeCellsOutlined,
     PlusOutlined,
     PrinterOutlined,
     SearchOutlined,
@@ -507,6 +515,7 @@
         DeleteOutlined,
         DownloadOutlined,
         DownOutlined,
+        MergeCellsOutlined,
         PrinterOutlined,
         SyncOutlined,
         isEmpty,
@@ -1008,6 +1017,57 @@
         this.batchHandleDatas = records;
 
         this.$refs.batchDeleteHandlerDialog.openDialog();
+      },
+      // 合并选中的销售出库单
+      mergeOrders() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records) || records.length < 2) {
+          createError('请选择两张及以上要合并的销售出库单！');
+          return;
+        }
+
+        const first = records[0];
+        for (let i = 0; i < records.length; i++) {
+          if (SALE_OUT_SHEET_STATUS.APPROVE_PASS.equalsCode(records[i].status)) {
+            createError('第' + (i + 1) + '个销售出库单已审核通过，不允许合并！');
+            return;
+          }
+          if (this.isSettleLocked(records[i])) {
+            createError('第' + (i + 1) + '个销售出库单已对账或已结算，不允许合并！');
+            return;
+          }
+          if (records[i].orderDate !== first.orderDate) {
+            createError('仅允许合并相同订单日期的销售出库单！');
+            return;
+          }
+          if (records[i].customerName !== first.customerName) {
+            createError('仅允许合并相同客户的销售出库单！');
+            return;
+          }
+          if (records[i].scName !== first.scName) {
+            createError('仅允许合并相同仓库的销售出库单！');
+            return;
+          }
+        }
+
+        createConfirm(
+          '确认合并选中的' +
+            records.length +
+            '张销售出库单？系统将保留创建时间最早的单据，并删除其余单据。',
+        ).then(() => {
+          this.loading = true;
+          api
+            .merge({
+              ids: records.map((item) => item.id),
+            })
+            .then(() => {
+              createSuccess('合并成功！');
+              this.search();
+            })
+            .finally(() => {
+              this.loading = false;
+            });
+        });
       },
       doBatchApprovePass(row) {
         return api.batchApprovePass({
