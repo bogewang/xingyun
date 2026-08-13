@@ -2,10 +2,13 @@ package com.lframework.xingyun.sc.impl.sale;
 
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
+import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
+import com.lframework.xingyun.sc.enums.SaleOutSheetStatus;
+import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
-import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -154,6 +157,17 @@ class SaleOutSheetServiceImplTest {
   }
 
   /**
+   * 验证合并销售出库单不再限制订单日期一致。
+   */
+  @Test
+  void validateMergeSheetsShouldAllowDifferentOrderDates() {
+    SaleOutSheet target = createMergeSheet("sale-1", LocalDate.of(2026, 8, 12));
+    SaleOutSheet other = createMergeSheet("sale-2", LocalDate.of(2026, 8, 13));
+
+    new SaleOutSheetServiceImpl().validateMergeSheets(target, Arrays.asList(target, other));
+  }
+
+  /**
    * 验证标签打印只保留用户勾选的销售明细。
    */
   @Test
@@ -185,6 +199,26 @@ class SaleOutSheetServiceImplTest {
     sheet.setId(id);
     sheet.setCode(code);
     sheet.setCreateTime(createTime);
+    return sheet;
+  }
+
+  /**
+   * 创建用于合并校验的销售出库单。
+   *
+   * @param id 销售出库单ID
+   * @param orderDate 订单日期
+   * @return 销售出库单
+   */
+  private SaleOutSheet createMergeSheet(String id, LocalDate orderDate) {
+    SaleOutSheet sheet = new SaleOutSheet();
+    sheet.setId(id);
+    sheet.setCode(id);
+    sheet.setCustomerId("customer-1");
+    sheet.setScId("sc-1");
+    sheet.setSaleOrderId("order-1");
+    sheet.setOrderDate(orderDate);
+    sheet.setStatus(SaleOutSheetStatus.CREATED);
+    sheet.setSettleStatus(SettleStatus.UN_CHECK_BILL);
     return sheet;
   }
 }

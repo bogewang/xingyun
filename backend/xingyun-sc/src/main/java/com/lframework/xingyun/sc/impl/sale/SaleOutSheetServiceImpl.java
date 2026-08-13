@@ -1315,7 +1315,7 @@ public class SaleOutSheetServiceImpl extends
      * @param target 保留的销售出库单
      * @param sheets 待合并销售出库单列表
      */
-    private void validateMergeSheets(SaleOutSheet target, List<SaleOutSheet> sheets) {
+    void validateMergeSheets(SaleOutSheet target, List<SaleOutSheet> sheets) {
         for (SaleOutSheet sheet : sheets) {
             checkApproveStatus(sheet, "销售出库单已审核通过，无法合并！", "销售出库单无法合并！");
             if (Arrays.asList(SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE,
@@ -1325,9 +1325,6 @@ public class SaleOutSheetServiceImpl extends
 
             if (!StringUtil.equals(target.getCustomerId(), sheet.getCustomerId())) {
                 throw new DefaultClientException("仅允许合并相同客户的销售出库单！");
-            }
-            if (!Objects.equals(target.getOrderDate(), sheet.getOrderDate())) {
-                throw new DefaultClientException("仅允许合并相同订单日期的销售出库单！");
             }
             if (!StringUtil.equals(target.getScId(), sheet.getScId())) {
                 throw new DefaultClientException("仅允许合并相同仓库的销售出库单！");
