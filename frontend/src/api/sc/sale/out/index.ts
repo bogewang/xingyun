@@ -30,6 +30,7 @@ const region = 'cloud-api';
 
 type TagPrintParams = QuerySaleOutSheetVo & {
   idList?: string[];
+  detailIdList?: string[];
 };
 
 type MarketBuySummaryParams = {

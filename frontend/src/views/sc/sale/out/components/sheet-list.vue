@@ -376,6 +376,14 @@
         @ok="doTagPrintWithCategory"
         @cancel="closeTagPrintModal"
       >
+        <a-checkbox
+          v-if="tagPrintModal.treeShow"
+          :checked="isAllTagPrintCategoryChecked()"
+          :indeterminate="isTagPrintCategoryCheckIndeterminate()"
+          @change="toggleAllTagPrintCategories"
+        >
+          全选
+        </a-checkbox>
         <a-tree
           v-if="tagPrintModal.treeShow"
           v-model:checkedKeys="tagPrintModal.checkedCategoryIds"
@@ -1285,6 +1293,44 @@
       closeTagPrintModal() {
         this.tagPrintModal.visible = false;
         this.tagPrintModal.pendingRecords = [];
+      },
+      /** 获取标签打印分类树中全部分类ID。 */
+      getAllTagPrintCategoryIds() {
+        const categoryIds = [];
+        const collectCategoryIds = (categories) => {
+          categories.forEach((category) => {
+            categoryIds.push(category.id);
+            if (category.children && category.children.length > 0) {
+              collectCategoryIds(category.children);
+            }
+          });
+        };
+        collectCategoryIds(this.tagPrintModal.categoryTreeData);
+        return categoryIds;
+      },
+      /** 判断标签打印分类是否已全部勾选。 */
+      isAllTagPrintCategoryChecked() {
+        const categoryIds = this.getAllTagPrintCategoryIds();
+        return (
+          categoryIds.length > 0 &&
+          categoryIds.every((categoryId) =>
+            this.tagPrintModal.checkedCategoryIds.includes(categoryId),
+          )
+        );
+      },
+      /** 判断标签打印分类是否处于部分勾选状态。 */
+      isTagPrintCategoryCheckIndeterminate() {
+        const categoryIds = this.getAllTagPrintCategoryIds();
+        const checkedCount = categoryIds.filter((categoryId) =>
+          this.tagPrintModal.checkedCategoryIds.includes(categoryId),
+        ).length;
+        return checkedCount > 0 && checkedCount < categoryIds.length;
+      },
+      /** 切换标签打印分类的全选状态。 */
+      toggleAllTagPrintCategories(event) {
+        this.tagPrintModal.checkedCategoryIds = event.target.checked
+          ? this.getAllTagPrintCategoryIds()
+          : [];
       },
       /** 确认标签打印（携带分类筛选，并缓存勾选的分类到Redis） */
       async doTagPrintWithCategory() {

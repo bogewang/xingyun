@@ -292,6 +292,10 @@ public class SaleOutSheetServiceImpl extends
         result.getDatas().forEach(item -> {
             Customer customer = customerService.findById(item.getCustomerId());
             List<SaleOutSheetDetail> details = getSheetDetails(item.getId());
+            details = filterTagPrintDetails(details, vo.getDetailIdList());
+            if (CollectionUtils.isEmpty(details)) {
+                return;
+            }
 
             List<String> productIds = details.stream()
                     .map(SaleOutSheetDetail::getProductId)
@@ -349,6 +353,22 @@ public class SaleOutSheetServiceImpl extends
                         .thenComparing(PrintSaleTagBo::getProductName)
                         .thenComparing(PrintSaleTagBo::getOrderDate))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 根据指定明细ID过滤标签打印数据；未指定时保留单据全部明细。
+     *
+     * @param details 单据明细
+     * @param detailIdList 指定的明细ID列表
+     * @return 可用于标签打印的明细
+     */
+    static List<SaleOutSheetDetail> filterTagPrintDetails(List<SaleOutSheetDetail> details,
+            List<String> detailIdList) {
+        if (CollectionUtils.isEmpty(detailIdList)) {
+            return details;
+        }
+        Set<String> detailIds = new HashSet<>(detailIdList);
+        return details.stream().filter(detail -> detailIds.contains(detail.getId())).collect(Collectors.toList());
     }
 
     @Override
