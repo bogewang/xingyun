@@ -411,6 +411,12 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
     private String description;
 
     /**
+     * 商品备注
+     */
+    @ApiModelProperty("商品备注")
+    private String productRemark;
+
+    /**
      * 采购订单明细ID
      */
     @ApiModelProperty("采购订单明细ID")
@@ -467,6 +473,7 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
       this.spec = product.getSpec();
       this.categoryName = product.getCategoryName();
       this.brandName = product.getBrandName();
+      this.productRemark = product.getRemark();
 
       if (!StringUtil.isBlank(dto.getPurchaseOrderDetailId())) {
         PurchaseOrderDetailService purchaseOrderDetailService = ApplicationUtil.getBean(

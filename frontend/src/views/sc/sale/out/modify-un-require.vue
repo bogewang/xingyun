@@ -240,13 +240,8 @@
               @input="(e) => paidAmountInput(e.target.value)"
             />
           </j-form-item>
-        </j-form>
-      </j-border>
-
-      <j-border>
-        <j-form bordered label-width="140px">
-          <j-form-item label="备注" :span="24" :content-nest="false">
-            <a-textarea v-model:value.trim="formData.description" maxlength="200" />
+          <j-form-item label="备注" :span="4" :content-nest="false">
+            <a-input v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>
@@ -462,11 +457,17 @@
             width: 100,
             slots: { default: 'taxPrice_default' },
           },
+
           {
             field: 'description',
             title: '备注',
             width: 200,
             slots: { default: 'description_default' },
+          },
+          {
+            field: 'productRemark',
+            title: '商品备注',
+            width: 200,
           },
           {
             field: 'taxAmount',
@@ -479,14 +480,14 @@
             field: 'confirmNum',
             title: '验收数量',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'confirmNum_default' },
           },
           {
             field: 'confirmAmt',
             title: '验收金额',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'confirmAmt_default' },
           },
           { field: 'categoryName', title: '商品分类', width: 80 },
@@ -495,7 +496,7 @@
             field: 'costPrice',
             title: '成本单价',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'costPrice_default' },
           },
           {
@@ -768,6 +769,7 @@
         const selectedPrice = this.getSelectedProductPrice(product);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
+          productRemark: product.remark,
           oriPrice: product.salePrice,
           taxPrice: selectedPrice,
           baseSalePrice: selectedPrice,
@@ -1173,7 +1175,7 @@
 </script>
 <style scoped>
   .sheet-editor-page {
-    height: calc(100vh - 150px);
+    height: calc(100vh - 112px);
     min-height: 0;
     display: flex;
     flex-direction: column;

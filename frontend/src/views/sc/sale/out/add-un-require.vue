@@ -210,13 +210,8 @@
               <a-button type="primary" @click="setPaid">已付款</a-button>
             </a-space>
           </j-form-item>
-        </j-form>
-      </j-border>
-
-      <j-border>
-        <j-form bordered label-width="140px">
-          <j-form-item label="备注" :span="24" :content-nest="false">
-            <a-textarea v-model:value.trim="formData.description" maxlength="200" />
+          <j-form-item label="备注" :span="4" :content-nest="false">
+            <a-input v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>
@@ -386,7 +381,7 @@
           {
             field: 'productName',
             title: '商品名称',
-            width: 260,
+            width: 150,
             slots: { default: 'productName_default' },
           },
           {
@@ -401,28 +396,28 @@
             field: 'stockNum',
             title: '库存数量',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'stockNum_default' },
           },
           {
             field: 'outNum',
             title: '数量',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'outNum_default' },
           },
           {
             field: 'taxPrice',
             title: '价格（元）',
             align: 'right',
-            width: 140,
+            width: 80,
             slots: { default: 'taxPrice_default' },
           },
           {
             field: 'taxAmount',
             title: '金额',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'taxAmount_default' },
           },
           {
@@ -435,15 +430,20 @@
             field: 'confirmNum',
             title: '验收数量',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'confirmNum_default' },
           },
           {
             field: 'confirmAmt',
             title: '验收金额',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'confirmAmt_default' },
+          },
+          {
+            field: 'productRemark',
+            title: '商品备注',
+            width: 200,
           },
         ],
         tableData: [],
@@ -643,6 +643,7 @@
         const selectedPrice = this.getSelectedProductPrice(product);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
+          productRemark: product.remark,
           oriPrice: product.salePrice,
           taxPrice: selectedPrice,
           baseSalePrice: selectedPrice,
@@ -1069,7 +1070,7 @@
 </script>
 <style scoped>
   .sheet-editor-page {
-    height: calc(100vh - 150px);
+    height: calc(100vh - 112px);
     min-height: 640px;
     display: flex;
     flex-direction: column;

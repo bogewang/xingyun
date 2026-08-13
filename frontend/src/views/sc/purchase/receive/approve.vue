@@ -196,6 +196,7 @@
             width: 120,
             slots: { default: 'taxAmount_default' },
           },
+          { field: 'productRemark', title: '商品备注', width: 200 },
           { field: 'description', title: '备注', width: 200 },
         ],
         tableData: [],
