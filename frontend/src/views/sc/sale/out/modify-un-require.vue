@@ -314,7 +314,6 @@
     mul,
     add,
     isFloat,
-    isFloatGtZero,
     isNumberPrecision,
     uuid,
     PATTERN_IS_FLOAT,
@@ -766,14 +765,11 @@
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
         const baseUnit = product.units?.find((item) => item.baseUnit);
-        // 如果行内已有有效的价格(>0)，则保留原价格，不被最新售价覆盖
         const selectedPrice = this.getSelectedProductPrice(product);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           oriPrice: product.salePrice,
-          taxPrice: isFloatGtZero(this.tableData[index].taxPrice)
-            ? this.tableData[index].taxPrice
-            : selectedPrice,
+          taxPrice: selectedPrice,
           baseSalePrice: selectedPrice,
           baseStockNum: product.stockNum,
           unitId: baseUnit?.id || '',
