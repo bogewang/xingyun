@@ -152,6 +152,22 @@ export function importExcel(data: { id: string; file: Blob }): Promise<void> {
 }
 
 /**
+ * 导出客户信息
+ */
+export function exportList(data: QueryCustomerVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/export',
+      data,
+    },
+    {
+      contentType: ContentTypeEnum.FORM_URLENCODED,
+      region,
+    },
+  );
+}
+
+/**
  * 根据ID删除
  * @param id
  */

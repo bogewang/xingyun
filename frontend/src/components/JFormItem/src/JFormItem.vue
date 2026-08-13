@@ -5,7 +5,7 @@
         v-if="!hiddenLabel && !(autoHiddenLabel && !$slots.default)"
         :class="_bordered ? 'j-form-item-label-border' : ''"
         class="j-form-item-label"
-        :style="{ width: form.labelWidth, minWidth: form.labelWidth }"
+        :style="{ width: globalLabelWidth, minWidth: globalLabelWidth }"
       >
         <div class="j-form-item-label-wrapper">
           <span v-if="_required" class="j-form-item-required"></span>
@@ -69,7 +69,7 @@
        */
       span: {
         type: Number,
-        default: 8,
+        default: 4,
       },
       /**
        * 当内容为空时， 是否自动隐藏文字标签
@@ -184,6 +184,13 @@
       };
     },
     computed: {
+      /**
+       * 获取全局统一的表单标签列宽。
+       * @returns 标签列宽度
+       */
+      globalLabelWidth() {
+        return '80px';
+      },
       form() {
         let parent = this.$parent;
         let parentName = parent.$options.componentName;
@@ -194,7 +201,8 @@
         return parent;
       },
       itemWidth() {
-        const span = Math.max(1, Math.min(this.span, 24));
+        // 普通字段最多占 4 格，统一为每行最多 6 列；整行字段保留 24 格。
+        const span = this.span === 24 ? 24 : Math.max(1, Math.min(this.span, 4));
 
         return (span / 24) * 100 + '%';
       },

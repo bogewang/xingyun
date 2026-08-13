@@ -476,6 +476,7 @@
             width: 100,
             formatter: ({ cellValue }) => SETTLE_STATUS.getDesc(cellValue),
           },
+          { field: 'productRemark', title: '商品备注', width: 200 },
           { field: 'description', title: '备注', width: 200 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },

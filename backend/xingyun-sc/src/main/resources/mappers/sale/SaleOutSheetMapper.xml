@@ -217,6 +217,7 @@
             d.product_id,
             g.code AS product_code,
             g.name AS product_name,
+            g.remark AS product_remark,
             g.remark2 AS product_remark2,
             g.inquiry_product AS inquiry_product,
             g.sku_code,

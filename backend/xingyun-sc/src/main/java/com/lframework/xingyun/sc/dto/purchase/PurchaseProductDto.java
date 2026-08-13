@@ -91,6 +91,11 @@ public class PurchaseProductDto implements BaseDto, Serializable {
   private Boolean inquiryProduct;
 
   /**
+   * 备注
+   */
+  private String remark;
+
+  /**
    * 状态
    */
   private Boolean available;
