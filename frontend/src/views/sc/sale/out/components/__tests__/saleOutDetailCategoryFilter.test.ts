@@ -10,4 +10,13 @@ describe('销售出库明细商品分类筛选', () => {
     expect(source).toContain(':only-final="true"');
     expect(source).toContain('categoryIdList: []');
   });
+
+  it('支持勾选销售明细后打印标签', () => {
+    const source = readFileSync(new URL('../detail-list.vue', import.meta.url), 'utf-8');
+
+    expect(source).toContain("{ type: 'checkbox', width: 45 }");
+    expect(source).toContain('@click="tagPrint"');
+    expect(source).toContain('detailIdList: records.map((item) => item.detailId)');
+    expect(source).toContain('this.vgPrintPreview(PRINT_TYPE.SALE_TAG.code, res)');
+  });
 });

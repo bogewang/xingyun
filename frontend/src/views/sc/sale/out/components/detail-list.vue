@@ -112,6 +112,13 @@
             <a-button @click="resetSearchForm">清空</a-button>
             <a-button type="primary" :icon="h(SearchOutlined)" @click="search">查询</a-button>
             <a-button
+              v-permission="['sale:out:query']"
+              :icon="h(PrinterOutlined)"
+              @click="tagPrint"
+            >
+              标签打印
+            </a-button>
+            <a-button
               v-if="showPriceUniqueCheck"
               :icon="h(EditOutlined)"
               @click="openPriceCheckDialog"
@@ -301,12 +308,18 @@
 <script>
   import { defineComponent, h } from 'vue';
   import moment from 'moment';
-  import { DownloadOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons-vue';
+  import {
+    DownloadOutlined,
+    EditOutlined,
+    PrinterOutlined,
+    SearchOutlined,
+  } from '@ant-design/icons-vue';
   import Detail from '../detail.vue';
   import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
   import * as api from '@/api/sc/sale/out';
   import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { printMix } from '@/mixins/print.ts';
   import { buildSortPageVo, isEmpty } from '@/utils/utils';
   import {
     buildVisibleSelectOptions,
@@ -323,6 +336,7 @@
   import { usePermission } from '/@/hooks/web/usePermission';
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
   import { calcSaleOutProfitRateByProfit } from './saleOutProfit';
+  import { PRINT_TYPE } from '@/enums/biz/printType';
 
   const createDefaultSearchFormData = () => ({
     code: '',
@@ -349,7 +363,7 @@
       CustomerSelector,
       ProductCategorySelector,
     },
-    mixins: [gridCollapseHeightMix, multiplePageMix],
+    mixins: [gridCollapseHeightMix, multiplePageMix, printMix],
     setup() {
       const { hasPermission } = usePermission();
       return {
@@ -359,6 +373,7 @@
         SearchOutlined,
         EditOutlined,
         DownloadOutlined,
+        PrinterOutlined,
         formatInquiryProduct,
         SETTLE_STATUS,
         SALE_OUT_SHEET_STATUS,
@@ -411,6 +426,7 @@
           layouts: ['Home', 'PrevPage', 'Jump', 'PageCount', 'NextPage', 'End', 'Sizes', 'Total'],
         },
         tableColumn: [
+          { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
           { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
           {
@@ -949,6 +965,25 @@
         api.exportDetail(this.buildSearchFormData()).then(() => {
           createSuccess('已加入导出任务，请到导出中心查看！');
         });
+      },
+      /** 打印勾选的销售出库明细标签。 */
+      async tagPrint() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要打印标签的销售明细！');
+          return;
+        }
+
+        this.loading = true;
+        try {
+          const res = await api.tagPrint({
+            idList: [...new Set(records.map((item) => item.id))],
+            detailIdList: records.map((item) => item.detailId),
+          });
+          await this.vgPrintPreview(PRINT_TYPE.SALE_TAG.code, res);
+        } finally {
+          this.loading = false;
+        }
       },
       exportDetailDailySummary() {
         api.exportDetailDailySummary(this.buildSearchFormData());

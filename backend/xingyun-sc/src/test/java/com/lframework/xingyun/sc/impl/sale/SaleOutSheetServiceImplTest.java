@@ -153,6 +153,23 @@ class SaleOutSheetServiceImplTest {
     Assert.assertEquals(sheets.get(0).getId(), "sale-1");
   }
 
+  /**
+   * 验证标签打印只保留用户勾选的销售明细。
+   */
+  @Test
+  void filterTagPrintDetailsShouldKeepSelectedDetailsOnly() {
+    SaleOutSheetDetail firstDetail = new SaleOutSheetDetail();
+    firstDetail.setId("detail-1");
+    SaleOutSheetDetail secondDetail = new SaleOutSheetDetail();
+    secondDetail.setId("detail-2");
+
+    List<SaleOutSheetDetail> details = SaleOutSheetServiceImpl.filterTagPrintDetails(
+        Arrays.asList(firstDetail, secondDetail), Arrays.asList("detail-2"));
+
+    Assert.assertEquals(details.size(), 1);
+    Assert.assertEquals(details.get(0).getId(), "detail-2");
+  }
+
   private SaleOutSheetImportModel createModel(BigDecimal orderNum, BigDecimal taxPrice,
       BigDecimal confirmNum) {
     SaleOutSheetImportModel model = new SaleOutSheetImportModel();
