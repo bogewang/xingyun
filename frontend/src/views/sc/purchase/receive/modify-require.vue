@@ -1015,7 +1015,7 @@
 </script>
 <style scoped>
   .sheet-editor-page {
-    height: calc(100vh - 80px);
+    height: calc(100vh - 112px);
     min-height: 640px;
     display: flex;
     flex-direction: column;
