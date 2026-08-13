@@ -744,10 +744,7 @@
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           productRemark: product.remark,
           oriPrice: product.salePrice,
-          // 如果行内已有有效的价格(>0)，则保留原价格，不被最新售价覆盖
-          taxPrice: isFloatGtZero(this.tableData[index].taxPrice)
-            ? this.tableData[index].taxPrice
-            : product.latestSalePrice,
+          taxPrice: product.latestSalePrice,
           baseSalePrice: product.latestSalePrice,
           baseStockNum: product.stockNum,
           unitId: baseUnit?.id || '',

@@ -1,9 +1,13 @@
 package com.lframework.xingyun.sc.impl.sale;
 
+import com.lframework.starter.common.exceptions.impl.DefaultClientException;
+import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -113,6 +117,42 @@ class SaleOutSheetServiceImplTest {
     Assert.assertEquals(SaleOutSheetServiceImpl.resolveCostNum(detail), BigDecimal.ZERO);
   }
 
+  /**
+   * 验证合并单据ID会去除空值并去重。
+   */
+  @Test
+  void normalizeMergeSheetIdsShouldRemoveBlankAndDuplicateIds() {
+    List<String> ids = SaleOutSheetServiceImpl.normalizeMergeSheetIds(
+        Arrays.asList("sale-1", "", "sale-2", "sale-1", null));
+
+    Assert.assertEquals(ids, Arrays.asList("sale-1", "sale-2"));
+  }
+
+  /**
+   * 验证合并单据至少需要两张有效单据。
+   */
+  @Test(expectedExceptions = DefaultClientException.class)
+  void normalizeMergeSheetIdsShouldRejectLessThanTwoIds() {
+    SaleOutSheetServiceImpl.normalizeMergeSheetIds(Arrays.asList("sale-1", "", "sale-1"));
+  }
+
+  /**
+   * 验证合并时保留创建时间最早的单据。
+   */
+  @Test
+  void sortMergeSheetsShouldPutEarliestCreateTimeFirst() {
+    SaleOutSheet lateSheet = createSheet("sale-2", "SO-002",
+        LocalDateTime.of(2026, 8, 12, 10, 0));
+    SaleOutSheet earlySheet = createSheet("sale-1", "SO-001",
+        LocalDateTime.of(2026, 8, 12, 9, 0));
+
+    List<SaleOutSheet> sheets = Arrays.asList(lateSheet, earlySheet);
+
+    SaleOutSheetServiceImpl.sortMergeSheets(sheets);
+
+    Assert.assertEquals(sheets.get(0).getId(), "sale-1");
+  }
+
   private SaleOutSheetImportModel createModel(BigDecimal orderNum, BigDecimal taxPrice,
       BigDecimal confirmNum) {
     SaleOutSheetImportModel model = new SaleOutSheetImportModel();
@@ -121,5 +161,13 @@ class SaleOutSheetServiceImplTest {
     model.setTaxPrice(taxPrice);
     model.setConfirmNum(confirmNum);
     return model;
+  }
+
+  private SaleOutSheet createSheet(String id, String code, LocalDateTime createTime) {
+    SaleOutSheet sheet = new SaleOutSheet();
+    sheet.setId(id);
+    sheet.setCode(code);
+    sheet.setCreateTime(createTime);
+    return sheet;
   }
 }

@@ -1223,6 +1223,159 @@ public class SaleOutSheetServiceImpl extends
     }
 
     /**
+     * 合并销售出库单，保留创建时间最早的单据并追加其他单据明细。
+     *
+     * @param vo 合并参数
+     * @return 合并后保留的销售出库单ID
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public String merge(MergeSaleOutSheetVo vo) {
+
+        if (vo == null || CollectionUtil.isEmpty(vo.getIds()) || vo.getIds().size() < 2) {
+            throw new DefaultClientException("请选择两张及以上销售出库单进行合并！");
+        }
+
+        List<String> distinctIds = normalizeMergeSheetIds(vo.getIds());
+
+        List<SaleOutSheet> sheets = listByIds(distinctIds);
+        if (sheets.size() != distinctIds.size()) {
+            throw new DefaultClientException("部分销售出库单不存在，请刷新后重试！");
+        }
+
+        sortMergeSheets(sheets);
+
+        SaleOutSheet target = sheets.get(0);
+        validateMergeSheets(target, sheets);
+
+        UpdateSaleOutSheetVo updateVo = buildMergeUpdateVo(target, sheets);
+        updateVo.validate();
+
+        SaleOutSheetService thisService = getThis(this.getClass());
+        thisService.update(updateVo);
+
+        for (SaleOutSheet sheet : sheets) {
+            if (!StringUtil.equals(target.getId(), sheet.getId())) {
+                thisService.deleteById(sheet.getId());
+            }
+        }
+
+        return target.getId();
+    }
+
+    /**
+     * 规范化待合并销售出库单ID。
+     *
+     * @param ids 待合并销售出库单ID列表
+     * @return 去空白、去重后的销售出库单ID列表
+     */
+    static List<String> normalizeMergeSheetIds(List<String> ids) {
+        List<String> distinctIds = ids.stream().filter(StringUtils::isNotBlank).distinct()
+                .collect(Collectors.toList());
+        if (distinctIds.size() < 2) {
+            throw new DefaultClientException("请选择两张及以上销售出库单进行合并！");
+        }
+        return distinctIds;
+    }
+
+    /**
+     * 按合并保留规则排序销售出库单。
+     *
+     * @param sheets 待排序销售出库单列表
+     */
+    static void sortMergeSheets(List<SaleOutSheet> sheets) {
+        sheets.sort(Comparator.comparing(SaleOutSheet::getCreateTime,
+                        Comparator.nullsLast(LocalDateTime::compareTo))
+                .thenComparing(SaleOutSheet::getCode, Comparator.nullsLast(String::compareTo)));
+    }
+
+    /**
+     * 校验销售出库单是否满足合并条件。
+     *
+     * @param target 保留的销售出库单
+     * @param sheets 待合并销售出库单列表
+     */
+    private void validateMergeSheets(SaleOutSheet target, List<SaleOutSheet> sheets) {
+        for (SaleOutSheet sheet : sheets) {
+            checkApproveStatus(sheet, "销售出库单已审核通过，无法合并！", "销售出库单无法合并！");
+            if (Arrays.asList(SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE,
+                    SettleStatus.SETTLED).contains(sheet.getSettleStatus())) {
+                throw new DefaultClientException("销售出库单已对账或已结算，无法合并！");
+            }
+
+            if (!StringUtil.equals(target.getCustomerId(), sheet.getCustomerId())) {
+                throw new DefaultClientException("仅允许合并相同客户的销售出库单！");
+            }
+            if (!Objects.equals(target.getOrderDate(), sheet.getOrderDate())) {
+                throw new DefaultClientException("仅允许合并相同订单日期的销售出库单！");
+            }
+            if (!StringUtil.equals(target.getScId(), sheet.getScId())) {
+                throw new DefaultClientException("仅允许合并相同仓库的销售出库单！");
+            }
+            if (!StringUtil.equals(target.getSaleOrderId(), sheet.getSaleOrderId())) {
+                throw new DefaultClientException("仅允许合并相同销售订单来源的销售出库单！");
+            }
+        }
+    }
+
+    /**
+     * 构建合并保存参数。
+     *
+     * @param target 保留的销售出库单
+     * @param sheets 待合并销售出库单列表
+     * @return 销售出库单修改参数
+     */
+    private UpdateSaleOutSheetVo buildMergeUpdateVo(SaleOutSheet target, List<SaleOutSheet> sheets) {
+        UpdateSaleOutSheetVo updateVo = new UpdateSaleOutSheetVo();
+        updateVo.setId(target.getId());
+        updateVo.setScId(target.getScId());
+        updateVo.setCustomerId(target.getCustomerId());
+        updateVo.setSalerId(target.getSalerId());
+        updateVo.setOrderDate(target.getOrderDate());
+        updateVo.setPaymentDate(target.getPaymentDate());
+        updateVo.setSaleOrderId(target.getSaleOrderId());
+        updateVo.setDescription(target.getDescription());
+        updateVo.setRequired(StringUtil.isNotBlank(target.getSaleOrderId()));
+        updateVo.setPaidAmount(sumSheetAmount(sheets, SaleOutSheet::getPaidAmount));
+
+        List<SaleOutProductVo> products = new ArrayList<>();
+        int seq = 1;
+        for (SaleOutSheet sheet : sheets) {
+            List<SaleOutSheetDetail> details = getSheetDetails(sheet.getId());
+            for (SaleOutSheetDetail detail : details) {
+                products.add(toMergeProductVo(detail, seq++));
+            }
+        }
+        updateVo.setProducts(products);
+        return updateVo;
+    }
+
+    /**
+     * 将销售出库明细转换为合并保存商品参数。
+     *
+     * @param detail 销售出库明细
+     * @param seq 行号
+     * @return 销售出库商品参数
+     */
+    private SaleOutProductVo toMergeProductVo(SaleOutSheetDetail detail, int seq) {
+        SaleOutProductVo productVo = new SaleOutProductVo();
+        productVo.setSeq(seq);
+        productVo.setProductId(detail.getProductId());
+        productVo.setUnitId(detail.getUnitId());
+        productVo.setUnit(detail.getUnitName());
+        productVo.setOriPrice(detail.getOriPrice());
+        productVo.setTaxPrice(detail.getTaxPrice());
+        productVo.setDiscountRate(detail.getDiscountRate());
+        productVo.setOrderNum(detail.getBusinessNum());
+        productVo.setConfirmNum(detail.getConfirmNum());
+        productVo.setDescription(detail.getDescription());
+        productVo.setCostPrice(detail.getCostPrice());
+        productVo.setSaleOrderDetailId(detail.getSaleOrderDetailId());
+        productVo.setActualDate(detail.getActualDate());
+        return productVo;
+    }
+
+    /**
      *
      * @param sheet
      * @param msg
