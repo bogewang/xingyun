@@ -140,6 +140,7 @@
             s.settle_version
         FROM tbl_sale_out_sheet AS s
         LEFT JOIN tbl_sale_order AS o ON o.id = s.sale_order_id
+        LEFT JOIN base_data_customer AS cu ON cu.id = s.customer_id
     </sql>
 
     <sql id="SaleOutSheetFullDto_sql">
@@ -467,7 +468,24 @@
                 </if>
             </if>
         </where>
-        ORDER BY s.create_time desc, s.order_date DESC, s.id DESC
+        ORDER BY
+        <choose>
+            <when test="vo != null and vo.sortField == 'customerName'">
+                cu.name
+                <choose>
+                    <when test="vo.sortOrder == 'asc'">ASC</when>
+                    <otherwise>DESC</otherwise>
+                </choose>,
+            </when>
+            <when test="vo != null and vo.sortField == 'confirmAmt'">
+                s.confirm_amt
+                <choose>
+                    <when test="vo.sortOrder == 'asc'">ASC</when>
+                    <otherwise>DESC</otherwise>
+                </choose>,
+            </when>
+        </choose>
+        s.create_time DESC, s.order_date DESC, s.id DESC
     </select>
     <select id="queryProfitSummary" resultType="com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo">
         SELECT
