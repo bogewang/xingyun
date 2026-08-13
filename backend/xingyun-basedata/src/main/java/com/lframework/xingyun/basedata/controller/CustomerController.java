@@ -2,6 +2,7 @@ package com.lframework.xingyun.basedata.controller;
 
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.CollectionUtil;
+import com.lframework.starter.mq.core.utils.ExportTaskUtil;
 import com.lframework.starter.web.core.annotations.security.HasPermission;
 import com.lframework.starter.web.core.components.resp.InvokeResult;
 import com.lframework.starter.web.core.components.resp.InvokeResultBuilder;
@@ -12,6 +13,7 @@ import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.basedata.bo.customer.GetCustomerBo;
 import com.lframework.xingyun.basedata.bo.customer.QueryCustomerBo;
 import com.lframework.xingyun.basedata.entity.Customer;
+import com.lframework.xingyun.basedata.excel.customer.CustomerExportTaskWorker;
 import com.lframework.xingyun.basedata.excel.customer.CustomerImportListener;
 import com.lframework.xingyun.basedata.excel.customer.CustomerImportModel;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
@@ -137,6 +139,19 @@ public class CustomerController extends DefaultBaseController {
     customerService.update(vo);
 
     customerService.cleanCacheByKey(vo.getId());
+
+    return InvokeResultBuilder.success();
+  }
+
+  /**
+   * 导出客户信息。
+   */
+  @ApiOperation("导出")
+  @HasPermission({"base-data:customer:import"})
+  @PostMapping("/export")
+  public InvokeResult<Void> export(@Valid QueryCustomerVo vo) {
+
+    ExportTaskUtil.exportTask("客户信息", CustomerExportTaskWorker.class, vo);
 
     return InvokeResultBuilder.success();
   }
