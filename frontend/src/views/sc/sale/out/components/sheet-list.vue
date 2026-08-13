@@ -1045,10 +1045,6 @@
             createError('第' + (i + 1) + '个销售出库单已对账或已结算，不允许合并！');
             return;
           }
-          if (records[i].orderDate !== first.orderDate) {
-            createError('仅允许合并相同订单日期的销售出库单！');
-            return;
-          }
           if (records[i].customerName !== first.customerName) {
             createError('仅允许合并相同客户的销售出库单！');
             return;
