@@ -28,6 +28,19 @@ class SaleOutSheetDetailExportModelTest {
   }
 
   /**
+   * 验证计划日期映射到销售出库明细导出列。
+   */
+  @Test
+  void shouldMapPlanDateForDetailExport() throws IOException {
+    String modelSource = readSource(
+        "src/main/java/com/lframework/xingyun/sc/excel/sale/out/"
+            + "SaleOutSheetDetailExportModel.java");
+
+    Assertions.assertTrue(modelSource.contains("@ExcelProperty(\"计划日期\")"));
+    Assertions.assertTrue(modelSource.contains("setPlanDate(dto.getPlanDate())"));
+  }
+
+  /**
    * 验证询价商品标识为空时导出“否”。
    */
   @Test

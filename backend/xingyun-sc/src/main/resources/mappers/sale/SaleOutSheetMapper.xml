@@ -214,6 +214,7 @@
             cu.code AS customer_code,
             cu.name AS customer_name,
             s.order_date,
+            d.plan_date,
             s.sale_order_id,
             o.code AS sale_order_code,
             d.id AS detail_id,
