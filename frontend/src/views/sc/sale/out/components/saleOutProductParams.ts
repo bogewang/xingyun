@@ -9,6 +9,7 @@ export interface SaleOutTableRow {
   outNum?: string | number;
   confirmNum?: string | number;
   description?: string;
+  planDate?: string;
   isFixed?: boolean;
 }
 
@@ -24,6 +25,7 @@ export function buildUnrequiredSaleOutProducts(rows: SaleOutTableRow[]) {
     orderNum: row.outNum,
     confirmNum: normalizeConfirmNum(row.confirmNum),
     description: row.description,
+    ...(row.planDate ? { planDate: row.planDate } : {}),
   }));
 }
 
@@ -34,6 +36,7 @@ export function buildRequiredSaleOutProducts(rows: SaleOutTableRow[]) {
       orderNum: row.outNum,
       confirmNum: normalizeConfirmNum(row.confirmNum),
       description: row.description,
+      ...(row.planDate ? { planDate: row.planDate } : {}),
       oriPrice: row.oriPrice,
       taxPrice: row.taxPrice,
     };

@@ -1360,7 +1360,7 @@ public class SaleOutSheetServiceImpl extends
         for (SaleOutSheet sheet : sheets) {
             List<SaleOutSheetDetail> details = getSheetDetails(sheet.getId());
             for (SaleOutSheetDetail detail : details) {
-                products.add(toMergeProductVo(detail, seq++));
+                products.add(toMergeProductVo(detail, sheet.getOrderDate(), seq++));
             }
         }
         updateVo.setProducts(products);
@@ -1371,10 +1371,12 @@ public class SaleOutSheetServiceImpl extends
      * 将销售出库明细转换为合并保存商品参数。
      *
      * @param detail 销售出库明细
+     * @param orderDate 原销售出库单订单日期
      * @param seq 行号
      * @return 销售出库商品参数
      */
-    private SaleOutProductVo toMergeProductVo(SaleOutSheetDetail detail, int seq) {
+    static SaleOutProductVo toMergeProductVo(SaleOutSheetDetail detail, LocalDate orderDate,
+            int seq) {
         SaleOutProductVo productVo = new SaleOutProductVo();
         productVo.setSeq(seq);
         productVo.setProductId(detail.getProductId());
@@ -1389,6 +1391,7 @@ public class SaleOutSheetServiceImpl extends
         productVo.setCostPrice(detail.getCostPrice());
         productVo.setSaleOrderDetailId(detail.getSaleOrderDetailId());
         productVo.setActualDate(detail.getActualDate());
+        productVo.setPlanDate(orderDate);
         return productVo;
     }
 
@@ -2035,6 +2038,7 @@ public class SaleOutSheetServiceImpl extends
         detail.setDescription(productVo.getDescription());
         detail.setOrderNo(productVo.getSeq());
         detail.setActualDate(productVo.getActualDate());
+        detail.setPlanDate(productVo.getPlanDate());
         detail.setSettleStatus(this.getInitSettleStatus(customer));
         detail.setTaxAmount(SaleOutSheetAmtCalculator.calculateLineAmount(price,
                 detail.getBusinessNum()));

@@ -98,6 +98,12 @@ public class SaleOutProductVo implements BaseVo, Serializable {
     private LocalDate actualDate;
 
     /**
+     * 计划日期
+     */
+    @ApiModelProperty("计划日期")
+    private LocalDate planDate;
+
+    /**
      * 是否询价商品
      */
     @ApiModelProperty("是否询价商品")

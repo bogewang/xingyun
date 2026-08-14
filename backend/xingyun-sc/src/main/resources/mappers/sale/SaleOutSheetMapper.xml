@@ -84,6 +84,7 @@
             <result column="detail_cost_price" property="costPrice"/>
             <result column="detail_manual_input_cost" property="manualInputCost"/>
             <result column="detail_total_profit" property="totalProfit"/>
+            <result column="detail_plan_date" property="planDate"/>
             <result column="category_name" property="categoryName"/>
         </collection>
     </resultMap>
@@ -196,6 +197,7 @@
             d.cost_price AS detail_cost_price,
             d.manual_input_cost AS detail_manual_input_cost,
             d.total_profit AS detail_total_profit,
+            d.plan_date AS detail_plan_date,
             c.name AS category_name
         FROM tbl_sale_out_sheet AS s
         LEFT JOIN tbl_sale_out_sheet_detail AS d ON d.sheet_id = s.id

@@ -212,6 +212,9 @@
               @keydown="(e) => handleTableInputKeyDown(e, 'descriptionInputRef', rowIndex)"
             />
           </template>
+          <template #planDate_default="{ row }">
+            <a-date-picker v-model:value="row.planDate" value-format="YYYY-MM-DD" />
+          </template>
         </vxe-grid>
       </div>
 
@@ -463,6 +466,12 @@
             title: '备注',
             width: 200,
             slots: { default: 'description_default' },
+          },
+          {
+            field: 'planDate',
+            title: '计划日期',
+            width: 130,
+            slots: { default: 'planDate_default' },
           },
           {
             field: 'productRemark',
@@ -1135,6 +1144,7 @@
               orderNum: t.outNum,
               confirmNum: normalizeConfirmNum(t.confirmNum),
               description: t.description,
+              planDate: t.planDate,
               costPrice: this.canEditCostPrice(t) && !isEmpty(t.costPrice) ? t.costPrice : null,
             };
 
