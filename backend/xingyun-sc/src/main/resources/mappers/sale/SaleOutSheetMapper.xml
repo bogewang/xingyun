@@ -997,7 +997,7 @@
     <select id="queryDetail" resultType="com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto">
         <include refid="SaleOutSheetDetailDto_sql"/>
         <include refid="SaleOutSheetDetailWhere_sql"/>
-        ORDER BY s.order_date DESC, g.name ASC, s.code DESC, d.order_no ASC
+        ORDER BY s.order_date DESC, s.code DESC, d.order_no ASC
     </select>
     <select id="queryPriceCheckDetail" resultType="com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto">
         <include refid="SaleOutSheetDetailDto_sql"/>
@@ -1229,6 +1229,7 @@
     <select id="getDetail" resultMap="SaleOutSheetFullDto">
         <include refid="SaleOutSheetFullDto_sql"/>
         WHERE s.id = #{id}
+        ORDER BY d.order_no ASC
     </select>
     <select id="getWithReturn" resultMap="SaleOutSheetWithReturnDto">
         SELECT
