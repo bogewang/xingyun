@@ -7,6 +7,7 @@ import com.lframework.xingyun.sc.enums.SaleOutSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
+import com.lframework.xingyun.sc.vo.sale.out.SaleOutProductVo;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -165,6 +166,19 @@ class SaleOutSheetServiceImplTest {
     SaleOutSheet other = createMergeSheet("sale-2", LocalDate.of(2026, 8, 13));
 
     new SaleOutSheetServiceImpl().validateMergeSheets(target, Arrays.asList(target, other));
+  }
+
+  /**
+   * 验证合并订单时明细计划日期使用原订单日期。
+   */
+  @Test
+  void toMergeProductVoShouldUseSourceOrderDateAsPlanDate() {
+    SaleOutSheetDetail detail = new SaleOutSheetDetail();
+    LocalDate orderDate = LocalDate.of(2026, 8, 13);
+
+    SaleOutProductVo product = SaleOutSheetServiceImpl.toMergeProductVo(detail, orderDate, 1);
+
+    Assert.assertEquals(product.getPlanDate(), orderDate);
   }
 
   /**

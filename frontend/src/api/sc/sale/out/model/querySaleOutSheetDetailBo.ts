@@ -5,6 +5,8 @@ export interface QuerySaleOutSheetDetailBo {
   customerCode: string;
   customerName: string;
   orderDate: string;
+  /** 计划日期 */
+  planDate: string;
   saleOrderId: string;
   saleOrderCode: string;
   detailId: string;

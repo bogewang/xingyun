@@ -68,4 +68,9 @@ export interface SaleOutProductVo {
    * 销售订单明细ID
    */
   saleOrderDetailId: string;
+
+  /**
+   * 计划日期
+   */
+  planDate?: string;
 }

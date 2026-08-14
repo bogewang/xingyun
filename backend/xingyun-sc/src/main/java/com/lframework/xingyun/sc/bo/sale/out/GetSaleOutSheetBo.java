@@ -478,6 +478,12 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
         private BigDecimal confirmAmt;
 
         /**
+         * 计划日期
+         */
+        @ApiModelProperty("计划日期")
+        private LocalDate planDate;
+
+        /**
          * 仓库ID
          */
         @ApiModelProperty(value = "仓库ID", hidden = true)

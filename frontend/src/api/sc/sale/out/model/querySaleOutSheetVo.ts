@@ -57,6 +57,16 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
   orderDateEnd: string;
 
   /**
+   * 计划起始日期
+   */
+  planDateStart: string;
+
+  /**
+   * 计划截止日期
+   */
+  planDateEnd: string;
+
+  /**
    * 审核人ID
    */
   approveBy: string;

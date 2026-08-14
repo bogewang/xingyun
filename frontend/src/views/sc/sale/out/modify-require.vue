@@ -246,6 +246,9 @@
         <template #description_default="{ row }">
           <a-input v-model:value="row.description" />
         </template>
+        <template #planDate_default="{ row }">
+          <a-date-picker v-model:value="row.planDate" value-format="YYYY-MM-DD" />
+        </template>
       </vxe-grid>
 
       <j-border title="合计">
@@ -548,6 +551,12 @@
             title: '备注',
             width: 200,
             slots: { default: 'description_default' },
+          },
+          {
+            field: 'planDate',
+            title: '计划日期',
+            width: 130,
+            slots: { default: 'planDate_default' },
           },
         ],
         tableData: [],
@@ -1118,6 +1127,7 @@
               orderNum: t.outNum,
               confirmNum: normalizeConfirmNum(t.confirmNum),
               description: t.description,
+              planDate: t.planDate,
               oriPrice: t.oriPrice,
               taxPrice: t.taxPrice,
               costPrice: this.canEditCostPrice(t) && !isEmpty(t.costPrice) ? t.costPrice : null,

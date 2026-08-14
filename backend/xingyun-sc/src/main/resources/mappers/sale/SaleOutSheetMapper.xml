@@ -84,6 +84,7 @@
             <result column="detail_cost_price" property="costPrice"/>
             <result column="detail_manual_input_cost" property="manualInputCost"/>
             <result column="detail_total_profit" property="totalProfit"/>
+            <result column="detail_plan_date" property="planDate"/>
             <result column="category_name" property="categoryName"/>
         </collection>
     </resultMap>
@@ -196,6 +197,7 @@
             d.cost_price AS detail_cost_price,
             d.manual_input_cost AS detail_manual_input_cost,
             d.total_profit AS detail_total_profit,
+            d.plan_date AS detail_plan_date,
             c.name AS category_name
         FROM tbl_sale_out_sheet AS s
         LEFT JOIN tbl_sale_out_sheet_detail AS d ON d.sheet_id = s.id
@@ -212,6 +214,7 @@
             cu.code AS customer_code,
             cu.name AS customer_name,
             s.order_date,
+            d.plan_date,
             s.sale_order_id,
             o.code AS sale_order_code,
             d.id AS detail_id,
@@ -297,6 +300,14 @@
                 <if test="vo.orderDateEnd != null">
                     <![CDATA[
                     AND s.order_date <= #{vo.orderDateEnd}
+                    ]]>
+                </if>
+                <if test="vo.planDateStart != null">
+                    AND d.plan_date >= #{vo.planDateStart}
+                </if>
+                <if test="vo.planDateEnd != null">
+                    <![CDATA[
+                    AND d.plan_date <= #{vo.planDateEnd}
                     ]]>
                 </if>
                 <if test="vo.approveStartTime != null">
@@ -414,6 +425,21 @@
                     <![CDATA[
                     AND s.order_date <= #{vo.orderDateEnd}
                     ]]>
+                </if>
+                <if test="vo.planDateStart != null or vo.planDateEnd != null">
+                    AND EXISTS (
+                        SELECT 1
+                        FROM tbl_sale_out_sheet_detail AS sd
+                        WHERE sd.sheet_id = s.id
+                        <if test="vo.planDateStart != null">
+                            AND sd.plan_date >= #{vo.planDateStart}
+                        </if>
+                        <if test="vo.planDateEnd != null">
+                            <![CDATA[
+                            AND sd.plan_date <= #{vo.planDateEnd}
+                            ]]>
+                        </if>
+                    )
                 </if>
                 <if test="vo.approveStartTime != null">
                     AND s.approve_time >= #{vo.approveStartTime}

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.lframework.xingyun.sc.vo.sale.out.QuerySaleOutSheetVo;
+import java.time.LocalDate;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -43,5 +44,49 @@ class SaleOutSheetDetailCategoryFilterTest {
 
     assertTrue(detailWhereSql.contains("vo.categoryIdList != null and vo.categoryIdList.size() > 0"));
     assertTrue(detailWhereSql.contains("AND g.category_id IN"));
+  }
+
+  /**
+   * 验证明细查询可按计划日期范围过滤。
+   *
+   * @throws IOException 读取 Mapper 文件失败
+   */
+  @Test
+  void shouldFilterDetailByPlanDateRange() throws IOException {
+    QuerySaleOutSheetVo vo = new QuerySaleOutSheetVo();
+    vo.setPlanDateStart(LocalDate.of(2026, 8, 1));
+    vo.setPlanDateEnd(LocalDate.of(2026, 8, 31));
+
+    String mapperXml = new String(Files.readAllBytes(
+        Paths.get("src/main/resources/mappers/sale/SaleOutSheetMapper.xml")),
+        StandardCharsets.UTF_8);
+    int detailWhereStart = mapperXml.indexOf("<sql id=\"SaleOutSheetDetailWhere_sql\">");
+    int detailWhereEnd = mapperXml.indexOf("</sql>", detailWhereStart);
+    String detailWhereSql = mapperXml.substring(detailWhereStart, detailWhereEnd);
+
+    assertEquals(LocalDate.of(2026, 8, 1), vo.getPlanDateStart());
+    assertEquals(LocalDate.of(2026, 8, 31), vo.getPlanDateEnd());
+    assertTrue(detailWhereSql.contains("AND d.plan_date >= #{vo.planDateStart}"));
+    assertTrue(detailWhereSql.contains("AND d.plan_date <= #{vo.planDateEnd}"));
+  }
+
+  /**
+   * 验证单据查询按同一明细的计划日期范围过滤。
+   *
+   * @throws IOException 读取 Mapper 文件失败
+   */
+  @Test
+  void shouldFilterSheetByPlanDateRange() throws IOException {
+    String mapperXml = new String(Files.readAllBytes(
+        Paths.get("src/main/resources/mappers/sale/SaleOutSheetMapper.xml")),
+        StandardCharsets.UTF_8);
+    int queryStart = mapperXml.indexOf("<select id=\"query\"");
+    int queryEnd = mapperXml.indexOf("</select>", queryStart);
+    String querySql = mapperXml.substring(queryStart, queryEnd);
+
+    assertTrue(querySql.contains("vo.planDateStart != null or vo.planDateEnd != null"));
+    assertTrue(querySql.contains("FROM tbl_sale_out_sheet_detail AS sd"));
+    assertTrue(querySql.contains("AND sd.plan_date >= #{vo.planDateStart}"));
+    assertTrue(querySql.contains("AND sd.plan_date <= #{vo.planDateEnd}"));
   }
 }
