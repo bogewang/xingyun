@@ -31,6 +31,14 @@
                 />
               </j-form-item>
 
+              <j-form-item label="计划日期">
+                <a-range-picker
+                  v-model:value="planDateRange"
+                  value-format="YYYY-MM-DD"
+                  :placeholder="['开始日期', '结束日期']"
+                />
+              </j-form-item>
+
               <j-form-item label="商品名称">
                 <a-input v-model:value="searchFormData.productName" allow-clear />
               </j-form-item>
@@ -407,6 +415,7 @@
         },
         searchFormData: createDefaultSearchFormData(),
         orderDateRange: [],
+        planDateRange: [],
         approveDateRange: [],
         createByOptions: [],
         createByOptionMap: {},
@@ -429,6 +438,7 @@
           { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
           { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
+          { field: 'planDate', title: '计划日期', width: 120, sortable: true },
           {
             field: 'code',
             title: '单据号',
@@ -894,6 +904,7 @@
       resetSearchForm() {
         this.searchFormData = createDefaultSearchFormData();
         this.orderDateRange = this.getDefaultOrderDateRange();
+        this.planDateRange = [];
         this.approveDateRange = [];
         this.search();
       },
@@ -910,6 +921,8 @@
           createBy: this.searchFormData.createBy,
           orderDateStart: this.orderDateRange?.[0] || '',
           orderDateEnd: this.orderDateRange?.[1] || '',
+          planDateStart: this.planDateRange?.[0] || '',
+          planDateEnd: this.planDateRange?.[1] || '',
           approveBy: this.searchFormData.approveBy,
           approveStartTime: this.approveDateRange?.[0]
             ? `${this.approveDateRange[0]} 00:00:00`

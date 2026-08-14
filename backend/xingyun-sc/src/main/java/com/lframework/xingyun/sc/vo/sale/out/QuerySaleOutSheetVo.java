@@ -96,6 +96,18 @@ public class QuerySaleOutSheetVo extends SortPageVo {
   private LocalDate orderDateEnd;
 
   /**
+   * 计划起始日期
+   */
+  @ApiModelProperty("计划起始日期")
+  private LocalDate planDateStart;
+
+  /**
+   * 计划截止日期
+   */
+  @ApiModelProperty("计划截止日期")
+  private LocalDate planDateEnd;
+
+  /**
    * 审核人ID
    */
   @ApiModelProperty("审核人ID")

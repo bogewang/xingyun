@@ -30,6 +30,9 @@ public class QuerySaleOutSheetDetailBo extends BaseBo<QuerySaleOutSheetDetailDto
   @ApiModelProperty("订单日期")
   private String orderDate;
 
+  @ApiModelProperty("计划日期")
+  private String planDate;
+
   @ApiModelProperty("销售订单ID")
   private String saleOrderId;
 

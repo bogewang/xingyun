@@ -302,6 +302,14 @@
                     AND s.order_date <= #{vo.orderDateEnd}
                     ]]>
                 </if>
+                <if test="vo.planDateStart != null">
+                    AND d.plan_date >= #{vo.planDateStart}
+                </if>
+                <if test="vo.planDateEnd != null">
+                    <![CDATA[
+                    AND d.plan_date <= #{vo.planDateEnd}
+                    ]]>
+                </if>
                 <if test="vo.approveStartTime != null">
                     AND s.approve_time >= #{vo.approveStartTime}
                 </if>
@@ -417,6 +425,21 @@
                     <![CDATA[
                     AND s.order_date <= #{vo.orderDateEnd}
                     ]]>
+                </if>
+                <if test="vo.planDateStart != null or vo.planDateEnd != null">
+                    AND EXISTS (
+                        SELECT 1
+                        FROM tbl_sale_out_sheet_detail AS sd
+                        WHERE sd.sheet_id = s.id
+                        <if test="vo.planDateStart != null">
+                            AND sd.plan_date >= #{vo.planDateStart}
+                        </if>
+                        <if test="vo.planDateEnd != null">
+                            <![CDATA[
+                            AND sd.plan_date <= #{vo.planDateEnd}
+                            ]]>
+                        </if>
+                    )
                 </if>
                 <if test="vo.approveStartTime != null">
                     AND s.approve_time >= #{vo.approveStartTime}
