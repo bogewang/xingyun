@@ -194,7 +194,7 @@
                 >买菜汇总2</a-button
               >
               <a-button
-                v-permission="['report:sale-profit:query']"
+                v-permission="['report:sale-profit:approve']"
                 :icon="h(SyncOutlined)"
                 @click="openCostRecalculate"
                 >重算成本</a-button
