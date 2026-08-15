@@ -1009,7 +1009,7 @@
     <select id="queryDetail" resultType="com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto">
         <include refid="SaleOutSheetDetailDto_sql"/>
         <include refid="SaleOutSheetDetailWhere_sql"/>
-        ORDER BY s.order_date DESC, s.code DESC, d.order_no ASC
+        ORDER BY s.order_date DESC, s.code DESC, s.id ASC, d.order_no ASC
     </select>
     <select id="queryPriceCheckDetail" resultType="com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto">
         <include refid="SaleOutSheetDetailDto_sql"/>

@@ -140,8 +140,8 @@ importers:
         specifier: ^3.9.4
         version: 3.10.5
       vg-print:
-        specifier: ^1.1.318
-        version: 1.1.318(axios@1.7.4)(socket.io-client@4.8.3)(vue@3.4.38(typescript@5.5.4))
+        specifier: ^1.1.323
+        version: 1.1.401(axios@1.7.4)(socket.io-client@4.8.3)(vue@3.4.38(typescript@5.5.4))
       vue:
         specifier: ^3.3.4
         version: 3.4.38(typescript@5.5.4)
@@ -5339,10 +5339,6 @@ packages:
   print-js@1.6.0:
     resolution: {integrity: sha512-BfnOIzSKbqGRtO4o0rnj/K3681BSd2QUrsIZy/+WdCIugjIswjmx3lDEZpXB2ruGf9d4b3YNINri81+J0FsBWg==}
 
-  prismjs@1.30.0:
-    resolution: {integrity: sha512-DEvV2ZF2r2/63V+tK8hQvrR2ZGn10srHbXviTlcv7Kpzw8jWiNTqbVgjO3IY8RxrrOUF8VPMQQFysYYYv0YZxw==}
-    engines: {node: '>=6'}
-
   process-nextick-args@2.0.1:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
 
@@ -6473,16 +6469,19 @@ packages:
   vditor@3.10.5:
     resolution: {integrity: sha512-TEhuErdRCdtpeNntbU+SA0/aGuUSEVBbPkNkH0oov2ZKyis20PqtG+az2EmIomCefKlCXcpcKMM/jglv3fKkig==}
 
-  vg-print@1.1.318:
-    resolution: {integrity: sha512-36gH4GnKtw5Yj0gGU/GVm8GkHU6vjVVfbkmhF86+3R2Z7z2nwMIF+sx74YzMxHPsahQW6yfRibA+nrtSVoBLDg==}
+  vg-print@1.1.401:
+    resolution: {integrity: sha512-/4T0kaV7eqNWua5tqU5U0UJABd+o4KBRuTXb1rW/yWKN6NTmkXhtci9dvxJ94qA806KQaJjNLla9Av9IhC9dnQ==}
     engines: {node: '>=18.18.0'}
     peerDependencies:
       '@vg-print/plugin-bwip-js': ^0.1.2
+      '@vg-print/plugin-code-editor': ^0.1.9
       axios: '>=1.0.0 <2'
       socket.io-client: '>=4.0.0 <5'
       vue: '>=3.2.0 <4'
     peerDependenciesMeta:
       '@vg-print/plugin-bwip-js':
+        optional: true
+      '@vg-print/plugin-code-editor':
         optional: true
       axios:
         optional: true
@@ -6627,12 +6626,6 @@ packages:
   vue-ls@4.2.0:
     resolution: {integrity: sha512-aEQvaFzIH6A0u0in4ghsxiqMgXNxf2+mtgOW8BaiLM6f3gTfvJMjZBjSrycDgdde7P5VfXOqLFGk4+Tf0Mre6Q==}
     engines: {node: '>=6.11.5'}
-
-  vue-prism-editor@2.0.0-alpha.2:
-    resolution: {integrity: sha512-Gu42ba9nosrE+gJpnAEuEkDMqG9zSUysIR8SdXUw8MQKDjBnnNR9lHC18uOr/ICz7yrA/5c7jHJr9lpElODC7w==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      vue: ^3.0.0
 
   vue-router@4.0.14:
     resolution: {integrity: sha512-wAO6zF9zxA3u+7AkMPqw9LjoUCjSxfFvINQj3E/DceTt6uEz1XZLraDhdg2EYmvVwTBSGlLYsUw8bDmx0754Mw==}
@@ -7328,7 +7321,7 @@ snapshots:
       '@types/node': 20.5.1
       chalk: 4.1.2
       cosmiconfig: 8.3.6(typescript@5.5.4)
-      cosmiconfig-typescript-loader: 4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@5.5.4))(ts-node@10.9.2(@types/node@20.16.1)(typescript@5.5.4))(typescript@5.5.4)
+      cosmiconfig-typescript-loader: 4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@5.5.4))(ts-node@10.9.2(@types/node@20.5.1)(typescript@5.5.4))(typescript@5.5.4)
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       lodash.uniq: 4.5.0
@@ -9408,7 +9401,7 @@ snapshots:
       object-assign: 4.1.1
       vary: 1.1.2
 
-  cosmiconfig-typescript-loader@4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@5.5.4))(ts-node@10.9.2(@types/node@20.16.1)(typescript@5.5.4))(typescript@5.5.4):
+  cosmiconfig-typescript-loader@4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@5.5.4))(ts-node@10.9.2(@types/node@20.5.1)(typescript@5.5.4))(typescript@5.5.4):
     dependencies:
       '@types/node': 20.5.1
       cosmiconfig: 8.3.6(typescript@5.5.4)
@@ -12529,8 +12522,6 @@ snapshots:
 
   print-js@1.6.0: {}
 
-  prismjs@1.30.0: {}
-
   process-nextick-args@2.0.1: {}
 
   prompts@2.4.2:
@@ -13774,7 +13765,7 @@ snapshots:
     dependencies:
       diff-match-patch: 1.0.5
 
-  vg-print@1.1.318(axios@1.7.4)(socket.io-client@4.8.3)(vue@3.4.38(typescript@5.5.4)):
+  vg-print@1.1.401(axios@1.7.4)(socket.io-client@4.8.3)(vue@3.4.38(typescript@5.5.4)):
     dependencies:
       '@claviska/jquery-minicolors': 2.3.6(jquery@3.7.1)
       '@wtto00/html2canvas': 1.4.3
@@ -13782,13 +13773,10 @@ snapshots:
       canvg: 3.0.11
       jquery: 3.7.1
       jsbarcode: 3.12.3
-      json5: 2.2.3
       jspdf: 2.5.2
       nzh: 1.0.14
-      prismjs: 1.30.0
       vue: 3.4.38(typescript@5.5.4)
       vue-ls: 4.2.0
-      vue-prism-editor: 2.0.0-alpha.2(vue@3.4.38(typescript@5.5.4))
     optionalDependencies:
       axios: 1.7.4
       socket.io-client: 4.8.3
@@ -13974,10 +13962,6 @@ snapshots:
   vue-ls@4.2.0:
     dependencies:
       opencollective-postinstall: 2.0.3
-
-  vue-prism-editor@2.0.0-alpha.2(vue@3.4.38(typescript@5.5.4)):
-    dependencies:
-      vue: 3.4.38(typescript@5.5.4)
 
   vue-router@4.0.14(vue@3.4.38(typescript@5.5.4)):
     dependencies:
