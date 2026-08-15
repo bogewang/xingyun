@@ -176,6 +176,12 @@
                 >导出</a-button
               >
               <a-button
+                v-permission="['sale:out:export']"
+                :icon="h(DownloadOutlined)"
+                @click="batchExportDetails"
+                >批量导出明细</a-button
+              >
+              <a-button
                 v-permission="['wenshan:sale:out:saleexport']"
                 :icon="h(DownloadOutlined)"
                 @click="exportSales"
@@ -191,7 +197,7 @@
                 v-permission="['sale:out:query']"
                 :icon="h(DownloadOutlined)"
                 @click="marketBuySummary2"
-                >买菜汇总2</a-button
+                >买菜汇总-按客户</a-button
               >
               <a-button
                 v-permission="['report:sale-profit:approve']"
@@ -218,7 +224,7 @@
                 >同步询价到销售表</a-button
               >
               <a-button
-                v-permission="['sale:out:modify']"
+                v-permission="['sale:out:approve']"
                 :icon="h(MergeCellsOutlined)"
                 @click="mergeOrders"
               >合并订单</a-button
@@ -1160,6 +1166,28 @@
         this.loading = true;
         api
           .exportList(this.buildQueryParams({}))
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
+      /**
+       * 批量导出选中销售出库单的明细。
+       */
+      batchExportDetails() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要导出明细的销售出库单！');
+          return;
+        }
+
+        this.loading = true;
+        api
+          .exportDetail({
+            idList: records.map((item) => item.id),
+          })
           .then(() => {
             createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
           })

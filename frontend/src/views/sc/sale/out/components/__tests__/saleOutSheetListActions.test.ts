@@ -19,4 +19,15 @@ describe('销售出库列表行操作', () => {
     expect(moreActions).toMatch(/label:\s*'修改备注'/);
     expect(moreActions).toMatch(/label:\s*'删除'/);
   });
+
+  it('支持批量导出选中单据的明细', () => {
+    const source = readFileSync(new URL('../sheet-list.vue', import.meta.url), 'utf-8');
+
+    expect(source).toContain('@click="batchExportDetails"');
+    expect(source).toMatch(/>批量导出明细<\/a-button\s*>/);
+    expect(source).toMatch(/batchExportDetails\(\)\s*\{[\s\S]*?getCheckboxRecords\(\)/);
+    expect(source).toMatch(
+      /batchExportDetails\(\)\s*\{[\s\S]*?exportDetail\(\{[\s\S]*?idList:\s*records\.map\(\(item\)\s*=>\s*item\.id\)/,
+    );
+  });
 });
