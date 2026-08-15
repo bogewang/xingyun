@@ -267,6 +267,9 @@
                 <if test="vo.productName != null and vo.productName != ''">
                     AND g.name LIKE CONCAT('%', #{vo.productName}, '%')
                 </if>
+                <if test="vo.description != null and vo.description != ''">
+                    AND d.description LIKE CONCAT('%', #{vo.description}, '%')
+                </if>
                 <if test="vo.categoryIdList != null and vo.categoryIdList.size() > 0">
                     AND g.category_id IN <foreach collection="vo.categoryIdList" open="(" separator="," close=")" item="item">#{item}</foreach>
                 </if>

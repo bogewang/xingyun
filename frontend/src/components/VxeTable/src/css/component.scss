@@ -21,6 +21,16 @@
   }
 }
 
+// 分页栏左侧展示当前已勾选的记录数。
+.vxe-pager--selection-count {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  color: var(--vxe-ui-font-color);
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+
 .vxe-table--filter-antd-wrapper {
   & > .ant-input,
   & > .ant-input-number,
