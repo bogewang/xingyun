@@ -10,6 +10,7 @@ export interface PrintTemplateOption {
 export interface PrintDialogPayload {
   templateJson: PrintTemplateJson;
   printData: unknown;
+  resetPageNumberPerData?: boolean;
   title?: string;
   bizType?: string;
   templateId?: string;
@@ -21,6 +22,7 @@ export interface PrintDialogState {
   open: boolean;
   templateJson: PrintTemplateJson;
   printData: unknown;
+  resetPageNumberPerData: boolean;
   title: string;
   bizType: string;
   templateId: string;
@@ -33,6 +35,7 @@ const state = reactive<PrintDialogState>({
   open: false,
   templateJson: {},
   printData: [],
+  resetPageNumberPerData: false,
   title: '',
   bizType: '',
   templateId: '',
@@ -50,6 +53,7 @@ const state = reactive<PrintDialogState>({
 export function openPrintDialog(payload: PrintDialogPayload) {
   state.templateJson = payload.templateJson || {};
   state.printData = payload.printData ?? [];
+  state.resetPageNumberPerData = payload.resetPageNumberPerData === true;
   state.title = payload.title || '';
   state.bizType = payload.bizType || '';
   state.templateId = payload.templateId || '';

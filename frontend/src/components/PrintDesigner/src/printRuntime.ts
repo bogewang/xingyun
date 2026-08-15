@@ -7,7 +7,12 @@ export interface PrintRuntimePreviewOptions
   extends Partial<
     Pick<
       PrintDialogPayload,
-      'title' | 'bizType' | 'templateId' | 'templateList' | 'enableTemplateSwitch'
+      | 'title'
+      | 'bizType'
+      | 'templateId'
+      | 'templateList'
+      | 'enableTemplateSwitch'
+      | 'resetPageNumberPerData'
     >
   > {}
 
@@ -29,6 +34,7 @@ function preview(templateJson: unknown, data: unknown, options: PrintRuntimePrev
     templateId: options.templateId,
     templateList: options.templateList || [],
     enableTemplateSwitch: options.enableTemplateSwitch === true,
+    resetPageNumberPerData: options.resetPageNumberPerData === true,
     templateJson: normalizeTemplate(templateJson),
     printData: normalizePrintData(data),
   });

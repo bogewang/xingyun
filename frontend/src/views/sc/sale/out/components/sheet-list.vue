@@ -1163,7 +1163,9 @@
           const printDatas = await Promise.all(
             records.map(async (record) => this.buildPrintData(await api.print(record.id))),
           );
-          await this.vgPrintPreview(PRINT_TYPE.SALE_OUT.code, printDatas);
+          await this.vgPrintPreview(PRINT_TYPE.SALE_OUT.code, printDatas, {
+            resetPageNumberPerData: true,
+          });
         } finally {
           this.loading = false;
         }
