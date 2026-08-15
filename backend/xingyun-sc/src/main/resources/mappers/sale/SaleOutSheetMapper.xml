@@ -503,6 +503,15 @@
                     <otherwise>DESC</otherwise>
                 </choose>,
             </when>
+            <when test="vo != null and vo.sortField == 'customerDescription'">
+                cu.description
+                <choose>
+                    <when test="vo.sortOrder == 'asc'">ASC</when>
+                    <otherwise>DESC</otherwise>
+                </choose>,
+                s.order_date ASC,
+                cu.name ASC,
+            </when>
             <when test="vo != null and vo.sortField == 'confirmAmt'">
                 s.confirm_amt
                 <choose>

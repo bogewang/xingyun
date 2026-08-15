@@ -30,6 +30,11 @@ export interface QuerySaleOutSheetBo {
   customerName: string;
 
   /**
+   * 客户备注
+   */
+  customerDescription: string;
+
+  /**
    * 销售员姓名
    */
   salerName: string;

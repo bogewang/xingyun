@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 class SaleOutSheetSortSqlTest {
 
-  /** 验证销售出库列表仅允许按客户名称和验收金额动态排序。 */
+  /** 验证销售出库列表允许按客户字段和验收金额动态排序。 */
   @Test
   void shouldSupportWhitelistedCustomerNameAndConfirmAmountSort() throws IOException {
     String mapperXml = readMapperXml();
@@ -19,6 +19,11 @@ class SaleOutSheetSortSqlTest {
     assertTrue(mapperXml.contains("LEFT JOIN base_data_customer AS cu ON cu.id = s.customer_id"));
     assertTrue(querySql.contains("vo.sortField == 'customerName'"));
     assertTrue(querySql.contains("cu.name"));
+    assertTrue(querySql.contains("vo.sortField == 'customerDescription'"));
+    String customerDescriptionSortSql = getCustomerDescriptionSortSql(querySql);
+    assertTrue(customerDescriptionSortSql.contains("cu.description"));
+    assertTrue(customerDescriptionSortSql.contains("s.order_date DESC"));
+    assertTrue(customerDescriptionSortSql.contains("cu.name ASC"));
     assertTrue(querySql.contains("vo.sortField == 'confirmAmt'"));
     assertTrue(querySql.contains("s.confirm_amt"));
     assertTrue(querySql.contains("vo.sortOrder == 'asc'"));
@@ -36,5 +41,13 @@ class SaleOutSheetSortSqlTest {
     int queryStart = mapperXml.indexOf("<select id=\"query\"");
     int queryEnd = mapperXml.indexOf("</select>", queryStart);
     return mapperXml.substring(queryStart, queryEnd);
+  }
+
+  /** 提取客户备注排序分支 SQL。 */
+  private String getCustomerDescriptionSortSql(String querySql) {
+    int customerDescriptionSortStart = querySql.indexOf("vo.sortField == 'customerDescription'");
+    int confirmAmountSortStart = querySql.indexOf("vo.sortField == 'confirmAmt'",
+        customerDescriptionSortStart);
+    return querySql.substring(customerDescriptionSortStart, confirmAmountSortStart);
   }
 }
