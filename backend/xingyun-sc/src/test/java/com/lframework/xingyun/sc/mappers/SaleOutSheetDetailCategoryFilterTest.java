@@ -47,6 +47,28 @@ class SaleOutSheetDetailCategoryFilterTest {
   }
 
   /**
+   * 验证明细查询可按明细备注过滤。
+   *
+   * @throws IOException 读取 Mapper 文件失败
+   */
+  @Test
+  void shouldFilterDetailByDescription() throws IOException {
+    QuerySaleOutSheetVo vo = new QuerySaleOutSheetVo();
+    vo.setDescription("加急");
+
+    String mapperXml = new String(Files.readAllBytes(
+        Paths.get("src/main/resources/mappers/sale/SaleOutSheetMapper.xml")),
+        StandardCharsets.UTF_8);
+    int detailWhereStart = mapperXml.indexOf("<sql id=\"SaleOutSheetDetailWhere_sql\">");
+    int detailWhereEnd = mapperXml.indexOf("</sql>", detailWhereStart);
+    String detailWhereSql = mapperXml.substring(detailWhereStart, detailWhereEnd);
+
+    assertEquals("加急", vo.getDescription());
+    assertTrue(detailWhereSql.contains("vo.description != null and vo.description != ''"));
+    assertTrue(detailWhereSql.contains("AND d.description LIKE CONCAT('%', #{vo.description}, '%')"));
+  }
+
+  /**
    * 验证明细查询可按计划日期范围过滤。
    *
    * @throws IOException 读取 Mapper 文件失败

@@ -42,6 +42,9 @@
               <j-form-item label="商品名称">
                 <a-input v-model:value="searchFormData.productName" allow-clear />
               </j-form-item>
+              <j-form-item label="备注">
+                <a-input v-model:value="searchFormData.description" allow-clear />
+              </j-form-item>
               <j-form-item label="客户">
                 <customer-selector
                   v-model:value="searchFormData.customerIdList"
@@ -349,6 +352,7 @@
   const createDefaultSearchFormData = () => ({
     code: '',
     productName: '',
+    description: '',
     categoryIdList: [],
     scId: '',
     customerIdList: [],

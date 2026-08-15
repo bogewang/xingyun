@@ -602,6 +602,7 @@
             slots: { default: 'code_default' },
           },
           { field: 'customerName', title: '客户名称', width: 120, sortable: true },
+          { field: 'customerDescription', title: '客户备注', width: 200, sortable: true },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
           {
             field: 'confirmAmt',
