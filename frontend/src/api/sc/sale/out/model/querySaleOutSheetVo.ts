@@ -12,6 +12,11 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
   productName: string;
 
   /**
+   * 明细备注
+   */
+  description: string;
+
+  /**
    * 商品ID
    */
   productId: string;
@@ -55,6 +60,16 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
    * 订单截止日期
    */
   orderDateEnd: string;
+
+  /**
+   * 计划起始日期
+   */
+  planDateStart: string;
+
+  /**
+   * 计划截止日期
+   */
+  planDateEnd: string;
 
   /**
    * 审核人ID

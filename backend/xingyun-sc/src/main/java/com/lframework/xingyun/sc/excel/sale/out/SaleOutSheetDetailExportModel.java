@@ -20,6 +20,12 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
     @ExcelProperty("订单日期")
     private String orderDate;
 
+    /**
+     * 计划日期。
+     */
+    @ExcelProperty("计划日期")
+    private String planDate;
+
     @ExcelProperty("客户")
     private String customerName;
 
@@ -51,6 +57,12 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
 
     @ExcelProperty("备注")
     private String description;
+
+    /**
+     * 商品备注。
+     */
+    @ExcelProperty("商品备注")
+    private String productRemark;
 
     /**
      * 商品备注二。
@@ -109,10 +121,12 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
 
         // 补齐订单日期和客户名称
         this.setOrderDate(dto.getOrderDate().replace("-", ""));
+        this.setPlanDate(dto.getPlanDate());
         this.setCustomerName(dto.getCustomerName());
 
         this.setProductCode(dto.getProductCode());
         this.setProductName(dto.getProductName());
+        this.setProductRemark(dto.getProductRemark());
         this.setProductRemark2(dto.getProductRemark2());
         // this.setShortName(dto.gets);
         this.setSpec(dto.getSpec());

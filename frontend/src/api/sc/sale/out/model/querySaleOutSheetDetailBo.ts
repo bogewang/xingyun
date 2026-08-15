@@ -5,12 +5,16 @@ export interface QuerySaleOutSheetDetailBo {
   customerCode: string;
   customerName: string;
   orderDate: string;
+  /** 计划日期 */
+  planDate: string;
   saleOrderId: string;
   saleOrderCode: string;
   detailId: string;
   productId: string;
   productCode: string;
   productName: string;
+  /** 商品备注 */
+  productRemark: string;
   /** 是否询价商品 */
   inquiryProduct: boolean | null;
   skuCode: string;

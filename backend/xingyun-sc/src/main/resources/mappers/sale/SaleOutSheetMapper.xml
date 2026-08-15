@@ -84,6 +84,7 @@
             <result column="detail_cost_price" property="costPrice"/>
             <result column="detail_manual_input_cost" property="manualInputCost"/>
             <result column="detail_total_profit" property="totalProfit"/>
+            <result column="detail_plan_date" property="planDate"/>
             <result column="category_name" property="categoryName"/>
         </collection>
     </resultMap>
@@ -140,6 +141,7 @@
             s.settle_version
         FROM tbl_sale_out_sheet AS s
         LEFT JOIN tbl_sale_order AS o ON o.id = s.sale_order_id
+        LEFT JOIN base_data_customer AS cu ON cu.id = s.customer_id
     </sql>
 
     <sql id="SaleOutSheetFullDto_sql">
@@ -195,6 +197,7 @@
             d.cost_price AS detail_cost_price,
             d.manual_input_cost AS detail_manual_input_cost,
             d.total_profit AS detail_total_profit,
+            d.plan_date AS detail_plan_date,
             c.name AS category_name
         FROM tbl_sale_out_sheet AS s
         LEFT JOIN tbl_sale_out_sheet_detail AS d ON d.sheet_id = s.id
@@ -211,12 +214,14 @@
             cu.code AS customer_code,
             cu.name AS customer_name,
             s.order_date,
+            d.plan_date,
             s.sale_order_id,
             o.code AS sale_order_code,
             d.id AS detail_id,
             d.product_id,
             g.code AS product_code,
             g.name AS product_name,
+            g.remark AS product_remark,
             g.remark2 AS product_remark2,
             g.inquiry_product AS inquiry_product,
             g.sku_code,
@@ -262,6 +267,9 @@
                 <if test="vo.productName != null and vo.productName != ''">
                     AND g.name LIKE CONCAT('%', #{vo.productName}, '%')
                 </if>
+                <if test="vo.description != null and vo.description != ''">
+                    AND d.description LIKE CONCAT('%', #{vo.description}, '%')
+                </if>
                 <if test="vo.categoryIdList != null and vo.categoryIdList.size() > 0">
                     AND g.category_id IN <foreach collection="vo.categoryIdList" open="(" separator="," close=")" item="item">#{item}</foreach>
                 </if>
@@ -295,6 +303,14 @@
                 <if test="vo.orderDateEnd != null">
                     <![CDATA[
                     AND s.order_date <= #{vo.orderDateEnd}
+                    ]]>
+                </if>
+                <if test="vo.planDateStart != null">
+                    AND d.plan_date >= #{vo.planDateStart}
+                </if>
+                <if test="vo.planDateEnd != null">
+                    <![CDATA[
+                    AND d.plan_date <= #{vo.planDateEnd}
                     ]]>
                 </if>
                 <if test="vo.approveStartTime != null">
@@ -413,6 +429,21 @@
                     AND s.order_date <= #{vo.orderDateEnd}
                     ]]>
                 </if>
+                <if test="vo.planDateStart != null or vo.planDateEnd != null">
+                    AND EXISTS (
+                        SELECT 1
+                        FROM tbl_sale_out_sheet_detail AS sd
+                        WHERE sd.sheet_id = s.id
+                        <if test="vo.planDateStart != null">
+                            AND sd.plan_date >= #{vo.planDateStart}
+                        </if>
+                        <if test="vo.planDateEnd != null">
+                            <![CDATA[
+                            AND sd.plan_date <= #{vo.planDateEnd}
+                            ]]>
+                        </if>
+                    )
+                </if>
                 <if test="vo.approveStartTime != null">
                     AND s.approve_time >= #{vo.approveStartTime}
                 </if>
@@ -466,7 +497,33 @@
                 </if>
             </if>
         </where>
-        ORDER BY s.create_time desc, s.order_date DESC, s.id DESC
+        ORDER BY
+        <choose>
+            <when test="vo != null and vo.sortField == 'customerName'">
+                cu.name
+                <choose>
+                    <when test="vo.sortOrder == 'asc'">ASC</when>
+                    <otherwise>DESC</otherwise>
+                </choose>,
+            </when>
+            <when test="vo != null and vo.sortField == 'customerDescription'">
+                cu.description
+                <choose>
+                    <when test="vo.sortOrder == 'asc'">ASC</when>
+                    <otherwise>DESC</otherwise>
+                </choose>,
+                s.order_date ASC,
+                cu.name ASC,
+            </when>
+            <when test="vo != null and vo.sortField == 'confirmAmt'">
+                s.confirm_amt
+                <choose>
+                    <when test="vo.sortOrder == 'asc'">ASC</when>
+                    <otherwise>DESC</otherwise>
+                </choose>,
+            </when>
+        </choose>
+        s.create_time DESC, s.order_date DESC, s.id DESC
     </select>
     <select id="queryProfitSummary" resultType="com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo">
         SELECT
@@ -952,7 +1009,7 @@
     <select id="queryDetail" resultType="com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto">
         <include refid="SaleOutSheetDetailDto_sql"/>
         <include refid="SaleOutSheetDetailWhere_sql"/>
-        ORDER BY s.order_date DESC, g.name ASC, s.code DESC, d.order_no ASC
+        ORDER BY s.order_date DESC, s.code DESC, d.order_no ASC
     </select>
     <select id="queryPriceCheckDetail" resultType="com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto">
         <include refid="SaleOutSheetDetailDto_sql"/>
@@ -1184,6 +1241,7 @@
     <select id="getDetail" resultMap="SaleOutSheetFullDto">
         <include refid="SaleOutSheetFullDto_sql"/>
         WHERE s.id = #{id}
+        ORDER BY d.order_no ASC
     </select>
     <select id="getWithReturn" resultMap="SaleOutSheetWithReturnDto">
         SELECT

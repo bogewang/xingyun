@@ -55,6 +55,12 @@
               @click="$refs.importer.openDialog()"
               >导入Excel</a-button
             >
+            <a-button
+              v-permission="['base-data:customer:import']"
+              :icon="h(DownloadOutlined)"
+              @click="exportList"
+              >导出</a-button
+            >
             <a-dropdown>
               <template #overlay>
                 <a-menu @click="handleCommand">
@@ -113,6 +119,7 @@
     DeleteOutlined,
     DownOutlined,
     CloudUploadOutlined,
+    DownloadOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/base-data/customer';
   import { isEmpty, buildSortPageVo } from '@/utils/utils';
@@ -140,6 +147,7 @@
         CheckOutlined,
         DeleteOutlined,
         CloudUploadOutlined,
+        DownloadOutlined,
       };
     },
     data() {
@@ -221,6 +229,18 @@
       },
       doBatchDelete(row) {
         return api.deleteById(row.id);
+      },
+      // 创建导出任务
+      exportList() {
+        this.loading = true;
+        api
+          .exportList(this.buildQueryParams({}))
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
       },
       deleteRow(id) {
         createConfirm('是否确定删除该客户？').then(() => {

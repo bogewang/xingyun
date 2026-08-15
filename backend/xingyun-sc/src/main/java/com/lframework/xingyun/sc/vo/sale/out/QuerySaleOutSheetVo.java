@@ -30,6 +30,12 @@ public class QuerySaleOutSheetVo extends SortPageVo {
   private String productName;
 
   /**
+   * 明细备注
+   */
+  @ApiModelProperty("明细备注")
+  private String description;
+
+  /**
    * 商品ID
    */
   @ApiModelProperty("商品ID")
@@ -46,6 +52,12 @@ public class QuerySaleOutSheetVo extends SortPageVo {
    */
   @ApiModelProperty("单据ID列表")
   private List<String> idList;
+
+  /**
+   * 销售出库明细ID列表。
+   */
+  @ApiModelProperty("销售出库明细ID列表")
+  private List<String> detailIdList;
 
   /**
    * 买菜汇总是否按日期汇总
@@ -88,6 +100,18 @@ public class QuerySaleOutSheetVo extends SortPageVo {
    */
   @ApiModelProperty("订单截止日期")
   private LocalDate orderDateEnd;
+
+  /**
+   * 计划起始日期
+   */
+  @ApiModelProperty("计划起始日期")
+  private LocalDate planDateStart;
+
+  /**
+   * 计划截止日期
+   */
+  @ApiModelProperty("计划截止日期")
+  private LocalDate planDateEnd;
 
   /**
    * 审核人ID

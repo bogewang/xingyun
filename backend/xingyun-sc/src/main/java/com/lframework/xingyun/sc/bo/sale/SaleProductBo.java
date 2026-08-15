@@ -138,6 +138,12 @@ public class SaleProductBo extends BaseBo<SaleProductDto> {
     private Boolean inquiryProduct;
 
     /**
+     * 备注
+     */
+    @ApiModelProperty("备注")
+    private String remark;
+
+    /**
      * 仓库ID
      */
     @ApiModelProperty(value = "仓库ID", hidden = true)

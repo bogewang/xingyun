@@ -159,6 +159,11 @@ export interface OrderDetailBo {
   productName: string;
 
   /**
+   * 商品备注
+   */
+  productRemark: string;
+
+  /**
    * 是否询价商品
    */
   inquiryProduct: boolean | null;

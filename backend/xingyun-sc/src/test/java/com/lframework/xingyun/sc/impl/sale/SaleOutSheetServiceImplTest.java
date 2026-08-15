@@ -1,9 +1,17 @@
 package com.lframework.xingyun.sc.impl.sale;
 
+import com.lframework.starter.common.exceptions.impl.DefaultClientException;
+import com.lframework.xingyun.sc.entity.SaleOutSheet;
+import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
+import com.lframework.xingyun.sc.enums.SaleOutSheetStatus;
+import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
-import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
+import com.lframework.xingyun.sc.vo.sale.out.SaleOutProductVo;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -113,6 +121,83 @@ class SaleOutSheetServiceImplTest {
     Assert.assertEquals(SaleOutSheetServiceImpl.resolveCostNum(detail), BigDecimal.ZERO);
   }
 
+  /**
+   * 验证合并单据ID会去除空值并去重。
+   */
+  @Test
+  void normalizeMergeSheetIdsShouldRemoveBlankAndDuplicateIds() {
+    List<String> ids = SaleOutSheetServiceImpl.normalizeMergeSheetIds(
+        Arrays.asList("sale-1", "", "sale-2", "sale-1", null));
+
+    Assert.assertEquals(ids, Arrays.asList("sale-1", "sale-2"));
+  }
+
+  /**
+   * 验证合并单据至少需要两张有效单据。
+   */
+  @Test(expectedExceptions = DefaultClientException.class)
+  void normalizeMergeSheetIdsShouldRejectLessThanTwoIds() {
+    SaleOutSheetServiceImpl.normalizeMergeSheetIds(Arrays.asList("sale-1", "", "sale-1"));
+  }
+
+  /**
+   * 验证合并时保留创建时间最早的单据。
+   */
+  @Test
+  void sortMergeSheetsShouldPutEarliestCreateTimeFirst() {
+    SaleOutSheet lateSheet = createSheet("sale-2", "SO-002",
+        LocalDateTime.of(2026, 8, 12, 10, 0));
+    SaleOutSheet earlySheet = createSheet("sale-1", "SO-001",
+        LocalDateTime.of(2026, 8, 12, 9, 0));
+
+    List<SaleOutSheet> sheets = Arrays.asList(lateSheet, earlySheet);
+
+    SaleOutSheetServiceImpl.sortMergeSheets(sheets);
+
+    Assert.assertEquals(sheets.get(0).getId(), "sale-1");
+  }
+
+  /**
+   * 验证合并销售出库单不再限制订单日期一致。
+   */
+  @Test
+  void validateMergeSheetsShouldAllowDifferentOrderDates() {
+    SaleOutSheet target = createMergeSheet("sale-1", LocalDate.of(2026, 8, 12));
+    SaleOutSheet other = createMergeSheet("sale-2", LocalDate.of(2026, 8, 13));
+
+    new SaleOutSheetServiceImpl().validateMergeSheets(target, Arrays.asList(target, other));
+  }
+
+  /**
+   * 验证合并订单时明细计划日期使用原订单日期。
+   */
+  @Test
+  void toMergeProductVoShouldUseSourceOrderDateAsPlanDate() {
+    SaleOutSheetDetail detail = new SaleOutSheetDetail();
+    LocalDate orderDate = LocalDate.of(2026, 8, 13);
+
+    SaleOutProductVo product = SaleOutSheetServiceImpl.toMergeProductVo(detail, orderDate, 1);
+
+    Assert.assertEquals(product.getPlanDate(), orderDate);
+  }
+
+  /**
+   * 验证标签打印只保留用户勾选的销售明细。
+   */
+  @Test
+  void filterTagPrintDetailsShouldKeepSelectedDetailsOnly() {
+    SaleOutSheetDetail firstDetail = new SaleOutSheetDetail();
+    firstDetail.setId("detail-1");
+    SaleOutSheetDetail secondDetail = new SaleOutSheetDetail();
+    secondDetail.setId("detail-2");
+
+    List<SaleOutSheetDetail> details = SaleOutSheetServiceImpl.filterTagPrintDetails(
+        Arrays.asList(firstDetail, secondDetail), Arrays.asList("detail-2"));
+
+    Assert.assertEquals(details.size(), 1);
+    Assert.assertEquals(details.get(0).getId(), "detail-2");
+  }
+
   private SaleOutSheetImportModel createModel(BigDecimal orderNum, BigDecimal taxPrice,
       BigDecimal confirmNum) {
     SaleOutSheetImportModel model = new SaleOutSheetImportModel();
@@ -121,5 +206,33 @@ class SaleOutSheetServiceImplTest {
     model.setTaxPrice(taxPrice);
     model.setConfirmNum(confirmNum);
     return model;
+  }
+
+  private SaleOutSheet createSheet(String id, String code, LocalDateTime createTime) {
+    SaleOutSheet sheet = new SaleOutSheet();
+    sheet.setId(id);
+    sheet.setCode(code);
+    sheet.setCreateTime(createTime);
+    return sheet;
+  }
+
+  /**
+   * 创建用于合并校验的销售出库单。
+   *
+   * @param id 销售出库单ID
+   * @param orderDate 订单日期
+   * @return 销售出库单
+   */
+  private SaleOutSheet createMergeSheet(String id, LocalDate orderDate) {
+    SaleOutSheet sheet = new SaleOutSheet();
+    sheet.setId(id);
+    sheet.setCode(id);
+    sheet.setCustomerId("customer-1");
+    sheet.setScId("sc-1");
+    sheet.setSaleOrderId("order-1");
+    sheet.setOrderDate(orderDate);
+    sheet.setStatus(SaleOutSheetStatus.CREATED);
+    sheet.setSettleStatus(SettleStatus.UN_CHECK_BILL);
+    return sheet;
   }
 }

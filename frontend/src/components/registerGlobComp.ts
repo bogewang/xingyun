@@ -36,6 +36,43 @@ export async function registerGlobComp(app: App) {
 
   VxeUI.use(VxeUIPluginRenderAntd);
   VXETable.setup(componentSetting.vxeTable);
+
+  /** 刷新所有 VXE 表格分页栏中的当前页勾选条数。 */
+  const refreshVxePagerSelectionCount = () => {
+    document.querySelectorAll<HTMLElement>('.vxe-grid').forEach((gridElement) => {
+      const pagerElement = gridElement.querySelector<HTMLElement>('.vxe-pager');
+      if (!pagerElement) {
+        return;
+      }
+
+      const checkboxCells = gridElement.querySelectorAll(
+        '.vxe-table--body-wrapper .vxe-cell--checkbox',
+      );
+      const selectionCountElement = pagerElement.querySelector<HTMLElement>(
+        '.vxe-pager--selection-count',
+      );
+      if (!checkboxCells.length) {
+        selectionCountElement?.remove();
+        return;
+      }
+
+      const selectedCount = gridElement.querySelectorAll(
+        '.vxe-table--body-wrapper .vxe-cell--checkbox.is--checked',
+      ).length;
+      const countElement = selectionCountElement || document.createElement('span');
+      countElement.className = 'vxe-pager--selection-count';
+      countElement.textContent = `已勾选 ${selectedCount} 条`;
+      if (!selectionCountElement) {
+        pagerElement.prepend(countElement);
+      }
+    });
+  };
+
+  document.addEventListener('click', () => {
+    window.setTimeout(refreshVxePagerSelectionCount);
+  }, true);
+  window.setTimeout(refreshVxePagerSelectionCount, 500);
+  window.setTimeout(refreshVxePagerSelectionCount, 1500);
   VXETable.renderer.add('NotData', {
     renderEmpty(renderOpts) {
       const { attrs, props } = renderOpts;

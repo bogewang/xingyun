@@ -143,6 +143,14 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   void update(UpdateSaleOutSheetVo vo);
 
   /**
+   * 合并销售出库单
+   *
+   * @param vo 合并参数
+   * @return 合并后保留的销售出库单ID
+   */
+  String merge(MergeSaleOutSheetVo vo);
+
+  /**
    * 修改备注
    *
    * @param vo

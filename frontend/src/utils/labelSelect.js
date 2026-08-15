@@ -5,7 +5,7 @@ import * as userApi from '@/api/system/user';
 export async function requestLabelSelectOptions(selectorApi, keyword = '', extraParams = {}) {
   const response = await selectorApi({
     pageIndex: 1,
-    pageSize: 20,
+    pageSize: 50,
     label: keyword,
     ...extraParams,
   });

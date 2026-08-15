@@ -31,8 +31,19 @@
                 />
               </j-form-item>
 
+              <j-form-item label="计划日期">
+                <a-range-picker
+                  v-model:value="planDateRange"
+                  value-format="YYYY-MM-DD"
+                  :placeholder="['开始日期', '结束日期']"
+                />
+              </j-form-item>
+
               <j-form-item label="商品名称">
                 <a-input v-model:value="searchFormData.productName" allow-clear />
+              </j-form-item>
+              <j-form-item label="备注">
+                <a-input v-model:value="searchFormData.description" allow-clear />
               </j-form-item>
               <j-form-item label="客户">
                 <customer-selector
@@ -111,6 +122,13 @@
           <a-space>
             <a-button @click="resetSearchForm">清空</a-button>
             <a-button type="primary" :icon="h(SearchOutlined)" @click="search">查询</a-button>
+            <a-button
+              v-permission="['sale:out:query']"
+              :icon="h(PrinterOutlined)"
+              @click="tagPrint"
+            >
+              标签打印
+            </a-button>
             <a-button
               v-if="showPriceUniqueCheck"
               :icon="h(EditOutlined)"
@@ -301,12 +319,18 @@
 <script>
   import { defineComponent, h } from 'vue';
   import moment from 'moment';
-  import { DownloadOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons-vue';
+  import {
+    DownloadOutlined,
+    EditOutlined,
+    PrinterOutlined,
+    SearchOutlined,
+  } from '@ant-design/icons-vue';
   import Detail from '../detail.vue';
   import SaleOrderDetail from '@/views/sc/sale/order/detail.vue';
   import * as api from '@/api/sc/sale/out';
   import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { printMix } from '@/mixins/print.ts';
   import { buildSortPageVo, isEmpty } from '@/utils/utils';
   import {
     buildVisibleSelectOptions,
@@ -323,10 +347,12 @@
   import { usePermission } from '/@/hooks/web/usePermission';
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
   import { calcSaleOutProfitRateByProfit } from './saleOutProfit';
+  import { PRINT_TYPE } from '@/enums/biz/printType';
 
   const createDefaultSearchFormData = () => ({
     code: '',
     productName: '',
+    description: '',
     categoryIdList: [],
     scId: '',
     customerIdList: [],
@@ -349,7 +375,7 @@
       CustomerSelector,
       ProductCategorySelector,
     },
-    mixins: [gridCollapseHeightMix, multiplePageMix],
+    mixins: [gridCollapseHeightMix, multiplePageMix, printMix],
     setup() {
       const { hasPermission } = usePermission();
       return {
@@ -359,6 +385,7 @@
         SearchOutlined,
         EditOutlined,
         DownloadOutlined,
+        PrinterOutlined,
         formatInquiryProduct,
         SETTLE_STATUS,
         SALE_OUT_SHEET_STATUS,
@@ -392,6 +419,7 @@
         },
         searchFormData: createDefaultSearchFormData(),
         orderDateRange: [],
+        planDateRange: [],
         approveDateRange: [],
         createByOptions: [],
         createByOptionMap: {},
@@ -411,8 +439,10 @@
           layouts: ['Home', 'PrevPage', 'Jump', 'PageCount', 'NextPage', 'End', 'Sizes', 'Total'],
         },
         tableColumn: [
+          { type: 'checkbox', width: 45 },
           { type: 'seq', width: 50, title: '序号' },
           { field: 'orderDate', title: '订单日期', width: 120, sortable: true },
+          { field: 'planDate', title: '计划日期', width: 120, sortable: true },
           {
             field: 'code',
             title: '单据号',
@@ -476,6 +506,7 @@
             width: 100,
             formatter: ({ cellValue }) => SETTLE_STATUS.getDesc(cellValue),
           },
+          { field: 'productRemark', title: '商品备注', width: 200 },
           { field: 'description', title: '备注', width: 200 },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
@@ -877,6 +908,7 @@
       resetSearchForm() {
         this.searchFormData = createDefaultSearchFormData();
         this.orderDateRange = this.getDefaultOrderDateRange();
+        this.planDateRange = [];
         this.approveDateRange = [];
         this.search();
       },
@@ -893,6 +925,8 @@
           createBy: this.searchFormData.createBy,
           orderDateStart: this.orderDateRange?.[0] || '',
           orderDateEnd: this.orderDateRange?.[1] || '',
+          planDateStart: this.planDateRange?.[0] || '',
+          planDateEnd: this.planDateRange?.[1] || '',
           approveBy: this.searchFormData.approveBy,
           approveStartTime: this.approveDateRange?.[0]
             ? `${this.approveDateRange[0]} 00:00:00`
@@ -948,6 +982,25 @@
         api.exportDetail(this.buildSearchFormData()).then(() => {
           createSuccess('已加入导出任务，请到导出中心查看！');
         });
+      },
+      /** 打印勾选的销售出库明细标签。 */
+      async tagPrint() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要打印标签的销售明细！');
+          return;
+        }
+
+        this.loading = true;
+        try {
+          const res = await api.tagPrint({
+            idList: [...new Set(records.map((item) => item.id))],
+            detailIdList: records.map((item) => item.detailId),
+          });
+          await this.vgPrintPreview(PRINT_TYPE.SALE_TAG.code, res);
+        } finally {
+          this.loading = false;
+        }
       },
       exportDetailDailySummary() {
         api.exportDetailDailySummary(this.buildSearchFormData());

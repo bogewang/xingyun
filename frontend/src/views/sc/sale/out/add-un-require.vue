@@ -131,6 +131,7 @@
               v-model:value="row.taxPrice"
               class="number-input"
               @input="(e) => taxPriceInput(row, e.target.value)"
+              @keydown="(e) => handleTableInputKeyDown(e, 'taxPriceInputRef', rowIndex)"
             />
           </template>
 
@@ -141,7 +142,7 @@
               v-model:value="row.outNum"
               class="number-input"
               @input="(e) => outNumInput(row, e.target.value)"
-              @keydown="stopGridDeleteFromInput"
+              @keydown="(e) => handleTableInputKeyDown(e, 'outNumInputRef', rowIndex, true)"
             />
           </template>
 
@@ -152,18 +153,22 @@
           </template>
 
           <!-- 金额 列自定义内容 -->
-          <template #taxAmount_default="{ row }">
+          <template #taxAmount_default="{ row, rowIndex }">
             <a-input
+              :ref="'taxAmountInputRef' + rowIndex"
               v-model:value="row.taxAmount"
               class="number-input"
               @input="(e) => taxAmountInput(row, e.target.value)"
+              @keydown="(e) => handleTableInputKeyDown(e, 'taxAmountInputRef', rowIndex)"
             />
           </template>
-          <template #confirmNum_default="{ row }">
+          <template #confirmNum_default="{ row, rowIndex }">
             <a-input
+              :ref="'confirmNumInputRef' + rowIndex"
               v-model:value="row.confirmNum"
               class="number-input"
               @input="(e) => confirmNumInput(row, e.target.value)"
+              @keydown="(e) => handleTableInputKeyDown(e, 'confirmNumInputRef', rowIndex)"
             />
           </template>
           <template #confirmAmt_default="{ row }"
@@ -172,7 +177,14 @@
 
           <!-- 备注 列自定义内容 -->
           <template #description_default="{ row, rowIndex }">
-            <a-input :ref="'descriptionInputRef' + rowIndex" v-model:value="row.description" />
+            <a-input
+              :ref="'descriptionInputRef' + rowIndex"
+              v-model:value="row.description"
+              @keydown="(e) => handleTableInputKeyDown(e, 'descriptionInputRef', rowIndex)"
+            />
+          </template>
+          <template #planDate_default="{ row }">
+            <a-date-picker v-model:value="row.planDate" value-format="YYYY-MM-DD" />
           </template>
         </vxe-grid>
       </div>
@@ -201,13 +213,8 @@
               <a-button type="primary" @click="setPaid">已付款</a-button>
             </a-space>
           </j-form-item>
-        </j-form>
-      </j-border>
-
-      <j-border>
-        <j-form bordered label-width="140px">
-          <j-form-item label="备注" :span="24" :content-nest="false">
-            <a-textarea v-model:value.trim="formData.description" maxlength="200" />
+          <j-form-item label="备注" :span="4" :content-nest="false">
+            <a-input v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>
@@ -277,7 +284,6 @@
     isEmpty,
     isFloat,
     isFloatGeZero,
-    isFloatGtZero,
     isNumberPrecision,
     mul,
     PATTERN_IS_FLOAT,
@@ -378,7 +384,7 @@
           {
             field: 'productName',
             title: '商品名称',
-            width: 260,
+            width: 150,
             slots: { default: 'productName_default' },
           },
           {
@@ -393,28 +399,28 @@
             field: 'stockNum',
             title: '库存数量',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'stockNum_default' },
           },
           {
             field: 'outNum',
             title: '数量',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'outNum_default' },
           },
           {
             field: 'taxPrice',
             title: '价格（元）',
             align: 'right',
-            width: 140,
+            width: 80,
             slots: { default: 'taxPrice_default' },
           },
           {
             field: 'taxAmount',
             title: '金额',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'taxAmount_default' },
           },
           {
@@ -424,18 +430,29 @@
             slots: { default: 'description_default' },
           },
           {
+            field: 'planDate',
+            title: '计划日期',
+            width: 130,
+            slots: { default: 'planDate_default' },
+          },
+          {
             field: 'confirmNum',
             title: '验收数量',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'confirmNum_default' },
           },
           {
             field: 'confirmAmt',
             title: '验收金额',
             align: 'right',
-            width: 100,
+            width: 80,
             slots: { default: 'confirmAmt_default' },
+          },
+          {
+            field: 'productRemark',
+            title: '商品备注',
+            width: 200,
           },
         ],
         tableData: [],
@@ -596,17 +613,48 @@
       focusRowInput(refName, index) {
         return focusTableInput(this, refName, index);
       },
+      /** 获取表格输入框对应的原生输入元素。 */
+      getTableInputElement(refName, rowIndex) {
+        const inputRef = this.$refs[refName + rowIndex];
+        const target = Array.isArray(inputRef) ? inputRef[0] : inputRef;
+        return (
+          target?.input ||
+          target?.resizableTextArea?.textArea ||
+          target?.$el?.querySelector?.('input,textarea') ||
+          null
+        );
+      },
+      /** 聚焦并选中表格输入框内容，便于直接覆盖原值。 */
+      async focusAndSelectTableInput(refName, rowIndex) {
+        const focused = await focusTableInput(this, refName, rowIndex);
+        if (!focused) {
+          return;
+        }
+
+        await this.$nextTick();
+        this.getTableInputElement(refName, rowIndex)?.select?.();
+      },
+      /** 处理明细输入列方向下键，跳转到本列下一行输入框并选中内容。 */
+      async handleTableInputKeyDown(event, refName, rowIndex, stopDelete = false) {
+        if (stopDelete) {
+          stopGridDeleteFromInput(event);
+        }
+        if (event.key !== 'ArrowDown') {
+          return;
+        }
+
+        event.preventDefault();
+        await this.focusAndSelectTableInput(refName, rowIndex + 1);
+      },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
         const baseUnit = product.units?.find((item) => item.baseUnit);
-        // 如果行内已有有效的价格(>0)，则保留原价格，不被最新售价覆盖
         const selectedPrice = this.getSelectedProductPrice(product);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
+          productRemark: product.remark,
           oriPrice: product.salePrice,
-          taxPrice: isFloatGtZero(this.tableData[index].taxPrice)
-            ? this.tableData[index].taxPrice
-            : selectedPrice,
+          taxPrice: selectedPrice,
           baseSalePrice: selectedPrice,
           baseStockNum: product.stockNum,
           unitId: baseUnit?.id || '',
@@ -1031,7 +1079,7 @@
 </script>
 <style scoped>
   .sheet-editor-page {
-    height: calc(100vh - 150px);
+    height: calc(100vh - 112px);
     min-height: 640px;
     display: flex;
     flex-direction: column;

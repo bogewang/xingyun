@@ -71,6 +71,8 @@
               width="120"
               align="right"
             />
+            <!-- 备注（始终显示并固定在最后一列） -->
+            <vxe-column field="remark" title="备注" min-width="180" />
           </vxe-table>
           <div
             class="inline-product-select-add"
@@ -123,7 +125,7 @@
       /** 行是否固定（有订单模式下来自订单的行不可编辑） */
       isFixed: { type: Boolean, default: false },
       /** 下拉宽度 */
-      dropdownWidth: { type: String, default: '1080px' },
+      dropdownWidth: { type: String, default: '1260px' },
     },
     emits: ['select', 'addProduct', 'openAddProductPage'],
     setup(props, { emit, expose }) {

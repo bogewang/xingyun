@@ -246,6 +246,9 @@
         <template #description_default="{ row }">
           <a-input v-model:value="row.description" />
         </template>
+        <template #planDate_default="{ row }">
+          <a-date-picker v-model:value="row.planDate" value-format="YYYY-MM-DD" />
+        </template>
       </vxe-grid>
 
       <j-border title="合计">
@@ -539,10 +542,21 @@
           },
           { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           {
+            field: 'productRemark',
+            title: '商品备注',
+            width: 200,
+          },
+          {
             field: 'description',
             title: '备注',
             width: 200,
             slots: { default: 'description_default' },
+          },
+          {
+            field: 'planDate',
+            title: '计划日期',
+            width: 130,
+            slots: { default: 'planDate_default' },
           },
         ],
         tableData: [],
@@ -737,11 +751,9 @@
         const baseUnit = product.units?.find((item) => item.baseUnit);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
+          productRemark: product.remark,
           oriPrice: product.salePrice,
-          // 如果行内已有有效的价格(>0)，则保留原价格，不被最新售价覆盖
-          taxPrice: isFloatGtZero(this.tableData[index].taxPrice)
-            ? this.tableData[index].taxPrice
-            : product.latestSalePrice,
+          taxPrice: product.latestSalePrice,
           baseSalePrice: product.latestSalePrice,
           baseStockNum: product.stockNum,
           unitId: baseUnit?.id || '',
@@ -1115,6 +1127,7 @@
               orderNum: t.outNum,
               confirmNum: normalizeConfirmNum(t.confirmNum),
               description: t.description,
+              planDate: t.planDate,
               oriPrice: t.oriPrice,
               taxPrice: t.taxPrice,
               costPrice: this.canEditCostPrice(t) && !isEmpty(t.costPrice) ? t.costPrice : null,
@@ -1172,7 +1185,7 @@
 </script>
 <style scoped>
   .sheet-editor-page {
-    height: calc(100vh - 150px);
+    height: calc(100vh - 112px);
     min-height: 640px;
     display: flex;
     flex-direction: column;

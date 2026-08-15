@@ -32,6 +32,13 @@
                     :placeholder="['开始日期', '结束日期']"
                   />
                 </j-form-item>
+                <j-form-item label="计划日期">
+                  <a-range-picker
+                    v-model:value="planDateRange"
+                    value-format="YYYY-MM-DD"
+                    :placeholder="['开始日期', '结束日期']"
+                  />
+                </j-form-item>
                 <j-form-item label="商品名称">
                   <a-input v-model:value="searchFormData.productName" allow-clear />
                 </j-form-item>
@@ -155,6 +162,7 @@
                 @click="batchDelete"
                 >批量删除</a-button
               >
+
               <a-button
                 v-permission="['sale:out:add']"
                 :icon="h(CloudUploadOutlined)"
@@ -208,6 +216,12 @@
                 :icon="h(SyncOutlined)"
                 @click="openInquiryPriceSync"
                 >同步询价到销售表</a-button
+              >
+              <a-button
+                v-permission="['sale:out:modify']"
+                :icon="h(MergeCellsOutlined)"
+                @click="mergeOrders"
+              >合并订单</a-button
               >
             </a-space>
           </template>
@@ -375,6 +389,14 @@
         @ok="doTagPrintWithCategory"
         @cancel="closeTagPrintModal"
       >
+        <a-checkbox
+          v-if="tagPrintModal.treeShow"
+          :checked="isAllTagPrintCategoryChecked()"
+          :indeterminate="isTagPrintCategoryCheckIndeterminate()"
+          @change="toggleAllTagPrintCategories"
+        >
+          全选
+        </a-checkbox>
         <a-tree
           v-if="tagPrintModal.treeShow"
           v-model:checkedKeys="tagPrintModal.checkedCategoryIds"
@@ -448,6 +470,7 @@
     DeleteOutlined,
     DownloadOutlined,
     DownOutlined,
+    MergeCellsOutlined,
     PlusOutlined,
     PrinterOutlined,
     SearchOutlined,
@@ -513,6 +536,7 @@
         DeleteOutlined,
         DownloadOutlined,
         DownOutlined,
+        MergeCellsOutlined,
         PrinterOutlined,
         SyncOutlined,
         isEmpty,
@@ -553,6 +577,7 @@
           unpaidAmountEnd: undefined,
         },
         orderDateRange: this.getDefaultOrderDateRange(),
+        planDateRange: [],
         approveDateRange: [],
         createByOptions: [],
         createByOptionMap: {},
@@ -582,13 +607,15 @@
             sortable: true,
             slots: { default: 'code_default' },
           },
-          { field: 'customerName', title: '客户名称', width: 120 },
+          { field: 'customerName', title: '客户名称', width: 120, sortable: true },
+          { field: 'customerDescription', title: '客户备注', width: 200, sortable: true },
           { field: 'totalAmount', title: '单据总金额', align: 'right', width: 100 },
           {
             field: 'confirmAmt',
             title: '验收金额',
             align: 'right',
             width: 100,
+            sortable: true,
             formatter: ({ cellValue }) => this.formatAmount(cellValue),
           },
           { field: 'paidAmount', title: '已付金额', align: 'right', width: 80 },
@@ -818,6 +845,7 @@
           unpaidAmountEnd: undefined,
         };
         this.orderDateRange = this.getDefaultOrderDateRange();
+        this.planDateRange = [];
         this.approveDateRange = [];
         this.search();
       },
@@ -836,6 +864,8 @@
           createBy: this.searchFormData.createBy,
           orderDateStart: this.orderDateRange?.[0] || '',
           orderDateEnd: this.orderDateRange?.[1] || '',
+          planDateStart: this.planDateRange?.[0] || '',
+          planDateEnd: this.planDateRange?.[1] || '',
           approveBy: this.searchFormData.approveBy,
           approveStartTime: this.approveDateRange?.[0]
             ? `${this.approveDateRange[0]} 00:00:00`
@@ -1014,6 +1044,53 @@
         this.batchHandleDatas = records;
 
         this.$refs.batchDeleteHandlerDialog.openDialog();
+      },
+      // 合并选中的销售出库单
+      mergeOrders() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records) || records.length < 2) {
+          createError('请选择两张及以上要合并的销售出库单！');
+          return;
+        }
+
+        const first = records[0];
+        for (let i = 0; i < records.length; i++) {
+          if (SALE_OUT_SHEET_STATUS.APPROVE_PASS.equalsCode(records[i].status)) {
+            createError('第' + (i + 1) + '个销售出库单已审核通过，不允许合并！');
+            return;
+          }
+          if (this.isSettleLocked(records[i])) {
+            createError('第' + (i + 1) + '个销售出库单已对账或已结算，不允许合并！');
+            return;
+          }
+          if (records[i].customerName !== first.customerName) {
+            createError('仅允许合并相同客户的销售出库单！');
+            return;
+          }
+          if (records[i].scName !== first.scName) {
+            createError('仅允许合并相同仓库的销售出库单！');
+            return;
+          }
+        }
+
+        createConfirm(
+          '确认合并选中的' +
+            records.length +
+            '张销售出库单？系统将保留创建时间最早的单据，并删除其余单据。',
+        ).then(() => {
+          this.loading = true;
+          api
+            .merge({
+              ids: records.map((item) => item.id),
+            })
+            .then(() => {
+              createSuccess('合并成功！');
+              this.search();
+            })
+            .finally(() => {
+              this.loading = false;
+            });
+        });
       },
       doBatchApprovePass(row) {
         return api.batchApprovePass({
@@ -1253,6 +1330,44 @@
       closeTagPrintModal() {
         this.tagPrintModal.visible = false;
         this.tagPrintModal.pendingRecords = [];
+      },
+      /** 获取标签打印分类树中全部分类ID。 */
+      getAllTagPrintCategoryIds() {
+        const categoryIds = [];
+        const collectCategoryIds = (categories) => {
+          categories.forEach((category) => {
+            categoryIds.push(category.id);
+            if (category.children && category.children.length > 0) {
+              collectCategoryIds(category.children);
+            }
+          });
+        };
+        collectCategoryIds(this.tagPrintModal.categoryTreeData);
+        return categoryIds;
+      },
+      /** 判断标签打印分类是否已全部勾选。 */
+      isAllTagPrintCategoryChecked() {
+        const categoryIds = this.getAllTagPrintCategoryIds();
+        return (
+          categoryIds.length > 0 &&
+          categoryIds.every((categoryId) =>
+            this.tagPrintModal.checkedCategoryIds.includes(categoryId),
+          )
+        );
+      },
+      /** 判断标签打印分类是否处于部分勾选状态。 */
+      isTagPrintCategoryCheckIndeterminate() {
+        const categoryIds = this.getAllTagPrintCategoryIds();
+        const checkedCount = categoryIds.filter((categoryId) =>
+          this.tagPrintModal.checkedCategoryIds.includes(categoryId),
+        ).length;
+        return checkedCount > 0 && checkedCount < categoryIds.length;
+      },
+      /** 切换标签打印分类的全选状态。 */
+      toggleAllTagPrintCategories(event) {
+        this.tagPrintModal.checkedCategoryIds = event.target.checked
+          ? this.getAllTagPrintCategoryIds()
+          : [];
       },
       /** 确认标签打印（携带分类筛选，并缓存勾选的分类到Redis） */
       async doTagPrintWithCategory() {

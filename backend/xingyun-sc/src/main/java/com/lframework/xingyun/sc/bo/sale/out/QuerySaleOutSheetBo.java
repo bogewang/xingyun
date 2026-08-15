@@ -59,6 +59,12 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
     private String customerName;
 
     /**
+     * 客户备注
+     */
+    @ApiModelProperty("客户备注")
+    private String customerDescription;
+
+    /**
      * 销售员姓名
      */
     @ApiModelProperty("销售员姓名")
@@ -210,6 +216,7 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
         Customer customer = customerService.findById(dto.getCustomerId());
         this.customerCode = customer.getCode();
         this.customerName = customer.getName();
+        this.customerDescription = customer.getDescription();
 
         SysUserService userService = ApplicationUtil.getBean(SysUserService.class);
         if (!StringUtil.isBlank(dto.getSalerId())) {

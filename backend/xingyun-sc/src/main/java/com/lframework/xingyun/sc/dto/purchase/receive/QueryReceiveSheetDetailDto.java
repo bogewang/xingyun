@@ -38,6 +38,11 @@ public class QueryReceiveSheetDetailDto implements BaseDto, Serializable {
   private String productName;
 
   /**
+   * 商品备注
+   */
+  private String productRemark;
+
+  /**
    * 是否询价商品
    */
   private Boolean inquiryProduct;

@@ -183,13 +183,8 @@
               @input="(e) => paidAmountInput(e.target.value)"
             />
           </j-form-item>
-        </j-form>
-      </j-border>
-
-      <j-border>
-        <j-form bordered label-width="140px">
-          <j-form-item label="备注" :span="24" :content-nest="false">
-            <a-textarea v-model:value.trim="formData.description" maxlength="200" />
+          <j-form-item label="备注" :span="4" :content-nest="false">
+            <a-input v-model:value.trim="formData.description" maxlength="200" />
           </j-form-item>
         </j-form>
       </j-border>
@@ -369,7 +364,7 @@
           },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80, slots: { default: 'unit_default' } },
-          { field: 'stockNum', title: '库存数量', align: 'right', width: 140 },
+          { field: 'stockNum', title: '库存数量', align: 'right', width: 80 },
           {
             field: 'receiveNum',
             title: '数量',
@@ -398,11 +393,17 @@
             width: 120,
             slots: { default: 'productionDate_default' },
           },
+
           {
             field: 'description',
             title: '备注',
             width: 200,
             slots: { default: 'description_default' },
+          },
+          {
+            field: 'productRemark',
+            title: '商品备注',
+            width: 200,
           },
         ],
         tableData: [],
@@ -546,6 +547,7 @@
         const baseUnit = product.units?.find((item) => item.baseUnit);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
+          productRemark: product.remark,
           purchasePrice,
           basePurchasePrice: purchasePrice,
           baseStockNum: product.stockNum,
@@ -981,7 +983,7 @@
 </script>
 <style scoped>
   .sheet-editor-page {
-    height: calc(100vh - 150px);
+    height: calc(100vh - 112px);
     min-height: 640px;
     display: flex;
     flex-direction: column;

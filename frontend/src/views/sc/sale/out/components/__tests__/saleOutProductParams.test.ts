@@ -92,6 +92,18 @@ describe('销售出库明细请求组装', () => {
     expect(typeof product.confirmNum).toBe('number');
   });
 
+  it('保留手工填写的计划日期', () => {
+    const [product] = buildUnrequiredSaleOutProducts([
+      {
+        productId: 'product-1',
+        outNum: 1,
+        planDate: '2026-08-13',
+      },
+    ]);
+
+    expect(product.planDate).toBe('2026-08-13');
+  });
+
   it('需订单出库提交前将小数验收数量转换为 number', () => {
     const [product] = buildRequiredSaleOutProducts([
       {

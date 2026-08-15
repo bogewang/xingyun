@@ -261,6 +261,11 @@ public class SaleOutSheetFullDto implements BaseDto, Serializable {
     private BigDecimal totalProfit;
 
     /**
+     * 计划日期
+     */
+    private LocalDate planDate;
+
+    /**
      * 商品分类名称
      */
     private String categoryName;

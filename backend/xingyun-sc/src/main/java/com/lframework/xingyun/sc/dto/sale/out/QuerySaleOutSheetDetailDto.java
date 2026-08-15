@@ -24,6 +24,11 @@ public class QuerySaleOutSheetDetailDto implements BaseDto, Serializable {
 
   private String orderDate;
 
+  /**
+   * 计划日期
+   */
+  private String planDate;
+
   private String saleOrderId;
 
   private String saleOrderCode;
@@ -35,6 +40,11 @@ public class QuerySaleOutSheetDetailDto implements BaseDto, Serializable {
   private String productCode;
 
   private String productName;
+
+  /**
+   * 商品备注
+   */
+  private String productRemark;
 
   /**
    * 商品备注二
