@@ -194,6 +194,12 @@
               <a-button
                 v-permission="['sale:out:query']"
                 :icon="h(PrinterOutlined)"
+                @click="batchPrint"
+                >批量打印</a-button
+              >
+              <a-button
+                v-permission="['sale:out:query']"
+                :icon="h(PrinterOutlined)"
                 @click="tagPrint"
                 >标签打印</a-button
               >
@@ -1138,6 +1144,26 @@
           // 将res组装成模板定义和打印数据的格式，然后调用打印预览组件进行预览
           const printData = this.buildPrintData(res);
           await this.vgPrintPreview(PRINT_TYPE.SALE_OUT.code, printData);
+        } finally {
+          this.loading = false;
+        }
+      },
+      /**
+       * 加载选中的销售出库单并在同一打印预览中批量打印。
+       */
+      async batchPrint() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要打印的销售出库单！');
+          return;
+        }
+
+        this.loading = true;
+        try {
+          const printDatas = await Promise.all(
+            records.map(async (record) => this.buildPrintData(await api.print(record.id))),
+          );
+          await this.vgPrintPreview(PRINT_TYPE.SALE_OUT.code, printDatas);
         } finally {
           this.loading = false;
         }
