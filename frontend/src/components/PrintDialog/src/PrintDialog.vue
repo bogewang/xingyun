@@ -46,6 +46,7 @@
   import {
     buildPrintPayload,
     normalizeTemplate,
+    resetPageNumberForEachPrintData,
     type PrintTemplateJson,
   } from '@/components/PrintDesigner/src/printUtils';
   import { closePrintDialog, usePrintDialogState } from './printDialog';
@@ -99,9 +100,12 @@
   // 2) data: 打印数据（对象或数组）
   // 3) width: 弹窗宽度；支持百分比字符串（如 '80%'）或数字（如 980，单位 px）
 
-  const templateInstance = computed(() =>
-    createTemplate(normalizeTemplate(currentTemplateJson.value)),
-  );
+  const templateInstance = computed(() => {
+    const template = normalizeTemplate(currentTemplateJson.value);
+    return createTemplate(
+      state.resetPageNumberPerData ? resetPageNumberForEachPrintData(template) : template,
+    );
+  });
   const currentPrintData = computed(() => buildPrintPayload(state.printData, 1));
 
   /**

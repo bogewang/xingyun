@@ -22,6 +22,31 @@ export function normalizeTemplate(templateJson: unknown): PrintTemplateJson {
 }
 
 /**
+ * 创建按单据重置页码的模板副本。
+ *
+ * vg-print 会根据面板的 `paperNumberContinue` 配置决定多条数据是否连续计页。
+ * 批量单据打印应让每张单据独立计页，因此仅在副本中关闭该配置，避免影响保存的模板。
+ */
+export function resetPageNumberForEachPrintData(templateJson: unknown): PrintTemplateJson {
+  const template = normalizeTemplate(templateJson);
+  const panels = template.panels as unknown[];
+
+  return {
+    ...template,
+    panels: panels.map((panel) => {
+      if (!panel || typeof panel !== 'object') {
+        return panel;
+      }
+
+      return {
+        ...(panel as Record<string, unknown>),
+        paperNumberContinue: false,
+      };
+    }),
+  };
+}
+
+/**
  * 将后端或编辑器中的示例数据规范化为数组或对象。
  */
 export function normalizeDemoData(data: unknown): PrintDemoData {
