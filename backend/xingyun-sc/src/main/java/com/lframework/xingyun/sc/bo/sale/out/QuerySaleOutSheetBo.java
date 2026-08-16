@@ -138,6 +138,12 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
     private Boolean fillAllCost;
 
     /**
+     * 是否已送货
+     */
+    @ApiModelProperty("是否已送货")
+    private Boolean delivered;
+
+  /**
      * 备注
      */
     @ApiModelProperty("备注")

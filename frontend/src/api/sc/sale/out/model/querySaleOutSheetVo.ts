@@ -127,6 +127,11 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
   fillAllCost: boolean;
 
   /**
+   * 是否已送货
+   */
+  delivered: boolean;
+
+  /**
    * 已付金额起始值
    */
   paidAmountStart: number;

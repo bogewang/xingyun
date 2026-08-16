@@ -1551,6 +1551,29 @@ public class SaleOutSheetServiceImpl extends
     }
 
     /**
+     * 批量标记销售出库单为已送货。
+     *
+     * @param vo 销售出库单ID列表
+     */
+    @OpLog(type = SaleOpLogType.class, name = "批量送货")
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void batchDelivery(BatchDeliverySaleOutSheetVo vo) {
+
+        List<SaleOutSheet> sheets = listByIds(vo.getIds());
+        if (sheets.size() != vo.getIds().size()) {
+            throw new DefaultClientException("部分销售出库单不存在，请刷新后重试！");
+        }
+
+        LambdaUpdateWrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
+                .set(SaleOutSheet::getDelivered, true)
+                .in(SaleOutSheet::getId, vo.getIds());
+        if (!update(updateWrapper)) {
+            throw new DefaultClientException("销售出库单送货状态更新失败，请刷新后重试！");
+        }
+    }
+
+    /**
      * 按销售出库订单日期同步询价商品售价及相关金额。
      *
      * @param vo 日期范围

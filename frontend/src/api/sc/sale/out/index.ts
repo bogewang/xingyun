@@ -715,6 +715,22 @@ export function batchUpdatePrice(data: BatchUpdateSaleOutSheetPriceVo): Promise<
 }
 
 /**
+ * 批量送货
+ */
+export function batchDelivery(ids: string[]): Promise<void> {
+  return defHttp.patch<void>(
+    {
+      url: baseUrl + '/delivery',
+      data: { ids },
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/**
  * 按订单日期同步询价商品销售价
  */
 export function syncInquirySalePrice(data: SyncInquirySalePriceVo): Promise<void> {
