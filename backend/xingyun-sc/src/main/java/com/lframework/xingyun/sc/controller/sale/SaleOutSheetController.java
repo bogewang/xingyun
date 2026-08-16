@@ -649,6 +649,23 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
+     * 批量送货
+     */
+    @ApiOperation("批量送货")
+    @HasPermission({ "sale:out:modify" })
+    @PatchMapping("/delivery")
+    public InvokeResult<Void> batchDelivery(
+            @RequestBody @Valid BatchDeliverySaleOutSheetVo vo) {
+        try {
+            saleOutSheetService.batchDelivery(vo);
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("批量送货出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
+    }
+
+    /**
      * 同步询价商品销售价。
      */
     @ApiOperation("同步询价商品销售价")

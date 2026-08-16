@@ -188,6 +188,12 @@ public class QuerySaleOutSheetVo extends SortPageVo {
   private Boolean fillAllCost;
 
   /**
+   * 是否已送货
+   */
+  @ApiModelProperty("是否已送货")
+  private Boolean delivered;
+
+  /**
    * 已付金额起始值
    */
   @ApiModelProperty("已付金额起始值")

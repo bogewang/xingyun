@@ -105,6 +105,11 @@ export interface QuerySaleOutSheetBo {
   fillAllCost: boolean;
 
   /**
+   * 是否已送货
+   */
+  delivered: boolean;
+
+  /**
    * 备注
    */
   description: string;

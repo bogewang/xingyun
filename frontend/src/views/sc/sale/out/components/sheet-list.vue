@@ -63,6 +63,12 @@
                     <a-select-option :value="false">未补全</a-select-option>
                   </a-select>
                 </j-form-item>
+                <j-form-item label="是否已送货">
+                  <a-select v-model:value="searchFormData.delivered" placeholder="全部" allow-clear>
+                    <a-select-option :value="true">已送货</a-select-option>
+                    <a-select-option :value="false">未送货</a-select-option>
+                  </a-select>
+                </j-form-item>
                 <j-form-item label="结算状态">
                   <a-select
                     v-model:value="searchFormData.settleStatus"
@@ -228,6 +234,12 @@
                 :icon="h(MergeCellsOutlined)"
                 @click="mergeOrders"
               >合并订单</a-button
+              >
+              <a-button
+                v-permission="['sale:out:modify']"
+                :icon="h(CheckOutlined)"
+                @click="batchDelivery"
+              >确认送货</a-button
               >
             </a-space>
           </template>
@@ -577,6 +589,7 @@
           saleOrderCode: '',
           settleStatus: undefined,
           fillAllCost: undefined,
+          delivered: undefined,
           paidAmountStart: undefined,
           paidAmountEnd: undefined,
           unpaidAmountStart: undefined,
@@ -653,6 +666,12 @@
             title: '成本状态',
             width: 80,
             slots: { default: 'fillAllCost_default' },
+          },
+          {
+            field: 'delivered',
+            title: '是否已送货',
+            width: 100,
+            formatter: ({ cellValue }) => (cellValue ? '已送货' : '未送货'),
           },
           { field: 'createTime', title: '操作时间', width: 150, sortable: true },
           { field: 'createBy', title: '操作人', width: 80 },
@@ -830,7 +849,8 @@
         this.$refs.grid.commitProxy('reload');
       },
       getDefaultOrderDateRange() {
-        return [moment().startOf('month').format('YYYY-MM-DD'), moment().format('YYYY-MM-DD')];
+        const today = moment().format('YYYY-MM-DD');
+        return [today, today];
       },
       resetSearchForm() {
         this.searchFormData = {
@@ -845,6 +865,7 @@
           saleOrderCode: '',
           settleStatus: undefined,
           fillAllCost: undefined,
+          delivered: undefined,
           paidAmountStart: undefined,
           paidAmountEnd: undefined,
           unpaidAmountStart: undefined,
@@ -1101,6 +1122,27 @@
       doBatchApprovePass(row) {
         return api.batchApprovePass({
           id: row.id,
+        });
+      },
+      // 批量送货
+      batchDelivery() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要送货的销售出库单！');
+          return;
+        }
+
+        createConfirm('确认将选中的' + records.length + '张销售出库单标记为已送货？').then(() => {
+          this.loading = true;
+          api
+            .batchDelivery(records.map((item) => item.id))
+            .then(() => {
+              createSuccess('送货成功！');
+              this.search();
+            })
+            .finally(() => {
+              this.loading = false;
+            });
         });
       },
       // 批量审核通过
