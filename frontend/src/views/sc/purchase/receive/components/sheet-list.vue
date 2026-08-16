@@ -470,10 +470,8 @@
         this.$refs.grid.commitProxy('reload');
       },
       getDefaultOrderDateRange() {
-        return [
-          moment().startOf('month').format('YYYY-MM-DD'),
-          moment().add(2, 'd').format('YYYY-MM-DD'),
-        ];
+        const today = moment().format('YYYY-MM-DD');
+        return [today, today];
       },
       resetSearchForm() {
         this.searchFormData = {
