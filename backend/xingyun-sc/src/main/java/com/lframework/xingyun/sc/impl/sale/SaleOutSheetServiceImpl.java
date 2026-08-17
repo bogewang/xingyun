@@ -2923,10 +2923,15 @@ public class SaleOutSheetServiceImpl extends
             BigDecimal totalProfit = details.stream()
                     .map(item -> NumberUtil.getDefaultValue(item.getTotalProfit()))
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
+            // 成本重算同时修正单据头验收汇总，保证与明细已保存的验收数据一致。
+            BigDecimal confirmNum = sumDetailAmount(details, SaleOutSheetDetail::getConfirmNum);
+            BigDecimal confirmAmt = sumDetailAmount(details, SaleOutSheetDetail::getConfirmAmt);
 
             LambdaUpdateWrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
                     .set(SaleOutSheet::getTotalCost, totalCostAmount)
                     .set(SaleOutSheet::getTotalProfit, totalProfit)
+                    .set(SaleOutSheet::getConfirmNum, confirmNum)
+                    .set(SaleOutSheet::getConfirmAmt, confirmAmt)
                     .set(SaleOutSheet::getFillAllCost, fillAllCost)
                     .eq(SaleOutSheet::getId, sheet.getId());
             this.update(updateWrapper);
