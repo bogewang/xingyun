@@ -143,8 +143,8 @@ importers:
         specifier: ^3.9.4
         version: 3.10.5
       vg-print:
-        specifier: ^1.1.323
-        version: 1.1.401(@vg-print/plugin-code-editor@0.1.9(jiti@1.21.6)(vue@3.4.38(typescript@5.5.4)))(axios@1.7.4)(socket.io-client@4.8.3)(vue@3.4.38(typescript@5.5.4))
+        specifier: ^1.1.402
+        version: 1.1.402(@vg-print/plugin-code-editor@0.1.9(jiti@1.21.6)(vue@3.4.38(typescript@5.5.4)))(axios@1.7.4)(socket.io-client@4.8.3)(vue@3.4.38(typescript@5.5.4))
       vue:
         specifier: ^3.3.4
         version: 3.4.38(typescript@5.5.4)
@@ -6664,8 +6664,8 @@ packages:
   vditor@3.10.5:
     resolution: {integrity: sha512-TEhuErdRCdtpeNntbU+SA0/aGuUSEVBbPkNkH0oov2ZKyis20PqtG+az2EmIomCefKlCXcpcKMM/jglv3fKkig==}
 
-  vg-print@1.1.401:
-    resolution: {integrity: sha512-/4T0kaV7eqNWua5tqU5U0UJABd+o4KBRuTXb1rW/yWKN6NTmkXhtci9dvxJ94qA806KQaJjNLla9Av9IhC9dnQ==}
+  vg-print@1.1.402:
+    resolution: {integrity: sha512-LTA+BACXCwebDAcAkc6A4bHR/ZeLWs0f4+qegGgYmSy1zpc6xs/uX/4/qXriB709oR7HvSGAJdxFrg8q8IgwUA==}
     engines: {node: '>=18.18.0'}
     peerDependencies:
       '@vg-print/plugin-bwip-js': ^0.1.2
@@ -14259,7 +14259,7 @@ snapshots:
     dependencies:
       diff-match-patch: 1.0.5
 
-  vg-print@1.1.401(@vg-print/plugin-code-editor@0.1.9(jiti@1.21.6)(vue@3.4.38(typescript@5.5.4)))(axios@1.7.4)(socket.io-client@4.8.3)(vue@3.4.38(typescript@5.5.4)):
+  vg-print@1.1.402(@vg-print/plugin-code-editor@0.1.9(jiti@1.21.6)(vue@3.4.38(typescript@5.5.4)))(axios@1.7.4)(socket.io-client@4.8.3)(vue@3.4.38(typescript@5.5.4)):
     dependencies:
       '@claviska/jquery-minicolors': 2.3.6(jquery@3.7.1)
       '@wtto00/html2canvas': 1.4.3
