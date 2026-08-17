@@ -3,7 +3,7 @@ name: Deploy Test
 on:
   push:
     branches:
-      - develop
+      - fix/0817_print
   workflow_dispatch:
 
 concurrency:
