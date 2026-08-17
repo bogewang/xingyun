@@ -7,6 +7,7 @@ import '@/components/VxeTable/src/css/index.scss';
 import 'virtual:svg-icons-register';
 import { io } from 'socket.io-client';
 import { setSocketIo, hiprint } from 'vg-print';
+import pluginEleCodeEditor from '@vg-print/plugin-code-editor';
 
 import { createApp } from 'vue';
 
@@ -62,6 +63,12 @@ async function bootstrap() {
 hiprint.init({
   host: 'http://localhost:17521',
   token: 'eyJrIjoiZ21jNTc2MDMzNyJ9',
+});
+
+// 在应用初始化时全局注册，确保模板解析和设计器均可使用代码编辑器插件。
+hiprint.register({
+  authKey: 'eyJrIjoiZ21jNTc2MDMzNyJ9',
+  plugins: [pluginEleCodeEditor()],
 });
 
 // disAutoConnect() // 注入不自动链接，需要关闭自动链接

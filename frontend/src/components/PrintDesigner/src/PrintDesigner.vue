@@ -49,7 +49,8 @@
 
 <script lang="ts">
   import { computed, defineComponent, nextTick, onMounted, ref } from 'vue';
-  import { FullDesigner, hiprint, pluginEleCodeEditor } from 'vg-print';
+  import { FullDesigner } from 'vg-print';
+
   import * as printTemplateApi from '@/api/base-data/print-template';
   import type { PrintTemplateColumnDescription } from '@/api/base-data/print-template/model/printTemplateColumnDescription';
   import {
@@ -60,8 +61,6 @@
     type PrintDemoData,
     type PrintTemplateJson,
   } from './printUtils';
-
-  hiprint.register({ authKey: 'eyJrIjoiZ21jNTc2MDMzNyJ9', plugins:[pluginEleCodeEditor()]});
 
   const IMPORTED_TEMPLATE_STORAGE_KEY = 'xingyun-print-imported-templates';
 
