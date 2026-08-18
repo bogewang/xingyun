@@ -66,45 +66,30 @@ jobs:
       - name: Package frontend
         run: tar -czf frontend-dist.tar.gz -C frontend dist
 
-      - name: Prepare SSH
+      - name: Prepare deployment directories
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.O101_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "${{ secrets.O101_SSH_PORT }}" "${{ secrets.O101_SSH_HOST }}" >> ~/.ssh/known_hosts
-
-      - name: Prepare remote directories
-        run: |
-          ssh -p "${{ secrets.O101_SSH_PORT }}" -i ~/.ssh/deploy_key "${{ secrets.O101_SSH_USER }}@${{ secrets.O101_SSH_HOST }}" '
-            set -e
-            umask 0002
-            mkdir -p /www/wwwroot/xingyun/data/tmp
-            mkdir -p /www/wwwroot/xingyun/data/upload
-            mkdir -p /www/wwwroot/xingyun/data/security-upload
-            chmod 775 /www/wwwroot/xingyun
-            chmod -R 775 /www/wwwroot/xingyun/data
-          '
-
-      - name: Upload artifacts
-        run: |
-          scp -P "${{ secrets.O101_SSH_PORT }}" -i ~/.ssh/deploy_key backend/xingyun-api/target/xingyun-api.jar "${{ secrets.O101_SSH_USER }}@${{ secrets.O101_SSH_HOST }}:/www/wwwroot/xingyun/xingyun-api.jar.new"
-          scp -P "${{ secrets.O101_SSH_PORT }}" -i ~/.ssh/deploy_key frontend-dist.tar.gz "${{ secrets.O101_SSH_USER }}@${{ secrets.O101_SSH_HOST }}:/www/wwwroot/xingyun/frontend-dist.tar.gz"
+          set -e
+          umask 0002
+          mkdir -p /www/wwwroot/xingyun/data/tmp
+          mkdir -p /www/wwwroot/xingyun/data/upload
+          mkdir -p /www/wwwroot/xingyun/data/security-upload
+          chmod 775 /www/wwwroot/xingyun
+          chmod -R 775 /www/wwwroot/xingyun/data
 
       - name: Restart 101 services
         run: |
-          ssh -p "${{ secrets.O101_SSH_PORT }}" -i ~/.ssh/deploy_key "${{ secrets.O101_SSH_USER }}@${{ secrets.O101_SSH_HOST }}" '
-            set -e
-            umask 0002
-            cd /www/wwwroot/xingyun
-            rm -rf dist.new
-            mkdir -p dist.new
-            tar -xzf frontend-dist.tar.gz -C dist.new
-            rm -rf dist
-            mv dist.new/dist dist
-            rm -rf dist.new
-            mv xingyun-api.jar.new xingyun-api.jar
-            chmod 664 xingyun-api.jar frontend-dist.tar.gz
-            chmod -R 775 dist
-            sudo /usr/bin/systemctl restart xingyun-api-101
-            sudo /www/server/nginx/sbin/nginx -s reload
-          '
+          set -e
+          umask 0002
+          cd /www/wwwroot/xingyun
+          rm -rf dist.new
+          mkdir -p dist.new
+          tar -xzf "$GITHUB_WORKSPACE/frontend-dist.tar.gz" -C dist.new
+          mv "$GITHUB_WORKSPACE/backend/xingyun-api/target/xingyun-api.jar" xingyun-api.jar.new
+          rm -rf dist
+          mv dist.new/dist dist
+          rm -rf dist.new
+          mv xingyun-api.jar.new xingyun-api.jar
+          chmod 664 xingyun-api.jar
+          chmod -R 775 dist
+          sudo /usr/bin/systemctl restart xingyun-api-test
+          sudo /www/server/nginx/sbin/nginx -s reload
