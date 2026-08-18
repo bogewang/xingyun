@@ -1,4 +1,4 @@
-name: Deploy Prod
+name: Deploy 101
 
 on:
   push:
@@ -7,14 +7,14 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: deploy-prod
+  group: deploy-101
   cancel-in-progress: true
 
 jobs:
-  deploy-prod:
-    name: Build and deploy prod
+  deploy-101:
+    name: Build and deploy 101
     runs-on: [self-hosted, linux, x64, deploy]
-    environment: production
+    environment: 101
 
     steps:
       - name: SSH Agent
@@ -22,11 +22,11 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Checkout master via SSH
+      - name: Checkout trigger branch via SSH
         run: |
           git remote set-url origin git@github.com:bogewang/xingyun.git
-          git fetch --no-tags --prune --no-recurse-submodules origin master
-          git checkout -B master origin/master
+          git fetch --no-tags --prune --no-recurse-submodules origin "${{ github.ref_name }}"
+          git checkout -B "${{ github.ref_name }}" "origin/${{ github.ref_name }}"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -71,11 +71,11 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.O101_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "${{ secrets.O101_SSH_PORT }}" "${{ secrets.O101_SSH_PORT }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "${{ secrets.O101_SSH_PORT }}" "${{ secrets.O101_SSH_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Prepare remote directories
         run: |
-          ssh -p "${{ secrets.O101_SSH_PORT }}" -i ~/.ssh/deploy_key "${{ secrets.O101_SSH_USER }}@${{ secrets.O101_SSH_PORT }}" '
+          ssh -p "${{ secrets.O101_SSH_PORT }}" -i ~/.ssh/deploy_key "${{ secrets.O101_SSH_USER }}@${{ secrets.O101_SSH_HOST }}" '
             set -e
             umask 0002
             mkdir -p /www/wwwroot/xingyun/data/tmp
@@ -87,12 +87,12 @@ jobs:
 
       - name: Upload artifacts
         run: |
-          scp -P "${{ secrets.O101_SSH_PORT }}" -i ~/.ssh/deploy_key backend/xingyun-api/target/xingyun-api.jar "${{ secrets.O101_SSH_USER }}@${{ secrets.O101_SSH_PORT }}:/www/wwwroot/xingyun/xingyun-api.jar.new"
-          scp -P "${{ secrets.O101_SSH_PORT }}" -i ~/.ssh/deploy_key frontend-dist.tar.gz "${{ secrets.O101_SSH_USER }}@${{ secrets.O101_SSH_PORT }}:/www/wwwroot/xingyun/frontend-dist.tar.gz"
+          scp -P "${{ secrets.O101_SSH_PORT }}" -i ~/.ssh/deploy_key backend/xingyun-api/target/xingyun-api.jar "${{ secrets.O101_SSH_USER }}@${{ secrets.O101_SSH_HOST }}:/www/wwwroot/xingyun/xingyun-api.jar.new"
+          scp -P "${{ secrets.O101_SSH_PORT }}" -i ~/.ssh/deploy_key frontend-dist.tar.gz "${{ secrets.O101_SSH_USER }}@${{ secrets.O101_SSH_HOST }}:/www/wwwroot/xingyun/frontend-dist.tar.gz"
 
-      - name: Restart prod services
+      - name: Restart 101 services
         run: |
-          ssh -p "${{ secrets.O101_SSH_PORT }}" -i ~/.ssh/deploy_key "${{ secrets.O101_SSH_USER }}@${{ secrets.O101_SSH_PORT }}" '
+          ssh -p "${{ secrets.O101_SSH_PORT }}" -i ~/.ssh/deploy_key "${{ secrets.O101_SSH_USER }}@${{ secrets.O101_SSH_HOST }}" '
             set -e
             umask 0002
             cd /www/wwwroot/xingyun
@@ -105,6 +105,6 @@ jobs:
             mv xingyun-api.jar.new xingyun-api.jar
             chmod 664 xingyun-api.jar frontend-dist.tar.gz
             chmod -R 775 dist
-            sudo /usr/bin/systemctl restart xingyun-api-prod
+            sudo /usr/bin/systemctl restart xingyun-api-101
             sudo /www/server/nginx/sbin/nginx -s reload
           '
