@@ -150,6 +150,13 @@
             >
               按天汇总导出
             </a-button>
+            <a-button
+              v-permission="['sale:out:export']"
+              :icon="h(DownloadOutlined)"
+              @click="exportInvoiceDetail"
+            >
+              导出开票明细
+            </a-button>
           </a-space>
         </template>
 
@@ -1006,6 +1013,12 @@
       },
       exportDetailDailySummary() {
         api.exportDetailDailySummary(this.buildSearchFormData());
+      },
+      /** 按当前筛选条件导出按商品和单位汇总的开票明细。 */
+      exportInvoiceDetail() {
+        api.exportInvoiceDetail(this.buildSearchFormData()).then(() => {
+          createSuccess('已加入导出任务，请到导出中心查看！');
+        });
       },
       batchUpdatePriceInDialog() {
         const records = this.$refs.priceCheckGrid.getCheckboxRecords();
