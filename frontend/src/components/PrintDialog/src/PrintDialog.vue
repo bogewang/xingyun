@@ -30,6 +30,10 @@
             </a-select-option>
           </a-select>
         </div>
+        <div class="print-count-switcher">
+          <span class="print-count-switcher__label">打印份数</span>
+          <a-input-number v-model:value="printCount" :min="1" :precision="0" />
+        </div>
       </div>
       <span v-else>{{ title }}</span>
       <a-button @click="onToPdf">导出 PDF</a-button>
@@ -47,6 +51,7 @@
     buildPrintPayload,
     normalizeTemplate,
     resetPageNumberForEachPrintData,
+    shouldResetPageNumberForPrintData,
     type PrintTemplateJson,
   } from '@/components/PrintDesigner/src/printUtils';
   import { closePrintDialog, usePrintDialogState } from './printDialog';
@@ -91,8 +96,7 @@
   const currentTemplateJson = ref<PrintTemplateJson>(normalizeTemplate(state.templateJson));
   const templateLoading = ref(false);
   const templateCache = new Map<string, PrintTemplateJson>();
-  // 打印份数
-  // const printCount = ref(1);
+  const printCount = ref(1);
 
   // show(template, data, width?)
   // 参数说明：
@@ -103,10 +107,12 @@
   const templateInstance = computed(() => {
     const template = normalizeTemplate(currentTemplateJson.value);
     return createTemplate(
-      state.resetPageNumberPerData ? resetPageNumberForEachPrintData(template) : template,
+      shouldResetPageNumberForPrintData(state.resetPageNumberPerData, printCount.value)
+        ? resetPageNumberForEachPrintData(template)
+        : template,
     );
   });
-  const currentPrintData = computed(() => buildPrintPayload(state.printData, 1));
+  const currentPrintData = computed(() => buildPrintPayload(state.printData, printCount.value));
 
   /**
    * 缓存已加载的模板配置，预览弹窗内切换模板时避免重复请求。
@@ -127,6 +133,7 @@
    */
   function resetTemplateState() {
     templateCache.clear();
+    printCount.value = 1;
     currentTemplateJson.value = normalizeTemplate(state.templateJson);
     cacheTemplate(state.templateId, state.templateJson);
     selectedTemplateId.value = state.templateId || state.templateList?.[0]?.id || '';
@@ -243,6 +250,13 @@
     }
   }
 
+  /**
+   * 打印份数变更后，重新生成预览数据，使预览、PDF 导出与实际打印保持一致。
+   */
+  async function handlePrintCountChange() {
+    await showPreview();
+  }
+
   watch(
     () => [state.open, state.frameKey] as const,
     async ([open, frameKey], previousValue) => {
@@ -268,12 +282,15 @@
     },
     { immediate: true },
   );
+
+  watch(printCount, handlePrintCountChange);
 </script>
 
 <style scoped>
   .print-dialog-title {
     display: inline-flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 14px;
     max-width: 100%;
     padding-right: 16px;
@@ -311,5 +328,26 @@
   .print-template-switcher__select {
     width: 240px;
     min-width: 240px;
+  }
+
+  .print-count-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .print-count-switcher__label {
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .print-count-switcher :deep(.ant-input-number) {
+    width: 72px;
+  }
+
+  :deep(.preview-header .print-count) {
+    display: none;
   }
 </style>

@@ -47,6 +47,18 @@ export function resetPageNumberForEachPrintData(templateJson: unknown): PrintTem
 }
 
 /**
+ * 判断打印数据是否应按每份单据独立计页。
+ *
+ * 批量单据或同一单据打印多份时，均不能把各份的页数累计到同一个总页码中。
+ */
+export function shouldResetPageNumberForPrintData(
+  resetPageNumberPerData: boolean,
+  copies: number,
+): boolean {
+  return resetPageNumberPerData || copies > 1;
+}
+
+/**
  * 将后端或编辑器中的示例数据规范化为数组或对象。
  */
 export function normalizeDemoData(data: unknown): PrintDemoData {
