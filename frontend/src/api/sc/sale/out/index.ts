@@ -272,7 +272,6 @@ export function exportMarketBuySummary(params: MarketBuySummaryParams): Promise<
     {
       region,
       contentType: ContentTypeEnum.JSON,
-      responseType: ResponseEnum.BLOB,
     },
   );
 }
@@ -289,7 +288,6 @@ export function exportMarketBuySummary2(params: MarketBuySummaryParams): Promise
     {
       region,
       contentType: ContentTypeEnum.JSON,
-      responseType: ResponseEnum.BLOB,
     },
   );
 }
@@ -336,6 +334,22 @@ export function exportDetailDailySummary(data: QuerySaleOutSheetVo): Promise<voi
       region,
       contentType: ContentTypeEnum.JSON,
       responseType: ResponseEnum.BLOB,
+    },
+  );
+}
+
+/**
+ * 导出开票明细。
+ */
+export function exportInvoiceDetail(data: QuerySaleOutSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/exportDetail/invoice',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }

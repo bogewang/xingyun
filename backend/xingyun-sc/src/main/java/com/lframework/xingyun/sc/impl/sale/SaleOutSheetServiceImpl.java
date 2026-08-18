@@ -50,6 +50,7 @@ import com.lframework.xingyun.sc.entity.*;
 import com.lframework.xingyun.sc.enums.*;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetDetailExportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetInvoiceDetailExportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetSalesExportHelper;
 import com.lframework.xingyun.sc.mappers.ProductStockMapper;
@@ -553,6 +554,18 @@ public class SaleOutSheetServiceImpl extends
         ExcelUtil.writeWithSheets("销售出库单明细按天汇总", sortedDatas);
     }
 
+    /**
+     * 查询开票明细；同一商品的不同单位分别汇总。
+     *
+     * @param vo 查询参数
+     * @return 开票明细
+     */
+    @Override
+    public List<SaleOutSheetInvoiceDetailExportModel> queryInvoiceDetail(QuerySaleOutSheetVo vo) {
+        List<QuerySaleOutSheetDetailDto> details = getBaseMapper().queryDetail(vo);
+        return buildInvoiceDetailExportModels(details);
+    }
+
     @Override
     public void exportSales(QuerySaleOutSheetVo vo, HttpServletResponse response) {
         List<SaleOutSheet> sheets = this.query(vo);
@@ -634,6 +647,95 @@ public class SaleOutSheetServiceImpl extends
         }
 
         return new ArrayList<>(summaryMap.values());
+    }
+
+    /**
+     * 构建开票明细导出行，按商品标识和交易单位汇总。
+     *
+     * @param details 销售出库明细
+     * @return 开票明细导出行
+     */
+    static List<SaleOutSheetInvoiceDetailExportModel> buildInvoiceDetailExportModels(
+            List<QuerySaleOutSheetDetailDto> details) {
+        if (CollectionUtils.isEmpty(details)) {
+            return Collections.emptyList();
+        }
+
+        Map<InvoiceDetailKey, SaleOutSheetInvoiceDetailExportModel> summaryMap = new LinkedHashMap<>();
+        for (QuerySaleOutSheetDetailDto detail : details) {
+            InvoiceDetailKey key = new InvoiceDetailKey(buildInvoiceProductKey(detail), detail.getUnit());
+            SaleOutSheetInvoiceDetailExportModel summary = summaryMap.get(key);
+            if (summary == null) {
+                summary = new SaleOutSheetInvoiceDetailExportModel(detail.getProductCode(), detail.getProductName(),
+                        detail.getSpec(), detail.getCategoryName(), detail.getUnit(), BigDecimal.ZERO, BigDecimal.ZERO);
+                summaryMap.put(key, summary);
+            }
+            summary.setQuantity(NumberUtil.add(summary.getQuantity(), resolveInvoiceQuantity(detail)));
+            summary.setAmount(NumberUtil.add(summary.getAmount(), resolveInvoiceAmount(detail)));
+        }
+
+        return summaryMap.values().stream()
+                .sorted(Comparator.comparing(SaleOutSheetInvoiceDetailExportModel::getProductName,
+                                Comparator.nullsFirst(String::compareTo))
+                        .thenComparing(SaleOutSheetInvoiceDetailExportModel::getUnit,
+                                Comparator.nullsFirst(String::compareTo)))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 获取用于开票明细汇总的商品标识，缺失商品 ID 时依次回退到商品编码和名称。
+     *
+     * @param detail 销售出库明细
+     * @return 商品标识
+     */
+    private static String buildInvoiceProductKey(QuerySaleOutSheetDetailDto detail) {
+        if (StringUtils.isNotBlank(detail.getProductId())) {
+            return detail.getProductId();
+        }
+        if (StringUtils.isNotBlank(detail.getProductCode())) {
+            return detail.getProductCode();
+        }
+        return detail.getProductName();
+    }
+
+    /**
+     * 开票数量优先使用大于零的验收数量。
+     *
+     * @param detail 销售出库明细
+     * @return 开票数量
+     */
+    private static BigDecimal resolveInvoiceQuantity(QuerySaleOutSheetDetailDto detail) {
+        return isPositive(detail.getConfirmNum()) ? detail.getConfirmNum() : defaultValue(detail.getOrderNum());
+    }
+
+    /**
+     * 开票金额优先使用大于零的验收金额。
+     *
+     * @param detail 销售出库明细
+     * @return 开票金额
+     */
+    private static BigDecimal resolveInvoiceAmount(QuerySaleOutSheetDetailDto detail) {
+        return isPositive(detail.getConfirmAmt()) ? detail.getConfirmAmt() : defaultValue(detail.getTaxAmount());
+    }
+
+    /**
+     * 判断金额是否大于零。
+     *
+     * @param value 金额或数量
+     * @return 是否大于零
+     */
+    private static boolean isPositive(BigDecimal value) {
+        return value != null && value.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    /**
+     * 开票明细汇总键。
+     */
+    @Data
+    @AllArgsConstructor
+    private static class InvoiceDetailKey {
+        private String productKey;
+        private String unit;
     }
 
     /**
@@ -721,7 +823,7 @@ public class SaleOutSheetServiceImpl extends
         return data;
     }
 
-    private BigDecimal defaultValue(BigDecimal value) {
+    private static BigDecimal defaultValue(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
     }
 

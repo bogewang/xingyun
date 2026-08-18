@@ -40,6 +40,7 @@ import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetDetailExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetInvoiceDetailExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetProductProfitExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetProfitExportTaskWorker;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
@@ -421,6 +422,17 @@ public class SaleOutSheetController extends DefaultBaseController {
             log.error("按天汇总导出销售出库明细失败", e);
             throw new DefaultClientException(e.getMessage());
         }
+    }
+
+    /**
+     * 导出开票明细。
+     */
+    @ApiOperation("导出开票明细")
+    @HasPermission({ "sale:out:export" })
+    @PostMapping("/exportDetail/invoice")
+    public InvokeResult<Void> exportInvoiceDetail(@RequestBody @Valid QuerySaleOutSheetVo vo) {
+        ExportTaskUtil.exportTask("销售出库单开票明细", SaleOutSheetInvoiceDetailExportTaskWorker.class, vo);
+        return InvokeResultBuilder.success();
     }
 
     /**

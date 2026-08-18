@@ -5,6 +5,8 @@ import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
 import com.lframework.xingyun.sc.enums.SaleOutSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
+import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetInvoiceDetailExportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.vo.sale.out.SaleOutProductVo;
@@ -198,6 +200,35 @@ class SaleOutSheetServiceImplTest {
     Assert.assertEquals(details.get(0).getId(), "detail-2");
   }
 
+  /**
+   * 验证开票明细按商品和单位汇总，并优先使用大于零的验收数量和金额。
+   */
+  @Test
+  void buildInvoiceDetailExportModelsShouldGroupByProductAndUnit() {
+    QuerySaleOutSheetDetailDto first = createInvoiceDetail("product-1", "盒", "2", "20", "1", "10");
+    QuerySaleOutSheetDetailDto second = createInvoiceDetail("product-1", "盒", "3", "30", "2", "18");
+    QuerySaleOutSheetDetailDto differentUnit = createInvoiceDetail("product-1", "件", "4", "40", "0", "0");
+
+    List<SaleOutSheetInvoiceDetailExportModel> models =
+        SaleOutSheetServiceImpl.buildInvoiceDetailExportModels(
+            Arrays.asList(first, second, differentUnit));
+
+    Assert.assertEquals(models.size(), 2);
+    SaleOutSheetInvoiceDetailExportModel box = models.stream()
+        .filter(item -> "盒".equals(item.getUnit()))
+        .findFirst()
+        .orElseThrow(AssertionError::new);
+    Assert.assertEquals(box.getQuantity(), new BigDecimal("3"));
+    Assert.assertEquals(box.getAmount(), new BigDecimal("38"));
+    Assert.assertEquals(box.getCategoryName(), "测试分类");
+    SaleOutSheetInvoiceDetailExportModel piece = models.stream()
+        .filter(item -> "件".equals(item.getUnit()))
+        .findFirst()
+        .orElseThrow(AssertionError::new);
+    Assert.assertEquals(piece.getQuantity(), new BigDecimal("4"));
+    Assert.assertEquals(piece.getAmount(), new BigDecimal("40"));
+  }
+
   private SaleOutSheetImportModel createModel(BigDecimal orderNum, BigDecimal taxPrice,
       BigDecimal confirmNum) {
     SaleOutSheetImportModel model = new SaleOutSheetImportModel();
@@ -214,6 +245,32 @@ class SaleOutSheetServiceImplTest {
     sheet.setCode(code);
     sheet.setCreateTime(createTime);
     return sheet;
+  }
+
+  /**
+   * 创建开票明细测试数据。
+   *
+   * @param productId 商品ID
+   * @param unit 单位
+   * @param orderNum 出库数量
+   * @param taxAmount 销售金额
+   * @param confirmNum 验收数量
+   * @param confirmAmt 验收金额
+   * @return 销售出库明细
+   */
+  private QuerySaleOutSheetDetailDto createInvoiceDetail(String productId, String unit, String orderNum,
+      String taxAmount, String confirmNum, String confirmAmt) {
+    QuerySaleOutSheetDetailDto detail = new QuerySaleOutSheetDetailDto();
+    detail.setProductId(productId);
+    detail.setProductCode("P-001");
+    detail.setProductName("测试商品");
+    detail.setCategoryName("测试分类");
+    detail.setUnit(unit);
+    detail.setOrderNum(new BigDecimal(orderNum));
+    detail.setTaxAmount(new BigDecimal(taxAmount));
+    detail.setConfirmNum(new BigDecimal(confirmNum));
+    detail.setConfirmAmt(new BigDecimal(confirmAmt));
+    return detail;
   }
 
   /**

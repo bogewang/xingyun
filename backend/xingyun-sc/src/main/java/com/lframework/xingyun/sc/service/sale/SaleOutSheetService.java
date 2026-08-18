@@ -11,6 +11,7 @@ import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProfitTrendDto;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
+import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetInvoiceDetailExportModel;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetWithReturnDto;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
@@ -293,6 +294,14 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   void marketBuySummary2(QuerySaleOutSheetVo vo);
 
   void exportDetailDailySummary(QuerySaleOutSheetVo vo);
+
+  /**
+   * 查询已按商品和单位汇总的开票明细。
+   *
+   * @param vo 查询参数
+   * @return 开票明细
+   */
+  List<SaleOutSheetInvoiceDetailExportModel> queryInvoiceDetail(QuerySaleOutSheetVo vo);
 
   void exportSales(QuerySaleOutSheetVo vo, HttpServletResponse response);
 
