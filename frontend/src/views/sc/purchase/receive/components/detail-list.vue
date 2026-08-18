@@ -223,7 +223,7 @@
           { field: 'categoryName', title: '商品分类', width: 120 },
           { field: 'orderNum', title: '数量', align: 'right', width: 100 },
           { field: 'taxPrice', title: '采购价', align: 'right', width: 100 },
-          { field: 'taxAmount', title: '采购金额', align: 'right', width: 100 },
+          { field: 'taxAmount', title: '采购金额', align: 'right', width: 100, sortable: true },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
           {

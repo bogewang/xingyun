@@ -475,6 +475,7 @@
             title: '销售金额',
             align: 'right',
             width: 100,
+            sortable: true,
             slots: { default: 'taxAmount_default' },
           },
           { field: 'confirmNum', title: '验收数量', align: 'right', width: 100 },
