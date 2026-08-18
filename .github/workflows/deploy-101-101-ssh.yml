@@ -1,0 +1,95 @@
+name: Deploy 101
+
+on:
+  push:
+    branches:
+      - feature/0818_dev_xml
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-101
+  cancel-in-progress: true
+
+jobs:
+  deploy-101:
+    name: Build and deploy 101
+    runs-on: [self-hosted, linux, x64, deploy]
+    environment: 101
+
+    steps:
+      - name: SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Checkout trigger branch via SSH
+        run: |
+          git remote set-url origin git@github.com:bogewang/xingyun.git
+          git fetch --no-tags --prune --no-recurse-submodules origin "${{ github.ref_name }}"
+          git checkout -B "${{ github.ref_name }}" "origin/${{ github.ref_name }}"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+          cache: maven
+          overwrite-settings: false
+
+      - name: Install jugg dependencies
+        run: |
+          git clone --depth 1 --branch main git@github.com:bogewang/jugg.git "$RUNNER_TEMP/jugg"
+          mvn --settings "$GITHUB_WORKSPACE/.github/maven-settings.xml" -f "$RUNNER_TEMP/jugg/pom.xml" clean install -DskipTests
+
+      - name: Build backend
+        working-directory: backend
+        run: mvn --settings "$GITHUB_WORKSPACE/.github/maven-settings.xml" clean package -Pprod -DskipTests -pl xingyun-api -am
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+
+      - name: Package frontend
+        run: tar -czf frontend-dist.tar.gz -C frontend dist
+
+      - name: Prepare deployment directories
+        run: |
+          set -e
+          umask 0002
+          mkdir -p /www/wwwroot/xingyun/data/tmp
+          mkdir -p /www/wwwroot/xingyun/data/upload
+          mkdir -p /www/wwwroot/xingyun/data/security-upload
+          chmod 775 /www/wwwroot/xingyun
+          chmod -R 775 /www/wwwroot/xingyun/data
+
+      - name: Restart 101 services
+        run: |
+          set -e
+          umask 0002
+          cd /www/wwwroot/xingyun
+          rm -rf dist.new
+          mkdir -p dist.new
+          tar -xzf "$GITHUB_WORKSPACE/frontend-dist.tar.gz" -C dist.new
+          mv "$GITHUB_WORKSPACE/backend/xingyun-api/target/xingyun-api.jar" xingyun-api.jar.new
+          rm -rf dist
+          mv dist.new/dist dist
+          rm -rf dist.new
+          mv xingyun-api.jar.new xingyun-api.jar
+          chmod 664 xingyun-api.jar
+          chmod -R 775 dist
+          sudo /usr/bin/systemctl restart xingyun-api-test
+          sudo /www/server/nginx/sbin/nginx -s reload
