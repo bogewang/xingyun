@@ -56,7 +56,7 @@
   } from '@/components/PrintDesigner/src/printUtils';
   import { closePrintDialog, usePrintDialogState } from './printDialog';
 
-  const PREVIEW_WIDTH = '80%';
+  const PREVIEW_WIDTH = 'min(90vw, 1080px)';
 
   type PrinterOption = {
     label: string;
@@ -349,5 +349,10 @@
 
   :deep(.preview-header .print-count) {
     display: none;
+  }
+
+  :deep(.preview-container) {
+    padding-left: 12px;
+    padding-right: 12px;
   }
 </style>
