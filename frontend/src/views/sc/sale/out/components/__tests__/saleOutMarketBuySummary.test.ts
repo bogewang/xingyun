@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 
 import {
   buildMarketBuySummary2Params,
@@ -6,6 +7,28 @@ import {
 } from '../saleOutMarketBuySummary';
 
 describe('买菜汇总请求参数', () => {
+  it('买菜汇总导出按二进制响应处理', () => {
+    const apiSource = readFileSync(
+      new URL('../../../../../../api/sc/sale/out/index.ts', import.meta.url),
+      'utf-8',
+    );
+
+    expect(apiSource).toMatch(
+      /url: baseUrl \+ '\/export\/marketBuySummary',\s*data: params,\s*},\s*{\s*region,\s*contentType: ContentTypeEnum\.JSON,\s*responseType: ResponseEnum\.BLOB/,
+    );
+  });
+
+  it('买菜汇总2导出按二进制响应处理', () => {
+    const apiSource = readFileSync(
+      new URL('../../../../../../api/sc/sale/out/index.ts', import.meta.url),
+      'utf-8',
+    );
+
+    expect(apiSource).toMatch(
+      /url: baseUrl \+ '\/export\/marketBuySummary2',\s*data: params,\s*},\s*{\s*region,\s*contentType: ContentTypeEnum\.JSON,\s*responseType: ResponseEnum\.BLOB/,
+    );
+  });
+
   it('买菜汇总默认不按日期汇总', () => {
     expect(
       buildMarketBuySummaryParams([

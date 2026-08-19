@@ -272,6 +272,7 @@ export function exportMarketBuySummary(params: MarketBuySummaryParams): Promise<
     {
       region,
       contentType: ContentTypeEnum.JSON,
+      responseType: ResponseEnum.BLOB,
     },
   );
 }
@@ -288,6 +289,7 @@ export function exportMarketBuySummary2(params: MarketBuySummaryParams): Promise
     {
       region,
       contentType: ContentTypeEnum.JSON,
+      responseType: ResponseEnum.BLOB,
     },
   );
 }
