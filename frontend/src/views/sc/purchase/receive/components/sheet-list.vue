@@ -129,30 +129,6 @@
                 >新增</a-button
               >
               <a-button
-                v-permission="['purchase:receive:modify']"
-                @click="openBatchDescriptionDialog"
-                >更新备注</a-button
-              >
-              <a-button
-                v-permission="['purchase:receive:approve']"
-                :icon="h(CheckOutlined)"
-                @click="batchApprovePass"
-                >审核通过</a-button
-              >
-              <a-button
-                v-permission="['purchase:receive:approve']"
-                :icon="h(CloseOutlined)"
-                @click="batchApproveRefuse"
-                >审核拒绝</a-button
-              >
-              <a-button
-                v-permission="['purchase:receive:delete']"
-                danger
-                :icon="h(DeleteOutlined)"
-                @click="batchDelete"
-                >批量删除</a-button
-              >
-              <a-button
                 v-permission="['purchase:receive:export']"
                 :icon="h(CloudUploadOutlined)"
                 @click="$refs.importer.openDialog()"
@@ -164,6 +140,25 @@
                 @click="exportList"
                 >导出</a-button
               >
+              <a-dropdown>
+                <template #overlay>
+                  <a-menu @click="handleMoreCommand">
+                    <a-menu-item v-permission="['purchase:receive:delete']" key="batchDelete" :icon="h(DeleteOutlined)" class="danger-menu-item">
+                      批量删除
+                    </a-menu-item>
+                    <a-menu-item v-permission="['purchase:receive:modify']" key="updateDescription">
+                      更新备注
+                    </a-menu-item>
+                    <a-menu-item v-permission="['purchase:receive:approve']" key="batchApprovePass" :icon="h(CheckOutlined)">
+                      审核通过
+                    </a-menu-item>
+                    <a-menu-item v-permission="['purchase:receive:approve']" key="batchApproveRefuse" :icon="h(CloseOutlined)">
+                      审核拒绝
+                    </a-menu-item>
+                  </a-menu>
+                </template>
+                <a-button size="middle" class="toolbar-more-button">更多<DownOutlined /></a-button>
+              </a-dropdown>
             </a-space>
           </template>
 
@@ -284,6 +279,7 @@
     CloudUploadOutlined,
     DeleteOutlined,
     DownloadOutlined,
+    DownOutlined,
     PlusOutlined,
     SearchOutlined,
   } from '@ant-design/icons-vue';
@@ -336,8 +332,10 @@
         PlusOutlined,
         CheckOutlined,
         CloseOutlined,
+        CloudUploadOutlined,
         DeleteOutlined,
         DownloadOutlined,
+        DownOutlined,
         isEmpty,
         RECEIVE_SHEET_STATUS,
         SETTLE_STATUS,
@@ -614,6 +612,16 @@
           ids: [],
           description: row.description || '',
         };
+      },
+      /** 处理顶部更多菜单操作。 */
+      handleMoreCommand({ key }) {
+        const commandMap = {
+          batchDelete: () => this.batchDelete(),
+          updateDescription: () => this.openBatchDescriptionDialog(),
+          batchApprovePass: () => this.batchApprovePass(),
+          batchApproveRefuse: () => this.batchApproveRefuse(),
+        };
+        commandMap[key]?.();
       },
       /** 打开批量更新备注弹窗。 */
       openBatchDescriptionDialog() {
@@ -898,3 +906,14 @@
     },
   });
 </script>
+
+<style scoped>
+  :global(.ant-dropdown-menu-item.danger-menu-item),
+  :global(.ant-dropdown-menu-item.danger-menu-item:hover) {
+    color: #ff4d4f;
+  }
+
+  .toolbar-more-button {
+    min-height: 32px;
+  }
+</style>
