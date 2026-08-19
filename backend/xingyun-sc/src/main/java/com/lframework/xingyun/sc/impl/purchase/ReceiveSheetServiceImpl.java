@@ -364,6 +364,31 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         OpLogUtil.setExtra(vo);
     }
 
+    /**
+     * 批量更新采购收货单备注。
+     *
+     * @param vo 批量更新参数
+     */
+    @OpLog(type = PurchaseOpLogType.class, name = "批量修改采购收货单备注")
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void batchUpdateDescription(BatchUpdateReceiveSheetDescriptionVo vo) {
+
+        List<ReceiveSheet> sheets = getBaseMapper().selectBatchIds(vo.getIds());
+        if (sheets.size() != vo.getIds().size()) {
+            throw new InputErrorException("部分采购收货单不存在，请刷新后重试！");
+        }
+
+        Wrapper<ReceiveSheet> updateWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
+                .set(ReceiveSheet::getDescription, vo.getDescription())
+                .in(ReceiveSheet::getId, vo.getIds());
+        if (getBaseMapper().update(updateWrapper) != vo.getIds().size()) {
+            throw new DefaultClientException("采购收货单信息已过期，请刷新重试！");
+        }
+
+        OpLogUtil.setExtra(vo);
+    }
+
     @OpLog(type = PurchaseOpLogType.class, name = "审核通过采购收货单，单号：{}", params = "#code")
     @OrderTimeLineLog(type = ApprovePassOrderTimeLineBizType.class, orderId = "#vo.id", name = "审核通过")
     @Transactional(rollbackFor = Exception.class)

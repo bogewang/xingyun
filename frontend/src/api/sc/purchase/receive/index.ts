@@ -14,6 +14,7 @@ import { QueryReceiveSheetWithReturnBo } from '@/api/sc/purchase/receive/model/q
 import { CreateReceiveSheetVo } from '@/api/sc/purchase/receive/model/createReceiveSheetVo';
 import { UpdateReceiveSheetVo } from '@/api/sc/purchase/receive/model/updateReceiveSheetVo';
 import { UpdateReceiveSheetDescriptionVo } from '@/api/sc/purchase/receive/model/updateReceiveSheetDescriptionVo';
+import { BatchUpdateReceiveSheetDescriptionVo } from '@/api/sc/purchase/receive/model/batchUpdateReceiveSheetDescriptionVo';
 import { ApprovePassReceiveSheetVo } from '@/api/sc/purchase/receive/model/approvePassReceiveSheetVo';
 import { ApproveRefuseReceiveSheetVo } from '@/api/sc/purchase/receive/model/approveRefuseReceiveSheetVo';
 import { PrintReceiveSheetBo } from '@/api/sc/purchase/receive/model/printReceiveSheetBo';
@@ -265,6 +266,20 @@ export function updateDescription(data: UpdateReceiveSheetDescriptionVo): Promis
   return defHttp.patch<void>(
     {
       url: baseUrl + '/description',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/** 批量更新备注。 */
+export function batchUpdateDescription(data: BatchUpdateReceiveSheetDescriptionVo): Promise<void> {
+  return defHttp.patch<void>(
+    {
+      url: baseUrl + '/description/batch',
       data,
     },
     {

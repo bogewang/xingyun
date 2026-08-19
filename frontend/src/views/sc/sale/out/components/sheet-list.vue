@@ -148,27 +148,6 @@
                 @click="openAddDialog"
                 >新增</a-button
               >
-
-              <a-button
-                v-permission="['sale:out:approve']"
-                :icon="h(CheckOutlined)"
-                @click="batchApprovePass"
-                >审核通过</a-button
-              >
-              <a-button
-                v-permission="['sale:out:approve']"
-                :icon="h(CloseOutlined)"
-                @click="batchApproveRefuse"
-                >审核拒绝</a-button
-              >
-              <a-button
-                v-permission="['sale:out:delete']"
-                danger
-                :icon="h(DeleteOutlined)"
-                @click="batchDelete"
-                >批量删除</a-button
-              >
-
               <a-button
                 v-permission="['sale:out:add']"
                 :icon="h(CloudUploadOutlined)"
@@ -182,12 +161,6 @@
                 >导出</a-button
               >
               <a-button
-                v-permission="['sale:out:export']"
-                :icon="h(DownloadOutlined)"
-                @click="batchExportDetails"
-                >批量导出明细</a-button
-              >
-              <a-button
                 v-permission="['wenshan:sale:out:saleexport']"
                 :icon="h(DownloadOutlined)"
                 @click="exportSales"
@@ -198,12 +171,6 @@
                 :icon="h(DownloadOutlined)"
                 @click="marketBuySummary"
                 >买菜汇总</a-button
-              >
-              <a-button
-                v-permission="['sale:out:query']"
-                :icon="h(DownloadOutlined)"
-                @click="marketBuySummary2"
-                >买菜汇总-按客户</a-button
               >
               <a-button
                 v-permission="['report:sale-profit:approve']"
@@ -223,24 +190,40 @@
                 @click="tagPrint"
                 >标签打印</a-button
               >
-              <a-button
-                v-permission="['sale:out:approve']"
-                :icon="h(SyncOutlined)"
-                @click="openInquiryPriceSync"
-                >同步询价到销售表</a-button
-              >
-              <a-button
-                v-permission="['sale:out:modify']"
-                :icon="h(MergeCellsOutlined)"
-                @click="mergeOrders"
-              >合并订单</a-button
-              >
-              <a-button
-                v-permission="['sale:out:modify']"
-                :icon="h(CheckOutlined)"
-                @click="batchDelivery"
-              >确认送货</a-button
-              >
+              <a-dropdown>
+                <template #overlay>
+                  <a-menu @click="handleMoreCommand">
+                    <a-menu-item v-permission="['sale:out:delete']" key="batchDelete" :icon="h(DeleteOutlined)" class="danger-menu-item">
+                      批量删除
+                    </a-menu-item>
+                    <a-menu-item v-permission="['sale:out:export']" key="batchExportDetails" :icon="h(DownloadOutlined)">
+                      批量导出明细
+                    </a-menu-item>
+                    <a-menu-item v-permission="['sale:out:query']" key="marketBuySummary2" :icon="h(DownloadOutlined)">
+                      买菜汇总-按客户
+                    </a-menu-item>
+                    <a-menu-item v-permission="['sale:out:modify']" key="mergeOrders" :icon="h(MergeCellsOutlined)">
+                      合并订单
+                    </a-menu-item>
+                    <a-menu-item v-permission="['sale:out:modify']" key="batchDelivery" :icon="h(CheckOutlined)">
+                      确认送货
+                    </a-menu-item>
+                    <a-menu-item v-permission="['sale:out:modify']" key="updateDescription" :icon="h(ContainerOutlined)">
+                      更新备注
+                    </a-menu-item>
+                    <a-menu-item v-permission="['sale:out:approve']" key="openInquiryPriceSync" :icon="h(SyncOutlined)">
+                      同步询价到销售表
+                    </a-menu-item>
+                    <a-menu-item v-permission="['sale:out:approve']" key="batchApprovePass" :icon="h(CheckOutlined)">
+                      审核通过
+                    </a-menu-item>
+                    <a-menu-item v-permission="['sale:out:approve']" key="batchApproveRefuse" :icon="h(CloseOutlined)">
+                      审核拒绝
+                    </a-menu-item>
+                  </a-menu>
+                </template>
+                <a-button size="middle" class="toolbar-more-button">更多<DownOutlined /></a-button>
+              </a-dropdown>
             </a-space>
           </template>
 
@@ -305,7 +288,7 @@
 
       <a-modal
         v-model:open="descriptionModal.visible"
-        title="修改备注"
+        :title="descriptionModal.ids.length ? '批量更新备注' : '修改备注'"
         :confirm-loading="descriptionModal.loading"
         @ok="submitDescription"
         @cancel="closeDescriptionDialog"
@@ -484,7 +467,7 @@
   import {
     CheckOutlined,
     CloseOutlined,
-    CloudUploadOutlined,
+    CloudUploadOutlined, ContainerOutlined,
     DeleteOutlined,
     DownloadOutlined,
     DownOutlined,
@@ -549,6 +532,7 @@
         SearchOutlined,
         PlusOutlined,
         CheckOutlined,
+        ContainerOutlined,
         CloseOutlined,
         CloudUploadOutlined,
         DeleteOutlined,
@@ -699,6 +683,7 @@
           visible: false,
           loading: false,
           id: '',
+          ids: [],
           description: '',
         },
         inquiryPriceSyncModal: {
@@ -1008,7 +993,38 @@
           visible: true,
           loading: false,
           id: row.id,
+          ids: [],
           description: row.description || '',
+        };
+      },
+      /** 处理顶部更多菜单操作。 */
+      handleMoreCommand({ key }) {
+        const commandMap = {
+          batchDelete: () => this.batchDelete(),
+          batchExportDetails: () => this.batchExportDetails(),
+          marketBuySummary2: () => this.marketBuySummary2(),
+          mergeOrders: () => this.mergeOrders(),
+          batchDelivery: () => this.batchDelivery(),
+          updateDescription: () => this.openBatchDescriptionDialog(),
+          openInquiryPriceSync: () => this.openInquiryPriceSync(),
+          batchApprovePass: () => this.batchApprovePass(),
+          batchApproveRefuse: () => this.batchApproveRefuse(),
+        };
+        commandMap[key]?.();
+      },
+      /** 打开批量更新备注弹窗。 */
+      openBatchDescriptionDialog() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (records.length === 0) {
+          createError('请选择需要更新备注的销售出库单！');
+          return;
+        }
+        this.descriptionModal = {
+          visible: true,
+          loading: false,
+          id: '',
+          ids: records.map((item) => item.id),
+          description: '',
         };
       },
       closeDescriptionDialog() {
@@ -1017,11 +1033,16 @@
       },
       submitDescription() {
         this.descriptionModal.loading = true;
-        api
-          .updateDescription({
-            id: this.descriptionModal.id,
-            description: this.descriptionModal.description,
-          })
+        const request = this.descriptionModal.ids.length
+          ? api.batchUpdateDescription({
+              ids: this.descriptionModal.ids,
+              description: this.descriptionModal.description,
+            })
+          : api.updateDescription({
+              id: this.descriptionModal.id,
+              description: this.descriptionModal.description,
+            });
+        request
           .then(() => {
             createSuccess('保存成功！');
             this.closeDescriptionDialog();
@@ -1582,7 +1603,6 @@
           {
             permission: ['sale:out:modify'],
             label: '修改备注',
-            ifShow: () => !this.isSettleLocked(row),
             onClick: () => {
               this.openDescriptionDialog(row);
             },
@@ -1661,5 +1681,14 @@
   .recalc-error {
     max-width: 420px;
     text-align: center;
+  }
+
+  :global(.ant-dropdown-menu-item.danger-menu-item),
+  :global(.ant-dropdown-menu-item.danger-menu-item:hover) {
+    color: #ff4d4f;
+  }
+
+  .toolbar-more-button {
+    min-height: 32px;
   }
 </style>

@@ -17,6 +17,7 @@ import { QuerySaleOutSheetWithReturnBo } from '@/api/sc/sale/out/model/querySale
 import { CreateSaleOutSheetVo } from '@/api/sc/sale/out/model/createSaleOutSheetVo';
 import { UpdateSaleOutSheetVo } from '@/api/sc/sale/out/model/updateSaleOutSheetVo';
 import { UpdateSaleOutSheetDescriptionVo } from '@/api/sc/sale/out/model/updateSaleOutSheetDescriptionVo';
+import { BatchUpdateSaleOutSheetDescriptionVo } from '@/api/sc/sale/out/model/batchUpdateSaleOutSheetDescriptionVo';
 import { ApprovePassSaleOutSheetVo } from '@/api/sc/sale/out/model/approvePassSaleOutSheetVo';
 import { ApproveRefuseSaleOutSheetVo } from '@/api/sc/sale/out/model/approveRefuseSaleOutSheetVo';
 import { BatchUpdateSaleOutSheetPriceVo } from '@/api/sc/sale/out/model/batchUpdateSaleOutSheetPriceVo';
@@ -705,6 +706,20 @@ export function updateDescription(data: UpdateSaleOutSheetDescriptionVo): Promis
   return defHttp.patch<void>(
     {
       url: baseUrl + '/description',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/** 批量更新备注。 */
+export function batchUpdateDescription(data: BatchUpdateSaleOutSheetDescriptionVo): Promise<void> {
+  return defHttp.patch<void>(
+    {
+      url: baseUrl + '/description/batch',
       data,
     },
     {
