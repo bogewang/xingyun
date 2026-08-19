@@ -230,7 +230,7 @@
                 >同步询价到销售表</a-button
               >
               <a-button
-                v-permission="['sale:out:approve']"
+                v-permission="['sale:out:modify']"
                 :icon="h(MergeCellsOutlined)"
                 @click="mergeOrders"
               >合并订单</a-button
