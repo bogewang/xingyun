@@ -20,6 +20,13 @@ import org.testng.annotations.Test;
 
 class SaleOutSheetServiceImplTest {
 
+  /** 验证标签打印数量会去除小数点后的无意义零。 */
+  @Test
+  void formatTagPrintNumShouldStripTrailingZero() {
+    Assert.assertEquals(SaleOutSheetServiceImpl.formatTagPrintNum(new BigDecimal("1.0")), "1");
+    Assert.assertEquals(SaleOutSheetServiceImpl.formatTagPrintNum(new BigDecimal("1.5")), "1.5");
+  }
+
   @Test
   void normalizeQueryImportNumbersShouldConvertNullQuantityToZero() {
     SaleOutSheetQueryImportModel model = new SaleOutSheetQueryImportModel();

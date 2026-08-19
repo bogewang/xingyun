@@ -331,7 +331,7 @@ public class SaleOutSheetServiceImpl extends
                         BigDecimal outNum = outDetails.stream()
                                 .map(SaleOutSheetDetail::getBusinessNum)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-                        String format = outNum.setScale(1, RoundingMode.HALF_UP).toString();
+                        String format = formatTagPrintNum(outNum);
                         String unitName = outDetails.get(0).getUnitName();
                         // 添加备注
                         if (StringUtils.isNotBlank(outDetails.get(0).getDescription())) {
@@ -354,6 +354,16 @@ public class SaleOutSheetServiceImpl extends
                         .thenComparing(PrintSaleTagBo::getProductName)
                         .thenComparing(PrintSaleTagBo::getOrderDate))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 格式化标签打印数量：保留一位小数进行四舍五入，并移除末尾无意义的零。
+     *
+     * @param num 数量
+     * @return 用于标签展示的数量
+     */
+    static String formatTagPrintNum(BigDecimal num) {
+        return num.setScale(1, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
     }
 
     /**
