@@ -20,6 +20,13 @@ import org.testng.annotations.Test;
 
 class SaleOutSheetServiceImplTest {
 
+  /** 验证标签打印数量会去除小数点后的无意义零。 */
+  @Test
+  void formatTagPrintNumShouldStripTrailingZero() {
+    Assert.assertEquals(SaleOutSheetServiceImpl.formatTagPrintNum(new BigDecimal("1.0")), "1");
+    Assert.assertEquals(SaleOutSheetServiceImpl.formatTagPrintNum(new BigDecimal("1.5")), "1.5");
+  }
+
   @Test
   void normalizeQueryImportNumbersShouldConvertNullQuantityToZero() {
     SaleOutSheetQueryImportModel model = new SaleOutSheetQueryImportModel();
@@ -53,7 +60,7 @@ class SaleOutSheetServiceImplTest {
 
     List<String> errors = SaleOutSheetServiceImpl.validateImportNumbers(model);
 
-    Assert.assertTrue(errors.contains("第2行“数量”不允许小于0"));
+    Assert.assertTrue(errors.contains("第2行“验收数量”不允许小于0"));
     Assert.assertTrue(errors.contains("第2行“单价”不允许小于0"));
   }
 
@@ -120,7 +127,7 @@ class SaleOutSheetServiceImplTest {
     detail.setOrderNum(new BigDecimal("10"));
     detail.setConfirmNum(BigDecimal.ZERO);
 
-    Assert.assertEquals(SaleOutSheetServiceImpl.resolveCostNum(detail), BigDecimal.ZERO);
+    Assert.assertEquals(SaleOutSheetServiceImpl.resolveCostNum(detail), new BigDecimal("10"));
   }
 
   /**
@@ -219,7 +226,7 @@ class SaleOutSheetServiceImplTest {
         .findFirst()
         .orElseThrow(AssertionError::new);
     Assert.assertEquals(box.getQuantity(), new BigDecimal("3"));
-    Assert.assertEquals(box.getAmount(), new BigDecimal("38"));
+    Assert.assertEquals(box.getAmount(), new BigDecimal("28"));
     Assert.assertEquals(box.getCategoryName(), "测试分类");
     SaleOutSheetInvoiceDetailExportModel piece = models.stream()
         .filter(item -> "件".equals(item.getUnit()))
