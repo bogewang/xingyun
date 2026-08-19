@@ -647,6 +647,24 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
+     * 批量修改备注
+     */
+    @ApiOperation("批量修改备注")
+    @HasPermission({ "sale:out:modify" })
+    @PatchMapping("/description/batch")
+    public InvokeResult<Void> batchUpdateDescription(
+            @RequestBody @Valid BatchUpdateSaleOutSheetDescriptionVo vo) {
+        try {
+            saleOutSheetService.batchUpdateDescription(vo);
+
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
+    }
+
+    /**
      * 批量调整售价
      */
     @ApiOperation("批量调整售价")

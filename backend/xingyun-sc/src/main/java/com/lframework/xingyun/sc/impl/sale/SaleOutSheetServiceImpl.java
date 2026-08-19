@@ -1564,11 +1564,6 @@ public class SaleOutSheetServiceImpl extends
         if (sheet == null) {
             throw new InputErrorException("销售出库单不存在！");
         }
-        if (Arrays.asList(SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE,
-                SettleStatus.SETTLED).contains(sheet.getSettleStatus())) {
-            throw new DefaultClientException("销售出库单已对账或已结算，无法修改！");
-        }
-
         Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
                 .set(SaleOutSheet::getDescription, vo.getDescription())
                 .eq(SaleOutSheet::getId, sheet.getId());
@@ -1577,6 +1572,30 @@ public class SaleOutSheetServiceImpl extends
         }
 
         OpLogUtil.setVariable("code", sheet.getCode());
+        OpLogUtil.setExtra(vo);
+    }
+
+    /**
+     * 批量更新销售出库单备注。
+     *
+     * @param vo 批量更新参数
+     */
+    @OpLog(type = SaleOpLogType.class, name = "批量修改销售出库单备注")
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void batchUpdateDescription(BatchUpdateSaleOutSheetDescriptionVo vo) {
+
+        List<SaleOutSheet> sheets = getBaseMapper().selectBatchIds(vo.getIds());
+        if (sheets.size() != vo.getIds().size()) {
+            throw new InputErrorException("部分销售出库单不存在，请刷新后重试！");
+        }
+        Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
+                .set(SaleOutSheet::getDescription, vo.getDescription())
+                .in(SaleOutSheet::getId, vo.getIds());
+        if (getBaseMapper().update(updateWrapper) != vo.getIds().size()) {
+            throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
+        }
+
         OpLogUtil.setExtra(vo);
     }
 

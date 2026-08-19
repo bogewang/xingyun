@@ -148,6 +148,11 @@
                 @click="openAddDialog"
                 >新增</a-button
               >
+              <a-button
+                v-permission="['sale:out:modify']"
+                @click="openBatchDescriptionDialog"
+                >更新备注</a-button
+              >
 
               <a-button
                 v-permission="['sale:out:approve']"
@@ -305,7 +310,7 @@
 
       <a-modal
         v-model:open="descriptionModal.visible"
-        title="修改备注"
+        :title="descriptionModal.ids.length ? '批量更新备注' : '修改备注'"
         :confirm-loading="descriptionModal.loading"
         @ok="submitDescription"
         @cancel="closeDescriptionDialog"
@@ -699,6 +704,7 @@
           visible: false,
           loading: false,
           id: '',
+          ids: [],
           description: '',
         },
         inquiryPriceSyncModal: {
@@ -1008,7 +1014,23 @@
           visible: true,
           loading: false,
           id: row.id,
+          ids: [],
           description: row.description || '',
+        };
+      },
+      /** 打开批量更新备注弹窗。 */
+      openBatchDescriptionDialog() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (records.length === 0) {
+          createError('请选择需要更新备注的销售出库单！');
+          return;
+        }
+        this.descriptionModal = {
+          visible: true,
+          loading: false,
+          id: '',
+          ids: records.map((item) => item.id),
+          description: '',
         };
       },
       closeDescriptionDialog() {
@@ -1017,11 +1039,16 @@
       },
       submitDescription() {
         this.descriptionModal.loading = true;
-        api
-          .updateDescription({
-            id: this.descriptionModal.id,
-            description: this.descriptionModal.description,
-          })
+        const request = this.descriptionModal.ids.length
+          ? api.batchUpdateDescription({
+              ids: this.descriptionModal.ids,
+              description: this.descriptionModal.description,
+            })
+          : api.updateDescription({
+              id: this.descriptionModal.id,
+              description: this.descriptionModal.description,
+            });
+        request
           .then(() => {
             createSuccess('保存成功！');
             this.closeDescriptionDialog();
@@ -1582,7 +1609,6 @@
           {
             permission: ['sale:out:modify'],
             label: '修改备注',
-            ifShow: () => !this.isSettleLocked(row),
             onClick: () => {
               this.openDescriptionDialog(row);
             },

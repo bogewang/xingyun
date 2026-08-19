@@ -305,6 +305,23 @@ public class ReceiveSheetController extends DefaultBaseController {
     }
 
     /**
+     * 批量修改备注
+     */
+    @ApiOperation("批量修改备注")
+    @HasPermission({"purchase:receive:modify"})
+    @PatchMapping("/description/batch")
+    public InvokeResult<Void> batchUpdateDescription(
+            @RequestBody @Valid BatchUpdateReceiveSheetDescriptionVo vo) {
+        try {
+            receiveSheetService.batchUpdateDescription(vo);
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
+    }
+
+    /**
      * 审核通过
      */
     @ApiOperation("审核通过")

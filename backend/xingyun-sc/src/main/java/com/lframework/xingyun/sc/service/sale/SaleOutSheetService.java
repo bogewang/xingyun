@@ -159,6 +159,13 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   void updateDescription(UpdateSaleOutSheetDescriptionVo vo);
 
   /**
+   * 批量更新销售出库单备注。
+   *
+   * @param vo 批量更新参数
+   */
+  void batchUpdateDescription(BatchUpdateSaleOutSheetDescriptionVo vo);
+
+  /**
    * 批量调整销售出库明细售价
    *
    * @param vo

@@ -106,6 +106,13 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
   void updateDescription(UpdateReceiveSheetDescriptionVo vo);
 
   /**
+   * 批量更新采购收货单备注。
+   *
+   * @param vo 批量更新参数
+   */
+  void batchUpdateDescription(BatchUpdateReceiveSheetDescriptionVo vo);
+
+  /**
    * 审核通过
    *
    * @param vo
