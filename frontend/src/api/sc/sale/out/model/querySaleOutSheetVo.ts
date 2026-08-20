@@ -7,6 +7,11 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
   code: string;
 
   /**
+   * 单据备注
+   */
+  sheetDescription: string;
+
+  /**
    * 商品名称
    */
   productName: string;

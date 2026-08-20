@@ -53,6 +53,9 @@
                 <j-form-item label="单据号">
                   <a-input v-model:value="searchFormData.code" allow-clear />
                 </j-form-item>
+                <j-form-item label="备注">
+                  <a-input v-model:value="searchFormData.sheetDescription" allow-clear />
+                </j-form-item>
                 <j-form-item label="成本状态">
                   <a-select
                     v-model:value="searchFormData.fillAllCost"
@@ -193,31 +196,68 @@
               <a-dropdown>
                 <template #overlay>
                   <a-menu @click="handleMoreCommand">
-                    <a-menu-item v-permission="['sale:out:delete']" key="batchDelete" :icon="h(DeleteOutlined)" class="danger-menu-item">
+                    <a-menu-item
+                      v-if="hasPermission('sale:out:delete', false)"
+                      key="batchDelete"
+                      :icon="h(DeleteOutlined)"
+                      class="danger-menu-item"
+                    >
                       批量删除
                     </a-menu-item>
-                    <a-menu-item v-permission="['sale:out:export']" key="batchExportDetails" :icon="h(DownloadOutlined)">
+                    <a-menu-item
+                      v-if="hasPermission('sale:out:export', false)"
+                      key="batchExportDetails"
+                      :icon="h(DownloadOutlined)"
+                    >
                       批量导出明细
                     </a-menu-item>
-                    <a-menu-item v-permission="['sale:out:query']" key="marketBuySummary2" :icon="h(DownloadOutlined)">
+                    <a-menu-item
+                      v-if="hasPermission('sale:out:query', false)"
+                      key="marketBuySummary2"
+                      :icon="h(DownloadOutlined)"
+                    >
                       买菜汇总-按客户
                     </a-menu-item>
-                    <a-menu-item v-permission="['sale:out:modify']" key="mergeOrders" :icon="h(MergeCellsOutlined)">
+                    <a-menu-item
+                      v-if="hasPermission('sale:out:modify', false)"
+                      key="mergeOrders"
+                      :icon="h(MergeCellsOutlined)"
+                    >
                       合并订单
                     </a-menu-item>
-                    <a-menu-item v-permission="['sale:out:modify']" key="batchDelivery" :icon="h(CheckOutlined)">
+                    <a-menu-item
+                      v-if="hasPermission('sale:out:modify', false)"
+                      key="batchDelivery"
+                      :icon="h(CheckOutlined)"
+                    >
                       确认送货
                     </a-menu-item>
-                    <a-menu-item v-permission="['sale:out:modify']" key="updateDescription" :icon="h(ContainerOutlined)">
+                    <a-menu-item
+                      v-if="hasPermission('sale:out:modify', false)"
+                      key="updateDescription"
+                      :icon="h(ContainerOutlined)"
+                    >
                       更新备注
                     </a-menu-item>
-                    <a-menu-item v-permission="['sale:out:approve']" key="openInquiryPriceSync" :icon="h(SyncOutlined)">
+                    <a-menu-item
+                      v-if="hasPermission('sale:out:approve', false)"
+                      key="openInquiryPriceSync"
+                      :icon="h(SyncOutlined)"
+                    >
                       同步询价到销售表
                     </a-menu-item>
-                    <a-menu-item v-permission="['sale:out:approve']" key="batchApprovePass" :icon="h(CheckOutlined)">
+                    <a-menu-item
+                      v-if="hasPermission('sale:out:approve', false)"
+                      key="batchApprovePass"
+                      :icon="h(CheckOutlined)"
+                    >
                       审核通过
                     </a-menu-item>
-                    <a-menu-item v-permission="['sale:out:approve']" key="batchApproveRefuse" :icon="h(CloseOutlined)">
+                    <a-menu-item
+                      v-if="hasPermission('sale:out:approve', false)"
+                      key="batchApproveRefuse"
+                      :icon="h(CloseOutlined)"
+                    >
                       审核拒绝
                     </a-menu-item>
                   </a-menu>
@@ -563,6 +603,7 @@
         // 查询列表的查询条件
         searchFormData: {
           code: '',
+          sheetDescription: '',
           productName: '',
           scId: '',
           customerIdList: [],
@@ -623,6 +664,13 @@
           },
           { field: 'paidAmount', title: '已付金额', align: 'right', width: 80 },
           { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 80 },
+          { field: 'description', title: '备注', width: 200 },
+          {
+            field: 'delivered',
+            title: '是否已送货',
+            width: 100,
+            formatter: ({ cellValue }) => (cellValue ? '已送货' : '未送货'),
+          },
           {
             field: 'settleStatus',
             title: '结算状态',
@@ -651,15 +699,9 @@
             width: 80,
             slots: { default: 'fillAllCost_default' },
           },
-          {
-            field: 'delivered',
-            title: '是否已送货',
-            width: 100,
-            formatter: ({ cellValue }) => (cellValue ? '已送货' : '未送货'),
-          },
+
           { field: 'createTime', title: '操作时间', width: 150, sortable: true },
           { field: 'createBy', title: '操作人', width: 80 },
-          { field: 'description', title: '备注', width: 200 },
           { title: '操作', minWidth: 300, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
@@ -840,6 +882,7 @@
       resetSearchForm() {
         this.searchFormData = {
           code: '',
+          sheetDescription: '',
           productName: '',
           scId: '',
           customerIdList: [],
