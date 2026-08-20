@@ -623,6 +623,13 @@
           },
           { field: 'paidAmount', title: '已付金额', align: 'right', width: 80 },
           { field: 'unpaidAmount', title: '未付金额', align: 'right', width: 80 },
+          { field: 'description', title: '备注', width: 200 },
+          {
+            field: 'delivered',
+            title: '是否已送货',
+            width: 100,
+            formatter: ({ cellValue }) => (cellValue ? '已送货' : '未送货'),
+          },
           {
             field: 'settleStatus',
             title: '结算状态',
@@ -651,15 +658,9 @@
             width: 80,
             slots: { default: 'fillAllCost_default' },
           },
-          {
-            field: 'delivered',
-            title: '是否已送货',
-            width: 100,
-            formatter: ({ cellValue }) => (cellValue ? '已送货' : '未送货'),
-          },
+
           { field: 'createTime', title: '操作时间', width: 150, sortable: true },
           { field: 'createBy', title: '操作人', width: 80 },
-          { field: 'description', title: '备注', width: 200 },
           { title: '操作', minWidth: 300, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
