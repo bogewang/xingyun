@@ -860,10 +860,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new InputErrorException("折后金额最多允许2位小数！");
         }
 
-        if (NumberUtil.gt(actualTotalAmount.abs(), detailTotalAmount.abs())) {
-            throw new InputErrorException("折后金额绝对值不允许大于明细金额绝对值！");
-        }
-
         return actualTotalAmount;
     }
 

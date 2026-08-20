@@ -45,6 +45,9 @@
                 <j-form-item label="单据号">
                   <a-input v-model:value="searchFormData.code" allow-clear />
                 </j-form-item>
+                <j-form-item label="备注">
+                  <a-input v-model:value="searchFormData.sheetDescription" allow-clear />
+                </j-form-item>
                 <j-form-item label="操作人">
                   <a-select
                     v-model:value="searchFormData.createBy"
@@ -350,6 +353,7 @@
         // 查询列表的查询条件
         searchFormData: {
           code: '',
+          sheetDescription: '',
           productName: '',
           supplierId: undefined,
           createBy: undefined,
@@ -480,6 +484,7 @@
       resetSearchForm() {
         this.searchFormData = {
           code: '',
+          sheetDescription: '',
           productName: '',
           supplierId: undefined,
           createBy: undefined,
