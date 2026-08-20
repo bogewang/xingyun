@@ -301,8 +301,7 @@ public class SaleOutSheetServiceImpl extends
             List<String> productIds = details.stream()
                     .map(SaleOutSheetDetail::getProductId)
                     .collect(Collectors.toList());
-            // 组装成打印数据；
-            // 按商品汇总，排除不需要打印的分类；若指定了分类筛选则只保留选中分类的商品
+            // 组装成打印数据；若指定了分类筛选则只保留选中分类的商品
             Map<String, Product> productMap = productService.getBaseMapper().selectBatchIds(productIds).stream()
                     .filter(product -> {
                         // 如果指定了分类筛选，只保留选中分类的商品
@@ -313,29 +312,22 @@ public class SaleOutSheetServiceImpl extends
                     })
                     .collect(Collectors.toMap(Product::getId, r -> r, (v1, v2) -> v2));
 
-            Map<String, List<SaleOutSheetDetail>> map = details.stream()
+            // 每条销售明细单独生成标签，确保数量和备注与原始明细一一对应。
+            List<PrintSaleTagBo> collect = details.stream()
                     .filter(detail -> productMap.containsKey(detail.getProductId()))
-                    .collect(Collectors.groupingBy(a -> String.format("%s#%s", a.getProductId(), a.getUnitName())));
-
-            List<PrintSaleTagBo> collect = map.keySet().stream()
-                    .map(key -> {
-                        String productId = key.split("#")[0];
-                        Product product = productMap.get(productId);
+                    .map(detail -> {
+                        Product product = productMap.get(detail.getProductId());
 
                         PrintSaleTagBo bo = new PrintSaleTagBo();
                         bo.setCustomerSimpleName(
                                 customer.getNickName() == null ? customer.getName() : customer.getNickName());
                         bo.setProductName(product.getName());
 
-                        List<SaleOutSheetDetail> outDetails = map.get(key);
-                        BigDecimal outNum = outDetails.stream()
-                                .map(SaleOutSheetDetail::getBusinessNum)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
-                        String format = formatTagPrintNum(outNum);
-                        String unitName = outDetails.get(0).getUnitName();
+                        String format = formatTagPrintNum(detail.getBusinessNum());
+                        String unitName = detail.getUnitName();
                         // 添加备注
-                        if (StringUtils.isNotBlank(outDetails.get(0).getDescription())) {
-                            unitName = String.format("%s（%s）", unitName, outDetails.get(0).getDescription());
+                        if (StringUtils.isNotBlank(detail.getDescription())) {
+                            unitName = String.format("%s（%s）", unitName, detail.getDescription());
                         }
                         bo.setOrderNum(String.format("%s%s", format, unitName));
                         bo.setOrderDate(item.getOrderDate().toString());

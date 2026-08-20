@@ -24,6 +24,12 @@ public class QueryReceiveSheetVo extends SortPageVo {
   private String code;
 
   /**
+   * 单据备注
+   */
+  @ApiModelProperty("单据备注")
+  private String sheetDescription;
+
+  /**
    * 商品名称
    */
   @ApiModelProperty("商品名称")
