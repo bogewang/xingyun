@@ -53,6 +53,9 @@
                 <j-form-item label="单据号">
                   <a-input v-model:value="searchFormData.code" allow-clear />
                 </j-form-item>
+                <j-form-item label="备注">
+                  <a-input v-model:value="searchFormData.sheetDescription" allow-clear />
+                </j-form-item>
                 <j-form-item label="成本状态">
                   <a-select
                     v-model:value="searchFormData.fillAllCost"
@@ -600,6 +603,7 @@
         // 查询列表的查询条件
         searchFormData: {
           code: '',
+          sheetDescription: '',
           productName: '',
           scId: '',
           customerIdList: [],
@@ -878,6 +882,7 @@
       resetSearchForm() {
         this.searchFormData = {
           code: '',
+          sheetDescription: '',
           productName: '',
           scId: '',
           customerIdList: [],

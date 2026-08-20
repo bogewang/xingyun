@@ -387,6 +387,9 @@
                 <if test="vo.code != null and vo.code != ''">
                     AND s.code = #{vo.code}
                 </if>
+                <if test="vo.sheetDescription != null and vo.sheetDescription != ''">
+                    AND s.description LIKE CONCAT('%', #{vo.sheetDescription}, '%')
+                </if>
                 <if test="vo.productName != null and vo.productName != ''">
                     AND EXISTS (
                         SELECT 1
