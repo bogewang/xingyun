@@ -25,17 +25,9 @@ import { SyncInquirySalePriceVo } from '@/api/sc/sale/out/model/syncInquirySaleP
 import { MergeSaleOutSheetVo } from '@/api/sc/sale/out/model/mergeSaleOutSheetVo';
 import { PrintSaleOrderBo } from '@/api/sc/sale/order/model/printSaleOrderBo';
 import { PrintSaleTagBo } from '@/api/sc/sale/order/model/PrintSaleTagBo';
-import qs from 'qs';
 
 const baseUrl = '/sale/out/sheet';
 const region = 'cloud-api';
-
-/**
- * 将数组查询参数序列化为 Spring MVC 可绑定的重复参数格式。
- */
-const serializeQueryParams = (params: Record<string, unknown>) => {
-  return qs.stringify(params, { arrayFormat: 'repeat' });
-};
 
 type TagPrintParams = QuerySaleOutSheetVo & {
   idList?: string[];
@@ -67,14 +59,14 @@ export function print(id: string): Promise<PrintSaleOrderBo> {
  * 订单列表
  */
 export function query(params: QuerySaleOutSheetVo): Promise<PageResult<QuerySaleOutSheetBo>> {
-  return defHttp.get<PageResult<QuerySaleOutSheetBo>>(
+  return defHttp.post<PageResult<QuerySaleOutSheetBo>>(
     {
       url: baseUrl + '/query',
-      params,
-      paramsSerializer: serializeQueryParams,
+      data: params,
     },
     {
       region,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }
@@ -82,14 +74,14 @@ export function query(params: QuerySaleOutSheetVo): Promise<PageResult<QuerySale
 export function queryDetail(
   params: QuerySaleOutSheetVo,
 ): Promise<PageResult<QuerySaleOutSheetDetailBo>> {
-  return defHttp.get<PageResult<QuerySaleOutSheetDetailBo>>(
+  return defHttp.post<PageResult<QuerySaleOutSheetDetailBo>>(
     {
       url: baseUrl + '/query/detail',
-      params,
-      paramsSerializer: serializeQueryParams,
+      data: params,
     },
     {
       region,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }
@@ -97,13 +89,14 @@ export function queryDetail(
 export function queryPriceCheckDetail(
   params: QuerySaleOutSheetVo,
 ): Promise<PageResult<QuerySaleOutSheetDetailBo>> {
-  return defHttp.get<PageResult<QuerySaleOutSheetDetailBo>>(
+  return defHttp.post<PageResult<QuerySaleOutSheetDetailBo>>(
     {
       url: baseUrl + '/query/priceCheck',
-      params,
+      data: params,
     },
     {
       region,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }
@@ -310,7 +303,7 @@ export function exportList(data: QuerySaleOutSheetVo): Promise<void> {
     },
     {
       region,
-      contentType: ContentTypeEnum.FORM_URLENCODED,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }
@@ -372,7 +365,7 @@ export function exportProfit(data: QuerySaleOutSheetVo): Promise<void> {
     },
     {
       region,
-      contentType: ContentTypeEnum.FORM_URLENCODED,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }
@@ -388,7 +381,7 @@ export function exportProductProfit(data: QuerySaleOutSheetVo): Promise<void> {
     },
     {
       region,
-      contentType: ContentTypeEnum.FORM_URLENCODED,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }
