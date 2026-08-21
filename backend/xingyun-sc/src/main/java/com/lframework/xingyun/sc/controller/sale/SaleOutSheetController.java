@@ -112,8 +112,8 @@ public class SaleOutSheetController extends DefaultBaseController {
      */
     @ApiOperation("订单列表")
     @HasPermission({ "sale:out:query" })
-    @GetMapping("/query")
-    public InvokeResult<PageResult<QuerySaleOutSheetBo>> query(@Valid QuerySaleOutSheetVo vo) {
+    @PostMapping("/query")
+    public InvokeResult<PageResult<QuerySaleOutSheetBo>> query(@Valid @RequestBody QuerySaleOutSheetVo vo) {
 
         PageResult<SaleOutSheet> pageResult = saleOutSheetService.query(getPageIndex(vo),
                 getPageSize(vo), vo);
@@ -128,8 +128,8 @@ public class SaleOutSheetController extends DefaultBaseController {
 
     @ApiOperation("订单明细列表")
     @HasPermission({ "sale:out:query" })
-    @GetMapping("/query/detail")
-    public InvokeResult<PageResult<QuerySaleOutSheetDetailBo>> queryDetail(@Valid QuerySaleOutSheetVo vo) {
+    @PostMapping("/query/detail")
+    public InvokeResult<PageResult<QuerySaleOutSheetDetailBo>> queryDetail(@Valid @RequestBody QuerySaleOutSheetVo vo) {
 
         PageResult<QuerySaleOutSheetDetailDto> pageResult = saleOutSheetService.queryDetail(
                 getPageIndex(vo), getPageSize(vo), vo);
@@ -145,8 +145,8 @@ public class SaleOutSheetController extends DefaultBaseController {
 
     @ApiOperation("查询产品询价不唯一的销售明细")
     @HasPermission({ "sale:out:query" })
-    @GetMapping("/query/priceCheck")
-    public InvokeResult<PageResult<QuerySaleOutSheetDetailBo>> queryPriceCheckDetail(@Valid QuerySaleOutSheetVo vo) {
+    @PostMapping("/query/priceCheck")
+    public InvokeResult<PageResult<QuerySaleOutSheetDetailBo>> queryPriceCheckDetail(@Valid @RequestBody QuerySaleOutSheetVo vo) {
         try {
             PageResult<QuerySaleOutSheetDetailDto> pageResult = saleOutSheetService.queryPriceCheckDetail(
                     getPageIndex(vo), getPageSize(vo), vo);
@@ -387,7 +387,7 @@ public class SaleOutSheetController extends DefaultBaseController {
     @ApiOperation("导出")
     @HasPermission({ "sale:out:export" })
     @PostMapping("/export")
-    public InvokeResult<Void> export(@Valid QuerySaleOutSheetVo vo) {
+    public InvokeResult<Void> export(@RequestBody @Valid QuerySaleOutSheetVo vo) {
 
         ExportTaskUtil.exportTask("销售出库单信息", SaleOutSheetExportTaskWorker.class, vo);
 
@@ -441,7 +441,7 @@ public class SaleOutSheetController extends DefaultBaseController {
     @ApiOperation("销售利润（按单据）导出")
     @HasPermission({ "report:sale-profit:export" })
     @PostMapping("/profit/export")
-    public InvokeResult<Void> exportProfit(@Valid QuerySaleOutSheetVo vo) {
+    public InvokeResult<Void> exportProfit(@RequestBody @Valid QuerySaleOutSheetVo vo) {
 
         ExportTaskUtil.exportTask("销售利润（按单据）", SaleOutSheetProfitExportTaskWorker.class, vo);
 
@@ -454,7 +454,7 @@ public class SaleOutSheetController extends DefaultBaseController {
     @ApiOperation("销售利润（按商品）导出")
     @HasPermission({ "report:sale-profit:product:export" })
     @PostMapping("/profit/product/export")
-    public InvokeResult<Void> exportProductProfit(@Valid QuerySaleOutSheetVo vo) {
+    public InvokeResult<Void> exportProductProfit(@RequestBody @Valid QuerySaleOutSheetVo vo) {
 
         ExportTaskUtil.exportTask("销售利润（按商品）", SaleOutSheetProductProfitExportTaskWorker.class,
                 vo);

@@ -146,16 +146,29 @@
               <a-dropdown>
                 <template #overlay>
                   <a-menu @click="handleMoreCommand">
-                    <a-menu-item v-permission="['purchase:receive:delete']" key="batchDelete" :icon="h(DeleteOutlined)" class="danger-menu-item">
+                    <a-menu-item
+                      v-permission="['purchase:receive:delete']"
+                      key="batchDelete"
+                      :icon="h(DeleteOutlined)"
+                      class="danger-menu-item"
+                    >
                       批量删除
                     </a-menu-item>
                     <a-menu-item v-permission="['purchase:receive:modify']" key="updateDescription">
                       更新备注
                     </a-menu-item>
-                    <a-menu-item v-permission="['purchase:receive:approve']" key="batchApprovePass" :icon="h(CheckOutlined)">
+                    <a-menu-item
+                      v-permission="['purchase:receive:approve']"
+                      key="batchApprovePass"
+                      :icon="h(CheckOutlined)"
+                    >
                       审核通过
                     </a-menu-item>
-                    <a-menu-item v-permission="['purchase:receive:approve']" key="batchApproveRefuse" :icon="h(CloseOutlined)">
+                    <a-menu-item
+                      v-permission="['purchase:receive:approve']"
+                      key="batchApproveRefuse"
+                      :icon="h(CloseOutlined)"
+                    >
                       审核拒绝
                     </a-menu-item>
                   </a-menu>

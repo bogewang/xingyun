@@ -59,16 +59,14 @@ export function print(id: string): Promise<PrintSaleOrderBo> {
  * 订单列表
  */
 export function query(params: QuerySaleOutSheetVo): Promise<PageResult<QuerySaleOutSheetBo>> {
-  return defHttp.get<PageResult<QuerySaleOutSheetBo>>(
+  return defHttp.post<PageResult<QuerySaleOutSheetBo>>(
     {
       url: baseUrl + '/query',
-      params,
-      paramsSerializer: {
-        indexes: null,
-      },
+      data: params,
     },
     {
       region,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }
@@ -76,16 +74,14 @@ export function query(params: QuerySaleOutSheetVo): Promise<PageResult<QuerySale
 export function queryDetail(
   params: QuerySaleOutSheetVo,
 ): Promise<PageResult<QuerySaleOutSheetDetailBo>> {
-  return defHttp.get<PageResult<QuerySaleOutSheetDetailBo>>(
+  return defHttp.post<PageResult<QuerySaleOutSheetDetailBo>>(
     {
       url: baseUrl + '/query/detail',
-      params,
-      paramsSerializer: {
-        indexes: null,
-      },
+      data: params,
     },
     {
       region,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }
@@ -93,13 +89,14 @@ export function queryDetail(
 export function queryPriceCheckDetail(
   params: QuerySaleOutSheetVo,
 ): Promise<PageResult<QuerySaleOutSheetDetailBo>> {
-  return defHttp.get<PageResult<QuerySaleOutSheetDetailBo>>(
+  return defHttp.post<PageResult<QuerySaleOutSheetDetailBo>>(
     {
       url: baseUrl + '/query/priceCheck',
-      params,
+      data: params,
     },
     {
       region,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }
@@ -306,7 +303,7 @@ export function exportList(data: QuerySaleOutSheetVo): Promise<void> {
     },
     {
       region,
-      contentType: ContentTypeEnum.FORM_URLENCODED,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }
@@ -368,7 +365,7 @@ export function exportProfit(data: QuerySaleOutSheetVo): Promise<void> {
     },
     {
       region,
-      contentType: ContentTypeEnum.FORM_URLENCODED,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }
@@ -384,7 +381,7 @@ export function exportProductProfit(data: QuerySaleOutSheetVo): Promise<void> {
     },
     {
       region,
-      contentType: ContentTypeEnum.FORM_URLENCODED,
+      contentType: ContentTypeEnum.JSON,
     },
   );
 }

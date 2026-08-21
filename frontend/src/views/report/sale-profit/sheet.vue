@@ -190,10 +190,10 @@
 
   export default defineComponent({
     name: 'SaleProfitSheetReport',
-    mixins: [costRecalculateMixin],
     components: {
       Detail,
     },
+    mixins: [costRecalculateMixin],
     setup() {
       return {
         h,

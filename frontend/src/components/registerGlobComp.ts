@@ -68,9 +68,13 @@ export async function registerGlobComp(app: App) {
     });
   };
 
-  document.addEventListener('click', () => {
-    window.setTimeout(refreshVxePagerSelectionCount);
-  }, true);
+  document.addEventListener(
+    'click',
+    () => {
+      window.setTimeout(refreshVxePagerSelectionCount);
+    },
+    true,
+  );
   window.setTimeout(refreshVxePagerSelectionCount, 500);
   window.setTimeout(refreshVxePagerSelectionCount, 1500);
   VXETable.renderer.add('NotData', {

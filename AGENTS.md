@@ -45,6 +45,7 @@
 - Entity 映射使用 MapStruct，禁止手写重复转换逻辑。
 - LLM、S3、外部 HTTP 调用不得放在数据库事务内。
 - 结构化输出统一使用 `StructuredOutputInvoker` 做重试包装。
+- 前后端交互，可以的前提下一律使用POST方法
 
 ## Never Do
 

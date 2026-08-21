@@ -64,7 +64,7 @@ setSocketIo(io); // 再注入 io（这一步不会触发连接了）
 
 hiprint.init({
   host: 'http://127.0.0.1:17521',
-  token: '',
+  token: 'D,u.j@Xu}MN%;"3y-J"|',
 });
 
 // 在应用初始化时全局注册，确保模板解析和设计器均可使用代码编辑器插件。
