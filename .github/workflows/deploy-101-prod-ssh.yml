@@ -99,9 +99,14 @@ jobs:
             rm -rf dist.new
             mkdir -p dist.new
             tar -xzf frontend-dist.tar.gz -C dist.new
-            rm -rf dist
-            mv dist.new/dist dist
+            # 保留旧版哈希资源，防止已打开的页面在发布后懒加载旧分包时返回 404。
+            mkdir -p dist
+            cp -a dist.new/dist/. dist
             rm -rf dist.new
+            # 新版文件名带内容哈希；仅保留七天，避免历史分包持续占用磁盘空间。
+            asset_retention_days=7
+            find dist/assets -type f -mtime +"$asset_retention_days" -delete
+            find dist/assets -depth -type d -empty -delete
             mv xingyun-api.jar.new xingyun-api.jar
             chmod 664 xingyun-api.jar frontend-dist.tar.gz
             chmod -R 775 dist
