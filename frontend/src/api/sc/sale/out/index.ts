@@ -25,9 +25,17 @@ import { SyncInquirySalePriceVo } from '@/api/sc/sale/out/model/syncInquirySaleP
 import { MergeSaleOutSheetVo } from '@/api/sc/sale/out/model/mergeSaleOutSheetVo';
 import { PrintSaleOrderBo } from '@/api/sc/sale/order/model/printSaleOrderBo';
 import { PrintSaleTagBo } from '@/api/sc/sale/order/model/PrintSaleTagBo';
+import qs from 'qs';
 
 const baseUrl = '/sale/out/sheet';
 const region = 'cloud-api';
+
+/**
+ * 将数组查询参数序列化为 Spring MVC 可绑定的重复参数格式。
+ */
+const serializeQueryParams = (params: Record<string, unknown>) => {
+  return qs.stringify(params, { arrayFormat: 'repeat' });
+};
 
 type TagPrintParams = QuerySaleOutSheetVo & {
   idList?: string[];
@@ -63,9 +71,7 @@ export function query(params: QuerySaleOutSheetVo): Promise<PageResult<QuerySale
     {
       url: baseUrl + '/query',
       params,
-      paramsSerializer: {
-        indexes: null,
-      },
+      paramsSerializer: serializeQueryParams,
     },
     {
       region,
@@ -80,9 +86,7 @@ export function queryDetail(
     {
       url: baseUrl + '/query/detail',
       params,
-      paramsSerializer: {
-        indexes: null,
-      },
+      paramsSerializer: serializeQueryParams,
     },
     {
       region,

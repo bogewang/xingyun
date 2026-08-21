@@ -507,7 +507,8 @@
   import {
     CheckOutlined,
     CloseOutlined,
-    CloudUploadOutlined, ContainerOutlined,
+    CloudUploadOutlined,
+    ContainerOutlined,
     DeleteOutlined,
     DownloadOutlined,
     DownOutlined,

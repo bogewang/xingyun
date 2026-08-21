@@ -49,12 +49,25 @@
                 </a-select>
               </j-form-item>
               <j-form-item label="状态">
-                <a-select v-model:value="searchFormData.settleStatus" allow-clear placeholder="全部状态">
-                  <a-select-option v-for="item in SETTLE_STATUS.values()" :key="item.code" :value="item.code">{{ item.desc }}</a-select-option>
+                <a-select
+                  v-model:value="searchFormData.settleStatus"
+                  allow-clear
+                  placeholder="全部状态"
+                >
+                  <a-select-option
+                    v-for="item in SETTLE_STATUS.values()"
+                    :key="item.code"
+                    :value="item.code"
+                    >{{ item.desc }}</a-select-option
+                  >
                 </a-select>
               </j-form-item>
               <j-form-item label="单据日期">
-                <a-range-picker v-model:value="orderDateRange" value-format="YYYY-MM-DD" :placeholder="['开始日期', '结束日期']" />
+                <a-range-picker
+                  v-model:value="orderDateRange"
+                  value-format="YYYY-MM-DD"
+                  :placeholder="['开始日期', '结束日期']"
+                />
               </j-form-item>
               <j-form-item label="关键字">
                 <a-input
@@ -155,16 +168,10 @@
           >
         </a-form-item>
         <a-form-item v-if="shouldConfirmPartialSettle">
-          <a-checkbox
-            :checked="settleDialog.fullSettleConfirmed"
-            @change="selectFullSettle"
-          >
+          <a-checkbox :checked="settleDialog.fullSettleConfirmed" @change="selectFullSettle">
             完全结算
           </a-checkbox>
-          <a-checkbox
-            :checked="settleDialog.partialSettleConfirmed"
-            @change="selectPartialSettle"
-          >
+          <a-checkbox :checked="settleDialog.partialSettleConfirmed" @change="selectPartialSettle">
             部分结算
           </a-checkbox>
           <div class="amount-tip">
@@ -237,7 +244,7 @@
           settleStatus: undefined as number | undefined,
         },
         orderDateRange: [] as string[],
-        customerOptions: [] as Array<{ label: string; value: string }> ,
+        customerOptions: [] as Array<{ label: string; value: string }>,
         toolbarConfig: {
           refresh: { queryMethod: () => this.loadList() },
           slots: { buttons: 'toolbar_buttons' },
@@ -284,12 +291,16 @@
             slots: { default: 'settleStatus_default' },
           },
           {
-            field: 'checkTime', title: '对账时间', width: 170,
+            field: 'checkTime',
+            title: '对账时间',
+            width: 170,
             formatter: ({ cellValue }: { cellValue: string }) =>
               cellValue ? moment(cellValue).format('YYYY-MM-DD HH:mm:ss') : '-',
           },
           {
-            field: 'settleTime', title: '结算时间', width: 170,
+            field: 'settleTime',
+            title: '结算时间',
+            width: 170,
             formatter: ({ cellValue }: { cellValue: string }) =>
               cellValue ? moment(cellValue).format('YYYY-MM-DD HH:mm:ss') : '-',
           },
@@ -348,16 +359,22 @@
         );
       },
       shouldConfirmPartialSettle(): boolean {
-        return this.selectedRows.length === 1 &&
+        return (
+          this.selectedRows.length === 1 &&
           Number(this.settleDialog.amount || 0).toFixed(2) !==
-            Number(this.selectedTotalUnSettleAmount || 0).toFixed(2);
+            Number(this.selectedTotalUnSettleAmount || 0).toFixed(2)
+        );
       },
       partialSettleRemainingAmount(): number {
-        return Number(this.selectedTotalUnSettleAmount || 0) - Number(this.settleDialog.amount || 0);
+        return (
+          Number(this.selectedTotalUnSettleAmount || 0) - Number(this.settleDialog.amount || 0)
+        );
       },
       shouldShowMultiFullSettleTip(): boolean {
-        return this.selectedRows.length > 1 &&
-          Number(this.settleDialog.amount || 0) < Number(this.selectedTotalUnSettleAmount || 0);
+        return (
+          this.selectedRows.length > 1 &&
+          Number(this.settleDialog.amount || 0) < Number(this.selectedTotalUnSettleAmount || 0)
+        );
       },
     },
     watch: {
@@ -448,14 +465,17 @@
       },
       /** 生成由路由客户限定的工作台查询条件。 */
       buildQueryParams() {
-        return buildCustomerDetailQuery({ customerId: this.customerId }, {
-          ...buildSortPageVo(this.pagerConfig, []),
-          code: this.searchFormData.code || undefined,
-          bizType: this.searchFormData.bizType || undefined,
-          settleStatus: this.searchFormData.settleStatus,
-          orderDateStart: this.orderDateRange?.[0] || undefined,
-          orderDateEnd: this.orderDateRange?.[1] || undefined,
-        });
+        return buildCustomerDetailQuery(
+          { customerId: this.customerId },
+          {
+            ...buildSortPageVo(this.pagerConfig, []),
+            code: this.searchFormData.code || undefined,
+            bizType: this.searchFormData.bizType || undefined,
+            settleStatus: this.searchFormData.settleStatus,
+            orderDateStart: this.orderDateRange?.[0] || undefined,
+            orderDateEnd: this.orderDateRange?.[1] || undefined,
+          },
+        );
       },
       /** 查询当前固定客户的工作台数据。 */
       async loadList() {
@@ -541,8 +561,8 @@
         }
         this.currentBizId = row.id;
         this.$nextTick(() => {
-          const detailRef = row.bizType === 1
-            ? this.$refs.saleOutDetailDialog : this.$refs.saleReturnDetailDialog;
+          const detailRef =
+            row.bizType === 1 ? this.$refs.saleOutDetailDialog : this.$refs.saleReturnDetailDialog;
           (detailRef as any)?.openDialog?.();
         });
       },
@@ -611,8 +631,10 @@
       },
       /** 结算金额变化时，金额不足默认选择部分结算。 */
       handleSettleAmountChange(amount: number | null) {
-        if (this.selectedRows.length === 1 &&
-          Number(amount || 0) < Number(this.selectedTotalUnSettleAmount || 0)) {
+        if (
+          this.selectedRows.length === 1 &&
+          Number(amount || 0) < Number(this.selectedTotalUnSettleAmount || 0)
+        ) {
           this.settleDialog.partialSettleConfirmed = true;
           this.settleDialog.fullSettleConfirmed = false;
         }
@@ -642,8 +664,11 @@
           createError('结算金额必须与所选单据未结算净额方向一致，且不能为零！');
           return;
         }
-        if (this.shouldConfirmPartialSettle &&
-          !this.settleDialog.partialSettleConfirmed && !this.settleDialog.fullSettleConfirmed) {
+        if (
+          this.shouldConfirmPartialSettle &&
+          !this.settleDialog.partialSettleConfirmed &&
+          !this.settleDialog.fullSettleConfirmed
+        ) {
           createError('结算金额与对账金额不一致，请选择“完全结算”或“部分结算”！');
           return;
         }
