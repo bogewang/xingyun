@@ -60,9 +60,11 @@ async function bootstrap() {
   app.mount('#app');
 }
 
+setSocketIo(io); // 再注入 io（这一步不会触发连接了）
+
 hiprint.init({
-  host: 'http://localhost:17521',
-  token: 'eyJrIjoiZ21jNTc2MDMzNyJ9',
+  host: 'http://127.0.0.1:17521',
+  token: '',
 });
 
 // 在应用初始化时全局注册，确保模板解析和设计器均可使用代码编辑器插件。
@@ -73,6 +75,5 @@ hiprint.register({
 
 // disAutoConnect() // 注入不自动链接，需要关闭自动链接
 // 关键：先把 window.autoConnect 置 false
-setSocketIo(io); // 再注入 io（这一步不会触发连接了）
 
 bootstrap();
