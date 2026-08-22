@@ -117,6 +117,7 @@
               v-model:value="row.purchasePrice"
               class="number-input"
               @input="(e) => purchasePriceInput(row, e.target.value)"
+              @keydown="(e) => handleTableInputKeyDown(e, 'purchasePriceInputRef', rowIndex)"
             />
           </template>
 
@@ -127,15 +128,18 @@
               v-model:value="row.receiveNum"
               class="number-input"
               @input="(e) => receiveNumInput(row, e.target.value)"
+              @keydown="(e) => handleTableInputKeyDown(e, 'receiveNumInputRef', rowIndex)"
             />
           </template>
 
           <!-- 含税金额 列自定义内容 -->
-          <template #taxAmount_default="{ row }">
+          <template #taxAmount_default="{ row, rowIndex }">
             <a-input
+              :ref="'taxAmountInputRef' + rowIndex"
               v-model:value="row.taxAmount"
               class="number-input"
               @input="(e) => taxAmountInput(row, e.target.value)"
+              @keydown="(e) => handleTableInputKeyDown(e, 'taxAmountInputRef', rowIndex)"
             />
           </template>
 
@@ -143,12 +147,17 @@
             <a-input
               :ref="'productionDateInputRef' + rowIndex"
               v-model:value="row.productionDate"
+              @keydown="(e) => handleTableInputKeyDown(e, 'productionDateInputRef', rowIndex)"
             />
           </template>
 
           <!-- 备注 列自定义内容 -->
           <template #description_default="{ row, rowIndex }">
-            <a-input :ref="'descriptionInputRef' + rowIndex" v-model:value="row.description" />
+            <a-input
+              :ref="'descriptionInputRef' + rowIndex"
+              v-model:value="row.description"
+              @keydown="(e) => handleTableInputKeyDown(e, 'descriptionInputRef', rowIndex)"
+            />
           </template>
         </vxe-grid>
       </div>
@@ -599,6 +608,26 @@
       },
       focusRowInput(refName, index) {
         return focusTableInput(this, refName, index);
+      },
+      /** 获取表格输入框对应的原生输入元素。 */
+      getTableInputElement(refName, rowIndex) {
+        const inputRef = this.$refs[refName + rowIndex];
+        const target = Array.isArray(inputRef) ? inputRef[0] : inputRef;
+        return target?.input || target?.$el?.querySelector?.('input,textarea') || null;
+      },
+      /** 处理明细输入列上下方向键，跳转至本列相邻行并选中内容。 */
+      async handleTableInputKeyDown(event, refName, rowIndex) {
+        const rowOffset = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
+        const targetRowIndex = rowIndex + rowOffset;
+        if (!rowOffset || targetRowIndex < 0 || targetRowIndex >= this.tableData.length) {
+          return;
+        }
+
+        event.preventDefault();
+        if (await focusTableInput(this, refName, targetRowIndex)) {
+          await this.$nextTick();
+          this.getTableInputElement(refName, targetRowIndex)?.select?.();
+        }
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {

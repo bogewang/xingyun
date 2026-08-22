@@ -202,30 +202,42 @@
         </template>
 
         <!-- 收货数量 列自定义内容 -->
-        <template #receiveNum_default="{ row }">
+        <template #receiveNum_default="{ row, rowIndex }">
           <a-input
+            :ref="'receiveNumInputRef' + rowIndex"
             v-model:value="row.receiveNum"
             class="number-input"
             @input="(e) => receiveNumInput(row, e.target.value)"
+            @keydown="(e) => handleTableInputKeyDown(e, 'receiveNumInputRef', rowIndex)"
           />
         </template>
 
         <!-- 含税金额 列自定义内容 -->
-        <template #taxAmount_default="{ row }">
+        <template #taxAmount_default="{ row, rowIndex }">
           <a-input
+            :ref="'taxAmountInputRef' + rowIndex"
             v-model:value="row.taxAmount"
             class="number-input"
             @input="(e) => taxAmountInput(row, e.target.value)"
+            @keydown="(e) => handleTableInputKeyDown(e, 'taxAmountInputRef', rowIndex)"
           />
         </template>
 
-        <template #productionDate_default="{ row }">
-          <a-input v-model:value="row.productionDate" />
+        <template #productionDate_default="{ row, rowIndex }">
+          <a-input
+            :ref="'productionDateInputRef' + rowIndex"
+            v-model:value="row.productionDate"
+            @keydown="(e) => handleTableInputKeyDown(e, 'productionDateInputRef', rowIndex)"
+          />
         </template>
 
         <!-- 备注 列自定义内容 -->
-        <template #description_default="{ row }">
-          <a-input v-model:value="row.description" />
+        <template #description_default="{ row, rowIndex }">
+          <a-input
+            :ref="'descriptionInputRef' + rowIndex"
+            v-model:value="row.description"
+            @keydown="(e) => handleTableInputKeyDown(e, 'descriptionInputRef', rowIndex)"
+          />
         </template>
       </vxe-grid>
 
@@ -325,7 +337,7 @@
     mergeSelectOptionMap,
     normalizeSelectValue,
   } from '@/utils/searchSelect';
-  import { focusVxeGridRow } from '@/utils/vxeGrid';
+  import { focusTableInput, focusVxeGridRow } from '@/utils/vxeGrid';
   import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
   import {
     applyManualSheetAmount,
@@ -653,6 +665,26 @@
           nextTick: () => this.$nextTick(),
           focus: () => this.$refs['productInputRef' + index]?.focus(),
         });
+      },
+      /** 获取表格输入框对应的原生输入元素。 */
+      getTableInputElement(refName, rowIndex) {
+        const inputRef = this.$refs[refName + rowIndex];
+        const target = Array.isArray(inputRef) ? inputRef[0] : inputRef;
+        return target?.input || target?.$el?.querySelector?.('input,textarea') || null;
+      },
+      /** 处理明细输入列上下方向键，跳转至本列相邻行并选中内容。 */
+      async handleTableInputKeyDown(event, refName, rowIndex) {
+        const rowOffset = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
+        const targetRowIndex = rowIndex + rowOffset;
+        if (!rowOffset || targetRowIndex < 0 || targetRowIndex >= this.tableData.length) {
+          return;
+        }
+
+        event.preventDefault();
+        if (await focusTableInput(this, refName, targetRowIndex)) {
+          await this.$nextTick();
+          this.getTableInputElement(refName, targetRowIndex)?.select?.();
+        }
       },
       // 新增商品
       addProduct() {
