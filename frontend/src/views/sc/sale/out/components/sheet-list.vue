@@ -1,7 +1,7 @@
 <template>
   <div ref="importerContainer" class="excel-importer-local-container">
     <div v-permission="['sale:out:query']">
-      <page-wrapper content-full-height fixed-height dense>
+      <page-wrapper content-full-height fixed-height>
         <!-- 数据列表 -->
         <vxe-grid
           id="SaleOutSheet"

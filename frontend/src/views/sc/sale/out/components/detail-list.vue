@@ -1,6 +1,6 @@
 <template>
   <div ref="priceCheckContainer" class="price-check-local-container">
-    <page-wrapper content-full-height fixed-height dense>
+    <page-wrapper content-full-height fixed-height>
       <vxe-grid
         id="SaleOutSheetDetailList"
         ref="grid"
