@@ -45,7 +45,9 @@
                   placeholder="请选择主单位"
                   allow-clear
                   show-search
+                  :filter-option="false"
                   style="width: 140px; flex: none"
+                  @search="searchUnitOptions"
                 >
                   <a-select-option v-for="item in unitOptions" :key="item.id" :value="item.id"
                     >{{ item.name }}
@@ -90,9 +92,11 @@
                   placeholder="辅单位"
                   style="width: 130px"
                   show-search
+                  :filter-option="false"
+                  @search="searchUnitOptions"
                 >
                   <a-select-option
-                    v-for="option in unitOptions"
+                    v-for="option in getAuxiliaryUnitOptions(item.unitName)"
                     :key="option.id"
                     :value="option.name"
                     >{{ option.name }}
@@ -264,6 +268,8 @@
         // 表单数据
         formData: {},
         unitOptions: [],
+        unitSearchTimer: null,
+        unitSearchSequence: 0,
         modelorList: [],
         // 表单校验规则
         rules: {
@@ -379,13 +385,46 @@
       this.loadFormData();
     },
     methods: {
-      loadUnitOptions() {
-        unitApi.query({ pageSize: 50, pageIndex: 1 }).then((res) => {
-          this.unitOptions = res.datas || [];
+      /**
+       * 按关键字加载计量单位候选项。
+       * @param keyword 单位名称搜索关键字
+       */
+      loadUnitOptions(keyword = '') {
+        const sequence = ++this.unitSearchSequence;
+        unitApi.query({ pageSize: 50, pageIndex: 1, name: keyword || undefined }).then((res) => {
+          if (sequence === this.unitSearchSequence) {
+            this.unitOptions = res?.datas || [];
+          }
         });
+      },
+      /**
+       * 延迟处理下拉搜索，减少连续输入产生的请求数。
+       * @param keyword 单位名称搜索关键字
+       */
+      searchUnitOptions(keyword) {
+        if (this.unitSearchTimer) {
+          clearTimeout(this.unitSearchTimer);
+        }
+        this.unitSearchTimer = setTimeout(() => this.loadUnitOptions(String(keyword || '').trim()), 300);
       },
       getBaseUnitName() {
         return this.unitOptions.find((item) => item.id === this.formData.unit)?.name || '主单位';
+      },
+      /**
+       * 获取当前辅单位可选择的计量单位。
+       * 排除主单位及已被其他辅单位行选中的单位，避免提交时出现重复单位。
+       * @param currentUnitName 当前行已选单位名称
+       * @returns 可选的计量单位列表
+       */
+      getAuxiliaryUnitOptions(currentUnitName) {
+        const baseUnitName = this.getBaseUnitName();
+        const selectedUnitNames = (this.formData.auxiliaryUnits || [])
+          .map((item) => item.unitName)
+          .filter((unitName) => unitName && unitName !== currentUnitName);
+
+        return this.unitOptions.filter(
+          (option) => option.name !== baseUnitName && !selectedUnitNames.includes(option.name),
+        );
       },
       // 关闭对话框
       closeDialog() {
