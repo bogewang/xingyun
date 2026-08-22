@@ -6,6 +6,8 @@ export const gridCollapseHeightMix = {
   },
   mounted() {
     window.addEventListener('resize', this.handleGridResize);
+    this.syncGridHeight();
+    window.setTimeout(() => this.syncGridHeight(), 240);
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.handleGridResize);

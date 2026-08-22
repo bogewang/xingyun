@@ -111,6 +111,7 @@
       prefixCls,
       {
         [`${prefixCls}--dense`]: props.dense,
+        [`${prefixCls}--fixed-height`]: props.contentFullHeight && props.fixedHeight,
       },
       attrs.class ?? {},
     ];
@@ -199,6 +200,12 @@
     &--dense {
       .@{prefix-cls}-content {
         margin: 0;
+      }
+    }
+
+    &--fixed-height {
+      .@{prefix-cls}-content {
+        margin-bottom: 0;
       }
     }
   }

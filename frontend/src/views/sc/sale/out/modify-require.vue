@@ -199,39 +199,47 @@
         </template>
 
         <!-- 出库数量 列自定义内容 -->
-        <template #outNum_default="{ row }">
+        <template #outNum_default="{ row, rowIndex }">
           <a-input
+            :ref="'outNumInputRef' + rowIndex"
             v-model:value="row.outNum"
             class="number-input"
             @input="(e) => outNumInput(row, e.target.value)"
+            @keydown="(e) => handleTableInputKeyDown(e, 'outNumInputRef', rowIndex)"
           />
         </template>
 
         <!-- 含税金额 列自定义内容 -->
-        <template #taxAmount_default="{ row }">
+        <template #taxAmount_default="{ row, rowIndex }">
           <a-input
+            :ref="'taxAmountInputRef' + rowIndex"
             v-model:value="row.taxAmount"
             class="number-input"
             @input="(e) => taxAmountInput(row, e.target.value)"
+            @keydown="(e) => handleTableInputKeyDown(e, 'taxAmountInputRef', rowIndex)"
           />
         </template>
-        <template #confirmNum_default="{ row }">
+        <template #confirmNum_default="{ row, rowIndex }">
           <a-input
+            :ref="'confirmNumInputRef' + rowIndex"
             v-model:value="row.confirmNum"
             class="number-input"
             @input="(e) => confirmNumInput(row, e.target.value)"
+            @keydown="(e) => handleTableInputKeyDown(e, 'confirmNumInputRef', rowIndex)"
           />
         </template>
         <template #confirmAmt_default="{ row }">
           <span>{{ row.confirmAmt }}</span>
         </template>
 
-        <template #costPrice_default="{ row }">
+        <template #costPrice_default="{ row, rowIndex }">
           <a-input
             v-if="canEditCostPrice(row)"
+            :ref="'costPriceInputRef' + rowIndex"
             v-model:value="row.costPrice"
             class="number-input"
             @input="(e) => costPriceInput(row, e.target.value)"
+            @keydown="(e) => handleTableInputKeyDown(e, 'costPriceInputRef', rowIndex)"
           />
           <span v-else></span>
         </template>
@@ -243,8 +251,12 @@
         </template>
 
         <!-- 备注 列自定义内容 -->
-        <template #description_default="{ row }">
-          <a-input v-model:value="row.description" />
+        <template #description_default="{ row, rowIndex }">
+          <a-input
+            :ref="'descriptionInputRef' + rowIndex"
+            v-model:value="row.description"
+            @keydown="(e) => handleTableInputKeyDown(e, 'descriptionInputRef', rowIndex)"
+          />
         </template>
         <template #planDate_default="{ row }">
           <a-date-picker v-model:value="row.planDate" value-format="YYYY-MM-DD" />
@@ -359,7 +371,7 @@
     mergeSelectOptionMap,
     normalizeSelectValue,
   } from '@/utils/searchSelect';
-  import { focusVxeGridRow } from '@/utils/vxeGrid';
+  import { focusTableInput, focusVxeGridRow } from '@/utils/vxeGrid';
   import { getSheetAmountCellClass, hasSheetAmountWarning } from '@/utils/sheetAmountWarning';
   import {
     applyManualSheetAmount,
@@ -723,6 +735,27 @@
           nextTick: () => this.$nextTick(),
           focus: () => this.$refs['productInputRef' + index]?.focus(),
         });
+      },
+      /** 获取表格输入框对应的原生输入元素。 */
+      getTableInputElement(refName, rowIndex) {
+        const inputRef = this.$refs[refName + rowIndex];
+        const target = Array.isArray(inputRef) ? inputRef[0] : inputRef;
+        return target?.input || target?.$el?.querySelector?.('input,textarea') || null;
+      },
+      /** 处理明细输入列上下方向键，跳转至本列相邻行并选中内容。 */
+      async handleTableInputKeyDown(event, refName, rowIndex) {
+        const rowOffset = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
+        const targetRowIndex = rowIndex + rowOffset;
+        if (!rowOffset || targetRowIndex < 0 || targetRowIndex >= this.tableData.length) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        if (await focusTableInput(this, refName, targetRowIndex)) {
+          await this.$nextTick();
+          this.getTableInputElement(refName, targetRowIndex)?.select?.();
+        }
       },
       // 新增商品
       addProduct() {

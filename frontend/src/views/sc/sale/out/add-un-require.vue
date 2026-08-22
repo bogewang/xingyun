@@ -634,17 +634,20 @@
         await this.$nextTick();
         this.getTableInputElement(refName, rowIndex)?.select?.();
       },
-      /** 处理明细输入列方向下键，跳转到本列下一行输入框并选中内容。 */
+      /** 处理明细输入列上下方向键，跳转至本列相邻行并选中内容。 */
       async handleTableInputKeyDown(event, refName, rowIndex, stopDelete = false) {
         if (stopDelete) {
           stopGridDeleteFromInput(event);
         }
-        if (event.key !== 'ArrowDown') {
+        const rowOffset = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
+        const targetRowIndex = rowIndex + rowOffset;
+        if (!rowOffset || targetRowIndex < 0 || targetRowIndex >= this.tableData.length) {
           return;
         }
 
         event.preventDefault();
-        await this.focusAndSelectTableInput(refName, rowIndex + 1);
+        event.stopPropagation();
+        await this.focusAndSelectTableInput(refName, targetRowIndex);
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {

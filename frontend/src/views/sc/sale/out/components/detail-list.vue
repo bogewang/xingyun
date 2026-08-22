@@ -1,6 +1,6 @@
 <template>
   <div ref="priceCheckContainer" class="price-check-local-container">
-    <page-wrapper content-full-height fixed-height dense>
+    <page-wrapper content-full-height fixed-height>
       <vxe-grid
         id="SaleOutSheetDetailList"
         ref="grid"
@@ -468,13 +468,14 @@
           { field: 'spec', title: '规格', width: 100 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'categoryName', title: '商品分类', width: 120 },
-          { field: 'orderNum', title: '数量', align: 'right', width: 100 },
-          { field: 'taxPrice', title: '销售价', align: 'right', width: 100 },
+          { field: 'orderNum', title: '数量', align: 'right', width: 100, sortable: true },
+          { field: 'taxPrice', title: '销售价', align: 'right', width: 100, sortable: true },
           {
             field: 'costPrice',
             title: '成本单价',
             align: 'right',
             width: 100,
+            sortable: true,
             slots: { default: 'costPrice_default' },
           },
           {
@@ -485,13 +486,14 @@
             sortable: true,
             slots: { default: 'taxAmount_default' },
           },
-          { field: 'confirmNum', title: '验收数量', align: 'right', width: 100 },
-          { field: 'confirmAmt', title: '验收金额', align: 'right', width: 100 },
+          { field: 'confirmNum', title: '验收数量', align: 'right', width: 100, sortable: true },
+          { field: 'confirmAmt', title: '验收金额', align: 'right', width: 100, sortable: true },
           {
             field: 'costAmount',
             title: '成本',
             align: 'right',
             width: 100,
+            sortable: true,
             slots: { default: 'costAmount_default' },
           },
           {
@@ -499,6 +501,7 @@
             title: '毛利',
             align: 'right',
             width: 100,
+            sortable: true,
             slots: { default: 'totalProfit_default' },
           },
           {
@@ -506,6 +509,7 @@
             title: '毛利率',
             align: 'right',
             width: 100,
+            sortable: true,
             slots: { default: 'profitRate_default' },
           },
           {
@@ -515,7 +519,7 @@
             formatter: ({ cellValue }) => SETTLE_STATUS.getDesc(cellValue),
           },
           { field: 'productRemark', title: '商品备注', width: 200 },
-          { field: 'description', title: '备注', width: 200 },
+          { field: 'description', title: '备注', width: 200, sortable: true },
           { field: 'createTime', title: '操作时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
         ],

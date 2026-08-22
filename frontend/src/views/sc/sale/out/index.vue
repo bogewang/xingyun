@@ -1,11 +1,11 @@
 <template>
   <div v-permission="['sale:out:query']">
-    <a-tabs v-model:activeKey="activeKey" class="query-tabs">
+    <a-tabs v-model:activeKey="activeKey" class="query-tabs" @change="syncActiveGridHeight">
       <a-tab-pane key="sheet" tab="单据查询">
-        <sheet-list />
+        <sheet-list ref="sheetList" />
       </a-tab-pane>
       <a-tab-pane key="detail" tab="明细查询">
-        <detail-list />
+        <detail-list ref="detailList" />
       </a-tab-pane>
     </a-tabs>
   </div>
@@ -26,6 +26,15 @@
       return {
         activeKey: 'sheet',
       };
+    },
+    methods: {
+      /** 切换标签页后同步当前表格高度，确保分页栏始终位于可视区域。 */
+      syncActiveGridHeight(activeKey) {
+        this.$nextTick(() => {
+          const gridList = activeKey === 'detail' ? this.$refs.detailList : this.$refs.sheetList;
+          gridList?.syncGridHeight();
+        });
+      },
     },
   });
 </script>

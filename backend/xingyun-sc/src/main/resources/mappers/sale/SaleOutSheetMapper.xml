@@ -237,8 +237,14 @@
             d.tax_price,
             d.tax_amount,
             d.confirm_amt,
-            d.cost_price * COALESCE(d.conversion_rate, 1) AS cost_price,
+            d.cost_price * COALESCE(d.conversion_rate, 1) AS costPrice,
             d.total_profit,
+            d.tax_amount - COALESCE(d.total_profit, 0) AS costAmount,
+            CASE
+                WHEN COALESCE(d.confirm_amt, 0) != 0 THEN COALESCE(d.total_profit, 0) / d.confirm_amt * 100
+                WHEN COALESCE(d.tax_amount, 0) != 0 THEN COALESCE(d.total_profit, 0) / d.tax_amount * 100
+                ELSE 0
+            END AS profitRate,
             d.is_gift,
             d.description,
             s.description AS sheet_description,

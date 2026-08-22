@@ -21,6 +21,49 @@ import { setupStore } from '@/store';
 
 import App from './App.vue';
 
+/**
+ * 处理懒加载 chunk 404：新版本部署后服务器上旧 hash 的 chunk 已被删除，
+ * 若浏览器仍持有旧版本的 index.html（或标签页在部署前已打开），
+ * 动态导入会报 "Failed to fetch dynamically imported module"，此时自动刷新页面加载新版本。
+ */
+function setupChunkErrorReload() {
+  const CHUNK_RELOAD_KEY = '__chunk_error_reload_ts__';
+  // 30 秒内只自动刷新一次，防止刷新后依然失败导致死循环
+  const RELOAD_INTERVAL = 30 * 1000;
+
+  const reloadOnce = () => {
+    const lastReload = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || 0);
+    if (Date.now() - lastReload < RELOAD_INTERVAL) {
+      return;
+    }
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+    console.warn('[chunk] 动态导入模块失败，自动刷新页面加载新版本');
+    location.reload();
+  };
+
+  // 路由懒加载失败时通过 Promise 拒绝抛出
+  window.addEventListener('unhandledrejection', (event) => {
+    const message = String(event.reason?.message ?? event.reason ?? '');
+    // 动态导入失败的典型报错文案
+    if (/dynamically imported module|importing a module script failed/i.test(message)) {
+      reloadOnce();
+    }
+  });
+
+  // 部分场景（如 preload 预加载）只有资源加载错误事件，没有 Promise 拒绝
+  window.addEventListener(
+    'error',
+    (event) => {
+      const target = event.target as HTMLElement | null;
+      const src = (target as HTMLScriptElement | null)?.src ?? '';
+      if (target?.tagName === 'SCRIPT' && src.includes('/assets/')) {
+        reloadOnce();
+      }
+    },
+    true,
+  );
+}
+
 async function bootstrap() {
   const app = createApp(App);
 
@@ -75,5 +118,8 @@ hiprint.register({
 
 // disAutoConnect() // 注入不自动链接，需要关闭自动链接
 // 关键：先把 window.autoConnect 置 false
+
+// 必须在 bootstrap 之前注册，动态导入发生在应用启动和路由跳转过程中
+setupChunkErrorReload();
 
 bootstrap();
