@@ -16,15 +16,14 @@ import java.math.RoundingMode;
 
 @Data
 public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetailDto> implements ExcelModel {
-
-    @ExcelProperty("订单日期")
-    private String orderDate;
-
     /**
      * 计划日期。
      */
     @ExcelProperty("计划日期")
     private String planDate;
+
+    @ExcelProperty("订单日期")
+    private String orderDate;
 
     @ExcelProperty("客户")
     private String customerName;
