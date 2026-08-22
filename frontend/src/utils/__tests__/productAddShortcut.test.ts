@@ -38,21 +38,63 @@ describe('表格输入框快捷键处理', () => {
     expect(event.stopPropagation).toHaveBeenCalledOnce();
   });
 
-  it('销售出库数量输入框绑定删除键拦截处理', () => {
+  it('销售出库新增数量输入框绑定统一键盘处理', () => {
     const source = readFileSync(
       new URL('../../views/sc/sale/out/add-un-require.vue', import.meta.url),
       'utf-8',
     );
 
-    expect(source).toContain('@keydown="stopGridDeleteFromInput"');
+    expect(source).toContain(
+      '@keydown="(e) => handleTableInputKeyDown(e, \'outNumInputRef\', rowIndex, true)"',
+    );
+    expect(source).toContain('stopGridDeleteFromInput(event);');
   });
 
-  it('销售出库修改页数量输入框绑定表格快捷键拦截处理', () => {
+  it('销售出库修改数量输入框绑定统一键盘处理', () => {
     const source = readFileSync(
       new URL('../../views/sc/sale/out/modify-un-require.vue', import.meta.url),
       'utf-8',
     );
 
-    expect(source).toContain('@keydown="stopGridDeleteFromInput"');
+    expect(source).toContain(
+      '@keydown="(e) => handleTableInputKeyDown(e, \'outNumInputRef\', rowIndex, true)"',
+    );
+    expect(source).toContain('stopGridDeleteFromInput(event);');
+  });
+
+  it('销售出库订单新增页绑定上键切换处理', () => {
+    const source = readFileSync(
+      new URL('../../views/sc/sale/out/add-require.vue', import.meta.url),
+      'utf-8',
+    );
+
+    expect(source).toContain(
+      '@keydown="(e) => handleTableInputKeyDown(e, \'outNumInputRef\', rowIndex)"',
+    );
+    expect(source).toContain("event.key === 'ArrowUp'");
+    expect(source).toContain('event.stopPropagation();');
+  });
+
+  it('销售出库非订单修改页绑定上键切换处理', () => {
+    const source = readFileSync(
+      new URL('../../views/sc/sale/out/modify-un-require.vue', import.meta.url),
+      'utf-8',
+    );
+
+    expect(source).toContain("event.key === 'ArrowUp'");
+    expect(source).toContain('event.stopPropagation();');
+  });
+
+  it('销售出库订单修改页绑定上键切换处理', () => {
+    const source = readFileSync(
+      new URL('../../views/sc/sale/out/modify-require.vue', import.meta.url),
+      'utf-8',
+    );
+
+    expect(source).toContain(
+      '@keydown="(e) => handleTableInputKeyDown(e, \'outNumInputRef\', rowIndex)"',
+    );
+    expect(source).toContain("event.key === 'ArrowUp'");
+    expect(source).toContain('event.stopPropagation();');
   });
 });

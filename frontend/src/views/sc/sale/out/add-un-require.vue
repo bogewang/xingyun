@@ -646,6 +646,7 @@
         }
 
         event.preventDefault();
+        event.stopPropagation();
         await this.focusAndSelectTableInput(refName, targetRowIndex);
       },
       // 选择商品（从表格中点击）
