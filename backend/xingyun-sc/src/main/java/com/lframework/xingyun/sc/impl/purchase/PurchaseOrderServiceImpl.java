@@ -209,6 +209,7 @@ public class PurchaseOrderServiceImpl extends
 
         productService.assertAvailable(vo.getProducts().stream()
                 .map(PurchaseProductVo::getProductId).collect(Collectors.toList()));
+        supplierService.assertAvailable(vo.getSupplierId());
 
         PurchaseConfig config = purchaseConfigService.get();
 

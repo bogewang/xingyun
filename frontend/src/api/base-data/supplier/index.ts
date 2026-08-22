@@ -8,6 +8,7 @@ import { CreateSupplierVo } from '@/api/base-data/supplier/model/createSupplierV
 import { GetSupplierBo } from '@/api/base-data/supplier/model/getSupplierBo';
 import { QuerySupplierVo } from '@/api/base-data/supplier/model/querySupplierVo';
 import { QuerySupplierBo } from '@/api/base-data/supplier/model/querySupplierBo';
+import { UpdateSupplierAvailableVo } from '@/api/base-data/supplier/model/updateSupplierAvailableVo';
 
 const baseUrl = '/basedata/supplier';
 const selectorBaseUrl = '/selector';
@@ -114,6 +115,23 @@ export function update(data: UpdateSupplierVo): Promise<void> {
     },
     {
       contentType: ContentTypeEnum.FORM_URLENCODED,
+      region,
+    },
+  );
+}
+
+/**
+ * 批量更新供应商可用状态。
+ * @param data 批量更新请求参数
+ */
+export function updateAvailable(data: UpdateSupplierAvailableVo): Promise<void> {
+  return defHttp.put<void>(
+    {
+      url: baseUrl + '/available',
+      data,
+    },
+    {
+      contentType: ContentTypeEnum.JSON,
       region,
     },
   );

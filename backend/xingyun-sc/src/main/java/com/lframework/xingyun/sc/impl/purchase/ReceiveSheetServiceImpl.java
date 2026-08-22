@@ -260,6 +260,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         productService.assertAvailable(vo.getProducts().stream()
                 .map(ReceiveProductVo::getProductId).collect(Collectors.toList()));
+        supplierService.assertAvailable(vo.getSupplierId());
 
         ReceiveSheet sheet = new ReceiveSheet();
         sheet.setId(IdUtil.getId());

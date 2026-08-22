@@ -28,6 +28,7 @@ import com.lframework.xingyun.basedata.vo.supplier.CreateSupplierVo;
 import com.lframework.xingyun.basedata.vo.supplier.QuerySupplierSelectorVo;
 import com.lframework.xingyun.basedata.vo.supplier.QuerySupplierVo;
 import com.lframework.xingyun.basedata.vo.supplier.UpdateSupplierVo;
+import com.lframework.xingyun.basedata.vo.supplier.UpdateSupplierAvailableVo;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -38,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SupplierServiceImpl extends BaseMpServiceImpl<SupplierMapper, Supplier> implements
@@ -256,6 +258,44 @@ public class SupplierServiceImpl extends BaseMpServiceImpl<SupplierMapper, Suppl
     OpLogUtil.setVariable("id", data.getId());
     OpLogUtil.setVariable("code", vo.getCode());
     OpLogUtil.setExtra(vo);
+  }
+
+  /**
+   * 批量更新供应商启用状态。
+   *
+   * @param vo 状态更新请求
+   */
+  @Transactional(rollbackFor = Exception.class)
+  @Override
+  public void updateAvailable(UpdateSupplierAvailableVo vo) {
+    List<String> supplierIds = vo.getIds().stream()
+        .filter(StringUtil::isNotBlank)
+        .map(String::trim)
+        .distinct()
+        .collect(Collectors.toList());
+    if (supplierIds.isEmpty()) {
+      throw new DefaultClientException("供应商 ID 不能为空！");
+    }
+    getBaseMapper().update(null, Wrappers.lambdaUpdate(Supplier.class)
+        .in(Supplier::getId, supplierIds)
+        .set(Supplier::getAvailable, vo.getAvailable()));
+    supplierIds.forEach(this::cleanCacheByKey);
+  }
+
+  /**
+   * 校验供应商处于启用状态。
+   *
+   * @param supplierId 供应商 ID
+   */
+  @Override
+  public void assertAvailable(String supplierId) {
+    Supplier supplier = findById(supplierId);
+    if (supplier == null) {
+      throw new DefaultClientException("供应商不存在！");
+    }
+    if (Boolean.FALSE.equals(supplier.getAvailable())) {
+      throw new DefaultClientException("供应商已停用，无法新增业务单据！");
+    }
   }
 
   @Override

@@ -139,6 +139,7 @@ public class PurchaseReturnServiceImpl extends
 
     productService.assertAvailable(vo.getProducts().stream()
         .map(ReturnProductVo::getProductId).collect(Collectors.toList()));
+    supplierService.assertAvailable(vo.getSupplierId());
 
     PurchaseReturn purchaseReturn = new PurchaseReturn();
     purchaseReturn.setId(IdUtil.getId());

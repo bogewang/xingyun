@@ -74,8 +74,10 @@
                 <if test="vo.name != null and vo.name != ''">
                     AND name LIKE CONCAT('%', #{vo.name}, '%')
                 </if>
+                <if test="vo.available != null">
+                    AND available = #{vo.available}
+                </if>
             </if>
-            AND available = TRUE
         </where>
         ORDER BY create_time DESC
     </select>

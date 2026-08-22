@@ -31,6 +31,12 @@ public class QuerySupplierBo extends BaseBo<Supplier> {
     private String name;
 
     /**
+     * 启用状态。
+     */
+    @ApiModelProperty("启用状态")
+    private Boolean available;
+
+    /**
      * 备注
      */
     @ApiModelProperty("备注")

@@ -36,6 +36,13 @@
               <j-form-item label="名称">
                 <a-input v-model:value="searchFormData.name" allow-clear />
               </j-form-item>
+              <j-form-item label="状态">
+                <a-select v-model:value="searchFormData.available">
+                  <a-select-option :value="AVAILABLE.ENABLE.code">启用</a-select-option>
+                  <a-select-option :value="AVAILABLE.UNABLE.code">停用</a-select-option>
+                  <a-select-option value="">全部</a-select-option>
+                </a-select>
+              </j-form-item>
             </j-form>
           </j-border>
         </template>
@@ -65,10 +72,29 @@
             <a-dropdown>
               <template #overlay>
                 <a-menu @click="handleCommand">
-                  <a-menu-item key="batchDelete" :icon="h(DeleteOutlined)"> 批量删除 </a-menu-item>
+                  <a-menu-item
+                    v-permission="['base-data:supplier:modify']"
+                    key="batchEnable"
+                    :icon="h(CheckOutlined)"
+                    >批量启用</a-menu-item
+                  >
+                  <a-menu-item
+                    v-permission="['base-data:supplier:modify']"
+                    key="batchDisable"
+                    :icon="h(StopOutlined)"
+                    >批量停用</a-menu-item
+                  >
+                  <a-menu-item
+                    v-permission="['base-data:supplier:delete']"
+                    key="batchDelete"
+                    :icon="h(DeleteOutlined)"
+                    >批量删除</a-menu-item
+                  >
                 </a-menu>
               </template>
-              <a-button v-permission="['base-data:supplier:delete']">更多<DownOutlined /></a-button>
+              <a-button v-permission="['base-data:supplier:modify', 'base-data:supplier:delete']"
+                >更多<DownOutlined
+              /></a-button>
             </a-dropdown>
           </a-space>
         </template>
@@ -76,6 +102,9 @@
         <!-- 操作 列自定义内容 -->
         <template #action_default="{ row }">
           <table-action outside :actions="createActions(row)" />
+        </template>
+        <template #available_default="{ row }">
+          <available-tag :available="row.available" />
         </template>
       </vxe-grid>
     </page-wrapper>
@@ -103,6 +132,28 @@
       :handle-fn="doBatchDelete"
       @confirm="search"
     />
+    <batch-handler
+      ref="batchEnableHandlerDialog"
+      :table-column="[
+        { field: 'code', title: '编号', width: 100 },
+        { field: 'name', title: '名称', minWidth: 180 },
+      ]"
+      title="批量启用"
+      :table-data="batchHandleDatas"
+      :handle-fn="doBatchAvailableItem"
+      :batch-handle-fn="batchEnableHandle"
+    />
+    <batch-handler
+      ref="batchDisableHandlerDialog"
+      :table-column="[
+        { field: 'code', title: '编号', width: 100 },
+        { field: 'name', title: '名称', minWidth: 180 },
+      ]"
+      title="批量停用"
+      :table-data="batchHandleDatas"
+      :handle-fn="doBatchAvailableItem"
+      :batch-handle-fn="batchDisableHandle"
+    />
   </div>
 </template>
 
@@ -122,9 +173,13 @@
     SettingOutlined,
     DeleteOutlined,
     ThunderboltOutlined,
+    StopOutlined,
   } from '@ant-design/icons-vue';
   import { isEmpty, buildSortPageVo } from '@/utils/utils';
-  import { createError, createSuccess } from '@/hooks/web/msg';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import { AVAILABLE } from '@/enums/biz/available';
+  import AvailableTag from '@/components/Tag/AvailableTag.vue';
+  import { buildSupplierAvailabilityRequest } from './supplierAvailability';
   import SupplierImporter from '@/components/Importor/SupplierImporter.vue';
   import BatchHandler from '@/components/BatchHandler';
 
@@ -137,6 +192,7 @@
       DownOutlined,
       SupplierImporter,
       BatchHandler,
+      AvailableTag,
     },
     setup() {
       return {
@@ -146,9 +202,11 @@
         ThunderboltOutlined,
         SettingOutlined,
         CheckOutlined,
+        StopOutlined,
         DeleteOutlined,
         CloudUploadOutlined,
         DownloadOutlined,
+        AVAILABLE,
       };
     },
     data() {
@@ -158,7 +216,9 @@
         id: '',
         ids: [],
         // 查询列表的查询条件
-        searchFormData: {},
+        searchFormData: {
+          available: AVAILABLE.ENABLE.code,
+        },
         // 工具栏配置
         toolbarConfig: {
           // 自定义左侧工具栏
@@ -172,12 +232,13 @@
           { type: 'seq', width: 45 },
           { field: 'code', title: '编号', width: 100, sortable: true },
           { field: 'name', title: '名称', minWidth: 180, sortable: true },
+          { field: 'available', title: '状态', width: 80, slots: { default: 'available_default' } },
           { field: 'description', title: '备注', minWidth: 200 },
           { field: 'createBy', title: '创建人', width: 100 },
           { field: 'createTime', title: '创建时间', width: 170, sortable: true },
           { field: 'updateBy', title: '修改人', width: 100 },
           { field: 'updateTime', title: '修改时间', width: 170, sortable: true },
-          { title: '操作', width: 120, fixed: 'right', slots: { default: 'action_default' } },
+          { title: '操作', width: 180, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -217,9 +278,87 @@
         };
       },
       handleCommand({ key }) {
-        if (key === 'batchDelete') {
+        if (key === 'batchEnable') {
+          this.batchEnable();
+        } else if (key === 'batchDisable') {
+          this.batchDisable();
+        } else if (key === 'batchDelete') {
           this.batchDelete();
         }
+      },
+      /**
+       * 执行批量供应商状态更新请求。
+       * @param records 选中的供应商记录
+       * @param available 目标状态
+       */
+      doBatchAvailable(records, available) {
+        return api.updateAvailable(buildSupplierAvailabilityRequest(records, available)).then(() => {
+          this.search();
+          this.$refs.grid.clearCheckboxRow();
+        });
+      },
+      /**
+       * 批量处理组件的单行回调占位。
+       * @returns 已完成的 Promise
+       */
+      doBatchAvailableItem() {
+        return Promise.resolve();
+      },
+      /**
+       * 批量启用供应商。
+       * @param records 选中的供应商记录
+       */
+      batchEnableHandle(records) {
+        return this.doBatchAvailable(records, true);
+      },
+      /**
+       * 批量停用供应商。
+       * @param records 选中的供应商记录
+       */
+      batchDisableHandle(records) {
+        return this.doBatchAvailable(records, false);
+      },
+      /**
+       * 打开批量状态确认窗口。
+       * @param available 目标状态
+       */
+      openBatchAvailableDialog(available) {
+        const records = this.$refs.grid.getCheckboxRecords();
+        const action = available ? '启用' : '停用';
+
+        if (isEmpty(records)) {
+          createError(`请选择要${action}的供应商！`);
+          return;
+        }
+
+        this.batchHandleDatas = records;
+        this.$refs[
+          available ? 'batchEnableHandlerDialog' : 'batchDisableHandlerDialog'
+        ].openDialog();
+      },
+      /**
+       * 打开批量启用确认窗口。
+       */
+      batchEnable() {
+        this.openBatchAvailableDialog(true);
+      },
+      /**
+       * 打开批量停用确认窗口。
+       */
+      batchDisable() {
+        this.openBatchAvailableDialog(false);
+      },
+      /**
+       * 停用单个供应商。
+       * @param row 供应商列表行数据
+       */
+      disableSupplier(row) {
+        createConfirm(`确认停用供应商“${row.name}”？`).then(() => {
+          api.updateAvailable(buildSupplierAvailabilityRequest([row], false)).then(() => {
+            createSuccess('停用成功！');
+            this.search();
+          });
+        });
       },
       doBatchDelete(row) {
         return api.deleteById(row.id);
@@ -267,6 +406,16 @@
               this.$nextTick(() => this.$refs.viewDialog.openDialog());
             },
           },
+          ...(row.available === true
+            ? [
+                {
+                  permission: ['base-data:supplier:modify'],
+                  label: '停用',
+                  danger: true,
+                  onClick: () => this.disableSupplier(row),
+                },
+              ]
+            : []),
           {
             permission: ['base-data:supplier:modify'],
             label: '修改',
