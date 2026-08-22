@@ -1,6 +1,6 @@
 <template>
   <div>
-    <page-wrapper content-full-height fixed-height dense>
+    <page-wrapper content-full-height fixed-height>
       <vxe-grid
         id="ReceiveSheetDetailList"
         ref="grid"

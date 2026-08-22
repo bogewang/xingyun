@@ -1,7 +1,7 @@
 <template>
   <div ref="importerContainer" class="excel-importer-local-container">
     <div v-permission="['purchase:receive:query']">
-      <page-wrapper content-full-height fixed-height dense>
+      <page-wrapper content-full-height fixed-height>
         <!-- 数据列表 -->
         <vxe-grid
           id="ReceiveSheet"
