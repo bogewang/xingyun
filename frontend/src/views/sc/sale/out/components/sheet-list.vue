@@ -459,6 +459,9 @@
         <a-checkbox v-model:checked="marketBuySummaryModal.groupByDate">
           是否按日期汇总
         </a-checkbox>
+        <a-checkbox v-model:checked="marketBuySummaryModal.mergeSameDayCustomerProduct">
+          同一天、同一客户商品合并
+        </a-checkbox>
       </a-modal>
 
       <!-- 月底成本重算弹窗 -->
@@ -596,6 +599,7 @@
           visible: false,
           loading: false,
           groupByDate: false,
+          mergeSameDayCustomerProduct: false,
           pendingRecords: [],
         },
         // 当前行数据
@@ -1545,6 +1549,7 @@
             buildMarketBuySummaryParams(
               this.marketBuySummaryModal.pendingRecords,
               this.marketBuySummaryModal.groupByDate,
+              this.marketBuySummaryModal.mergeSameDayCustomerProduct,
             ),
           );
           this.closeMarketBuySummaryModal();
@@ -1557,6 +1562,7 @@
       closeMarketBuySummaryModal() {
         this.marketBuySummaryModal.visible = false;
         this.marketBuySummaryModal.groupByDate = false;
+        this.marketBuySummaryModal.mergeSameDayCustomerProduct = false;
         this.marketBuySummaryModal.pendingRecords = [];
       },
       // 按勾选单据导出买菜汇总2
