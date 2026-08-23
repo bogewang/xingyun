@@ -145,9 +145,29 @@ final class SaleOutSheetMarketBuySummaryFormatter {
       }
     }
     if (!descriptionDetails.isEmpty()) {
-      result.append('（').append(String.join("；", descriptionDetails)).append('）');
+      result.append('（').append(formatDescriptionDetails(plainQuantity, totalQuantity,
+          descriptionDetails)).append('）');
     }
     return result.toString();
+  }
+
+  /**
+   * 格式化备注数量明细；单条备注与总数量一致时省略重复的数量前缀。
+   *
+   * @param plainQuantity 无备注数量
+   * @param totalQuantity 总数量
+   * @param descriptionDetails 备注数量明细
+   * @return 格式化后的备注数量明细
+   */
+  private static String formatDescriptionDetails(BigDecimal plainQuantity, BigDecimal totalQuantity,
+      List<String> descriptionDetails) {
+    if (plainQuantity.compareTo(BigDecimal.ZERO) == 0 && descriptionDetails.size() == 1) {
+      String quantityPrefix = formatNumber(totalQuantity) + "/";
+      String detail = descriptionDetails.get(0);
+      return StringUtils.startsWith(detail, quantityPrefix)
+          ? detail.substring(quantityPrefix.length()) : detail;
+    }
+    return String.join("；", descriptionDetails);
   }
 
   /**

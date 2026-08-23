@@ -35,6 +35,20 @@ class SaleOutSheetMarketBuySummaryFormatterTest {
   }
 
   /**
+   * 验证单条备注的数量与总数量一致时，括号内不重复展示数量。
+   */
+  @Test
+  void formatCustomerDetailByDescriptionShouldRemoveRepeatedQuantityInSingleDescription() {
+    Map<String, BigDecimal> quantityByDescription = Collections.singletonMap(
+        "切片", new BigDecimal("2"));
+
+    String result = SaleOutSheetMarketBuySummaryFormatter.formatCustomerDetailByDescription(
+        "1灶", "kg", BigDecimal.ZERO, quantityByDescription);
+
+    Assert.assertEquals(result, "【1灶】2kg（切片）");
+  }
+
+  /**
    * 验证同一客户的多条商品明细保留各自数量与备注的对应关系。
    */
   @Test
