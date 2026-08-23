@@ -7,6 +7,7 @@ import com.lframework.xingyun.basedata.vo.supplier.CreateSupplierVo;
 import com.lframework.xingyun.basedata.vo.supplier.QuerySupplierSelectorVo;
 import com.lframework.xingyun.basedata.vo.supplier.QuerySupplierVo;
 import com.lframework.xingyun.basedata.vo.supplier.UpdateSupplierVo;
+import com.lframework.xingyun.basedata.vo.supplier.UpdateSupplierAvailableVo;
 import java.util.List;
 
 public interface SupplierService extends BaseMpService<Supplier> {
@@ -70,6 +71,20 @@ public interface SupplierService extends BaseMpService<Supplier> {
      * @param vo
      */
     void update(UpdateSupplierVo vo);
+
+    /**
+     * 批量更新供应商启用状态。
+     *
+     * @param vo 状态更新请求
+     */
+    void updateAvailable(UpdateSupplierAvailableVo vo);
+
+    /**
+     * 校验供应商处于启用状态。
+     *
+     * @param supplierId 供应商 ID
+     */
+    void assertAvailable(String supplierId);
 
     /**
      * 选择器

@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -74,6 +75,36 @@ class SaleOutSheetMarketBuySummaryGroupByDateTest {
   }
 
   /**
+   * 验证同一商品始终汇总为一行；默认保留多段明细，勾选合并后归并为一段明细。
+   */
+  @Test
+  void summaryRowsShouldMergeSameDaySameCustomerProductOnlyWhenEnabled() throws Exception {
+    SaleOutSheet firstSheet = createSheet("sheet-1", LocalDate.of(2026, 8, 1));
+    SaleOutSheet secondSheet = createSheet("sheet-2", LocalDate.of(2026, 8, 1));
+    Product product = new Product();
+    product.setId("product-1");
+    product.setName("土豆");
+
+    List<SaleOutSheetDetail> details = Arrays.asList(
+        createDetail("detail-1", "sheet-1"), createDetail("detail-2", "sheet-2"));
+    Map<String, SaleOutSheet> sheetMap = new HashMap<>();
+    sheetMap.put(firstSheet.getId(), firstSheet);
+    sheetMap.put(secondSheet.getId(), secondSheet);
+
+    List<?> unmergedRows = buildSummaryRows(details, sheetMap,
+        Collections.singletonMap(product.getId(), product), true, false);
+    List<?> mergedRows = buildSummaryRows(details, sheetMap,
+        Collections.singletonMap(product.getId(), product), true, true);
+
+    assertEquals(1, unmergedRows.size());
+    assertEquals(1, mergedRows.size());
+    assertEquals(2, getCustomerDetailSize(unmergedRows.get(0)));
+    assertEquals(1, getCustomerDetailSize(mergedRows.get(0)));
+    assertEquals("【客户A】1+【客户A】1", buildCustomerDetail(unmergedRows.get(0)));
+    assertEquals("【客户A】2", buildCustomerDetail(mergedRows.get(0)));
+  }
+
+  /**
    * 调用买菜汇总聚合方法生成测试结果。
    */
   private List<?> buildSummaryRows(List<SaleOutSheetDetail> details,
@@ -85,6 +116,43 @@ class SaleOutSheetMarketBuySummaryGroupByDateTest {
     method.setAccessible(true);
     return (List<?>) method.invoke(new SaleOutSheetServiceImpl(), details, sheetMap, productMap,
         Collections.emptyMap(), Collections.emptyMap(), groupByDate);
+  }
+
+  /**
+   * 调用包含同日同客户商品合并选项的买菜汇总聚合方法。
+   */
+  private List<?> buildSummaryRows(List<SaleOutSheetDetail> details,
+      Map<String, SaleOutSheet> sheetMap, Map<String, Product> productMap,
+      boolean groupByDate, boolean mergeSameDayCustomerProduct) throws Exception {
+    Method method = SaleOutSheetServiceImpl.class.getDeclaredMethod(
+        "buildSummaryRows", List.class, Map.class, Map.class, Map.class, Map.class,
+        boolean.class, boolean.class);
+    method.setAccessible(true);
+    return (List<?>) method.invoke(new SaleOutSheetServiceImpl(), details, sheetMap, productMap,
+        Collections.emptyMap(), Collections.emptyMap(), groupByDate,
+        mergeSameDayCustomerProduct);
+  }
+
+  /**
+   * 获取买菜汇总行中用于明细数量展示的客户明细段数量。
+   */
+  private int getCustomerDetailSize(Object summaryRow) throws Exception {
+    java.lang.reflect.Field field = summaryRow.getClass().getDeclaredField(
+        "marketBuySummaryDetails");
+    field.setAccessible(true);
+    return ((Map<?, ?>) field.get(summaryRow)).size();
+  }
+
+  /**
+   * 构建买菜汇总的明细数量文本。
+   */
+  private String buildCustomerDetail(Object summaryRow) throws Exception {
+    Method method = SaleOutSheetServiceImpl.class.getDeclaredMethod(
+        "buildMarketBuySummaryDetail", summaryRow.getClass(), LinkedHashMap.class);
+    method.setAccessible(true);
+    LinkedHashMap<String, String> customerNameMap = new LinkedHashMap<>();
+    customerNameMap.put("customer-1", "客户A");
+    return (String) method.invoke(new SaleOutSheetServiceImpl(), summaryRow, customerNameMap);
   }
 
   /**
@@ -102,7 +170,15 @@ class SaleOutSheetMarketBuySummaryGroupByDateTest {
    * 创建指定销售出库单的商品明细。
    */
   private SaleOutSheetDetail createDetail(String sheetId) {
+    return createDetail(null, sheetId);
+  }
+
+  /**
+   * 创建指定明细ID及销售出库单的商品明细。
+   */
+  private SaleOutSheetDetail createDetail(String id, String sheetId) {
     SaleOutSheetDetail detail = new SaleOutSheetDetail();
+    detail.setId(id);
     detail.setSheetId(sheetId);
     detail.setProductId("product-1");
     detail.setOrderNum(BigDecimal.ONE);

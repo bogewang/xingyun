@@ -72,6 +72,12 @@ public class QuerySaleOutSheetVo extends SortPageVo {
   private Boolean groupByDate;
 
   /**
+   * 买菜汇总是否合并同一天、同一客户的相同商品
+   */
+  @ApiModelProperty("买菜汇总是否合并同一天、同一客户的相同商品")
+  private Boolean mergeSameDayCustomerProduct;
+
+  /**
    * 客户ID
    */
   @ApiModelProperty("客户ID")

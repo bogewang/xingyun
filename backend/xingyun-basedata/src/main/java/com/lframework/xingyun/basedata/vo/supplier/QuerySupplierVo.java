@@ -23,4 +23,10 @@ public class QuerySupplierVo extends SortPageVo implements BaseVo, Serializable 
   @ApiModelProperty("名称")
   private String name;
 
+  /**
+   * 供应商启用状态；为空时查询全部状态。
+   */
+  @ApiModelProperty("供应商启用状态")
+  private Boolean available;
+
 }

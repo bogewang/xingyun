@@ -38,6 +38,7 @@ describe('买菜汇总请求参数', () => {
     ).toEqual({
       idList: ['sheet-1', 'sheet-2'],
       groupByDate: false,
+      mergeSameDayCustomerProduct: false,
     });
   });
 
@@ -45,6 +46,15 @@ describe('买菜汇总请求参数', () => {
     expect(buildMarketBuySummaryParams([{ id: 'sheet-1' }], true)).toEqual({
       idList: ['sheet-1'],
       groupByDate: true,
+      mergeSameDayCustomerProduct: false,
+    });
+  });
+
+  it('买菜汇总勾选后传递同日同客户商品合并选项', () => {
+    expect(buildMarketBuySummaryParams([{ id: 'sheet-1' }], false, true)).toEqual({
+      idList: ['sheet-1'],
+      groupByDate: false,
+      mergeSameDayCustomerProduct: true,
     });
   });
 

@@ -15,4 +15,9 @@ export interface QuerySupplierVo extends SortPageVo {
    * 名称
    */
   name: string;
+
+  /**
+   * 状态；true 表示启用，false 表示停用
+   */
+  available: boolean | '';
 }

@@ -20,10 +20,12 @@ import com.lframework.xingyun.basedata.service.supplier.SupplierService;
 import com.lframework.xingyun.basedata.vo.supplier.CreateSupplierVo;
 import com.lframework.xingyun.basedata.vo.supplier.QuerySupplierVo;
 import com.lframework.xingyun.basedata.vo.supplier.UpdateSupplierVo;
+import com.lframework.xingyun.basedata.vo.supplier.UpdateSupplierAvailableVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +47,7 @@ import java.util.stream.Collectors;
 @Validated
 @RestController
 @RequestMapping("/basedata/supplier")
+@Slf4j
 public class SupplierController extends DefaultBaseController {
 
   @Autowired
@@ -142,6 +145,26 @@ public class SupplierController extends DefaultBaseController {
     supplierService.cleanCacheByKey(vo.getId());
 
     return InvokeResultBuilder.success();
+  }
+
+  /**
+   * 批量更新供应商启用状态。
+   *
+   * @param vo 供应商启用状态请求
+   * @return 操作结果
+   */
+  @ApiOperation("批量更新供应商启用状态")
+  @HasPermission({"base-data:supplier:modify"})
+  @PutMapping("/available")
+  public InvokeResult<Void> updateAvailable(@Valid @RequestBody UpdateSupplierAvailableVo vo) {
+    try {
+      supplierService.updateAvailable(vo);
+      vo.getIds().forEach(supplierService::cleanCacheByKey);
+      return InvokeResultBuilder.success();
+    } catch (Exception e) {
+      log.error("请求出错", e);
+      return InvokeResultBuilder.fail(e.getMessage());
+    }
   }
 
   /**

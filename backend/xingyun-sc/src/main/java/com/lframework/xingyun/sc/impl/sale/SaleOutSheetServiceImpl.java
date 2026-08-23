@@ -392,6 +392,8 @@ public class SaleOutSheetServiceImpl extends
         validateMarketBuySummaryIds(vo);
 
         boolean groupByDate = Boolean.TRUE.equals(vo.getGroupByDate());
+        boolean mergeSameDayCustomerProduct = Boolean.TRUE.equals(
+                vo.getMergeSameDayCustomerProduct());
         Map<String, String> headerMap = buildMarketBuySummaryHeaders(groupByDate);
 
         List<SaleOutSheet> sheets = this.query(vo);
@@ -414,7 +416,7 @@ public class SaleOutSheetServiceImpl extends
         Map<String, ProductCategory> categoryMap = buildCategoryMap(productMap);
         Map<String, String> productUnitNameMap = buildProductUnitNameMap(productMap);
         List<SummaryRow> summaryRows = buildSummaryRows(details, sheetMap, productMap, categoryMap,
-                productUnitNameMap, groupByDate);
+                productUnitNameMap, groupByDate, mergeSameDayCustomerProduct);
 
         List<Map<String, String>> data = new ArrayList<>();
         for (SummaryRow row : summaryRows) {
@@ -1002,29 +1004,107 @@ public class SaleOutSheetServiceImpl extends
                 continue;
             }
 
-            // 根据导出选项按商品或“日期 + 商品”汇总，行内再按客户拆分单元格数据。
             String summaryKey = buildMarketBuySummaryRowKey(
                     sheet.getOrderDate(), product.getId(), groupByDate);
+            SummaryRow row = summaryMap.computeIfAbsent(summaryKey,
+                    key -> new SummaryRow(sheet.getOrderDate(), getCategoryName(product, categoryMap),
+                            product.getName(), product.getSpec(),
+                            productUnitNameMap.getOrDefault(product.getUnit(), product.getUnit())));
+            appendSummaryDetail(row, sheet, detail);
+        }
+        return sortMarketBuySummaryRows(summaryMap);
+    }
+
+    /**
+     * 将原始出库明细按日期、客户、商品及合并选项聚合成导出行。
+     *
+     * @param details 出库明细
+     * @param sheetMap 出库单映射
+     * @param productMap 商品映射
+     * @param categoryMap 商品分类映射
+     * @param productUnitNameMap 商品单位名称映射
+     * @param groupByDate 是否按日期汇总
+     * @param mergeSameDayCustomerProduct 是否合并同一天、同一客户的相同商品
+     * @return 汇总行
+     */
+    private List<SummaryRow> buildSummaryRows(List<SaleOutSheetDetail> details,
+            Map<String, SaleOutSheet> sheetMap,
+            Map<String, Product> productMap,
+            Map<String, ProductCategory> categoryMap,
+            Map<String, String> productUnitNameMap,
+            boolean groupByDate,
+            boolean mergeSameDayCustomerProduct) {
+        Map<String, SummaryRow> summaryMap = new LinkedHashMap<>();
+        int detailIndex = 0;
+        for (SaleOutSheetDetail detail : details) {
+            SaleOutSheet sheet = sheetMap.get(detail.getSheetId());
+            Product product = productMap.get(detail.getProductId());
+            if (sheet == null || product == null) {
+                continue;
+            }
+
+            // 商品仍汇总到同一行；日期选项决定是否按日期拆行。
+            String summaryKey = buildMarketBuySummaryRowKey(
+                    sheet.getOrderDate(), product.getId(), groupByDate);
+            detailIndex++;
             SummaryRow row = summaryMap.computeIfAbsent(summaryKey,
                     key -> new SummaryRow(sheet.getOrderDate(), getCategoryName(product, categoryMap),
                             product.getName(),
                             product.getSpec(),
                             productUnitNameMap.getOrDefault(product.getUnit(), product.getUnit())));
 
-            // 同一客户的数量累加，备注去重并保留原始出现顺序。
-            SummaryCell cell = row.cells.computeIfAbsent(sheet.getCustomerId(), key -> new SummaryCell());
+            // 未勾选合并时保留每条明细；勾选后以“日期 + 客户 + 商品”为维度累加。
+            String customerDetailKey = buildMarketBuySummaryRowKey(sheet.getOrderDate(),
+                    sheet.getCustomerId(), product.getId(), detail.getId(), detailIndex,
+                    mergeSameDayCustomerProduct);
+            SummaryDetail customerDetail = row.marketBuySummaryDetails.computeIfAbsent(
+                    customerDetailKey, key -> new SummaryDetail(sheet.getCustomerId()));
+            appendSummaryCell(customerDetail.cell, detail);
             BigDecimal orderNum = detail.getOrderNum() == null ? BigDecimal.ZERO : detail.getOrderNum();
-            cell.orderNum = NumberUtil.add(cell.orderNum, orderNum);
-            if (StringUtils.isNotBlank(detail.getDescription())) {
-                cell.descriptions.add(detail.getDescription());
-                cell.quantityByDescription.merge(detail.getDescription(), orderNum, NumberUtil::add);
-            } else {
-                cell.quantityWithoutDescription = NumberUtil.add(
-                        cell.quantityWithoutDescription, orderNum);
-            }
             row.total = NumberUtil.add(row.total, orderNum);
         }
 
+        return sortMarketBuySummaryRows(summaryMap);
+    }
+
+    /**
+     * 将销售出库明细的数量及备注追加到买菜汇总行。
+     *
+     * @param row 买菜汇总行
+     * @param sheet 销售出库单
+     * @param detail 销售出库单明细
+     */
+    private void appendSummaryDetail(SummaryRow row, SaleOutSheet sheet, SaleOutSheetDetail detail) {
+        SummaryCell cell = row.cells.computeIfAbsent(sheet.getCustomerId(), key -> new SummaryCell());
+        appendSummaryCell(cell, detail);
+        BigDecimal orderNum = detail.getOrderNum() == null ? BigDecimal.ZERO : detail.getOrderNum();
+        row.total = NumberUtil.add(row.total, orderNum);
+    }
+
+    /**
+     * 将销售出库明细的数量及备注追加到客户明细单元。
+     *
+     * @param cell 客户明细单元
+     * @param detail 销售出库单明细
+     */
+    private void appendSummaryCell(SummaryCell cell, SaleOutSheetDetail detail) {
+        BigDecimal orderNum = detail.getOrderNum() == null ? BigDecimal.ZERO : detail.getOrderNum();
+        cell.orderNum = NumberUtil.add(cell.orderNum, orderNum);
+        if (StringUtils.isNotBlank(detail.getDescription())) {
+            cell.descriptions.add(detail.getDescription());
+            cell.quantityByDescription.merge(detail.getDescription(), orderNum, NumberUtil::add);
+        } else {
+            cell.quantityWithoutDescription = NumberUtil.add(cell.quantityWithoutDescription, orderNum);
+        }
+    }
+
+    /**
+     * 按分类、商品名称及日期排序买菜汇总行。
+     *
+     * @param summaryMap 买菜汇总行映射
+     * @return 排序后的买菜汇总行
+     */
+    private List<SummaryRow> sortMarketBuySummaryRows(Map<String, SummaryRow> summaryMap) {
         return summaryMap.values().stream()
                 .sorted(Comparator.comparing((SummaryRow item) -> buildMarketBuySummarySortKey(
                         item.categoryName, item.productName, item.orderDate)))
@@ -1056,6 +1136,28 @@ public class SaleOutSheetServiceImpl extends
             return String.valueOf(productId);
         }
         return String.valueOf(orderDate) + '\u0000' + String.valueOf(productId);
+    }
+
+    /**
+     * 根据是否合并同日同客户商品构造买菜汇总行键。
+     *
+     * @param orderDate 订单日期
+     * @param customerId 客户ID
+     * @param productId 商品ID
+     * @param detailId 出库明细ID
+     * @param detailIndex 出库明细顺序，作为空明细ID的兜底唯一值
+     * @param mergeSameDayCustomerProduct 是否合并同一天、同一客户的相同商品
+     * @return 汇总行键
+     */
+    static String buildMarketBuySummaryRowKey(LocalDate orderDate, String customerId,
+            String productId, String detailId, int detailIndex,
+            boolean mergeSameDayCustomerProduct) {
+        String baseKey = String.valueOf(orderDate) + '\u0000' + String.valueOf(customerId)
+                + '\u0000' + String.valueOf(productId);
+        if (mergeSameDayCustomerProduct) {
+            return baseKey;
+        }
+        return baseKey + '\u0000' + (StringUtils.isBlank(detailId) ? detailIndex : detailId);
     }
 
     /**
@@ -1124,6 +1226,17 @@ public class SaleOutSheetServiceImpl extends
      */
     private String buildMarketBuySummaryDetail(SummaryRow row,
             LinkedHashMap<String, String> customerNameMap) {
+        if (!row.marketBuySummaryDetails.isEmpty()) {
+            return row.marketBuySummaryDetails.values().stream()
+                    .map(detail -> SaleOutSheetMarketBuySummaryFormatter
+                            .formatCustomerDetailByDescription(
+                                    customerNameMap.get(detail.customerId), row.unit,
+                                    detail.cell.quantityWithoutDescription,
+                                    detail.cell.quantityByDescription))
+                    .filter(StringUtils::isNotBlank)
+                    .collect(Collectors.joining("+"));
+        }
+
         List<String> details = new ArrayList<>();
         for (Map.Entry<String, String> customer : customerNameMap.entrySet()) {
             SummaryCell cell = row.cells.get(customer.getKey());
@@ -1160,6 +1273,9 @@ public class SaleOutSheetServiceImpl extends
         // key: customerId，value: 当前商品在该客户下的汇总数量与备注。
         private Map<String, SummaryCell> cells = new HashMap<>();
 
+        // key: 同日同客户商品合并键或明细唯一键，value: 买菜汇总明细数量展示段。
+        private Map<String, SummaryDetail> marketBuySummaryDetails = new LinkedHashMap<>();
+
         private SummaryRow(LocalDate orderDate, String categoryName, String productName, String spec,
                 String unit) {
             this.orderDate = orderDate;
@@ -1181,6 +1297,18 @@ public class SaleOutSheetServiceImpl extends
 
         // 使用 LinkedHashSet 去重并保持备注原始顺序，导出时展示更稳定。
         private Set<String> descriptions = new LinkedHashSet<>();
+    }
+
+    /**
+     * 买菜汇总单行中的客户明细数量展示段。
+     */
+    private static class SummaryDetail {
+        private String customerId;
+        private SummaryCell cell = new SummaryCell();
+
+        private SummaryDetail(String customerId) {
+            this.customerId = customerId;
+        }
     }
 
     @Override

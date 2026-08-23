@@ -36,6 +36,8 @@ type TagPrintParams = QuerySaleOutSheetVo & {
 
 type MarketBuySummaryParams = {
   idList: string[];
+  groupByDate?: boolean;
+  mergeSameDayCustomerProduct?: boolean;
 };
 
 /**
