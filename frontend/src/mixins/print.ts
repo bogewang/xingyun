@@ -160,10 +160,28 @@ export async function vgBrowserPrint(
   browserPrint(templateJson, printData, options);
 }
 
+/**
+ * 使用指定业务类型的默认打印模板直接调起浏览器打印。
+ */
+export async function vgDefaultBrowserPrint(
+  this: PrintMixinInstance,
+  type: PrintBizType,
+  printData: unknown,
+  options: PrintRuntimeBrowserPrintOptions = {},
+) {
+  const templateSelection = await getPrintTemplateSelection(type);
+  if (!templateSelection) {
+    return;
+  }
+
+  await vgBrowserPrint.call(this, printData, templateSelection.templateId, options);
+}
+
 export const printMix = {
   methods: {
     getPrintTemplateSelection,
     vgBrowserPrint,
+    vgDefaultBrowserPrint,
     vgPrintPreview,
   },
 };
