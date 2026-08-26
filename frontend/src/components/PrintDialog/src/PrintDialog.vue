@@ -1,5 +1,6 @@
 <template>
   <Preview
+    ref="previewRef"
     :print-template="templateInstance"
     :print-data="currentPrintData"
     :show-title="state.enableTemplateSwitch"
@@ -75,6 +76,15 @@
 
   type PrinterSource = Partial<PrinterOption>;
 
+  type PreviewExpose = {
+    show: (
+      template: unknown,
+      data: unknown[],
+      options?: { width?: string | number; showPrint2?: boolean },
+    ) => void;
+  };
+
+  const previewRef = ref<PreviewExpose>();
   const previewVisible = ref(false);
   const state = usePrintDialogState();
   const templateOptions = computed(() => state.templateList || []);
@@ -187,10 +197,26 @@
       if (!printer.value && normalizedPrinterList.length > 0) {
         printer.value = normalizedPrinterList[0].name || '';
       }
+
+      refreshDirectPrintStatus();
     } catch {
       console.log('Failed to load printers');
       printers.value = [];
     }
+  }
+
+  /**
+   * 客户端连接成功后刷新 vg-print 的连接状态，使“直接打印”按钮立即可用。
+   */
+  function refreshDirectPrintStatus() {
+    if (!state.open || !previewVisible.value) {
+      return;
+    }
+
+    previewRef.value?.show(templateInstance.value, currentPrintData.value, {
+      width: PREVIEW_WIDTH,
+      showPrint2: true,
+    });
   }
 
   function onToPdf() {
