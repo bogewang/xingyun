@@ -378,7 +378,7 @@ public class SaleOutSheetServiceImpl extends
     public Boolean getPriceUniqueConfig() {
 
         QuerySysParameterVo sysParameterVo = new QuerySysParameterVo();
-        sysParameterVo.setPmKey("product_sale_price_unique");
+        sysParameterVo.setPmKey("sale_out_price_use_unique_price");
         List<SysParameter> list = sysParameterService.query(sysParameterVo);
         if (CollectionUtil.isEmpty(list)) {
             return Boolean.FALSE;

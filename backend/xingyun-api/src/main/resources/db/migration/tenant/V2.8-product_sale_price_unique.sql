@@ -1,0 +1,1 @@
+delete from sys_parameter where pm_key = 'product_sale_price_unique'
