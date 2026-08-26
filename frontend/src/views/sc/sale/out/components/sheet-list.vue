@@ -1617,7 +1617,7 @@
             },
           },
           {
-            label: '浏览器打印',
+            label: '打印',
             onClick: () => {
               this.openBrowserPrintDialog(row);
             },
