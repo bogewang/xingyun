@@ -64,6 +64,11 @@
                     getNumber(mul(row.taxPrice, row.outNum), 2)
                   }}</span>
                 </template>
+                <template #confirmNum_default="{ row }">
+                  <span :class="{ 'confirm-num-warning': isConfirmNumMismatch(row) }">
+                    {{ row.confirmNum }}
+                  </span>
+                </template>
                 <template #taxPrice_default="{ row }">
                   <span :style="{ color: isNegativeProfit(row) ? '#f5222d' : undefined }">
                     {{ row.taxPrice }}
@@ -208,6 +213,13 @@
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
           { field: 'outNum', title: '数量', align: 'right', width: 100 },
+          {
+            field: 'confirmNum',
+            title: '验收数量',
+            align: 'right',
+            width: 100,
+            slots: { default: 'confirmNum_default' },
+          },
           {
             field: 'taxPrice',
             title: '价格（元）',
@@ -383,6 +395,10 @@
       isNegativeProfit(row) {
         return Number(row?.totalProfit || 0) < 0;
       },
+      /** 判断验收数量是否大于零且与出库数量不一致。 */
+      isConfirmNumMismatch(row) {
+        return Number(row?.confirmNum) > 0 && Number(row.confirmNum) !== Number(row.outNum);
+      },
       formatAmount(value) {
         return Number(value || 0).toFixed(2);
       },
@@ -478,5 +494,9 @@
 
   .order-detail-tabs :deep(.ant-tabs-nav) {
     margin-bottom: 12px;
+  }
+
+  .confirm-num-warning {
+    color: #f5222d;
   }
 </style>
