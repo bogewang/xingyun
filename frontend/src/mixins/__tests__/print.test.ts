@@ -45,13 +45,15 @@ describe('打印混入浏览器打印流程', () => {
     const browserPrint = vi.fn();
     vi.mocked(printTemplateApi.getSetting).mockResolvedValue({ templateJson } as any);
 
+    const options = { resetPageNumberPerData: true };
     await vgBrowserPrint.call(
       { $printRuntimeApi: { browserPrint } } as any,
       printData,
       'template-2',
+      options,
     );
 
     expect(printTemplateApi.getSetting).toHaveBeenCalledWith('template-2');
-    expect(browserPrint).toHaveBeenCalledWith(templateJson, printData);
+    expect(browserPrint).toHaveBeenCalledWith(templateJson, printData, options);
   });
 });

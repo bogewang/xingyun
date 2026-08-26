@@ -1365,7 +1365,7 @@
         }
       },
       /**
-       * 加载选中的销售出库单并在同一打印预览中批量打印。
+       * 加载选中的销售出库单及可用模板，打开浏览器批量打印模板选择弹窗。
        */
       async batchPrint() {
         const records = this.$refs.grid.getCheckboxRecords();
@@ -1376,12 +1376,20 @@
 
         this.loading = true;
         try {
-          const printDatas = await Promise.all(
-            records.map(async (record) => this.buildPrintData(await api.print(record.id))),
-          );
-          await this.vgPrintPreview(PRINT_TYPE.SALE_OUT.code, printDatas, {
-            resetPageNumberPerData: true,
-          });
+          const [printDatas, templateSelection] = await Promise.all([
+            Promise.all(
+              records.map(async (record) => this.buildPrintData(await api.print(record.id))),
+            ),
+            this.getPrintTemplateSelection(PRINT_TYPE.SALE_OUT.code),
+          ]);
+          if (!templateSelection) {
+            return;
+          }
+
+          this.browserPrintModal.printData = printDatas;
+          this.browserPrintModal.templateId = templateSelection.templateId;
+          this.browserPrintModal.templateList = templateSelection.templateList;
+          this.browserPrintModal.visible = true;
         } finally {
           this.loading = false;
         }
@@ -1423,6 +1431,7 @@
           await this.vgBrowserPrint(
             this.browserPrintModal.printData,
             this.browserPrintModal.templateId,
+            { resetPageNumberPerData: Array.isArray(this.browserPrintModal.printData) },
           );
           this.closeBrowserPrintDialog();
         } finally {
