@@ -4,11 +4,12 @@
     :show-title="state.enableTemplateSwitch"
     :show-pdf="false"
     :dialog-title="dialogTitle"
-    v-model:modalShow="modalShow"
+    v-model:modalShow="previewVisible"
     default-lang="cn"
     :printerList="printers"
     :selectedPrinter="printer"
     :showImg="false"
+    @close="closePrintDialog"
     @update:selected-printer="printer = $event"
   >
     <template #title="{ title }">
@@ -43,7 +44,13 @@
 
 <script lang="ts" setup>
   import { computed, nextTick, ref, watch } from 'vue';
-  import { Preview, createTemplate, connect, isClientConnected, refreshPrinterList } from 'vg-print';
+  import {
+    Preview,
+    createTemplate,
+    connect,
+    isClientConnected,
+    refreshPrinterList,
+  } from 'vg-print';
   import 'vg-print/style.css';
   import * as api from '@/api/base-data/print-template';
   import { createError } from '@/hooks/web/msg';
@@ -54,7 +61,7 @@
     shouldResetPageNumberForPrintData,
     type PrintTemplateJson,
   } from '@/components/PrintDesigner/src/printUtils';
-  import { closePrintDialog, usePrintDialogState } from './printDialog';
+  import { acquirePrintDialogOwner, closePrintDialog, usePrintDialogState } from './printDialog';
 
   const PREVIEW_WIDTH = 'min(90vw, 1080px)';
 
@@ -79,19 +86,12 @@
   type PrinterSource = Partial<PrinterOption>;
 
   const previewRef = ref<PreviewExpose>();
+  const previewVisible = ref(false);
   const state = usePrintDialogState();
   const templateOptions = computed(() => state.templateList || []);
   const dialogTitle = computed(() => state.title || '打印预览');
 
-  // 弹窗显示控制
-  const modalShow = computed({
-    get: () => state.open,
-    set: (value: boolean) => {
-      if (!value) {
-        closePrintDialog();
-      }
-    },
-  });
+  const previewOwnerId = `print-dialog-${Math.random().toString(36).slice(2)}`;
   const printers = ref<PrinterOption[]>([]);
   const printer = ref('');
   const selectedTemplateId = ref('');
@@ -178,7 +178,12 @@
    */
   async function loadPrinters() {
     try {
-      await waitForPrinterClient();
+      const connected = await waitForPrinterClient();
+      if (!connected) {
+        printers.value = [];
+        printer.value = '';
+        return;
+      }
 
       const printerList = await refreshPrinterList();
       const normalizedPrinterList = Array.isArray(printerList)
@@ -194,7 +199,7 @@
         printer.value = normalizedPrinterList[0].name || '';
       }
     } catch {
-      console.log('Failed to load printers')
+      console.log('Failed to load printers');
       printers.value = [];
     }
   }
@@ -226,7 +231,7 @@
    * 根据当前模板与打印数据刷新预览内容。
    */
   async function showPreview() {
-    if (!state.open) {
+    if (!state.open || !acquirePrintDialogOwner(previewOwnerId, state.frameKey)) {
       return;
     }
 
@@ -300,6 +305,7 @@
     () => [state.open, state.frameKey] as const,
     async ([open, frameKey], previousValue) => {
       if (!open) {
+        previewVisible.value = false;
         return;
       }
 
