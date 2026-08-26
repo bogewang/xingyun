@@ -3,6 +3,7 @@ package com.lframework.xingyun.sc.excel.sale.out;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.lframework.starter.web.core.components.excel.ExcelModel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
  */
 @Data
 @AllArgsConstructor
+@Builder
 public class SaleOutSheetInvoiceDetailExportModel implements ExcelModel {
 
     @ExcelProperty("商品编号")
@@ -31,6 +33,9 @@ public class SaleOutSheetInvoiceDetailExportModel implements ExcelModel {
 
     @ExcelProperty("数量")
     private BigDecimal quantity;
+
+    @ExcelProperty("单价")
+    private BigDecimal price;
 
     @ExcelProperty("金额")
     private BigDecimal amount;

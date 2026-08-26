@@ -218,7 +218,7 @@ class SaleOutSheetServiceImplTest {
 
     List<SaleOutSheetInvoiceDetailExportModel> models =
         SaleOutSheetServiceImpl.buildInvoiceDetailExportModels(
-            Arrays.asList(first, second, differentUnit));
+            Arrays.asList(first, second, differentUnit), false);
 
     Assert.assertEquals(models.size(), 2);
     SaleOutSheetInvoiceDetailExportModel box = models.stream()
@@ -227,6 +227,7 @@ class SaleOutSheetServiceImplTest {
         .orElseThrow(AssertionError::new);
     Assert.assertEquals(box.getQuantity(), new BigDecimal("3"));
     Assert.assertEquals(box.getAmount(), new BigDecimal("28"));
+    Assert.assertEquals(box.getPrice(), new BigDecimal("9.333333"));
     Assert.assertEquals(box.getCategoryName(), "测试分类");
     SaleOutSheetInvoiceDetailExportModel piece = models.stream()
         .filter(item -> "件".equals(item.getUnit()))
@@ -234,6 +235,21 @@ class SaleOutSheetServiceImplTest {
         .orElseThrow(AssertionError::new);
     Assert.assertEquals(piece.getQuantity(), new BigDecimal("4"));
     Assert.assertEquals(piece.getAmount(), new BigDecimal("40"));
+    Assert.assertEquals(piece.getPrice(), new BigDecimal("10.000000"));
+  }
+
+  /**
+   * 验证启用商品售价参数时，开票明细使用商品当前售价作为单价。
+   */
+  @Test
+  void buildInvoiceDetailExportModelsShouldUseProductSalePriceWhenConfigured() {
+    QuerySaleOutSheetDetailDto detail = createInvoiceDetail("product-1", "盒", "2", "20", "0", "0");
+    detail.setProductSalePrice(new BigDecimal("12.50"));
+
+    List<SaleOutSheetInvoiceDetailExportModel> models =
+        SaleOutSheetServiceImpl.buildInvoiceDetailExportModels(Arrays.asList(detail), true);
+
+    Assert.assertEquals(models.get(0).getPrice(), new BigDecimal("12.50"));
   }
 
   private SaleOutSheetImportModel createModel(BigDecimal orderNum, BigDecimal taxPrice,

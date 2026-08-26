@@ -96,6 +96,7 @@ public class SaleOutSheetServiceImpl extends
         BaseMpServiceImpl<SaleOutSheetMapper, SaleOutSheet> implements SaleOutSheetService {
 
     private static final String COST_PRICE_SOURCE_USE_STOCK_PRICE_PM_KEY = "sale_out_cost_price_use_stock_price";
+    private static final String PRODUCT_SALE_PRICE_UNIQUE_PM_KEY = "sale_out_price_use_unique_price";
     private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER = DateTimeFormatter
             .ofPattern("yyyy-MM-dd");
 
@@ -378,7 +379,7 @@ public class SaleOutSheetServiceImpl extends
     public Boolean getPriceUniqueConfig() {
 
         QuerySysParameterVo sysParameterVo = new QuerySysParameterVo();
-        sysParameterVo.setPmKey("sale_out_price_use_unique_price");
+        sysParameterVo.setPmKey(PRODUCT_SALE_PRICE_UNIQUE_PM_KEY);
         List<SysParameter> list = sysParameterService.query(sysParameterVo);
         if (CollectionUtil.isEmpty(list)) {
             return Boolean.FALSE;
@@ -567,7 +568,7 @@ public class SaleOutSheetServiceImpl extends
     @Override
     public List<SaleOutSheetInvoiceDetailExportModel> queryInvoiceDetail(QuerySaleOutSheetVo vo) {
         List<QuerySaleOutSheetDetailDto> details = getBaseMapper().queryDetail(vo);
-        return buildInvoiceDetailExportModels(details);
+        return buildInvoiceDetailExportModels(details, useProductSalePriceForInvoiceDetail());
     }
 
     @Override
@@ -660,7 +661,7 @@ public class SaleOutSheetServiceImpl extends
      * @return 开票明细导出行
      */
     static List<SaleOutSheetInvoiceDetailExportModel> buildInvoiceDetailExportModels(
-            List<QuerySaleOutSheetDetailDto> details) {
+            List<QuerySaleOutSheetDetailDto> details, boolean useProductSalePrice) {
         if (CollectionUtils.isEmpty(details)) {
             return Collections.emptyList();
         }
@@ -670,20 +671,58 @@ public class SaleOutSheetServiceImpl extends
             InvoiceDetailKey key = new InvoiceDetailKey(buildInvoiceProductKey(detail), detail.getUnit());
             SaleOutSheetInvoiceDetailExportModel summary = summaryMap.get(key);
             if (summary == null) {
-                summary = new SaleOutSheetInvoiceDetailExportModel(detail.getProductCode(), detail.getProductName(),
-                        detail.getSpec(), detail.getCategoryName(), detail.getUnit(), BigDecimal.ZERO, BigDecimal.ZERO);
+                summary = SaleOutSheetInvoiceDetailExportModel.builder()
+                        .productCode(detail.getProductCode())
+                        .unit(detail.getUnit())
+                        .productName(detail.getProductName())
+                        .spec(detail.getSpec())
+                        .categoryName(detail.getCategoryName())
+                        .price(defaultValue(detail.getProductSalePrice()))
+                        .quantity(BigDecimal.ZERO)
+                        .amount(BigDecimal.ZERO)
+                        .build();
                 summaryMap.put(key, summary);
             }
             summary.setQuantity(NumberUtil.add(summary.getQuantity(), resolveInvoiceQuantity(detail)));
             summary.setAmount(NumberUtil.add(summary.getAmount(), resolveInvoiceAmount(detail)));
         }
 
-        return summaryMap.values().stream()
+        List<SaleOutSheetInvoiceDetailExportModel> models = summaryMap.values().stream()
                 .sorted(Comparator.comparing(SaleOutSheetInvoiceDetailExportModel::getProductName,
                                 Comparator.nullsFirst(String::compareTo))
                         .thenComparing(SaleOutSheetInvoiceDetailExportModel::getUnit,
                                 Comparator.nullsFirst(String::compareTo)))
                 .collect(Collectors.toList());
+        if (!useProductSalePrice) {
+            models.forEach(model -> model.setPrice(resolveInvoicePrice(model.getAmount(), model.getQuantity())));
+        }
+        return models;
+    }
+
+    /**
+     * 计算开票明细的单价，数量为零时返回零避免除零异常。
+     *
+     * @param amount 汇总金额
+     * @param quantity 汇总数量
+     * @return 单价，保留六位小数
+     */
+    private static BigDecimal resolveInvoicePrice(BigDecimal amount, BigDecimal quantity) {
+        if (!isPositive(quantity)) {
+            return BigDecimal.ZERO;
+        }
+        return defaultValue(amount).divide(quantity, 6, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * 是否使用商品售价作为开票明细单价。
+     *
+     * @return 参数 product_sale_price_unique 为 true 时返回 true
+     */
+    private boolean useProductSalePriceForInvoiceDetail() {
+        QuerySysParameterVo parameterVo = new QuerySysParameterVo();
+        parameterVo.setPmKey(PRODUCT_SALE_PRICE_UNIQUE_PM_KEY);
+        List<SysParameter> parameters = sysParameterService.query(parameterVo);
+        return !CollectionUtil.isEmpty(parameters) && BooleanUtil.toBoolean(parameters.get(0).getPmValue());
     }
 
     /**
@@ -3271,7 +3310,7 @@ public class SaleOutSheetServiceImpl extends
      */
     private boolean useUniquePriceAsSalePrice() {
         QuerySysParameterVo sysParameterVo = new QuerySysParameterVo();
-        sysParameterVo.setPmKey("sale_out_price_use_unique_price");
+        sysParameterVo.setPmKey(PRODUCT_SALE_PRICE_UNIQUE_PM_KEY);
         List<SysParameter> list = sysParameterService.query(sysParameterVo);
         if (CollectionUtil.isEmpty(list)) {
             return false;
