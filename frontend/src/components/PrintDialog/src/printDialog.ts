@@ -44,6 +44,24 @@ const state = reactive<PrintDialogState>({
   frameKey: 0,
 });
 
+let previewOwnerFrameKey = -1;
+let previewOwnerId = '';
+
+/**
+ * 为当前打印请求分配唯一的预览组件。
+ *
+ * 页面中的列表、详情等区域可能同时挂载多个打印预览组件；
+ * 它们共用同一份打印状态时，只允许第一个领取当前请求的组件展示弹窗。
+ */
+export function acquirePrintDialogOwner(ownerId: string, frameKey: number) {
+  if (previewOwnerFrameKey !== frameKey) {
+    previewOwnerFrameKey = frameKey;
+    previewOwnerId = ownerId;
+  }
+
+  return previewOwnerId === ownerId;
+}
+
 /**
  * 打开全局打印预览弹窗。
  *
