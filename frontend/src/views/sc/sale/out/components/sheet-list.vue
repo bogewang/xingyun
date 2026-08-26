@@ -557,6 +557,9 @@
   import { calcSaleOutProfitRateByCost } from './saleOutProfit';
   import { costRecalculateMixin } from '@/mixins/costRecalculateMixin';
 
+  /** 是否显示行内“更多”菜单中的打印操作，当前固定隐藏。 */
+  const SHOW_MORE_PRINT_ACTION = false;
+
   export default defineComponent({
     name: 'SaleOutSheetSheetList',
     components: {
@@ -1640,7 +1643,8 @@
       createMoreActions(row) {
         return [
           {
-            label: '打印',
+            label: '客户端打印',
+            ifShow: () => SHOW_MORE_PRINT_ACTION,
             onClick: () => {
               this.printOrder(row);
             },
