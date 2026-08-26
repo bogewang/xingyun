@@ -6,7 +6,7 @@ import '@/components/VxeTable/src/css/index.scss';
 // Register icon sprite
 import 'virtual:svg-icons-register';
 import { io } from 'socket.io-client';
-import { setSocketIo, hiprint } from 'vg-print';
+import { setSocketIo, hiprint, disAutoConnect } from 'vg-print';
 import pluginEleCodeEditor from '@vg-print/plugin-code-editor';
 
 import { createApp } from 'vue';
@@ -103,6 +103,7 @@ async function bootstrap() {
   app.mount('#app');
 }
 
+disAutoConnect();
 setSocketIo(io); // 再注入 io（这一步不会触发连接了）
 
 hiprint.init({
