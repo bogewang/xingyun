@@ -107,6 +107,9 @@
 
   export default defineComponent({
     name: 'InlineProductSelect',
+    components: {
+      StarTwoTone,
+    },
     props: {
       /** 行数据 */
       row: { type: Object, required: true },
