@@ -419,7 +419,7 @@
         this.loading = true;
         try {
           const res = await api.print(this.id);
-          await this.vgPrintPreview(PRINT_TYPE.SALE_OUT.code, this.buildPrintData(res));
+          await this.vgDefaultBrowserPrint(PRINT_TYPE.SALE_OUT.code, this.buildPrintData(res));
         } finally {
           this.loading = false;
         }
