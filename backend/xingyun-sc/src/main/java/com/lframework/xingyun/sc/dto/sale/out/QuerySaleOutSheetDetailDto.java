@@ -77,6 +77,11 @@ public class QuerySaleOutSheetDetailDto implements BaseDto, Serializable {
 
   private BigDecimal taxPrice;
 
+  /**
+   * 商品售价，已换算为当前交易单位。
+   */
+  private BigDecimal productSalePrice;
+
   private BigDecimal taxAmount;
 
   /**

@@ -167,7 +167,13 @@
             <a-input
               :ref="'confirmNumInputRef' + rowIndex"
               v-model:value="row.confirmNum"
-              class="number-input"
+              :class="[
+                'number-input',
+                {
+                  'confirm-num-warning':
+                    Number(row.confirmNum) > 0 && Number(row.confirmNum) !== Number(row.outNum),
+                },
+              ]"
               @input="(e) => confirmNumInput(row, e.target.value)"
               @keydown="(e) => handleTableInputKeyDown(e, 'confirmNumInputRef', rowIndex)"
             />
@@ -1232,6 +1238,10 @@
 
   :deep(.vxe-body--column.sheet-zero-warning-cell),
   :deep(.sheet-zero-warning-cell .ant-input) {
+    color: #f5222d !important;
+  }
+
+  :deep(.confirm-num-warning) {
     color: #f5222d !important;
   }
 </style>

@@ -235,6 +235,7 @@
             d.business_num AS order_num,
             d.confirm_num,
             d.tax_price,
+            g.sale_price * COALESCE(d.conversion_rate, 1) AS product_sale_price,
             d.tax_amount,
             d.confirm_amt,
             d.cost_price * COALESCE(d.conversion_rate, 1) AS costPrice,
