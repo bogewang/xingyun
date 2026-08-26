@@ -43,7 +43,7 @@
 
 <script lang="ts" setup>
   import { computed, nextTick, ref, watch } from 'vue';
-  import { Preview, createTemplate, connect, refreshPrinterList } from 'vg-print';
+  import { Preview, createTemplate, connect, isClientConnected, refreshPrinterList } from 'vg-print';
   import 'vg-print/style.css';
   import * as api from '@/api/base-data/print-template';
   import { createError } from '@/hooks/web/msg';
@@ -70,6 +70,8 @@
       options?: {
         width?: string | number;
         showTitle?: boolean;
+        showPrint2?: boolean;
+        printerList?: PrinterOption[];
       },
     ) => void;
   };
@@ -140,11 +142,43 @@
   }
 
   /**
+   * 等待打印客户端建立连接，最长等待 8 秒。
+   */
+  async function waitForPrinterClient() {
+    if (isClientConnected()) {
+      return true;
+    }
+
+    return new Promise<boolean>((resolve) => {
+      let completed = false;
+      let timeoutId: number | undefined;
+      const finish = (connected: boolean) => {
+        if (completed) {
+          return;
+        }
+
+        completed = true;
+        if (timeoutId !== undefined) {
+          window.clearTimeout(timeoutId);
+        }
+        resolve(connected);
+      };
+
+      timeoutId = window.setTimeout(() => finish(false), 8000);
+      try {
+        connect((connected: boolean) => finish(connected));
+      } catch {
+        finish(false);
+      }
+    });
+  }
+
+  /**
    * 加载打印机列表并设置默认打印机。
    */
   async function loadPrinters() {
     try {
-      await connect();
+      await waitForPrinterClient();
 
       const printerList = await refreshPrinterList();
       const normalizedPrinterList = Array.isArray(printerList)
@@ -160,6 +194,7 @@
         printer.value = normalizedPrinterList[0].name || '';
       }
     } catch {
+      console.log('Failed to load printers')
       printers.value = [];
     }
   }
@@ -195,9 +230,13 @@
       return;
     }
 
+    await loadPrinters();
+
     await nextTick();
     previewRef.value?.show(templateInstance.value, currentPrintData.value, {
       width: PREVIEW_WIDTH,
+      showPrint2: true,
+      printerList: printers.value,
     });
   }
 
@@ -274,10 +313,6 @@
 
       if (openedNow || refreshedWhileOpen) {
         await showPreview();
-      }
-
-      if (openedNow) {
-        await loadPrinters();
       }
     },
     { immediate: true },

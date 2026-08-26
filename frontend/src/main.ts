@@ -6,7 +6,7 @@ import '@/components/VxeTable/src/css/index.scss';
 // Register icon sprite
 import 'virtual:svg-icons-register';
 import { io } from 'socket.io-client';
-import { setSocketIo, hiprint } from 'vg-print';
+import { setSocketIo, hiprint, disAutoConnect } from 'vg-print';
 import pluginEleCodeEditor from '@vg-print/plugin-code-editor';
 
 import { createApp } from 'vue';
@@ -103,11 +103,12 @@ async function bootstrap() {
   app.mount('#app');
 }
 
+disAutoConnect();
 setSocketIo(io); // 再注入 io（这一步不会触发连接了）
 
 hiprint.init({
   host: 'http://127.0.0.1:17521',
-  token: 'D,u.j@Xu}MN%;"3y-J"|',
+  // token: 'D,u.j@Xu}MN%;"3y-J"|',
 });
 
 // 在应用初始化时全局注册，确保模板解析和设计器均可使用代码编辑器插件。
