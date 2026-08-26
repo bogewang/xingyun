@@ -243,7 +243,7 @@
 
   import InlineProductSelect from '@/views/sc/shared/inline-product-select.vue';
   import { printMix } from '@/mixins/print.ts';
-  import { previewReceiveSheetPrint } from './print';
+  import { browserPrintReceiveSheet } from './print';
   import PrintDialog from '/@/components/PrintDialog';
   import {
     isEmpty,
@@ -915,8 +915,8 @@
       async print() {
         this.loading = true;
         try {
-          await previewReceiveSheetPrint(this.id, api.print, (type, data) => {
-            return this.vgPrintPreview(type, data);
+          await browserPrintReceiveSheet(this.id, api.print, (type, data) => {
+            return this.vgDefaultBrowserPrint(type, data);
           });
         } finally {
           this.loading = false;

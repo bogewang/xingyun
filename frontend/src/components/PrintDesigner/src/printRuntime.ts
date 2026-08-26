@@ -1,6 +1,11 @@
 import { openPrintDialog } from '/@/components/PrintDialog';
 import { createTemplate, printBrowser as printTemplateInBrowser } from 'vg-print';
-import { normalizePrintData, normalizeTemplate } from './printUtils';
+import {
+  normalizePrintData,
+  normalizeTemplate,
+  resetPageNumberForEachPrintData,
+  shouldResetPageNumberForPrintData,
+} from './printUtils';
 import type { PrintDialogPayload } from '/@/components/PrintDialog';
 
 export interface PrintRuntimePreviewOptions
@@ -16,9 +21,21 @@ export interface PrintRuntimePreviewOptions
     >
   > {}
 
+/**
+ * 浏览器打印选项。
+ */
+export interface PrintRuntimeBrowserPrintOptions {
+  /** 是否让每条打印数据从第一页开始计页。 */
+  resetPageNumberPerData?: boolean;
+}
+
 export interface PrintRuntimeApi {
   preview: (templateJson: unknown, data: unknown, options?: PrintRuntimePreviewOptions) => void;
-  browserPrint: (templateJson: unknown, data: unknown) => void;
+  browserPrint: (
+    templateJson: unknown,
+    data: unknown,
+    options?: PrintRuntimeBrowserPrintOptions,
+  ) => void;
 }
 
 /**
@@ -46,9 +63,19 @@ function preview(templateJson: unknown, data: unknown, options: PrintRuntimePrev
  * 与预览弹窗共用相同的数据和模板标准化逻辑，直接调起系统打印对话框，
  * 不依赖本地打印客户端。
  */
-function browserPrint(templateJson: unknown, data: unknown) {
-  const template = createTemplate(normalizeTemplate(templateJson));
-  printTemplateInBrowser(template, normalizePrintData(data));
+function browserPrint(
+  templateJson: unknown,
+  data: unknown,
+  options: PrintRuntimeBrowserPrintOptions = {},
+) {
+  const printData = normalizePrintData(data);
+  const normalizedTemplate = normalizeTemplate(templateJson);
+  const template = createTemplate(
+    shouldResetPageNumberForPrintData(options.resetPageNumberPerData === true, printData.length)
+      ? resetPageNumberForEachPrintData(normalizedTemplate)
+      : normalizedTemplate,
+  );
+  printTemplateInBrowser(template, printData);
 }
 
 const printRuntime: PrintRuntimeApi = {

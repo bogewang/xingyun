@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as printTemplateApi from '@/api/base-data/print-template';
-import { getPrintTemplateSelection, vgBrowserPrint } from '../print';
+import { getPrintTemplateSelection, vgBrowserPrint, vgDefaultBrowserPrint } from '../print';
 
 vi.mock('@/api/base-data/print-template', () => ({
   query: vi.fn(),
@@ -45,13 +45,30 @@ describe('打印混入浏览器打印流程', () => {
     const browserPrint = vi.fn();
     vi.mocked(printTemplateApi.getSetting).mockResolvedValue({ templateJson } as any);
 
+    const options = { resetPageNumberPerData: true };
     await vgBrowserPrint.call(
       { $printRuntimeApi: { browserPrint } } as any,
       printData,
       'template-2',
+      options,
     );
 
     expect(printTemplateApi.getSetting).toHaveBeenCalledWith('template-2');
-    expect(browserPrint).toHaveBeenCalledWith(templateJson, printData);
+    expect(browserPrint).toHaveBeenCalledWith(templateJson, printData, options);
+  });
+
+  it('使用业务类型的默认模板直接调用浏览器打印运行时', async () => {
+    const templateJson = { panels: [{ index: 0 }] };
+    const printData = { id: 'receive-1' };
+    const browserPrint = vi.fn();
+    vi.mocked(printTemplateApi.query).mockResolvedValue({
+      datas: [{ id: 'template-default', name: '默认模板', bizType: '1', isDefault: true }],
+    } as any);
+    vi.mocked(printTemplateApi.getSetting).mockResolvedValue({ templateJson } as any);
+
+    await vgDefaultBrowserPrint.call({ $printRuntimeApi: { browserPrint } } as any, 1, printData);
+
+    expect(printTemplateApi.getSetting).toHaveBeenCalledWith('template-default');
+    expect(browserPrint).toHaveBeenCalledWith(templateJson, printData, {});
   });
 });

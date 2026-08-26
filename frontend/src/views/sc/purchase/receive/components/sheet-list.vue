@@ -305,7 +305,7 @@
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
   import { printMix } from '@/mixins/print';
-  import { previewReceiveSheetPrint } from '../print';
+  import { browserPrintReceiveSheet } from '../print';
   import { isEmpty, buildSortPageVo } from '@/utils/utils';
   import {
     buildVisibleSelectOptions,
@@ -822,8 +822,8 @@
         this.loading = true;
 
         try {
-          await previewReceiveSheetPrint(row.id, api.print, (type, data) => {
-            return this.vgPrintPreview(type, data);
+          await browserPrintReceiveSheet(row.id, api.print, (type, data) => {
+            return this.vgDefaultBrowserPrint(type, data);
           });
         } finally {
           this.loading = false;

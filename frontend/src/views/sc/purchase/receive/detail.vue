@@ -105,7 +105,7 @@
   import PurchaseOrderDetail from '@/views/sc/purchase/order/detail.vue';
   import * as api from '@/api/sc/purchase/receive';
   import { printMix } from '@/mixins/print.ts';
-  import { previewReceiveSheetPrint } from './print';
+  import { browserPrintReceiveSheet } from './print';
   import { add, getNumber, isEmpty, isFloat, isFloatGeZero, mul, sub } from '@/utils/utils';
   import { RECEIVE_SHEET_STATUS } from '@/enums/biz/receiveSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
@@ -290,8 +290,8 @@
       async print() {
         this.loading = true;
         try {
-          await previewReceiveSheetPrint(this.id, api.print, (type, data) => {
-            return this.vgPrintPreview(type, data);
+          await browserPrintReceiveSheet(this.id, api.print, (type, data) => {
+            return this.vgDefaultBrowserPrint(type, data);
           });
         } finally {
           this.loading = false;

@@ -557,6 +557,9 @@
   import { calcSaleOutProfitRateByCost } from './saleOutProfit';
   import { costRecalculateMixin } from '@/mixins/costRecalculateMixin';
 
+  /** 是否显示行内“更多”菜单中的打印操作，当前固定隐藏。 */
+  const SHOW_MORE_PRINT_ACTION = false;
+
   export default defineComponent({
     name: 'SaleOutSheetSheetList',
     components: {
@@ -1365,7 +1368,7 @@
         }
       },
       /**
-       * 加载选中的销售出库单并在同一打印预览中批量打印。
+       * 加载选中的销售出库单及可用模板，打开浏览器批量打印模板选择弹窗。
        */
       async batchPrint() {
         const records = this.$refs.grid.getCheckboxRecords();
@@ -1376,12 +1379,20 @@
 
         this.loading = true;
         try {
-          const printDatas = await Promise.all(
-            records.map(async (record) => this.buildPrintData(await api.print(record.id))),
-          );
-          await this.vgPrintPreview(PRINT_TYPE.SALE_OUT.code, printDatas, {
-            resetPageNumberPerData: true,
-          });
+          const [printDatas, templateSelection] = await Promise.all([
+            Promise.all(
+              records.map(async (record) => this.buildPrintData(await api.print(record.id))),
+            ),
+            this.getPrintTemplateSelection(PRINT_TYPE.SALE_OUT.code),
+          ]);
+          if (!templateSelection) {
+            return;
+          }
+
+          this.browserPrintModal.printData = printDatas;
+          this.browserPrintModal.templateId = templateSelection.templateId;
+          this.browserPrintModal.templateList = templateSelection.templateList;
+          this.browserPrintModal.visible = true;
         } finally {
           this.loading = false;
         }
@@ -1423,6 +1434,7 @@
           await this.vgBrowserPrint(
             this.browserPrintModal.printData,
             this.browserPrintModal.templateId,
+            { resetPageNumberPerData: Array.isArray(this.browserPrintModal.printData) },
           );
           this.closeBrowserPrintDialog();
         } finally {
@@ -1508,22 +1520,32 @@
           ? this.getAllTagPrintCategoryIds()
           : [];
       },
-      /** 确认标签打印（携带分类筛选，并缓存勾选的分类到Redis） */
+      /** 确认标签打印（携带分类筛选，并打开浏览器打印模板选择弹窗） */
       async doTagPrintWithCategory() {
         // 缓存勾选的分类到Redis
         api.saveTagPrintCategoryCache(this.tagPrintModal.checkedCategoryIds);
         this.tagPrintModal.loading = true;
         try {
-          const res = await api.tagPrint({
-            ...this.buildQueryParams({}, {}),
-            idList: this.tagPrintModal.pendingRecords.map((item) => item.id),
-            categoryIdList:
-              this.tagPrintModal.checkedCategoryIds.length > 0
-                ? this.tagPrintModal.checkedCategoryIds
-                : undefined,
-          });
-          this.tagPrintModal.visible = false;
-          await this.vgPrintPreview(PRINT_TYPE.SALE_TAG.code, res);
+          const [printData, templateSelection] = await Promise.all([
+            api.tagPrint({
+              ...this.buildQueryParams({}, {}),
+              idList: this.tagPrintModal.pendingRecords.map((item) => item.id),
+              categoryIdList:
+                this.tagPrintModal.checkedCategoryIds.length > 0
+                  ? this.tagPrintModal.checkedCategoryIds
+                  : undefined,
+            }),
+            this.getPrintTemplateSelection(PRINT_TYPE.SALE_TAG.code),
+          ]);
+          if (!templateSelection) {
+            return;
+          }
+
+          this.closeTagPrintModal();
+          this.browserPrintModal.printData = printData;
+          this.browserPrintModal.templateId = templateSelection.templateId;
+          this.browserPrintModal.templateList = templateSelection.templateList;
+          this.browserPrintModal.visible = true;
         } finally {
           this.tagPrintModal.loading = false;
         }
@@ -1605,7 +1627,7 @@
             },
           },
           {
-            label: '浏览器打印',
+            label: '打印',
             onClick: () => {
               this.openBrowserPrintDialog(row);
             },
@@ -1631,7 +1653,8 @@
       createMoreActions(row) {
         return [
           {
-            label: '打印',
+            label: '客户端打印',
+            ifShow: () => SHOW_MORE_PRINT_ACTION,
             onClick: () => {
               this.printOrder(row);
             },

@@ -3,23 +3,23 @@ import { PRINT_TYPE } from '@/enums/biz/printType';
 
 export type ReceiveSheetPrintLoader = (id: string) => Promise<PrintReceiveSheetBo>;
 
-export type ReceiveSheetPrintPreview = (
+export type ReceiveSheetBrowserPrint = (
   type: number,
   data: PrintReceiveSheetBo,
 ) => Promise<void> | void;
 
 /**
- * 加载采购入库打印数据并打开采购入库业务类型的打印预览。
+ * 加载采购入库打印数据并调起采购入库业务类型的浏览器打印。
  *
  * @param id 采购入库单ID
  * @param load 打印数据加载函数
- * @param preview 打印预览函数
+ * @param browserPrint 浏览器打印函数
  */
-export async function previewReceiveSheetPrint(
+export async function browserPrintReceiveSheet(
   id: string,
   load: ReceiveSheetPrintLoader,
-  preview: ReceiveSheetPrintPreview,
+  browserPrint: ReceiveSheetBrowserPrint,
 ): Promise<void> {
   const data = await load(id);
-  await preview(PRINT_TYPE.RECEIVE_SHEET.code, data);
+  await browserPrint(PRINT_TYPE.RECEIVE_SHEET.code, data);
 }

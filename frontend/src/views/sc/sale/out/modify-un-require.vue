@@ -1100,7 +1100,7 @@
         this.loading = true;
         try {
           const res = await api.print(this.id);
-          await this.vgPrintPreview(PRINT_TYPE.SALE_OUT.code, res);
+          await this.vgDefaultBrowserPrint(PRINT_TYPE.SALE_OUT.code, res);
         } finally {
           this.loading = false;
         }

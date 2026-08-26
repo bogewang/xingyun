@@ -4,6 +4,7 @@ import type { QueryPrintTemplateBo } from '@/api/base-data/print-template/model/
 import { createError } from '@/hooks/web/msg';
 import type {
   PrintRuntimeApi,
+  PrintRuntimeBrowserPrintOptions,
   PrintRuntimePreviewOptions,
 } from '@/components/PrintDesigner/src/printRuntime';
 import type { PrintTemplateOption } from '@/components/PrintDialog';
@@ -137,6 +138,7 @@ export async function vgBrowserPrint(
   this: PrintMixinInstance,
   printData: unknown,
   templateId: string,
+  options: PrintRuntimeBrowserPrintOptions = {},
 ) {
   if (!templateId) {
     createError('请选择打印模板！');
@@ -155,13 +157,31 @@ export async function vgBrowserPrint(
     return;
   }
 
-  browserPrint(templateJson, printData);
+  browserPrint(templateJson, printData, options);
+}
+
+/**
+ * 使用指定业务类型的默认打印模板直接调起浏览器打印。
+ */
+export async function vgDefaultBrowserPrint(
+  this: PrintMixinInstance,
+  type: PrintBizType,
+  printData: unknown,
+  options: PrintRuntimeBrowserPrintOptions = {},
+) {
+  const templateSelection = await getPrintTemplateSelection(type);
+  if (!templateSelection) {
+    return;
+  }
+
+  await vgBrowserPrint.call(this, printData, templateSelection.templateId, options);
 }
 
 export const printMix = {
   methods: {
     getPrintTemplateSelection,
     vgBrowserPrint,
+    vgDefaultBrowserPrint,
     vgPrintPreview,
   },
 };
