@@ -1,9 +1,12 @@
 <template>
   <Preview
-    ref="previewRef"
+    :print-template="templateInstance"
+    :print-data="currentPrintData"
     :show-title="state.enableTemplateSwitch"
     :show-pdf="false"
+    :show-print2="true"
     :dialog-title="dialogTitle"
+    :width="PREVIEW_WIDTH"
     v-model:modalShow="previewVisible"
     default-lang="cn"
     :printerList="printers"
@@ -43,7 +46,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, nextTick, ref, watch } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import {
     Preview,
     createTemplate,
@@ -70,22 +73,8 @@
     name: string;
   };
 
-  type PreviewExpose = {
-    show: (
-      template: unknown,
-      data: unknown[],
-      options?: {
-        width?: string | number;
-        showTitle?: boolean;
-        showPrint2?: boolean;
-        printerList?: PrinterOption[];
-      },
-    ) => void;
-  };
-
   type PrinterSource = Partial<PrinterOption>;
 
-  const previewRef = ref<PreviewExpose>();
   const previewVisible = ref(false);
   const state = usePrintDialogState();
   const templateOptions = computed(() => state.templateList || []);
@@ -230,19 +219,13 @@
   /**
    * 根据当前模板与打印数据刷新预览内容。
    */
-  async function showPreview() {
+  function showPreview() {
     if (!state.open || !acquirePrintDialogOwner(previewOwnerId, state.frameKey)) {
       return;
     }
 
-    await loadPrinters();
-
-    await nextTick();
-    previewRef.value?.show(templateInstance.value, currentPrintData.value, {
-      width: PREVIEW_WIDTH,
-      showPrint2: true,
-      printerList: printers.value,
-    });
+    previewVisible.value = true;
+    void loadPrinters();
   }
 
   /**
