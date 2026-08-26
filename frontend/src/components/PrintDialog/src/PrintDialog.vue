@@ -1,5 +1,6 @@
 <template>
   <Preview
+    ref="previewRef"
     :print-template="templateInstance"
     :print-data="currentPrintData"
     :show-title="state.enableTemplateSwitch"
@@ -46,7 +47,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, watch } from 'vue';
+  import { computed, onBeforeUnmount, ref, watch } from 'vue';
   import {
     Preview,
     createTemplate,
@@ -88,6 +89,13 @@
   const templateLoading = ref(false);
   const templateCache = new Map<string, PrintTemplateJson>();
   const printCount = ref(1);
+  const previewRef = ref<any>(null);
+
+  /** 打印客户端连接状态轮询间隔（毫秒）。 */
+  const CLIENT_POLL_INTERVAL = 2000;
+  /** 最近一次观察到的打印客户端连接状态，用于检测状态变化。 */
+  const clientConnected = ref(false);
+  let clientPollTimer: number | undefined;
 
   // show(template, data, width?)
   // 参数说明：
@@ -193,6 +201,53 @@
     }
   }
 
+  /**
+   * 打印客户端连接状态变化时，保持弹窗打开并刷新「直接打印」按钮状态。
+   *
+   * vg-print 的 Preview 只在弹窗打开时检查一次客户端连接；
+   * 客户端在弹窗打开后才连接/断开时，按钮的禁用状态不会自动更新。
+   * 这里调用其暴露的 show() 方法（弹窗保持打开不关闭），
+   * 触发内部重新评估连接状态并刷新打印机列表。
+   */
+  function handleClientStateChange(connected: boolean) {
+    clientConnected.value = connected;
+    if (!state.open || !previewVisible.value || !previewRef.value) {
+      return;
+    }
+
+    previewRef.value.show(templateInstance.value, currentPrintData.value);
+    if (connected) {
+      void loadPrinters();
+    }
+  }
+
+  /**
+   * 开始轮询打印客户端连接状态。
+   *
+   * 弹窗打开时 vg-print 会自行检查一次连接状态，这里先记录基线；
+   * 之后每次轮询发现连接状态发生变化时，再刷新按钮状态。
+   */
+  function startClientPolling() {
+    stopClientPolling();
+    clientConnected.value = isClientConnected();
+    clientPollTimer = window.setInterval(() => {
+      const connected = isClientConnected();
+      if (connected !== clientConnected.value) {
+        handleClientStateChange(connected);
+      }
+    }, CLIENT_POLL_INTERVAL);
+  }
+
+  /**
+   * 停止轮询打印客户端连接状态。
+   */
+  function stopClientPolling() {
+    if (clientPollTimer !== undefined) {
+      window.clearInterval(clientPollTimer);
+      clientPollTimer = undefined;
+    }
+  }
+
   function onToPdf() {
     templateInstance.value.toPdf(currentPrintData.value, getPdfFilename(), {
       scale: 3,
@@ -288,6 +343,7 @@
     () => [state.open, state.frameKey] as const,
     async ([open, frameKey], previousValue) => {
       if (!open) {
+        stopClientPolling();
         previewVisible.value = false;
         return;
       }
@@ -302,12 +358,15 @@
 
       if (openedNow || refreshedWhileOpen) {
         await showPreview();
+        startClientPolling();
       }
     },
     { immediate: true },
   );
 
   watch(printCount, handlePrintCountChange);
+
+  onBeforeUnmount(stopClientPolling);
 </script>
 
 <style scoped>
