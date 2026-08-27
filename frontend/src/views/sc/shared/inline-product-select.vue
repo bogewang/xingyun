@@ -30,7 +30,7 @@
             <!-- 序号 -->
             <vxe-column type="seq" title="序号" width="60" />
             <!-- 商品名称（始终显示，含热度星标） -->
-            <vxe-column field="productName" title="商品名称" min-width="150">
+            <vxe-column field="productName" title="商品名称" min-width="250">
               <template #default="{ row: product }">
                 <span>{{ product.productName }}</span>
                 <span v-if="product.hotLevel" class="inline-product-hot-stars">
@@ -55,20 +55,20 @@
             <!-- 单位（始终显示） -->
             <vxe-column field="unit" title="单位" width="60" />
             <!-- 库存数量（始终显示） -->
-            <vxe-column field="stockNum" title="库存数量" width="80" align="right" />
+            <vxe-column field="stockNum" title="库存数量" width="60" align="right" />
             <!-- 价格列（始终显示） -->
-            <vxe-column field="purchasePrice" title="采购价（元）" width="120" align="right" />
+            <vxe-column field="purchasePrice" title="采购价（元）" width="80" align="right" />
             <vxe-column
               field="latestPurchasePrice"
               title="最新采购价（元）"
-              width="120"
+              width="80"
               align="right"
             />
-            <vxe-column field="salePrice" title="销售价（元）" width="120" align="right" />
+            <vxe-column field="salePrice" title="销售价（元）" width="80" align="right" />
             <vxe-column
               field="latestSalePrice"
               title="最新销售价（元）"
-              width="120"
+              width="80"
               align="right"
             />
             <!-- 备注（始终显示并固定在最后一列） -->

@@ -142,22 +142,22 @@ export async function vgBrowserPrint(
 ) {
   if (!templateId) {
     createError('请选择打印模板！');
-    return;
+    return false;
   }
 
   const templateJson = await getTemplateJson(templateId);
   if (!templateJson) {
     createError('未找到打印模板配置！');
-    return;
+    return false;
   }
 
   const browserPrint = this.$printRuntimeApi?.browserPrint;
   if (typeof browserPrint !== 'function') {
     createError('浏览器打印组件未正确初始化！');
-    return;
+    return false;
   }
 
-  browserPrint(templateJson, printData, options);
+  return browserPrint(templateJson, printData, options);
 }
 
 /**
