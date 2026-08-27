@@ -1010,7 +1010,7 @@
             idList: [...new Set(records.map((item) => item.id))],
             detailIdList: records.map((item) => item.detailId),
           });
-          await this.vgPrintPreview(PRINT_TYPE.SALE_TAG.code, res);
+          await this.vgDefaultBrowserPrint(PRINT_TYPE.SALE_TAG.code, res);
         } finally {
           this.loading = false;
         }

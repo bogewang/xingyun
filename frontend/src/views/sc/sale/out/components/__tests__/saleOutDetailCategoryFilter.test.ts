@@ -17,6 +17,6 @@ describe('销售出库明细商品分类筛选', () => {
     expect(source).toContain("{ type: 'checkbox', width: 45 }");
     expect(source).toContain('@click="tagPrint"');
     expect(source).toContain('detailIdList: records.map((item) => item.detailId)');
-    expect(source).toContain('this.vgPrintPreview(PRINT_TYPE.SALE_TAG.code, res)');
+    expect(source).toContain('this.vgDefaultBrowserPrint(PRINT_TYPE.SALE_TAG.code, res)');
   });
 });

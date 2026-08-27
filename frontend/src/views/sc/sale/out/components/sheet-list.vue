@@ -1522,32 +1522,23 @@
           ? this.getAllTagPrintCategoryIds()
           : [];
       },
-      /** 确认标签打印（携带分类筛选，并打开浏览器打印模板选择弹窗） */
+      /** 确认标签打印（携带分类筛选，并直接调起浏览器打印）。 */
       async doTagPrintWithCategory() {
         // 缓存勾选的分类到Redis
         api.saveTagPrintCategoryCache(this.tagPrintModal.checkedCategoryIds);
         this.tagPrintModal.loading = true;
         try {
-          const [printData, templateSelection] = await Promise.all([
-            api.tagPrint({
-              ...this.buildQueryParams({}, {}),
-              idList: this.tagPrintModal.pendingRecords.map((item) => item.id),
-              categoryIdList:
-                this.tagPrintModal.checkedCategoryIds.length > 0
-                  ? this.tagPrintModal.checkedCategoryIds
-                  : undefined,
-            }),
-            this.getPrintTemplateSelection(PRINT_TYPE.SALE_TAG.code),
-          ]);
-          if (!templateSelection) {
-            return;
-          }
+          const printData = await api.tagPrint({
+            ...this.buildQueryParams({}, {}),
+            idList: this.tagPrintModal.pendingRecords.map((item) => item.id),
+            categoryIdList:
+              this.tagPrintModal.checkedCategoryIds.length > 0
+                ? this.tagPrintModal.checkedCategoryIds
+                : undefined,
+          });
 
           this.closeTagPrintModal();
-          this.browserPrintModal.printData = printData;
-          this.browserPrintModal.templateId = templateSelection.templateId;
-          this.browserPrintModal.templateList = templateSelection.templateList;
-          this.browserPrintModal.visible = true;
+          await this.vgDefaultBrowserPrint(PRINT_TYPE.SALE_TAG.code, printData);
         } finally {
           this.tagPrintModal.loading = false;
         }
