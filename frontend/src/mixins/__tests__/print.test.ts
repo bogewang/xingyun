@@ -57,6 +57,34 @@ describe('打印混入浏览器打印流程', () => {
     expect(browserPrint).toHaveBeenCalledWith(templateJson, printData, options);
   });
 
+  it('等待浏览器打印任务结束，避免任务尚未完成时重复发起打印', async () => {
+    const templateJson = { panels: [{ index: 0 }] };
+    let finishPrint: () => void;
+    const browserPrint = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finishPrint = resolve;
+        }),
+    );
+    vi.mocked(printTemplateApi.getSetting).mockResolvedValue({ templateJson } as any);
+
+    let completed = false;
+    const printTask = vgBrowserPrint
+      .call({ $printRuntimeApi: { browserPrint } } as any, { id: 'sale-out-1' }, 'template-2')
+      .then(() => {
+        completed = true;
+      });
+
+    await vi.waitFor(() => {
+      expect(browserPrint).toHaveBeenCalledTimes(1);
+    });
+    expect(completed).toBe(false);
+
+    finishPrint!();
+    await printTask;
+    expect(completed).toBe(true);
+  });
+
   it('使用业务类型的默认模板直接调用浏览器打印运行时', async () => {
     const templateJson = { panels: [{ index: 0 }] };
     const printData = { id: 'receive-1' };

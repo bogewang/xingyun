@@ -1,5 +1,6 @@
 import { openPrintDialog } from '/@/components/PrintDialog';
 import { createTemplate, printBrowser as printTemplateInBrowser } from 'vg-print';
+import { createError } from '/@/hooks/web/msg';
 import {
   normalizePrintData,
   normalizeTemplate,
@@ -35,8 +36,11 @@ export interface PrintRuntimeApi {
     templateJson: unknown,
     data: unknown,
     options?: PrintRuntimeBrowserPrintOptions,
-  ) => void;
+  ) => Promise<boolean>;
 }
+
+const BROWSER_PRINT_TIMEOUT = 120000;
+let browserPrintInProgress = false;
 
 /**
  * 运行时打印预览入口。
@@ -67,7 +71,12 @@ function browserPrint(
   templateJson: unknown,
   data: unknown,
   options: PrintRuntimeBrowserPrintOptions = {},
-) {
+): Promise<boolean> {
+  if (browserPrintInProgress) {
+    createError('浏览器打印任务正在进行，请先完成当前打印。');
+    return Promise.resolve(false);
+  }
+
   const printData = normalizePrintData(data);
   const normalizedTemplate = normalizeTemplate(templateJson);
   const template = createTemplate(
@@ -75,7 +84,43 @@ function browserPrint(
       ? resetPageNumberForEachPrintData(normalizedTemplate)
       : normalizedTemplate,
   );
-  printTemplateInBrowser(template, printData);
+
+  browserPrintInProgress = true;
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (success: boolean) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      window.clearTimeout(timeoutId);
+      browserPrintInProgress = false;
+      resolve(success);
+    };
+    const timeoutId = window.setTimeout(() => {
+      createError('浏览器打印等待超时，请关闭系统打印窗口后重试。');
+      finish(false);
+    }, BROWSER_PRINT_TIMEOUT);
+
+    try {
+      const printTask = printTemplateInBrowser(
+        template,
+        printData,
+        {},
+        {
+          callback: () => finish(true),
+        },
+      );
+      Promise.resolve(printTask).catch(() => {
+        createError('浏览器打印启动失败，请重试。');
+        finish(false);
+      });
+    } catch {
+      createError('浏览器打印启动失败，请重试。');
+      finish(false);
+    }
+  });
 }
 
 const printRuntime: PrintRuntimeApi = {

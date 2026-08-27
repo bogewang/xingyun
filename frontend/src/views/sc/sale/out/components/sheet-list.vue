@@ -1431,12 +1431,14 @@
 
         this.browserPrintModal.loading = true;
         try {
-          await this.vgBrowserPrint(
+          const printCompleted = await this.vgBrowserPrint(
             this.browserPrintModal.printData,
             this.browserPrintModal.templateId,
             { resetPageNumberPerData: Array.isArray(this.browserPrintModal.printData) },
           );
-          this.closeBrowserPrintDialog();
+          if (printCompleted) {
+            this.closeBrowserPrintDialog();
+          }
         } finally {
           this.browserPrintModal.loading = false;
         }
