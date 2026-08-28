@@ -261,7 +261,6 @@
     isEmpty,
     isFloat,
     isFloatGeZero,
-    isFloatGtZero,
     isNumberPrecision,
     mul,
     PATTERN_IS_FLOAT,
@@ -567,10 +566,8 @@
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
-        // 如果行内已有有效的采购价(>0)，则保留原价格，不被最新采购价覆盖
-        const purchasePrice = isFloatGtZero(this.tableData[index].purchasePrice)
-          ? this.tableData[index].purchasePrice
-          : !isEmpty(product.latestPurchasePrice)
+        // 优先使用商品最新采购价，未维护时使用商品档案采购价
+        const purchasePrice = !isEmpty(product.latestPurchasePrice)
           ? product.latestPurchasePrice
           : product.purchasePrice;
         const baseUnit = product.units?.find((item) => item.baseUnit);
