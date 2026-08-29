@@ -1513,6 +1513,8 @@ public class SaleOutSheetServiceImpl extends
 
         sheet.setStatus(SaleOutSheetStatus.CREATED);
 
+        persistUpdatedSheet(sheet);
+
         clearApproveStatus(sheet);
 
         this.adjustCustomerAmount(oldCustomerId);
@@ -1528,6 +1530,17 @@ public class SaleOutSheetServiceImpl extends
 
         OpLogUtil.setVariable("code", sheet.getCode());
         OpLogUtil.setExtra(vo);
+    }
+
+    /**
+     * 持久化修改后的销售出库主表，确保订单日期、报价单和金额汇总同步写入。
+     *
+     * @param sheet 已重算的销售出库主表
+     */
+    void persistUpdatedSheet(SaleOutSheet sheet) {
+        if (getBaseMapper().updateById(sheet) != 1) {
+            throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
+        }
     }
 
     /**

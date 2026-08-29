@@ -6,12 +6,14 @@ import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
 import com.lframework.xingyun.sc.enums.SaleOutSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
+import com.lframework.xingyun.sc.mappers.SaleOutSheetMapper;
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetInvoiceDetailExportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.vo.sale.out.SaleOutProductVo;
 import java.math.BigDecimal;
+import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -19,8 +21,45 @@ import java.util.List;
 import java.util.Map;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class SaleOutSheetServiceImplTest {
+
+  /** 验证修改单据后，唯一报价模式与关闭模式的主表关键字段都会持久化。 */
+  @Test
+  void persistUpdatedSheetShouldPersistQuoteFieldsForBothPricingModes() throws Exception {
+    SaleOutSheetMapper mapper = mock(SaleOutSheetMapper.class);
+    when(mapper.updateById(any(SaleOutSheet.class))).thenReturn(1);
+    SaleOutSheetServiceImpl service = new SaleOutSheetServiceImpl();
+    setBaseMapper(service, mapper);
+
+    SaleOutSheet quoteEnabled = new SaleOutSheet();
+    quoteEnabled.setId("sheet-1");
+    quoteEnabled.setOrderDate(LocalDate.of(2026, 9, 1));
+    quoteEnabled.setQuoteSheetId("quote-2");
+    quoteEnabled.setTotalAmount(new BigDecimal("25.00"));
+    service.persistUpdatedSheet(quoteEnabled);
+
+    SaleOutSheet quoteDisabled = new SaleOutSheet();
+    quoteDisabled.setId("sheet-2");
+    quoteDisabled.setOrderDate(LocalDate.of(2026, 9, 2));
+    quoteDisabled.setQuoteSheetId(null);
+    quoteDisabled.setTotalAmount(new BigDecimal("30.00"));
+    service.persistUpdatedSheet(quoteDisabled);
+
+    ArgumentCaptor<SaleOutSheet> captor = ArgumentCaptor.forClass(SaleOutSheet.class);
+    verify(mapper, org.mockito.Mockito.times(2)).updateById(captor.capture());
+    Assert.assertEquals(captor.getAllValues().get(0).getOrderDate(), LocalDate.of(2026, 9, 1));
+    Assert.assertEquals(captor.getAllValues().get(0).getQuoteSheetId(), "quote-2");
+    Assert.assertEquals(captor.getAllValues().get(0).getTotalAmount(), new BigDecimal("25.00"));
+    Assert.assertNull(captor.getAllValues().get(1).getQuoteSheetId());
+    Assert.assertEquals(captor.getAllValues().get(1).getOrderDate(), LocalDate.of(2026, 9, 2));
+    Assert.assertEquals(captor.getAllValues().get(1).getTotalAmount(), new BigDecimal("30.00"));
+  }
 
   /** 验证唯一报价会绑定主表并覆盖客户端提交的商品单价。 */
   @Test
@@ -307,6 +346,23 @@ class SaleOutSheetServiceImplTest {
     model.setTaxPrice(taxPrice);
     model.setConfirmNum(confirmNum);
     return model;
+  }
+
+  /** 为单元测试注入 BaseMpServiceImpl 持有的 Mapper。 */
+  private void setBaseMapper(SaleOutSheetServiceImpl service, SaleOutSheetMapper mapper)
+      throws Exception {
+    Class<?> type = service.getClass();
+    while (type != null) {
+      try {
+        Field field = type.getDeclaredField("baseMapper");
+        field.setAccessible(true);
+        field.set(service, mapper);
+        return;
+      } catch (NoSuchFieldException ignored) {
+        type = type.getSuperclass();
+      }
+    }
+    throw new AssertionError("未找到 BaseMapper 字段");
   }
 
   private SaleOutSheet createSheet(String id, String code, LocalDateTime createTime) {
