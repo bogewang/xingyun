@@ -2,7 +2,7 @@
 INSERT INTO sys_menu (id, code, name, title, icon, component_type, component, request_param,
   parent_id, sys_module_id, path, no_cache, display, hidden, permission, is_special, available,
   description, create_by, create_by_id, create_time, update_by, update_by_id, update_time)
-SELECT 'base-data-quote-menu', 'quote-menu', 'QuoteSheet', '报价单管理', 'ant-design:tags-outlined', 1,
+SELECT 'base-data-quote-menu', 'quote-menu', 'QuoteSheet', '报价单管理', null, 1,
   'base-data/quote/index', NULL, parent.id, parent.sys_module_id, '/base-data/quote', 0, 1, 0,
   'base-data:quote:query', 0, 1, '', '系统管理员', '1', NOW(), '系统管理员', '1', NOW()
 FROM sys_menu parent
