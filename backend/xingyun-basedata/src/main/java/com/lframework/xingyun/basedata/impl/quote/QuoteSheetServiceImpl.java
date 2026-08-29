@@ -3,6 +3,7 @@ package com.lframework.xingyun.basedata.impl.quote;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.pagehelper.PageInfo;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
+import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.utils.IdUtil;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
@@ -68,7 +69,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     List<QuoteProductBo> result=details.stream().map(detail -> quoteSheetConverter.toProductBo(products.get(detail.getProductId()), detail.getSalePrice(), detail.getQuoteSheetId())).collect(Collectors.toList()); GetQuoteSheetBo bo=quoteSheetConverter.toGetBo(sheet); bo.setProducts(result); return bo;
   }
   /** 分页查询报价单。 */
-  @Override public PageResult<QuoteSheet> query(Integer pageIndex,Integer pageSize,QueryQuoteSheetVo vo) { PageHelperUtil.startPage(pageIndex,pageSize); return PageResultUtil.convert(new PageInfo<>(getBaseMapper().selectList(Wrappers.lambdaQuery(QuoteSheet.class).eq(vo.getStatus()!=null,QuoteSheet::getStatus,vo.getStatus()).eq(vo.getCode()!=null,QuoteSheet::getCode,vo.getCode()).like(vo.getName()!=null,QuoteSheet::getName,vo.getName()).ge(vo.getStartDate()!=null,QuoteSheet::getStartDate,vo.getStartDate()).le(vo.getEndDate()!=null,QuoteSheet::getEndDate,vo.getEndDate()).orderByDesc(QuoteSheet::getCreateTime)))); }
+  @Override public PageResult<QuoteSheet> query(Integer pageIndex,Integer pageSize,QueryQuoteSheetVo vo) { PageHelperUtil.startPage(pageIndex,pageSize); return PageResultUtil.convert(new PageInfo<>(getBaseMapper().selectList(Wrappers.lambdaQuery(QuoteSheet.class).eq(vo.getStatus()!=null,QuoteSheet::getStatus,vo.getStatus()).like(StringUtil.isNotBlank(vo.getName()),QuoteSheet::getName,vo.getName()).ge(vo.getStartDate()!=null,QuoteSheet::getStartDate,vo.getStartDate()).le(vo.getEndDate()!=null,QuoteSheet::getEndDate,vo.getEndDate()).orderByDesc(QuoteSheet::getCreateTime)))); }
   /** 一次关联查询指定日期的已启用报价商品。 */
   @Override public List<QuoteProductBo> getActiveQuoteProducts(QueryQuoteProductVo vo) { return getBaseMapper().getActiveQuoteProducts(vo); }
   /** 校验保存请求。 */

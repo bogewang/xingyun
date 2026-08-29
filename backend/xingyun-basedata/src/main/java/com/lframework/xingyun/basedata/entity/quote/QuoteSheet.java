@@ -22,9 +22,6 @@ public class QuoteSheet extends BaseEntity implements BaseDto {
   /** ID。 */
   private String id;
 
-  /** 编号。 */
-  private String code;
-
   /** 名称。 */
   private String name;
 

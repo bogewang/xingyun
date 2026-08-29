@@ -5,9 +5,6 @@
         ><a-form ref="formRef" :model="form" :rules="rules" layout="vertical"
           ><a-row :gutter="16"
             ><a-col :span="6"
-              ><a-form-item label="编号" name="code"
-                ><a-input v-model:value.trim="form.code" /></a-form-item></a-col
-            ><a-col :span="6"
               ><a-form-item label="名称" name="name"
                 ><a-input v-model:value.trim="form.name" /></a-form-item></a-col
             ><a-col :span="6"
@@ -92,7 +89,6 @@
         productSearch: { condition: '' },
         form: {
           id: '',
-          code: '',
           name: '',
           startDate: '',
           endDate: '',
@@ -100,7 +96,6 @@
           products: [],
         },
         rules: {
-          code: [{ required: true, message: '请输入编号' }],
           name: [{ required: true, message: '请输入名称' }],
           startDate: [{ required: true, message: '请选择生效开始日期' }],
           endDate: [{ required: true, message: '请选择生效结束日期' }],

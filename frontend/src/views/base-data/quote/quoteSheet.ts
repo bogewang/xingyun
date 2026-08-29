@@ -36,7 +36,6 @@ export function mergeQuoteProducts(
 export function buildQuoteSheetPayload(form: Record<string, any>) {
   return {
     ...(form.id ? { id: form.id } : {}),
-    code: form.code,
     name: form.name,
     startDate: form.startDate,
     endDate: form.endDate,

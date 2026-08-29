@@ -8,12 +8,13 @@
         :proxy-config="proxyConfig"
         :columns="columns"
         :toolbar-config="toolbarConfig"
+        :pager-config="{
+          layouts: ['Home', 'PrevPage', 'Jump', 'PageCount', 'NextPage', 'End', 'Sizes', 'Total'],
+        }"
       >
         <template #form
           ><j-border
             ><j-form bordered
-              ><j-form-item label="编号"
-                ><a-input v-model:value="searchForm.code" allow-clear /></j-form-item
               ><j-form-item label="名称"
                 ><a-input v-model:value="searchForm.name" allow-clear /></j-form-item
               ><j-form-item label="状态"
@@ -55,10 +56,9 @@
     name: 'QuoteSheet',
     data() {
       return {
-        searchForm: { code: '', name: '', status: '' },
+        searchForm: { name: '', status: '' },
         toolbarConfig: { slots: { buttons: 'toolbar_buttons' } },
         columns: [
-          { field: 'code', title: '编号', width: 140 },
           { field: 'name', title: '名称', minWidth: 180 },
           { field: 'startDate', title: '生效开始日期', width: 130 },
           { field: 'endDate', title: '生效结束日期', width: 130 },
@@ -72,7 +72,11 @@
           props: { result: 'datas', total: 'totalCount' },
           ajax: {
             query: ({ page, sorts }) =>
-              api.query({ ...buildSortPageVo(page, sorts), ...this.searchForm }),
+              api.query({
+                ...buildSortPageVo(page, sorts),
+                name: this.searchForm.name || undefined,
+                status: this.searchForm.status || undefined,
+              }),
           },
         },
       };

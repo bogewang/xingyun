@@ -2,7 +2,6 @@ import { PageVo } from '@/api/model/pageVo';
 
 /** 报价单查询参数。 */
 export interface QueryQuoteSheetVo extends PageVo {
-  code?: string;
   name?: string;
   status?: 'ENABLED' | 'DISABLED';
   startDate?: string;
@@ -18,7 +17,6 @@ export interface QuoteSheetProductVo {
 /** 报价单保存参数。 */
 export interface QuoteSheetVo {
   id?: string;
-  code: string;
   name: string;
   startDate: string;
   endDate: string;

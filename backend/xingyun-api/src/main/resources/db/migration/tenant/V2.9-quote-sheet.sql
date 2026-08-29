@@ -1,6 +1,5 @@
 CREATE TABLE `tbl_quote_sheet` (
     `id` varchar(32) NOT NULL COMMENT 'ID',
-    `code` varchar(64) NOT NULL COMMENT '编号',
     `name` varchar(128) NOT NULL COMMENT '名称',
     `start_date` date NOT NULL COMMENT '生效开始日期',
     `end_date` date NOT NULL COMMENT '生效结束日期',

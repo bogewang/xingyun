@@ -31,7 +31,6 @@ public class QuoteSheetModelTest {
 
     QuoteSheet quoteSheet = new QuoteSheet();
     quoteSheet.setId("quote-1");
-    quoteSheet.setCode("QT202608290001");
     quoteSheet.setName("夏季报价");
     quoteSheet.setStartDate(LocalDate.of(2026, 8, 29));
     quoteSheet.setEndDate(LocalDate.of(2026, 9, 30));
@@ -46,7 +45,7 @@ public class QuoteSheetModelTest {
     detail.setSalePrice(new BigDecimal("99.90"));
     detail.setTenantId("tenant-1");
 
-    Assert.assertEquals(quoteSheet.getCode(), "QT202608290001");
+    Assert.assertEquals(quoteSheet.getName(), "夏季报价");
     Assert.assertEquals(quoteSheet.getStatus(), QuoteSheetStatus.DISABLED);
     Assert.assertEquals(detail.getQuoteSheetId(), "quote-1");
     Assert.assertEquals(detail.getSalePrice(), new BigDecimal("99.90"));
