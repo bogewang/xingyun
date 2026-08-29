@@ -7,6 +7,7 @@ import com.lframework.xingyun.basedata.vo.quote.QuoteSheetProductVo;
 import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverter;
 import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverterImpl;
 import com.lframework.xingyun.basedata.mappers.quote.QuoteSheetDetailMapper;
+import com.lframework.xingyun.basedata.mappers.quote.QuoteSheetMapper;
 import java.time.LocalDate;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -41,6 +42,8 @@ public class QuoteSheetServiceImplTest {
   @Test(expectedExceptions=DefaultClientException.class,expectedExceptionsMessageRegExp=".*开始日期不能晚于.*") public void shouldRejectInvalidDatesBeforeEnabling() { QuoteSheetServiceImpl.assertBasicSheetData(date("2026-08-31"),date("2026-08-01"),Collections.singletonList("product-1")); }
   /** 有效报价 SQL 必须排除停用商品。 */
   @Test public void shouldExcludeDisabledProductsFromActiveQuoteQuery() throws Exception { String sql=new String(Files.readAllBytes(Paths.get("src/main/resources/mappers/quote/QuoteSheetMapper.xml")),StandardCharsets.UTF_8); Assert.assertTrue(sql.contains("p.available = TRUE")); }
+  /** 所有写流程共用的入口先锁定当前租户报价单范围。 */
+  @Test public void shouldLockTenantRangeBeforeLocatingQuoteSheet() throws Exception { QuoteSheetServiceImpl service=new QuoteSheetServiceImpl(); QuoteSheetMapper mapper=Mockito.mock(QuoteSheetMapper.class); QuoteSheet sheet=sheet("quote-1","2026-08-01","2026-08-31"); Mockito.when(mapper.selectByTenantIdForUpdate(Mockito.<String>any())).thenReturn(Collections.singletonList(sheet)); setBaseMapper(service,mapper); Assert.assertEquals(QuoteSheetServiceImpl.requireLockedSheet("quote-1",service.lockTenantQuoteSheets()),sheet); Mockito.verify(mapper).selectByTenantIdForUpdate(Mockito.<String>any()); }
   /** 批量持久化必须把租户 ID 传入 Mapper 明细实体。 */
   @Test public void shouldPassTenantIdToBatchInsertMapper() throws Exception {
     QuoteSheetServiceImpl service=new QuoteSheetServiceImpl();
@@ -60,4 +63,6 @@ public class QuoteSheetServiceImplTest {
   private LocalDate date(String value) { return LocalDate.parse(value); }
   /** 通过反射注入服务依赖。 */
   private void setField(Object target,String name,Object value) throws Exception { Field field=QuoteSheetServiceImpl.class.getDeclaredField(name); field.setAccessible(true); field.set(target,value); }
+  /** 为服务注入基础 Mapper。 */
+  private void setBaseMapper(QuoteSheetServiceImpl service,QuoteSheetMapper mapper) throws Exception { Class<?> type=service.getClass(); while(type!=null){ try { Field field=type.getDeclaredField("baseMapper"); field.setAccessible(true); field.set(service,mapper); return; } catch(NoSuchFieldException ignored) { type=type.getSuperclass(); } } throw new IllegalStateException("未找到 BaseMapper 字段"); }
 }

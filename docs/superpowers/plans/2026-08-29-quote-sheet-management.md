@@ -148,11 +148,12 @@ git commit -m "feat: add quote sheet management api"
 ```java
 @Test
 void shouldRepriceDetailsWhenOrderDateChanges() {
+  SaleOutSheet sheet = sheet("2026-09-01");
   SaleOutSheetDetail detail = detail("product-1", new BigDecimal("10"));
   QuoteProductBo quoteProduct = quoteProduct("quote-sep", "product-1", new BigDecimal("12"));
-  SaleOutSheetServiceImpl.applyQuotePrice(detail, quoteProduct);
+  SaleOutSheetServiceImpl.applyQuotePrice(sheet, detail, quoteProduct);
   Assert.assertEquals(detail.getSalePrice(), new BigDecimal("12"));
-  Assert.assertEquals(detail.getQuoteSheetId(), "quote-sep");
+  Assert.assertEquals(sheet.getQuoteSheetId(), "quote-sep");
 }
 ```
 
