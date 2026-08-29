@@ -11,6 +11,10 @@ import org.apache.ibatis.annotations.Param;
  * 报价单数据访问接口。
  */
 public interface QuoteSheetMapper extends BaseMapper<QuoteSheet> {
+  /** 锁定指定租户的报价单周期记录。 */
+  List<QuoteSheet> selectByTenantIdForUpdate(@Param("tenantId") String tenantId);
+  /** 锁定单张报价单。 */
+  QuoteSheet selectByIdForUpdate(@Param("id") String id);
   /** 一次关联查询指定日期的生效报价商品。 */
   List<QuoteProductBo> getActiveQuoteProducts(@Param("vo") QueryQuoteProductVo vo);
 }

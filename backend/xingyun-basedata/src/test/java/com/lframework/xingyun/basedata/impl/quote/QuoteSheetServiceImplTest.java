@@ -4,6 +4,9 @@ import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.xingyun.basedata.entity.quote.QuoteSheet;
 import com.lframework.xingyun.basedata.enums.quote.QuoteSheetStatus;
 import com.lframework.xingyun.basedata.vo.quote.QuoteSheetProductVo;
+import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverter;
+import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverterImpl;
+import com.lframework.xingyun.basedata.mappers.quote.QuoteSheetDetailMapper;
 import java.time.LocalDate;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -11,6 +14,12 @@ import java.nio.file.Paths;
 import java.util.*;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.mockito.MockedStatic;
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** 报价单服务规则测试。 */
 public class QuoteSheetServiceImplTest {
@@ -32,8 +41,23 @@ public class QuoteSheetServiceImplTest {
   @Test(expectedExceptions=DefaultClientException.class,expectedExceptionsMessageRegExp=".*开始日期不能晚于.*") public void shouldRejectInvalidDatesBeforeEnabling() { QuoteSheetServiceImpl.assertBasicSheetData(date("2026-08-31"),date("2026-08-01"),Collections.singletonList("product-1")); }
   /** 有效报价 SQL 必须排除停用商品。 */
   @Test public void shouldExcludeDisabledProductsFromActiveQuoteQuery() throws Exception { String sql=new String(Files.readAllBytes(Paths.get("src/main/resources/mappers/quote/QuoteSheetMapper.xml")),StandardCharsets.UTF_8); Assert.assertTrue(sql.contains("p.available = TRUE")); }
+  /** 批量持久化必须把租户 ID 传入 Mapper 明细实体。 */
+  @Test public void shouldPassTenantIdToBatchInsertMapper() throws Exception {
+    QuoteSheetServiceImpl service=new QuoteSheetServiceImpl();
+    QuoteSheetDetailMapper mapper=Mockito.mock(QuoteSheetDetailMapper.class);
+    AtomicReference<List<com.lframework.xingyun.basedata.entity.quote.QuoteSheetDetail>> detailsRef=new AtomicReference<>();
+    Mockito.doAnswer(invocation->{ detailsRef.set(invocation.getArgument(0)); return 1; }).when(mapper).batchInsert(Mockito.anyList());
+    setField(service,"quoteSheetDetailMapper",mapper);
+    setField(service,"quoteSheetConverter",new QuoteSheetConverterImpl());
+    QuoteSheetProductVo product=new QuoteSheetProductVo(); product.setProductId("product-1"); product.setSalePrice(BigDecimal.ONE);
+    try (MockedStatic<com.lframework.starter.web.core.utils.IdUtil> idUtil=Mockito.mockStatic(com.lframework.starter.web.core.utils.IdUtil.class)) { idUtil.when(com.lframework.starter.web.core.utils.IdUtil::getId).thenReturn("detail-1"); service.saveDetails("quote-1","tenant-1",Collections.singletonList(product)); }
+    Assert.assertNotNull(detailsRef.get());
+    Assert.assertEquals(detailsRef.get().get(0).getTenantId(),"tenant-1");
+  }
   /** 构造报价单。 */
   private QuoteSheet sheet(String id,String start,String end) { QuoteSheet sheet=new QuoteSheet(); sheet.setId(id); sheet.setStartDate(date(start)); sheet.setEndDate(date(end)); return sheet; }
   /** 解析测试日期。 */
   private LocalDate date(String value) { return LocalDate.parse(value); }
+  /** 通过反射注入服务依赖。 */
+  private void setField(Object target,String name,Object value) throws Exception { Field field=QuoteSheetServiceImpl.class.getDeclaredField(name); field.setAccessible(true); field.set(target,value); }
 }
