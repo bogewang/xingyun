@@ -44,6 +44,8 @@ import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetInvoiceDetailExportT
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetProductProfitExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetProfitExportTaskWorker;
 import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
+import com.lframework.xingyun.basedata.bo.quote.QuoteProductBo;
+import com.lframework.xingyun.basedata.vo.quote.QueryQuoteProductVo;
 import com.lframework.xingyun.sc.vo.sale.out.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -171,6 +173,25 @@ public class SaleOutSheetController extends DefaultBaseController {
 
         try {
             return InvokeResultBuilder.success(saleOutSheetService.getPriceUniqueConfig());
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    /**
+     * 按订单日期查询销售可选报价商品。
+     *
+     * @param vo 查询参数
+     * @return 已启用报价商品
+     */
+    @ApiOperation("查询销售报价商品")
+    @HasPermission({ "sale:out:query" })
+    @PostMapping("/quote/products")
+    public InvokeResult<List<QuoteProductBo>> queryQuoteProducts(
+            @Valid @RequestBody QueryQuoteProductVo vo) {
+        try {
+            return InvokeResultBuilder.success(saleOutSheetService.queryQuoteProducts(vo));
         } catch (Exception e) {
             log.error("请求出错", e);
             return InvokeResultBuilder.fail(e.getMessage(), null);

@@ -21,6 +21,8 @@ import com.lframework.xingyun.sc.dto.sale.out.MonthEndRecalculateResult;
 import com.lframework.xingyun.sc.dto.sale.out.MonthEndRecalculateStartResult;
 import com.lframework.xingyun.sc.dto.sale.out.MonthEndRecalculateStepResult;
 import com.lframework.xingyun.sc.vo.sale.out.*;
+import com.lframework.xingyun.basedata.bo.quote.QuoteProductBo;
+import com.lframework.xingyun.basedata.vo.quote.QueryQuoteProductVo;
 import javax.servlet.http.HttpServletResponse;
 
 import java.time.LocalDate;
@@ -290,6 +292,14 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
    * @return
    */
   Boolean getPriceUniqueConfig();
+
+  /**
+   * 按订单日期查询可用于销售出库的报价商品。
+   *
+   * @param vo 查询参数
+   * @return 已启用报价单中的商品
+   */
+  List<QuoteProductBo> queryQuoteProducts(QueryQuoteProductVo vo);
 
   void marketBuySummary(QuerySaleOutSheetVo vo);
 

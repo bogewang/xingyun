@@ -1,6 +1,7 @@
 package com.lframework.xingyun.sc.impl.sale;
 
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
+import com.lframework.xingyun.basedata.bo.quote.QuoteProductBo;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
 import com.lframework.xingyun.sc.enums.SaleOutSheetStatus;
@@ -15,10 +16,56 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 class SaleOutSheetServiceImplTest {
+
+  /** 验证唯一报价会绑定主表并覆盖客户端提交的商品单价。 */
+  @Test
+  void resolveUniqueQuotePricesShouldBindSheetAndUseQuotePrices() {
+    SaleOutSheet sheet = new SaleOutSheet();
+    SaleOutProductVo product = new SaleOutProductVo();
+    product.setSeq(1);
+    product.setProductId("product-1");
+    product.setTaxPrice(new BigDecimal("99"));
+    QuoteProductBo quoteProduct = new QuoteProductBo();
+    quoteProduct.setQuoteSheetId("quote-1");
+    quoteProduct.setProductId("product-1");
+    quoteProduct.setSalePrice(new BigDecimal("12.50"));
+
+    Map<String, BigDecimal> prices = SaleOutSheetServiceImpl.resolveUniqueQuotePrices(sheet,
+        Arrays.asList(product), Arrays.asList(quoteProduct));
+
+    Assert.assertEquals(sheet.getQuoteSheetId(), "quote-1");
+    Assert.assertEquals(prices.get("product-1"), new BigDecimal("12.50"));
+  }
+
+  /** 验证销售商品不在当前报价单时拒绝保存。 */
+  @Test(expectedExceptions = DefaultClientException.class,
+      expectedExceptionsMessageRegExp = ".*不在当前生效报价单中.*")
+  void resolveUniqueQuotePricesShouldRejectProductMissingFromQuote() {
+    SaleOutSheet sheet = new SaleOutSheet();
+    SaleOutProductVo product = new SaleOutProductVo();
+    product.setSeq(2);
+    product.setProductId("product-2");
+    QuoteProductBo quoteProduct = new QuoteProductBo();
+    quoteProduct.setQuoteSheetId("quote-1");
+    quoteProduct.setProductId("product-1");
+    quoteProduct.setSalePrice(BigDecimal.ONE);
+
+    SaleOutSheetServiceImpl.resolveUniqueQuotePrices(sheet, Arrays.asList(product),
+        Arrays.asList(quoteProduct));
+  }
+
+  /** 验证订单日期没有已启用报价单时拒绝保存。 */
+  @Test(expectedExceptions = DefaultClientException.class,
+      expectedExceptionsMessageRegExp = ".*不存在已启用报价单.*")
+  void resolveUniqueQuotePricesShouldRejectMissingQuoteSheet() {
+    SaleOutSheetServiceImpl.resolveUniqueQuotePrices(new SaleOutSheet(),
+        Arrays.asList(new SaleOutProductVo()), Arrays.asList());
+  }
 
   /** 验证标签打印数量会去除小数点后的无意义零。 */
   @Test
