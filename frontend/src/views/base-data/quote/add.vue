@@ -199,11 +199,14 @@
           activeProductIndex: -1,
         };
       },
-      // 新增商品行
+      // 新增商品行：一次性新增50行空行
       addProduct() {
-        this.tableData.push(this.emptyProduct());
+        const startIndex = this.tableData.length;
+        for (let index = 0; index < 50; index += 1) {
+          this.tableData.push(this.emptyProduct());
+        }
         this.$nextTick(() => {
-          const productInputRef = this.$refs['productInputRef' + (this.tableData.length - 1)];
+          const productInputRef = this.$refs['productInputRef' + startIndex];
           if (productInputRef) {
             productInputRef.focus();
           }
@@ -280,10 +283,11 @@
           createError('生效开始日期不能晚于生效结束日期！');
           return;
         }
-        if (!this.validProducts()) return;
+        const products = this.validProducts();
+        if (!products) return;
         this.loading = true;
         api
-          .create(buildQuoteSheetPayload({ ...this.formData, products: this.tableData }))
+          .create(buildQuoteSheetPayload({ ...this.formData, products }))
           .then(() => {
             createSuccess('保存成功！');
             this.closeDialog();
@@ -293,22 +297,20 @@
           });
       },
       validProducts() {
-        if (isEmpty(this.tableData)) {
+        // 未选择商品的空行不参与保存
+        const products = this.tableData.filter((t) => !isEmpty(t.productId));
+        if (isEmpty(products)) {
           createError('请添加报价商品！');
-          return false;
+          return null;
         }
-        for (let index = 0; index < this.tableData.length; index += 1) {
-          const product = this.tableData[index];
-          if (isEmpty(product.productId)) {
-            createError(`第${index + 1}行请选择商品！`);
-            return false;
-          }
+        for (let index = 0; index < products.length; index += 1) {
+          const product = products[index];
           if (!isFloatGeZero(product.salePrice)) {
             createError(`第${index + 1}行商品销售单价必须是不小于0的数字！`);
-            return false;
+            return null;
           }
         }
-        return true;
+        return products;
       },
       closeDialog() {
         this.$router.back();
