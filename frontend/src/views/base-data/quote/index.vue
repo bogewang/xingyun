@@ -86,7 +86,9 @@
         this.$refs.grid.commitProxy('reload');
       },
       edit(id = '') {
-        this.$router.push({ name: 'QuoteSheetEdit', params: id ? { id } : {} });
+        this.$router.push(
+          id ? { name: 'QuoteSheetModify', params: { id } } : { name: 'QuoteSheetAdd' },
+        );
       },
       detail(id) {
         this.$router.push({ name: 'QuoteSheetDetail', params: { id } });

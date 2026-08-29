@@ -118,10 +118,16 @@ export const QuoteRoute: AppRouteRecordRaw = {
       meta: { title: '报价单详情' },
     },
     {
-      path: 'quote/edit/:id?',
-      name: 'QuoteSheetEdit',
-      component: () => import('/@/views/base-data/quote/edit.vue'),
-      meta: { title: '编辑报价单' },
+      path: 'quote/add',
+      name: 'QuoteSheetAdd',
+      component: () => import('/@/views/base-data/quote/add.vue'),
+      meta: { title: '新增报价单' },
+    },
+    {
+      path: 'quote/modify/:id',
+      name: 'QuoteSheetModify',
+      component: () => import('/@/views/base-data/quote/modify.vue'),
+      meta: { title: '修改报价单' },
     },
   ],
 };

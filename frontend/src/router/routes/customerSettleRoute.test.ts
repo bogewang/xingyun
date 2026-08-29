@@ -37,13 +37,16 @@ describe('客户结算路由', () => {
 });
 
 describe('报价单路由', () => {
-  it('注册报价单管理、详情与编辑页面', () => {
+  it('注册报价单管理、详情、新增与修改页面', () => {
     const routes = QuoteRoute.children || [];
 
     expect(routes.find((route) => route.path === 'quote')?.name).toBe('QuoteSheet');
     expect(routes.find((route) => route.path === 'quote/detail/:id')?.name).toBe(
       'QuoteSheetDetail',
     );
-    expect(routes.find((route) => route.path === 'quote/edit/:id?')?.name).toBe('QuoteSheetEdit');
+    expect(routes.find((route) => route.path === 'quote/add')?.name).toBe('QuoteSheetAdd');
+    expect(routes.find((route) => route.path === 'quote/modify/:id')?.name).toBe(
+      'QuoteSheetModify',
+    );
   });
 });
