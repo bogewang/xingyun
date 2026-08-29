@@ -31,7 +31,7 @@
         show-overflow
         highlight-hover-row
         keep-source
-        row-id="productId"
+        row-id="id"
         height="100%"
         :data="tableData"
         :columns="tableColumn"
@@ -41,16 +41,20 @@
         <!-- 工具栏 -->
         <template #toolbar_buttons>
           <a-space>
-            <a-button type="primary" :icon="h(PlusOutlined)" @click="openProductDialog"
-              >批量添加商品</a-button
-            >
-            <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除商品</a-button>
+            <a-button type="primary" :icon="h(PlusOutlined)" @click="addProduct">新增</a-button>
+            <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
           </a-space>
         </template>
 
         <!-- 操作 列自定义内容 -->
-        <template #operation_default="{ row }">
+        <template #operation_default="{ row, rowIndex }">
           <a-space size="small">
+            <a-button
+              type="link"
+              size="small"
+              :icon="h(PlusCircleTwoTone)"
+              @click="insertProduct(rowIndex)"
+            />
             <a-button
               type="link"
               size="small"
@@ -59,6 +63,17 @@
               @click="removeCurrentProduct(row)"
             />
           </a-space>
+        </template>
+
+        <!-- 商品名称 列自定义内容 -->
+        <template #productName_default="{ row, rowIndex }">
+          <InlineProductSelect
+            :ref="'productInputRef' + rowIndex"
+            :row="row"
+            :row-index="rowIndex"
+            @select="handleSelectProduct"
+            @add-product="addProduct"
+          />
         </template>
 
         <!-- 销售单价 列自定义内容 -->
@@ -85,48 +100,34 @@
         </a-space>
       </div>
     </div>
-
-    <!-- 选择商品弹窗 -->
-    <a-modal
-      v-model:open="productDialogVisible"
-      width="70%"
-      title="选择商品"
-      @ok="addSelectedProducts"
-      ><j-form bordered
-        ><j-form-item label="商品"
-          ><a-input
-            v-model:value="productSearch.condition"
-            allow-clear
-            @press-enter="searchProducts" /></j-form-item
-        ><j-form-item
-          ><a-button type="primary" @click="searchProducts">查询</a-button></j-form-item
-        ></j-form
-      ><vxe-grid
-        ref="selectorGrid"
-        row-id="id"
-        height="500"
-        :data="productOptions"
-        :columns="selectorColumns"
-        :checkbox-config="{ trigger: 'row' }"
-    /></a-modal>
   </div>
 </template>
 <script>
   import { defineComponent, h } from 'vue';
-  import { DeleteOutlined, MinusCircleTwoTone, PlusOutlined } from '@ant-design/icons-vue';
+  import {
+    DeleteOutlined,
+    MinusCircleTwoTone,
+    PlusCircleTwoTone,
+    PlusOutlined,
+  } from '@ant-design/icons-vue';
   import * as api from '@/api/base-data/quote';
-  import * as productApi from '@/api/base-data/product/info';
-  import { createError, createSuccess } from '@/hooks/web/msg';
-  import { isEmpty, isFloatGeZero } from '@/utils/utils';
-  import { buildQuoteSheetPayload, mergeQuoteProducts } from './quoteSheet';
+  import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import { isEmpty, isFloatGeZero, uuid } from '@/utils/utils';
+  import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
+  import { buildQuoteSheetPayload } from './quoteSheet';
+  import InlineProductSelect from './inline-product-select.vue';
 
   export default defineComponent({
     name: 'AddQuoteSheet',
+    components: {
+      InlineProductSelect,
+    },
     setup() {
       return {
         h,
         PlusOutlined,
         DeleteOutlined,
+        PlusCircleTwoTone,
         MinusCircleTwoTone,
       };
     },
@@ -134,10 +135,6 @@
       return {
         // 是否显示加载框
         loading: false,
-        // 选择商品弹窗
-        productDialogVisible: false,
-        productOptions: [],
-        productSearch: { condition: '' },
         // 表单数据
         formData: { name: '', startDate: '', endDate: '', description: '' },
         // 工具栏配置
@@ -164,7 +161,12 @@
             slots: { default: 'operation_default' },
           },
           { field: 'code', title: '商品编号', width: 120 },
-          { field: 'name', title: '商品名称', minWidth: 180 },
+          {
+            field: 'name',
+            title: '商品名称',
+            minWidth: 180,
+            slots: { default: 'productName_default' },
+          },
           { field: 'skuCode', title: '商品SKU编号', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
@@ -177,62 +179,89 @@
           },
         ],
         tableData: [],
-        // 选择商品弹窗的列表数据配置
-        selectorColumns: [
-          { type: 'checkbox', width: 45 },
-          { field: 'code', title: '商品编号', width: 140 },
-          { field: 'name', title: '商品名称', minWidth: 180 },
-          { field: 'spec', title: '规格', width: 120 },
-          { field: 'unit', title: '单位', width: 90 },
-        ],
       };
     },
     methods: {
-      openProductDialog() {
-        this.productDialogVisible = true;
-        this.searchProducts();
+      emptyProduct() {
+        return {
+          id: uuid(),
+          productId: '',
+          code: '',
+          name: '',
+          skuCode: '',
+          spec: '',
+          unit: '',
+          salePrice: '',
+          editingProduct: false,
+          productQuery: '',
+          products: [],
+          productOptions: [],
+          activeProductIndex: -1,
+        };
       },
-      searchProducts() {
-        const condition = this.productSearch.condition;
-        productApi
-          .selector({
-            pageIndex: 1,
-            pageSize: 100,
-            code: condition,
-            name: condition,
-            skuCode: '',
-            shortName: '',
-            brandId: '',
-            categoryId: '',
-            startTime: '',
-            endTime: '',
-            productType: undefined,
-            available: true,
-          })
-          .then((data) => {
-            this.productOptions = data.datas || [];
-          });
+      // 新增商品行
+      addProduct() {
+        this.tableData.push(this.emptyProduct());
+        this.$nextTick(() => {
+          const productInputRef = this.$refs['productInputRef' + (this.tableData.length - 1)];
+          if (productInputRef) {
+            productInputRef.focus();
+          }
+        });
       },
-      addSelectedProducts() {
-        const records = this.$refs.selectorGrid.getCheckboxRecords();
-        if (isEmpty(records)) {
-          createError('请选择商品！');
+      // 在指定行后插入商品行
+      insertProduct(index) {
+        this.tableData.splice(index + 1, 0, this.emptyProduct());
+        this.$nextTick(() => {
+          const productInputRef = this.$refs['productInputRef' + (index + 1)];
+          if (productInputRef) {
+            productInputRef.focus();
+          }
+        });
+      },
+      // 删除当前行商品
+      removeCurrentProduct(row) {
+        this.tableData = this.tableData.filter((item) => item.id !== row.id);
+      },
+      // 选择商品
+      handleSelectProduct(index, product) {
+        // 同一报价单商品不能重复
+        const exists = this.tableData.some(
+          (item, itemIndex) => itemIndex !== index && item.productId === product.id,
+        );
+        if (exists) {
+          createError('该商品已存在！');
           return;
         }
-        this.tableData = mergeQuoteProducts(this.tableData, records);
-        this.productDialogVisible = false;
+
+        this.tableData[index] = Object.assign(this.tableData[index], {
+          productId: product.id,
+          code: product.code,
+          name: product.name,
+          skuCode: product.skuCode,
+          spec: product.spec,
+          unit: product.unit,
+          editingProduct: false,
+          productQuery: '',
+        });
+        resetInlineProductSelect(this.tableData[index]);
       },
+      // 删除勾选商品
       delProduct() {
         const records = this.$refs.grid.getCheckboxRecords();
         if (isEmpty(records)) {
-          createError('请选择商品！');
+          createError('请选择要删除的商品数据！');
           return;
         }
-        const ids = new Set(records.map((item) => item.productId));
-        this.tableData = this.tableData.filter((item) => !ids.has(item.productId));
-      },
-      removeCurrentProduct(row) {
-        this.tableData = this.tableData.filter((item) => item.productId !== row.productId);
+
+        createConfirm('是否确定删除选中的商品？').then(() => {
+          const tableData = this.tableData.filter((t) => {
+            const tmp = records.filter((item) => item.id === t.id);
+            return isEmpty(tmp);
+          });
+
+          this.tableData = tableData;
+        });
       },
       createSheet() {
         if (isEmpty(this.formData.name)) {
@@ -251,17 +280,7 @@
           createError('生效开始日期不能晚于生效结束日期！');
           return;
         }
-        if (isEmpty(this.tableData)) {
-          createError('请添加报价商品！');
-          return;
-        }
-        for (let index = 0; index < this.tableData.length; index += 1) {
-          const product = this.tableData[index];
-          if (!isFloatGeZero(product.salePrice)) {
-            createError(`第${index + 1}行商品销售单价必须是不小于0的数字！`);
-            return;
-          }
-        }
+        if (!this.validProducts()) return;
         this.loading = true;
         api
           .create(buildQuoteSheetPayload({ ...this.formData, products: this.tableData }))
@@ -272,6 +291,24 @@
           .finally(() => {
             this.loading = false;
           });
+      },
+      validProducts() {
+        if (isEmpty(this.tableData)) {
+          createError('请添加报价商品！');
+          return false;
+        }
+        for (let index = 0; index < this.tableData.length; index += 1) {
+          const product = this.tableData[index];
+          if (isEmpty(product.productId)) {
+            createError(`第${index + 1}行请选择商品！`);
+            return false;
+          }
+          if (!isFloatGeZero(product.salePrice)) {
+            createError(`第${index + 1}行商品销售单价必须是不小于0的数字！`);
+            return false;
+          }
+        }
+        return true;
       },
       closeDialog() {
         this.$router.back();

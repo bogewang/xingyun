@@ -1,4 +1,4 @@
-/** 报价单编辑页的数据组装与商品去重。 */
+/** 报价单编辑页的数据组装。 */
 export interface QuoteProductRow {
   productId: string;
   code: string;
@@ -8,28 +8,6 @@ export interface QuoteProductRow {
   spec?: string;
   unit?: string;
   salePrice: string | number;
-}
-
-/** 合并批量选择的商品，已存在商品保留原报价。 */
-export function mergeQuoteProducts(
-  current: QuoteProductRow[],
-  selected: Array<Record<string, any>>,
-): QuoteProductRow[] {
-  const productIds = new Set(current.map((item) => item.productId));
-  return current.concat(
-    selected
-      .filter((item) => !productIds.has(item.productId || item.id))
-      .map((item) => ({
-        productId: item.productId || item.id,
-        code: item.productCode || item.code,
-        name: item.productName || item.name,
-        shortName: item.shortName,
-        skuCode: item.skuCode,
-        spec: item.spec,
-        unit: item.unit,
-        salePrice: item.salePrice ?? 0,
-      })),
-  );
 }
 
 /** 构造后端报价单保存请求。 */
