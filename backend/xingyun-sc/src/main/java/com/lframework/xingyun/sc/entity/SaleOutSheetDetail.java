@@ -105,11 +105,6 @@ public class SaleOutSheetDetail extends BaseEntity implements BaseDto {
   private String saleOrderDetailId;
 
   /**
-   * 报价单ID
-   */
-  private String quoteSheetId;
-
-  /**
    * 已退货数量
    */
   private BigDecimal returnNum;

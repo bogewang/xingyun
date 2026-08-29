@@ -33,5 +33,5 @@ CREATE TABLE `tbl_quote_sheet_detail` (
     UNIQUE KEY `uk_quote_sheet_detail_sheet_product` (`quote_sheet_id`, `product_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='报价单明细';
 
-ALTER TABLE `tbl_sale_out_sheet_detail`
-    ADD COLUMN `quote_sheet_id` varchar(32) NULL DEFAULT NULL COMMENT '报价单ID' AFTER `sale_order_detail_id`;
+ALTER TABLE `tbl_sale_out_sheet`
+    ADD COLUMN `quote_sheet_id` varchar(32) NULL DEFAULT NULL COMMENT '报价单ID' AFTER `sale_order_id`;

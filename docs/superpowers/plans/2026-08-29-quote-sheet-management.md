@@ -4,7 +4,7 @@
 
 **Goal:** 在商品中心新增带有效期的报价单管理，并在唯一报价模式下以报价单商品和价格驱动销售出库单。
 
-**Architecture:** 报价单归属基础资料模块，由主表、商品明细和销售明细中的来源报价单 ID 组成。基础资料服务负责报价单生命周期和按日期查询；销售出库服务仅调用该查询并在保存事务中重新计算价格与金额，前端只负责受限选择和展示。
+**Architecture:** 报价单归属基础资料模块，由主表、商品明细和销售出库单主表中的来源报价单 ID 组成。基础资料服务负责报价单生命周期和按日期查询；销售出库服务仅调用该查询并在保存事务中重新计算价格与金额，前端只负责受限选择和展示。
 
 **Tech Stack:** Spring Boot 2.2、MyBatis-Plus、MapStruct、MySQL 5.7、Vue 3、TypeScript、ant-design-vue、vxe-table、TestNG。
 
@@ -54,8 +54,8 @@ Expected: 编译失败，提示 `QuoteSheetServiceImpl` 不存在。
 迁移脚本创建 `tbl_quote_sheet`（`id`、`code`、`name`、`start_date`、`end_date`、`status`、`description`、租户和审计字段）及 `tbl_quote_sheet_detail`（`id`、`quote_sheet_id`、`product_id`、`sale_price`、租户和审计字段），并执行：
 
 ```sql
-ALTER TABLE `tbl_sale_out_sheet_detail`
-  ADD COLUMN `quote_sheet_id` varchar(32) DEFAULT NULL COMMENT '报价单ID' AFTER `product_id`;
+ALTER TABLE `tbl_sale_out_sheet`
+  ADD COLUMN `quote_sheet_id` varchar(32) DEFAULT NULL COMMENT '报价单ID' AFTER `sale_order_id`;
 CREATE UNIQUE INDEX `uk_quote_sheet_detail_product`
   ON `tbl_quote_sheet_detail` (`quote_sheet_id`, `product_id`);
 CREATE INDEX `idx_quote_sheet_date`
@@ -143,7 +143,7 @@ git commit -m "feat: add quote sheet management api"
 
 - [ ] **Step 1: 写销售报价失败测试**
 
-测试唯一报价模式开启时：指定日期无有效报价单、报价中缺商品时均抛 `DefaultClientException`；商品存在时销售明细的单价和 `quoteSheetId` 被覆盖；日期改为另一报价周期时重新使用新价格；关闭模式时 `quoteSheetId` 为 `null` 并继续商品基础售价逻辑。
+测试唯一报价模式开启时：指定日期无有效报价单、报价中缺商品时均抛 `DefaultClientException`；商品存在时销售明细单价被覆盖且销售出库单主表 `quoteSheetId` 被写入；日期改为另一报价周期时重新使用新价格；关闭模式时主表 `quoteSheetId` 为 `null` 并继续商品基础售价逻辑。
 
 ```java
 @Test
@@ -164,7 +164,7 @@ Expected: FAIL，缺少报价定价方法。
 
 - [ ] **Step 3: 在保存事务内实现服务端定价**
 
-在销售出库 `create`、`update` 进入明细金额计算前调用 `applyQuotePricing(orderDate, details)`：开关开启时只查询一次已启用报价单和其商品映射，对每条明细校验商品存在，调用现有金额计算路径；关闭时清空 `quoteSheetId` 并使用原有 `getDefaultSalePrice`。新增 `POST /sale/out/quote-products/query` 仅返回当前日期可售报价商品，供前端查询。
+在销售出库 `create`、`update` 进入明细金额计算前调用 `applyQuotePricing(orderDate, details)`：开关开启时只查询一次已启用报价单和其商品映射，对每条明细校验商品存在，调用现有金额计算路径，并在销售出库单主表写入 `quoteSheetId`；关闭时清空主表 `quoteSheetId` 并使用原有 `getDefaultSalePrice`。新增 `POST /sale/out/quote-products/query` 仅返回当前日期可售报价商品，供前端查询。
 
 - [ ] **Step 4: 运行销售单元测试确认通过**
 
@@ -234,7 +234,7 @@ git commit -m "feat: add quote sheet management pages"
 ```ts
 it('日期变化时仅保留当前报价单商品并带入报价价', () => {
   const result = applyQuoteProducts(rows, [{ productId: 'p-1', salePrice: 12, quoteSheetId: 'q-2' }]);
-  expect(result[0]).toMatchObject({ productId: 'p-1', oriPrice: 12, quoteSheetId: 'q-2' });
+expect(result[0]).toMatchObject({ productId: 'p-1', oriPrice: 12 });
   expect(result[1].invalidQuoteProduct).toBe(true);
 });
 ```
@@ -247,7 +247,7 @@ Expected: FAIL，缺少 `applyQuoteProducts`。
 
 - [ ] **Step 3: 实现日期驱动商品范围和价格刷新**
 
-开关开启后，订单日期变化调用报价商品查询接口；商品搜索、批量添加和已选行均使用该结果。对仍存在的商品覆盖单价和报价单 ID；不存在的行标红并阻止保存。关闭开关后清空报价状态，恢复原始商品查询和价格选择。
+开关开启后，订单日期变化调用报价商品查询接口；商品搜索、批量添加和已选行均使用该结果。对仍存在的商品覆盖单价，并在销售出库单主表保存报价单 ID；不存在的行标红并阻止保存。关闭开关后清空主表报价状态，恢复原始商品查询和价格选择。
 
 - [ ] **Step 4: 运行前端测试与质量检查**
 
