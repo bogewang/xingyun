@@ -1516,6 +1516,9 @@ public class SaleOutSheetServiceImpl extends
         persistUpdatedSheet(sheet);
 
         clearApproveStatus(sheet);
+        if (StringUtil.isBlank(sheet.getQuoteSheetId())) {
+            clearPersistedQuoteSheetId(sheet.getId());
+        }
 
         this.adjustCustomerAmount(oldCustomerId);
         if (!StringUtil.equals(oldCustomerId, sheet.getCustomerId())) {
@@ -1539,6 +1542,20 @@ public class SaleOutSheetServiceImpl extends
      */
     void persistUpdatedSheet(SaleOutSheet sheet) {
         if (getBaseMapper().updateById(sheet) != 1) {
+            throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
+        }
+    }
+
+    /**
+     * 显式清空销售出库主表的报价单ID，避免 MyBatis-Plus 忽略实体中的空字段。
+     *
+     * @param sheetId 销售出库单ID
+     */
+    void clearPersistedQuoteSheetId(String sheetId) {
+        LambdaUpdateWrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
+                .set(SaleOutSheet::getQuoteSheetId, null)
+                .eq(SaleOutSheet::getId, sheetId);
+        if (getBaseMapper().update(null, updateWrapper) != 1) {
             throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
         }
     }

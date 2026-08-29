@@ -7,6 +7,9 @@ import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
 import com.lframework.xingyun.sc.enums.SaleOutSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.mappers.SaleOutSheetMapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetInvoiceDetailExportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
@@ -19,10 +22,12 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -59,6 +64,24 @@ class SaleOutSheetServiceImplTest {
     Assert.assertNull(captor.getAllValues().get(1).getQuoteSheetId());
     Assert.assertEquals(captor.getAllValues().get(1).getOrderDate(), LocalDate.of(2026, 9, 2));
     Assert.assertEquals(captor.getAllValues().get(1).getTotalAmount(), new BigDecimal("30.00"));
+  }
+
+  /** 验证关闭唯一报价时，更新包装器显式将报价单ID设为数据库空值。 */
+  @Test
+  void clearPersistedQuoteSheetIdShouldExplicitlySetNullInUpdateWrapper() throws Exception {
+    SaleOutSheetMapper mapper = mock(SaleOutSheetMapper.class);
+    when(mapper.update(isNull(), any(LambdaUpdateWrapper.class))).thenReturn(1);
+    SaleOutSheetServiceImpl service = new SaleOutSheetServiceImpl();
+    setBaseMapper(service, mapper);
+    initTableInfo(SaleOutSheet.class);
+
+    service.clearPersistedQuoteSheetId("sheet-2");
+
+    ArgumentCaptor<LambdaUpdateWrapper> captor = ArgumentCaptor.forClass(LambdaUpdateWrapper.class);
+    verify(mapper).update(isNull(), captor.capture());
+    LambdaUpdateWrapper<SaleOutSheet> wrapper = captor.getValue();
+    Assert.assertTrue(wrapper.getSqlSet().contains("quote_sheet_id"));
+    Assert.assertTrue(wrapper.getParamNameValuePairs().containsValue(null));
   }
 
   /** 验证唯一报价会绑定主表并覆盖客户端提交的商品单价。 */
@@ -363,6 +386,12 @@ class SaleOutSheetServiceImplTest {
       }
     }
     throw new AssertionError("未找到 BaseMapper 字段");
+  }
+
+  /** 初始化 LambdaUpdateWrapper 解析实体字段所需的 MyBatis 元数据。 */
+  private void initTableInfo(Class<?> entityClass) {
+    TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), "test"),
+        entityClass);
   }
 
   private SaleOutSheet createSheet(String id, String code, LocalDateTime createTime) {
