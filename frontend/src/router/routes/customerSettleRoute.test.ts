@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it } from 'vitest';
-import { CustomerSettleRoute, SettleRoute } from './index';
+import { CustomerSettleRoute, QuoteRoute, SettleRoute } from './index';
 
 describe('客户结算路由', () => {
   it('注册客户结算汇总与具体结算页面', () => {
@@ -33,5 +33,17 @@ describe('客户结算路由', () => {
     expect(routes.find((route) => route.name === 'AddSupplierSettleSheet')?.path).toBe(
       'supplier/settle',
     );
+  });
+});
+
+describe('报价单路由', () => {
+  it('注册报价单管理、详情与编辑页面', () => {
+    const routes = QuoteRoute.children || [];
+
+    expect(routes.find((route) => route.path === 'quote')?.name).toBe('QuoteSheet');
+    expect(routes.find((route) => route.path === 'quote/detail/:id')?.name).toBe(
+      'QuoteSheetDetail',
+    );
+    expect(routes.find((route) => route.path === 'quote/edit/:id?')?.name).toBe('QuoteSheetEdit');
   });
 });

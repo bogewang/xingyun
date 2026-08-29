@@ -100,6 +100,32 @@ export const ProductRoute: AppRouteRecordRaw = {
   ],
 };
 
+export const QuoteRoute: AppRouteRecordRaw = {
+  path: '/base-data',
+  name: 'QuoteRoute',
+  component: LAYOUT,
+  children: [
+    {
+      path: 'quote',
+      name: 'QuoteSheet',
+      component: () => import('/@/views/base-data/quote/index.vue'),
+      meta: { title: '报价单管理' },
+    },
+    {
+      path: 'quote/detail/:id',
+      name: 'QuoteSheetDetail',
+      component: () => import('/@/views/base-data/quote/detail.vue'),
+      meta: { title: '报价单详情' },
+    },
+    {
+      path: 'quote/edit/:id?',
+      name: 'QuoteSheetEdit',
+      component: () => import('/@/views/base-data/quote/edit.vue'),
+      meta: { title: '编辑报价单' },
+    },
+  ],
+};
+
 export const PurchaseRoute: AppRouteRecordRaw = {
   path: '/purchase',
   name: 'PurchaseRoute',
@@ -684,6 +710,7 @@ export const basicRoutes = [
   SettingsRoute,
   ProfileRoute,
   ProductRoute,
+  QuoteRoute,
   PurchaseRoute,
   SaleRoute,
   RetailRoute,
