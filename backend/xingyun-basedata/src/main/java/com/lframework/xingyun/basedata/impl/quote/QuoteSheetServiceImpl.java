@@ -29,20 +29,21 @@ import org.springframework.transaction.annotation.Transactional;
 public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, QuoteSheet> implements QuoteSheetService {
   @Autowired private QuoteSheetDetailMapper quoteSheetDetailMapper;
   @Autowired private ProductMapper productMapper;
+  @Autowired private QuoteSheetConverter quoteSheetConverter;
   @Autowired(required = false) private List<QuoteSheetReferenceChecker> quoteSheetReferenceCheckers = Collections.emptyList();
 
   /** 创建报价单。 */
   @Override @Transactional(rollbackFor = Exception.class)
   public String create(CreateQuoteSheetVo vo) {
     validateSave(vo, null);
-    QuoteSheet sheet = QuoteSheetConverter.toEntity(vo); sheet.setId(IdUtil.getId()); sheet.setStatus(QuoteSheetStatus.DISABLED);
+    QuoteSheet sheet = quoteSheetConverter.toEntity(vo); sheet.setId(IdUtil.getId()); sheet.setStatus(QuoteSheetStatus.DISABLED);
     getBaseMapper().insert(sheet); saveDetails(sheet.getId(), vo.getProducts()); return sheet.getId();
   }
   /** 更新报价单及其明细。 */
   @Override @Transactional(rollbackFor = Exception.class)
   public void update(UpdateQuoteSheetVo vo) {
     QuoteSheet existed = requireSheet(vo.getId()); validateSave(vo, vo.getId());
-    QuoteSheet sheet = QuoteSheetConverter.toEntity(vo); sheet.setId(existed.getId()); sheet.setStatus(existed.getStatus());
+    QuoteSheet sheet = quoteSheetConverter.toEntity(vo); sheet.setId(existed.getId()); sheet.setStatus(existed.getStatus());
     getBaseMapper().updateById(sheet);
     quoteSheetDetailMapper.delete(Wrappers.lambdaQuery(QuoteSheetDetail.class).eq(QuoteSheetDetail::getQuoteSheetId, vo.getId()));
     saveDetails(vo.getId(), vo.getProducts());
@@ -55,7 +56,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
   }
   /** 启用报价单并复核定价周期。 */
   @Override @Transactional(rollbackFor = Exception.class)
-  public void enable(String id) { QuoteSheet sheet = requireSheet(id); assertNoDateRangeOverlap(id, sheet.getStartDate(), sheet.getEndDate(), getBaseMapper().selectList(Wrappers.lambdaQuery(QuoteSheet.class))); sheet.setStatus(QuoteSheetStatus.ENABLED); getBaseMapper().updateById(sheet); }
+  public void enable(String id) { QuoteSheet sheet = requireSheet(id); List<QuoteSheetDetail> details=quoteSheetDetailMapper.selectList(Wrappers.lambdaQuery(QuoteSheetDetail.class).eq(QuoteSheetDetail::getQuoteSheetId,id)); validateSheetData(sheet.getStartDate(),sheet.getEndDate(),details.stream().map(QuoteSheetDetail::getProductId).collect(Collectors.toList()),id); sheet.setStatus(QuoteSheetStatus.ENABLED); getBaseMapper().updateById(sheet); }
   /** 停用报价单。 */
   @Override @Transactional(rollbackFor = Exception.class)
   public void disable(String id) { QuoteSheet sheet = requireSheet(id); sheet.setStatus(QuoteSheetStatus.DISABLED); getBaseMapper().updateById(sheet); }
@@ -63,16 +64,18 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
   @Override public GetQuoteSheetBo get(String id) {
     QuoteSheet sheet = requireSheet(id); List<QuoteSheetDetail> details=quoteSheetDetailMapper.selectList(Wrappers.lambdaQuery(QuoteSheetDetail.class).eq(QuoteSheetDetail::getQuoteSheetId,id));
     Map<String,Product> products=details.isEmpty()?Collections.emptyMap():productMapper.selectList(Wrappers.lambdaQuery(Product.class).in(Product::getId,details.stream().map(QuoteSheetDetail::getProductId).collect(Collectors.toSet()))).stream().collect(Collectors.toMap(Product::getId,p->p));
-    List<QuoteProductBo> result=QuoteSheetConverter.toProductBos(details); result.forEach(bo->{Product p=products.get(bo.getProductId()); if(p!=null){bo.setCode(p.getCode());bo.setName(p.getName());bo.setShortName(p.getShortName());bo.setSkuCode(p.getSkuCode());bo.setSpec(p.getSpec());bo.setUnit(p.getUnit());}}); return QuoteSheetConverter.toGetBo(sheet,result);
+    List<QuoteProductBo> result=quoteSheetConverter.toProductBos(details); result.forEach(bo->{Product p=products.get(bo.getProductId()); if(p!=null){bo.setCode(p.getCode());bo.setName(p.getName());bo.setShortName(p.getShortName());bo.setSkuCode(p.getSkuCode());bo.setSpec(p.getSpec());bo.setUnit(p.getUnit());}}); GetQuoteSheetBo bo=quoteSheetConverter.toGetBo(sheet); bo.setProducts(result); return bo;
   }
   /** 分页查询报价单。 */
   @Override public PageResult<QuoteSheet> query(Integer pageIndex,Integer pageSize,QueryQuoteSheetVo vo) { PageHelperUtil.startPage(pageIndex,pageSize); return PageResultUtil.convert(new PageInfo<>(getBaseMapper().selectList(Wrappers.lambdaQuery(QuoteSheet.class).eq(vo.getStatus()!=null,QuoteSheet::getStatus,vo.getStatus()).eq(vo.getCode()!=null,QuoteSheet::getCode,vo.getCode()).like(vo.getName()!=null,QuoteSheet::getName,vo.getName()).ge(vo.getStartDate()!=null,QuoteSheet::getStartDate,vo.getStartDate()).le(vo.getEndDate()!=null,QuoteSheet::getEndDate,vo.getEndDate()).orderByDesc(QuoteSheet::getCreateTime)))); }
   /** 一次关联查询指定日期的已启用报价商品。 */
   @Override public List<QuoteProductBo> getActiveQuoteProducts(QueryQuoteProductVo vo) { return getBaseMapper().getActiveQuoteProducts(vo); }
   /** 校验保存请求。 */
-  private void validateSave(CreateQuoteSheetVo vo,String excludeId) { if(vo.getStartDate().isAfter(vo.getEndDate())) throw new DefaultClientException("生效开始日期不能晚于生效结束日期！"); assertNoDuplicatedProducts(vo.getProducts()); assertNoDateRangeOverlap(excludeId,vo.getStartDate(),vo.getEndDate(),getBaseMapper().selectList(Wrappers.lambdaQuery(QuoteSheet.class))); }
+  private void validateSave(CreateQuoteSheetVo vo,String excludeId) { if(vo==null) throw new DefaultClientException("报价单不能为空！"); List<QuoteSheetProductVo> products=vo.getProducts(); validateSheetData(vo.getStartDate(),vo.getEndDate(),products==null?Collections.emptyList():products.stream().map(QuoteSheetProductVo::getProductId).collect(Collectors.toList()),excludeId); }
+  /** 校验报价单日期、商品明细、重复商品及周期。 */
+  private void validateSheetData(LocalDate startDate,LocalDate endDate,List<String> productIds,String excludeId) { assertBasicSheetData(startDate,endDate,productIds); assertNoDateRangeOverlap(excludeId,startDate,endDate,getBaseMapper().selectList(Wrappers.lambdaQuery(QuoteSheet.class))); }
   /** 批量保存报价单明细。 */
-  private void saveDetails(String quoteSheetId,List<QuoteSheetProductVo> products) { List<QuoteSheetDetail> details=products.stream().map(p->{QuoteSheetDetail d=QuoteSheetConverter.toDetail(p,quoteSheetId);d.setId(IdUtil.getId());return d;}).collect(Collectors.toList()); quoteSheetDetailMapper.batchInsert(details); }
+  private void saveDetails(String quoteSheetId,List<QuoteSheetProductVo> products) { List<QuoteSheetDetail> details=products.stream().map(p->{QuoteSheetDetail d=quoteSheetConverter.toDetail(p,quoteSheetId);d.setId(IdUtil.getId());return d;}).collect(Collectors.toList()); quoteSheetDetailMapper.batchInsert(details); }
   /** 获取不存在时报业务异常。 */
   private QuoteSheet requireSheet(String id) { QuoteSheet result=getBaseMapper().selectById(id); if(result==null) throw new DefaultClientException("报价单不存在！"); return result; }
   /** 判断两个日期闭区间是否重叠。 */
@@ -80,7 +83,11 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
   /** 校验报价周期不与其他未删除报价单重叠。 */
   public static void assertNoDateRangeOverlap(String excludeId,LocalDate startDate,LocalDate endDate,List<QuoteSheet> sheets) { if(sheets.stream().filter(s->!Objects.equals(s.getId(),excludeId)).anyMatch(s->isDateRangeOverlapped(startDate,endDate,s.getStartDate(),s.getEndDate()))) throw new DefaultClientException("定价周期与已有报价单冲突！"); }
   /** 校验同一报价单内商品不重复。 */
-  public static void assertNoDuplicatedProducts(List<QuoteSheetProductVo> products) { if(products.stream().map(QuoteSheetProductVo::getProductId).collect(Collectors.toSet()).size()!=products.size()) throw new DefaultClientException("同一报价单商品不能重复！"); }
+  public static void assertNoDuplicatedProducts(List<QuoteSheetProductVo> products) { assertNoDuplicatedProductIds(products.stream().map(QuoteSheetProductVo::getProductId).collect(Collectors.toList())); }
+  /** 校验商品 ID 列表不重复。 */
+  public static void assertNoDuplicatedProductIds(List<String> productIds) { if(productIds.stream().collect(Collectors.toSet()).size()!=productIds.size()) throw new DefaultClientException("同一报价单商品不能重复！"); }
+  /** 校验保存和启用共用的基础字段规则。 */
+  public static void assertBasicSheetData(LocalDate startDate,LocalDate endDate,List<String> productIds) { if(startDate==null||endDate==null) throw new DefaultClientException("生效日期不能为空！"); if(startDate.isAfter(endDate)) throw new DefaultClientException("生效开始日期不能晚于生效结束日期！"); if(productIds==null||productIds.isEmpty()) throw new DefaultClientException("商品明细不能为空！"); assertNoDuplicatedProductIds(productIds); }
   /** 判断报价单是否在指定日期生效。 */
   public static boolean isActiveOn(QuoteSheet sheet,LocalDate orderDate) { return sheet.getStatus()==QuoteSheetStatus.ENABLED && !orderDate.isBefore(sheet.getStartDate()) && !orderDate.isAfter(sheet.getEndDate()); }
 }

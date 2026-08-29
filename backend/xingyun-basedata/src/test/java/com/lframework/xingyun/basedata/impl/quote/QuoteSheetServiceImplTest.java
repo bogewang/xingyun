@@ -5,6 +5,9 @@ import com.lframework.xingyun.basedata.entity.quote.QuoteSheet;
 import com.lframework.xingyun.basedata.enums.quote.QuoteSheetStatus;
 import com.lframework.xingyun.basedata.vo.quote.QuoteSheetProductVo;
 import java.time.LocalDate;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -23,6 +26,12 @@ public class QuoteSheetServiceImplTest {
   @Test(expectedExceptions=DefaultClientException.class,expectedExceptionsMessageRegExp=".*商品不能重复.*") public void shouldRejectDuplicatedProducts() { QuoteSheetProductVo first=new QuoteSheetProductVo(); first.setProductId("product-1"); QuoteSheetProductVo second=new QuoteSheetProductVo(); second.setProductId("product-1"); QuoteSheetServiceImpl.assertNoDuplicatedProducts(Arrays.asList(first,second)); }
   /** 停用报价单不参与生效报价查询。 */
   @Test public void shouldNotTreatDisabledQuoteAsActive() { QuoteSheet disabled=sheet("quote-1","2026-08-01","2026-08-31"); disabled.setStatus(QuoteSheetStatus.DISABLED); Assert.assertFalse(QuoteSheetServiceImpl.isActiveOn(disabled,date("2026-08-15"))); }
+  /** 服务层保存时空商品明细应被拒绝。 */
+  @Test(expectedExceptions=DefaultClientException.class,expectedExceptionsMessageRegExp=".*商品明细不能为空.*") public void shouldRejectEmptyProductsInServiceLayer() { QuoteSheetServiceImpl.assertBasicSheetData(date("2026-08-01"),date("2026-08-31"),Collections.emptyList()); }
+  /** 启用前非法日期应被共用校验拒绝。 */
+  @Test(expectedExceptions=DefaultClientException.class,expectedExceptionsMessageRegExp=".*开始日期不能晚于.*") public void shouldRejectInvalidDatesBeforeEnabling() { QuoteSheetServiceImpl.assertBasicSheetData(date("2026-08-31"),date("2026-08-01"),Collections.singletonList("product-1")); }
+  /** 有效报价 SQL 必须排除停用商品。 */
+  @Test public void shouldExcludeDisabledProductsFromActiveQuoteQuery() throws Exception { String sql=new String(Files.readAllBytes(Paths.get("src/main/resources/mappers/quote/QuoteSheetMapper.xml")),StandardCharsets.UTF_8); Assert.assertTrue(sql.contains("p.available = TRUE")); }
   /** 构造报价单。 */
   private QuoteSheet sheet(String id,String start,String end) { QuoteSheet sheet=new QuoteSheet(); sheet.setId(id); sheet.setStartDate(date(start)); sheet.setEndDate(date(end)); return sheet; }
   /** 解析测试日期。 */

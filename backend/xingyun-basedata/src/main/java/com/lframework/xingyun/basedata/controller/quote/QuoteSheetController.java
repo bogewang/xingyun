@@ -22,9 +22,10 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j @Validated @RestController @RequestMapping("/basedata/quote")
 public class QuoteSheetController extends DefaultBaseController {
   @Autowired private QuoteSheetService quoteSheetService;
+  @Autowired private QuoteSheetConverter quoteSheetConverter;
   /** 分页查询报价单。 */
   @PostMapping("/query") @HasPermission("base-data:quote:query")
-  public InvokeResult<PageResult<QueryQuoteSheetBo>> query(@Valid @RequestBody QueryQuoteSheetVo vo) { try { PageResult<QuoteSheet> page=quoteSheetService.query(getPageIndex(vo),getPageSize(vo),vo); List<QueryQuoteSheetBo> data=page.getDatas().stream().map(QuoteSheetConverter::toQueryBo).collect(Collectors.toList()); return InvokeResultBuilder.success(PageResultUtil.rebuild(page,data)); } catch(Exception e) { return fail(e); } }
+  public InvokeResult<PageResult<QueryQuoteSheetBo>> query(@Valid @RequestBody QueryQuoteSheetVo vo) { try { PageResult<QuoteSheet> page=quoteSheetService.query(getPageIndex(vo),getPageSize(vo),vo); List<QueryQuoteSheetBo> data=page.getDatas().stream().map(quoteSheetConverter::toQueryBo).collect(Collectors.toList()); return InvokeResultBuilder.success(PageResultUtil.rebuild(page,data)); } catch(Exception e) { return fail(e); } }
   /** 获取报价单详情。 */
   @PostMapping("/get") @HasPermission("base-data:quote:query")
   public InvokeResult<GetQuoteSheetBo> get(@RequestParam @NotBlank(message="ID不能为空！") String id) { try { return InvokeResultBuilder.success(quoteSheetService.get(id)); } catch(Exception e) { return fail(e); } }
