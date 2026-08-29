@@ -1,6 +1,109 @@
+import { computed, nextTick, ref } from 'vue';
 import { isEmpty } from '@/utils/utils';
 
 const ACTIVE_ROW_CLASS = 'inline-product-select-active-row';
+
+/**
+ * 表格内联商品选择的公共逻辑，供各业务的内联选品下拉组件复用。
+ *
+ * @param row 行数据（响应式对象引用，允许变异）
+ * @param searchProducts 商品搜索接口，返回商品列表
+ * @param emits 事件发射函数
+ */
+export function useInlineProductSelect(
+  row: Recordable,
+  searchProducts: (keyword: string) => Promise<Recordable[]>,
+  emits: (event: 'select' | 'addProduct', ...args: unknown[]) => void,
+) {
+  const autoCompleteRef = ref(null);
+
+  // 是否显示auto-complete输入框
+  const showAutoComplete = computed(() => {
+    return isEmpty(row.productId) || row.editingProduct;
+  });
+
+  // 搜索商品
+  const queryProduct = (queryString: string, currentRow: Recordable) => {
+    if (isEmpty(queryString)) {
+      currentRow.products = [];
+      currentRow.productOptions = [];
+      resetInlineProductSelect(currentRow);
+      return;
+    }
+
+    searchProducts(queryString).then((res) => {
+      setInlineProductSelectProducts(currentRow, res);
+      currentRow.productOptions = res.map((item) => ({
+        value: item.productId || item.id,
+        label: (item.productCode || item.code || '') + ' ' + (item.productName || item.name || ''),
+      }));
+    });
+  };
+
+  // 输入框聚焦时触发搜索，fallbackName为已选商品名称等兜底关键字
+  const handleProductInputFocus = (fallbackName?: string) => {
+    const keyword = row.productQuery || fallbackName;
+    if (isEmpty(keyword)) return;
+
+    queryProduct(keyword, row);
+  };
+
+  // 键盘导航
+  const handleProductSelectKeydown = (
+    event: KeyboardEvent,
+    currentRow: Recordable,
+    currentRowIndex: number,
+  ) => {
+    if (handleEmptyProductInputEnter(event, currentRow, () => emits('addProduct'))) {
+      return;
+    }
+
+    handleInlineProductSelectKeydown(
+      event,
+      currentRow,
+      currentRowIndex,
+      (idx, product) => emits('select', idx, product),
+      () => nextTick(),
+    );
+  };
+
+  // 行高亮CSS类
+  const getProductSelectRowClass = (currentRow: Recordable, product: Recordable) => {
+    return getInlineProductSelectRowClass(currentRow, product);
+  };
+
+  // 启用编辑模式（row为对象引用，变异是设计行为）
+  const handleEnableProductEdit = (enabled = true) => {
+    if (!enabled) return;
+
+    row.editingProduct = true;
+    row.productQuery = '';
+    row.products = [];
+    row.productOptions = [];
+    resetInlineProductSelect(row);
+    nextTick(() => {
+      autoCompleteRef.value?.focus();
+    });
+  };
+
+  // 聚焦输入框
+  const focus = () => {
+    nextTick(() => {
+      autoCompleteRef.value?.focus();
+    });
+  };
+
+  return {
+    autoCompleteRef,
+    showAutoComplete,
+    queryProduct,
+    handleProductInputFocus,
+    handleProductSelectKeydown,
+    getProductSelectRowClass,
+    handleEnableProductEdit,
+    focus,
+  };
+}
 
 export function resetInlineProductSelect(row: Recordable) {
   row.activeProductIndex = -1;

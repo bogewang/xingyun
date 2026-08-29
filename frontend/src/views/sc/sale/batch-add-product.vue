@@ -5,8 +5,7 @@
     :show-inquiry-product="showInquiryProduct"
     :sc-id="scId"
     :is-return="isReturn"
-    :quote-products="quoteProducts"
-    :quote-pricing-enabled="quotePricingEnabled"
+    :order-date="orderDate"
     v-bind="$attrs"
     @close="$emit('close')"
     @confirm="(records) => $emit('confirm', records)"
@@ -34,13 +33,9 @@
         type: Boolean,
         default: false,
       },
-      quoteProducts: {
-        type: Array,
-        default: () => [],
-      },
-      quotePricingEnabled: {
-        type: Boolean,
-        default: false,
+      orderDate: {
+        type: String,
+        default: '',
       },
     },
     emits: ['close', 'confirm'],

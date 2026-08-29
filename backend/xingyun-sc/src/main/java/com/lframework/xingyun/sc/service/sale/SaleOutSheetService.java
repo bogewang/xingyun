@@ -6,6 +6,7 @@ import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitSummaryBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
+import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
@@ -300,6 +301,15 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
    * @return 已启用报价单中的商品
    */
   List<QuoteProductBo> queryQuoteProducts(QueryQuoteProductVo vo);
+
+  /**
+   * 唯一报价模式下，将可销售商品过滤为单据日期报价单内的商品，并用报价价覆盖售价。
+   *
+   * @param products 可销售商品
+   * @param orderDate 单据日期
+   * @return 过滤后的商品列表；未开启唯一报价或日期为空时返回 null，表示无需过滤
+   */
+  List<SaleProductDto> applyQuoteFilter(List<SaleProductDto> products, String orderDate);
 
   void marketBuySummary(QuerySaleOutSheetVo vo);
 

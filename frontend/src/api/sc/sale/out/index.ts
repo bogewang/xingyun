@@ -25,24 +25,9 @@ import { SyncInquirySalePriceVo } from '@/api/sc/sale/out/model/syncInquirySaleP
 import { MergeSaleOutSheetVo } from '@/api/sc/sale/out/model/mergeSaleOutSheetVo';
 import { PrintSaleOrderBo } from '@/api/sc/sale/order/model/printSaleOrderBo';
 import { PrintSaleTagBo } from '@/api/sc/sale/order/model/PrintSaleTagBo';
-import { QuoteProductBo } from '@/api/sc/sale/out/model/quoteProductBo';
 
 const baseUrl = '/sale/out/sheet';
 const region = 'cloud-api';
-
-/** 根据销售出库日期查询当前有效报价单中的可销售商品。 */
-export function queryQuoteProducts(params: { orderDate: string }): Promise<QuoteProductBo[]> {
-  return defHttp.post<QuoteProductBo[]>(
-    {
-      url: baseUrl + '/quote/products',
-      data: params,
-    },
-    {
-      region,
-      contentType: ContentTypeEnum.JSON,
-    },
-  );
-}
 
 type TagPrintParams = QuerySaleOutSheetVo & {
   idList?: string[];

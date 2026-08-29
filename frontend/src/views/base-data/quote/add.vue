@@ -69,6 +69,8 @@
         <template #productName_default="{ row, rowIndex }">
           <InlineProductSelect
             :ref="'productInputRef' + rowIndex"
+            biz-type="quote"
+            mode="unrequire"
             :row="row"
             :row-index="rowIndex"
             @select="handleSelectProduct"
@@ -115,7 +117,7 @@
   import { isEmpty, isFloatGeZero, uuid } from '@/utils/utils';
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
   import { buildQuoteSheetPayload } from './quoteSheet';
-  import InlineProductSelect from './inline-product-select.vue';
+  import InlineProductSelect from '@/views/sc/shared/inline-product-select.vue';
 
   export default defineComponent({
     name: 'AddQuoteSheet',

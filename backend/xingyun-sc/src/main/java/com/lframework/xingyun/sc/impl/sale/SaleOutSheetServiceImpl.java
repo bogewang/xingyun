@@ -47,6 +47,7 @@ import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
 import com.lframework.xingyun.sc.dto.purchase.receive.QueryReceiveSheetDetailDto;
+import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
 import com.lframework.xingyun.sc.dto.sale.out.*;
 import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
 import com.lframework.xingyun.sc.entity.*;
@@ -403,6 +404,35 @@ public class SaleOutSheetServiceImpl extends
     @Override
     public List<QuoteProductBo> queryQuoteProducts(QueryQuoteProductVo vo) {
         return quoteSheetService.getActiveQuoteProducts(vo);
+    }
+
+    /**
+     * 唯一报价模式下，将可销售商品过滤为单据日期报价单内的商品，并用报价价覆盖售价。
+     *
+     * @param products 可销售商品
+     * @param orderDate 单据日期
+     * @return 过滤后的商品列表；未开启唯一报价或日期为空时返回 null，表示无需过滤
+     */
+    @Override
+    public List<SaleProductDto> applyQuoteFilter(List<SaleProductDto> products, String orderDate) {
+        if (CollectionUtil.isEmpty(products) || StringUtils.isBlank(orderDate)) {
+            return null;
+        }
+        if (!Boolean.TRUE.equals(getPriceUniqueConfig())) {
+            return null;
+        }
+        QueryQuoteProductVo quoteVo = new QueryQuoteProductVo();
+        quoteVo.setOrderDate(LocalDate.parse(orderDate));
+        List<QuoteProductBo> quoteProducts = queryQuoteProducts(quoteVo);
+        if (CollectionUtil.isEmpty(quoteProducts)) {
+            return Collections.emptyList();
+        }
+        Map<String, BigDecimal> quotePriceMap = quoteProducts.stream().collect(
+                Collectors.toMap(QuoteProductBo::getProductId, QuoteProductBo::getSalePrice));
+        return products.stream()
+                .filter(product -> quotePriceMap.containsKey(product.getId()))
+                .peek(product -> product.setSalePrice(quotePriceMap.get(product.getId())))
+                .collect(Collectors.toList());
     }
 
     @Override

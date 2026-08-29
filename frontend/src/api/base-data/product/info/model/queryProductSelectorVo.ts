@@ -2,6 +2,11 @@ import { PageVo } from '@/api/model/pageVo';
 
 export interface QueryProductSelectorVo extends PageVo {
   /**
+   * 关键字
+   */
+  condition: string;
+
+  /**
    * 编号
    */
   code: string;

@@ -38,4 +38,10 @@ public class QuerySaleProductVo extends PageVo {
    */
   @ApiModelProperty("是否退货")
   private Boolean isReturn = Boolean.FALSE;
+
+  /**
+   * 单据日期，唯一报价模式下用于过滤报价商品
+   */
+  @ApiModelProperty("单据日期")
+  private String orderDate;
 }

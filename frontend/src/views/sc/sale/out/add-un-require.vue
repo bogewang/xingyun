@@ -104,8 +104,7 @@
               biz-type="sale"
               mode="unrequire"
               :sc-id="formData.scId"
-              :quote-products="quoteProducts"
-              :quote-pricing-enabled="saleOutPriceUseUniquePrice"
+              :order-date="formData.orderDate"
               @select="handleSelectProduct"
               @add-product="addProduct"
               @open-add-product-page="openChildPage('/product/info/add')"
@@ -225,8 +224,7 @@
         ref="batchAddProductDialog"
         :show-inquiry-product="true"
         :sc-id="formData.scId"
-        :quote-products="quoteProducts"
-        :quote-pricing-enabled="saleOutPriceUseUniquePrice"
+        :order-date="formData.orderDate"
         @confirm="batchAddProduct"
       />
       <sale-out-sheet-importer
@@ -315,7 +313,6 @@
   } from '@/hooks/web/msg';
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
   import { shouldAddProductByEnter, stopGridDeleteFromInput } from '@/utils/productAddShortcut';
-  import { quotePricingMix } from './components/quotePricingMix';
   import { buildUnrequiredSaleOutProducts } from './components/saleOutProductParams';
   import { syncConfirmAmount, sumConfirmFields } from './components/saleOutConfirm';
   import { isSaleOutStockEnough } from './components/saleOutStock';
@@ -329,7 +326,7 @@
       SaleOutSheetImporter,
       InlineProductSelect,
     },
-    mixins: [multiplePageMix, quotePricingMix],
+    mixins: [multiplePageMix],
     setup() {
       return {
         h,
@@ -520,7 +517,6 @@
 
         this.paidAmountDirty = false;
         this.tableData = [];
-        await this.loadQuotePricingSetting();
       },
       emptyProduct() {
         return {
@@ -632,7 +628,7 @@
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
         const baseUnit = product.units?.find((item) => item.baseUnit);
-        const selectedPrice = this.getSelectedProductPrice(product);
+        const selectedPrice = product.latestSalePrice;
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           productRemark: product.remark,
@@ -646,7 +642,6 @@
           productQuery: '',
           importUnmatched: false,
         });
-        delete this.tableData[index].quoteSheetId;
         resetInlineProductSelect(this.tableData[index]);
 
         this.taxPriceInput(this.tableData[index], this.tableData[index].taxPrice);
@@ -692,9 +687,6 @@
         const classNames = [];
         if (this.isImportUnmatchedProduct(row)) {
           classNames.push('sale-out-import-unmatched-row');
-        }
-        if (row.quoteInvalid) {
-          classNames.push('sheet-price-warning-row');
         }
         if (!isEmpty(row.productCode) && this.hasWarningAmount(row)) {
           classNames.push('sheet-price-warning-row');
@@ -982,9 +974,6 @@
       },
       // 创建订单
       createOrder() {
-        if (!this.validQuoteProducts()) {
-          return;
-        }
         if (!this.validData()) {
           return;
         }

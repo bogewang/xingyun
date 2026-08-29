@@ -106,8 +106,7 @@
               biz-type="sale"
               mode="unrequire"
               :sc-id="formData.scId"
-              :quote-products="quoteProducts"
-              :quote-pricing-enabled="saleOutPriceUseUniquePrice"
+              :order-date="formData.orderDate"
               @select="handleSelectProduct"
               @add-product="addProduct"
               @open-add-product-page="openChildPage('/product/info/add')"
@@ -261,8 +260,7 @@
         ref="batchAddProductDialog"
         :show-inquiry-product="true"
         :sc-id="formData.scId"
-        :quote-products="quoteProducts"
-        :quote-pricing-enabled="saleOutPriceUseUniquePrice"
+        :order-date="formData.orderDate"
         @confirm="batchAddProduct"
       />
       <a-modal
@@ -346,7 +344,6 @@
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
-  import { quotePricingMix } from './components/quotePricingMix';
   import {
     formatConfirmAmount,
     normalizeConfirmNum,
@@ -365,7 +362,7 @@
       OrderPrintDialog: PrintDialog,
       InlineProductSelect,
     },
-    mixins: [multiplePageMix, printMix, quotePricingMix],
+    mixins: [multiplePageMix, printMix],
     setup() {
       return {
         h,
@@ -591,7 +588,6 @@
         this.paidAmountDirty = false;
         this.originalFillAllCost = false;
         this.tableData = [];
-        await this.loadQuotePricingSetting();
       },
       // 加载数据
       loadData() {
@@ -764,7 +760,7 @@
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
         const baseUnit = product.units?.find((item) => item.baseUnit);
-        const selectedPrice = this.getSelectedProductPrice(product);
+        const selectedPrice = product.latestSalePrice;
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           productRemark: product.remark,
@@ -777,7 +773,6 @@
           editingProduct: false,
           productQuery: '',
         });
-        delete this.tableData[index].quoteSheetId;
         resetInlineProductSelect(this.tableData[index]);
 
         this.taxPriceInput(this.tableData[index], this.tableData[index].taxPrice);
@@ -924,7 +919,7 @@
         return isSaleOutProfitNegative(row);
       },
       getTableRowClassName({ row }) {
-        return row.quoteInvalid || (!isEmpty(row.productCode) && this.hasWarningAmount(row))
+        return !isEmpty(row.productCode) && this.hasWarningAmount(row)
           ? 'sheet-price-warning-row'
           : '';
       },
@@ -1109,9 +1104,6 @@
         };
       },
       updateOrder() {
-        if (!this.validQuoteProducts()) {
-          return;
-        }
         if (!this.validData()) {
           return;
         }
