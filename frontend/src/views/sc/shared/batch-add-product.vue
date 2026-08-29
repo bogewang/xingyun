@@ -81,6 +81,7 @@
   import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
+  import { filterQuoteProducts } from '@/views/sc/sale/out/components/quoteProductPricing';
 
   export default defineComponent({
     name: 'SharedBatchAddProduct',
@@ -105,6 +106,16 @@
         default: false,
       },
       showInquiryProduct: {
+        type: Boolean,
+        default: false,
+      },
+      /** 唯一报价模式下当前报价单可选商品 */
+      quoteProducts: {
+        type: Array,
+        default: () => [],
+      },
+      /** 是否启用唯一报价商品筛选 */
+      quotePricingEnabled: {
         type: Boolean,
         default: false,
       },
@@ -208,6 +219,14 @@
         this.search();
       },
       queryProductList(params) {
+        if (this.quotePricingEnabled) {
+          const products = filterQuoteProducts(this.quoteProducts, params.condition || '');
+          const start = (params.pageIndex - 1) * params.pageSize;
+          return Promise.resolve({
+            datas: products.slice(start, start + params.pageSize),
+            totalCount: products.length,
+          });
+        }
         return saleApi.querySaleProductList(params);
       },
       search() {

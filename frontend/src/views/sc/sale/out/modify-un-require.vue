@@ -106,6 +106,8 @@
               biz-type="sale"
               mode="unrequire"
               :sc-id="formData.scId"
+              :quote-products="quoteProducts"
+              :quote-pricing-enabled="saleOutPriceUseUniquePrice"
               @select="handleSelectProduct"
               @add-product="addProduct"
               @open-add-product-page="openChildPage('/product/info/add')"
@@ -259,6 +261,8 @@
         ref="batchAddProductDialog"
         :show-inquiry-product="true"
         :sc-id="formData.scId"
+        :quote-products="quoteProducts"
+        :quote-pricing-enabled="saleOutPriceUseUniquePrice"
         @confirm="batchAddProduct"
       />
       <a-modal
@@ -305,7 +309,6 @@
     CheckSquareOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
-  import * as sysParameterApi from '@/api/system/parameter';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
 
   import InlineProductSelect from '@/views/sc/shared/inline-product-select.vue';
@@ -343,7 +346,7 @@
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
-  import { useUserStoreWithOut } from '/@/store/modules/user';
+  import { quotePricingMix } from './components/quotePricingMix';
   import {
     formatConfirmAmount,
     normalizeConfirmNum,
@@ -362,7 +365,7 @@
       OrderPrintDialog: PrintDialog,
       InlineProductSelect,
     },
-    mixins: [multiplePageMix, printMix],
+    mixins: [multiplePageMix, printMix, quotePricingMix],
     setup() {
       return {
         h,
@@ -531,7 +534,6 @@
         tableData: [],
         customerOptions: [],
         customerOptionMap: {},
-        saleOutPriceUseUniquePrice: false,
       };
     },
     computed: {},
@@ -589,29 +591,7 @@
         this.paidAmountDirty = false;
         this.originalFillAllCost = false;
         this.tableData = [];
-        await this.loadSaleOutPriceUseUniquePrice();
-      },
-      async loadSaleOutPriceUseUniquePrice() {
-        const tenantId = (await useUserStoreWithOut().getTenantRequire())?.tenantId;
-        if (!tenantId) {
-          this.saleOutPriceUseUniquePrice = false;
-          return;
-        }
-
-        const res = await sysParameterApi.query({
-          pageIndex: 1,
-          pageSize: 1,
-          tenantId,
-          pmKey: 'sale_out_price_use_unique_price',
-          createTimeStart: '',
-          createTimeEnd: '',
-        });
-
-        const parameter = res.datas?.[0];
-        this.saleOutPriceUseUniquePrice = parameter?.pmValue === 'true';
-      },
-      getSelectedProductPrice(product) {
-        return this.saleOutPriceUseUniquePrice ? product.salePrice : product.latestSalePrice;
+        await this.loadQuotePricingSetting();
       },
       // 加载数据
       loadData() {
@@ -797,6 +777,7 @@
           editingProduct: false,
           productQuery: '',
         });
+        delete this.tableData[index].quoteSheetId;
         resetInlineProductSelect(this.tableData[index]);
 
         this.taxPriceInput(this.tableData[index], this.tableData[index].taxPrice);
@@ -943,7 +924,7 @@
         return isSaleOutProfitNegative(row);
       },
       getTableRowClassName({ row }) {
-        return !isEmpty(row.productCode) && this.hasWarningAmount(row)
+        return row.quoteInvalid || (!isEmpty(row.productCode) && this.hasWarningAmount(row))
           ? 'sheet-price-warning-row'
           : '';
       },
@@ -1128,6 +1109,9 @@
         };
       },
       updateOrder() {
+        if (!this.validQuoteProducts()) {
+          return;
+        }
         if (!this.validData()) {
           return;
         }

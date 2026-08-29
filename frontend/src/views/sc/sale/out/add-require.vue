@@ -123,6 +123,8 @@
             mode="require"
             :sc-id="formData.scId"
             :is-fixed="row.isFixed"
+            :quote-products="quoteProducts"
+            :quote-pricing-enabled="saleOutPriceUseUniquePrice"
             @select="handleSelectProduct"
             @add-product="addProduct"
             @open-add-product-page="openChildPage('/product/info/add')"
@@ -231,6 +233,8 @@
         ref="batchAddProductDialog"
         :show-inquiry-product="true"
         :sc-id="formData.scId"
+        :quote-products="quoteProducts"
+        :quote-pricing-enabled="saleOutPriceUseUniquePrice"
         @confirm="batchAddProduct"
       />
       <div
@@ -272,6 +276,7 @@
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { quotePricingMix } from './components/quotePricingMix';
 
   import InlineProductSelect from '@/views/sc/shared/inline-product-select.vue';
   import { focusTableInput } from '@/utils/vxeGrid';
@@ -316,7 +321,7 @@
       BatchAddProduct,
       InlineProductSelect,
     },
-    mixins: [multiplePageMix],
+    mixins: [multiplePageMix, quotePricingMix],
     setup() {
       return {
         h,
@@ -539,6 +544,7 @@
 
         this.paidAmountDirty = false;
         this.tableData = [];
+        await this.loadQuotePricingSetting();
       },
       emptyProduct() {
         return {
@@ -613,6 +619,7 @@
           editingProduct: false,
           productQuery: '',
         });
+        delete this.tableData[index].quoteSheetId;
         resetInlineProductSelect(this.tableData[index]);
 
         this.taxPriceInput(this.tableData[index], this.tableData[index].taxPrice);
@@ -726,7 +733,7 @@
         return hasSheetAmountWarning(row, 'taxPrice', 'outNum');
       },
       getTableRowClassName({ row }) {
-        return this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
+        return row.quoteInvalid || this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
       },
       getCellClassName({ row, column }) {
         return getSheetAmountCellClass(row, column.field, 'taxPrice', 'outNum');
@@ -934,6 +941,9 @@
       },
       // 创建订单
       createOrder() {
+        if (!this.validQuoteProducts()) {
+          return;
+        }
         if (!this.validData()) {
           return;
         }

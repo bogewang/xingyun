@@ -15,7 +15,10 @@ export function query(data: QueryQuoteSheetVo): Promise<PageResult<QuoteSheetBo>
 }
 /** 获取报价单详情。 */
 export function get(id: string): Promise<QuoteSheetBo> {
-  return defHttp.post<QuoteSheetBo>({ url: `${baseUrl}/get`, params: { id } }, { region });
+  return defHttp.post<QuoteSheetBo>(
+    { url: `${baseUrl}/get`, data: { id } },
+    { contentType: ContentTypeEnum.FORM_URLENCODED, region },
+  );
 }
 /** 新增报价单。 */
 export function create(data: QuoteSheetVo): Promise<string> {
@@ -33,13 +36,22 @@ export function update(data: QuoteSheetVo): Promise<void> {
 }
 /** 删除报价单。 */
 export function deleteById(id: string): Promise<void> {
-  return defHttp.post<void>({ url: `${baseUrl}/delete`, params: { id } }, { region });
+  return defHttp.post<void>(
+    { url: `${baseUrl}/delete`, data: { id } },
+    { contentType: ContentTypeEnum.FORM_URLENCODED, region },
+  );
 }
 /** 启用报价单。 */
 export function enable(id: string): Promise<void> {
-  return defHttp.post<void>({ url: `${baseUrl}/enable`, params: { id } }, { region });
+  return defHttp.post<void>(
+    { url: `${baseUrl}/enable`, data: { id } },
+    { contentType: ContentTypeEnum.FORM_URLENCODED, region },
+  );
 }
 /** 停用报价单。 */
 export function disable(id: string): Promise<void> {
-  return defHttp.post<void>({ url: `${baseUrl}/disable`, params: { id } }, { region });
+  return defHttp.post<void>(
+    { url: `${baseUrl}/disable`, data: { id } },
+    { contentType: ContentTypeEnum.FORM_URLENCODED, region },
+  );
 }

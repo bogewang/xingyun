@@ -65,12 +65,7 @@
               align="right"
             />
             <vxe-column field="salePrice" title="销售价（元）" width="80" align="right" />
-            <vxe-column
-              field="latestSalePrice"
-              title="最新销售价（元）"
-              width="80"
-              align="right"
-            />
+            <vxe-column field="latestSalePrice" title="最新销售价（元）" width="80" align="right" />
             <!-- 备注（始终显示并固定在最后一列） -->
             <vxe-column field="remark" title="备注" min-width="180" />
           </vxe-table>
@@ -104,6 +99,7 @@
     resetInlineProductSelect,
     setInlineProductSelectProducts,
   } from '@/utils/inlineProductSelect';
+  import { filterQuoteProducts } from '@/views/sc/sale/out/components/quoteProductPricing';
 
   export default defineComponent({
     name: 'InlineProductSelect',
@@ -129,6 +125,10 @@
       isFixed: { type: Boolean, default: false },
       /** 下拉宽度 */
       dropdownWidth: { type: String, default: '1260px' },
+      /** 唯一报价模式下当前报价单可选商品 */
+      quoteProducts: { type: Array, default: () => [] },
+      /** 是否启用唯一报价商品筛选 */
+      quotePricingEnabled: { type: Boolean, default: false },
     },
     emits: ['select', 'addProduct', 'openAddProductPage'],
     setup(props, { emit, expose }) {
@@ -159,7 +159,10 @@
           return;
         }
 
-        saleApi.searchSaleProducts(props.scId, queryString).then((res) => {
+        const productRequest = props.quotePricingEnabled
+          ? Promise.resolve(filterQuoteProducts(props.quoteProducts, queryString))
+          : saleApi.searchSaleProducts(props.scId, queryString);
+        productRequest.then((res) => {
           setInlineProductSelectProducts(row, res);
           row.productOptions = res.map((item) => ({
             value: item.productId,

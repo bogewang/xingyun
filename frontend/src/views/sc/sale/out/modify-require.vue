@@ -163,6 +163,8 @@
             mode="require"
             :sc-id="formData.scId"
             :is-fixed="row.isFixed"
+            :quote-products="quoteProducts"
+            :quote-pricing-enabled="saleOutPriceUseUniquePrice"
             @select="handleSelectProduct"
             @add-product="addProduct"
             @open-add-product-page="openChildPage('/product/info/add')"
@@ -307,6 +309,8 @@
         ref="batchAddProductDialog"
         :show-inquiry-product="true"
         :sc-id="formData.sc.id"
+        :quote-products="quoteProducts"
+        :quote-pricing-enabled="saleOutPriceUseUniquePrice"
         @confirm="batchAddProduct"
       />
       <a-modal
@@ -353,6 +357,7 @@
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
+  import { quotePricingMix } from './components/quotePricingMix';
 
   import InlineProductSelect from '@/views/sc/shared/inline-product-select.vue';
   import { printMix } from '@/mixins/print.ts';
@@ -410,7 +415,7 @@
       OrderPrintDialog: PrintDialog,
       InlineProductSelect,
     },
-    mixins: [multiplePageMix, printMix],
+    mixins: [multiplePageMix, printMix, quotePricingMix],
     setup() {
       return {
         h,
@@ -603,9 +608,9 @@
         this.addProduct();
       },
       // 打开对话框 由父页面触发
-      openDialog() {
+      async openDialog() {
         // 初始化表单数据
-        this.initFormData();
+        await this.initFormData();
         this.loadData();
       },
       // 关闭对话框
@@ -617,7 +622,7 @@
         this.closeCurrentPage();
       },
       // 初始化表单数据
-      initFormData() {
+      async initFormData() {
         this.formData = {
           sc: {},
           customer: {},
@@ -636,6 +641,7 @@
         this.paidAmountDirty = false;
         this.originalFillAllCost = false;
         this.tableData = [];
+        await this.loadQuotePricingSetting();
       },
       // 加载数据
       loadData() {
@@ -800,6 +806,7 @@
           editingProduct: false,
           productQuery: '',
         });
+        delete this.tableData[index].quoteSheetId;
         resetInlineProductSelect(this.tableData[index]);
 
         this.taxPriceInput(this.tableData[index], this.tableData[index].taxPrice);
@@ -874,7 +881,7 @@
         return hasSheetAmountWarning(row, 'taxPrice', 'outNum');
       },
       getTableRowClassName({ row }) {
-        return this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
+        return row.quoteInvalid || this.hasWarningAmount(row) ? 'sheet-price-warning-row' : '';
       },
       getCellClassName({ row, column }) {
         return getSheetAmountCellClass(row, column.field, 'taxPrice', 'outNum');
@@ -1142,6 +1149,9 @@
         };
       },
       updateOrder() {
+        if (!this.validQuoteProducts()) {
+          return;
+        }
         if (!this.validData()) {
           return;
         }
