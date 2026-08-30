@@ -56,7 +56,7 @@
     name: 'QuoteSheet',
     data() {
       return {
-        searchForm: { name: '', status: '' },
+        searchForm: { name: '', status: 'ENABLED' },
         toolbarConfig: { slots: { buttons: 'toolbar_buttons' } },
         columns: [
           { field: 'name', title: '名称', minWidth: 180 },

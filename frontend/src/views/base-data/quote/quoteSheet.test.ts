@@ -3,6 +3,12 @@ import { readFileSync } from 'node:fs';
 import { buildQuoteSheetPayload } from './quoteSheet';
 
 describe('报价单编辑数据', () => {
+  it('列表页首次查询默认筛选启用状态', () => {
+    const source = readFileSync(new URL('./index.vue', import.meta.url), 'utf-8');
+
+    expect(source).toContain("searchForm: { name: '', status: 'ENABLED' }");
+  });
+
   it('列表页必须启用分页配置，以解析分页响应中的 datas', () => {
     const source = readFileSync(new URL('./index.vue', import.meta.url), 'utf-8');
     expect(source).toContain(':pager-config');
