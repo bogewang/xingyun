@@ -85,7 +85,9 @@
 
           <!-- 商品编号 列自定义内容 -->
           <template #productCode_default="{ row }">
-            <a-tag v-if="isImportUnmatchedProduct(row)" color="error">未匹配</a-tag>
+            <a-tag v-if="isImportUnmatchedProduct(row) || row.quoteUnmatched" color="error"
+              >未匹配</a-tag
+            >
             <span v-else>{{ row.productCode }}</span>
           </template>
 
@@ -320,6 +322,7 @@
   import { getSelectedSaleOutPrice } from './saleOutPrice';
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
   import { calculateUnitPrice, calculateUnitStockNum } from '@/utils/productUnitConversion';
+  import { markProductsOutsideQuoteSheet } from '@/utils/quoteProductMismatch';
 
   export default defineComponent({
     name: 'AddSaleOutSheetUnRequire',
@@ -464,6 +467,11 @@
       };
     },
     computed: {},
+    watch: {
+      'formData.orderDate'() {
+        this.validateQuoteProductsByOrderDate();
+      },
+    },
     created() {
       // 初始化表单数据
       this.openDialog();
@@ -479,6 +487,25 @@
       document.removeEventListener('keydown', this.handleKeyDown);
     },
     methods: {
+      /** 按订单日期校验当前表格商品是否在生效报价单内。 */
+      async validateQuoteProductsByOrderDate() {
+        const orderDate = this.formData.orderDate;
+        if (!orderDate || !this.tableData.some((item) => !isEmpty(item.productId))) {
+          markProductsOutsideQuoteSheet(this.tableData, [], false);
+          return;
+        }
+        try {
+          const [enabled, quoteProducts] = await Promise.all([
+            api.getPriceUniqueConfig(),
+            api.queryQuoteProducts({ orderDate }),
+          ]);
+          if (orderDate === this.formData.orderDate) {
+            markProductsOutsideQuoteSheet(this.tableData, quoteProducts, enabled);
+          }
+        } catch {
+          // 查询报价单失败时不影响当前明细编辑。
+        }
+      },
       getImporterContainer() {
         return this.$refs.importerContainer;
       },
@@ -653,6 +680,7 @@
           editingProduct: false,
           productQuery: '',
           importUnmatched: false,
+          quoteUnmatched: false,
         });
         resetInlineProductSelect(this.tableData[index]);
 

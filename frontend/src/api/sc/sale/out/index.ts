@@ -115,6 +115,38 @@ export function getPriceUniqueConfig(): Promise<boolean> {
 }
 
 /**
+ * 按订单日期查询生效报价单中的商品。
+ */
+export function queryQuoteProducts(params: { orderDate: string }): Promise<
+  {
+    productId: string;
+    code?: string;
+    name?: string;
+    spec?: string;
+    unit?: string;
+  }[]
+> {
+  return defHttp.post<
+    {
+      productId: string;
+      code?: string;
+      name?: string;
+      spec?: string;
+      unit?: string;
+    }[]
+  >(
+    {
+      url: baseUrl + '/quote/products',
+      data: params,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/**
  * 销售利润汇总
  */
 export function queryProfitSummary(

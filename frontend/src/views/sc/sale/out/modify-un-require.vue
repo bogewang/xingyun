@@ -91,6 +91,11 @@
             </a-space>
           </template>
 
+          <template #productCode_default="{ row }">
+            <a-tag v-if="row.quoteUnmatched" color="error">未匹配</a-tag>
+            <span v-else>{{ row.productCode }}</span>
+          </template>
+
           <template #inquiryProduct_default="{ row }">
             <span :class="formatInquiryProduct(row.inquiryProduct).className">
               {{ formatInquiryProduct(row.inquiryProduct).text }}
@@ -354,6 +359,7 @@
   import { isSaleOutStockEnough } from './components/saleOutStock';
   import { getSelectedSaleOutPrice } from './saleOutPrice';
   import { calculateUnitPrice, calculateUnitStockNum } from '@/utils/productUnitConversion';
+  import { markProductsOutsideQuoteSheet } from '@/utils/quoteProductMismatch';
 
   export default defineComponent({
     name: 'ModifySaleOutSheetUnRequire',
@@ -428,7 +434,12 @@
             width: 80,
             slots: { default: 'operation_default' },
           },
-          { field: 'productCode', title: '商品编号', width: 120 },
+          {
+            field: 'productCode',
+            title: '商品编号',
+            width: 120,
+            slots: { default: 'productCode_default' },
+          },
           {
             field: 'productName',
             title: '商品名称',
@@ -536,6 +547,11 @@
       };
     },
     computed: {},
+    watch: {
+      'formData.orderDate'() {
+        this.validateQuoteProductsByOrderDate();
+      },
+    },
     created() {
       this.openDialog();
     },
@@ -550,6 +566,25 @@
       document.removeEventListener('keydown', this.handleKeyDown);
     },
     methods: {
+      /** 按订单日期校验当前表格商品是否在生效报价单内。 */
+      async validateQuoteProductsByOrderDate() {
+        const orderDate = this.formData.orderDate;
+        if (!orderDate || !this.tableData.some((item) => !isEmpty(item.productId))) {
+          markProductsOutsideQuoteSheet(this.tableData, [], false);
+          return;
+        }
+        try {
+          const [enabled, quoteProducts] = await Promise.all([
+            api.getPriceUniqueConfig(),
+            api.queryQuoteProducts({ orderDate }),
+          ]);
+          if (orderDate === this.formData.orderDate) {
+            markProductsOutsideQuoteSheet(this.tableData, quoteProducts, enabled);
+          }
+        } catch {
+          // 查询报价单失败时不影响当前明细编辑。
+        }
+      },
       handleKeyDown(event) {
         if (!shouldAddProductByEnter(event)) {
           return;
@@ -783,6 +818,7 @@
           unit: baseUnit?.unitName || product.unit || '',
           editingProduct: false,
           productQuery: '',
+          quoteUnmatched: false,
         });
         resetInlineProductSelect(this.tableData[index]);
 

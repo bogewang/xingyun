@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { markQuoteProductMismatch } from '../quoteProductMismatch';
+import { markProductsOutsideQuoteSheet, markQuoteProductMismatch } from '../quoteProductMismatch';
 
 describe('报价商品未匹配标记', () => {
   it('按后端返回的商品行号标记对应的有效商品行', () => {
@@ -13,5 +13,43 @@ describe('报价商品未匹配标记', () => {
 
     expect(rows[0].quoteUnmatched).toBe(false);
     expect(rows[2].quoteUnmatched).toBe(true);
+  });
+
+  it('按当前报价单刷新未匹配状态，并在未启用时恢复正常显示', () => {
+    const rows = [
+      { productId: 'product-1', quoteUnmatched: true },
+      { productId: 'product-2', quoteUnmatched: false },
+    ];
+
+    markProductsOutsideQuoteSheet(rows, [{ productId: 'product-1' }], true);
+    expect(rows.map((row) => row.quoteUnmatched)).toEqual([false, true]);
+
+    markProductsOutsideQuoteSheet(rows, [], false);
+    expect(rows.map((row) => row.quoteUnmatched)).toEqual([false, false]);
+  });
+
+  it('导入时未匹配的商品切换日期后命中报价单，会回填商品并恢复正常显示', () => {
+    const rows = [
+      {
+        productId: '',
+        productCode: '',
+        productName: '紫甘蓝',
+        importUnmatched: true,
+        quoteUnmatched: true,
+      },
+    ];
+
+    markProductsOutsideQuoteSheet(
+      rows,
+      [{ productId: 'product-purple-cabbage', code: 'P001', name: '紫甘蓝', unit: '公斤' }],
+      true,
+    );
+
+    expect(rows[0]).toMatchObject({
+      productId: 'product-purple-cabbage',
+      productCode: 'P001',
+      importUnmatched: false,
+      quoteUnmatched: false,
+    });
   });
 });

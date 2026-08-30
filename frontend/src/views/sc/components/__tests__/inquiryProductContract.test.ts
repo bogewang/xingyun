@@ -81,6 +81,25 @@ describe('询价商品前端契约', () => {
     });
   });
 
+  it('采购入库和销售出库切换订单日期时复核当前商品报价匹配状态', () => {
+    const callers = [
+      'views/sc/purchase/receive/add-require.vue',
+      'views/sc/purchase/receive/add-un-require.vue',
+      'views/sc/purchase/receive/modify-require.vue',
+      'views/sc/purchase/receive/modify-un-require.vue',
+      'views/sc/sale/out/add-require.vue',
+      'views/sc/sale/out/add-un-require.vue',
+      'views/sc/sale/out/modify-require.vue',
+      'views/sc/sale/out/modify-un-require.vue',
+    ].map(readSource);
+
+    callers.forEach((source) => {
+      expect(source).toContain("'formData.orderDate'()");
+      expect(source).toContain('validateQuoteProductsByOrderDate');
+      expect(source).toContain('markProductsOutsideQuoteSheet');
+    });
+  });
+
   it('采购入库导入携带订单日期以筛选报价商品', () => {
     const pageSource = readSource('views/sc/purchase/receive/add-un-require.vue');
     const importerSource = readSource('components/Importor/ReceiveSheetImporter.vue');

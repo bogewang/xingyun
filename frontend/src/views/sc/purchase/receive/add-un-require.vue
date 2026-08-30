@@ -293,7 +293,11 @@
     createSuccessAutoClose,
   } from '@/hooks/web/msg';
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
-  import { markQuoteProductMismatch } from '@/utils/quoteProductMismatch';
+  import {
+    markProductsOutsideQuoteSheet,
+    markQuoteProductMismatch,
+  } from '@/utils/quoteProductMismatch';
+  import * as saleApi from '@/api/sc/sale/out';
   import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import JFormItem from '@/components/JFormItem';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
@@ -430,6 +434,11 @@
         return Moment;
       },
     },
+    watch: {
+      'formData.orderDate'() {
+        this.validateQuoteProductsByOrderDate();
+      },
+    },
     created() {
       this.openDialog();
     },
@@ -444,6 +453,25 @@
       document.removeEventListener('keydown', this.handleKeyDown);
     },
     methods: {
+      /** 按订单日期校验当前表格商品是否在生效报价单内。 */
+      async validateQuoteProductsByOrderDate() {
+        const orderDate = this.formData.orderDate;
+        if (!orderDate || !this.tableData.some((item) => !isEmpty(item.productId))) {
+          markProductsOutsideQuoteSheet(this.tableData, [], false);
+          return;
+        }
+        try {
+          const [enabled, quoteProducts] = await Promise.all([
+            saleApi.getPriceUniqueConfig(),
+            saleApi.queryQuoteProducts({ orderDate }),
+          ]);
+          if (orderDate === this.formData.orderDate) {
+            markProductsOutsideQuoteSheet(this.tableData, quoteProducts, enabled);
+          }
+        } catch {
+          // 查询报价单失败时不影响当前明细编辑。
+        }
+      },
       getImporterContainer() {
         return this.$refs.importerContainer;
       },

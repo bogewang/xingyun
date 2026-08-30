@@ -27,3 +27,41 @@ export function markQuoteProductMismatch(error: unknown, rows: Record<string, an
     }
   });
 }
+
+/**
+ * 根据当前订单日期的报价商品标记表格中未匹配的商品。
+ */
+export function markProductsOutsideQuoteSheet(
+  rows: Record<string, any>[],
+  quoteProducts: {
+    productId: string;
+    code?: string;
+    name?: string;
+    spec?: string;
+    unit?: string;
+  }[],
+  enabled: boolean,
+) {
+  const quoteProductIds = new Set(quoteProducts.map((item) => item.productId));
+  rows.forEach((row) => {
+    const matchedProducts = quoteProducts.filter(
+      (item) =>
+        !row.productId &&
+        !!row.productName &&
+        item.name === row.productName &&
+        (!row.unit || !item.unit || item.unit === row.unit),
+    );
+    if (enabled && matchedProducts.length === 1) {
+      const product = matchedProducts[0];
+      Object.assign(row, {
+        productId: product.productId,
+        productCode: product.code || row.productCode,
+        productName: product.name || row.productName,
+        spec: product.spec || row.spec,
+        unit: product.unit || row.unit,
+        importUnmatched: false,
+      });
+    }
+    row.quoteUnmatched = !!enabled && !!row.productId && !quoteProductIds.has(row.productId);
+  });
+}
