@@ -29,17 +29,8 @@
           >
             <!-- 序号 -->
             <vxe-column type="seq" title="序号" width="60" />
-            <!-- 报价单模式：商品编号/名称/规格/单位 -->
-            <vxe-column v-if="isQuote" field="code" title="商品编号" width="140" />
-            <vxe-column v-if="isQuote" field="name" title="商品名称" min-width="200" />
-            <vxe-column v-if="isQuote" field="spec" title="规格" width="120" />
-            <vxe-column v-if="isQuote" field="unit" title="单位" width="70">
-              <template #default="{ row: product }">
-                {{ getUnitName(product.unit) }}
-              </template>
-            </vxe-column>
-            <!-- 进销模式：商品名称（始终显示，含热度星标） -->
-            <vxe-column v-if="!isQuote" field="productName" title="商品名称" min-width="250">
+            <!-- 报价和进销模式共用商品名称，始终展示热度星标 -->
+            <vxe-column field="productName" title="商品名称" min-width="250">
               <template #default="{ row: product }">
                 <span>{{ product.productName }}</span>
                 <span v-if="product.hotLevel" class="inline-product-hot-stars">
@@ -59,10 +50,13 @@
                 </span>
               </template>
             </vxe-column>
-            <!-- 规格（进销模式显示） -->
-            <vxe-column v-if="!isQuote" field="spec" title="规格" width="120" />
-            <!-- 单位（进销模式显示） -->
-            <vxe-column v-if="!isQuote" field="unit" title="单位" width="60" />
+            <!-- 报价和进销模式共用字段 -->
+            <vxe-column field="spec" title="规格" width="120" />
+            <vxe-column field="unit" title="单位" width="70">
+              <template #default="{ row: product }">
+                {{ getUnitName(product.unit) }}
+              </template>
+            </vxe-column>
             <!-- 库存数量（进销模式显示） -->
             <vxe-column
               v-if="!isQuote"
@@ -180,7 +174,12 @@
               pageSize: 100,
               condition: keyword,
             })
-            .then((data) => data.datas || []);
+            .then((data) =>
+              (data.datas || []).map((product) => ({
+                ...product,
+                productName: product.name,
+              })),
+            );
         }
         return saleApi.searchSaleProducts(props.scId, keyword, props.orderDate);
       };
