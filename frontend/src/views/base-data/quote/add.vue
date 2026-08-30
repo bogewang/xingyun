@@ -119,6 +119,7 @@
   import * as api from '@/api/base-data/quote';
   import * as unitApi from '@/api/base-data/unit';
   import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { isEmpty, isFloatGeZero, uuid } from '@/utils/utils';
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
   import { buildQuoteSheetPayload } from './quoteSheet';
@@ -127,6 +128,7 @@
 
   export default defineComponent({
     name: 'QuoteSheetAdd',
+    mixins: [multiplePageMix],
     components: {
       InlineProductSelect,
       QuoteSheetImporter,
@@ -365,7 +367,7 @@
         return products;
       },
       closeDialog() {
-        this.$router.back();
+        this.closeCurrentPage();
       },
     },
   });

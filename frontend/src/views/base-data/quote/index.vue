@@ -51,9 +51,11 @@
   import * as api from '@/api/base-data/quote';
   import { buildSortPageVo } from '@/utils/utils';
   import { createConfirm, createSuccess } from '@/hooks/web/msg';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
 
   export default defineComponent({
     name: 'QuoteSheet',
+    mixins: [multiplePageMix],
     data() {
       return {
         searchForm: { name: '', status: 'ENABLED' },
@@ -86,9 +88,7 @@
         this.$refs.grid.commitProxy('reload');
       },
       edit(id = '') {
-        this.$router.push(
-          id ? { name: 'QuoteSheetModify', params: { id } } : { name: 'QuoteSheetAdd' },
-        );
+        this.openChildPage(id ? `/base-data/quote/modify/${id}` : '/base-data/quote/add');
       },
       detail(id) {
         this.$router.push({ name: 'QuoteSheetDetail', params: { id } });
@@ -131,6 +131,10 @@
             onClick: () => this.remove(row.id),
           },
         ];
+      },
+      /** 子页面保存后重新加载报价单列表。 */
+      onRefreshPage() {
+        this.search();
       },
     },
   });

@@ -35,6 +35,8 @@ public class QuoteSheetServiceImplTest {
   @Test public void shouldTreatSharedEndpointAsOverlapping() { Assert.assertTrue(QuoteSheetServiceImpl.isDateRangeOverlapped(date("2026-08-01"),date("2026-08-31"),date("2026-08-31"),date("2026-09-30"))); }
   /** 重叠定价周期应拒绝。 */
   @Test(expectedExceptions=DefaultClientException.class,expectedExceptionsMessageRegExp=".*定价周期.*冲突.*") public void shouldRejectOverlappedQuotePeriod() { QuoteSheetServiceImpl.assertNoDateRangeOverlap("quote-2",date("2026-08-01"),date("2026-08-31"),Collections.singletonList(sheet("quote-1","2026-08-31","2026-09-30"))); }
+  /** 与停用报价单重叠时应允许保存。 */
+  @Test public void shouldAllowOverlappedPeriodWithDisabledQuoteSheet() { QuoteSheet disabled=sheet("quote-1","2026-08-31","2026-09-30"); disabled.setStatus(QuoteSheetStatus.DISABLED); QuoteSheetServiceImpl.assertNoDateRangeOverlap("quote-2",date("2026-08-01"),date("2026-08-31"),Collections.singletonList(disabled)); }
   /** 排除自身后允许更新原报价周期。 */
   @Test public void shouldExcludeCurrentQuoteSheetFromOverlapCheck() { QuoteSheetServiceImpl.assertNoDateRangeOverlap("quote-1",date("2026-08-01"),date("2026-08-31"),Collections.singletonList(sheet("quote-1","2026-08-01","2026-08-31"))); }
   /** 同单重复商品应拒绝。 */
@@ -73,7 +75,7 @@ public class QuoteSheetServiceImplTest {
     Assert.assertNotNull(detailsRef.get().get(0).getProductSnapshot());
   }
   /** 构造报价单。 */
-  private QuoteSheet sheet(String id,String start,String end) { QuoteSheet sheet=new QuoteSheet(); sheet.setId(id); sheet.setStartDate(date(start)); sheet.setEndDate(date(end)); return sheet; }
+  private QuoteSheet sheet(String id,String start,String end) { QuoteSheet sheet=new QuoteSheet(); sheet.setId(id); sheet.setStartDate(date(start)); sheet.setEndDate(date(end)); sheet.setStatus(QuoteSheetStatus.ENABLED); return sheet; }
   /** 解析测试日期。 */
   private LocalDate date(String value) { return LocalDate.parse(value); }
   /** 通过反射注入服务依赖。 */

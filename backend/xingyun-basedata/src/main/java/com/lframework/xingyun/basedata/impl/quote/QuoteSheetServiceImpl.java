@@ -180,7 +180,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
         QuoteSheet sheet = quoteSheetConverter.toEntity(vo);
         sheet.setId(IdUtil.getId());
         sheet.setTenantId(currentTenantId());
-        sheet.setStatus(QuoteSheetStatus.DISABLED);
+        sheet.setStatus(QuoteSheetStatus.ENABLED);
         getBaseMapper().insert(sheet);
         saveDetails(sheet.getId(), sheet.getTenantId(), vo.getProducts());
         return sheet.getId();
@@ -364,10 +364,13 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     }
 
     /**
-     * 校验报价周期不与其他未删除报价单重叠。
+     * 校验报价周期不与其他已启用报价单重叠。
      */
     public static void assertNoDateRangeOverlap(String excludeId, LocalDate startDate, LocalDate endDate, List<QuoteSheet> sheets) {
-        if (sheets.stream().filter(s -> !Objects.equals(s.getId(), excludeId)).anyMatch(s -> isDateRangeOverlapped(startDate, endDate, s.getStartDate(), s.getEndDate())))
+        if (sheets.stream()
+                .filter(s -> s.getStatus() == QuoteSheetStatus.ENABLED)
+                .filter(s -> !Objects.equals(s.getId(), excludeId))
+                .anyMatch(s -> isDateRangeOverlapped(startDate, endDate, s.getStartDate(), s.getEndDate())))
             throw new DefaultClientException("定价周期与已有报价单冲突！");
     }
 
