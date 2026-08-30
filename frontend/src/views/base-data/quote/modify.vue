@@ -6,21 +6,20 @@
           <j-form-item label="名称" required>
             <a-input v-model:value.trim="formData.name" placeholder="请输入名称" />
           </j-form-item>
-          <j-form-item label="生效开始日期" required>
+          <j-form-item label="开始日期" required>
             <a-date-picker
               v-model:value="formData.startDate"
               placeholder=""
               value-format="YYYY-MM-DD"
             />
           </j-form-item>
-          <j-form-item label="生效结束日期" required>
+          <j-form-item label="结束日期" required>
             <a-date-picker
               v-model:value="formData.endDate"
               placeholder=""
               value-format="YYYY-MM-DD"
             />
           </j-form-item>
-          <j-form-item />
           <j-form-item label="状态">
             <span v-if="formData.status === 'ENABLED'" style="color: #52c41a">启用</span>
             <span v-else style="color: #303133">停用</span>
@@ -171,10 +170,9 @@
           {
             field: 'name',
             title: '商品名称',
-            minWidth: 180,
+            width: 300,
             slots: { default: 'productName_default' },
           },
-          { field: 'skuCode', title: '商品SKU编号', width: 120 },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
           {
