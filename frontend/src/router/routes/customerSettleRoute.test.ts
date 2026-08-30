@@ -49,4 +49,17 @@ describe('报价单路由', () => {
       'QuoteSheetModify',
     );
   });
+
+  it('新增和修改页组件名与路由缓存键一致，切换 Tab 时保留填写内容', async () => {
+    const routes = QuoteRoute.children || [];
+    const pageModules = {
+      QuoteSheetAdd: await routes.find((route) => route.name === 'QuoteSheetAdd')?.component?.(),
+      QuoteSheetModify: await routes
+        .find((route) => route.name === 'QuoteSheetModify')
+        ?.component?.(),
+    };
+
+    expect(pageModules.QuoteSheetAdd.default.name).toBe('QuoteSheetAdd');
+    expect(pageModules.QuoteSheetModify.default.name).toBe('QuoteSheetModify');
+  });
 });

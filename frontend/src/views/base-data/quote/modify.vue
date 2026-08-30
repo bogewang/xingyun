@@ -126,7 +126,7 @@
   import InlineProductSelect from '@/views/sc/shared/inline-product-select.vue';
 
   export default defineComponent({
-    name: 'ModifyQuoteSheet',
+    name: 'QuoteSheetModify',
     components: {
       InlineProductSelect,
     },

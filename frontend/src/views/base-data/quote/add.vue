@@ -39,6 +39,11 @@
             <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
             <a-button :icon="h(CloudUploadOutlined)" @click="$refs.importer.openDialog()">导入Excel</a-button>
           </a-space>
+          </template>
+
+        <template #code_default="{ row }">
+          <a-tag v-if="isImportUnmatchedProduct(row)" color="error">未匹配</a-tag>
+          <span v-else>{{ row.code }}</span>
         </template>
 
         <!-- 操作 列自定义内容 -->
@@ -121,7 +126,7 @@
   import QuoteSheetImporter from '@/components/Importor/QuoteSheetImporter.vue';
 
   export default defineComponent({
-    name: 'AddQuoteSheet',
+    name: 'QuoteSheetAdd',
     components: {
       InlineProductSelect,
       QuoteSheetImporter,
@@ -167,7 +172,7 @@
             width: 140,
             slots: { default: 'operation_default' },
           },
-          { field: 'code', title: '商品编号', width: 120 },
+          { field: 'code', title: '商品编号', width: 120, slots: { default: 'code_default' } },
           {
             field: 'name',
             title: '商品名称',
@@ -206,9 +211,11 @@
     },
     methods: {
       getImporterContainer() { return this.$refs.importerContainer; },
+      /** 判断导入商品是否未匹配。 */
+      isImportUnmatchedProduct(row) { return row.importUnmatched && isEmpty(row.productId); },
       handleImportConfirm(res) {
         const items = res?.data || res?.datas || res || [];
-        this.tableData = (Array.isArray(items) ? items : []).map((item) => Object.assign(this.emptyProduct(), item, { id: uuid(), importUnmatched: isEmpty(item.productId), productQuery: isEmpty(item.productId) ? item.productName : '' }));
+        this.tableData = (Array.isArray(items) ? items : []).map((item) => Object.assign(this.emptyProduct(), item, { id: uuid(), importUnmatched: isEmpty(item.productId), productQuery: isEmpty(item.productId) ? item.name : '' }));
       },
       // 加载计量单位名称，避免报价单商品行展示单位 ID。
       loadUnitNames() {
@@ -311,6 +318,7 @@
         });
       },
       createSheet() {
+        if (this.tableData.some((item) => this.isImportUnmatchedProduct(item))) { createError('存在未匹配商品，请手动选择后再保存！'); return; }
         if (isEmpty(this.formData.name)) {
           createError('请输入名称！');
           return;
