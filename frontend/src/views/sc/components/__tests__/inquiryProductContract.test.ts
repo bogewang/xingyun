@@ -77,8 +77,17 @@ describe('询价商品前端契约', () => {
     receiveCallers.forEach((source) => {
       expect(source).toContain('<InlineProductSelect');
       expect(source).toContain('<batch-add-product');
-      expect(source.match(/:order-date="formData\.orderDate"/g)).toHaveLength(2);
+      expect(source.match(/:order-date="formData\.orderDate"/g)?.length).toBeGreaterThanOrEqual(2);
     });
+  });
+
+  it('采购入库导入携带订单日期以筛选报价商品', () => {
+    const pageSource = readSource('views/sc/purchase/receive/add-un-require.vue');
+    const importerSource = readSource('components/Importor/ReceiveSheetImporter.vue');
+
+    expect(pageSource).toContain(':order-date="formData.orderDate"');
+    expect(importerSource).toContain(':form-data="{ orderDate }"');
+    expect(importerSource).toContain('orderDate: this.orderDate');
   });
 
   it('四个只读明细 API 将询价标识声明为可空布尔值', () => {

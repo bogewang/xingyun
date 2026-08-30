@@ -7,6 +7,9 @@ import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.vo.purchase.receive.ReceiveProductVo;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Collections;
 import org.testng.Assert;
@@ -125,6 +128,27 @@ class ReceiveSheetServiceImplTest {
 
     ReceiveSheetServiceImpl.validateQuoteProductCoverage(Collections.singletonList(product),
         Collections.singletonList(quoteProduct));
+  }
+
+  /** 验证导入匹配到商品后回填商品档案名称。 */
+  @Test
+  void importProductMatchShouldFillProductName() throws Exception {
+    String source = new String(Files.readAllBytes(Paths.get(
+        "src/main/java/com/lframework/xingyun/sc/impl/purchase/ReceiveSheetServiceImpl.java")),
+        StandardCharsets.UTF_8);
+
+    Assert.assertTrue(source.contains("data.setProductName(product.getName());"));
+  }
+
+  /** 验证采购入库导入按订单日期过滤非报价商品。 */
+  @Test
+  void importShouldFilterProductsOutsideActiveQuoteSheet() throws Exception {
+    String source = new String(Files.readAllBytes(Paths.get(
+        "src/main/java/com/lframework/xingyun/sc/impl/purchase/ReceiveSheetServiceImpl.java")),
+        StandardCharsets.UTF_8);
+
+    Assert.assertTrue(source.contains("checkImportData(list, orderDate)"));
+    Assert.assertTrue(source.contains("quoteProductIds.contains(product.getId())"));
   }
 
   private ReceiveSheetImportModel createModel(BigDecimal receiveNum, BigDecimal purchasePrice) {

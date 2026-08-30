@@ -36,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -402,7 +403,8 @@ public class ReceiveSheetController extends DefaultBaseController {
     @ApiOperation("导入")
     @HasPermission({"purchase:receive:import"})
     @PostMapping("/import")
-    public InvokeResult<List<ReceiveProductVo>> importExcel(@NotNull(message = "请上传文件") MultipartFile file) {
+    public InvokeResult<List<ReceiveProductVo>> importExcel(@NotNull(message = "请上传文件") MultipartFile file,
+            @RequestParam @NotNull(message = "订单日期不能为空！") LocalDate orderDate) {
 
         try {
             PurchaseConfig config = purchaseConfigService.get();
@@ -414,7 +416,7 @@ public class ReceiveSheetController extends DefaultBaseController {
             for (int i = 0; i < list.size(); i++) {
                 list.get(i).setSeq(i + 2);
             }
-            List<ReceiveProductVo> data = receiveSheetService.checkImport(list);
+            List<ReceiveProductVo> data = receiveSheetService.checkImport(list, orderDate);
 
             return InvokeResultBuilder.success(data);
         } catch (Exception e) {

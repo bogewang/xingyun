@@ -960,12 +960,18 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
     @Override
     public List<ReceiveProductVo> checkImport(List<ReceiveSheetImportModel> list) {
+        return checkImport(list, null);
+    }
+
+    @Override
+    public List<ReceiveProductVo> checkImport(List<ReceiveSheetImportModel> list,
+            LocalDate orderDate) {
         if (CollectionUtils.isEmpty(list)) {
             return Lists.newArrayList();
         }
         handleSeq(list);
         // 匹配编号
-        List<String> errors = checkImportData(list);
+        List<String> errors = checkImportData(list, orderDate);
         Assert.isTrue(CollectionUtils.isEmpty(errors), StringUtils.join(errors, "；\r\n"));
 
         return list.stream()
@@ -982,13 +988,21 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
     }
 
-    private List<String> checkImportData(List<ReceiveSheetImportModel> list) {
+    private List<String> checkImportData(List<ReceiveSheetImportModel> list, LocalDate orderDate) {
         List<String> productNames = list.stream().map(ReceiveSheetImportModel::getProductName)
                 .filter(StringUtils::isNotBlank)
                 .map(StringUtils::trim)
                 .distinct()
                 .collect(Collectors.toList());
         List<Product> products = productService.selectByProductName(productNames);
+        if (orderDate != null && Boolean.TRUE.equals(saleOutSheetService.getPriceUniqueConfig())) {
+            QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
+            quoteProductVo.setOrderDate(orderDate);
+            Set<String> quoteProductIds = saleOutSheetService.queryQuoteProducts(quoteProductVo)
+                    .stream().map(QuoteProductBo::getProductId).collect(Collectors.toSet());
+            products = products.stream().filter(product -> quoteProductIds.contains(product.getId()))
+                    .collect(Collectors.toList());
+        }
         Map<String, List<Product>> nameUnitMap = new HashMap<>();
         for (Product product : products) {
             productUnitService.getAvailableByProductId(product.getId()).stream()
@@ -1019,6 +1033,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
                 }
                 data.setProductCode(product.getCode());
                 data.setProductId(product.getId());
+                data.setProductName(product.getName());
                 data.setUnitId(unit.getId());
                 data.setSpec(product.getSpec());
                 data.setInquiryProduct(product.getInquiryProduct());

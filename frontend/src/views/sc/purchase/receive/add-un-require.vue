@@ -210,6 +210,7 @@
       />
       <receive-sheet-importer
         ref="importer"
+        :order-date="formData.orderDate"
         :get-container="getImporterContainer"
         local-container
         hide-on-deactivated
@@ -781,7 +782,7 @@
             const importUnmatched = isEmpty(item.productId);
             const row = Object.assign(this.emptyProduct(), item, {
               id: uuid(),
-              productName: item.productName,
+              productName: item.productName || item.name || '',
               basePurchasePrice: item.purchasePrice,
               units: isEmpty(item.unitId)
                 ? []
