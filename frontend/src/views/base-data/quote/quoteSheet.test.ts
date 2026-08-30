@@ -38,4 +38,14 @@ describe('报价单编辑数据', () => {
     expect(source).toContain('api.enable');
     expect(source).toContain('api.disable');
   });
+
+  it('新增和编辑页使用日期范围组件并映射开始、结束日期', () => {
+    for (const file of ['./add.vue', './modify.vue']) {
+      const source = readFileSync(new URL(file, import.meta.url), 'utf-8');
+      expect(source).toContain('<a-range-picker');
+      expect(source).toContain('v-model:value="dateRange"');
+      expect(source).toContain('this.formData.startDate = value?.[0] ||');
+      expect(source).toContain('this.formData.endDate = value?.[1] ||');
+    }
+  });
 });
