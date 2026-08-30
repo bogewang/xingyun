@@ -6,18 +6,12 @@
           <j-form-item label="名称" required>
             <a-input v-model:value.trim="formData.name" placeholder="请输入名称" />
           </j-form-item>
-          <j-form-item label="开始日期" required>
-            <a-date-picker
-              v-model:value="formData.startDate"
-              placeholder=""
+          <j-form-item label="生效日期" required>
+            <a-range-picker
+              v-model:value="dateRange"
+              :placeholder="['开始日期', '结束日期']"
               value-format="YYYY-MM-DD"
-            />
-          </j-form-item>
-          <j-form-item label="结束日期" required>
-            <a-date-picker
-              v-model:value="formData.endDate"
-              placeholder=""
-              value-format="YYYY-MM-DD"
+              style="width: 100%"
             />
           </j-form-item>
         </j-form>
@@ -73,6 +67,7 @@
             mode="unrequire"
             :row="row"
             :row-index="rowIndex"
+            :unit-name-map="unitNameMap"
             @select="handleSelectProduct"
             @add-product="addProduct"
           />
@@ -184,6 +179,20 @@
         ],
         tableData: [],
       };
+    },
+    computed: {
+      // 将日期范围组件的数组值映射为后端需要的开始、结束日期字段。
+      dateRange: {
+        get() {
+          return this.formData.startDate || this.formData.endDate
+            ? [this.formData.startDate, this.formData.endDate]
+            : [];
+        },
+        set(value) {
+          this.formData.startDate = value?.[0] || '';
+          this.formData.endDate = value?.[1] || '';
+        },
+      },
     },
     created() {
       this.loadUnitNames();

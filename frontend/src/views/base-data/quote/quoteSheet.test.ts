@@ -48,4 +48,18 @@ describe('报价单编辑数据', () => {
       expect(source).toContain('this.formData.endDate = value?.[1] ||');
     }
   });
+
+  it('报价单商品下拉不展示 SKU，并将单位 ID 转为单位名称', () => {
+    const selectorSource = readFileSync(
+      new URL('../../sc/shared/inline-product-select.vue', import.meta.url),
+      'utf-8',
+    );
+
+    expect(selectorSource).not.toContain('v-if="isQuote" field="skuCode"');
+    expect(selectorSource).toContain('getUnitName(product.unit)');
+    for (const file of ['./add.vue', './modify.vue']) {
+      const pageSource = readFileSync(new URL(file, import.meta.url), 'utf-8');
+      expect(pageSource).toContain(':unit-name-map="unitNameMap"');
+    }
+  });
 });

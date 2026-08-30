@@ -29,12 +29,15 @@
           >
             <!-- 序号 -->
             <vxe-column type="seq" title="序号" width="60" />
-            <!-- 报价单模式：商品编号/名称/SKU/规格/单位 -->
+            <!-- 报价单模式：商品编号/名称/规格/单位 -->
             <vxe-column v-if="isQuote" field="code" title="商品编号" width="140" />
             <vxe-column v-if="isQuote" field="name" title="商品名称" min-width="200" />
-            <vxe-column v-if="isQuote" field="skuCode" title="SKU编号" width="120" />
             <vxe-column v-if="isQuote" field="spec" title="规格" width="120" />
-            <vxe-column v-if="isQuote" field="unit" title="单位" width="70" />
+            <vxe-column v-if="isQuote" field="unit" title="单位" width="70">
+              <template #default="{ row: product }">
+                {{ getUnitName(product.unit) }}
+              </template>
+            </vxe-column>
             <!-- 进销模式：商品名称（始终显示，含热度星标） -->
             <vxe-column v-if="!isQuote" field="productName" title="商品名称" min-width="250">
               <template #default="{ row: product }">
@@ -65,7 +68,7 @@
               v-if="!isQuote"
               field="stockNum"
               title="库存数量"
-              width="60"
+              width="80"
               align="right"
             />
             <!-- 价格列（进销模式显示） -->
@@ -157,11 +160,16 @@
       dropdownWidth: { type: String, default: '1260px' },
       /** 单据日期，后端按需过滤可售商品 */
       orderDate: { type: String, default: '' },
+      /** 计量单位 ID 到名称的映射，仅报价单模式使用 */
+      unitNameMap: { type: Object, default: () => ({}) },
     },
     emits: ['select', 'addProduct', 'openAddProductPage'],
     setup(props, { emit, expose }) {
       // 是否报价单模式
       const isQuote = computed(() => props.bizType === 'quote');
+
+      // 将报价单商品接口中的单位 ID 转为用户可读的单位名称。
+      const getUnitName = (unit) => props.unitNameMap[unit] || unit;
 
       // 商品搜索：报价单模式走商品中心查询所有非停用基础商品，进销模式走后端可售商品搜索
       const searchProducts = (keyword) => {
@@ -221,6 +229,7 @@
         onEnableProductEdit,
         focus,
         isQuote,
+        getUnitName,
         isEmpty,
         formatInquiryProduct,
         StarTwoTone,
