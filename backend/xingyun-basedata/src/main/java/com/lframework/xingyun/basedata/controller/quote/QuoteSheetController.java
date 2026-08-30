@@ -7,6 +7,9 @@ import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.basedata.bo.quote.*;
 import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverter;
 import com.lframework.xingyun.basedata.entity.quote.QuoteSheet;
+import com.lframework.xingyun.basedata.excel.quote.QuoteSheetImportModel;
+import com.lframework.starter.web.core.utils.ExcelUtil;
+import com.lframework.starter.web.core.utils.EasyExcelUtils;
 import com.lframework.xingyun.basedata.service.quote.QuoteSheetService;
 import com.lframework.xingyun.basedata.vo.quote.*;
 
@@ -19,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 报价单管理接口。
@@ -32,6 +36,26 @@ public class QuoteSheetController extends DefaultBaseController {
     private QuoteSheetService quoteSheetService;
     @Autowired
     private QuoteSheetConverter quoteSheetConverter;
+
+    /**
+     * 下载报价单导入模板。
+     */
+    @GetMapping("/import/template")
+    @HasPermission("base-data:quote:add")
+    public void downloadImportTemplate() {
+        ExcelUtil.export("报价单导入模板", QuoteSheetImportModel.class);
+    }
+
+    /** 解析报价单导入文件，后续由页面提示未匹配商品。 */
+    @PostMapping("/import")
+    @HasPermission("base-data:quote:add")
+    public InvokeResult<List<QuoteSheetImportModel>> importExcel(@RequestParam MultipartFile file) {
+        try {
+            return InvokeResultBuilder.success(EasyExcelUtils.syncReadModel(file.getInputStream(), QuoteSheetImportModel.class));
+        } catch (Exception e) {
+            return fail(e);
+        }
+    }
 
     /**
      * 分页查询报价单。

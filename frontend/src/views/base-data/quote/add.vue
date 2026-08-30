@@ -1,5 +1,5 @@
 <template>
-  <div class="app-card-container sheet-editor-page">
+  <div ref="importerContainer" class="app-card-container sheet-editor-page excel-importer-local-container">
     <div class="sheet-editor-content" v-permission="['base-data:quote:add']" v-loading="loading">
       <j-border>
         <j-form bordered>
@@ -37,6 +37,7 @@
           <a-space>
             <a-button type="primary" :icon="h(PlusOutlined)" @click="addProduct">新增</a-button>
             <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
+            <a-button :icon="h(CloudUploadOutlined)" @click="$refs.importer.openDialog()">导入Excel</a-button>
           </a-space>
         </template>
 
@@ -87,6 +88,8 @@
         </j-form>
       </j-border>
 
+      <quote-sheet-importer ref="importer" :get-container="getImporterContainer" local-container @confirm="handleImportConfirm" />
+
       <div
         class="sheet-editor-actions"
         style="text-align: center; background-color: #ffffff; padding: 8px 0"
@@ -106,6 +109,7 @@
     MinusCircleTwoTone,
     PlusCircleTwoTone,
     PlusOutlined,
+    CloudUploadOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/base-data/quote';
   import * as unitApi from '@/api/base-data/unit';
@@ -114,11 +118,13 @@
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
   import { buildQuoteSheetPayload } from './quoteSheet';
   import InlineProductSelect from '@/views/sc/shared/inline-product-select.vue';
+  import QuoteSheetImporter from '@/components/Importor/QuoteSheetImporter.vue';
 
   export default defineComponent({
     name: 'AddQuoteSheet',
     components: {
       InlineProductSelect,
+      QuoteSheetImporter,
     },
     setup() {
       return {
@@ -127,6 +133,7 @@
         DeleteOutlined,
         PlusCircleTwoTone,
         MinusCircleTwoTone,
+        CloudUploadOutlined,
       };
     },
     data() {
@@ -198,6 +205,11 @@
       this.loadUnitNames();
     },
     methods: {
+      getImporterContainer() { return this.$refs.importerContainer; },
+      handleImportConfirm(res) {
+        const items = res?.data || res?.datas || res || [];
+        this.tableData = (Array.isArray(items) ? items : []).map((item) => Object.assign(this.emptyProduct(), item, { id: uuid(), importUnmatched: isEmpty(item.productId), productQuery: isEmpty(item.productId) ? item.productName : '' }));
+      },
       // 加载计量单位名称，避免报价单商品行展示单位 ID。
       loadUnitNames() {
         unitApi.query({ pageIndex: 1, pageSize: 1000 }).then((data) => {
