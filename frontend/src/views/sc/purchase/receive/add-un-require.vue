@@ -82,7 +82,9 @@
 
           <!-- 商品编号 列自定义内容 -->
           <template #productCode_default="{ row }">
-            <a-tag v-if="isImportUnmatchedProduct(row)" color="error">未匹配</a-tag>
+            <a-tag v-if="isImportUnmatchedProduct(row) || row.quoteUnmatched" color="error"
+              >未匹配</a-tag
+            >
             <span v-else>{{ row.productCode }}</span>
           </template>
 
@@ -290,6 +292,7 @@
     createSuccessAutoClose,
   } from '@/hooks/web/msg';
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
+  import { markQuoteProductMismatch } from '@/utils/quoteProductMismatch';
   import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import JFormItem from '@/components/JFormItem';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
@@ -584,6 +587,7 @@
           editingProduct: false,
           productQuery: '',
           importUnmatched: false,
+          quoteUnmatched: false,
         });
         resetInlineProductSelect(this.tableData[index]);
 
@@ -948,6 +952,7 @@
             this.$emit('confirm');
             this.closeDialog();
           })
+          .catch((e) => markQuoteProductMismatch(e, this.tableData))
           .finally(() => {
             this.loading = false;
           });
@@ -970,6 +975,7 @@
               this.$emit('confirm');
               this.closeDialog();
             })
+            .catch((e) => markQuoteProductMismatch(e, this.tableData))
             .finally(() => {
               this.loading = false;
             });

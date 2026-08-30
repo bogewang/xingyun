@@ -103,6 +103,11 @@
           </a-space>
         </template>
 
+        <template #productCode_default="{ row }">
+          <a-tag v-if="row.quoteUnmatched" color="error">未匹配</a-tag>
+          <span v-else>{{ row.productCode }}</span>
+        </template>
+
         <!-- 商品名称 列自定义内容 -->
         <template #inquiryProduct_default="{ row }">
           <span :class="formatInquiryProduct(row.inquiryProduct).className">
@@ -288,6 +293,7 @@
   } from '@/utils/sheetAmountInput';
   import { createConfirm, createError, createPrompt, createSuccess } from '@/hooks/web/msg';
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
+  import { markQuoteProductMismatch } from '@/utils/quoteProductMismatch';
   import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
   import { focusTableInput } from '@/utils/vxeGrid';
@@ -347,7 +353,12 @@
             width: 140,
             slots: { default: 'operation_default' },
           },
-          { field: 'productCode', title: '商品编号', width: 120 },
+          {
+            field: 'productCode',
+            title: '商品编号',
+            width: 120,
+            slots: { default: 'productCode_default' },
+          },
           {
             field: 'productName',
             title: '商品名称',
@@ -580,6 +591,7 @@
           purchasePrice,
           editingProduct: false,
           productQuery: '',
+          quoteUnmatched: false,
         });
         resetInlineProductSelect(this.tableData[index]);
 
@@ -921,6 +933,7 @@
             this.$emit('confirm');
             this.closeDialog();
           })
+          .catch((e) => markQuoteProductMismatch(e, this.tableData))
           .finally(() => {
             this.loading = false;
           });
@@ -943,6 +956,7 @@
               this.$emit('confirm');
               this.closeDialog();
             })
+            .catch((e) => markQuoteProductMismatch(e, this.tableData))
             .finally(() => {
               this.loading = false;
             });

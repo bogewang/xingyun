@@ -152,6 +152,11 @@
           </a-space>
         </template>
 
+        <template #productCode_default="{ row }">
+          <a-tag v-if="row.quoteUnmatched" color="error">未匹配</a-tag>
+          <span v-else>{{ row.productCode }}</span>
+        </template>
+
         <!-- 商品名称 列自定义内容 -->
         <template #inquiryProduct_default="{ row }">
           <span :class="formatInquiryProduct(row.inquiryProduct).className">
@@ -347,6 +352,7 @@
     getSheetLineAmount,
   } from '@/utils/sheetAmountInput';
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
+  import { markQuoteProductMismatch } from '@/utils/quoteProductMismatch';
   import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import { requestUserSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
@@ -416,7 +422,12 @@
             width: 140,
             slots: { default: 'operation_default' },
           },
-          { field: 'productCode', title: '商品编号', width: 120 },
+          {
+            field: 'productCode',
+            title: '商品编号',
+            width: 120,
+            slots: { default: 'productCode_default' },
+          },
           {
             field: 'productName',
             title: '商品名称',
@@ -654,6 +665,7 @@
           isFixed: false,
           editingProduct: false,
           productQuery: '',
+          quoteUnmatched: false,
           products: [],
           productOptions: [],
           activeProductIndex: -1,
@@ -1040,6 +1052,7 @@
             this.$emit('confirm');
             this.goQueryPage();
           })
+          .catch((e) => markQuoteProductMismatch(e, this.tableData))
           .finally(() => {
             this.loading = false;
           });

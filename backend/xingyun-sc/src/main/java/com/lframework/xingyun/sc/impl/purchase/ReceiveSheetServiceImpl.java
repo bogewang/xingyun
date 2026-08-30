@@ -30,6 +30,7 @@ import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductUnit;
 import com.lframework.xingyun.basedata.entity.StoreCenter;
 import com.lframework.xingyun.basedata.entity.Supplier;
+import com.lframework.xingyun.basedata.bo.quote.QuoteProductBo;
 import com.lframework.xingyun.basedata.enums.ManageType;
 import com.lframework.xingyun.basedata.enums.SettleType;
 import com.lframework.xingyun.basedata.service.product.ProductLatestPriceCacheService;
@@ -59,6 +60,7 @@ import com.lframework.xingyun.sc.service.stock.ProductStockPendingCostService;
 import com.lframework.xingyun.sc.service.stock.ProductStockLogService;
 import com.lframework.xingyun.sc.service.stock.ProductStockService;
 import com.lframework.xingyun.sc.vo.purchase.receive.*;
+import com.lframework.xingyun.basedata.vo.quote.QueryQuoteProductVo;
 import com.lframework.xingyun.sc.vo.stock.AddProductStockVo;
 import com.lframework.xingyun.sc.vo.stock.SubProductStockVo;
 import org.apache.commons.collections4.CollectionUtils;
@@ -258,6 +260,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     @Override
     public String create(CreateReceiveSheetVo vo) {
 
+        validateQuoteProductCoverage(vo);
         productService.assertAvailable(vo.getProducts().stream()
                 .map(ReceiveProductVo::getProductId).collect(Collectors.toList()));
         supplierService.assertAvailable(vo.getSupplierId());
@@ -306,6 +309,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
                 && sheet.getStatus() != ReceiveSheetStatus.APPROVE_REFUSE) {
             throw new DefaultClientException("采购收货单无法修改！");
         }
+
+        validateQuoteProductCoverage(vo);
 
         List<ReceiveSheetDetail> oldDetails = receiveSheetDetailService.getBySheetId(sheet.getId());
         boolean stockSynced = hasStockSynced(sheet.getId());
@@ -627,7 +632,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     }
 
     private void create(ReceiveSheet sheet, CreateReceiveSheetVo vo) {
-
         if (!StringUtil.isBlank(vo.getScId())) {
             StoreCenter sc = storeCenterService.findById(vo.getScId());
             if (sc == null) {
@@ -716,6 +720,52 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), actualTotalAmount));
         sheet.setDescription(StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(supplier));
+    }
+
+    /**
+     * 唯一报价模式下，校验采购入库明细均属于订单日期生效的报价单。
+     *
+     * @param vo 采购入库保存参数
+     */
+    private void validateQuoteProductCoverage(CreateReceiveSheetVo vo) {
+        if (!Boolean.TRUE.equals(saleOutSheetService.getPriceUniqueConfig())) {
+            return;
+        }
+
+        QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
+        quoteProductVo.setOrderDate(vo.getOrderDate());
+        validateQuoteProductCoverage(vo.getProducts(),
+                saleOutSheetService.queryQuoteProducts(quoteProductVo));
+    }
+
+    /**
+     * 校验采购入库商品与指定日期生效报价单的覆盖关系。
+     *
+     * @param products 采购入库商品
+     * @param quoteProducts 生效报价商品
+     */
+    static void validateQuoteProductCoverage(List<ReceiveProductVo> products,
+            List<QuoteProductBo> quoteProducts) {
+        if (CollectionUtil.isEmpty(quoteProducts)) {
+            throw new DefaultClientException("当前订单日期不存在已启用报价单！");
+        }
+
+        Set<String> quoteSheetIds = quoteProducts.stream().map(QuoteProductBo::getQuoteSheetId)
+                .filter(StringUtil::isNotBlank).collect(Collectors.toSet());
+        if (quoteSheetIds.size() != 1) {
+            throw new DefaultClientException("当前订单日期存在多个已启用报价单！");
+        }
+
+        Set<String> quoteProductIds = quoteProducts.stream().map(QuoteProductBo::getProductId)
+                .collect(Collectors.toSet());
+        for (int index = 0; index < products.size(); index++) {
+            ReceiveProductVo product = products.get(index);
+            if (!quoteProductIds.contains(product.getProductId())) {
+                int seq = product.getSeq() == null ? index + 1 : product.getSeq();
+                throw new DefaultClientException(
+                        "第" + seq + "行商品不在当前生效报价单中！");
+            }
+        }
     }
 
     private ProductUnit resolveUnit(Product product, String unitId, String unitName) {
