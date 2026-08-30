@@ -44,20 +44,25 @@
         /></template>
       </vxe-grid>
     </page-wrapper>
+    <!-- 查看窗口 -->
+    <detail :id="id" ref="viewDialog" />
   </div>
 </template>
 <script>
   import { defineComponent } from 'vue';
   import * as api from '@/api/base-data/quote';
+  import Detail from './detail.vue';
   import { buildSortPageVo } from '@/utils/utils';
   import { createConfirm, createSuccess } from '@/hooks/web/msg';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
 
   export default defineComponent({
     name: 'QuoteSheet',
+    components: { Detail },
     mixins: [multiplePageMix],
     data() {
       return {
+        id: '',
         searchForm: { name: '', status: 'ENABLED' },
         toolbarConfig: { slots: { buttons: 'toolbar_buttons' } },
         columns: [
@@ -91,7 +96,8 @@
         this.openChildPage(id ? `/base-data/quote/modify/${id}` : '/base-data/quote/add');
       },
       detail(id) {
-        this.$router.push({ name: 'QuoteSheetDetail', params: { id } });
+        this.id = id;
+        this.$nextTick(() => this.$refs.viewDialog.openDialog());
       },
       changeStatus(row) {
         const fn = row.status === 'ENABLED' ? api.disable : api.enable;

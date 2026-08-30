@@ -3,6 +3,16 @@ import { readFileSync } from 'node:fs';
 import { buildQuoteSheetPayload, resolveQuoteProductUnitName } from './quoteSheet';
 
 describe('报价单编辑数据', () => {
+  it('列表页查看报价单时应打开详情弹窗', () => {
+    const source = readFileSync(new URL('./index.vue', import.meta.url), 'utf-8');
+    const detailSource = readFileSync(new URL('./detail.vue', import.meta.url), 'utf-8');
+
+    expect(source).toContain('<detail :id="id" ref="viewDialog" />');
+    expect(source).toContain('this.$refs.viewDialog.openDialog()');
+    expect(detailSource).toContain('<a-modal');
+    expect(detailSource).toContain('openDialog()');
+  });
+
   it('详情商品应将单位 ID 转为单位名称', () => {
     expect(resolveQuoteProductUnitName('unit-1', { 'unit-1': '箱' })).toBe('箱');
     expect(resolveQuoteProductUnitName('历史单位', { 'unit-1': '箱' })).toBe('历史单位');
