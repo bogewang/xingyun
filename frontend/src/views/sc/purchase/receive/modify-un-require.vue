@@ -90,6 +90,7 @@
               biz-type="purchase"
               mode="unrequire"
               :sc-id="formData.scId"
+              :order-date="formData.orderDate"
               @select="handleSelectProduct"
               @add-product="addProduct"
               @open-add-product-page="openChildPage('/product/info/add')"
@@ -191,6 +192,7 @@
         ref="batchAddProductDialog"
         :show-inquiry-product="true"
         :sc-id="formData.scId"
+        :order-date="formData.orderDate"
         @confirm="batchAddProduct"
       />
       <a-modal

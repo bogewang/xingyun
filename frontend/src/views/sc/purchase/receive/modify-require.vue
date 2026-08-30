@@ -167,6 +167,7 @@
             biz-type="purchase"
             mode="require"
             :sc-id="formData.sc.id"
+            :order-date="formData.orderDate"
             :is-fixed="row.isFixed"
             @select="handleSelectProduct"
             @add-product="addProduct"
@@ -266,6 +267,7 @@
         ref="batchAddProductDialog"
         :show-inquiry-product="true"
         :sc-id="formData.sc.id"
+        :order-date="formData.orderDate"
         @confirm="batchAddProduct"
       />
       <a-modal

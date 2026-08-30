@@ -15,14 +15,12 @@ function readSource(relativePath: string) {
 describe('询价商品前端契约', () => {
   it('商品联想和共享批量列表实际使用销售商品端点', () => {
     const apiSource = readSource('api/sc/sale/order/index.ts');
-    const receiveSource = readSource('views/sc/purchase/receive/add-un-require.vue');
-    const saleOutSource = readSource('views/sc/sale/out/add-un-require.vue');
+    const inlineProductSelectSource = readSource('views/sc/shared/inline-product-select.vue');
     const sharedBatchSource = readSource('views/sc/shared/batch-add-product.vue');
 
     expect(apiSource).toContain("baseUrl + '/product/search'");
     expect(apiSource).toContain("baseUrl + '/product/list'");
-    expect(receiveSource).toContain('saleApi.searchSaleProducts');
-    expect(saleOutSource).toContain('saleApi.searchSaleProducts');
+    expect(inlineProductSelectSource).toContain('saleApi.searchSaleProducts');
     expect(sharedBatchSource).toContain('saleApi.querySaleProductList');
   });
 
@@ -65,6 +63,21 @@ describe('询价商品前端契约', () => {
     });
     disabledCallers.forEach((source) => {
       expect(source).not.toContain(':show-inquiry-product="true"');
+    });
+  });
+
+  it('采购入库新增和修改按单据日期筛选报价商品', () => {
+    const receiveCallers = [
+      'views/sc/purchase/receive/add-require.vue',
+      'views/sc/purchase/receive/add-un-require.vue',
+      'views/sc/purchase/receive/modify-require.vue',
+      'views/sc/purchase/receive/modify-un-require.vue',
+    ].map(readSource);
+
+    receiveCallers.forEach((source) => {
+      expect(source).toContain('<InlineProductSelect');
+      expect(source).toContain('<batch-add-product');
+      expect(source.match(/:order-date="formData\.orderDate"/g)).toHaveLength(2);
     });
   });
 
