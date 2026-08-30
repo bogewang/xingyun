@@ -19,12 +19,12 @@
           <j-form bordered>
             <j-form-item label="名称" :span="6">{{ form.name }}</j-form-item>
             <j-form-item label="生效日期" :span="6"
-              >{{ form.startDate }} 至 {{ form.endDate }}</j-form-item
-            >
-            <j-form-item label="状态" :span="6">{{
-              form.status === 'ENABLED' ? '启用' : '停用'
-            }}</j-form-item>
-            <j-form-item label="备注" :span="24">{{ form.description }}</j-form-item>
+              >{{ form.startDate }} 至 {{ form.endDate }}
+            </j-form-item>
+            <j-form-item label="状态" :span="6"
+              >{{ form.status === 'ENABLED' ? '启用' : '停用' }}
+            </j-form-item>
+            <j-form-item label="备注" :span="12">{{ form.description }}</j-form-item>
           </j-form>
         </j-border>
         <div class="quote-sheet-detail-grid-wrap">
