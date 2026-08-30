@@ -4,6 +4,7 @@
       ref="importer"
       :download-template-url="downloadTemplate"
       :upload-url="upload"
+      :form-data="{ orderDate }"
       @confirm="(e) => $emit('confirm', e)"
     />
   </div>
@@ -17,6 +18,12 @@
   export default defineComponent({
     name: 'SaleOrderImporter',
     components: { ExcelImporter },
+    props: {
+      orderDate: {
+        type: String,
+        required: true,
+      },
+    },
     data() {
       return {};
     },

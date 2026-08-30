@@ -62,9 +62,7 @@
             >
             <a-button :icon="h(NumberOutlined)" @click="batchInputOrderNum">批量录入数量</a-button>
             <a-button :icon="h(EditOutlined)" @click="batchInputTaxPrice">批量调整价格</a-button>
-            <a-button :icon="h(CloudUploadOutlined)" @click="$refs.importer.openDialog()"
-              >导入Excel
-            </a-button>
+            <a-button :icon="h(CloudUploadOutlined)" @click="openImportDialog">导入Excel</a-button>
           </a-space>
         </template>
 
@@ -168,7 +166,11 @@
         :sc-id="formData.scId"
         @confirm="batchAddProduct"
       />
-      <sale-order-importer ref="importer" @confirm="handleImportConfirm" />
+      <sale-order-importer
+        ref="importer"
+        :order-date="formData.orderDate"
+        @confirm="handleImportConfirm"
+      />
       <div style="text-align: center; background-color: #ffffff; padding: 8px 0">
         <a-space>
           <a-button
@@ -496,6 +498,14 @@
           return;
         }
         this.$refs.batchAddProductDialog.openDialog();
+      },
+      // 打开导入弹窗
+      openImportDialog() {
+        if (isEmpty(this.formData.orderDate)) {
+          createError('请先选择订单日期！');
+          return;
+        }
+        this.$refs.importer.openDialog();
       },
       taxPriceInput(row, value) {
         if (row.oriPrice !== 0) {

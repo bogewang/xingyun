@@ -809,12 +809,13 @@ public class SaleOutSheetController extends DefaultBaseController {
     @ApiOperation("导入")
     @HasPermission({ "sale:out:add" })
     @PostMapping("/import")
-    public InvokeResult<List<SaleOutProductVo>> importExcel(@NotNull(message = "请上传文件") MultipartFile file) {
+    public InvokeResult<List<SaleOutProductVo>> importExcel(@NotNull(message = "请上传文件") MultipartFile file,
+                                                             @RequestParam @NotNull(message = "请先选择订单日期！") LocalDate orderDate) {
         try {
 
             List<SaleOutSheetImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(),
                     SaleOutSheetImportModel.class);
-            List<SaleOutProductVo> data = saleOutSheetService.checkImport(list);
+            List<SaleOutProductVo> data = saleOutSheetService.checkImport(list, orderDate);
 
             return InvokeResultBuilder.success(data);
         } catch (Exception e) {

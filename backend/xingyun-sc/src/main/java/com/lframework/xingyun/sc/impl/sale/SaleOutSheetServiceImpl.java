@@ -2768,7 +2768,17 @@ public class SaleOutSheetServiceImpl extends
     }
 
     @Override
-    public List<SaleOutProductVo> checkImport(List<SaleOutSheetImportModel> list) {
+    /**
+     * 校验销售出库导入数据，并按订单日期限定可导入商品。
+     *
+     * @param list 导入数据
+     * @param orderDate 订单日期
+     * @return 校验后的销售出库商品
+     */
+    public List<SaleOutProductVo> checkImport(List<SaleOutSheetImportModel> list, LocalDate orderDate) {
+        if (orderDate == null) {
+            throw new DefaultClientException("请先选择订单日期！");
+        }
         if (CollectionUtils.isEmpty(list)) {
             return Lists.newArrayList();
         }
@@ -2776,7 +2786,7 @@ public class SaleOutSheetServiceImpl extends
         handleSeq(list);
 
         // 匹配编号
-        List<String> errors = checkImportData(list);
+        List<String> errors = checkImportData(list, orderDate);
         Assert.isTrue(CollectionUtils.isEmpty(errors), StringUtils.join(errors, ";\r\n"));
 
         return list.stream()
@@ -2864,7 +2874,7 @@ public class SaleOutSheetServiceImpl extends
         List<SaleOutSheetImportModel> collect = list.stream()
                 .map(item -> BeanUtil.copyProperties(item, SaleOutSheetImportModel.class))
                 .collect(Collectors.toList());
-        List<SaleOutProductVo> checked = checkImport(collect);
+        List<SaleOutProductVo> checked = checkImportData(collect);
         List<SaleOutProductVo> products = checked.stream()
                 .map(item -> BeanUtil.copyProperties(item, SaleOutProductVo.class))
                 .collect(Collectors.toList());
@@ -2898,13 +2908,44 @@ public class SaleOutSheetServiceImpl extends
         }
     }
 
-    private List<String> checkImportData(List<SaleOutSheetImportModel> list) {
+    /**
+     * 校验查询页面导入的商品，不限定询价表日期。
+     *
+     * @param list 导入数据
+     * @return 校验错误信息
+     */
+    private List<SaleOutProductVo> checkImportData(List<SaleOutSheetImportModel> list) {
+        List<String> errors = checkImportData(list, null);
+        Assert.isTrue(CollectionUtils.isEmpty(errors), StringUtils.join(errors, ";\r\n"));
+        return list.stream()
+                .map(item -> BeanUtil.copyProperties(item, SaleOutProductVo.class))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 按订单日期对应的生效询价表校验导入商品。
+     *
+     * @param list 导入数据
+     * @param orderDate 订单日期；为空时不限制询价表
+     * @return 校验错误信息
+     */
+    private List<String> checkImportData(List<SaleOutSheetImportModel> list, LocalDate orderDate) {
         List<String> productNames = list.stream().map(SaleOutSheetImportModel::getProductName)
                 .filter(StringUtils::isNotBlank)
                 .map(StringUtils::trim)
                 .distinct()
                 .collect(Collectors.toList());
         List<Product> products = productService.selectByProductName(productNames);
+        if (orderDate != null) {
+            QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
+            quoteProductVo.setOrderDate(orderDate);
+            Set<String> quoteProductIds = queryQuoteProducts(quoteProductVo).stream()
+                    .map(QuoteProductBo::getProductId)
+                    .collect(Collectors.toSet());
+            products = products.stream()
+                    .filter(item -> quoteProductIds.contains(item.getId()))
+                    .collect(Collectors.toList());
+        }
         Map<String, List<Product>> nameUnitMap = new HashMap<>();
         for (Product product : products) {
             productUnitService.getAvailableByProductId(product.getId())

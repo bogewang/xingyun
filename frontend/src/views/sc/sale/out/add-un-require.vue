@@ -59,7 +59,7 @@
               </a-button>
               <a-button :icon="h(NumberOutlined)" @click="batchInputOutNum">批量录入数量</a-button>
               <a-button :icon="h(EditOutlined)" @click="batchInputTaxPrice">批量调整价格</a-button>
-              <a-button :icon="h(CloudUploadOutlined)" @click="$refs.importer.openDialog()"
+              <a-button :icon="h(CloudUploadOutlined)" @click="openImportDialog"
                 >导入Excel
               </a-button>
             </a-space>
@@ -229,6 +229,7 @@
       />
       <sale-out-sheet-importer
         ref="importer"
+        :order-date="formData.orderDate"
         :get-container="getImporterContainer"
         local-container
         hide-on-deactivated
@@ -714,6 +715,14 @@
       },
       openBatchAddProductDialog() {
         this.$refs.batchAddProductDialog.openDialog();
+      },
+      // 打开导入弹窗
+      openImportDialog() {
+        if (isEmpty(this.formData.orderDate)) {
+          createError('请先选择订单日期！');
+          return;
+        }
+        this.$refs.importer.openDialog();
       },
       filterOption(input, option) {
         return filterSelectOption(input, option);

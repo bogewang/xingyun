@@ -5,6 +5,7 @@
       :tip-msg="'Excel 可填写“验收数量”；“验收金额”由系统按验收数量×单价自动计算，不能手工覆盖。'"
       :download-template-url="downloadTemplate"
       :upload-url="upload"
+      :form-data="{ orderDate }"
       :get-container="getContainer"
       :local-container="localContainer"
       :hide-on-deactivated="hideOnDeactivated"
@@ -22,6 +23,10 @@
     name: 'SaleOutSheetImporter',
     components: { ExcelImporter },
     props: {
+      orderDate: {
+        type: String,
+        required: true,
+      },
       getContainer: {
         type: [Function, Boolean],
         default: undefined,

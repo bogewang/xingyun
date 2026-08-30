@@ -44,6 +44,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.time.LocalDate;
 import java.util.stream.Collectors;
 
 /**
@@ -390,12 +391,13 @@ public class SaleOrderController extends DefaultBaseController {
     @ApiOperation("导入")
     @HasPermission({ "sale:order:import" })
     @PostMapping("/import")
-    public InvokeResult<List<SaleProductVo>> importExcel(@NotNull(message = "请上传文件") MultipartFile file) {
+    public InvokeResult<List<SaleProductVo>> importExcel(@NotNull(message = "请上传文件") MultipartFile file,
+                                                          @RequestParam @NotNull(message = "请先选择订单日期！") LocalDate orderDate) {
         try {
 
             List<SaleOrderImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(),
                     SaleOrderImportModel.class);
-            List<SaleProductVo> data = saleOrderService.checkImport(list);
+            List<SaleProductVo> data = saleOrderService.checkImport(list, orderDate);
 
             return InvokeResultBuilder.success(data);
         } catch (Exception e) {

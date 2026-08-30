@@ -283,7 +283,14 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
       LocalDateTime endTime,
       SettleStatus settleStatus);
 
-  List<SaleOutProductVo> checkImport(List<SaleOutSheetImportModel> list);
+  /**
+   * 校验销售出库导入数据，并按订单日期限定可导入的询价商品。
+   *
+   * @param list 导入数据
+   * @param orderDate 订单日期
+   * @return 校验后的销售出库商品
+   */
+  List<SaleOutProductVo> checkImport(List<SaleOutSheetImportModel> list, LocalDate orderDate);
 
   List<PrintSaleTagBo> tagPrint(QuerySaleOutSheetVo vo);
 

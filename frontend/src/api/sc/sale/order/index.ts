@@ -115,7 +115,7 @@ export function downloadImportTemplate(): Promise<void> {
   );
 }
 
-export function importExcel(data: { id: string; file: Blob }): Promise<void> {
+export function importExcel(data: { file: Blob; orderDate: string }): Promise<void> {
   return defHttp.post<void>(
     {
       url: baseUrl + '/import',
