@@ -60,6 +60,14 @@ describe('报价单编辑数据', () => {
     expect(source).toContain('api.disable');
   });
 
+  it('编辑页保存或关闭时必须通过多标签页机制关闭当前标签', () => {
+    const source = readFileSync(new URL('./modify.vue', import.meta.url), 'utf-8');
+
+    expect(source).toContain("import { multiplePageMix } from '@/mixins/multiplePageMix';");
+    expect(source).toContain('mixins: [multiplePageMix]');
+    expect(source).toContain('closeDialog() {\n        this.closeCurrentPage();');
+  });
+
   it('新增和编辑页使用日期范围组件并映射开始、结束日期', () => {
     for (const file of ['./add.vue', './modify.vue']) {
       const source = readFileSync(new URL(file, import.meta.url), 'utf-8');

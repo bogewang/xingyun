@@ -15,11 +15,7 @@
             />
           </j-form-item>
           <j-form-item label="状态">
-            <a-select
-              :value="formData.status"
-              style="width: 100%"
-              @change="changeStatus"
-            >
+            <a-select :value="formData.status" style="width: 100%" @change="changeStatus">
               <a-select-option value="ENABLED">启用</a-select-option>
               <a-select-option value="DISABLED">停用</a-select-option>
             </a-select>
@@ -122,6 +118,7 @@
   import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
   import { isEmpty, isFloatGeZero, uuid } from '@/utils/utils';
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { buildQuoteSheetPayload } from './quoteSheet';
   import InlineProductSelect from '@/views/sc/shared/inline-product-select.vue';
 
@@ -130,6 +127,7 @@
     components: {
       InlineProductSelect,
     },
+    mixins: [multiplePageMix],
     setup() {
       return {
         h,
@@ -399,7 +397,7 @@
         return products;
       },
       closeDialog() {
-        this.$router.back();
+        this.closeCurrentPage();
       },
     },
   });
