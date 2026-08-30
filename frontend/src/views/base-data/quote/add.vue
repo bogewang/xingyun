@@ -113,6 +113,7 @@
     PlusOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/base-data/quote';
+  import * as unitApi from '@/api/base-data/unit';
   import { createConfirm, createError, createSuccess } from '@/hooks/web/msg';
   import { isEmpty, isFloatGeZero, uuid } from '@/utils/utils';
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
@@ -137,6 +138,8 @@
       return {
         // 是否显示加载框
         loading: false,
+        // 计量单位 ID 到名称的映射，用于展示商品主单位。
+        unitNameMap: {},
         // 表单数据
         formData: { name: '', startDate: '', endDate: '', description: '' },
         // 工具栏配置
@@ -182,7 +185,26 @@
         tableData: [],
       };
     },
+    created() {
+      this.loadUnitNames();
+    },
     methods: {
+      // 加载计量单位名称，避免报价单商品行展示单位 ID。
+      loadUnitNames() {
+        unitApi.query({ pageIndex: 1, pageSize: 1000 }).then((data) => {
+          this.unitNameMap = (data.datas || []).reduce((result, item) => {
+            result[item.id] = item.name;
+            return result;
+          }, {});
+          this.tableData.forEach((item) => {
+            item.unit = this.getUnitName(item.unit);
+          });
+        });
+      },
+      // 获取单位显示名称；兼容历史数据中已保存的单位名称。
+      getUnitName(unit) {
+        return this.unitNameMap[unit] || unit;
+      },
       emptyProduct() {
         return {
           id: uuid(),
@@ -244,7 +266,7 @@
           name: product.name,
           skuCode: product.skuCode,
           spec: product.spec,
-          unit: product.unit,
+          unit: this.getUnitName(product.unit),
           editingProduct: false,
           productQuery: '',
         });
