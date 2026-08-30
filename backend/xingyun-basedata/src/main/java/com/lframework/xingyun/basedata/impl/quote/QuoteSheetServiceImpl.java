@@ -67,9 +67,6 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     public void update(UpdateQuoteSheetVo vo) {
         List<QuoteSheet> lockedSheets = lockTenantQuoteSheets();
         QuoteSheet existed = requireLockedSheet(vo.getId(), lockedSheets);
-        if (quoteSheetReferenceCheckers.stream().anyMatch(checker -> checker.hasReference(vo.getId()))) {
-            throw new DefaultClientException("报价单已被业务单据使用，不能修改！");
-        }
         validateSave(vo, vo.getId(), lockedSheets);
         QuoteSheet sheet = quoteSheetConverter.toEntity(vo);
         sheet.setId(existed.getId());

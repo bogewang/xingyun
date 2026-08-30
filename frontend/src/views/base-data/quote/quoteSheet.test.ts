@@ -28,4 +28,14 @@ describe('报价单编辑数据', () => {
       products: [{ productId: 'p1', salePrice: '12.50' }],
     });
   });
+
+  it('编辑页必须通过下拉框提供报价单状态切换入口', () => {
+    const source = readFileSync(new URL('./modify.vue', import.meta.url), 'utf-8');
+
+    expect(source).toContain('@change="changeStatus"');
+    expect(source).toContain('<a-select-option value="ENABLED">启用</a-select-option>');
+    expect(source).toContain('<a-select-option value="DISABLED">停用</a-select-option>');
+    expect(source).toContain('api.enable');
+    expect(source).toContain('api.disable');
+  });
 });

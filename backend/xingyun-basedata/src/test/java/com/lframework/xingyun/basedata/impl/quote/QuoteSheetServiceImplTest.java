@@ -47,6 +47,8 @@ public class QuoteSheetServiceImplTest {
   @Test(expectedExceptions=DefaultClientException.class,expectedExceptionsMessageRegExp=".*开始日期不能晚于.*") public void shouldRejectInvalidDatesBeforeEnabling() { QuoteSheetServiceImpl.assertBasicSheetData(date("2026-08-31"),date("2026-08-01"),Collections.singletonList("product-1")); }
   /** 有效报价 SQL 必须排除停用商品。 */
   @Test public void shouldExcludeDisabledProductsFromActiveQuoteQuery() throws Exception { String sql=new String(Files.readAllBytes(Paths.get("src/main/resources/mappers/quote/QuoteSheetMapper.xml")),StandardCharsets.UTF_8); Assert.assertTrue(sql.contains("p.available = TRUE")); }
+  /** 已被引用的报价单仍允许修改，删除限制由删除流程单独处理。 */
+  @Test public void shouldAllowUpdatingReferencedQuoteSheet() throws Exception { String source=new String(Files.readAllBytes(Paths.get("src/main/java/com/lframework/xingyun/basedata/impl/quote/QuoteSheetServiceImpl.java")),StandardCharsets.UTF_8); Assert.assertFalse(source.contains("报价单已被业务单据使用，不能修改！")); }
   /** 所有写流程共用的入口先锁定当前租户报价单范围。 */
   @Test public void shouldLockTenantRangeBeforeLocatingQuoteSheet() throws Exception { QuoteSheetServiceImpl service=new QuoteSheetServiceImpl(); QuoteSheetMapper mapper=Mockito.mock(QuoteSheetMapper.class); QuoteSheet sheet=sheet("quote-1","2026-08-01","2026-08-31"); Mockito.when(mapper.selectByTenantIdForUpdate(Mockito.<String>any())).thenReturn(Collections.singletonList(sheet)); setBaseMapper(service,mapper); Assert.assertEquals(QuoteSheetServiceImpl.requireLockedSheet("quote-1",service.lockTenantQuoteSheets()),sheet); Mockito.verify(mapper).selectByTenantIdForUpdate(Mockito.<String>any()); }
   /** 批量持久化必须把租户 ID 传入 Mapper 明细实体。 */

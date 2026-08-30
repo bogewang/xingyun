@@ -21,8 +21,14 @@
             />
           </j-form-item>
           <j-form-item label="状态">
-            <span v-if="formData.status === 'ENABLED'" style="color: #52c41a">启用</span>
-            <span v-else style="color: #303133">停用</span>
+            <a-select
+              :value="formData.status"
+              style="width: 100px"
+              @change="changeStatus"
+            >
+              <a-select-option value="ENABLED">启用</a-select-option>
+              <a-select-option value="DISABLED">停用</a-select-option>
+            </a-select>
           </j-form-item>
         </j-form>
       </j-border>
@@ -348,6 +354,24 @@
           .finally(() => {
             this.loading = false;
           });
+      },
+      // 切换报价单启用状态，启用时由后端复核报价周期和商品明细。
+      changeStatus(status) {
+        if (status === this.formData.status) return;
+        const enabled = status === 'ENABLED';
+        const text = enabled ? '启用' : '停用';
+        const request = enabled ? api.enable : api.disable;
+        createConfirm(`是否确定${text}该报价单？`).then(() => {
+          this.loading = true;
+          request(this.formData.id)
+            .then(() => {
+              this.formData.status = status;
+              createSuccess(`${text}成功！`);
+            })
+            .finally(() => {
+              this.loading = false;
+            });
+        });
       },
       validProducts() {
         // 未选择商品的空行不参与保存
