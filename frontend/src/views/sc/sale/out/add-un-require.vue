@@ -317,6 +317,7 @@
   import { buildUnrequiredSaleOutProducts } from './components/saleOutProductParams';
   import { syncConfirmAmount, sumConfirmFields } from './components/saleOutConfirm';
   import { isSaleOutStockEnough } from './components/saleOutStock';
+  import { getSelectedSaleOutPrice } from './saleOutPrice';
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
   import { calculateUnitPrice, calculateUnitStockNum } from '@/utils/productUnitConversion';
 
@@ -457,6 +458,7 @@
           },
         ],
         tableData: [],
+        useUniquePrice: false,
         customerOptions: [],
         customerOptionMap: {},
       };
@@ -518,6 +520,15 @@
 
         this.paidAmountDirty = false;
         this.tableData = [];
+        await this.loadUseUniquePrice();
+      },
+      /** 加载销售出库唯一售价配置。 */
+      async loadUseUniquePrice() {
+        try {
+          this.useUniquePrice = await api.getPriceUniqueConfig();
+        } catch (e) {
+          this.useUniquePrice = false;
+        }
       },
       emptyProduct() {
         return {
@@ -629,7 +640,7 @@
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
         const baseUnit = product.units?.find((item) => item.baseUnit);
-        const selectedPrice = product.latestSalePrice;
+        const selectedPrice = getSelectedSaleOutPrice(product, this.useUniquePrice);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           productRemark: product.remark,

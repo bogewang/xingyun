@@ -311,6 +311,7 @@
   import { buildRequiredSaleOutProducts } from './components/saleOutProductParams';
   import { syncConfirmAmount, sumConfirmFields } from './components/saleOutConfirm';
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
+  import { getSelectedSaleOutPrice } from './saleOutPrice';
 
   export default defineComponent({
     name: 'AddSaleOutSheetRequire',
@@ -459,6 +460,7 @@
           },
         ],
         tableData: [],
+        useUniquePrice: false,
         customerOptions: [],
         customerOptionMap: {},
         salerOptions: [],
@@ -511,9 +513,9 @@
         this.addProduct();
       },
       // 打开对话框 由父页面触发
-      openDialog() {
+      async openDialog() {
         // 初始化表单数据
-        this.initFormData();
+        await this.initFormData();
       },
       // 关闭对话框
       closeDialog() {
@@ -541,6 +543,15 @@
 
         this.paidAmountDirty = false;
         this.tableData = [];
+        await this.loadUseUniquePrice();
+      },
+      /** 加载销售出库唯一售价配置。 */
+      async loadUseUniquePrice() {
+        try {
+          this.useUniquePrice = await api.getPriceUniqueConfig();
+        } catch (e) {
+          this.useUniquePrice = false;
+        }
       },
       emptyProduct() {
         return {
@@ -606,12 +617,13 @@
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
+        const selectedPrice = getSelectedSaleOutPrice(product, this.useUniquePrice);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           productRemark: product.remark,
           // 参考价=》商品的售价，价格=》最新价格
           oriPrice: product.salePrice,
-          taxPrice: product.latestSalePrice,
+          taxPrice: selectedPrice,
           editingProduct: false,
           productQuery: '',
         });
