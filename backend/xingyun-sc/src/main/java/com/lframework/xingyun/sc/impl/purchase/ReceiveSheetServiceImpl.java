@@ -690,6 +690,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             }
 
             detail.setProductId(productVo.getProductId());
+            detail.setSourceId(productVo.getSourceId());
             detail.setOrderNum(baseNum);
             detail.setUnitId(unit.getId());
             detail.setUnitName(unit.getUnitName());

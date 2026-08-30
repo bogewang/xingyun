@@ -27,6 +27,9 @@ public class QuoteSheetDetail extends BaseEntity implements BaseDto {
   /** 商品ID。 */
   private String productId;
 
+  /** 商品快照（JSON）。 */
+  private String productSnapshot;
+
   /** 销售单价。 */
   private BigDecimal salePrice;
 

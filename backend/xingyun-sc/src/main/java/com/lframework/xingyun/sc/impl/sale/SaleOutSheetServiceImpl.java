@@ -2383,11 +2383,15 @@ public class SaleOutSheetServiceImpl extends
         sheet.setOrderDate(vo.getOrderDate());
 
         Map<String, BigDecimal> quotePrices = Collections.emptyMap();
+        Map<String, String> quoteSourceIds = Collections.emptyMap();
         if (Boolean.TRUE.equals(getPriceUniqueConfig())) {
             QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
             quoteProductVo.setOrderDate(vo.getOrderDate());
-            quotePrices = resolveUniqueQuotePrices(sheet, vo.getProducts(),
-                    queryQuoteProducts(quoteProductVo));
+            List<QuoteProductBo> quoteProducts = queryQuoteProducts(quoteProductVo);
+            quotePrices = resolveUniqueQuotePrices(sheet, vo.getProducts(), quoteProducts);
+            quoteSourceIds = quoteProducts.stream().collect(Collectors.toMap(
+                    QuoteProductBo::getProductId, QuoteProductBo::getSourceId,
+                    (first, ignored) -> first));
         } else {
             sheet.setQuoteSheetId(null);
         }
@@ -2398,7 +2402,8 @@ public class SaleOutSheetServiceImpl extends
             Assert.notNull(product, "第" + productVo.getSeq() + "行商品不存在！");
 
             SaleOutSheetDetail detail = buildDetail(sheet, productVo, product, customer,
-                    quotePrices.get(productVo.getProductId()));
+                    quotePrices.get(productVo.getProductId()),
+                    quoteSourceIds.get(productVo.getProductId()));
 
             saleOutSheetDetailService.save(detail);
             updateProductPrice(product, detail);
@@ -2417,7 +2422,8 @@ public class SaleOutSheetServiceImpl extends
                                            SaleOutProductVo productVo,
                                            Product product,
                                            Customer customer,
-                                           BigDecimal quoteBasePrice) {
+                                           BigDecimal quoteBasePrice,
+                                           String quoteSourceId) {
         ProductUnit unit = resolveUnit(product, productVo.getUnitId(), productVo.getUnit());
         BigDecimal baseNum = NumberUtil.mul(productVo.getOrderNum(), unit.getConversionRate());
         BigDecimal price = resolveDetailPrice(productVo, product, unit, quoteBasePrice);
@@ -2427,6 +2433,7 @@ public class SaleOutSheetServiceImpl extends
         detail.setSheetId(sheet.getId());
 
         detail.setProductId(productVo.getProductId());
+        detail.setSourceId(quoteSourceId);
         detail.setOrderNum(baseNum);
         detail.setUnitId(unit.getId());
         detail.setUnitName(unit.getUnitName());

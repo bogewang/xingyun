@@ -38,6 +38,9 @@ public class SaleOutSheetDetail extends BaseEntity implements BaseDto {
    */
   private String productId;
 
+  /** 来源报价明细ID。 */
+  private String sourceId;
+
   /**
    * 出库数量(主单位数量)
    */

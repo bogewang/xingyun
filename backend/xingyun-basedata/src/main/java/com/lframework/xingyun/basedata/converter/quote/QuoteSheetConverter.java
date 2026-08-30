@@ -29,6 +29,7 @@ public interface QuoteSheetConverter {
   @Mapping(target = "quoteSheetId", source = "quoteSheetId")
   QuoteSheetDetail toDetail(QuoteSheetProductVo source, String quoteSheetId);
   /** 将报价明细转换为商品响应。 */
+  @Mapping(target = "sourceId", source = "id")
   QuoteProductBo toProductBo(QuoteSheetDetail source);
   /** 将商品基础展示字段和报价业务上下文转换为报价商品响应。 */
   @Mapping(target = "productId", source = "product.id")

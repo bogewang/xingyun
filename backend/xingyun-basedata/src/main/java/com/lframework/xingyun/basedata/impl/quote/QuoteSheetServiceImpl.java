@@ -5,6 +5,7 @@ import com.github.pagehelper.PageInfo;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.utils.IdUtil;
+import com.lframework.starter.web.core.utils.JsonUtil;
 import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
 import com.lframework.starter.web.core.utils.PageHelperUtil;
@@ -66,6 +67,9 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     public void update(UpdateQuoteSheetVo vo) {
         List<QuoteSheet> lockedSheets = lockTenantQuoteSheets();
         QuoteSheet existed = requireLockedSheet(vo.getId(), lockedSheets);
+        if (quoteSheetReferenceCheckers.stream().anyMatch(checker -> checker.hasReference(vo.getId()))) {
+            throw new DefaultClientException("报价单已被业务单据使用，不能修改！");
+        }
         validateSave(vo, vo.getId(), lockedSheets);
         QuoteSheet sheet = quoteSheetConverter.toEntity(vo);
         sheet.setId(existed.getId());
@@ -121,7 +125,15 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
         QuoteSheet sheet = requireSheet(id);
         List<QuoteSheetDetail> details = quoteSheetDetailMapper.selectList(Wrappers.lambdaQuery(QuoteSheetDetail.class).eq(QuoteSheetDetail::getQuoteSheetId, id));
         Map<String, Product> products = details.isEmpty() ? Collections.emptyMap() : productMapper.selectList(Wrappers.lambdaQuery(Product.class).in(Product::getId, details.stream().map(QuoteSheetDetail::getProductId).collect(Collectors.toSet()))).stream().collect(Collectors.toMap(Product::getId, p -> p));
-        List<QuoteProductBo> result = details.stream().map(detail -> quoteSheetConverter.toProductBo(products.get(detail.getProductId()), detail.getSalePrice(), detail.getQuoteSheetId())).collect(Collectors.toList());
+        List<QuoteProductBo> result = details.stream().map(detail -> {
+            Product product = StringUtil.isBlank(detail.getProductSnapshot())
+                    ? products.get(detail.getProductId())
+                    : JsonUtil.parseObject(detail.getProductSnapshot(), Product.class);
+            QuoteProductBo productBo = quoteSheetConverter.toProductBo(product,
+                    detail.getSalePrice(), detail.getQuoteSheetId());
+            productBo.setSourceId(detail.getId());
+            return productBo;
+        }).collect(Collectors.toList());
         GetQuoteSheetBo bo = quoteSheetConverter.toGetBo(sheet);
         bo.setProducts(result);
         return bo;
@@ -172,10 +184,19 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
      * 批量保存报价单明细。
      */
     void saveDetails(String quoteSheetId, String tenantId, List<QuoteSheetProductVo> products) {
+        Map<String, Product> productMap = productMapper.selectList(Wrappers.lambdaQuery(Product.class)
+                .in(Product::getId, products.stream().map(QuoteSheetProductVo::getProductId)
+                        .collect(Collectors.toSet())))
+                .stream().collect(Collectors.toMap(Product::getId, product -> product));
         List<QuoteSheetDetail> details = products.stream().map(p -> {
+            Product product = productMap.get(p.getProductId());
+            if (product == null) {
+                throw new DefaultClientException("商品不存在！");
+            }
             QuoteSheetDetail d = quoteSheetConverter.toDetail(p, quoteSheetId);
             d.setId(IdUtil.getId());
             d.setTenantId(tenantId);
+            d.setProductSnapshot(JsonUtil.toJsonString(product));
             return d;
         }).collect(Collectors.toList());
         quoteSheetDetailMapper.batchInsert(details);

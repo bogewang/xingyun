@@ -6,6 +6,10 @@ import com.lframework.xingyun.basedata.enums.quote.QuoteSheetStatus;
 import com.lframework.xingyun.basedata.vo.quote.QuoteSheetProductVo;
 import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverter;
 import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverterImpl;
+import com.lframework.xingyun.basedata.entity.Product;
+import com.lframework.xingyun.basedata.mappers.ProductMapper;
+import com.lframework.starter.web.core.utils.ApplicationUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lframework.xingyun.basedata.mappers.quote.QuoteSheetDetailMapper;
 import com.lframework.xingyun.basedata.mappers.quote.QuoteSheetMapper;
 import java.time.LocalDate;
@@ -16,6 +20,7 @@ import java.util.*;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.support.StaticApplicationContext;
 import org.mockito.Mockito;
 import org.mockito.MockedStatic;
 import java.lang.reflect.Field;
@@ -46,16 +51,24 @@ public class QuoteSheetServiceImplTest {
   @Test public void shouldLockTenantRangeBeforeLocatingQuoteSheet() throws Exception { QuoteSheetServiceImpl service=new QuoteSheetServiceImpl(); QuoteSheetMapper mapper=Mockito.mock(QuoteSheetMapper.class); QuoteSheet sheet=sheet("quote-1","2026-08-01","2026-08-31"); Mockito.when(mapper.selectByTenantIdForUpdate(Mockito.<String>any())).thenReturn(Collections.singletonList(sheet)); setBaseMapper(service,mapper); Assert.assertEquals(QuoteSheetServiceImpl.requireLockedSheet("quote-1",service.lockTenantQuoteSheets()),sheet); Mockito.verify(mapper).selectByTenantIdForUpdate(Mockito.<String>any()); }
   /** 批量持久化必须把租户 ID 传入 Mapper 明细实体。 */
   @Test public void shouldPassTenantIdToBatchInsertMapper() throws Exception {
+    StaticApplicationContext applicationContext=new StaticApplicationContext();
+    applicationContext.getBeanFactory().registerSingleton("objectMapper",new ObjectMapper());
+    new ApplicationUtil().setApplicationContext(applicationContext);
     QuoteSheetServiceImpl service=new QuoteSheetServiceImpl();
     QuoteSheetDetailMapper mapper=Mockito.mock(QuoteSheetDetailMapper.class);
+    ProductMapper productMapper=Mockito.mock(ProductMapper.class);
     AtomicReference<List<com.lframework.xingyun.basedata.entity.quote.QuoteSheetDetail>> detailsRef=new AtomicReference<>();
     Mockito.doAnswer(invocation->{ detailsRef.set(invocation.getArgument(0)); return 1; }).when(mapper).batchInsert(Mockito.anyList());
     setField(service,"quoteSheetDetailMapper",mapper);
+    setField(service,"productMapper",productMapper);
     setField(service,"quoteSheetConverter",new QuoteSheetConverterImpl());
     QuoteSheetProductVo product=new QuoteSheetProductVo(); product.setProductId("product-1"); product.setSalePrice(BigDecimal.ONE);
+    Product savedProduct=new Product(); savedProduct.setId("product-1"); savedProduct.setName("测试商品");
+    Mockito.when(productMapper.selectList(Mockito.any())).thenReturn(Collections.singletonList(savedProduct));
     try (MockedStatic<com.lframework.starter.web.core.utils.IdUtil> idUtil=Mockito.mockStatic(com.lframework.starter.web.core.utils.IdUtil.class)) { idUtil.when(com.lframework.starter.web.core.utils.IdUtil::getId).thenReturn("detail-1"); service.saveDetails("quote-1","tenant-1",Collections.singletonList(product)); }
     Assert.assertNotNull(detailsRef.get());
     Assert.assertEquals(detailsRef.get().get(0).getTenantId(),"tenant-1");
+    Assert.assertNotNull(detailsRef.get().get(0).getProductSnapshot());
   }
   /** 构造报价单。 */
   private QuoteSheet sheet(String id,String start,String end) { QuoteSheet sheet=new QuoteSheet(); sheet.setId(id); sheet.setStartDate(date(start)); sheet.setEndDate(date(end)); return sheet; }

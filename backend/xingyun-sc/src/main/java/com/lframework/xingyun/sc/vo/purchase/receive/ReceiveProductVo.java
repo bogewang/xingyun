@@ -22,6 +22,12 @@ public class ReceiveProductVo implements BaseVo, Serializable {
   private String productId;
 
   /**
+   * 来源报价明细ID
+   */
+  @ApiModelProperty("来源报价明细ID")
+  private String sourceId;
+
+  /**
    * 商品编号
    */
   @ApiModelProperty("商品编号")
