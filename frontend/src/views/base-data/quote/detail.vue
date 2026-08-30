@@ -1,22 +1,30 @@
-<template
-  ><page-wrapper
-    ><j-border title="报价单详情" v-loading="loading"
-      ><j-form bordered
-        ><j-form-item label="名称" :span="6">{{ form.name }}</j-form-item
-        ><j-form-item label="生效日期" :span="6"
-          >{{ form.startDate }} 至 {{ form.endDate }}</j-form-item
-        ><j-form-item label="状态" :span="6">{{
-          form.status === 'ENABLED' ? '启用' : '停用'
-        }}</j-form-item
-        ><j-form-item label="备注" :span="24">{{ form.description }}</j-form-item></j-form
-      ></j-border
-    ><j-border title="报价商品"><vxe-grid :data="form.products" :columns="columns" /></j-border
-    ><div class="footer"><a-button @click="$router.back()">返回</a-button></div></page-wrapper
-  ></template
->
+<template>
+  <page-wrapper>
+    <j-border title="报价单详情" v-loading="loading">
+      <j-form bordered>
+        <j-form-item label="名称" :span="6">{{ form.name }} </j-form-item>
+        <j-form-item label="生效日期" :span="6"
+          >{{ form.startDate }} 至 {{ form.endDate }}
+        </j-form-item>
+        <j-form-item label="状态" :span="6"
+          >{{ form.status === 'ENABLED' ? '启用' : '停用' }}
+        </j-form-item>
+        <j-form-item label="备注" :span="8">{{ form.description }}</j-form-item>
+      </j-form>
+    </j-border>
+    <j-border title="报价商品">
+      <vxe-grid :data="form.products" :columns="columns" />
+    </j-border>
+    <div class="footer">
+      <a-button @click="$router.back()">返回</a-button>
+    </div>
+  </page-wrapper>
+</template>
 <script>
   import { defineComponent } from 'vue';
   import * as api from '@/api/base-data/quote';
+  import * as unitApi from '@/api/base-data/unit';
+  import { resolveQuoteProductUnitName } from './quoteSheet';
 
   export default defineComponent({
     name: 'QuoteSheetDetail',
@@ -36,17 +44,27 @@
     },
     created() {
       this.loading = true;
-      api
-        .get(this.$route.params.id)
-        .then((data) => {
-          this.form = data;
+      Promise.all([api.get(this.$route.params.id), unitApi.query({ pageIndex: 1, pageSize: 1000 })])
+        .then(([data, unitResult]) => {
+          const unitNameMap = (unitResult.datas || []).reduce((result, item) => {
+            result[item.id] = item.name;
+            return result;
+          }, {});
+          this.form = {
+            ...data,
+            products: (data.products || []).map((item) => ({
+              ...item,
+              unit: resolveQuoteProductUnitName(item.unit, unitNameMap),
+            })),
+          };
         })
         .finally(() => {
           this.loading = false;
         });
     },
-  });</script
-><style scoped>
+  });
+</script>
+<style scoped>
   .footer {
     padding: 16px;
     text-align: center;

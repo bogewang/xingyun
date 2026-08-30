@@ -24,3 +24,11 @@ export function buildQuoteSheetPayload(form: Record<string, any>) {
     })),
   };
 }
+
+/** 将报价商品中的单位 ID 转换为可读的单位名称，兼容历史名称数据。 */
+export function resolveQuoteProductUnitName(
+  unit: string | undefined,
+  unitNameMap: Record<string, string>,
+) {
+  return unitNameMap[unit || ''] || unit;
+}
