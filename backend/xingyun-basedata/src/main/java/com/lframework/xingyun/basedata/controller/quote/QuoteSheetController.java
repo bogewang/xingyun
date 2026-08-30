@@ -51,7 +51,8 @@ public class QuoteSheetController extends DefaultBaseController {
     @HasPermission("base-data:quote:add")
     public InvokeResult<List<QuoteSheetImportModel>> importExcel(@RequestParam MultipartFile file) {
         try {
-            return InvokeResultBuilder.success(EasyExcelUtils.syncReadModel(file.getInputStream(), QuoteSheetImportModel.class));
+            List<QuoteSheetImportModel> models = quoteSheetService.checkImport(EasyExcelUtils.syncReadModel(file.getInputStream(), QuoteSheetImportModel.class));
+            return InvokeResultBuilder.success(models);
         } catch (Exception e) {
             return fail(e);
         }

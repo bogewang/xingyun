@@ -52,11 +52,7 @@ import com.lframework.xingyun.sc.dto.sale.out.*;
 import com.lframework.xingyun.sc.dto.stock.ProductStockChangeDto;
 import com.lframework.xingyun.sc.entity.*;
 import com.lframework.xingyun.sc.enums.*;
-import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetDetailExportModel;
-import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
-import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetInvoiceDetailExportModel;
-import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
-import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetSalesExportHelper;
+import com.lframework.xingyun.sc.excel.sale.out.*;
 import com.lframework.xingyun.sc.mappers.ProductStockMapper;
 import com.lframework.xingyun.sc.mappers.ReceiveSheetDetailMapper;
 import com.lframework.xingyun.sc.mappers.SaleOutSheetMapper;
@@ -92,6 +88,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.lframework.xingyun.basedata.impl.quote.QuoteSheetServiceImpl.buildProductImportKey;
 import static com.lframework.xingyun.sc.impl.sale.SaleOutSheetMarketBuySummaryFormatter.formatUnit;
 
 @Service
@@ -2910,7 +2907,7 @@ public class SaleOutSheetServiceImpl extends
         List<Product> products = productService.selectByProductName(productNames);
         Map<String, List<Product>> nameUnitMap = new HashMap<>();
         for (Product product : products) {
-            productUnitService.getAvailableByProductId(product.getId()).stream()
+            productUnitService.getAvailableByProductId(product.getId())
                     .forEach(unit -> nameUnitMap.computeIfAbsent(
                             buildProductImportKey(product.getName(), unit.getUnitName()), key -> new ArrayList<>())
                             .add(product));
@@ -2973,11 +2970,6 @@ public class SaleOutSheetServiceImpl extends
             errors.add("第" + rowIndex + "行“验收数量”最多允许6位小数");
         }
         return errors;
-    }
-
-    private String buildProductImportKey(String productName, String unit) {
-        return StringUtils.trimToEmpty(productName) + StringPool.STR_SPLIT
-                + StringUtils.trimToEmpty(unit);
     }
 
     private Product matchImportProduct(SaleOutSheetImportModel data,

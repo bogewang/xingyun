@@ -2,7 +2,12 @@ package com.lframework.xingyun.basedata.impl.quote;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Lists;
+import com.lframework.starter.common.constants.StringPool;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
+import com.lframework.starter.common.utils.Assert;
+import com.lframework.starter.common.utils.BeanUtil;
+import com.lframework.starter.common.utils.NumberUtil;
 import com.lframework.starter.common.utils.StringUtil;
 import com.lframework.starter.web.core.utils.IdUtil;
 import com.lframework.starter.web.core.utils.JsonUtil;
@@ -14,17 +19,24 @@ import com.lframework.starter.web.core.components.tenant.TenantContextHolder;
 import com.lframework.xingyun.basedata.bo.quote.*;
 import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverter;
 import com.lframework.xingyun.basedata.entity.Product;
+import com.lframework.xingyun.basedata.entity.ProductUnit;
+import com.lframework.xingyun.basedata.excel.quote.QuoteSheetImportModel;
 import com.lframework.xingyun.basedata.entity.quote.*;
 import com.lframework.xingyun.basedata.enums.quote.QuoteSheetStatus;
 import com.lframework.xingyun.basedata.mappers.ProductMapper;
 import com.lframework.xingyun.basedata.mappers.quote.*;
+import com.lframework.xingyun.basedata.service.product.ProductService;
+import com.lframework.xingyun.basedata.service.product.ProductUnitService;
 import com.lframework.xingyun.basedata.service.quote.*;
 import com.lframework.xingyun.basedata.vo.quote.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +54,121 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     private QuoteSheetConverter quoteSheetConverter;
     @Autowired(required = false)
     private List<QuoteSheetReferenceChecker> quoteSheetReferenceCheckers = Collections.emptyList();
+
+    @Autowired
+    private ProductService productService;
+    @Autowired
+    private ProductUnitService productUnitService;
+    /**
+     * 校验导入商品，仅匹配非停用商品。
+     */
+    @Override
+    public List<QuoteSheetImportModel> checkImport(List<QuoteSheetImportModel> list) {
+        if (CollectionUtils.isEmpty(list)) {
+            return Lists.newArrayList();
+        }
+
+        handleSeq(list);
+
+        // 匹配编号
+        List<String> errors = checkImportData(list);
+        Assert.isTrue(CollectionUtils.isEmpty(errors), StringUtils.join(errors, ";\r\n"));
+
+        return list;
+    }
+
+    private List<String> checkImportData(List<QuoteSheetImportModel> list) {
+        List<String> productNames = list.stream().map(QuoteSheetImportModel::getName)
+                .filter(StringUtils::isNotBlank)
+                .map(StringUtils::trim)
+                .distinct()
+                .collect(Collectors.toList());
+        List<Product> products = productService.selectByProductName(productNames);
+        Map<String, List<Product>> nameUnitMap = new HashMap<>();
+        for (Product product : products) {
+            productUnitService.getAvailableByProductId(product.getId())
+                    .forEach(unit -> nameUnitMap.computeIfAbsent(
+                                    buildProductImportKey(product.getName(), unit.getUnitName()), key -> new ArrayList<>())
+                            .add(product));
+        }
+
+        List<String> errors = Lists.newArrayList();
+        for (int i = 0; i < list.size(); i++) {
+            QuoteSheetImportModel data = list.get(i);
+            int rowIndex = data.getSeq();
+
+            if (StringUtils.isBlank(data.getName())) {
+                errors.add("第" + rowIndex + "行“商品名称”不能为空");
+            }
+            if (StringUtils.isBlank(data.getUnit())) {
+                errors.add("第" + rowIndex + "行“单位”不能为空");
+            }
+            errors.addAll(validateImportNumbers(data));
+
+            Product product = matchImportProduct(data, nameUnitMap);
+            if (product != null) {
+                ProductUnit unit = productUnitService.getAvailableByUnitName(product.getId(),
+                        StringUtils.trim(data.getUnit()));
+                if (unit == null) {
+                    continue;
+                }
+                data.setCode(product.getCode());
+                data.setProductId(product.getId());
+                data.setUnitId(unit.getId());
+                data.setSpec(product.getSpec());
+                data.setUnit(unit.getUnitName());
+            }
+        }
+        return errors;
+    }
+
+    private Product matchImportProduct(QuoteSheetImportModel data, Map<String, List<Product>> nameUnitMap) {
+        if (StringUtils.isBlank(data.getName()) || StringUtils.isBlank(data.getUnit())) {
+            return null;
+        }
+
+        List<Product> candidates = nameUnitMap.get(buildProductImportKey(data.getName(), data.getUnit()));
+        if (CollectionUtils.isEmpty(candidates)) {
+            return null;
+        }
+
+        if (candidates.size() == 1) {
+            return candidates.get(0);
+        }
+
+        String spec = StringUtils.trimToEmpty(data.getSpec());
+        List<Product> specMatchedProducts = candidates.stream()
+                .filter(item -> StringUtils.equals(StringUtils.trimToEmpty(item.getSpec()), spec))
+                .collect(Collectors.toList());
+
+        return specMatchedProducts.size() == 1 ? specMatchedProducts.get(0) : null;
+    }
+
+    static List<String> validateImportNumbers(QuoteSheetImportModel data) {
+        List<String> errors = Lists.newArrayList();
+        int rowIndex = data.getSeq();
+        if (data.getSalePrice() != null && NumberUtil.lt(data.getSalePrice(), BigDecimal.ZERO)) {
+            errors.add("第" + rowIndex + "行“单价”不允许小于0");
+        }
+        if (data.getSalePrice() != null && !NumberUtil.isNumberPrecision(data.getSalePrice(), 6)) {
+            errors.add("第" + rowIndex + "行“单价”最多允许6位小数");
+        }
+        return errors;
+    }
+
+    public static String buildProductImportKey(String productName, String unit) {
+        return StringUtils.trimToEmpty(productName) + StringPool.STR_SPLIT
+                + StringUtils.trimToEmpty(unit);
+    }
+
+    private void handleSeq(List<QuoteSheetImportModel> list) {
+        for (int i = 0; i < list.size(); i++) {
+            QuoteSheetImportModel model = list.get(i);
+            if (model.getSeq() == null) {
+                model.setSeq(i + 2);
+            }
+        }
+    }
 
     /**
      * 创建报价单。
@@ -182,8 +309,8 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
      */
     void saveDetails(String quoteSheetId, String tenantId, List<QuoteSheetProductVo> products) {
         Map<String, Product> productMap = productMapper.selectList(Wrappers.lambdaQuery(Product.class)
-                .in(Product::getId, products.stream().map(QuoteSheetProductVo::getProductId)
-                        .collect(Collectors.toSet())))
+                        .in(Product::getId, products.stream().map(QuoteSheetProductVo::getProductId)
+                                .collect(Collectors.toSet())))
                 .stream().collect(Collectors.toMap(Product::getId, product -> product));
         List<QuoteSheetDetail> details = products.stream().map(p -> {
             Product product = productMap.get(p.getProductId());
