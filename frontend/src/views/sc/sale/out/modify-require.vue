@@ -161,6 +161,7 @@
         <!-- 商品名称 列自定义内容 -->
         <template #productName_default="{ row, rowIndex }">
           <InlineProductSelect
+            :key="row.id"
             :ref="'productInputRef' + rowIndex"
             :row="row"
             :row-index="rowIndex"
