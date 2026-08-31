@@ -97,6 +97,7 @@ describe('报价单编辑数据', () => {
     expect(batchSource).not.toContain("{ field: 'brandName', title: '商品品牌'");
     expect(batchSource).toContain('v-if="bizType !== \'quote\'" label="商品品牌"');
     expect(batchSource).toContain("? { quoteSheetId: this.quoteSheetId }");
+    expect(batchSource).toContain('pageSizes: [100, 200, 500, 1000]');
   });
 
   it('编辑页保存或关闭时必须通过多标签页机制关闭当前标签', () => {

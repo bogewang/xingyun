@@ -21,7 +21,7 @@
         :columns="tableColumn"
         :toolbar-config="toolbarConfig"
         :custom-config="{}"
-        :pager-config="{}"
+        :pager-config="pagerConfig"
         :checkbox-config="{
           trigger: 'row',
           highlight: true,
@@ -202,6 +202,12 @@
       },
       rowId() {
         return this.bizType === 'quote' ? 'id' : 'productId';
+      },
+      // 报价单商品较多，提供更大的分页档位；其他业务沿用默认配置。
+      pagerConfig() {
+        return this.bizType === 'quote'
+          ? { pageSize: 100, pageSizes: [100, 200, 500, 1000] }
+          : {};
       },
       permissionCodes() {
         if (this.bizType === 'purchase') {
