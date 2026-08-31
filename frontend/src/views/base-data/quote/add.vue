@@ -86,6 +86,9 @@
         <template #salePrice_default="{ row }">
           <a-input v-model:value="row.salePrice" class="number-input" />
         </template>
+        <template #inquiryProduct_default="{ row }">
+          <a-checkbox v-model:checked="row.inquiryProduct">是</a-checkbox>
+        </template>
         </vxe-grid>
       </div>
 
@@ -194,6 +197,7 @@
             width: 140,
             slots: { default: 'salePrice_default' },
           },
+          { field: 'inquiryProduct', title: '是否询价', width: 100, slots: { default: 'inquiryProduct_default' } },
         ],
         tableData: [],
       };
@@ -221,7 +225,7 @@
       isImportUnmatchedProduct(row) { return row.importUnmatched && isEmpty(row.productId); },
       handleImportConfirm(res) {
         const items = res?.data || res?.datas || res || [];
-        this.tableData = (Array.isArray(items) ? items : []).map((item) => Object.assign(this.emptyProduct(), item, { id: uuid(), importUnmatched: isEmpty(item.productId), productQuery: isEmpty(item.productId) ? item.name : '' }));
+        this.tableData = (Array.isArray(items) ? items : []).map((item) => Object.assign(this.emptyProduct(), item, { id: uuid(), inquiryProduct: item.inquiryProduct !== false, importUnmatched: isEmpty(item.productId), productQuery: isEmpty(item.productId) ? item.name : '' }));
       },
       // 加载计量单位名称，避免报价单商品行展示单位 ID。
       loadUnitNames() {
@@ -249,6 +253,7 @@
           spec: '',
           unit: '',
           salePrice: '',
+          inquiryProduct: true,
           editingProduct: false,
           productQuery: '',
           products: [],

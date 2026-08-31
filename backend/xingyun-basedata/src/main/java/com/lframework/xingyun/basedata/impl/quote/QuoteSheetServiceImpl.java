@@ -103,6 +103,11 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
             if (StringUtils.isBlank(data.getUnit())) {
                 errors.add("第" + rowIndex + "行“单位”不能为空");
             }
+            try {
+                data.setInquiryProduct(parseImportInquiryProduct(data.getInquiryProductText(), rowIndex));
+            } catch (DefaultClientException e) {
+                errors.add(e.getMessage());
+            }
             errors.addAll(validateImportNumbers(data));
 
             Product product = matchImportProduct(data, nameUnitMap);
@@ -154,6 +159,23 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
             errors.add("第" + rowIndex + "行“单价”最多允许6位小数");
         }
         return errors;
+    }
+
+    /**
+     * 解析导入行的是否询价商品字段；留空时默认是。
+     *
+     * @param inquiryProductText Excel 填写值
+     * @param rowIndex Excel 行号
+     * @return 是否询价商品
+     */
+    static Boolean parseImportInquiryProduct(String inquiryProductText, int rowIndex) {
+        if (StringUtils.isBlank(inquiryProductText) || "是".equals(StringUtils.trim(inquiryProductText))) {
+            return Boolean.TRUE;
+        }
+        if ("否".equals(StringUtils.trim(inquiryProductText))) {
+            return Boolean.FALSE;
+        }
+        throw new DefaultClientException("第" + rowIndex + "行“是否询价商品”只能填写“是”或“否”");
     }
 
     public static String buildProductImportKey(String productName, String unit) {
@@ -256,6 +278,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
             QuoteProductBo productBo = quoteSheetConverter.toProductBo(product,
                     detail.getSalePrice(), detail.getQuoteSheetId());
             productBo.setSourceId(detail.getId());
+            productBo.setInquiryProduct(detail.getInquiryProduct());
             return productBo;
         }).collect(Collectors.toList());
         GetQuoteSheetBo bo = quoteSheetConverter.toGetBo(sheet);
@@ -320,6 +343,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
             QuoteSheetDetail d = quoteSheetConverter.toDetail(p, quoteSheetId);
             d.setId(IdUtil.getId());
             d.setTenantId(tenantId);
+            d.setInquiryProduct(!Boolean.FALSE.equals(p.getInquiryProduct()));
             d.setProductSnapshot(JsonUtil.toJsonString(product));
             return d;
         }).collect(Collectors.toList());

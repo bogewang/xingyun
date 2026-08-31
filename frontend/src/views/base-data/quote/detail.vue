@@ -75,6 +75,7 @@
           { field: 'spec', title: '规格', width: 120 },
           { field: 'unit', title: '单位', width: 90 },
           { field: 'salePrice', title: '销售单价（元）', width: 140, align: 'right' },
+          { field: 'inquiryProduct', title: '是否询价', width: 100, formatter: ({ cellValue }) => (cellValue ? '是' : '否') },
         ],
       };
     },

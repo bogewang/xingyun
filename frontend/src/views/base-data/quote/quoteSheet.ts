@@ -8,6 +8,7 @@ export interface QuoteProductRow {
   spec?: string;
   unit?: string;
   salePrice: string | number;
+  inquiryProduct?: boolean;
 }
 
 /** 构造后端报价单保存请求。 */
@@ -21,6 +22,7 @@ export function buildQuoteSheetPayload(form: Record<string, any>) {
     products: form.products.map((item: QuoteProductRow) => ({
       productId: item.productId,
       salePrice: item.salePrice,
+      inquiryProduct: item.inquiryProduct !== false,
     })),
   };
 }

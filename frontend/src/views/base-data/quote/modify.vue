@@ -87,6 +87,9 @@
         <template #salePrice_default="{ row }">
           <a-input v-model:value="row.salePrice" class="number-input" />
         </template>
+        <template #inquiryProduct_default="{ row }">
+          <a-checkbox v-model:checked="row.inquiryProduct">是</a-checkbox>
+        </template>
         </vxe-grid>
       </div>
 
@@ -198,6 +201,7 @@
             width: 140,
             slots: { default: 'salePrice_default' },
           },
+          { field: 'inquiryProduct', title: '是否询价', width: 100, slots: { default: 'inquiryProduct_default' } },
         ],
         tableData: [],
       };
@@ -233,6 +237,7 @@
           this.tableData = (data.products || []).map((item) => ({
             ...item,
             unit: this.getUnitName(item.unit),
+            inquiryProduct: item.inquiryProduct !== false,
             id: uuid(),
             editingProduct: false,
             productQuery: '',
@@ -272,6 +277,7 @@
           spec: '',
           unit: '',
           salePrice: '',
+          inquiryProduct: true,
           editingProduct: false,
           productQuery: '',
           products: [],

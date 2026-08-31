@@ -33,6 +33,9 @@ public class QuoteSheetDetail extends BaseEntity implements BaseDto {
   /** 销售单价。 */
   private BigDecimal salePrice;
 
+  /** 是否询价。 */
+  private Boolean inquiryProduct;
+
   /** 租户ID。 */
   private String tenantId;
 

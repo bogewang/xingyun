@@ -16,4 +16,7 @@ public class QuoteSheetProductVo {
     @NotNull(message = "销售单价不能为空！")
     @DecimalMin(value = "0", message = "销售单价不能小于0！")
     private BigDecimal salePrice;
+
+    /** 是否询价。 */
+    private Boolean inquiryProduct;
 }

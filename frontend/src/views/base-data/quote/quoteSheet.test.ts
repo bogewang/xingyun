@@ -48,7 +48,7 @@ describe('报价单编辑数据', () => {
     expect(source).toContain(':pager-config');
   });
 
-  it('保存时只提交报价单接口需要的有效期和商品单价字段，不包含编号', () => {
+  it('保存时只提交报价单接口需要的有效期、商品单价和是否询价字段，不包含编号', () => {
     expect(
       buildQuoteSheetPayload({
         id: 'q1',
@@ -57,7 +57,7 @@ describe('报价单编辑数据', () => {
         endDate: '2026-09-30',
         description: '测试',
         status: 'ENABLED',
-        products: [{ productId: 'p1', code: 'P001', name: '商品', salePrice: '12.50' }],
+        products: [{ productId: 'p1', code: 'P001', name: '商品', salePrice: '12.50', inquiryProduct: true }],
       }),
     ).toEqual({
       id: 'q1',
@@ -65,8 +65,17 @@ describe('报价单编辑数据', () => {
       startDate: '2026-09-01',
       endDate: '2026-09-30',
       description: '测试',
-      products: [{ productId: 'p1', salePrice: '12.50' }],
+      products: [{ productId: 'p1', salePrice: '12.50', inquiryProduct: true }],
     });
+  });
+
+  it('新增报价单明细时是否询价默认选中，并在保存时传递该字段', () => {
+    const addSource = readFileSync(new URL('./add.vue', import.meta.url), 'utf-8');
+    const modifySource = readFileSync(new URL('./modify.vue', import.meta.url), 'utf-8');
+
+    expect(addSource).toContain('inquiryProduct: true');
+    expect(addSource).toContain('v-model:checked="row.inquiryProduct"');
+    expect(modifySource).toContain('inquiryProduct: item.inquiryProduct !== false');
   });
 
   it('编辑页必须通过下拉框提供报价单状态切换入口', () => {

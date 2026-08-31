@@ -35,6 +35,9 @@ public class QuoteSheetDetailExportModel implements ExcelModel {
   @ExcelProperty("销售单价（元）")
   private BigDecimal salePrice;
 
+  @ExcelProperty("是否询价")
+  private String inquiryProduct;
+
   @ExcelProperty("备注")
   private String description;
 
@@ -57,6 +60,7 @@ public class QuoteSheetDetailExportModel implements ExcelModel {
     this.spec = data.getSpec();
     this.unit = data.getUnit();
     this.salePrice = data.getSalePrice();
+    this.inquiryProduct = Boolean.TRUE.equals(data.getInquiryProduct()) ? "是" : "否";
     this.description = data.getDescription();
   }
 }

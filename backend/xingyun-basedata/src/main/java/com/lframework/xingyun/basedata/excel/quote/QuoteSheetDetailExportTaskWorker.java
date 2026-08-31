@@ -142,6 +142,7 @@ public class QuoteSheetDetailExportTaskWorker implements
     result.setSpec(product == null ? null : product.getSpec());
     result.setUnit(product == null ? null : resolveUnitName(product.getUnit(), unitNameMap));
     result.setSalePrice(detail.getSalePrice());
+    result.setInquiryProduct(detail.getInquiryProduct());
     return result;
   }
 

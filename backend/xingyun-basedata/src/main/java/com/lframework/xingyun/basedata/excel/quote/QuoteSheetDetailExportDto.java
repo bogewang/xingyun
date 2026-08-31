@@ -17,4 +17,5 @@ public class QuoteSheetDetailExportDto {
   private String spec;
   private String unit;
   private BigDecimal salePrice;
+  private Boolean inquiryProduct;
 }

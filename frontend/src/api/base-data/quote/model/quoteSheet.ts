@@ -13,6 +13,7 @@ export interface QueryQuoteSheetVo extends PageVo {
 export interface QuoteSheetProductVo {
   productId: string;
   salePrice: string | number;
+  inquiryProduct?: boolean;
 }
 
 /** 报价单保存参数。 */
