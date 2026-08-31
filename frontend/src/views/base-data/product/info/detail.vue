@@ -41,15 +41,9 @@
         <a-descriptions-item label="采购价（元）" :span="2">{{
           formData.purchasePrice
         }}</a-descriptions-item>
-        <a-descriptions-item label="销售价（元）" :span="2">{{
-          formData.salePrice
-        }}</a-descriptions-item>
         <a-descriptions-item label="零售价（元）" :span="2">{{
           formData.retailPrice
         }}</a-descriptions-item>
-        <a-descriptions-item label="询价商品" :span="2">
-          {{ formData.inquiryProduct ? '是' : '否' }}
-        </a-descriptions-item>
         <a-descriptions-item label="备注" :span="2">{{ formData.remark }}</a-descriptions-item>
         <a-descriptions-item label="备注二" :span="2">{{ formData.remark2 }}</a-descriptions-item>
         <a-descriptions-item label="商品类型" :span="4">普通商品</a-descriptions-item>
@@ -119,9 +113,7 @@
           spec: '',
           unit: '',
           purchasePrice: '',
-          salePrice: '',
           retailPrice: '',
-          inquiryProduct: false,
           remark: '',
           remark2: '',
           properties: [],

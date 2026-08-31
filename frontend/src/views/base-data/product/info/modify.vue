@@ -69,11 +69,6 @@
           </a-col>
 
           <a-col :md="6" :sm="24">
-            <a-form-item label="销售价（元）" name="salePrice">
-              <a-input v-model:value="formData.salePrice" allow-clear />
-            </a-form-item>
-          </a-col>
-          <a-col :md="6" :sm="24">
             <a-form-item label="零售价（元）" name="retailPrice">
               <a-input v-model:value="formData.retailPrice" allow-clear />
             </a-form-item>
@@ -147,11 +142,6 @@
           <a-col :md="6" :sm="24">
             <a-form-item label="默认供应商" name="defaultSupplier">
               <supplier-selector v-model:value="formData.defaultSupplier" />
-            </a-form-item>
-          </a-col>
-          <a-col :md="6" :sm="24">
-            <a-form-item label="询价商品" name="inquiryProduct">
-              <a-checkbox v-model:checked="formData.inquiryProduct" />
             </a-form-item>
           </a-col>
           <a-col :md="6" :sm="24">
@@ -336,25 +326,6 @@
               },
             },
           ],
-          salePrice: [
-            {
-              validator: (rule, value) => {
-                if (!isEmpty(value)) {
-                  if (!isFloat(value)) {
-                    return Promise.reject('销售价（元）必须是数字');
-                  }
-                  if (!isFloatGeZero(value)) {
-                    return Promise.reject('销售价（元）不允许小于0');
-                  }
-                  if (!isNumberPrecision(value, 6)) {
-                    return Promise.reject('销售价（元）最多允许6位小数');
-                  }
-                }
-
-                return Promise.resolve();
-              },
-            },
-          ],
           retailPrice: [
             {
               validator: (rule, value) => {
@@ -432,7 +403,7 @@
       },
       // 初始化表单数据
       initFormData() {
-        this.formData = { inquiryProduct: false, multiUnitEnabled: false, auxiliaryUnits: [] };
+        this.formData = { multiUnitEnabled: false, auxiliaryUnits: [] };
       },
       // 提交表单事件
       buildUnits() {
@@ -518,7 +489,6 @@
               .filter((item) => !item.baseUnit)
               .map((item) => ({ unitName: item.unitName, conversionRate: item.conversionRate }));
             this.formData = Object.assign({}, data, {
-              inquiryProduct: Boolean(data.inquiryProduct),
               multiUnitEnabled: auxiliaryUnits.length > 0,
               auxiliaryUnits,
             });

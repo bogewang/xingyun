@@ -41,13 +41,6 @@
                 <j-form-item label="商品品牌">
                   <product-brand-selector v-model:value="searchFormData.brandId" />
                 </j-form-item>
-                <j-form-item label="询价商品">
-                  <a-select v-model:value="searchFormData.inquiryProduct" allow-clear>
-                    <a-select-option value="">全部</a-select-option>
-                    <a-select-option :value="true">是</a-select-option>
-                    <a-select-option :value="false">否</a-select-option>
-                  </a-select>
-                </j-form-item>
                 <j-form-item label="状态">
                   <a-select v-model:value="searchFormData.available">
                     <a-select-option :value="AVAILABLE.ENABLE.code">启用</a-select-option>
@@ -249,7 +242,6 @@
           skuCode: '',
           categoryId: '',
           brandId: '',
-          inquiryProduct: '',
           available: AVAILABLE.ENABLE.code,
         },
         // 工具栏配置
@@ -269,16 +261,9 @@
           { field: 'categoryName', title: '分类', width: 120 },
           { field: 'spec', title: '规格', width: 120 },
           { field: 'unit', title: '单位', width: 100 },
-          {
-            field: 'inquiryProduct',
-            title: '询价商品',
-            width: 100,
-            formatter: ({ cellValue }) => (cellValue ? '是' : '否'),
-          },
           { field: 'available', title: '状态', width: 80, slots: { default: 'available_default' } },
           { field: 'purchasePrice', title: '采购价', width: 120 },
           { field: 'latestPurchasePrice', title: '最新采购价', width: 120 },
-          { field: 'salePrice', title: '销售价', width: 120 },
           { field: 'latestSalePrice', title: '最新售价', width: 120 },
           { field: 'remark', title: '备注', width: 180 },
           { field: 'remark2', title: '备注二', width: 180 },
