@@ -23,7 +23,7 @@ describe('报价单编辑数据', () => {
 
     expect(source).toContain('class="quote-sheet-detail-grid-border"');
     expect(source).toContain('class="quote-sheet-detail-grid-container"');
-    expect(source).toContain('.quote-sheet-detail-grid-border {\n    flex: 1;');
+    expect(source).toContain('.quote-sheet-detail-grid-border {\n    height: 100%;');
     expect(source).toContain('.quote-sheet-detail-grid-container {\n    flex: 1;');
   });
 

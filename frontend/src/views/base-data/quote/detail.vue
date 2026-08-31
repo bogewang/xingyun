@@ -28,8 +28,10 @@
           </j-form>
         </j-border>
         <div class="quote-sheet-detail-grid-wrap">
-          <j-border title="报价商品">
-            <vxe-grid :data="form.products" :columns="columns" height="100%" />
+          <j-border title="报价商品" class="quote-sheet-detail-grid-border">
+            <div class="quote-sheet-detail-grid-container">
+              <vxe-grid :data="form.products" :columns="columns" height="100%" />
+            </div>
           </j-border>
         </div>
       </div>
@@ -156,5 +158,18 @@
     flex: 1;
     min-height: 0;
     overflow: hidden;
+  }
+
+  .quote-sheet-detail-grid-border {
+    height: 100%;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .quote-sheet-detail-grid-container {
+    flex: 1;
+    min-height: 0;
   }
 </style>
