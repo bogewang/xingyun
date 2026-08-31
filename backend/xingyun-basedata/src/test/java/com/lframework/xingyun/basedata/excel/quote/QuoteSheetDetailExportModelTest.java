@@ -1,6 +1,7 @@
 package com.lframework.xingyun.basedata.excel.quote;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -29,5 +30,14 @@ class QuoteSheetDetailExportModelTest {
     Assertions.assertEquals("P001", result.getProductCode());
     Assertions.assertEquals("箱", result.getUnit());
     Assertions.assertEquals(new BigDecimal("12.50"), result.getSalePrice());
+  }
+
+  /** 应将商品保存的单位 ID 转换为单位字典名称。 */
+  @Test
+  void shouldResolveUnitNameFromUnitDictionary() {
+    Assertions.assertEquals("箱", QuoteSheetDetailExportTaskWorker.resolveUnitName("unit-1",
+        Collections.singletonMap("unit-1", "箱")));
+    Assertions.assertEquals("历史单位", QuoteSheetDetailExportTaskWorker.resolveUnitName("历史单位",
+        Collections.emptyMap()));
   }
 }

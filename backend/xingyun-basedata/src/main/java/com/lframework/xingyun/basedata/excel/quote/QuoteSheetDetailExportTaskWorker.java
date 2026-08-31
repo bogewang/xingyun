@@ -9,12 +9,12 @@ import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.starter.web.core.utils.JsonUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
 import com.lframework.xingyun.basedata.entity.Product;
-import com.lframework.xingyun.basedata.entity.ProductUnit;
+import com.lframework.xingyun.basedata.entity.Unit;
 import com.lframework.xingyun.basedata.entity.quote.QuoteSheet;
 import com.lframework.xingyun.basedata.entity.quote.QuoteSheetDetail;
 import com.lframework.xingyun.basedata.mappers.quote.QuoteSheetDetailMapper;
 import com.lframework.xingyun.basedata.service.product.ProductService;
-import com.lframework.xingyun.basedata.service.product.ProductUnitService;
+import com.lframework.xingyun.basedata.service.UnitService;
 import com.lframework.xingyun.basedata.service.quote.QuoteSheetService;
 import com.lframework.xingyun.basedata.vo.quote.QueryQuoteSheetVo;
 import java.util.Collection;
@@ -115,16 +115,16 @@ public class QuoteSheetDetailExportTaskWorker implements
     return snapshotProducts;
   }
 
-  /** 批量读取商品单位名称，兼容快照中已保存的历史单位文本。 */
+  /** 批量读取单位字典名称，兼容快照中已保存的历史单位文本。 */
   private Map<String, String> loadUnitNames(Collection<Product> products) {
     Set<String> unitIds = products.stream().map(Product::getUnit).filter(StringUtil::isNotBlank)
         .collect(Collectors.toSet());
     if (unitIds.isEmpty()) {
       return Collections.emptyMap();
     }
-    ProductUnitService productUnitService = ApplicationUtil.getBean(ProductUnitService.class);
-    return productUnitService.list(Wrappers.lambdaQuery(ProductUnit.class).in(ProductUnit::getId, unitIds))
-        .stream().collect(Collectors.toMap(ProductUnit::getId, ProductUnit::getUnitName));
+    UnitService unitService = ApplicationUtil.getBean(UnitService.class);
+    return unitService.list(Wrappers.lambdaQuery(Unit.class).in(Unit::getId, unitIds))
+        .stream().collect(Collectors.toMap(Unit::getId, Unit::getName));
   }
 
   /** 将报价单、商品和报价明细组装为导出数据。 */
@@ -140,8 +140,13 @@ public class QuoteSheetDetailExportTaskWorker implements
     result.setProductName(product == null ? null : product.getName());
     result.setShortName(product == null ? null : product.getShortName());
     result.setSpec(product == null ? null : product.getSpec());
-    result.setUnit(product == null ? null : unitNameMap.getOrDefault(product.getUnit(), product.getUnit()));
+    result.setUnit(product == null ? null : resolveUnitName(product.getUnit(), unitNameMap));
     result.setSalePrice(detail.getSalePrice());
     return result;
+  }
+
+  /** 将商品保存的单位 ID 转换为单位字典名称。 */
+  static String resolveUnitName(String unitId, Map<String, String> unitNameMap) {
+    return unitNameMap.getOrDefault(unitId, unitId);
   }
 }

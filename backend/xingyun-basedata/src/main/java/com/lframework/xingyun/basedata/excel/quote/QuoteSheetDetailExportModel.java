@@ -54,7 +54,6 @@ public class QuoteSheetDetailExportModel implements ExcelModel {
     this.status = data.getStatus();
     this.productCode = data.getProductCode();
     this.productName = data.getProductName();
-    this.shortName = data.getShortName();
     this.spec = data.getSpec();
     this.unit = data.getUnit();
     this.salePrice = data.getSalePrice();
