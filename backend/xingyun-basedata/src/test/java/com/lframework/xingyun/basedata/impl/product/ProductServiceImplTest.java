@@ -4,6 +4,7 @@ import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductUnit;
+import com.lframework.xingyun.basedata.bo.product.info.QueryProductBo;
 import com.lframework.xingyun.basedata.excel.product.ProductImportModel;
 import com.lframework.xingyun.basedata.mappers.ProductMapper;
 import com.lframework.xingyun.basedata.service.product.ProductReferenceChecker;
@@ -30,6 +31,14 @@ class ProductServiceImplTest {
 
     Assert.assertFalse(fieldNames.contains("salePrice"));
     Assert.assertFalse(fieldNames.contains("inquiryProduct"));
+  }
+
+  @Test
+  void shouldExposeLatestSalePriceWithoutKeepingProductSalePrice() {
+    Set<String> fieldNames = Arrays.stream(QueryProductBo.class.getDeclaredFields())
+        .map(Field::getName).collect(java.util.stream.Collectors.toSet());
+
+    Assert.assertTrue(fieldNames.contains("latestSalePrice"));
   }
 
   @Test

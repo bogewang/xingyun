@@ -68,6 +68,7 @@ public class ProductConverter {
 
             bo.setPurchasePrice(dto.getPurchasePrice());
             bo.setLatestPurchasePrice(productLatestPriceCacheService.getLatestPurchasePrice(dto.getId()));
+            bo.setLatestSalePrice(productLatestPriceCacheService.getLatestSalePrice(dto.getId()));
             bo.setRetailPrice(dto.getRetailPrice());
             bo.setAlias(dto.getAlias());
             bo.setDefaultSupplier(dto.getDefaultSupplier());
