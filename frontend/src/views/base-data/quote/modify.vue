@@ -23,21 +23,24 @@
         </j-form>
       </j-border>
       <!-- 报价商品列表 -->
-      <vxe-grid
-        class="sheet-editor-grid"
-        id="QuoteSheetModify"
-        ref="grid"
-        resizable
-        show-overflow
-        highlight-hover-row
-        keep-source
-        row-id="id"
-        height="100%"
-        :data="tableData"
-        :columns="tableColumn"
-        :toolbar-config="toolbarConfig"
-        :custom-config="{}"
-      >
+      <div class="sheet-editor-grid-wrapper">
+        <vxe-grid
+          class="sheet-editor-grid"
+          id="QuoteSheetModify"
+          ref="grid"
+          resizable
+          show-overflow
+          highlight-hover-row
+          keep-source
+          row-id="id"
+          height="100%"
+          :scroll-y="{ enabled: false }"
+          @wheel.capture.stop
+          :data="tableData"
+          :columns="tableColumn"
+          :toolbar-config="toolbarConfig"
+          :custom-config="{}"
+        >
         <!-- 工具栏 -->
         <template #toolbar_buttons>
           <a-space>
@@ -83,7 +86,8 @@
         <template #salePrice_default="{ row }">
           <a-input v-model:value="row.salePrice" class="number-input" />
         </template>
-      </vxe-grid>
+        </vxe-grid>
+      </div>
 
       <j-border>
         <j-form bordered label-width="140px">
@@ -419,10 +423,14 @@
     overflow: hidden;
   }
 
-  .sheet-editor-grid {
+  .sheet-editor-grid-wrapper {
     flex: 1;
     min-height: 0;
     overflow: hidden;
+  }
+
+  .sheet-editor-grid {
+    height: 100%;
   }
 
   .sheet-editor-actions {
