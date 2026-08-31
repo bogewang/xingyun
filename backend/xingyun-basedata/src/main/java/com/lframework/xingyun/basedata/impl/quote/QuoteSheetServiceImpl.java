@@ -269,7 +269,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     @Override
     public PageResult<QuoteSheet> query(Integer pageIndex, Integer pageSize, QueryQuoteSheetVo vo) {
         PageHelperUtil.startPage(pageIndex, pageSize);
-        return PageResultUtil.convert(new PageInfo<>(getBaseMapper().selectList(Wrappers.lambdaQuery(QuoteSheet.class).eq(vo.getStatus() != null, QuoteSheet::getStatus, vo.getStatus()).like(StringUtil.isNotBlank(vo.getName()), QuoteSheet::getName, vo.getName()).ge(vo.getStartDate() != null, QuoteSheet::getStartDate, vo.getStartDate()).le(vo.getEndDate() != null, QuoteSheet::getEndDate, vo.getEndDate()).orderByDesc(QuoteSheet::getCreateTime))));
+        return PageResultUtil.convert(new PageInfo<>(getBaseMapper().selectList(Wrappers.lambdaQuery(QuoteSheet.class).in(CollectionUtils.isNotEmpty(vo.getIdList()), QuoteSheet::getId, vo.getIdList()).eq(vo.getStatus() != null, QuoteSheet::getStatus, vo.getStatus()).like(StringUtil.isNotBlank(vo.getName()), QuoteSheet::getName, vo.getName()).ge(vo.getStartDate() != null, QuoteSheet::getStartDate, vo.getStartDate()).le(vo.getEndDate() != null, QuoteSheet::getEndDate, vo.getEndDate()).orderByDesc(QuoteSheet::getCreateTime))));
     }
 
     /**

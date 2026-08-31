@@ -55,6 +55,13 @@ export function disable(id: string): Promise<void> {
     { contentType: ContentTypeEnum.FORM_URLENCODED, region },
   );
 }
+/** 创建报价单商品明细导出任务。 */
+export function exportDetail(data: QueryQuoteSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    { url: `${baseUrl}/exportDetail`, data },
+    { contentType: ContentTypeEnum.JSON, region },
+  );
+}
 export function downloadImportTemplate(): Promise<void> {
   return defHttp.get<void>({ url: `${baseUrl}/import/template` }, { responseType: ResponseEnum.BLOB, region });
 }

@@ -6,6 +6,7 @@ export interface QueryQuoteSheetVo extends PageVo {
   status?: 'ENABLED' | 'DISABLED';
   startDate?: string;
   endDate?: string;
+  idList?: string[];
 }
 
 /** 报价单商品。 */

@@ -10,6 +10,8 @@ import com.lframework.xingyun.basedata.entity.quote.QuoteSheet;
 import com.lframework.xingyun.basedata.excel.quote.QuoteSheetImportModel;
 import com.lframework.starter.web.core.utils.ExcelUtil;
 import com.lframework.starter.web.core.utils.EasyExcelUtils;
+import com.lframework.starter.mq.core.utils.ExportTaskUtil;
+import com.lframework.xingyun.basedata.excel.quote.QuoteSheetDetailExportTaskWorker;
 import com.lframework.xingyun.basedata.service.quote.QuoteSheetService;
 import com.lframework.xingyun.basedata.vo.quote.*;
 
@@ -70,6 +72,21 @@ public class QuoteSheetController extends DefaultBaseController {
             return InvokeResultBuilder.success(PageResultUtil.rebuild(page, data));
         } catch (Exception e) {
             return fail(e);
+        }
+    }
+
+    /**
+     * 创建报价单商品明细导出任务。
+     */
+    @PostMapping("/exportDetail")
+    @HasPermission("base-data:quote:export")
+    public InvokeResult<Void> exportDetail(@Valid @RequestBody QueryQuoteSheetVo vo) {
+        try {
+            ExportTaskUtil.exportTask("报价单明细", QuoteSheetDetailExportTaskWorker.class, vo);
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
         }
     }
 

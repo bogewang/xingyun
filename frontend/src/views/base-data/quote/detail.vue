@@ -36,7 +36,15 @@
     </div>
     <template #footer>
       <div class="form-modal-footer">
-        <a-button :loading="loading" @click="closeDialog">关闭</a-button>
+        <a-space>
+          <a-button
+            v-permission="['base-data:quote:export']"
+            :loading="loading"
+            @click="exportDetails"
+            >导出明细</a-button
+          >
+          <a-button :loading="loading" @click="closeDialog">关闭</a-button>
+        </a-space>
       </div>
     </template>
   </a-modal>
@@ -46,6 +54,7 @@
   import * as api from '@/api/base-data/quote';
   import * as unitApi from '@/api/base-data/unit';
   import { resolveQuoteProductUnitName } from './quoteSheet';
+  import { createSuccess } from '@/hooks/web/msg';
 
   export default defineComponent({
     name: 'QuoteSheetDetail',
@@ -76,6 +85,18 @@
       /** 关闭报价单查看弹窗。 */
       closeDialog() {
         this.visible = false;
+      },
+      /** 创建当前报价单的商品明细导出任务。 */
+      exportDetails() {
+        this.loading = true;
+        api
+          .exportDetail({ idList: [this.id] })
+          .then(() => {
+            createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+          })
+          .finally(() => {
+            this.loading = false;
+          });
       },
       /** 加载报价单详情及单位名称映射。 */
       loadData() {

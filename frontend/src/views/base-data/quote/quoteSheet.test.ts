@@ -18,6 +18,16 @@ describe('报价单编辑数据', () => {
     expect(resolveQuoteProductUnitName('历史单位', { 'unit-1': '箱' })).toBe('历史单位');
   });
 
+  it('查询页和查看页均提供报价单商品明细导出入口', () => {
+    const listSource = readFileSync(new URL('./index.vue', import.meta.url), 'utf-8');
+    const detailSource = readFileSync(new URL('./detail.vue', import.meta.url), 'utf-8');
+
+    expect(listSource).toContain("label: '导出明细'");
+    expect(listSource).toContain('api.exportDetail({ idList: [id] })');
+    expect(detailSource).toContain('@click="exportDetails"');
+    expect(detailSource).toMatch(/api\s*\.exportDetail\(\{\s*idList: \[this\.id\]\s*\}\)/);
+  });
+
   it('列表页首次查询默认筛选启用状态', () => {
     const source = readFileSync(new URL('./index.vue', import.meta.url), 'utf-8');
 

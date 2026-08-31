@@ -73,7 +73,7 @@
           { field: 'description', title: '备注', minWidth: 180 },
           { field: 'createBy', title: '创建人', width: 100 },
           { field: 'createTime', title: '创建时间', width: 170 },
-          { title: '操作', width: 220, fixed: 'right', slots: { default: 'action_default' } },
+          { title: '操作', width: 300, fixed: 'right', slots: { default: 'action_default' } },
         ],
         proxyConfig: {
           props: { result: 'datas', total: 'totalCount' },
@@ -117,9 +117,20 @@
           }),
         );
       },
+      /** 创建指定报价单的商品明细导出任务。 */
+      exportDetails(id) {
+        api.exportDetail({ idList: [id] }).then(() => {
+          createSuccess('创建导出任务成功，请前往“导出中心”进行下载。');
+        });
+      },
       actions(row) {
         return [
           { label: '查看', onClick: () => this.detail(row.id) },
+          {
+            permission: ['base-data:quote:export'],
+            label: '导出明细',
+            onClick: () => this.exportDetails(row.id),
+          },
           {
             permission: ['base-data:quote:modify'],
             label: '修改',
