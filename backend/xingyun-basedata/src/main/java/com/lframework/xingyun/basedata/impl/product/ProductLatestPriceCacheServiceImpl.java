@@ -25,18 +25,8 @@ public class ProductLatestPriceCacheServiceImpl implements ProductLatestPriceCac
 
     @Override
     public BigDecimal getLatestSalePrice(String productId) {
-
         ProductLatestPriceCacheItem item = this.getCacheItem(productId);
-        if (item == null || item.getLatestSalePrice() == null) {
-            Product product = productService.findById(productId);
-            if (product == null) {
-                return null;
-            }
-
-            updateLatestPrice(productId, product.getSalePrice(), null);
-            return product.getSalePrice();
-        }
-        return item.getLatestSalePrice();
+        return item == null ? null : item.getLatestSalePrice();
     }
 
     @Override

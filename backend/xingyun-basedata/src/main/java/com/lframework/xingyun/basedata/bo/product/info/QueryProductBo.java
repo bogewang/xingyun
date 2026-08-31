@@ -84,24 +84,6 @@ public class QueryProductBo extends BaseBo<Product> {
     private BigDecimal retailPrice;
 
     /**
-     * 销售价
-     */
-    @ApiModelProperty("售价")
-    private BigDecimal salePrice;
-
-    /**
-     * 最新售价
-     */
-    @ApiModelProperty("最新售价")
-    private BigDecimal latestSalePrice;
-
-    /**
-     * 是否询价商品
-     */
-    @ApiModelProperty("是否询价商品")
-    private Boolean inquiryProduct;
-
-    /**
      * 商品启用状态。
      */
     @ApiModelProperty("商品启用状态")

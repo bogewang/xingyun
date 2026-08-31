@@ -46,7 +46,6 @@ class SaleOutSheetImportQuoteProductTest {
         product.setId("squid-product");
         product.setName("鱿鱼串");
         product.setCode("P26082900166");
-        product.setSalePrice(new BigDecimal("3.15"));
         when(productService.selectByProductName(anyList())).thenReturn(Collections.singletonList(product));
 
         ProductUnit unit = new ProductUnit();

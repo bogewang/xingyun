@@ -172,7 +172,7 @@
             g.unit,
             g.purchase_price,
             g.tax_rate,
-            g.inquiry_product,
+            NULL AS inquiry_product,
             g.remark,
             g.available
         FROM base_data_product AS g

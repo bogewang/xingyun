@@ -33,9 +33,6 @@
                 <if test="vo.shortName != null and vo.shortName != ''">
                     AND g.short_name LIKE CONCAT('%', #{vo.shortName}, '%')
                 </if>
-                <if test="vo.inquiryProduct != null">
-                    AND g.inquiry_product = #{vo.inquiryProduct}
-                </if>
                 <if test="vo.startTime != null">
                     AND g.create_time >= #{vo.startTime}
                 </if>
@@ -95,9 +92,6 @@
                 </if>
                 <if test="vo.categoryId != null and vo.categoryId != ''">
                     AND (g.category_id = #{vo.categoryId} OR FIND_IN_SET(#{vo.categoryId}, rm.path))
-                </if>
-                <if test="vo.inquiryProduct != null">
-                    AND g.inquiry_product = #{vo.inquiryProduct}
                 </if>
                 <if test="vo.startTime != null">
                     AND g.create_time >= #{vo.startTime}

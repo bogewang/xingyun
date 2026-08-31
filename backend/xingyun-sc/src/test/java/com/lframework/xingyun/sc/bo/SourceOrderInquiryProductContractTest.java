@@ -49,7 +49,7 @@ class SourceOrderInquiryProductContractTest {
         .orElseThrow(AssertionError::new);
 
     assertEquals("inquiry_product", inquiryProductMapping.getColumn());
-    assertTrue(buildPurchaseSql(configuration, "getPurchaseById").contains("g.inquiry_product"));
+    assertTrue(buildPurchaseSql(configuration, "getPurchaseById").contains("NULL AS inquiry_product"));
   }
 
   /**

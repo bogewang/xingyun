@@ -141,22 +141,10 @@ public class GetProductBo extends BaseBo<Product> {
   private BigDecimal purchasePrice;
 
   /**
-   * 销售价
-   */
-  @ApiModelProperty("销售价")
-  private BigDecimal salePrice;
-
-  /**
    * 零售价
    */
   @ApiModelProperty("零售价")
   private BigDecimal retailPrice;
-
-  /**
-   * 是否询价商品
-   */
-  @ApiModelProperty("是否询价商品")
-  private Boolean inquiryProduct;
 
   @ApiModelProperty("别名")
   private String alias;
@@ -211,7 +199,6 @@ public class GetProductBo extends BaseBo<Product> {
     this.purchasePrice = dto.getPurchasePrice();
     ProductUnitService productUnitService = ApplicationUtil.getBean(ProductUnitService.class);
     this.units = productUnitService.getByProductId(dto.getId());
-    this.salePrice = dto.getSalePrice();
     this.retailPrice = dto.getRetailPrice();
     this.alias = dto.getAlias();
     this.defaultSupplier = dto.getDefaultSupplier();

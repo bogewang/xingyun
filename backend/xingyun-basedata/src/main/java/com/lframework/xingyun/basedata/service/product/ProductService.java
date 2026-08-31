@@ -134,7 +134,7 @@ public interface ProductService extends BaseMpService<Product> {
      */
     List<Product> selectByIds(List<String> ids);
 
-    void updatePrice(String id, BigDecimal salePrice, BigDecimal purchasePrice);
+    void updatePrice(String id, BigDecimal purchasePrice);
 
     /**
      * 批量设置商品启用状态。

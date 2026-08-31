@@ -879,7 +879,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         boolean override = BooleanUtil.toBoolean(list.get(0).getPmValue());
         if (override) {
-            productService.updatePrice(product.getId(), null,
+            productService.updatePrice(product.getId(),
                     toBasePrice(detail.getTaxPrice(), detail.getConversionRate()));
         }
     }
@@ -1036,7 +1036,6 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
                 data.setProductName(product.getName());
                 data.setUnitId(unit.getId());
                 data.setSpec(product.getSpec());
-                data.setInquiryProduct(product.getInquiryProduct());
                 BigDecimal defaultPurchasePrice = productLatestPriceCacheService
                         .getLatestPurchasePrice(product.getId());
                 if (data.getPurchasePrice() == null) {

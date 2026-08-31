@@ -128,10 +128,6 @@ public class CreateProductPolyVo implements BaseVo, Serializable {
         throw new InputErrorException("第" + (orderNo) + "行商品采购价不能为空！");
       }
 
-      if (product.getSalePrice() == null) {
-        throw new InputErrorException("第" + (orderNo) + "行商品销售价不能为空！");
-      }
-
       if (product.getRetailPrice() == null) {
         throw new InputErrorException("第" + (orderNo) + "行商品零售价不能为空！");
       }
@@ -206,11 +202,6 @@ public class CreateProductPolyVo implements BaseVo, Serializable {
      * 采购价
      */
     private BigDecimal purchasePrice;
-
-    /**
-     * 销售价
-     */
-    private BigDecimal salePrice;
 
     /**
      * 零售价

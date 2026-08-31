@@ -253,41 +253,6 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         }
     }
 
-    /**
-     * 解析商品询价标识，新增商品默认关闭，导入更新时保留原值。
-     *
-     * @param inquiryProduct 导入或请求传入的询价标识
-     * @param existingInquiryProduct 已存在商品的询价标识
-     * @param isNew 是否为新增商品
-     * @return 最终保存的询价标识
-     */
-    static Boolean resolveInquiryProduct(Boolean inquiryProduct, Boolean existingInquiryProduct, boolean isNew) {
-        if (inquiryProduct != null) {
-            return inquiryProduct;
-        }
-        return isNew ? Boolean.FALSE : existingInquiryProduct;
-    }
-
-    /**
-     * 解析导入文件中的询价商品文本。
-     *
-     * @param inquiryProductText 导入的文本值
-     * @param rowIndex Excel 行号
-     * @return 解析后的布尔值；空白时返回 {@code null}
-     */
-    static Boolean parseInquiryProduct(String inquiryProductText, int rowIndex) {
-        if (StringUtil.isBlank(inquiryProductText)) {
-            return null;
-        }
-        if ("是".equals(inquiryProductText.trim())) {
-            return Boolean.TRUE;
-        }
-        if ("否".equals(inquiryProductText.trim())) {
-            return Boolean.FALSE;
-        }
-        throw new DefaultClientException("第" + rowIndex + "行“询价商品”只能填写“是”或“否”");
-    }
-
     @OpLog(type = BaseDataOpLogType.class, name = "新增商品，ID：{}, 编号：{}", params = { "#_result",
             "#vo.code" }, autoSaveParams = true)
     @Transactional(rollbackFor = Exception.class)
@@ -360,12 +325,10 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                 StringUtil.isBlank(vo.getDefaultSupplier()) ? null : vo.getDefaultSupplier());
         data.setRemark(StringUtil.isBlank(vo.getRemark()) ? null : vo.getRemark());
         data.setRemark2(StringUtil.isBlank(vo.getRemark2()) ? null : vo.getRemark2());
-        data.setInquiryProduct(Boolean.TRUE.equals(vo.getInquiryProduct()));
 
         data.setAvailable(Boolean.TRUE);
 
         handlePurchasePrice(vo, data);
-        handleSalePrice(vo, data);
         handleRetailPrice(vo, data);
 
         getBaseMapper().insert(data);
@@ -441,18 +404,6 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
         data.setRetailPrice(vo.getRetailPrice());
     }
 
-    private void handleSalePrice(CreateProductVo vo, Product data) {
-        // if (vo.getSalePrice() == null) {
-        //     throw new DefaultClientException("销售价不能为空！");
-        // }
-        //
-        // if (NumberUtil.lt(vo.getSalePrice(), 0)) {
-        //     throw new DefaultClientException("销售价不允许小于0！");
-        // }
-
-        data.setSalePrice(vo.getSalePrice());
-    }
-
     private void handlePurchasePrice(CreateProductVo vo, Product data) {
         // if (vo.getPurchasePrice() == null) {
         //     throw new DefaultClientException("采购价不能为空！");
@@ -517,10 +468,8 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                         vo.getSaleTaxRate() == null ? BigDecimal.ZERO : vo.getSaleTaxRate())
                 .set(Product::getWeight, vo.getWeight())
                 .set(Product::getVolume, vo.getVolume())
-                .set(Product::getSalePrice, vo.getSalePrice())
                 .set(Product::getPurchasePrice, vo.getPurchasePrice())
                 .set(Product::getRetailPrice, vo.getRetailPrice())
-                .set(Product::getInquiryProduct, Boolean.TRUE.equals(vo.getInquiryProduct()))
                 .set(Product::getAlias, StringUtil.isBlank(vo.getAlias()) ? null : vo.getAlias())
                 .set(Product::getDefaultSupplier,
                         StringUtil.isBlank(vo.getDefaultSupplier()) ? null : vo.getDefaultSupplier())
@@ -657,15 +606,12 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void updatePrice(String id, BigDecimal salePrice, BigDecimal purchasePrice) {
+    public void updatePrice(String id, BigDecimal purchasePrice) {
         Assert.notBlank(id);
 
         LambdaUpdateWrapper<Product> updateWrapper = Wrappers.lambdaUpdate(Product.class)
                 .eq(Product::getId, id);
 
-        if (salePrice != null) {
-            updateWrapper.set(Product::getSalePrice, salePrice);
-        }
         if (purchasePrice != null) {
             updateWrapper.set(Product::getPurchasePrice, purchasePrice);
         }
@@ -854,12 +800,9 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             if (isNew) {
                 record.setId(IdUtil.getId());
             }
-            record.setInquiryProduct(resolveInquiryProduct(data.getInquiryProductValue(),
-                    data.getExistingInquiryProduct(), isNew));
             record.setTaxRate(data.getTaxRate() == null ? BigDecimal.ZERO : data.getTaxRate());
             record.setSaleTaxRate(data.getSaleTaxRate() == null ? BigDecimal.ZERO : data.getSaleTaxRate());
             record.setAvailable(Boolean.TRUE);
-            record.setSalePrice(data.getSalePrice() == null ? BigDecimal.ZERO : data.getSalePrice());
             record.setPurchasePrice(data.getPurchasePrice() == null ? BigDecimal.ZERO : data.getPurchasePrice());
             record.setRetailPrice(data.getRetailPrice() == null ? BigDecimal.ZERO : data.getRetailPrice());
             if (StringUtil.isNotBlank(data.getDefaultSupplier())) {
@@ -998,7 +941,6 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             Set<String> parentCategoryIds, int i, int rowIndex) {
         ProductImportModel data = list.get(i);
         checkCode(checkCodeSet, checkCodeRowMap, availableCodes, data, rowIndex);
-        data.setInquiryProductValue(parseInquiryProduct(data.getInquiryProductText(), rowIndex));
 
         if (StringUtil.isBlank(data.getName())) {
             throw new DefaultClientException("第" + rowIndex + "行“名称”不能为空");
@@ -1083,14 +1025,6 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             }
         }
 
-        if (data.getSalePrice() != null) {
-            if (!NumberUtil.isNumberPrecision(data.getSalePrice(), 6)) {
-                throw new DefaultClientException("第" + rowIndex + "行“销售价（元）”最多允许6位小数");
-            }
-            if (NumberUtil.lt(data.getSalePrice(), 0)) {
-                throw new DefaultClientException("第" + rowIndex + "行“销售价（元）”不允许小于0");
-            }
-        }
 
         if (data.getRetailPrice() != null) {
             if (!NumberUtil.isNumberPrecision(data.getRetailPrice(), 6)) {
@@ -1156,14 +1090,13 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     }
 
     /**
-     * 记录导入行对应的既有商品，供空询价商品列更新时保留原值。
+     * 记录导入行对应的既有商品。
      *
      * @param data 导入行数据
      * @param product 既有商品
      */
     private void setExistingProduct(ProductImportModel data, Product product) {
         data.setId(product.getId());
-        data.setExistingInquiryProduct(product.getInquiryProduct());
     }
 
     private String generateProductCode(Set<String> checkCodeSet, Set<String> usedCodes) {
@@ -1401,7 +1334,6 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
                     row.getUnit()));
             if (disabledProduct != null) {
                 row.setId(disabledProduct.getId());
-                row.setExistingInquiryProduct(disabledProduct.getInquiryProduct());
             }
         });
         return importRows;

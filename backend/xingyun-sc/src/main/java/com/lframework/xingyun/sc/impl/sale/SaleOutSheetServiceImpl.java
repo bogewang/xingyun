@@ -415,20 +415,21 @@ public class SaleOutSheetServiceImpl extends
         if (CollectionUtil.isEmpty(products) || StringUtils.isBlank(orderDate)) {
             return null;
         }
-        if (!Boolean.TRUE.equals(getPriceUniqueConfig())) {
-            return null;
-        }
         QueryQuoteProductVo quoteVo = new QueryQuoteProductVo();
         quoteVo.setOrderDate(LocalDate.parse(orderDate));
         List<QuoteProductBo> quoteProducts = queryQuoteProducts(quoteVo);
         if (CollectionUtil.isEmpty(quoteProducts)) {
             return Collections.emptyList();
         }
-        Map<String, BigDecimal> quotePriceMap = quoteProducts.stream().collect(
-                Collectors.toMap(QuoteProductBo::getProductId, QuoteProductBo::getSalePrice));
+        Map<String, QuoteProductBo> quoteProductMap = quoteProducts.stream().collect(
+                Collectors.toMap(QuoteProductBo::getProductId, Function.identity()));
         return products.stream()
-                .filter(product -> quotePriceMap.containsKey(product.getId()))
-                .peek(product -> product.setSalePrice(quotePriceMap.get(product.getId())))
+                .filter(product -> quoteProductMap.containsKey(product.getId()))
+                .peek(product -> {
+                    QuoteProductBo quoteProduct = quoteProductMap.get(product.getId());
+                    product.setSalePrice(quoteProduct.getSalePrice());
+                    product.setInquiryProduct(quoteProduct.getInquiryProduct());
+                })
                 .collect(Collectors.toList());
     }
 
@@ -1964,16 +1965,15 @@ public class SaleOutSheetServiceImpl extends
             throw new DefaultClientException("所选销售出库单没有商品明细！");
         }
 
-        Set<String> productIds = details.stream().map(SaleOutSheetDetail::getProductId)
-                .filter(StringUtils::isNotBlank).collect(Collectors.toSet());
-        Map<String, Product> inquiryProductMap = productService.list(
-                        Wrappers.lambdaQuery(Product.class)
-                                .in(Product::getId, productIds)
-                                .eq(Product::getInquiryProduct, Boolean.TRUE))
-                .stream().collect(Collectors.toMap(Product::getId, item -> item));
-
+        Map<String, LocalDate> sheetDateMap = sheets.stream().collect(Collectors.toMap(
+                SaleOutSheet::getId, SaleOutSheet::getOrderDate));
+        Map<LocalDate, Map<String, QuoteProductBo>> quoteProductMaps = new HashMap<>();
         List<SaleOutSheetDetail> changedDetails = details.stream()
-                .filter(item -> inquiryProductMap.containsKey(item.getProductId()))
+                .filter(item -> {
+                    QuoteProductBo quoteProduct = getQuoteProduct(quoteProductMaps,
+                            sheetDateMap.get(item.getSheetId()), item.getProductId());
+                    return quoteProduct != null && Boolean.TRUE.equals(quoteProduct.getInquiryProduct());
+                })
                 .filter(item -> !Boolean.TRUE.equals(item.getIsGift()))
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(changedDetails)) {
@@ -1985,9 +1985,10 @@ public class SaleOutSheetServiceImpl extends
                 throw new DefaultClientException("仅支持同步未对账、未结算的销售出库明细！");
             }
 
-            Product product = inquiryProductMap.get(detail.getProductId());
-            validateInquirySalePrice(product);
-            applyInquirySalePrice(detail, product.getSalePrice());
+            QuoteProductBo quoteProduct = getQuoteProduct(quoteProductMaps,
+                    sheetDateMap.get(detail.getSheetId()), detail.getProductId());
+            validateInquirySalePrice(quoteProduct == null ? null : quoteProduct.getSalePrice());
+            applyInquirySalePrice(detail, quoteProduct.getSalePrice());
         }
         if (!saleOutSheetDetailService.updateBatchById(changedDetails)) {
             throw new DefaultClientException("询价商品明细金额更新失败，请重试！");
@@ -2023,18 +2024,40 @@ public class SaleOutSheetServiceImpl extends
     /**
      * 校验询价商品销售价。
      *
-     * @param product 询价商品
+     * @param salePrice 报价单销售价
      */
-    private void validateInquirySalePrice(Product product) {
-        if (product == null || product.getSalePrice() == null) {
+    private void validateInquirySalePrice(BigDecimal salePrice) {
+        if (salePrice == null) {
             throw new DefaultClientException("询价商品销售价不能为空！");
         }
-        if (NumberUtil.lt(product.getSalePrice(), BigDecimal.ZERO)) {
+        if (NumberUtil.lt(salePrice, BigDecimal.ZERO)) {
             throw new DefaultClientException("询价商品销售价不允许小于0！");
         }
-        if (!NumberUtil.isNumberPrecision(product.getSalePrice(), 6)) {
+        if (!NumberUtil.isNumberPrecision(salePrice, 6)) {
             throw new DefaultClientException("询价商品销售价最多允许6位小数！");
         }
+    }
+
+    /**
+     * 按单据日期读取商品的生效报价。
+     *
+     * @param quoteProductMaps 按日期缓存的报价商品
+     * @param orderDate 单据日期
+     * @param productId 商品 ID
+     * @return 生效报价商品；不存在时返回 {@code null}
+     */
+    private QuoteProductBo getQuoteProduct(Map<LocalDate, Map<String, QuoteProductBo>> quoteProductMaps,
+            LocalDate orderDate, String productId) {
+        if (orderDate == null || StringUtils.isBlank(productId)) {
+            return null;
+        }
+        Map<String, QuoteProductBo> products = quoteProductMaps.computeIfAbsent(orderDate, date -> {
+            QueryQuoteProductVo vo = new QueryQuoteProductVo();
+            vo.setOrderDate(date);
+            return queryQuoteProducts(vo).stream().collect(Collectors.toMap(QuoteProductBo::getProductId,
+                    Function.identity(), (first, ignored) -> first));
+        });
+        return products.get(productId);
     }
 
     /**
@@ -2379,19 +2402,13 @@ public class SaleOutSheetServiceImpl extends
         sheet.setCustomerId(vo.getCustomerId());
         sheet.setOrderDate(vo.getOrderDate());
 
-        Map<String, BigDecimal> quotePrices = Collections.emptyMap();
-        Map<String, String> quoteSourceIds = Collections.emptyMap();
-        if (Boolean.TRUE.equals(getPriceUniqueConfig())) {
-            QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
-            quoteProductVo.setOrderDate(vo.getOrderDate());
-            List<QuoteProductBo> quoteProducts = queryQuoteProducts(quoteProductVo);
-            quotePrices = resolveUniqueQuotePrices(sheet, vo.getProducts(), quoteProducts);
-            quoteSourceIds = quoteProducts.stream().collect(Collectors.toMap(
-                    QuoteProductBo::getProductId, QuoteProductBo::getSourceId,
-                    (first, ignored) -> first));
-        } else {
-            sheet.setQuoteSheetId(null);
-        }
+        QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
+        quoteProductVo.setOrderDate(vo.getOrderDate());
+        List<QuoteProductBo> quoteProducts = queryQuoteProducts(quoteProductVo);
+        Map<String, BigDecimal> quotePrices = resolveUniqueQuotePrices(sheet, vo.getProducts(), quoteProducts);
+        Map<String, String> quoteSourceIds = quoteProducts.stream().collect(Collectors.toMap(
+                QuoteProductBo::getProductId, QuoteProductBo::getSourceId,
+                (first, ignored) -> first));
 
         List<SaleOutSheetDetail> details = new ArrayList<>(vo.getProducts().size());
         for (SaleOutProductVo productVo : vo.getProducts()) {
@@ -2680,8 +2697,7 @@ public class SaleOutSheetServiceImpl extends
 
         boolean override = BooleanUtil.toBoolean(list.get(0).getPmValue());
         if (override) {
-            productService.updatePrice(product.getId(),
-                    toBasePrice(detail.getTaxPrice(), detail.getConversionRate()), null);
+            // 销售价由报价单维护，销售出库不再回写商品主数据。
         }
     }
 
@@ -2936,12 +2952,13 @@ public class SaleOutSheetServiceImpl extends
                 .distinct()
                 .collect(Collectors.toList());
         List<Product> products = productService.selectByProductName(productNames);
+        Map<String, QuoteProductBo> quoteProductMap = Collections.emptyMap();
         if (orderDate != null) {
             QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
             quoteProductVo.setOrderDate(orderDate);
-            Set<String> quoteProductIds = queryQuoteProducts(quoteProductVo).stream()
-                    .map(QuoteProductBo::getProductId)
-                    .collect(Collectors.toSet());
+            quoteProductMap = queryQuoteProducts(quoteProductVo).stream().collect(Collectors.toMap(
+                    QuoteProductBo::getProductId, Function.identity(), (first, ignored) -> first));
+            Set<String> quoteProductIds = quoteProductMap.keySet();
             products = products.stream()
                     .filter(item -> quoteProductIds.contains(item.getId()))
                     .collect(Collectors.toList());
@@ -2979,12 +2996,14 @@ public class SaleOutSheetServiceImpl extends
                 data.setUnitId(unit.getId());
                 data.setSpec(product.getSpec());
                 data.setUnit(unit.getUnitName());
-                data.setInquiryProduct(product.getInquiryProduct());
-                data.setOriPrice(product.getSalePrice() == null ? BigDecimal.ZERO
-                        : NumberUtil.mul(product.getSalePrice(), unit.getConversionRate()));
+                QuoteProductBo quoteProduct = quoteProductMap.get(product.getId());
+                data.setInquiryProduct(quoteProduct == null ? null : quoteProduct.getInquiryProduct());
+                data.setOriPrice(quoteProduct == null ? BigDecimal.ZERO
+                        : NumberUtil.mul(quoteProduct.getSalePrice(), unit.getConversionRate()));
                 // 导入时，如果指定销售价，则以销售价为准
                 if (data.getTaxPrice() == null) {
-                    data.setTaxPrice(NumberUtil.mul(getDefaultSalePrice(product), unit.getConversionRate()));
+                    data.setTaxPrice(quoteProduct == null ? BigDecimal.ZERO
+                            : NumberUtil.mul(quoteProduct.getSalePrice(), unit.getConversionRate()));
                 }
             }
         }
@@ -3470,16 +3489,12 @@ public class SaleOutSheetServiceImpl extends
     }
 
     /**
-     * 获取商品售价
+     * 商品售价统一由报价单提供，未匹配报价时返回零值。
      * @param product
      * @return
      */
     private BigDecimal getDefaultSalePrice(Product product) {
-        if (useUniquePriceAsSalePrice()) {
-            return product.getSalePrice() == null ? BigDecimal.ZERO : product.getSalePrice();
-        }
-        BigDecimal latestSalePrice = productLatestPriceCacheService.getLatestSalePrice(product.getId());
-        return latestSalePrice == null ? BigDecimal.ZERO : latestSalePrice;
+        return BigDecimal.ZERO;
     }
 
     /**

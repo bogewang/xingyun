@@ -75,12 +75,6 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
     private BigDecimal purchasePrice;
 
     /**
-     * 销售价
-     */
-    @ExcelProperty("销售价（元）")
-    private BigDecimal salePrice;
-
-    /**
      * 零售价
      */
     // @ExcelProperty("零售价（元）")
@@ -94,34 +88,10 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
     private BigDecimal latestPurchasePrice;
 
     /**
-     * 最新销售价
-     */
-    @ExcelProperty("最新销售价（元）")
-    private BigDecimal latestSalePrice;
-
-    /**
      * 别名
      */
     @ExcelProperty("别名")
     private String alias;
-
-    /**
-     * 询价商品，导入导出使用“是”或“否”。
-     */
-    @ExcelProperty("询价商品")
-    private String inquiryProductText;
-
-    /**
-     * 解析后的询价商品标识。
-     */
-    @ExcelIgnore
-    private Boolean inquiryProductValue;
-
-    /**
-     * 更新商品原有的询价商品标识。
-     */
-    @ExcelIgnore
-    private Boolean existingInquiryProduct;
 
     /**
      * 备注
@@ -202,17 +172,6 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
 
     public ProductImportModel(Product dto) {
         super(dto);
-        this.inquiryProductText = formatInquiryProduct(dto.getInquiryProduct());
-    }
-
-    /**
-     * 将询价商品布尔值转换为导出文本。
-     *
-     * @param inquiryProduct 询价商品标识
-     * @return “是”或“否”
-     */
-    public static String formatInquiryProduct(Boolean inquiryProduct) {
-        return Boolean.TRUE.equals(inquiryProduct) ? "是" : "否";
     }
 
     @Override
@@ -239,10 +198,9 @@ public class ProductImportModel extends BaseBo<Product> implements ExcelModel {
             }
         }
 
-        // 最新采购价和最新售价
+        // 最新采购价
         ProductLatestPriceCacheService productLatestPriceCacheService =  ApplicationUtil.getBean(ProductLatestPriceCacheService.class);
         this.latestPurchasePrice = productLatestPriceCacheService.getLatestPurchasePrice(dto.getId());
-        this.latestSalePrice = productLatestPriceCacheService.getLatestSalePrice(dto.getId());
     }
 
 
