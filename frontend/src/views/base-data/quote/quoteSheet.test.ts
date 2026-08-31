@@ -79,6 +79,26 @@ describe('报价单编辑数据', () => {
     expect(source).toContain('api.disable');
   });
 
+  it('编辑页支持批量添加商品，并仅传递报价单 ID 由后端排除已有明细', () => {
+    const source = readFileSync(new URL('./modify.vue', import.meta.url), 'utf-8');
+    const batchSource = readFileSync(
+      new URL('../../sc/shared/batch-add-product.vue', import.meta.url),
+      'utf-8',
+    );
+
+    expect(source).toContain('openBatchAddProductDialog');
+    expect(source).toContain(':quote-sheet-id="formData.id"');
+    expect(source).toContain('batchAddProduct(productList)');
+    expect(batchSource).toContain("this.bizType === 'quote'");
+    expect(batchSource).toContain('quoteSheetId');
+    expect(batchSource).not.toContain('excludeProductIds');
+    expect(batchSource).toContain('loadQuoteUnitNames');
+    expect(batchSource).toContain('quoteUnitNameMap[product.unit] || product.unit');
+    expect(batchSource).not.toContain("{ field: 'brandName', title: '商品品牌'");
+    expect(batchSource).toContain('v-if="bizType !== \'quote\'" label="商品品牌"');
+    expect(batchSource).toContain("? { quoteSheetId: this.quoteSheetId }");
+  });
+
   it('编辑页保存或关闭时必须通过多标签页机制关闭当前标签', () => {
     const source = readFileSync(new URL('./modify.vue', import.meta.url), 'utf-8');
 

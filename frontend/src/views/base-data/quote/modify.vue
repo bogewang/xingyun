@@ -46,6 +46,7 @@
           <a-space>
             <a-button type="primary" :icon="h(PlusOutlined)" @click="addProduct">新增</a-button>
             <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
+            <a-button :icon="h(PlusOutlined)" @click="openBatchAddProductDialog">批量添加商品</a-button>
           </a-space>
         </template>
 
@@ -97,6 +98,13 @@
         </j-form>
       </j-border>
 
+      <shared-batch-add-product
+        ref="batchAddProductDialog"
+        biz-type="quote"
+        :quote-sheet-id="formData.id"
+        @confirm="batchAddProduct"
+      />
+
       <div
         class="sheet-editor-actions"
         style="text-align: center; background-color: #ffffff; padding: 8px 0"
@@ -125,11 +133,13 @@
   import { multiplePageMix } from '@/mixins/multiplePageMix';
   import { buildQuoteSheetPayload } from './quoteSheet';
   import InlineProductSelect from '@/views/sc/shared/inline-product-select.vue';
+  import SharedBatchAddProduct from '@/views/sc/shared/batch-add-product.vue';
 
   export default defineComponent({
     name: 'QuoteSheetModify',
     components: {
       InlineProductSelect,
+      SharedBatchAddProduct,
     },
     mixins: [multiplePageMix],
     setup() {
@@ -334,6 +344,18 @@
           });
 
           this.tableData = tableData;
+        });
+      },
+      // 打开批量添加商品弹窗。
+      openBatchAddProductDialog() {
+        this.$refs.batchAddProductDialog.openDialog();
+      },
+      // 将批量选择的商品追加到报价单中。
+      batchAddProduct(productList) {
+        productList.forEach((product) => {
+          const row = this.emptyProduct();
+          this.tableData.push(row);
+          this.handleSelectProduct(this.tableData.length - 1, product);
         });
       },
       updateSheet() {

@@ -138,6 +138,14 @@
                       OR g.sku_code LIKE CONCAT('%', #{vo.condition}, '%')
                   )
               </if>
+              <if test="vo.quoteSheetId != null and vo.quoteSheetId != ''">
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM tbl_quote_sheet_detail qsd
+                      WHERE qsd.quote_sheet_id = #{vo.quoteSheetId}
+                        AND qsd.product_id = g.id
+                  )
+              </if>
               <if test="vo.code != null and vo.code != ''">
                   AND g.code = #{vo.code}
               </if>

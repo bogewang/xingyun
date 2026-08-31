@@ -49,6 +49,8 @@ public class QuoteSheetServiceImplTest {
   @Test(expectedExceptions=DefaultClientException.class,expectedExceptionsMessageRegExp=".*开始日期不能晚于.*") public void shouldRejectInvalidDatesBeforeEnabling() { QuoteSheetServiceImpl.assertBasicSheetData(date("2026-08-31"),date("2026-08-01"),Collections.singletonList("product-1")); }
   /** 有效报价 SQL 必须排除停用商品。 */
   @Test public void shouldExcludeDisabledProductsFromActiveQuoteQuery() throws Exception { String sql=new String(Files.readAllBytes(Paths.get("src/main/resources/mappers/quote/QuoteSheetMapper.xml")),StandardCharsets.UTF_8); Assert.assertTrue(sql.contains("p.available = TRUE")); }
+  /** 商品选择器仅接收报价单 ID，并由数据库查询该报价单的已有明细。 */
+  @Test public void shouldExcludeQuoteSheetDetailsByQuoteSheetId() throws Exception { String sql=new String(Files.readAllBytes(Paths.get("src/main/resources/mappers/product/ProductMapper.xml")),StandardCharsets.UTF_8); Assert.assertTrue(sql.contains("vo.quoteSheetId")); Assert.assertTrue(sql.contains("NOT EXISTS")); Assert.assertTrue(sql.contains("tbl_quote_sheet_detail")); Assert.assertFalse(sql.contains("excludeProductIds")); }
   /** 已被引用的报价单仍允许修改，删除限制由删除流程单独处理。 */
   @Test public void shouldAllowUpdatingReferencedQuoteSheet() throws Exception { String source=new String(Files.readAllBytes(Paths.get("src/main/java/com/lframework/xingyun/basedata/impl/quote/QuoteSheetServiceImpl.java")),StandardCharsets.UTF_8); Assert.assertFalse(source.contains("报价单已被业务单据使用，不能修改！")); }
   /** 所有写流程共用的入口先锁定当前租户报价单范围。 */
