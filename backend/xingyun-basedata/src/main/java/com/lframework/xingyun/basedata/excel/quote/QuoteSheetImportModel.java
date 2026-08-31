@@ -31,6 +31,14 @@ public class QuoteSheetImportModel implements ExcelModel {
     @ExcelProperty("销售单价")
     private BigDecimal salePrice;
 
+    /** Excel 中填写“是”或“否”；留空时按“是”处理。 */
+    @ExcelProperty("是否询价商品")
+    private String inquiryProductText;
+
+    /** 解析后的是否询价商品标识。 */
+    @ExcelIgnore
+    private Boolean inquiryProduct;
+
     @ExcelIgnore
     private String productId;
 

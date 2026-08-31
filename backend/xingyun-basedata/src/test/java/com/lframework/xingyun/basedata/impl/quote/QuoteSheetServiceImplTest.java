@@ -7,6 +7,7 @@ import com.lframework.xingyun.basedata.vo.quote.QuoteSheetProductVo;
 import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverter;
 import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverterImpl;
 import com.lframework.xingyun.basedata.entity.Product;
+import com.lframework.xingyun.basedata.entity.ProductUnit;
 import com.lframework.xingyun.basedata.mappers.ProductMapper;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,6 +52,20 @@ public class QuoteSheetServiceImplTest {
   @Test public void shouldParseImportInquiryProductWithDefaultTrue() { Assert.assertTrue(QuoteSheetServiceImpl.parseImportInquiryProduct(null,2)); Assert.assertTrue(QuoteSheetServiceImpl.parseImportInquiryProduct("是",2)); Assert.assertFalse(QuoteSheetServiceImpl.parseImportInquiryProduct("否",2)); }
   /** 导入的是否询价商品仅允许填写是或否。 */
   @Test(expectedExceptions=DefaultClientException.class,expectedExceptionsMessageRegExp=".*是否询价商品.*只能填写.*") public void shouldRejectInvalidImportInquiryProduct() { QuoteSheetServiceImpl.parseImportInquiryProduct("未知",2); }
+  /** 导入匹配到商品后，返回页面的商品名称必须以商品主数据为准。 */
+  @Test public void shouldFillProductNameAfterMatchingQuoteSheetImport() throws Exception {
+    QuoteSheetServiceImpl service=new QuoteSheetServiceImpl();
+    com.lframework.xingyun.basedata.service.product.ProductService productService=Mockito.mock(com.lframework.xingyun.basedata.service.product.ProductService.class);
+    com.lframework.xingyun.basedata.service.product.ProductUnitService productUnitService=Mockito.mock(com.lframework.xingyun.basedata.service.product.ProductUnitService.class);
+    Product product=new Product(); product.setId("product-1"); product.setName("标准商品名"); product.setCode("P001");
+    ProductUnit unit=new ProductUnit(); unit.setUnitName("箱");
+    Mockito.when(productService.selectByProductName(Mockito.anyList())).thenReturn(Collections.singletonList(product));
+    Mockito.when(productUnitService.getAvailableByProductId("product-1")).thenReturn(Collections.singletonList(unit));
+    Mockito.when(productUnitService.getAvailableByUnitName("product-1","箱")).thenReturn(unit);
+    setField(service,"productService",productService); setField(service,"productUnitService",productUnitService);
+    com.lframework.xingyun.basedata.excel.quote.QuoteSheetImportModel row=new com.lframework.xingyun.basedata.excel.quote.QuoteSheetImportModel(); row.setName(" 标准商品名 "); row.setUnit("箱");
+    Assert.assertEquals(service.checkImport(Collections.singletonList(row)).get(0).getName(),"标准商品名");
+  }
   /** 有效报价 SQL 必须排除停用商品。 */
   @Test public void shouldExcludeDisabledProductsFromActiveQuoteQuery() throws Exception { String sql=new String(Files.readAllBytes(Paths.get("src/main/resources/mappers/quote/QuoteSheetMapper.xml")),StandardCharsets.UTF_8); Assert.assertTrue(sql.contains("p.available = TRUE")); }
   /** 商品选择器仅接收报价单 ID，并由数据库查询该报价单的已有明细。 */

@@ -118,6 +118,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
                     continue;
                 }
                 data.setCode(product.getCode());
+                data.setName(product.getName());
                 data.setProductId(product.getId());
                 // data.setUnitId(unit.getId());
                 data.setSpec(product.getSpec());
