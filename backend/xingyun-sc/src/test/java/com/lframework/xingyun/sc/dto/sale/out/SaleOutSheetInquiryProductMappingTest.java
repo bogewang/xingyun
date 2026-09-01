@@ -60,13 +60,16 @@ class SaleOutSheetInquiryProductMappingTest {
     assertFalse(new QuerySaleOutSheetDetailBo(normalDetail).getInquiryProduct());
   }
 
-  /** 验证销售出库 SQL 从商品表选择询价标识并映射完整单据明细。 */
+  /** 验证销售出库详情从单据报价单及商品读取询价标识。 */
   @Test
-  void shouldSelectInquiryProductInSaleOutMapperQueries() throws IOException {
+  void shouldSelectInquiryProductFromSheetQuoteDetailInSaleOutFullDetail() throws IOException {
     String mapperXml = readMapperXml();
 
-    assertTrue(mapperXml.contains("NULL AS inquiry_product"));
-    assertTrue(mapperXml.contains("NULL AS detail_inquiry_product"));
+        assertTrue(mapperXml.contains("LEFT JOIN tbl_quote_sheet AS q ON q.start_date &lt;= s.order_date"));
+        assertTrue(mapperXml.contains("AND q.end_date >= s.order_date"));
+        assertTrue(mapperXml.contains("LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = q.id"));
+    assertTrue(mapperXml.contains("AND qd.product_id = d.product_id"));
+    assertTrue(mapperXml.contains("qd.inquiry_product AS detail_inquiry_product"));
     assertTrue(mapperXml.contains("<result column=\"detail_inquiry_product\" property=\"inquiryProduct\"/>"));
   }
 

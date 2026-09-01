@@ -755,6 +755,7 @@
           productId: '',
           productCode: '',
           productName: '',
+          inquiryProduct: false,
           skuCode: '',
           externalCode: '',
           unit: '',

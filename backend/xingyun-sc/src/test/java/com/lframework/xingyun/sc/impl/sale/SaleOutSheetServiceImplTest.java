@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
+import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetInvoiceDetailExportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
@@ -102,6 +103,22 @@ class SaleOutSheetServiceImplTest {
 
     Assert.assertEquals(sheet.getQuoteSheetId(), "quote-1");
     Assert.assertEquals(prices.get("product-1"), new BigDecimal("12.50"));
+  }
+
+  /** 验证销售出库详情使用订单日期生效报价单回填询价商品标识。 */
+  @Test
+  void applyQuoteInquiryProductsShouldPopulateInquiryProductFromQuote() {
+    SaleOutSheetFullDto sheet = new SaleOutSheetFullDto();
+    SaleOutSheetFullDto.SheetDetailDto detail = new SaleOutSheetFullDto.SheetDetailDto();
+    detail.setProductId("product-1");
+    sheet.setDetails(Arrays.asList(detail));
+    QuoteProductBo quoteProduct = new QuoteProductBo();
+    quoteProduct.setProductId("product-1");
+    quoteProduct.setInquiryProduct(true);
+
+    SaleOutSheetServiceImpl.applyQuoteInquiryProducts(sheet, Arrays.asList(quoteProduct));
+
+    Assert.assertTrue(sheet.getDetails().get(0).getInquiryProduct());
   }
 
   /** 验证销售商品不在当前报价单时拒绝保存。 */

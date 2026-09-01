@@ -1431,8 +1431,35 @@ public class SaleOutSheetServiceImpl extends
 
     @Override
     public SaleOutSheetFullDto getDetail(String id) {
+        SaleOutSheetFullDto result = getBaseMapper().getDetail(id);
+        if (result == null || result.getOrderDate() == null
+                || CollectionUtil.isEmpty(result.getDetails())) {
+            return result;
+        }
 
-        return getBaseMapper().getDetail(id);
+        QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
+        quoteProductVo.setOrderDate(result.getOrderDate());
+        applyQuoteInquiryProducts(result, queryQuoteProducts(quoteProductVo));
+        return result;
+    }
+
+    /**
+     * 使用订单日期生效报价单的询价标识补全销售出库详情，避免历史明细缺少来源报价 ID 时返回空值。
+     *
+     * @param sheet 销售出库详情
+     * @param quoteProducts 生效报价商品
+     */
+    static void applyQuoteInquiryProducts(SaleOutSheetFullDto sheet,
+            List<QuoteProductBo> quoteProducts) {
+        if (sheet == null || CollectionUtil.isEmpty(sheet.getDetails())
+                || CollectionUtil.isEmpty(quoteProducts)) {
+            return;
+        }
+        Map<String, Boolean> inquiryProductMap = quoteProducts.stream().collect(Collectors.toMap(
+                QuoteProductBo::getProductId, QuoteProductBo::getInquiryProduct,
+                (first, ignored) -> first));
+        sheet.getDetails().forEach(detail -> detail.setInquiryProduct(
+                Boolean.TRUE.equals(inquiryProductMap.get(detail.getProductId()))));
     }
 
     @Override
