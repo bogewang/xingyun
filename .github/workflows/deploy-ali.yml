@@ -90,6 +90,10 @@ jobs:
             rm -rf dist.new
             mkdir -p dist.new
             tar -xzf frontend-dist.tar.gz -C dist.new
+            mkdir -p bak
+            backup_file="bak/$(TZ=Asia/Shanghai date +%Y%m%d%H%M).tar.gz"
+            tar -czf "$backup_file" dist xingyun-api.jar
+            find bak -maxdepth 1 -type f -name '????????????.tar.gz' -mtime +7 -delete
             rm -rf dist
             mv dist.new/dist dist
             rm -rf dist.new
