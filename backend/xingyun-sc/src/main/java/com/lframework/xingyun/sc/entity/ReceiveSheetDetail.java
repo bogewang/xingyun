@@ -37,6 +37,9 @@ public class ReceiveSheetDetail extends BaseEntity implements BaseDto {
    */
   private String productId;
 
+  /** 来源报价明细ID。 */
+  private String sourceId;
+
   /**
    * 采购数量
    */

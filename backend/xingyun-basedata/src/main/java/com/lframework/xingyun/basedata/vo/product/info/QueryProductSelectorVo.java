@@ -14,6 +14,18 @@ public class QueryProductSelectorVo extends PageVo implements BaseVo, Serializab
   private static final long serialVersionUID = 1L;
 
   /**
+   * 关键字（按编号/名称/SKU模糊匹配）
+   */
+  @ApiModelProperty("关键字")
+  private String condition;
+
+  /**
+   * 报价单ID，查询商品选择器时排除该报价单已有明细商品。
+   */
+  @ApiModelProperty("报价单ID")
+  private String quoteSheetId;
+
+  /**
    * 编号
    */
   @ApiModelProperty("编号")

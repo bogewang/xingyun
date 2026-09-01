@@ -56,12 +56,6 @@ public class QueryProductVo extends SortPageVo implements BaseVo, Serializable {
 	private String categoryId;
 
 	/**
-	 * 是否询价商品
-	 */
-	@ApiModelProperty("是否询价商品")
-	private Boolean inquiryProduct;
-
-	/**
 	 * 商品启用状态；为空时查询全部状态。
 	 */
 	@ApiModelProperty("商品启用状态")

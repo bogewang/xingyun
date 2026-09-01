@@ -76,10 +76,6 @@ public class Product extends BaseEntity implements BaseDto {
    */
   private BigDecimal saleTaxRate;
   /**
-   * 销售价
-   */
-  private BigDecimal salePrice;
-  /**
    * 进价
    */
   private BigDecimal purchasePrice;
@@ -87,11 +83,6 @@ public class Product extends BaseEntity implements BaseDto {
    * 零售价
    */
   private BigDecimal retailPrice;
-
-  /**
-   * 是否询价商品
-   */
-  private Boolean inquiryProduct;
 
   /**
    * 规格

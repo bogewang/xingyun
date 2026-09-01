@@ -25,6 +25,8 @@ import com.lframework.xingyun.sc.excel.sale.SaleOrderExportTaskWorker;
 import com.lframework.xingyun.sc.excel.sale.SaleOrderImportModel;
 import com.lframework.xingyun.sc.service.ProductHotnessService;
 import com.lframework.xingyun.sc.service.sale.SaleOrderService;
+import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
+import com.github.pagehelper.PageInfo;
 import com.lframework.xingyun.sc.vo.sale.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -42,6 +44,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.time.LocalDate;
 import java.util.stream.Collectors;
 
 /**
@@ -61,6 +64,9 @@ public class SaleOrderController extends DefaultBaseController {
 
     @Resource
     private StoreCenterService storeCenterService;
+
+    @Autowired
+    private SaleOutSheetService saleOutSheetService;
 
     /**
      * 打印
@@ -302,12 +308,13 @@ public class SaleOrderController extends DefaultBaseController {
     @ApiOperation("根据关键字查询可销售商品")
     @ApiImplicitParams({
             @ApiImplicitParam(value = "仓库ID", name = "scId", paramType = "query"),
-            @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true) })
+            @ApiImplicitParam(value = "关键字", name = "condition", paramType = "query", required = true),
+            @ApiImplicitParam(value = "单据日期，唯一报价模式下用于过滤报价商品", name = "orderDate", paramType = "query") })
     @HasPermission({ "sale:order:add", "sale:order:modify", "sale:out:add", "sale:out:modify",
             "sale:return:add", "sale:return:modify" })
     @GetMapping("/product/search")
     public InvokeResult<List<SaleProductBo>> searchSaleProducts(
-            String scId, String condition, Boolean isReturn) {
+            String scId, String condition, Boolean isReturn, String orderDate) {
 
         if (isReturn == null) {
             isReturn = false;
@@ -323,7 +330,14 @@ public class SaleOrderController extends DefaultBaseController {
                 getPageSize(), scId, condition, isReturn);
         List<SaleProductDto> datas = pageResult.getDatas();
         if (CollectionUtil.isNotEmpty(datas)) {
-            return InvokeResultBuilder.success(SaleOutSheetConverter.saleOutProductDto2Bos(scId, datas));
+            // 唯一报价模式下按单据日期过滤为报价商品，并用报价价覆盖售价
+            List<SaleProductDto> quoteFiltered = saleOutSheetService.applyQuoteFilter(datas, orderDate);
+            if (quoteFiltered != null) {
+                datas = quoteFiltered;
+            }
+            if (CollectionUtil.isNotEmpty(datas)) {
+                return InvokeResultBuilder.success(SaleOutSheetConverter.saleOutProductDto2Bos(scId, datas));
+            }
         }
 
         return InvokeResultBuilder.success(CollectionUtil.emptyList());
@@ -345,6 +359,13 @@ public class SaleOrderController extends DefaultBaseController {
 
         if (CollectionUtil.isEmpty(pageResult.getDatas())) {
             return InvokeResultBuilder.success(new PageResult<>());
+        }
+
+        // 唯一报价模式下按单据日期过滤为报价商品，并用报价价覆盖售价
+        List<SaleProductDto> quoteFiltered = saleOutSheetService.applyQuoteFilter(pageResult.getDatas(),
+                vo.getOrderDate());
+        if (quoteFiltered != null) {
+            pageResult = PageResultUtil.convert(new PageInfo<>(quoteFiltered));
         }
 
         List<SaleProductBo> results = pageResult.getDatas().stream().map(
@@ -370,12 +391,13 @@ public class SaleOrderController extends DefaultBaseController {
     @ApiOperation("导入")
     @HasPermission({ "sale:order:import" })
     @PostMapping("/import")
-    public InvokeResult<List<SaleProductVo>> importExcel(@NotNull(message = "请上传文件") MultipartFile file) {
+    public InvokeResult<List<SaleProductVo>> importExcel(@NotNull(message = "请上传文件") MultipartFile file,
+                                                          @RequestParam @NotNull(message = "请先选择订单日期！") LocalDate orderDate) {
         try {
 
             List<SaleOrderImportModel> list = EasyExcelUtils.syncReadModel(file.getInputStream(),
                     SaleOrderImportModel.class);
-            List<SaleProductVo> data = saleOrderService.checkImport(list);
+            List<SaleProductVo> data = saleOrderService.checkImport(list, orderDate);
 
             return InvokeResultBuilder.success(data);
         } catch (Exception e) {

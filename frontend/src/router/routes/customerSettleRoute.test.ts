@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it } from 'vitest';
-import { CustomerSettleRoute, SettleRoute } from './index';
+import { CustomerSettleRoute, QuoteRoute, SettleRoute } from './index';
 
 describe('客户结算路由', () => {
   it('注册客户结算汇总与具体结算页面', () => {
@@ -33,5 +33,31 @@ describe('客户结算路由', () => {
     expect(routes.find((route) => route.name === 'AddSupplierSettleSheet')?.path).toBe(
       'supplier/settle',
     );
+  });
+});
+
+describe('报价单路由', () => {
+  it('注册报价单管理、新增与修改页面，详情由列表弹窗展示', () => {
+    const routes = QuoteRoute.children || [];
+
+    expect(routes.find((route) => route.path === 'quote')?.name).toBe('QuoteSheet');
+    expect(routes.find((route) => route.path === 'quote/detail/:id')).toBeUndefined();
+    expect(routes.find((route) => route.path === 'quote/add')?.name).toBe('QuoteSheetAdd');
+    expect(routes.find((route) => route.path === 'quote/modify/:id')?.name).toBe(
+      'QuoteSheetModify',
+    );
+  });
+
+  it('新增和修改页组件名与路由缓存键一致，切换 Tab 时保留填写内容', async () => {
+    const routes = QuoteRoute.children || [];
+    const pageModules = {
+      QuoteSheetAdd: await routes.find((route) => route.name === 'QuoteSheetAdd')?.component?.(),
+      QuoteSheetModify: await routes
+        .find((route) => route.name === 'QuoteSheetModify')
+        ?.component?.(),
+    };
+
+    expect(pageModules.QuoteSheetAdd.default.name).toBe('QuoteSheetAdd');
+    expect(pageModules.QuoteSheetModify.default.name).toBe('QuoteSheetModify');
   });
 });

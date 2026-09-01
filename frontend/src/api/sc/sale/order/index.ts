@@ -115,7 +115,7 @@ export function downloadImportTemplate(): Promise<void> {
   );
 }
 
-export function importExcel(data: { id: string; file: Blob }): Promise<void> {
+export function importExcel(data: { file: Blob; orderDate: string }): Promise<void> {
   return defHttp.post<void>(
     {
       url: baseUrl + '/import',
@@ -358,6 +358,7 @@ export function batchDelete(id: string, showError: boolean = false): Promise<voi
 export function searchSaleProducts(
   scId: string | undefined,
   condition: string,
+  orderDate?: string,
 ): Promise<SaleProductBo[]> {
   return defHttp.get<SaleProductBo[]>(
     {
@@ -365,6 +366,7 @@ export function searchSaleProducts(
       params: {
         scId: scId || '',
         condition,
+        orderDate: orderDate || '',
       },
     },
     {

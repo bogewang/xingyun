@@ -152,6 +152,11 @@
           </a-space>
         </template>
 
+        <template #productCode_default="{ row }">
+          <a-tag v-if="row.quoteUnmatched" color="error">未匹配</a-tag>
+          <span v-else>{{ row.productCode }}</span>
+        </template>
+
         <!-- 商品名称 列自定义内容 -->
         <template #inquiryProduct_default="{ row }">
           <span :class="formatInquiryProduct(row.inquiryProduct).className">
@@ -167,6 +172,7 @@
             biz-type="purchase"
             mode="require"
             :sc-id="formData.sc.id"
+            :order-date="formData.orderDate"
             :is-fixed="row.isFixed"
             @select="handleSelectProduct"
             @add-product="addProduct"
@@ -266,6 +272,7 @@
         ref="batchAddProductDialog"
         :show-inquiry-product="true"
         :sc-id="formData.sc.id"
+        :order-date="formData.orderDate"
         @confirm="batchAddProduct"
       />
       <a-modal
@@ -345,6 +352,11 @@
     getSheetLineAmount,
   } from '@/utils/sheetAmountInput';
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
+  import {
+    markProductsOutsideQuoteSheet,
+    markQuoteProductMismatch,
+  } from '@/utils/quoteProductMismatch';
+  import * as saleApi from '@/api/sc/sale/out';
   import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import { requestUserSelectOptions } from '@/utils/labelSelect';
   import { createSuccess, createError, createConfirm, createPrompt } from '@/hooks/web/msg';
@@ -414,7 +426,12 @@
             width: 140,
             slots: { default: 'operation_default' },
           },
-          { field: 'productCode', title: '商品编号', width: 120 },
+          {
+            field: 'productCode',
+            title: '商品编号',
+            width: 120,
+            slots: { default: 'productCode_default' },
+          },
           {
             field: 'productName',
             title: '商品名称',
@@ -499,6 +516,11 @@
         return Moment;
       },
     },
+    watch: {
+      'formData.orderDate'() {
+        this.validateQuoteProductsByOrderDate();
+      },
+    },
     created() {
       // 初始化表单数据
       this.openDialog();
@@ -514,6 +536,25 @@
       document.removeEventListener('keydown', this.handleKeyDown);
     },
     methods: {
+      /** 按订单日期校验当前表格商品是否在生效报价单内。 */
+      async validateQuoteProductsByOrderDate() {
+        const orderDate = this.formData.orderDate;
+        if (!orderDate || !this.tableData.some((item) => !isEmpty(item.productId))) {
+          markProductsOutsideQuoteSheet(this.tableData, [], false);
+          return;
+        }
+        try {
+          const [enabled, quoteProducts] = await Promise.all([
+            saleApi.getPriceUniqueConfig(),
+            saleApi.queryQuoteProducts({ orderDate }),
+          ]);
+          if (orderDate === this.formData.orderDate) {
+            markProductsOutsideQuoteSheet(this.tableData, quoteProducts, enabled);
+          }
+        } catch {
+          // 查询报价单失败时不影响当前明细编辑。
+        }
+      },
       handleKeyDown(event) {
         if (!shouldAddProductByEnter(event)) {
           return;
@@ -652,6 +693,7 @@
           isFixed: false,
           editingProduct: false,
           productQuery: '',
+          quoteUnmatched: false,
           products: [],
           productOptions: [],
           activeProductIndex: -1,
@@ -1038,6 +1080,7 @@
             this.$emit('confirm');
             this.goQueryPage();
           })
+          .catch((e) => markQuoteProductMismatch(e, this.tableData))
           .finally(() => {
             this.loading = false;
           });

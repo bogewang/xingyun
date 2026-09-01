@@ -33,9 +33,6 @@
                 <if test="vo.shortName != null and vo.shortName != ''">
                     AND g.short_name LIKE CONCAT('%', #{vo.shortName}, '%')
                 </if>
-                <if test="vo.inquiryProduct != null">
-                    AND g.inquiry_product = #{vo.inquiryProduct}
-                </if>
                 <if test="vo.startTime != null">
                     AND g.create_time >= #{vo.startTime}
                 </if>
@@ -96,9 +93,6 @@
                 <if test="vo.categoryId != null and vo.categoryId != ''">
                     AND (g.category_id = #{vo.categoryId} OR FIND_IN_SET(#{vo.categoryId}, rm.path))
                 </if>
-                <if test="vo.inquiryProduct != null">
-                    AND g.inquiry_product = #{vo.inquiryProduct}
-                </if>
                 <if test="vo.startTime != null">
                     AND g.create_time >= #{vo.startTime}
                 </if>
@@ -131,6 +125,21 @@
         <include refid="ProductDto_sql"/>
         <where>
           <if test="vo != null">
+              <if test="vo.condition != null and vo.condition != ''">
+                  AND (
+                      g.code LIKE CONCAT('%', #{vo.condition}, '%')
+                      OR g.name LIKE CONCAT('%', #{vo.condition}, '%')
+                      OR g.sku_code LIKE CONCAT('%', #{vo.condition}, '%')
+                  )
+              </if>
+              <if test="vo.quoteSheetId != null and vo.quoteSheetId != ''">
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM tbl_quote_sheet_detail qsd
+                      WHERE qsd.quote_sheet_id = #{vo.quoteSheetId}
+                        AND qsd.product_id = g.id
+                  )
+              </if>
               <if test="vo.code != null and vo.code != ''">
                   AND g.code = #{vo.code}
               </if>

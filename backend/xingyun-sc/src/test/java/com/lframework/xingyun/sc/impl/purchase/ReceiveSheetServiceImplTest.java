@@ -1,11 +1,17 @@
 package com.lframework.xingyun.sc.impl.purchase;
 
 import com.lframework.starter.common.utils.BeanUtil;
+import com.lframework.starter.common.exceptions.impl.DefaultClientException;
+import com.lframework.xingyun.basedata.bo.quote.QuoteProductBo;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.vo.purchase.receive.ReceiveProductVo;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Collections;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -92,6 +98,57 @@ class ReceiveSheetServiceImplTest {
     Assert.assertEquals(
         ReceiveSheetServiceImpl.validateProductionDate("2026-07-16", "第2行").get(0),
         "第2行商品生产日期格式错误，应为yyyy.MM.dd且必须是有效日期");
+  }
+
+  /** 验证采购入库商品不在订单日期生效报价单内时拒绝保存。 */
+  @Test(expectedExceptions = DefaultClientException.class, expectedExceptionsMessageRegExp = ".*不在当前生效报价单中.*")
+  void validateQuoteProductCoverageShouldRejectProductOutsideQuoteSheet() {
+    ReceiveProductVo product = new ReceiveProductVo();
+    product.setSeq(2);
+    product.setProductId("product-outside");
+
+    QuoteProductBo quoteProduct = new QuoteProductBo();
+    quoteProduct.setQuoteSheetId("quote-1");
+    quoteProduct.setProductId("product-in-quote");
+
+    ReceiveSheetServiceImpl.validateQuoteProductCoverage(Collections.singletonList(product),
+        Collections.singletonList(quoteProduct));
+  }
+
+  /** 验证采购入库商品位于订单日期生效报价单内时允许保存。 */
+  @Test
+  void validateQuoteProductCoverageShouldAllowProductInQuoteSheet() {
+    ReceiveProductVo product = new ReceiveProductVo();
+    product.setSeq(1);
+    product.setProductId("product-1");
+
+    QuoteProductBo quoteProduct = new QuoteProductBo();
+    quoteProduct.setQuoteSheetId("quote-1");
+    quoteProduct.setProductId("product-1");
+
+    ReceiveSheetServiceImpl.validateQuoteProductCoverage(Collections.singletonList(product),
+        Collections.singletonList(quoteProduct));
+  }
+
+  /** 验证导入匹配到商品后回填商品档案名称。 */
+  @Test
+  void importProductMatchShouldFillProductName() throws Exception {
+    String source = new String(Files.readAllBytes(Paths.get(
+        "src/main/java/com/lframework/xingyun/sc/impl/purchase/ReceiveSheetServiceImpl.java")),
+        StandardCharsets.UTF_8);
+
+    Assert.assertTrue(source.contains("data.setProductName(product.getName());"));
+  }
+
+  /** 验证采购入库导入按订单日期过滤非报价商品。 */
+  @Test
+  void importShouldFilterProductsOutsideActiveQuoteSheet() throws Exception {
+    String source = new String(Files.readAllBytes(Paths.get(
+        "src/main/java/com/lframework/xingyun/sc/impl/purchase/ReceiveSheetServiceImpl.java")),
+        StandardCharsets.UTF_8);
+
+    Assert.assertTrue(source.contains("checkImportData(list, orderDate)"));
+    Assert.assertTrue(source.contains("quoteProductIds.contains(product.getId())"));
   }
 
   private ReceiveSheetImportModel createModel(BigDecimal receiveNum, BigDecimal purchasePrice) {

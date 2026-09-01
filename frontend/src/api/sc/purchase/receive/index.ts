@@ -432,7 +432,11 @@ export function downloadImportTemplate(): Promise<void> {
 /**
  * 导入
  */
-export function importExcel(data: { id?: string; file: Blob }): Promise<ReceiveProductVo[]> {
+export function importExcel(data: {
+  id?: string;
+  file: Blob;
+  orderDate: string;
+}): Promise<ReceiveProductVo[]> {
   return defHttp.post<ReceiveProductVo[]>(
     {
       url: baseUrl + '/import',

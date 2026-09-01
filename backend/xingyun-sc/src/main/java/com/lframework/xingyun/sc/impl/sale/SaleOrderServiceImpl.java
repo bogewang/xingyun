@@ -24,12 +24,15 @@ import com.lframework.starter.web.inner.entity.SysUser;
 import com.lframework.starter.web.inner.service.GenerateCodeService;
 import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.xingyun.basedata.entity.*;
+import com.lframework.xingyun.basedata.bo.quote.QuoteProductBo;
 import com.lframework.xingyun.basedata.service.customer.CustomerService;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductCategoryService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.product.ProductUnitService;
 import com.lframework.xingyun.basedata.service.storecenter.StoreCenterService;
+import com.lframework.xingyun.basedata.service.quote.QuoteSheetService;
+import com.lframework.xingyun.basedata.vo.quote.QueryQuoteProductVo;
 import com.lframework.xingyun.core.utils.SplitNumberUtil;
 import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
 import com.lframework.xingyun.sc.components.code.GenerateCodeTypePool;
@@ -60,10 +63,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -98,6 +103,9 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
 
     @Autowired
     private ProductUnitService productUnitService;
+
+    @Autowired
+    private QuoteSheetService quoteSheetService;
 
     @Autowired
     private SaleConfigService saleConfigService;
@@ -560,23 +568,46 @@ public class SaleOrderServiceImpl extends BaseMpServiceImpl<SaleOrderMapper, Sal
     }
 
     @Override
-    public List<SaleProductVo> checkImport(List<SaleOrderImportModel> list) {
+    /**
+     * 校验销售订单导入数据，并按订单日期限定可导入商品。
+     *
+     * @param list 导入数据
+     * @param orderDate 订单日期
+     * @return 校验后的销售商品
+     */
+    public List<SaleProductVo> checkImport(List<SaleOrderImportModel> list, LocalDate orderDate) {
+        if (orderDate == null) {
+            throw new DefaultClientException("请先选择订单日期！");
+        }
         if (CollectionUtils.isEmpty(list)) {
             return Lists.newArrayList();
         }
 
         // 匹配编号
-        checkImportData(list);
+        checkImportData(list, orderDate);
 
         return list.stream()
                 .map(item -> BeanUtil.copyProperties(item, SaleProductVo.class))
                 .collect(Collectors.toList());
     }
 
-    private void checkImportData(List<SaleOrderImportModel> list) {
+    /**
+     * 按订单日期对应的生效询价表校验导入商品。
+     *
+     * @param list 导入数据
+     * @param orderDate 订单日期
+     */
+    private void checkImportData(List<SaleOrderImportModel> list, LocalDate orderDate) {
         List<String> productNames = list.stream().map(SaleOrderImportModel::getProductName)
                 .collect(Collectors.toList());
-        List<Product> products = productService.selectByProductName(productNames);
+        QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
+        quoteProductVo.setOrderDate(orderDate);
+        Set<String> quoteProductIds = quoteSheetService.getActiveQuoteProducts(quoteProductVo).stream()
+                .map(QuoteProductBo::getProductId)
+                .collect(Collectors.toSet());
+        List<Product> products = productService.selectByProductName(productNames).stream()
+                .filter(item -> quoteProductIds.contains(item.getId()))
+                .collect(Collectors.toList());
         Map<String, Product> nameSpecUnitMap = products.stream()
                 .collect(Collectors.toMap(item -> item.getName() + item.getSpec() + item.getUnit(), item -> item));
         Map<String, Product> nameUnitMap = products.stream()

@@ -11,6 +11,7 @@ import com.lframework.xingyun.sc.excel.sale.SaleOrderImportModel;
 import com.lframework.xingyun.sc.vo.sale.*;
 
 import javax.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
 
 public interface SaleOrderService extends BaseMpService<SaleOrder> {
@@ -141,7 +142,14 @@ public interface SaleOrderService extends BaseMpService<SaleOrder> {
      */
     SaleProductDto getSaleById(String id);
 
-    List<SaleProductVo> checkImport(List<SaleOrderImportModel> list);
+    /**
+     * 校验销售订单导入数据，并按订单日期限定可导入的询价商品。
+     *
+     * @param list 导入数据
+     * @param orderDate 订单日期
+     * @return 校验后的销售商品
+     */
+    List<SaleProductVo> checkImport(List<SaleOrderImportModel> list, LocalDate orderDate);
 
     List<PrintSaleTagBo> tagPrint(@Valid QuerySaleOrderVo vo);
 }

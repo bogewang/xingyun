@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lframework.xingyun.basedata.mappers.quote.QuoteSheetMapper">
+    <select id="selectAllForUpdate" resultType="com.lframework.xingyun.basedata.entity.quote.QuoteSheet">
+        SELECT * FROM tbl_quote_sheet FOR UPDATE
+    </select>
+    <select id="getActiveQuoteProducts" resultType="com.lframework.xingyun.basedata.bo.quote.QuoteProductBo">
+        SELECT q.id AS quote_sheet_id,
+               d.id AS source_id,
+               d.product_id,
+               p.code,
+               p.name,
+               p.short_name,
+               p.sku_code,
+               p.spec,
+               p.unit,
+               d.sale_price,
+               d.inquiry_product
+        FROM tbl_quote_sheet q
+                 INNER JOIN tbl_quote_sheet_detail d ON d.quote_sheet_id = q.id
+                 INNER JOIN base_data_product p ON p.id = d.product_id
+        WHERE q.status = 1
+          AND p.available = TRUE
+          AND q.start_date &lt;= #{vo.orderDate}
+          AND q.end_date &gt;= #{vo.orderDate}
+        ORDER BY p.code
+    </select>
+</mapper>

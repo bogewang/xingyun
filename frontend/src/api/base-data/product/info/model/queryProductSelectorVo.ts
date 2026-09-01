@@ -2,6 +2,16 @@ import { PageVo } from '@/api/model/pageVo';
 
 export interface QueryProductSelectorVo extends PageVo {
   /**
+   * 报价单 ID，后端据此排除已有明细商品。
+   */
+  quoteSheetId?: string;
+
+  /**
+   * 关键字
+   */
+  condition: string;
+
+  /**
    * 编号
    */
   code: string;

@@ -82,19 +82,9 @@ export interface CreateProductVo {
   purchasePrice: number;
 
   /**
-   * 销售价
-   */
-  salePrice: number;
-
-  /**
    * 零售价
    */
   retailPrice: number;
-
-  /**
-   * 是否询价商品
-   */
-  inquiryProduct: boolean;
 
   /**
    * 别名

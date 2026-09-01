@@ -500,7 +500,9 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
         public BaseBo<SaleOutSheetFullDto.SheetDetailDto> convert(
                 SaleOutSheetFullDto.SheetDetailDto dto) {
 
-            return super.convert(dto);
+            BaseBo<SaleOutSheetFullDto.SheetDetailDto> result = super.convert(dto);
+            this.inquiryProduct = dto.getInquiryProduct();
+            return result;
         }
 
         @Override

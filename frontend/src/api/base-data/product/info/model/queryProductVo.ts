@@ -37,11 +37,6 @@ export interface QueryProductVo extends SortPageVo {
   productType: number;
 
   /**
-   * 是否询价商品；空值表示全部
-   */
-  inquiryProduct: boolean | '';
-
-  /**
    * 创建起始时间
    */
   startTime: string;

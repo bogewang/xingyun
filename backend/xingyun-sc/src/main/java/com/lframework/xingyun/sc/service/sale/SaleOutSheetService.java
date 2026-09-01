@@ -6,6 +6,7 @@ import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitSummaryBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProfitSummaryBo;
 import com.lframework.xingyun.sc.dto.purchase.receive.GetPaymentDateDto;
+import com.lframework.xingyun.sc.dto.sale.SaleProductDto;
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitDto;
 import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetProductProfitTrendDto;
@@ -21,6 +22,8 @@ import com.lframework.xingyun.sc.dto.sale.out.MonthEndRecalculateResult;
 import com.lframework.xingyun.sc.dto.sale.out.MonthEndRecalculateStartResult;
 import com.lframework.xingyun.sc.dto.sale.out.MonthEndRecalculateStepResult;
 import com.lframework.xingyun.sc.vo.sale.out.*;
+import com.lframework.xingyun.basedata.bo.quote.QuoteProductBo;
+import com.lframework.xingyun.basedata.vo.quote.QueryQuoteProductVo;
 import javax.servlet.http.HttpServletResponse;
 
 import java.time.LocalDate;
@@ -280,7 +283,14 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
       LocalDateTime endTime,
       SettleStatus settleStatus);
 
-  List<SaleOutProductVo> checkImport(List<SaleOutSheetImportModel> list);
+  /**
+   * 校验销售出库导入数据，并按订单日期限定可导入的询价商品。
+   *
+   * @param list 导入数据
+   * @param orderDate 订单日期
+   * @return 校验后的销售出库商品
+   */
+  List<SaleOutProductVo> checkImport(List<SaleOutSheetImportModel> list, LocalDate orderDate);
 
   List<PrintSaleTagBo> tagPrint(QuerySaleOutSheetVo vo);
 
@@ -290,6 +300,23 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
    * @return
    */
   Boolean getPriceUniqueConfig();
+
+  /**
+   * 按订单日期查询可用于销售出库的报价商品。
+   *
+   * @param vo 查询参数
+   * @return 已启用报价单中的商品
+   */
+  List<QuoteProductBo> queryQuoteProducts(QueryQuoteProductVo vo);
+
+  /**
+   * 唯一报价模式下，将可销售商品过滤为单据日期报价单内的商品，并用报价价覆盖售价。
+   *
+   * @param products 可销售商品
+   * @param orderDate 单据日期
+   * @return 过滤后的商品列表；未开启唯一报价或日期为空时返回 null，表示无需过滤
+   */
+  List<SaleProductDto> applyQuoteFilter(List<SaleProductDto> products, String orderDate);
 
   void marketBuySummary(QuerySaleOutSheetVo vo);
 

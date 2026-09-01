@@ -13,6 +13,7 @@ import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import com.lframework.xingyun.sc.vo.purchase.receive.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -203,6 +204,15 @@ public interface ReceiveSheetService extends BaseMpService<ReceiveSheet> {
   void exportDetailDailySummary(QueryReceiveSheetVo vo);
 
   List<ReceiveProductVo> checkImport(List<ReceiveSheetImportModel> list);
+
+  /**
+   * 按订单日期校验导入商品并补齐展示信息。
+   *
+   * @param list 导入商品
+   * @param orderDate 订单日期
+   * @return 校验后的商品
+   */
+  List<ReceiveProductVo> checkImport(List<ReceiveSheetImportModel> list, LocalDate orderDate);
   /**
    * 从采购查询页面导入并创建订单
    *

@@ -65,8 +65,8 @@ class ReceiveSheetInquiryProductMappingTest {
   void shouldSelectInquiryProductInReceiveMapperQueries() throws IOException {
     String mapperXml = readMapperXml();
 
-    assertTrue(mapperXml.contains("g.inquiry_product AS inquiry_product"));
-    assertTrue(mapperXml.contains("p.inquiry_product AS detail_inquiry_product"));
+    assertTrue(mapperXml.contains("NULL AS inquiry_product"));
+    assertTrue(mapperXml.contains("NULL AS detail_inquiry_product"));
     assertTrue(mapperXml.contains("<result column=\"detail_inquiry_product\" property=\"inquiryProduct\"/>"));
   }
 

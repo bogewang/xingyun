@@ -1,24 +1,150 @@
 package com.lframework.xingyun.sc.impl.sale;
 
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
+import com.lframework.xingyun.basedata.bo.quote.QuoteProductBo;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
 import com.lframework.xingyun.sc.enums.SaleOutSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
+import com.lframework.xingyun.sc.mappers.SaleOutSheetMapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
+import com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetInvoiceDetailExportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetImportModel;
 import com.lframework.xingyun.sc.excel.sale.out.SaleOutSheetQueryImportModel;
 import com.lframework.xingyun.sc.vo.sale.out.SaleOutProductVo;
 import java.math.BigDecimal;
+import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class SaleOutSheetServiceImplTest {
+
+  /** 验证修改单据后，唯一报价模式与关闭模式的主表关键字段都会持久化。 */
+  @Test
+  void persistUpdatedSheetShouldPersistQuoteFieldsForBothPricingModes() throws Exception {
+    SaleOutSheetMapper mapper = mock(SaleOutSheetMapper.class);
+    when(mapper.updateById(any(SaleOutSheet.class))).thenReturn(1);
+    SaleOutSheetServiceImpl service = new SaleOutSheetServiceImpl();
+    setBaseMapper(service, mapper);
+
+    SaleOutSheet quoteEnabled = new SaleOutSheet();
+    quoteEnabled.setId("sheet-1");
+    quoteEnabled.setOrderDate(LocalDate.of(2026, 9, 1));
+    quoteEnabled.setQuoteSheetId("quote-2");
+    quoteEnabled.setTotalAmount(new BigDecimal("25.00"));
+    service.persistUpdatedSheet(quoteEnabled);
+
+    SaleOutSheet quoteDisabled = new SaleOutSheet();
+    quoteDisabled.setId("sheet-2");
+    quoteDisabled.setOrderDate(LocalDate.of(2026, 9, 2));
+    quoteDisabled.setQuoteSheetId(null);
+    quoteDisabled.setTotalAmount(new BigDecimal("30.00"));
+    service.persistUpdatedSheet(quoteDisabled);
+
+    ArgumentCaptor<SaleOutSheet> captor = ArgumentCaptor.forClass(SaleOutSheet.class);
+    verify(mapper, org.mockito.Mockito.times(2)).updateById(captor.capture());
+    Assert.assertEquals(captor.getAllValues().get(0).getOrderDate(), LocalDate.of(2026, 9, 1));
+    Assert.assertEquals(captor.getAllValues().get(0).getQuoteSheetId(), "quote-2");
+    Assert.assertEquals(captor.getAllValues().get(0).getTotalAmount(), new BigDecimal("25.00"));
+    Assert.assertNull(captor.getAllValues().get(1).getQuoteSheetId());
+    Assert.assertEquals(captor.getAllValues().get(1).getOrderDate(), LocalDate.of(2026, 9, 2));
+    Assert.assertEquals(captor.getAllValues().get(1).getTotalAmount(), new BigDecimal("30.00"));
+  }
+
+  /** 验证关闭唯一报价时，更新包装器显式将报价单ID设为数据库空值。 */
+  @Test
+  void clearPersistedQuoteSheetIdShouldExplicitlySetNullInUpdateWrapper() throws Exception {
+    SaleOutSheetMapper mapper = mock(SaleOutSheetMapper.class);
+    when(mapper.update(isNull(), any(LambdaUpdateWrapper.class))).thenReturn(1);
+    SaleOutSheetServiceImpl service = new SaleOutSheetServiceImpl();
+    setBaseMapper(service, mapper);
+    initTableInfo(SaleOutSheet.class);
+
+    service.clearPersistedQuoteSheetId("sheet-2");
+
+    ArgumentCaptor<LambdaUpdateWrapper> captor = ArgumentCaptor.forClass(LambdaUpdateWrapper.class);
+    verify(mapper).update(isNull(), captor.capture());
+    LambdaUpdateWrapper<SaleOutSheet> wrapper = captor.getValue();
+    Assert.assertTrue(wrapper.getSqlSet().contains("quote_sheet_id"));
+    Assert.assertTrue(wrapper.getParamNameValuePairs().containsValue(null));
+  }
+
+  /** 验证唯一报价会绑定主表并覆盖客户端提交的商品单价。 */
+  @Test
+  void resolveUniqueQuotePricesShouldBindSheetAndUseQuotePrices() {
+    SaleOutSheet sheet = new SaleOutSheet();
+    SaleOutProductVo product = new SaleOutProductVo();
+    product.setSeq(1);
+    product.setProductId("product-1");
+    product.setTaxPrice(new BigDecimal("99"));
+    QuoteProductBo quoteProduct = new QuoteProductBo();
+    quoteProduct.setQuoteSheetId("quote-1");
+    quoteProduct.setProductId("product-1");
+    quoteProduct.setSalePrice(new BigDecimal("12.50"));
+
+    Map<String, BigDecimal> prices = SaleOutSheetServiceImpl.resolveUniqueQuotePrices(sheet,
+        Arrays.asList(product), Arrays.asList(quoteProduct));
+
+    Assert.assertEquals(sheet.getQuoteSheetId(), "quote-1");
+    Assert.assertEquals(prices.get("product-1"), new BigDecimal("12.50"));
+  }
+
+  /** 验证销售出库详情使用订单日期生效报价单回填询价商品标识。 */
+  @Test
+  void applyQuoteInquiryProductsShouldPopulateInquiryProductFromQuote() {
+    SaleOutSheetFullDto sheet = new SaleOutSheetFullDto();
+    SaleOutSheetFullDto.SheetDetailDto detail = new SaleOutSheetFullDto.SheetDetailDto();
+    detail.setProductId("product-1");
+    sheet.setDetails(Arrays.asList(detail));
+    QuoteProductBo quoteProduct = new QuoteProductBo();
+    quoteProduct.setProductId("product-1");
+    quoteProduct.setInquiryProduct(true);
+
+    SaleOutSheetServiceImpl.applyQuoteInquiryProducts(sheet, Arrays.asList(quoteProduct));
+
+    Assert.assertTrue(sheet.getDetails().get(0).getInquiryProduct());
+  }
+
+  /** 验证销售商品不在当前报价单时拒绝保存。 */
+  @Test(expectedExceptions = DefaultClientException.class,
+      expectedExceptionsMessageRegExp = ".*不在当前生效报价单中.*")
+  void resolveUniqueQuotePricesShouldRejectProductMissingFromQuote() {
+    SaleOutSheet sheet = new SaleOutSheet();
+    SaleOutProductVo product = new SaleOutProductVo();
+    product.setSeq(2);
+    product.setProductId("product-2");
+    QuoteProductBo quoteProduct = new QuoteProductBo();
+    quoteProduct.setQuoteSheetId("quote-1");
+    quoteProduct.setProductId("product-1");
+    quoteProduct.setSalePrice(BigDecimal.ONE);
+
+    SaleOutSheetServiceImpl.resolveUniqueQuotePrices(sheet, Arrays.asList(product),
+        Arrays.asList(quoteProduct));
+  }
+
+  /** 验证订单日期没有已启用报价单时拒绝保存。 */
+  @Test(expectedExceptions = DefaultClientException.class,
+      expectedExceptionsMessageRegExp = ".*不存在已启用报价单.*")
+  void resolveUniqueQuotePricesShouldRejectMissingQuoteSheet() {
+    SaleOutSheetServiceImpl.resolveUniqueQuotePrices(new SaleOutSheet(),
+        Arrays.asList(new SaleOutProductVo()), Arrays.asList());
+  }
 
   /** 验证标签打印数量会去除小数点后的无意义零。 */
   @Test
@@ -260,6 +386,29 @@ class SaleOutSheetServiceImplTest {
     model.setTaxPrice(taxPrice);
     model.setConfirmNum(confirmNum);
     return model;
+  }
+
+  /** 为单元测试注入 BaseMpServiceImpl 持有的 Mapper。 */
+  private void setBaseMapper(SaleOutSheetServiceImpl service, SaleOutSheetMapper mapper)
+      throws Exception {
+    Class<?> type = service.getClass();
+    while (type != null) {
+      try {
+        Field field = type.getDeclaredField("baseMapper");
+        field.setAccessible(true);
+        field.set(service, mapper);
+        return;
+      } catch (NoSuchFieldException ignored) {
+        type = type.getSuperclass();
+      }
+    }
+    throw new AssertionError("未找到 BaseMapper 字段");
+  }
+
+  /** 初始化 LambdaUpdateWrapper 解析实体字段所需的 MyBatis 元数据。 */
+  private void initTableInfo(Class<?> entityClass) {
+    TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), "test"),
+        entityClass);
   }
 
   private SaleOutSheet createSheet(String id, String code, LocalDateTime createTime) {

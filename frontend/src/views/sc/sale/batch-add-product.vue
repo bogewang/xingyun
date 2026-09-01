@@ -5,6 +5,7 @@
     :show-inquiry-product="showInquiryProduct"
     :sc-id="scId"
     :is-return="isReturn"
+    :order-date="orderDate"
     v-bind="$attrs"
     @close="$emit('close')"
     @confirm="(records) => $emit('confirm', records)"
@@ -31,6 +32,10 @@
       showInquiryProduct: {
         type: Boolean,
         default: false,
+      },
+      orderDate: {
+        type: String,
+        default: '',
       },
     },
     emits: ['close', 'confirm'],

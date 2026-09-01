@@ -4,6 +4,7 @@ import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.starter.web.core.utils.ApplicationUtil;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductUnit;
+import com.lframework.xingyun.basedata.bo.product.info.QueryProductBo;
 import com.lframework.xingyun.basedata.excel.product.ProductImportModel;
 import com.lframework.xingyun.basedata.mappers.ProductMapper;
 import com.lframework.xingyun.basedata.service.product.ProductReferenceChecker;
@@ -24,35 +25,20 @@ import org.testng.annotations.Test;
 class ProductServiceImplTest {
 
   @Test
-  void shouldKeepInquiryProductOnProductEntity() {
-    Product product = new Product();
-    product.setInquiryProduct(Boolean.TRUE);
-    Assert.assertTrue(product.getInquiryProduct());
+  void shouldNotKeepQuoteFieldsOnProductEntity() {
+    Set<String> fieldNames = Arrays.stream(Product.class.getDeclaredFields())
+        .map(Field::getName).collect(java.util.stream.Collectors.toSet());
+
+    Assert.assertFalse(fieldNames.contains("salePrice"));
+    Assert.assertFalse(fieldNames.contains("inquiryProduct"));
   }
 
   @Test
-  void shouldDefaultNullInquiryProductToFalse() {
-    Assert.assertFalse(ProductServiceImpl.resolveInquiryProduct(null, null, true));
-  }
+  void shouldExposeLatestSalePriceWithoutKeepingProductSalePrice() {
+    Set<String> fieldNames = Arrays.stream(QueryProductBo.class.getDeclaredFields())
+        .map(Field::getName).collect(java.util.stream.Collectors.toSet());
 
-  @Test
-  void shouldKeepExistingInquiryProductWhenImportValueIsBlank() {
-    Assert.assertTrue(ProductServiceImpl.resolveInquiryProduct(null, Boolean.TRUE, false));
-  }
-
-  @Test
-  void shouldParseInquiryProductYesFromImport() {
-    Assert.assertTrue(ProductServiceImpl.parseInquiryProduct("是", 2));
-  }
-
-  @Test
-  void shouldParseInquiryProductNoFromImport() {
-    Assert.assertFalse(ProductServiceImpl.parseInquiryProduct("否", 2));
-  }
-
-  @Test
-  void shouldTreatBlankInquiryProductAsMissing() {
-    Assert.assertNull(ProductServiceImpl.parseInquiryProduct("  ", 2));
+    Assert.assertTrue(fieldNames.contains("latestSalePrice"));
   }
 
   @Test
@@ -63,7 +49,6 @@ class ProductServiceImplTest {
     disabledProduct.setSpec("500ml");
     disabledProduct.setUnit("unit-bottle");
     disabledProduct.setAvailable(Boolean.FALSE);
-    disabledProduct.setInquiryProduct(Boolean.TRUE);
     ProductImportModel disabledRow = importModel("可乐", "500ml", "瓶");
     ProductImportModel unrelatedRow = importModel("雪碧", "500ml", "瓶");
     Map<String, String> unitNames = Collections.singletonMap("unit-bottle", "瓶");
@@ -74,7 +59,6 @@ class ProductServiceImplTest {
 
     Assert.assertEquals(result, Arrays.asList(disabledRow, unrelatedRow));
     Assert.assertEquals(disabledRow.getId(), "product-disabled");
-    Assert.assertTrue(disabledRow.getExistingInquiryProduct());
     Assert.assertNull(unrelatedRow.getId());
   }
 
@@ -106,39 +90,6 @@ class ProductServiceImplTest {
         new HashSet<>(Arrays.asList("  可乐  ", "可乐", " 雪碧 ", "  ")));
 
     Assert.assertEquals(normalizedNames, new HashSet<>(Arrays.asList("可乐", "雪碧")));
-  }
-
-  @Test(expectedExceptions = DefaultClientException.class,
-      expectedExceptionsMessageRegExp = "第3行“询价商品”只能填写“是”或“否”")
-  void shouldReportOriginalExcelRowIndexAfterResolvingDisabledRow() {
-    ProductImportModel disabledRow = importModel("可乐", "500ml", "瓶");
-    ProductImportModel invalidRow = importModel("雪碧", "500ml", "瓶");
-    Product disabledProduct = new Product();
-    disabledProduct.setName("可乐");
-    disabledProduct.setSpec("500ml");
-    disabledProduct.setUnit("unit-bottle");
-    disabledProduct.setAvailable(Boolean.FALSE);
-    Map<ProductImportModel, Integer> rowIndexes = ProductServiceImpl.buildImportRowIndexes(
-        Arrays.asList(disabledRow, invalidRow));
-
-    List<ProductImportModel> resolvedRows = ProductServiceImpl.resolveDisabledDuplicateImportRows(
-        Arrays.asList(disabledRow, invalidRow), Collections.singletonList(disabledProduct),
-        Collections.<Product>emptyList(), Collections.singletonMap("unit-bottle", "瓶"));
-
-    Assert.assertEquals(resolvedRows, Arrays.asList(disabledRow, invalidRow));
-    ProductServiceImpl.parseInquiryProduct("错误值", ProductServiceImpl.getImportRowIndex(rowIndexes, invalidRow, 0));
-  }
-
-  @Test(expectedExceptions = DefaultClientException.class,
-      expectedExceptionsMessageRegExp = "第2行“询价商品”只能填写“是”或“否”")
-  void shouldRejectInvalidInquiryProductFromImport() {
-    ProductServiceImpl.parseInquiryProduct("1", 2);
-  }
-
-  @Test
-  void shouldExportInquiryProductAsYesOrNo() {
-    Assert.assertEquals(ProductImportModel.formatInquiryProduct(Boolean.TRUE), "是");
-    Assert.assertEquals(ProductImportModel.formatInquiryProduct(Boolean.FALSE), "否");
   }
 
   @Test

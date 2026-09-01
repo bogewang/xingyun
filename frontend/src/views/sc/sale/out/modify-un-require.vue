@@ -91,6 +91,11 @@
             </a-space>
           </template>
 
+          <template #productCode_default="{ row }">
+            <a-tag v-if="row.quoteUnmatched" color="error">未匹配</a-tag>
+            <span v-else>{{ row.productCode }}</span>
+          </template>
+
           <template #inquiryProduct_default="{ row }">
             <span :class="formatInquiryProduct(row.inquiryProduct).className">
               {{ formatInquiryProduct(row.inquiryProduct).text }}
@@ -100,12 +105,14 @@
           <!-- 商品名称 列自定义内容 -->
           <template #productName_default="{ row, rowIndex }">
             <InlineProductSelect
+              :key="row.id"
               :ref="'productInputRef' + rowIndex"
               :row="row"
               :row-index="rowIndex"
               biz-type="sale"
               mode="unrequire"
               :sc-id="formData.scId"
+              :order-date="formData.orderDate"
               @select="handleSelectProduct"
               @add-product="addProduct"
               @open-add-product-page="openChildPage('/product/info/add')"
@@ -259,6 +266,7 @@
         ref="batchAddProductDialog"
         :show-inquiry-product="true"
         :sc-id="formData.scId"
+        :order-date="formData.orderDate"
         @confirm="batchAddProduct"
       />
       <a-modal
@@ -305,7 +313,6 @@
     CheckSquareOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
-  import * as sysParameterApi from '@/api/system/parameter';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
 
   import InlineProductSelect from '@/views/sc/shared/inline-product-select.vue';
@@ -343,7 +350,6 @@
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
   import OrderTimeLine from '@/components/OrderTimeLine';
-  import { useUserStoreWithOut } from '/@/store/modules/user';
   import {
     formatConfirmAmount,
     normalizeConfirmNum,
@@ -352,7 +358,9 @@
   } from './components/saleOutConfirm';
   import { calcSaleOutProfitRate, isSaleOutProfitNegative } from './components/saleOutProfit';
   import { isSaleOutStockEnough } from './components/saleOutStock';
+  import { getSelectedSaleOutPrice } from './saleOutPrice';
   import { calculateUnitPrice, calculateUnitStockNum } from '@/utils/productUnitConversion';
+  import { markProductsOutsideQuoteSheet } from '@/utils/quoteProductMismatch';
 
   export default defineComponent({
     name: 'ModifySaleOutSheetUnRequire',
@@ -427,7 +435,12 @@
             width: 80,
             slots: { default: 'operation_default' },
           },
-          { field: 'productCode', title: '商品编号', width: 120 },
+          {
+            field: 'productCode',
+            title: '商品编号',
+            width: 120,
+            slots: { default: 'productCode_default' },
+          },
           {
             field: 'productName',
             title: '商品名称',
@@ -529,12 +542,17 @@
           },
         ],
         tableData: [],
+        useUniquePrice: false,
         customerOptions: [],
         customerOptionMap: {},
-        saleOutPriceUseUniquePrice: false,
       };
     },
     computed: {},
+    watch: {
+      'formData.orderDate'() {
+        this.validateQuoteProductsByOrderDate();
+      },
+    },
     created() {
       this.openDialog();
     },
@@ -549,6 +567,25 @@
       document.removeEventListener('keydown', this.handleKeyDown);
     },
     methods: {
+      /** 按订单日期校验当前表格商品是否在生效报价单内。 */
+      async validateQuoteProductsByOrderDate() {
+        const orderDate = this.formData.orderDate;
+        if (!orderDate || !this.tableData.some((item) => !isEmpty(item.productId))) {
+          markProductsOutsideQuoteSheet(this.tableData, [], false);
+          return;
+        }
+        try {
+          const [enabled, quoteProducts] = await Promise.all([
+            api.getPriceUniqueConfig(),
+            api.queryQuoteProducts({ orderDate }),
+          ]);
+          if (orderDate === this.formData.orderDate) {
+            markProductsOutsideQuoteSheet(this.tableData, quoteProducts, enabled);
+          }
+        } catch {
+          // 查询报价单失败时不影响当前明细编辑。
+        }
+      },
       handleKeyDown(event) {
         if (!shouldAddProductByEnter(event)) {
           return;
@@ -589,29 +626,15 @@
         this.paidAmountDirty = false;
         this.originalFillAllCost = false;
         this.tableData = [];
-        await this.loadSaleOutPriceUseUniquePrice();
+        await this.loadUseUniquePrice();
       },
-      async loadSaleOutPriceUseUniquePrice() {
-        const tenantId = (await useUserStoreWithOut().getTenantRequire())?.tenantId;
-        if (!tenantId) {
-          this.saleOutPriceUseUniquePrice = false;
-          return;
+      /** 加载销售出库唯一售价配置。 */
+      async loadUseUniquePrice() {
+        try {
+          this.useUniquePrice = await api.getPriceUniqueConfig();
+        } catch (e) {
+          this.useUniquePrice = false;
         }
-
-        const res = await sysParameterApi.query({
-          pageIndex: 1,
-          pageSize: 1,
-          tenantId,
-          pmKey: 'sale_out_price_use_unique_price',
-          createTimeStart: '',
-          createTimeEnd: '',
-        });
-
-        const parameter = res.datas?.[0];
-        this.saleOutPriceUseUniquePrice = parameter?.pmValue === 'true';
-      },
-      getSelectedProductPrice(product) {
-        return this.saleOutPriceUseUniquePrice ? product.salePrice : product.latestSalePrice;
       },
       // 加载数据
       loadData() {
@@ -684,6 +707,7 @@
           productId: '',
           productCode: '',
           productName: '',
+          inquiryProduct: false,
           skuCode: '',
           externalCode: '',
           unit: '',
@@ -784,7 +808,7 @@
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
         const baseUnit = product.units?.find((item) => item.baseUnit);
-        const selectedPrice = this.getSelectedProductPrice(product);
+        const selectedPrice = getSelectedSaleOutPrice(product, this.useUniquePrice);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           productRemark: product.remark,
@@ -796,6 +820,7 @@
           unit: baseUnit?.unitName || product.unit || '',
           editingProduct: false,
           productQuery: '',
+          quoteUnmatched: false,
         });
         resetInlineProductSelect(this.tableData[index]);
 

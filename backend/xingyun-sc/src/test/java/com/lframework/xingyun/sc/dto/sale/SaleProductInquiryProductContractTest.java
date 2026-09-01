@@ -61,9 +61,9 @@ class SaleProductInquiryProductContractTest {
 
     assertEquals("inquiry_product", inquiryProductMapping.getColumn());
     assertTrue(buildSql(configuration, "querySaleByCondition",
-        searchParameters()).contains("g.inquiry_product"));
+        searchParameters()).contains("NULL AS inquiry_product"));
     assertTrue(buildSql(configuration, "querySaleList",
-        listParameters()).contains("g.inquiry_product"));
+        listParameters()).contains("NULL AS inquiry_product"));
   }
 
   /**

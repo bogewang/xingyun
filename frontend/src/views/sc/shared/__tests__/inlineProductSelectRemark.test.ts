@@ -10,6 +10,22 @@ function readInlineProductSelectSource() {
 }
 
 describe('采购入库和销售出库商品选择备注展示', () => {
+  it('销售出库删除明细后仍按商品行 ID 重新创建行内选择器', () => {
+    const sourceRoot = resolve(__dirname, '..', '..');
+    const pagePaths = [
+      'sale/out/add-require.vue',
+      'sale/out/add-un-require.vue',
+      'sale/out/modify-require.vue',
+      'sale/out/modify-un-require.vue',
+    ];
+
+    pagePaths.forEach((pagePath) => {
+      const source = readFileSync(resolve(sourceRoot, pagePath), 'utf-8');
+
+      expect(source).toMatch(/<InlineProductSelect\s+:key="row\.id"/);
+    });
+  });
+
   it('商品选择表格的最后一列为备注', () => {
     const source = readInlineProductSelectSource();
     const tableEndIndex = source.indexOf('</vxe-table>');

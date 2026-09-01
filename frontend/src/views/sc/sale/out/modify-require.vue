@@ -147,6 +147,11 @@
           </a-space>
         </template>
 
+        <template #productCode_default="{ row }">
+          <a-tag v-if="row.quoteUnmatched" color="error">未匹配</a-tag>
+          <span v-else>{{ row.productCode }}</span>
+        </template>
+
         <template #inquiryProduct_default="{ row }">
           <span :class="formatInquiryProduct(row.inquiryProduct).className">
             {{ formatInquiryProduct(row.inquiryProduct).text }}
@@ -156,6 +161,7 @@
         <!-- 商品名称 列自定义内容 -->
         <template #productName_default="{ row, rowIndex }">
           <InlineProductSelect
+            :key="row.id"
             :ref="'productInputRef' + rowIndex"
             :row="row"
             :row-index="rowIndex"
@@ -163,6 +169,7 @@
             mode="require"
             :sc-id="formData.scId"
             :is-fixed="row.isFixed"
+            :order-date="formData.orderDate"
             @select="handleSelectProduct"
             @add-product="addProduct"
             @open-add-product-page="openChildPage('/product/info/add')"
@@ -307,6 +314,7 @@
         ref="batchAddProductDialog"
         :show-inquiry-product="true"
         :sc-id="formData.sc.id"
+        :order-date="formData.orderDate"
         @confirm="batchAddProduct"
       />
       <a-modal
@@ -401,6 +409,8 @@
     calculateUnitStockNum,
     getUnitConversionRate,
   } from '@/utils/productUnitConversion';
+  import { getSelectedSaleOutPrice } from './saleOutPrice';
+  import { markProductsOutsideQuoteSheet } from '@/utils/quoteProductMismatch';
 
   export default defineComponent({
     name: 'ModifySaleOutSheetRequire',
@@ -472,7 +482,12 @@
             width: 140,
             slots: { default: 'operation_default' },
           },
-          { field: 'productCode', title: '商品编号', width: 120 },
+          {
+            field: 'productCode',
+            title: '商品编号',
+            width: 120,
+            slots: { default: 'productCode_default' },
+          },
           {
             field: 'productName',
             title: '商品名称',
@@ -578,9 +593,15 @@
           },
         ],
         tableData: [],
+        useUniquePrice: false,
       };
     },
     computed: {},
+    watch: {
+      'formData.orderDate'() {
+        this.validateQuoteProductsByOrderDate();
+      },
+    },
     created() {
       this.openDialog();
     },
@@ -595,6 +616,25 @@
       document.removeEventListener('keydown', this.handleKeyDown);
     },
     methods: {
+      /** 按订单日期校验当前表格商品是否在生效报价单内。 */
+      async validateQuoteProductsByOrderDate() {
+        const orderDate = this.formData.orderDate;
+        if (!orderDate || !this.tableData.some((item) => !isEmpty(item.productId))) {
+          markProductsOutsideQuoteSheet(this.tableData, [], false);
+          return;
+        }
+        try {
+          const [enabled, quoteProducts] = await Promise.all([
+            api.getPriceUniqueConfig(),
+            api.queryQuoteProducts({ orderDate }),
+          ]);
+          if (orderDate === this.formData.orderDate) {
+            markProductsOutsideQuoteSheet(this.tableData, quoteProducts, enabled);
+          }
+        } catch {
+          // 查询报价单失败时不影响当前明细编辑。
+        }
+      },
       handleKeyDown(event) {
         if (!shouldAddProductByEnter(event)) {
           return;
@@ -603,9 +643,9 @@
         this.addProduct();
       },
       // 打开对话框 由父页面触发
-      openDialog() {
+      async openDialog() {
         // 初始化表单数据
-        this.initFormData();
+        await this.initFormData();
         this.loadData();
       },
       // 关闭对话框
@@ -617,7 +657,7 @@
         this.closeCurrentPage();
       },
       // 初始化表单数据
-      initFormData() {
+      async initFormData() {
         this.formData = {
           sc: {},
           customer: {},
@@ -636,6 +676,15 @@
         this.paidAmountDirty = false;
         this.originalFillAllCost = false;
         this.tableData = [];
+        await this.loadUseUniquePrice();
+      },
+      /** 加载销售出库唯一售价配置。 */
+      async loadUseUniquePrice() {
+        try {
+          this.useUniquePrice = await api.getPriceUniqueConfig();
+        } catch (e) {
+          this.useUniquePrice = false;
+        }
       },
       // 加载数据
       loadData() {
@@ -706,6 +755,7 @@
           productId: '',
           productCode: '',
           productName: '',
+          inquiryProduct: false,
           skuCode: '',
           externalCode: '',
           unit: '',
@@ -788,17 +838,19 @@
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
         const baseUnit = product.units?.find((item) => item.baseUnit);
+        const selectedPrice = getSelectedSaleOutPrice(product, this.useUniquePrice);
         // 将选中的商品数据赋值给当前行
         this.tableData[index] = Object.assign(this.tableData[index], product, {
           productRemark: product.remark,
           oriPrice: product.salePrice,
-          taxPrice: product.latestSalePrice,
-          baseSalePrice: product.latestSalePrice,
+          taxPrice: selectedPrice,
+          baseSalePrice: selectedPrice,
           baseStockNum: product.stockNum,
           unitId: baseUnit?.id || '',
           unit: baseUnit?.unitName || product.unit || '',
           editingProduct: false,
           productQuery: '',
+          quoteUnmatched: false,
         });
         resetInlineProductSelect(this.tableData[index]);
 

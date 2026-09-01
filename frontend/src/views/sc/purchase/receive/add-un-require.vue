@@ -82,7 +82,9 @@
 
           <!-- 商品编号 列自定义内容 -->
           <template #productCode_default="{ row }">
-            <a-tag v-if="isImportUnmatchedProduct(row)" color="error">未匹配</a-tag>
+            <a-tag v-if="isImportUnmatchedProduct(row) || row.quoteUnmatched" color="error"
+              >未匹配</a-tag
+            >
             <span v-else>{{ row.productCode }}</span>
           </template>
 
@@ -101,6 +103,7 @@
               biz-type="purchase"
               mode="unrequire"
               :sc-id="formData.scId"
+              :order-date="formData.orderDate"
               @select="handleSelectProduct"
               @add-product="addProduct"
               @open-add-product-page="openChildPage('/product/info/add')"
@@ -202,10 +205,12 @@
         ref="batchAddProductDialog"
         :show-inquiry-product="true"
         :sc-id="formData.scId"
+        :order-date="formData.orderDate"
         @confirm="batchAddProduct"
       />
       <receive-sheet-importer
         ref="importer"
+        :order-date="formData.orderDate"
         :get-container="getImporterContainer"
         local-container
         hide-on-deactivated
@@ -261,7 +266,6 @@
     isEmpty,
     isFloat,
     isFloatGeZero,
-    isFloatGtZero,
     isNumberPrecision,
     mul,
     PATTERN_IS_FLOAT,
@@ -289,6 +293,11 @@
     createSuccessAutoClose,
   } from '@/hooks/web/msg';
   import { resetInlineProductSelect } from '@/utils/inlineProductSelect';
+  import {
+    markProductsOutsideQuoteSheet,
+    markQuoteProductMismatch,
+  } from '@/utils/quoteProductMismatch';
+  import * as saleApi from '@/api/sc/sale/out';
   import { shouldAddProductByEnter } from '@/utils/productAddShortcut';
   import JFormItem from '@/components/JFormItem';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
@@ -425,6 +434,11 @@
         return Moment;
       },
     },
+    watch: {
+      'formData.orderDate'() {
+        this.validateQuoteProductsByOrderDate();
+      },
+    },
     created() {
       this.openDialog();
     },
@@ -439,6 +453,25 @@
       document.removeEventListener('keydown', this.handleKeyDown);
     },
     methods: {
+      /** 按订单日期校验当前表格商品是否在生效报价单内。 */
+      async validateQuoteProductsByOrderDate() {
+        const orderDate = this.formData.orderDate;
+        if (!orderDate || !this.tableData.some((item) => !isEmpty(item.productId))) {
+          markProductsOutsideQuoteSheet(this.tableData, [], false);
+          return;
+        }
+        try {
+          const [enabled, quoteProducts] = await Promise.all([
+            saleApi.getPriceUniqueConfig(),
+            saleApi.queryQuoteProducts({ orderDate }),
+          ]);
+          if (orderDate === this.formData.orderDate) {
+            markProductsOutsideQuoteSheet(this.tableData, quoteProducts, enabled);
+          }
+        } catch {
+          // 查询报价单失败时不影响当前明细编辑。
+        }
+      },
       getImporterContainer() {
         return this.$refs.importerContainer;
       },
@@ -567,10 +600,8 @@
       },
       // 选择商品（从表格中点击）
       handleSelectProduct(index, product) {
-        // 如果行内已有有效的采购价(>0)，则保留原价格，不被最新采购价覆盖
-        const purchasePrice = isFloatGtZero(this.tableData[index].purchasePrice)
-          ? this.tableData[index].purchasePrice
-          : !isEmpty(product.latestPurchasePrice)
+        // 优先使用商品最新采购价，未维护时使用商品档案采购价
+        const purchasePrice = !isEmpty(product.latestPurchasePrice)
           ? product.latestPurchasePrice
           : product.purchasePrice;
         const baseUnit = product.units?.find((item) => item.baseUnit);
@@ -585,6 +616,7 @@
           editingProduct: false,
           productQuery: '',
           importUnmatched: false,
+          quoteUnmatched: false,
         });
         resetInlineProductSelect(this.tableData[index]);
 
@@ -778,7 +810,7 @@
             const importUnmatched = isEmpty(item.productId);
             const row = Object.assign(this.emptyProduct(), item, {
               id: uuid(),
-              productName: item.productName,
+              productName: item.productName || item.name || '',
               basePurchasePrice: item.purchasePrice,
               units: isEmpty(item.unitId)
                 ? []
@@ -949,6 +981,7 @@
             this.$emit('confirm');
             this.closeDialog();
           })
+          .catch((e) => markQuoteProductMismatch(e, this.tableData))
           .finally(() => {
             this.loading = false;
           });
@@ -971,6 +1004,7 @@
               this.$emit('confirm');
               this.closeDialog();
             })
+            .catch((e) => markQuoteProductMismatch(e, this.tableData))
             .finally(() => {
               this.loading = false;
             });
