@@ -3,7 +3,7 @@ name: Deploy 101
 on:
   push:
     branches:
-      - feature/0826_vg_print_update
+      - codex/quote-sheet-management
   workflow_dispatch:
 
 concurrency:
@@ -85,6 +85,10 @@ jobs:
           mkdir -p dist.new
           tar -xzf "$GITHUB_WORKSPACE/frontend-dist.tar.gz" -C dist.new
           mv "$GITHUB_WORKSPACE/backend/xingyun-api/target/xingyun-api.jar" xingyun-api.jar.new
+          mkdir -p bak
+          backup_file="bak/$(date +%Y%m%d%H%M).tar.gz"
+          tar -czf "$backup_file" dist xingyun-api.jar
+          find bak -maxdepth 1 -type f -name '????????????.tar.gz' -mtime +7 -delete
           rm -rf dist
           mv dist.new/dist dist
           rm -rf dist.new
