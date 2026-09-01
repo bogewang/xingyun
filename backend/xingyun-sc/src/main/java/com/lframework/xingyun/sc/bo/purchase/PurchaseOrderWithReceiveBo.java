@@ -282,7 +282,7 @@ public class PurchaseOrderWithReceiveBo extends BaseBo<PurchaseOrderWithReceiveD
       this.spec = product.getSpec();
       this.categoryName = product.getCategoryName();
       this.brandName = product.getBrandName();
-      this.inquiryProduct = product.getInquiryProduct();
+      this.inquiryProduct = dto.getInquiryProduct();
 
       this.orderNum = dto.getOrderNum();
       this.purchasePrice = dto.getTaxPrice();

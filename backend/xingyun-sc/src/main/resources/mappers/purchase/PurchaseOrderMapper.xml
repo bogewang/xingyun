@@ -63,9 +63,11 @@
         <result column="sc_id" property="scId"/>
         <result column="supplier_id" property="supplierId"/>
         <result column="purchaser_id" property="purchaserId"/>
+        <result column="order_date" property="orderDate"/>
         <collection property="details" ofType="com.lframework.xingyun.sc.dto.purchase.PurchaseOrderWithReceiveDto$DetailDto" javaType="java.util.ArrayList">
             <id column="detail_id" property="id"/>
             <result column="detail_product_id" property="productId"/>
+            <result column="detail_inquiry_product" property="inquiryProduct"/>
             <result column="detail_order_num" property="orderNum"/>
             <result column="detail_tax_price" property="taxPrice"/>
             <result column="detail_is_gift" property="isGift"/>
@@ -276,7 +278,8 @@
 
     <select id="getWithReceive" resultMap="PurchaseOrderWithReceiveDto">
         SELECT
-        o.id, o.sc_id, o.supplier_id, o.purchaser_id, d.id AS detail_id, d.product_id AS detail_product_id,
+        o.id, o.sc_id, o.supplier_id, o.purchaser_id, o.order_date, d.id AS detail_id, d.product_id AS detail_product_id,
+        NULL AS detail_inquiry_product,
         d.order_num AS detail_order_num, d.tax_price AS detail_tax_price, d.is_gift AS detail_is_gift,
         d.tax_rate AS detail_tax_rate, d.description AS detail_description, d.order_no AS detail_order_no,
         d.receive_num AS detail_receive_num

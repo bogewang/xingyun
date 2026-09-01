@@ -1,6 +1,7 @@
 package com.lframework.xingyun.sc.dto.purchase;
 
 import com.lframework.starter.web.core.dto.BaseDto;
+import java.time.LocalDate;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
@@ -35,6 +36,11 @@ public class PurchaseOrderWithReceiveDto implements BaseDto, Serializable {
   private String purchaserId;
 
   /**
+   * 订单日期
+   */
+  private LocalDate orderDate;
+
+  /**
    * 订单明细
    */
   private List<DetailDto> details;
@@ -53,6 +59,11 @@ public class PurchaseOrderWithReceiveDto implements BaseDto, Serializable {
      * 商品ID
      */
     private String productId;
+
+    /**
+     * 是否询价商品
+     */
+    private Boolean inquiryProduct;
 
     /**
      * 采购数量
