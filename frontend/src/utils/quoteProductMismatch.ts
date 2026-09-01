@@ -62,6 +62,6 @@ export function markProductsOutsideQuoteSheet(
         importUnmatched: false,
       });
     }
-    row.quoteUnmatched = !!enabled && !!row.productId && !quoteProductIds.has(row.productId);
+    row.quoteUnmatched = !!row.productId && !quoteProductIds.has(row.productId);
   });
 }

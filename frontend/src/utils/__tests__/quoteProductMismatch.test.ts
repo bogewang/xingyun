@@ -15,7 +15,7 @@ describe('报价商品未匹配标记', () => {
     expect(rows[2].quoteUnmatched).toBe(true);
   });
 
-  it('按当前报价单刷新未匹配状态，并在未启用时恢复正常显示', () => {
+  it('切换到无报价单日期时标记已选商品未匹配', () => {
     const rows = [
       { productId: 'product-1', quoteUnmatched: true },
       { productId: 'product-2', quoteUnmatched: false },
@@ -25,7 +25,7 @@ describe('报价商品未匹配标记', () => {
     expect(rows.map((row) => row.quoteUnmatched)).toEqual([false, true]);
 
     markProductsOutsideQuoteSheet(rows, [], false);
-    expect(rows.map((row) => row.quoteUnmatched)).toEqual([false, false]);
+    expect(rows.map((row) => row.quoteUnmatched)).toEqual([true, true]);
   });
 
   it('导入时未匹配的商品切换日期后命中报价单，会回填商品并恢复正常显示', () => {
