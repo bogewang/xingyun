@@ -1024,12 +1024,17 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
                 .distinct()
                 .collect(Collectors.toList());
         List<Product> products = productService.selectByProductName(productNames);
+        Map<String, QuoteProductBo> quoteProductMap = Collections.emptyMap();
         if (orderDate != null && Boolean.TRUE.equals(saleOutSheetService.getPriceUniqueConfig())) {
             QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
             quoteProductVo.setOrderDate(orderDate);
-            Set<String> quoteProductIds = saleOutSheetService.queryQuoteProducts(quoteProductVo)
-                    .stream().map(QuoteProductBo::getProductId).collect(Collectors.toSet());
-            products = products.stream().filter(product -> quoteProductIds.contains(product.getId()))
+            Map<String, QuoteProductBo> currentQuoteProductMap = saleOutSheetService
+                    .queryQuoteProducts(quoteProductVo).stream().collect(
+                    Collectors.toMap(QuoteProductBo::getProductId, item -> item,
+                            (first, ignored) -> first));
+            quoteProductMap = currentQuoteProductMap;
+            products = products.stream()
+                    .filter(product -> currentQuoteProductMap.containsKey(product.getId()))
                     .collect(Collectors.toList());
         }
         Map<String, List<Product>> nameUnitMap = new HashMap<>();
@@ -1065,6 +1070,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
                 data.setProductName(product.getName());
                 data.setUnitId(unit.getId());
                 data.setSpec(product.getSpec());
+                QuoteProductBo quoteProduct = quoteProductMap.get(product.getId());
+                data.setInquiryProduct(quoteProduct == null ? null : quoteProduct.getInquiryProduct());
                 BigDecimal defaultPurchasePrice = productLatestPriceCacheService
                         .getLatestPurchasePrice(product.getId());
                 if (data.getPurchasePrice() == null) {

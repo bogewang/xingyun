@@ -56,7 +56,7 @@
               <a-button
                 v-permission="['purchase:receive:import']"
                 :icon="h(CloudUploadOutlined)"
-                @click="$refs.importer.openDialog()"
+                @click="openImportDialog"
                 >导入Excel</a-button
               >
             </a-space>
@@ -689,6 +689,14 @@
       },
       openBatchAddProductDialog() {
         this.$refs.batchAddProductDialog.openDialog();
+      },
+      // 打开导入弹窗前校验订单日期，确保导入商品按正确报价单日期校验。
+      openImportDialog() {
+        if (isEmpty(this.formData.orderDate)) {
+          createError('请先选择订单日期！');
+          return;
+        }
+        this.$refs.importer.openDialog();
       },
       filterOption(input, option) {
         return filterSelectOption(input, option);

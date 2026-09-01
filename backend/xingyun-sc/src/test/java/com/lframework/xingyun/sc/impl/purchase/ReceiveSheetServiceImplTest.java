@@ -181,6 +181,17 @@ class ReceiveSheetServiceImplTest {
     Assert.assertEquals(detail.getInquiryProduct(), Boolean.TRUE);
   }
 
+  /** 验证采购入库 Excel 导入按订单日期回填报价单中的询价商品标识。 */
+  @Test
+  void importShouldPopulateInquiryProductFromActiveQuoteSheet() throws Exception {
+    String source = new String(Files.readAllBytes(Paths.get(
+        "src/main/java/com/lframework/xingyun/sc/impl/purchase/ReceiveSheetServiceImpl.java")),
+        StandardCharsets.UTF_8);
+
+    Assert.assertTrue(source.contains("Map<String, QuoteProductBo> quoteProductMap"));
+    Assert.assertTrue(source.contains("data.setInquiryProduct(quoteProduct == null ? null"));
+  }
+
   /** 构造报价商品。 */
   private QuoteProductBo createQuoteProduct(String productId, Boolean inquiryProduct) {
     QuoteProductBo quoteProduct = new QuoteProductBo();
