@@ -97,6 +97,7 @@
 
           <template #productName_default="{ row, rowIndex }">
             <InlineProductSelect
+              :key="row.id"
               :ref="'productInputRef' + rowIndex"
               :row="row"
               :row-index="rowIndex"
@@ -830,6 +831,7 @@
                     },
                   ],
               isFixed: false,
+              editingProduct: false,
               importUnmatched,
               productQuery: importUnmatched ? item.productName : '',
             });

@@ -907,6 +907,7 @@
                     },
                   ],
               isFixed: false,
+              editingProduct: false,
               importUnmatched,
               productQuery: importUnmatched ? item.productName : '',
               oriPrice: item.oriPrice,
