@@ -1,7 +1,13 @@
 import { defHttp } from '/@/utils/http/axios';
 import { PageResult } from '@/api/model/pageResult';
 import { ContentTypeEnum, ResponseEnum } from '@/enums/httpEnum';
-import { QueryQuoteSheetVo, QuoteSheetBo, QuoteSheetVo } from './model/quoteSheet';
+import {
+  QueryQuoteSheetDetailVo,
+  QueryQuoteSheetVo,
+  QuoteSheetBo,
+  QuoteSheetDetailBo,
+  QuoteSheetVo,
+} from './model/quoteSheet';
 
 const baseUrl = '/basedata/quote';
 const region = 'cloud-api';
@@ -10,6 +16,13 @@ const region = 'cloud-api';
 export function query(data: QueryQuoteSheetVo): Promise<PageResult<QuoteSheetBo>> {
   return defHttp.post<PageResult<QuoteSheetBo>>(
     { url: `${baseUrl}/query`, data },
+    { contentType: ContentTypeEnum.JSON, region },
+  );
+}
+/** 查询报价单商品明细。 */
+export function queryDetail(data: QueryQuoteSheetDetailVo): Promise<PageResult<QuoteSheetDetailBo>> {
+  return defHttp.post<PageResult<QuoteSheetDetailBo>>(
+    { url: `${baseUrl}/detail/query`, data },
     { contentType: ContentTypeEnum.JSON, region },
   );
 }

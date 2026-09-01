@@ -27,6 +27,9 @@ public interface QuoteSheetService extends BaseMpService<QuoteSheet> {
 
     PageResult<QuoteSheet> query(Integer pageIndex, Integer pageSize, QueryQuoteSheetVo vo);
 
+    /** 分页查询报价单商品明细。 */
+    PageResult<QueryQuoteSheetDetailBo> queryDetails(Integer pageIndex, Integer pageSize, QueryQuoteSheetDetailVo vo);
+
     List<QuoteProductBo> getActiveQuoteProducts(QueryQuoteProductVo vo);
 
     List<QuoteSheetImportModel> checkImport(List<QuoteSheetImportModel> items);

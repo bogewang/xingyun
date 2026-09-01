@@ -4,7 +4,7 @@ import { buildQuoteSheetPayload, resolveQuoteProductUnitName } from './quoteShee
 
 describe('报价单编辑数据', () => {
   it('列表页查看报价单时应打开详情弹窗', () => {
-    const source = readFileSync(new URL('./index.vue', import.meta.url), 'utf-8');
+    const source = readFileSync(new URL('./components/sheet-list.vue', import.meta.url), 'utf-8');
     const detailSource = readFileSync(new URL('./detail.vue', import.meta.url), 'utf-8');
 
     expect(source).toContain('<detail :id="id" ref="viewDialog" />');
@@ -28,7 +28,7 @@ describe('报价单编辑数据', () => {
   });
 
   it('查询页和查看页均提供报价单商品明细导出入口', () => {
-    const listSource = readFileSync(new URL('./index.vue', import.meta.url), 'utf-8');
+    const listSource = readFileSync(new URL('./components/sheet-list.vue', import.meta.url), 'utf-8');
     const detailSource = readFileSync(new URL('./detail.vue', import.meta.url), 'utf-8');
 
     expect(listSource).toContain("label: '导出明细'");
@@ -38,14 +38,24 @@ describe('报价单编辑数据', () => {
   });
 
   it('列表页首次查询默认筛选启用状态', () => {
-    const source = readFileSync(new URL('./index.vue', import.meta.url), 'utf-8');
+    const source = readFileSync(new URL('./components/sheet-list.vue', import.meta.url), 'utf-8');
 
     expect(source).toContain("searchForm: { name: '', status: 'ENABLED' }");
   });
 
   it('列表页必须启用分页配置，以解析分页响应中的 datas', () => {
-    const source = readFileSync(new URL('./index.vue', import.meta.url), 'utf-8');
+    const source = readFileSync(new URL('./components/sheet-list.vue', import.meta.url), 'utf-8');
     expect(source).toContain(':pager-config');
+  });
+
+  it('报价单查询页应提供可筛选商品的明细查询页签', () => {
+    const source = readFileSync(new URL('./index.vue', import.meta.url), 'utf-8');
+    const detailSource = readFileSync(new URL('./components/detail-list.vue', import.meta.url), 'utf-8');
+
+    expect(source).toContain('tab="明细查询"');
+    expect(detailSource).toContain('api.queryDetail');
+    expect(detailSource).toContain('商品名称/编号');
+    expect(detailSource).toContain("field: 'salePrice'");
   });
 
   it('保存时只提交报价单接口需要的有效期、商品单价和是否询价字段，不包含编号', () => {

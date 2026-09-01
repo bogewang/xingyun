@@ -296,6 +296,13 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
         return PageResultUtil.convert(new PageInfo<>(getBaseMapper().selectList(Wrappers.lambdaQuery(QuoteSheet.class).in(CollectionUtils.isNotEmpty(vo.getIdList()), QuoteSheet::getId, vo.getIdList()).eq(vo.getStatus() != null, QuoteSheet::getStatus, vo.getStatus()).like(StringUtil.isNotBlank(vo.getName()), QuoteSheet::getName, vo.getName()).ge(vo.getStartDate() != null, QuoteSheet::getStartDate, vo.getStartDate()).le(vo.getEndDate() != null, QuoteSheet::getEndDate, vo.getEndDate()).orderByDesc(QuoteSheet::getCreateTime))));
     }
 
+    /** 分页查询报价单商品明细。 */
+    @Override
+    public PageResult<QueryQuoteSheetDetailBo> queryDetails(Integer pageIndex, Integer pageSize, QueryQuoteSheetDetailVo vo) {
+        PageHelperUtil.startPage(pageIndex, pageSize);
+        return PageResultUtil.convert(new PageInfo<>(quoteSheetDetailMapper.queryDetails(vo)));
+    }
+
     /**
      * 一次关联查询指定日期的已启用报价商品。
      */

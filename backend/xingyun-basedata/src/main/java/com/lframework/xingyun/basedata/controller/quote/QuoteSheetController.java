@@ -75,6 +75,17 @@ public class QuoteSheetController extends DefaultBaseController {
         }
     }
 
+    /** 分页查询报价单商品明细。 */
+    @PostMapping("/detail/query")
+    @HasPermission("base-data:quote:query")
+    public InvokeResult<PageResult<QueryQuoteSheetDetailBo>> queryDetails(@Valid @RequestBody QueryQuoteSheetDetailVo vo) {
+        try {
+            return InvokeResultBuilder.success(quoteSheetService.queryDetails(getPageIndex(vo), getPageSize(vo), vo));
+        } catch (Exception e) {
+            return fail(e);
+        }
+    }
+
     /**
      * 创建报价单商品明细导出任务。
      */

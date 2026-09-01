@@ -9,6 +9,32 @@ export interface QueryQuoteSheetVo extends PageVo {
   idList?: string[];
 }
 
+/** 报价单商品明细查询参数。 */
+export interface QueryQuoteSheetDetailVo extends PageVo {
+  quoteSheetName?: string;
+  status?: 'ENABLED' | 'DISABLED';
+  startDate?: string;
+  endDate?: string;
+  productKeyword?: string;
+}
+
+/** 报价单商品明细。 */
+export interface QuoteSheetDetailBo {
+  quoteSheetId: string;
+  quoteSheetName: string;
+  startDate: string;
+  endDate: string;
+  status: 'ENABLED' | 'DISABLED';
+  detailId: string;
+  productId: string;
+  productCode?: string;
+  productName?: string;
+  spec?: string;
+  unit?: string;
+  salePrice: string | number;
+  inquiryProduct?: boolean;
+}
+
 /** 报价单商品。 */
 export interface QuoteSheetProductVo {
   productId: string;

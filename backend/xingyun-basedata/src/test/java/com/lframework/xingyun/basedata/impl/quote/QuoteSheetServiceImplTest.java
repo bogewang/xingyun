@@ -68,6 +68,8 @@ public class QuoteSheetServiceImplTest {
   }
   /** 有效报价 SQL 必须排除停用商品。 */
   @Test public void shouldExcludeDisabledProductsFromActiveQuoteQuery() throws Exception { String sql=new String(Files.readAllBytes(Paths.get("src/main/resources/mappers/quote/QuoteSheetMapper.xml")),StandardCharsets.UTF_8); Assert.assertTrue(sql.contains("p.available = TRUE")); }
+  /** 报价单商品明细查询应提供报价单和商品筛选字段。 */
+  @Test public void shouldProvideQuoteSheetDetailQueryMapper() throws Exception { String sql=new String(Files.readAllBytes(Paths.get("src/main/resources/mappers/quote/QuoteSheetDetailMapper.xml")),StandardCharsets.UTF_8); Assert.assertTrue(sql.contains("queryDetails")); Assert.assertTrue(sql.contains("vo.quoteSheetName")); Assert.assertTrue(sql.contains("vo.productKeyword")); Assert.assertTrue(sql.contains("base_data_unit")); }
   /** 商品选择器仅接收报价单 ID，并由数据库查询该报价单的已有明细。 */
   @Test public void shouldExcludeQuoteSheetDetailsByQuoteSheetId() throws Exception { String sql=new String(Files.readAllBytes(Paths.get("src/main/resources/mappers/product/ProductMapper.xml")),StandardCharsets.UTF_8); Assert.assertTrue(sql.contains("vo.quoteSheetId")); Assert.assertTrue(sql.contains("NOT EXISTS")); Assert.assertTrue(sql.contains("tbl_quote_sheet_detail")); Assert.assertFalse(sql.contains("excludeProductIds")); }
   /** 报价单明细批量保存必须包含是否询价字段。 */
