@@ -56,6 +56,7 @@ describe('报价单编辑数据', () => {
     expect(detailSource).toContain('api.queryDetail');
     expect(detailSource).toContain('商品名称/编号');
     expect(detailSource).toContain("field: 'salePrice'");
+    expect(detailSource).toContain("status: 'ENABLED'");
   });
 
   it('保存时只提交报价单接口需要的有效期、商品单价和是否询价字段，不包含编号', () => {

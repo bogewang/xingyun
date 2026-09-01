@@ -64,7 +64,7 @@
   const createDefaultSearchForm = () => ({
     quoteSheetName: '',
     productKeyword: '',
-    status: undefined,
+    status: 'ENABLED',
   });
 
   export default defineComponent({
