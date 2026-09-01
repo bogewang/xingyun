@@ -1,7 +1,9 @@
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, ref, unref, type Ref } from 'vue';
 import { isEmpty } from '@/utils/utils';
 
 const ACTIVE_ROW_CLASS = 'inline-product-select-active-row';
+
+type ProductRowSource = Recordable | Ref<Recordable>;
 
 /**
  * 表格内联商品选择的公共逻辑，供各业务的内联选品下拉组件复用。
@@ -11,14 +13,16 @@ const ACTIVE_ROW_CLASS = 'inline-product-select-active-row';
  * @param emits 事件发射函数
  */
 export function useInlineProductSelect(
-  row: Recordable,
+  rowSource: ProductRowSource,
   searchProducts: (keyword: string) => Promise<Recordable[]>,
   emits: (event: 'select' | 'addProduct', ...args: unknown[]) => void,
 ) {
   const autoCompleteRef = ref(null);
+  const getRow = () => unref(rowSource);
 
   // 是否显示auto-complete输入框
   const showAutoComplete = computed(() => {
+    const row = getRow();
     return isEmpty(row.productId) || row.editingProduct;
   });
 
@@ -42,6 +46,7 @@ export function useInlineProductSelect(
 
   // 输入框聚焦时触发搜索，fallbackName为已选商品名称等兜底关键字
   const handleProductInputFocus = (fallbackName?: string) => {
+    const row = getRow();
     const keyword = row.productQuery || fallbackName;
     if (isEmpty(keyword)) return;
 
@@ -76,6 +81,7 @@ export function useInlineProductSelect(
   const handleEnableProductEdit = (enabled = true) => {
     if (!enabled) return;
 
+    const row = getRow();
     row.editingProduct = true;
     row.productQuery = '';
     row.products = [];

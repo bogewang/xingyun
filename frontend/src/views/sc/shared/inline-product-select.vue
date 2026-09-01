@@ -116,7 +116,7 @@
 </template>
 
 <script>
-  import { computed, defineComponent } from 'vue';
+  import { computed, defineComponent, toRef } from 'vue';
   import { StarTwoTone } from '@ant-design/icons-vue';
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
   import * as saleApi from '@/api/sc/sale/order';
@@ -193,7 +193,7 @@
         getProductSelectRowClass,
         handleEnableProductEdit,
         focus,
-      } = useInlineProductSelect(props.row, searchProducts, emit);
+      } = useInlineProductSelect(toRef(props, 'row'), searchProducts, emit);
 
       // 有订单模式的固定行不可编辑
       const rowEditable = !(props.mode === 'require' && props.isFixed);
