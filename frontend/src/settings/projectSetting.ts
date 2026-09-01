@@ -80,8 +80,8 @@ const setting: ProjectConfig = {
     bgColor: SIDE_BAR_BG_COLOR_LIST[3],
     //  Whether to fix the left menu
     fixed: true,
-    // Menu collapse
-    collapsed: false,
+    // 默认收起侧边菜单
+    collapsed: true,
     // When sider hide because of the responsive layout
     siderHidden: false,
     // Whether to display the menu name when folding the menu
