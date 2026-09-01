@@ -15,7 +15,6 @@ import com.lframework.starter.web.core.components.resp.PageResult;
 import com.lframework.starter.web.core.impl.BaseMpServiceImpl;
 import com.lframework.starter.web.core.utils.PageHelperUtil;
 import com.lframework.starter.web.core.utils.PageResultUtil;
-import com.lframework.starter.web.core.components.tenant.TenantContextHolder;
 import com.lframework.xingyun.basedata.bo.quote.*;
 import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverter;
 import com.lframework.xingyun.basedata.entity.Product;
@@ -202,10 +201,9 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
         validateSave(vo, null);
         QuoteSheet sheet = quoteSheetConverter.toEntity(vo);
         sheet.setId(IdUtil.getId());
-        sheet.setTenantId(currentTenantId());
         sheet.setStatus(QuoteSheetStatus.ENABLED);
         getBaseMapper().insert(sheet);
-        saveDetails(sheet.getId(), sheet.getTenantId(), vo.getProducts());
+        saveDetails(sheet.getId(), vo.getProducts());
         return sheet.getId();
     }
 
@@ -215,7 +213,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(UpdateQuoteSheetVo vo) {
-        List<QuoteSheet> lockedSheets = lockTenantQuoteSheets();
+        List<QuoteSheet> lockedSheets = lockQuoteSheets();
         QuoteSheet existed = requireLockedSheet(vo.getId(), lockedSheets);
         validateSave(vo, vo.getId(), lockedSheets);
         QuoteSheet sheet = quoteSheetConverter.toEntity(vo);
@@ -223,7 +221,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
         sheet.setStatus(existed.getStatus());
         getBaseMapper().updateById(sheet);
         quoteSheetDetailMapper.delete(Wrappers.lambdaQuery(QuoteSheetDetail.class).eq(QuoteSheetDetail::getQuoteSheetId, vo.getId()));
-        saveDetails(vo.getId(), existed.getTenantId(), vo.getProducts());
+        saveDetails(vo.getId(), vo.getProducts());
     }
 
     /**
@@ -232,7 +230,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteById(String id) {
-        requireLockedSheet(id, lockTenantQuoteSheets());
+        requireLockedSheet(id, lockQuoteSheets());
         if (quoteSheetReferenceCheckers.stream().anyMatch(checker -> checker.hasReference(id)))
             throw new DefaultClientException("报价单已被销售单使用，不能删除！");
         quoteSheetDetailMapper.delete(Wrappers.lambdaQuery(QuoteSheetDetail.class).eq(QuoteSheetDetail::getQuoteSheetId, id));
@@ -245,7 +243,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void enable(String id) {
-        List<QuoteSheet> lockedSheets = lockTenantQuoteSheets();
+        List<QuoteSheet> lockedSheets = lockQuoteSheets();
         QuoteSheet sheet = requireLockedSheet(id, lockedSheets);
         List<QuoteSheetDetail> details = quoteSheetDetailMapper.selectList(Wrappers.lambdaQuery(QuoteSheetDetail.class).eq(QuoteSheetDetail::getQuoteSheetId, id));
         validateSheetData(sheet.getStartDate(), sheet.getEndDate(), details.stream().map(QuoteSheetDetail::getProductId).collect(Collectors.toList()), id, lockedSheets);
@@ -259,7 +257,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void disable(String id) {
-        QuoteSheet sheet = requireLockedSheet(id, lockTenantQuoteSheets());
+        QuoteSheet sheet = requireLockedSheet(id, lockQuoteSheets());
         sheet.setStatus(QuoteSheetStatus.DISABLED);
         getBaseMapper().updateById(sheet);
     }
@@ -315,7 +313,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
      * 校验保存请求。
      */
     private void validateSave(CreateQuoteSheetVo vo, String excludeId) {
-        validateSave(vo, excludeId, lockTenantQuoteSheets());
+        validateSave(vo, excludeId, lockQuoteSheets());
     }
 
     /**
@@ -338,7 +336,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     /**
      * 批量保存报价单明细。
      */
-    void saveDetails(String quoteSheetId, String tenantId, List<QuoteSheetProductVo> products) {
+    void saveDetails(String quoteSheetId, List<QuoteSheetProductVo> products) {
         Map<String, Product> productMap = productMapper.selectList(Wrappers.lambdaQuery(Product.class)
                         .in(Product::getId, products.stream().map(QuoteSheetProductVo::getProductId)
                                 .collect(Collectors.toSet())))
@@ -350,7 +348,6 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
             }
             QuoteSheetDetail d = quoteSheetConverter.toDetail(p, quoteSheetId);
             d.setId(IdUtil.getId());
-            d.setTenantId(tenantId);
             d.setInquiryProduct(!Boolean.FALSE.equals(p.getInquiryProduct()));
             d.setProductSnapshot(JsonUtil.toJsonString(product));
             return d;
@@ -368,24 +365,17 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     }
 
     /**
-     * 锁定当前租户范围内的报价单，作为所有写流程的统一首个锁。
+     * 锁定全部报价单，作为所有写流程的统一首个锁。
      */
-    List<QuoteSheet> lockTenantQuoteSheets() {
-        return getBaseMapper().selectByTenantIdForUpdate(currentTenantId());
+    List<QuoteSheet> lockQuoteSheets() {
+        return getBaseMapper().selectAllForUpdate();
     }
 
     /**
-     * 从已锁定的租户报价单范围中获取目标单据。
+     * 从已锁定的报价单范围中获取目标单据。
      */
     static QuoteSheet requireLockedSheet(String id, List<QuoteSheet> lockedSheets) {
         return lockedSheets.stream().filter(sheet -> Objects.equals(sheet.getId(), id)).findFirst().orElseThrow(() -> new DefaultClientException("报价单不存在！"));
-    }
-
-    /**
-     * 获取当前租户 ID 的字符串形式。
-     */
-    private String currentTenantId() {
-        return String.valueOf(TenantContextHolder.getTenantId());
     }
 
     /**

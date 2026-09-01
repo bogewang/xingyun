@@ -36,19 +36,16 @@ public class QuoteSheetModelTest {
     quoteSheet.setEndDate(LocalDate.of(2026, 9, 30));
     quoteSheet.setStatus(QuoteSheetStatus.DISABLED);
     quoteSheet.setDescription("测试报价单");
-    quoteSheet.setTenantId("tenant-1");
 
     QuoteSheetDetail detail = new QuoteSheetDetail();
     detail.setId("detail-1");
     detail.setQuoteSheetId(quoteSheet.getId());
     detail.setProductId("product-1");
     detail.setSalePrice(new BigDecimal("99.90"));
-    detail.setTenantId("tenant-1");
 
     Assert.assertEquals(quoteSheet.getName(), "夏季报价");
     Assert.assertEquals(quoteSheet.getStatus(), QuoteSheetStatus.DISABLED);
     Assert.assertEquals(detail.getQuoteSheetId(), "quote-1");
     Assert.assertEquals(detail.getSalePrice(), new BigDecimal("99.90"));
-    Assert.assertEquals(detail.getTenantId(), "tenant-1");
   }
 }

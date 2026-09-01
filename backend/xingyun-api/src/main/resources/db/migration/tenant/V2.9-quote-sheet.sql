@@ -5,7 +5,6 @@ CREATE TABLE `tbl_quote_sheet` (
     `end_date` date NOT NULL COMMENT '生效结束日期',
     `status` int NOT NULL DEFAULT 0 COMMENT '状态',
     `description` varchar(255) DEFAULT NULL COMMENT '备注',
-    `tenant_id` varchar(32) NOT NULL COMMENT '租户ID',
     `create_by_id` varchar(32) DEFAULT NULL COMMENT '创建人ID',
     `create_by` varchar(64) DEFAULT NULL COMMENT '创建人',
     `create_time` datetime DEFAULT NULL COMMENT '创建时间',
@@ -13,7 +12,7 @@ CREATE TABLE `tbl_quote_sheet` (
     `update_by_id` varchar(32) DEFAULT NULL COMMENT '修改人ID',
     `update_time` datetime DEFAULT NULL COMMENT '修改时间',
     PRIMARY KEY (`id`),
-    KEY `idx_quote_sheet_tenant_date` (`tenant_id`, `start_date`, `end_date`)
+    KEY `idx_quote_sheet_date` (`start_date`, `end_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='报价单';
 
 CREATE TABLE `tbl_quote_sheet_detail` (
@@ -21,7 +20,6 @@ CREATE TABLE `tbl_quote_sheet_detail` (
     `quote_sheet_id` varchar(32) NOT NULL COMMENT '报价单ID',
     `product_id` varchar(32) NOT NULL COMMENT '商品ID',
     `sale_price` decimal(18,2) NOT NULL COMMENT '销售单价',
-    `tenant_id` varchar(32) NOT NULL COMMENT '租户ID',
     `create_by_id` varchar(32) DEFAULT NULL COMMENT '创建人ID',
     `create_by` varchar(64) DEFAULT NULL COMMENT '创建人',
     `create_time` datetime DEFAULT NULL COMMENT '创建时间',
@@ -96,13 +94,9 @@ FROM sys_menu menu WHERE menu.id = 'base-data-quote-menu'
 ALTER TABLE `tbl_quote_sheet_detail`
     ADD COLUMN `inquiry_product` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否询价' AFTER `sale_price`;
 
-ALTER TABLE `tbl_quote_sheet` DROP COLUMN `tenant_id`;
-ALTER TABLE `tbl_quote_sheet_detail` DROP COLUMN `tenant_id`;
-
-
 update sys_menu set sys_module_id = '3' where code in ('2000011001','2000011002')
 -- 初始化报价单
--- 本脚本仅在该租户不存在与 2026-01-01 至 2026-09-30 重叠的启用报价单时创建默认报价单。
+-- 本脚本仅在不存在与 2026-01-01 至 2026-09-30 重叠的启用报价单时创建默认报价单。
 SET @quote_sheet_id = REPLACE(UUID(), '-', '');
 
 START TRANSACTION;

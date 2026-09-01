@@ -36,9 +36,6 @@ public class QuoteSheetDetail extends BaseEntity implements BaseDto {
   /** 是否询价。 */
   private Boolean inquiryProduct;
 
-  /** 租户ID。 */
-  private String tenantId;
-
   /** 创建人ID。 */
   @TableField(fill = FieldFill.INSERT)
   private String createById;

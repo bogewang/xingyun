@@ -76,10 +76,10 @@ public class QuoteSheetServiceImplTest {
   @Test public void shouldPersistInquiryProductInQuoteSheetDetail() throws Exception { String sql=new String(Files.readAllBytes(Paths.get("src/main/resources/mappers/quote/QuoteSheetDetailMapper.xml")),StandardCharsets.UTF_8); Assert.assertTrue(sql.contains("inquiry_product")); Assert.assertTrue(sql.contains("#{item.inquiryProduct}")); }
   /** 已被引用的报价单仍允许修改，删除限制由删除流程单独处理。 */
   @Test public void shouldAllowUpdatingReferencedQuoteSheet() throws Exception { String source=new String(Files.readAllBytes(Paths.get("src/main/java/com/lframework/xingyun/basedata/impl/quote/QuoteSheetServiceImpl.java")),StandardCharsets.UTF_8); Assert.assertFalse(source.contains("报价单已被业务单据使用，不能修改！")); }
-  /** 所有写流程共用的入口先锁定当前租户报价单范围。 */
-  @Test public void shouldLockTenantRangeBeforeLocatingQuoteSheet() throws Exception { QuoteSheetServiceImpl service=new QuoteSheetServiceImpl(); QuoteSheetMapper mapper=Mockito.mock(QuoteSheetMapper.class); QuoteSheet sheet=sheet("quote-1","2026-08-01","2026-08-31"); Mockito.when(mapper.selectByTenantIdForUpdate(Mockito.<String>any())).thenReturn(Collections.singletonList(sheet)); setBaseMapper(service,mapper); Assert.assertEquals(QuoteSheetServiceImpl.requireLockedSheet("quote-1",service.lockTenantQuoteSheets()),sheet); Mockito.verify(mapper).selectByTenantIdForUpdate(Mockito.<String>any()); }
-  /** 批量持久化必须把租户 ID 传入 Mapper 明细实体。 */
-  @Test public void shouldPassTenantIdToBatchInsertMapper() throws Exception {
+  /** 所有写流程共用的入口先锁定全部报价单。 */
+  @Test public void shouldLockAllQuoteSheetsBeforeLocatingQuoteSheet() throws Exception { QuoteSheetServiceImpl service=new QuoteSheetServiceImpl(); QuoteSheetMapper mapper=Mockito.mock(QuoteSheetMapper.class); QuoteSheet sheet=sheet("quote-1","2026-08-01","2026-08-31"); Mockito.when(mapper.selectAllForUpdate()).thenReturn(Collections.singletonList(sheet)); setBaseMapper(service,mapper); Assert.assertEquals(QuoteSheetServiceImpl.requireLockedSheet("quote-1",service.lockQuoteSheets()),sheet); Mockito.verify(mapper).selectAllForUpdate(); }
+  /** 批量持久化不再向明细实体写入租户 ID。 */
+  @Test public void shouldBatchInsertDetailsWithoutTenantId() throws Exception {
     StaticApplicationContext applicationContext=new StaticApplicationContext();
     applicationContext.getBeanFactory().registerSingleton("objectMapper",new ObjectMapper());
     new ApplicationUtil().setApplicationContext(applicationContext);
@@ -94,9 +94,8 @@ public class QuoteSheetServiceImplTest {
     QuoteSheetProductVo product=new QuoteSheetProductVo(); product.setProductId("product-1"); product.setSalePrice(BigDecimal.ONE);
     Product savedProduct=new Product(); savedProduct.setId("product-1"); savedProduct.setName("测试商品");
     Mockito.when(productMapper.selectList(Mockito.any())).thenReturn(Collections.singletonList(savedProduct));
-    try (MockedStatic<com.lframework.starter.web.core.utils.IdUtil> idUtil=Mockito.mockStatic(com.lframework.starter.web.core.utils.IdUtil.class)) { idUtil.when(com.lframework.starter.web.core.utils.IdUtil::getId).thenReturn("detail-1"); service.saveDetails("quote-1","tenant-1",Collections.singletonList(product)); }
+    try (MockedStatic<com.lframework.starter.web.core.utils.IdUtil> idUtil=Mockito.mockStatic(com.lframework.starter.web.core.utils.IdUtil.class)) { idUtil.when(com.lframework.starter.web.core.utils.IdUtil::getId).thenReturn("detail-1"); service.saveDetails("quote-1",Collections.singletonList(product)); }
     Assert.assertNotNull(detailsRef.get());
-    Assert.assertEquals(detailsRef.get().get(0).getTenantId(),"tenant-1");
     Assert.assertTrue(detailsRef.get().get(0).getInquiryProduct());
     Assert.assertNotNull(detailsRef.get().get(0).getProductSnapshot());
   }
