@@ -13,6 +13,7 @@ export interface QueryQuoteSheetVo extends PageVo {
 export interface QueryQuoteSheetDetailVo extends PageVo {
   quoteSheetName?: string;
   status?: 'ENABLED' | 'DISABLED';
+  inquiryProduct?: boolean;
   startDate?: string;
   endDate?: string;
   productKeyword?: string;

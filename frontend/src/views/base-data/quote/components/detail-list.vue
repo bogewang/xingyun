@@ -27,6 +27,12 @@
                 <a-select-option value="DISABLED">停用</a-select-option>
               </a-select>
             </j-form-item>
+            <j-form-item label="是否询价">
+              <a-select v-model:value="searchForm.inquiryProduct" allow-clear>
+                <a-select-option :value="true">是</a-select-option>
+                <a-select-option :value="false">否</a-select-option>
+              </a-select>
+            </j-form-item>
             <j-form-item label="生效日期">
               <a-range-picker
                 v-model:value="effectiveDateRange"
@@ -65,6 +71,7 @@
     quoteSheetName: '',
     productKeyword: '',
     status: 'ENABLED',
+    inquiryProduct: undefined,
   });
 
   export default defineComponent({

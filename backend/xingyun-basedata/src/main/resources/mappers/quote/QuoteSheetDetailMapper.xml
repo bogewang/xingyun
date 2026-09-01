@@ -13,6 +13,7 @@
     <where>
       <if test="vo.quoteSheetName != null and vo.quoteSheetName != ''">AND q.name LIKE CONCAT('%', #{vo.quoteSheetName}, '%')</if>
       <if test="vo.status != null">AND q.status = #{vo.status}</if>
+      <if test="vo.inquiryProduct != null">AND d.inquiry_product = #{vo.inquiryProduct}</if>
       <if test="vo.startDate != null">AND q.start_date &gt;= #{vo.startDate}</if>
       <if test="vo.endDate != null">AND q.end_date &lt;= #{vo.endDate}</if>
       <if test="vo.productKeyword != null and vo.productKeyword != ''">AND (p.name LIKE CONCAT('%', #{vo.productKeyword}, '%') OR p.code LIKE CONCAT('%', #{vo.productKeyword}, '%'))</if>
