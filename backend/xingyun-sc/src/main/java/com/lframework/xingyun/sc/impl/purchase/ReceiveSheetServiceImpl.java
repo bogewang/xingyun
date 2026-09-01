@@ -210,7 +210,36 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
     @Override
     public ReceiveSheetFullDto getDetail(String id) {
 
-        return getBaseMapper().getDetail(id);
+        ReceiveSheetFullDto result = getBaseMapper().getDetail(id);
+        if (result == null || result.getOrderDate() == null
+                || CollectionUtil.isEmpty(result.getDetails())) {
+            return result;
+        }
+
+        QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
+        quoteProductVo.setOrderDate(result.getOrderDate());
+        applyQuoteInquiryProducts(result, saleOutSheetService.queryQuoteProducts(quoteProductVo));
+        return result;
+    }
+
+    /**
+     * 使用订单日期生效报价单回填采购入库明细的询价商品标识。
+     *
+     * @param sheet 采购入库详情
+     * @param quoteProducts 生效报价商品
+     */
+    static void applyQuoteInquiryProducts(ReceiveSheetFullDto sheet,
+            List<QuoteProductBo> quoteProducts) {
+        if (sheet == null || CollectionUtil.isEmpty(sheet.getDetails())
+                || CollectionUtil.isEmpty(quoteProducts)) {
+            return;
+        }
+
+        Map<String, Boolean> inquiryProductMap = quoteProducts.stream().collect(Collectors.toMap(
+                QuoteProductBo::getProductId, QuoteProductBo::getInquiryProduct,
+                (first, ignored) -> first));
+        sheet.getDetails().forEach(detail -> detail.setInquiryProduct(Boolean.TRUE.equals(
+                inquiryProductMap.get(detail.getProductId()))));
     }
 
     @Override

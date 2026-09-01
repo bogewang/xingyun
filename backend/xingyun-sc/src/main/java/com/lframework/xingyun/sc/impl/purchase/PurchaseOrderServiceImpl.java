@@ -27,6 +27,7 @@ import com.lframework.starter.web.inner.service.system.SysUserService;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductBundle;
 import com.lframework.xingyun.basedata.entity.Supplier;
+import com.lframework.xingyun.basedata.bo.quote.QuoteProductBo;
 import com.lframework.xingyun.basedata.service.product.ProductBundleService;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.product.ProductUnitService;
@@ -46,7 +47,9 @@ import com.lframework.xingyun.sc.excel.purchase.PurchaseOrderImportModel;
 import com.lframework.xingyun.sc.mappers.PurchaseOrderMapper;
 import com.lframework.xingyun.sc.service.paytype.OrderPayTypeService;
 import com.lframework.xingyun.sc.service.purchase.*;
+import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
 import com.lframework.xingyun.sc.vo.purchase.*;
+import com.lframework.xingyun.basedata.vo.quote.QueryQuoteProductVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.dromara.warm.flow.core.dto.FlowParams;
@@ -126,6 +129,9 @@ public class PurchaseOrderServiceImpl extends
     @Autowired
     private PurchaseOrderDetailBundleFormService purchaseOrderDetailBundleFormService;
 
+    @Autowired
+    private SaleOutSheetService saleOutSheetService;
+
     @Override
     public PageResult<PurchaseOrder> query(Integer pageIndex, Integer pageSize,
                                            QueryPurchaseOrderVo vo) {
@@ -182,7 +188,29 @@ public class PurchaseOrderServiceImpl extends
         if (order == null) {
             throw new InputErrorException("订单不存在！");
         }
+        QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
+        quoteProductVo.setOrderDate(order.getOrderDate());
+        applyQuoteInquiryProducts(order, saleOutSheetService.queryQuoteProducts(quoteProductVo));
         return order;
+    }
+
+    /**
+     * 使用采购订单日期生效的报价单回填收货待选明细的询价商品标识。
+     *
+     * @param order 采购订单收货详情
+     * @param quoteProducts 生效报价商品
+     */
+    static void applyQuoteInquiryProducts(PurchaseOrderWithReceiveDto order,
+            List<QuoteProductBo> quoteProducts) {
+        if (order == null || CollectionUtil.isEmpty(order.getDetails())
+                || CollectionUtil.isEmpty(quoteProducts)) {
+            return;
+        }
+        Map<String, Boolean> inquiryProductMap = quoteProducts.stream().collect(Collectors.toMap(
+                QuoteProductBo::getProductId, QuoteProductBo::getInquiryProduct,
+                (first, ignored) -> first));
+        order.getDetails().forEach(detail -> detail.setInquiryProduct(Boolean.TRUE.equals(
+                inquiryProductMap.get(detail.getProductId()))));
     }
 
     @Override

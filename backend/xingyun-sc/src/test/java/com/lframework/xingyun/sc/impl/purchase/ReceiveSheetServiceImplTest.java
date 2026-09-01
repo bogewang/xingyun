@@ -3,6 +3,8 @@ package com.lframework.xingyun.sc.impl.purchase;
 import com.lframework.starter.common.utils.BeanUtil;
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.xingyun.basedata.bo.quote.QuoteProductBo;
+import com.lframework.xingyun.sc.dto.purchase.PurchaseOrderWithReceiveDto;
+import com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetImportModel;
 import com.lframework.xingyun.sc.excel.purchase.receive.ReceiveSheetQueryImportModel;
 import com.lframework.xingyun.sc.vo.purchase.receive.ReceiveProductVo;
@@ -10,8 +12,8 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Collections;
+import java.util.List;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -149,6 +151,42 @@ class ReceiveSheetServiceImplTest {
 
     Assert.assertTrue(source.contains("checkImportData(list, orderDate)"));
     Assert.assertTrue(source.contains("quoteProductIds.contains(product.getId())"));
+  }
+
+  /** 验证采购入库详情按单据日期回填报价单中的询价商品标识，供修改页面正确回显。 */
+  @Test
+  void receiveDetailShouldPopulateInquiryProductFromActiveQuoteSheet() {
+    ReceiveSheetFullDto sheet = new ReceiveSheetFullDto();
+    ReceiveSheetFullDto.OrderDetailDto detail = new ReceiveSheetFullDto.OrderDetailDto();
+    detail.setProductId("product-1");
+    sheet.setDetails(Collections.singletonList(detail));
+
+    ReceiveSheetServiceImpl.applyQuoteInquiryProducts(sheet,
+        Collections.singletonList(createQuoteProduct("product-1", true)));
+
+    Assert.assertEquals(detail.getInquiryProduct(), Boolean.TRUE);
+  }
+
+  /** 验证新增采购入库从采购订单带入商品时保留询价商品标识。 */
+  @Test
+  void purchaseOrderForReceiveShouldPopulateInquiryProductFromActiveQuoteSheet() {
+    PurchaseOrderWithReceiveDto order = new PurchaseOrderWithReceiveDto();
+    PurchaseOrderWithReceiveDto.DetailDto detail = new PurchaseOrderWithReceiveDto.DetailDto();
+    detail.setProductId("product-1");
+    order.setDetails(Collections.singletonList(detail));
+
+    PurchaseOrderServiceImpl.applyQuoteInquiryProducts(order,
+        Collections.singletonList(createQuoteProduct("product-1", true)));
+
+    Assert.assertEquals(detail.getInquiryProduct(), Boolean.TRUE);
+  }
+
+  /** 构造报价商品。 */
+  private QuoteProductBo createQuoteProduct(String productId, Boolean inquiryProduct) {
+    QuoteProductBo quoteProduct = new QuoteProductBo();
+    quoteProduct.setProductId(productId);
+    quoteProduct.setInquiryProduct(inquiryProduct);
+    return quoteProduct;
   }
 
   private ReceiveSheetImportModel createModel(BigDecimal receiveNum, BigDecimal purchasePrice) {
