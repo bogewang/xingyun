@@ -182,6 +182,12 @@ public class QuerySaleOutSheetVo extends SortPageVo {
   private Boolean fullyPaid;
 
   /**
+   * 是否询价商品
+   */
+  @ApiModelProperty("是否询价商品")
+  private Boolean inquiryProduct;
+
+  /**
    * 是否已录采购
    */
   @ApiModelProperty("是否已录采购")
@@ -234,6 +240,12 @@ public class QuerySaleOutSheetVo extends SortPageVo {
    */
   @ApiModelProperty("是否仅查询多价格商品")
   private Boolean onlyMultiPrice;
+
+  /**
+   * 是否存在金额为0的明细
+   */
+  @ApiModelProperty("是否存在金额为0的明细")
+  private Boolean hasZeroAmountDetail;
 
   /**
    * 商品分类ID列表

@@ -55,7 +55,12 @@
         </a-tag>
       </template>
       <template #inquiry_default="{ row }">
-        {{ row.inquiryProduct ? '是' : '否' }}
+        <a-tag :color="row.inquiryProduct ? 'green' : 'red'">
+          {{ row.inquiryProduct ? '是' : '否' }}
+        </a-tag>
+      </template>
+      <template #quote_sheet_name_default="{ row }">
+        <a @click="openModifyPage(row.quoteSheetId)">{{ row.quoteSheetName }}</a>
       </template>
     </vxe-grid>
   </page-wrapper>
@@ -66,6 +71,7 @@
   import * as api from '@/api/base-data/quote';
   import { buildSortPageVo } from '@/utils/utils';
   import { gridCollapseHeightMix } from '@/mixins/gridCollapseHeightMix';
+  import { multiplePageMix } from '@/mixins/multiplePageMix';
 
   const createDefaultSearchForm = () => ({
     quoteSheetName: '',
@@ -76,7 +82,7 @@
 
   export default defineComponent({
     name: 'QuoteSheetDetailList',
-    mixins: [gridCollapseHeightMix],
+    mixins: [gridCollapseHeightMix, multiplePageMix],
     data() {
       return {
         searchForm: createDefaultSearchForm(),
@@ -87,16 +93,26 @@
         },
         columns: [
           { type: 'seq', title: '序号', width: 60 },
-          { field: 'quoteSheetName', title: '报价单名称', minWidth: 180 },
+          {
+            field: 'quoteSheetName',
+            title: '报价单名称',
+            width: 180,
+            slots: { default: 'quote_sheet_name_default' },
+          },
           { field: 'startDate', title: '生效开始日期', width: 130 },
           { field: 'endDate', title: '生效结束日期', width: 130 },
           { field: 'status', title: '状态', width: 90, slots: { default: 'status_default' } },
           { field: 'productCode', title: '商品编号', width: 140 },
-          { field: 'productName', title: '商品名称', minWidth: 180 },
+          { field: 'productName', title: '商品名称', width: 180 },
           { field: 'spec', title: '规格', width: 120 },
           { field: 'unit', title: '单位', width: 90 },
           { field: 'salePrice', title: '销售单价（元）', width: 140, align: 'right' },
-          { field: 'inquiryProduct', title: '是否询价', width: 100, slots: { default: 'inquiry_default' } },
+          {
+            field: 'inquiryProduct',
+            title: '是否询价',
+            width: 100,
+            slots: { default: 'inquiry_default' },
+          },
         ],
         proxyConfig: {
           props: { result: 'datas', total: 'totalCount' },
@@ -116,6 +132,10 @@
         this.searchForm = createDefaultSearchForm();
         this.effectiveDateRange = [];
         this.search();
+      },
+      /** 打开报价单修改页面。 */
+      openModifyPage(quoteSheetId) {
+        this.openChildPage(`/base-data/quote/modify/${quoteSheetId}`);
       },
       /** 组装明细查询请求。 */
       buildQueryParams(page, sorts) {

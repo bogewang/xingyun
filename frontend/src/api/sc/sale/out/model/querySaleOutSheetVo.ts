@@ -112,9 +112,14 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
   settleStatus: number;
 
   /**
-   * 是否已付完
+   * 是否已收完款
    */
   fullyPaid: boolean;
+
+  /**
+   * 是否询价商品
+   */
+  inquiryProduct: boolean;
 
   /**
    * 是否已录采购
@@ -160,6 +165,11 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
    * 是否仅查询多价格商品
    */
   onlyMultiPrice: boolean;
+
+  /**
+   * 是否存在金额为0的明细
+   */
+  hasZeroAmountDetail: boolean;
 
   /**
    * 商品分类ID列表

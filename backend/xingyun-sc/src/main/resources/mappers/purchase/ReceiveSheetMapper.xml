@@ -201,7 +201,7 @@
             g.code AS product_code,
             g.name AS product_name,
             g.remark AS product_remark,
-            NULL AS inquiry_product,
+            qd.inquiry_product AS inquiry_product,
             g.sku_code,
             g.external_code,
             g.spec,
@@ -223,6 +223,10 @@
             r.status
         FROM tbl_receive_sheet AS r
         INNER JOIN tbl_receive_sheet_detail AS d ON d.sheet_id = r.id
+        LEFT JOIN tbl_quote_sheet AS q ON q.start_date &lt;= r.order_date
+            AND q.end_date >= r.order_date
+        LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = q.id
+            AND qd.product_id = d.product_id
         LEFT JOIN tbl_purchase_order AS o ON o.id = r.purchase_order_id
         LEFT JOIN base_data_supplier AS su ON su.id = r.supplier_id
         LEFT JOIN base_data_product AS g ON g.id = d.product_id
@@ -379,6 +383,9 @@
                             AND IFNULL(r.total_amount, 0) &gt; IFNULL(r.paid_amount, 0)
                         </otherwise>
                     </choose>
+                </if>
+                <if test="vo.inquiryProduct != null">
+                    AND qd.inquiry_product = #{vo.inquiryProduct}
                 </if>
                 <if test="vo.paidAmountStart != null">
                     AND IFNULL(r.paid_amount, 0) &gt;= #{vo.paidAmountStart}
