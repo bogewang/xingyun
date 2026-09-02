@@ -61,6 +61,15 @@ describe('报价单编辑数据', () => {
     expect(detailSource).toContain('v-model:value="searchForm.inquiryProduct"');
   });
 
+  it('明细查询页点击报价单名称应进入修改页', () => {
+    const source = readFileSync(new URL('./components/detail-list.vue', import.meta.url), 'utf-8');
+
+    expect(source).toContain('<template #quote_sheet_name_default="{ row }">');
+    expect(source).toContain('@click="openModifyPage(row.quoteSheetId)"');
+    expect(source).toContain('this.openChildPage(`/base-data/quote/modify/${quoteSheetId}`)');
+    expect(source).toContain("import { multiplePageMix } from '@/mixins/multiplePageMix';");
+  });
+
   it('保存时只提交报价单接口需要的有效期、商品单价和是否询价字段，不包含编号', () => {
     expect(
       buildQuoteSheetPayload({
