@@ -61,6 +61,13 @@ describe('报价单编辑数据', () => {
     expect(detailSource).toContain('v-model:value="searchForm.inquiryProduct"');
   });
 
+  it('明细查询页的是否询价应按结果展示绿色或红色标签', () => {
+    const source = readFileSync(new URL('./components/detail-list.vue', import.meta.url), 'utf-8');
+
+    expect(source).toContain(`<a-tag :color="row.inquiryProduct ? 'green' : 'red'">`);
+    expect(source).toContain("{{ row.inquiryProduct ? '是' : '否' }}");
+  });
+
   it('明细查询页点击报价单名称应进入修改页', () => {
     const source = readFileSync(new URL('./components/detail-list.vue', import.meta.url), 'utf-8');
 

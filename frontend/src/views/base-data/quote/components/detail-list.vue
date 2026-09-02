@@ -55,7 +55,9 @@
         </a-tag>
       </template>
       <template #inquiry_default="{ row }">
-        {{ row.inquiryProduct ? '是' : '否' }}
+        <a-tag :color="row.inquiryProduct ? 'green' : 'red'">
+          {{ row.inquiryProduct ? '是' : '否' }}
+        </a-tag>
       </template>
       <template #quote_sheet_name_default="{ row }">
         <a @click="openModifyPage(row.quoteSheetId)">{{ row.quoteSheetName }}</a>
