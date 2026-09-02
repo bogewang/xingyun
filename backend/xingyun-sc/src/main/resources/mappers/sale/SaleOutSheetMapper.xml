@@ -357,6 +357,9 @@
                         </otherwise>
                     </choose>
                 </if>
+                <if test="vo.inquiryProduct != null">
+                    AND qd.inquiry_product = #{vo.inquiryProduct}
+                </if>
                 <if test="vo.hasCostPrice != null">
                     <choose>
                         <when test="vo.hasCostPrice">

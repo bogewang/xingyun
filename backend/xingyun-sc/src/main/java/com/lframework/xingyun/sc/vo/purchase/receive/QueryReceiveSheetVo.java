@@ -118,6 +118,12 @@ public class QueryReceiveSheetVo extends SortPageVo {
   private Boolean fullyPaid;
 
   /**
+   * 是否询价商品
+   */
+  @ApiModelProperty("是否询价商品")
+  private Boolean inquiryProduct;
+
+  /**
    * 已付金额起始值
    */
   @ApiModelProperty("已付金额起始值")

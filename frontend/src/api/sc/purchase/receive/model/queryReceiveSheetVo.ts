@@ -87,6 +87,11 @@ export interface QueryReceiveSheetVo extends SortPageVo {
   fullyPaid: boolean;
 
   /**
+   * 是否询价商品
+   */
+  inquiryProduct: boolean;
+
+  /**
    * 已付金额起始值
    */
   paidAmountStart: number;

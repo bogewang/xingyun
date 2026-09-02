@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
 import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetDetailBo;
+import com.lframework.xingyun.sc.vo.sale.out.QuerySaleOutSheetVo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -84,6 +85,17 @@ class SaleOutSheetInquiryProductMappingTest {
     assertTrue(detailSql.contains("LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = q.id"));
     assertTrue(detailSql.contains("AND qd.product_id = d.product_id"));
     assertFalse(detailSql.contains("NULL AS inquiry_product"));
+  }
+
+  /** 验证销售出库明细查询支持按是否询价商品筛选。 */
+  @Test
+  void shouldFilterSaleOutQueryDetailByInquiryProduct() throws IOException, NoSuchMethodException {
+    String whereSql = extractSqlBlock(readMapperXml(), "SaleOutSheetDetailWhere_sql");
+
+    assertTrue(QuerySaleOutSheetVo.class.getMethod("getInquiryProduct").getReturnType()
+        .equals(Boolean.class));
+    assertTrue(whereSql.contains("vo.inquiryProduct != null"));
+    assertTrue(whereSql.contains("qd.inquiry_product = #{vo.inquiryProduct}"));
   }
 
   /** 读取测试类路径中的销售出库 Mapper XML。 */

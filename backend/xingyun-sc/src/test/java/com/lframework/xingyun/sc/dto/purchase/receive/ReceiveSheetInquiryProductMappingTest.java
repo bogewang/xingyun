@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.lframework.xingyun.sc.bo.purchase.receive.GetReceiveSheetBo;
 import com.lframework.xingyun.sc.bo.purchase.receive.QueryReceiveSheetDetailBo;
+import com.lframework.xingyun.sc.vo.purchase.receive.QueryReceiveSheetVo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -73,6 +74,17 @@ class ReceiveSheetInquiryProductMappingTest {
     assertFalse(detailSql.contains("NULL AS inquiry_product"));
   }
 
+  /** 验证采购入库明细查询支持按是否询价商品筛选。 */
+  @Test
+  void shouldFilterReceiveQueryDetailByInquiryProduct() throws IOException, NoSuchMethodException {
+    String queryDetailSql = extractSelectBlock(readMapperXml(), "queryDetail");
+
+    assertTrue(QueryReceiveSheetVo.class.getMethod("getInquiryProduct").getReturnType()
+        .equals(Boolean.class));
+    assertTrue(queryDetailSql.contains("vo.inquiryProduct != null"));
+    assertTrue(queryDetailSql.contains("qd.inquiry_product = #{vo.inquiryProduct}"));
+  }
+
   /** 读取测试类路径中的收货 Mapper XML。 */
   private String readMapperXml() throws IOException {
     try (InputStream input = getClass().getResourceAsStream(
@@ -86,6 +98,13 @@ class ReceiveSheetInquiryProductMappingTest {
   private String extractSqlBlock(String mapperXml, String sqlId) {
     int startIndex = mapperXml.indexOf("<sql id=\"" + sqlId + "\">");
     int endIndex = mapperXml.indexOf("</sql>", startIndex);
+    return mapperXml.substring(startIndex, endIndex);
+  }
+
+  /** 提取指定查询语句，避免其他查询语句干扰断言。 */
+  private String extractSelectBlock(String mapperXml, String selectId) {
+    int startIndex = mapperXml.indexOf("<select id=\"" + selectId + "\"");
+    int endIndex = mapperXml.indexOf("</select>", startIndex);
     return mapperXml.substring(startIndex, endIndex);
   }
 }

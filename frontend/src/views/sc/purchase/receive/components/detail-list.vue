@@ -78,6 +78,12 @@
                   <a-select-option :value="false">未付完</a-select-option>
                 </a-select>
               </j-form-item>
+              <j-form-item label="是否询价商品">
+                <a-select v-model:value="searchFormData.inquiryProduct" placeholder="全部" allow-clear>
+                  <a-select-option :value="true">是</a-select-option>
+                  <a-select-option :value="false">否</a-select-option>
+                </a-select>
+              </j-form-item>
             </j-form>
           </j-border>
         </template>
@@ -184,6 +190,7 @@
           purchaseOrderCode: '',
           settleStatus: undefined,
           fullyPaid: undefined,
+          inquiryProduct: undefined,
         },
         orderDateRange: [],
         approveDateRange: [],
@@ -310,6 +317,7 @@
           purchaseOrderCode: '',
           settleStatus: undefined,
           fullyPaid: undefined,
+          inquiryProduct: undefined,
         };
         this.orderDateRange = this.getDefaultOrderDateRange();
         this.approveDateRange = [];

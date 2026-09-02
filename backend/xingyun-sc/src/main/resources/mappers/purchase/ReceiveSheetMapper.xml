@@ -384,6 +384,9 @@
                         </otherwise>
                     </choose>
                 </if>
+                <if test="vo.inquiryProduct != null">
+                    AND qd.inquiry_product = #{vo.inquiryProduct}
+                </if>
                 <if test="vo.paidAmountStart != null">
                     AND IFNULL(r.paid_amount, 0) &gt;= #{vo.paidAmountStart}
                 </if>
