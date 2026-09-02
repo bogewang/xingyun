@@ -2432,7 +2432,6 @@ public class SaleOutSheetServiceImpl extends
         QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
         quoteProductVo.setOrderDate(vo.getOrderDate());
         List<QuoteProductBo> quoteProducts = queryQuoteProducts(quoteProductVo);
-        Map<String, BigDecimal> quotePrices = resolveUniqueQuotePrices(sheet, vo.getProducts(), quoteProducts);
         Map<String, String> quoteSourceIds = quoteProducts.stream().collect(Collectors.toMap(
                 QuoteProductBo::getProductId, QuoteProductBo::getSourceId,
                 (first, ignored) -> first));
@@ -2443,7 +2442,6 @@ public class SaleOutSheetServiceImpl extends
             Assert.notNull(product, "第" + productVo.getSeq() + "行商品不存在！");
 
             SaleOutSheetDetail detail = buildDetail(sheet, productVo, product, customer,
-                    quotePrices.get(productVo.getProductId()),
                     quoteSourceIds.get(productVo.getProductId()));
 
             saleOutSheetDetailService.save(detail);
@@ -2463,11 +2461,10 @@ public class SaleOutSheetServiceImpl extends
                                            SaleOutProductVo productVo,
                                            Product product,
                                            Customer customer,
-                                           BigDecimal quoteBasePrice,
                                            String quoteSourceId) {
         ProductUnit unit = resolveUnit(product, productVo.getUnitId(), productVo.getUnit());
         BigDecimal baseNum = NumberUtil.mul(productVo.getOrderNum(), unit.getConversionRate());
-        BigDecimal price = resolveDetailPrice(productVo, product, unit, quoteBasePrice);
+        BigDecimal price = resolveDetailPrice(productVo, product, unit);
 
         SaleOutSheetDetail detail = new SaleOutSheetDetail();
         detail.setId(IdUtil.getId());
@@ -2498,53 +2495,17 @@ public class SaleOutSheetServiceImpl extends
     }
 
     /**
-     * 计算销售明细的交易单位单价；报价模式下始终忽略客户端传入的单价。
+     * 计算销售明细的交易单位单价，优先采用客户端提交的价格。
      *
      * @param productVo 销售商品参数
      * @param product 商品
      * @param unit 交易单位
-     * @param quoteBasePrice 报价基础单位单价
      * @return 交易单位单价
      */
-    private BigDecimal resolveDetailPrice(SaleOutProductVo productVo, Product product,
-            ProductUnit unit, BigDecimal quoteBasePrice) {
-        if (quoteBasePrice != null) {
-            return NumberUtil.mul(quoteBasePrice, unit.getConversionRate());
-        }
+    BigDecimal resolveDetailPrice(SaleOutProductVo productVo, Product product, ProductUnit unit) {
         return productVo.getTaxPrice() == null
                 ? NumberUtil.mul(getDefaultSalePrice(product), unit.getConversionRate())
                 : productVo.getTaxPrice();
-    }
-
-    /**
-     * 校验唯一报价的商品覆盖范围，并返回按商品ID索引的基础单位报价。
-     *
-     * @param sheet 销售出库主表
-     * @param products 销售商品
-     * @param quoteProducts 生效报价商品
-     * @return 商品基础单位价格
-     */
-    static Map<String, BigDecimal> resolveUniqueQuotePrices(SaleOutSheet sheet,
-            List<SaleOutProductVo> products, List<QuoteProductBo> quoteProducts) {
-        if (CollectionUtil.isEmpty(quoteProducts)) {
-            throw new DefaultClientException("当前订单日期不存在已启用报价单！");
-        }
-
-        Set<String> quoteSheetIds = quoteProducts.stream().map(QuoteProductBo::getQuoteSheetId)
-                .filter(StringUtil::isNotBlank).collect(Collectors.toSet());
-        if (quoteSheetIds.size() != 1) {
-            throw new DefaultClientException("当前订单日期存在多个已启用报价单！");
-        }
-
-        Map<String, BigDecimal> quotePriceMap = quoteProducts.stream().collect(Collectors.toMap(
-                QuoteProductBo::getProductId, QuoteProductBo::getSalePrice, (first, ignored) -> first));
-        for (SaleOutProductVo product : products) {
-            if (!quotePriceMap.containsKey(product.getProductId())) {
-                throw new DefaultClientException("第" + product.getSeq() + "行商品不在当前生效报价单中！");
-            }
-        }
-        sheet.setQuoteSheetId(quoteSheetIds.iterator().next());
-        return quotePriceMap;
     }
 
     private void handleScId(SaleOutSheet sheet, CreateSaleOutSheetVo vo) {
@@ -3524,19 +3485,4 @@ public class SaleOutSheetServiceImpl extends
         return BigDecimal.ZERO;
     }
 
-    /**
-     * 是否优先使用询价作为售价
-     * 
-     * @return
-     */
-    private boolean useUniquePriceAsSalePrice() {
-        QuerySysParameterVo sysParameterVo = new QuerySysParameterVo();
-        sysParameterVo.setPmKey(PRODUCT_SALE_PRICE_UNIQUE_PM_KEY);
-        List<SysParameter> list = sysParameterService.query(sysParameterVo);
-        if (CollectionUtil.isEmpty(list)) {
-            return false;
-        }
-
-        return BooleanUtil.toBoolean(list.get(0).getPmValue());
-    }
 }
