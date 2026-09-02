@@ -72,6 +72,16 @@
                     <a-select-option :value="false">未送货</a-select-option>
                   </a-select>
                 </j-form-item>
+                <j-form-item label="明细金额为0">
+                  <a-select
+                    v-model:value="searchFormData.hasZeroAmountDetail"
+                    placeholder="全部"
+                    allow-clear
+                  >
+                    <a-select-option :value="true">存在</a-select-option>
+                    <a-select-option :value="false">不存在</a-select-option>
+                  </a-select>
+                </j-form-item>
                 <j-form-item label="结算状态">
                   <a-select
                     v-model:value="searchFormData.settleStatus"
@@ -99,42 +109,6 @@
                     @search="loadCreateByOptions"
                     @change="onCreateByChange"
                   />
-                </j-form-item>
-
-                <j-form-item label="已付金额">
-                  <a-space class="amount-range-input" :size="4">
-                    <a-input-number
-                      v-model:value="searchFormData.paidAmountStart"
-                      :min="0"
-                      :precision="2"
-                      placeholder="最小值"
-                    />
-                    <span>至</span>
-                    <a-input-number
-                      v-model:value="searchFormData.paidAmountEnd"
-                      :min="0"
-                      :precision="2"
-                      placeholder="最大值"
-                    />
-                  </a-space>
-                </j-form-item>
-
-                <j-form-item label="未付金额">
-                  <a-space class="amount-range-input" :size="4">
-                    <a-input-number
-                      v-model:value="searchFormData.unpaidAmountStart"
-                      :min="0"
-                      :precision="2"
-                      placeholder="最小值"
-                    />
-                    <span>至</span>
-                    <a-input-number
-                      v-model:value="searchFormData.unpaidAmountEnd"
-                      :min="0"
-                      :precision="2"
-                      placeholder="最大值"
-                    />
-                  </a-space>
                 </j-form-item>
               </j-form>
             </j-border>
@@ -623,6 +597,7 @@
           settleStatus: undefined,
           fillAllCost: undefined,
           delivered: undefined,
+          hasZeroAmountDetail: undefined,
           paidAmountStart: undefined,
           paidAmountEnd: undefined,
           unpaidAmountStart: undefined,
@@ -902,6 +877,7 @@
           settleStatus: undefined,
           fillAllCost: undefined,
           delivered: undefined,
+          hasZeroAmountDetail: undefined,
           paidAmountStart: undefined,
           paidAmountEnd: undefined,
           unpaidAmountStart: undefined,

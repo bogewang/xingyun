@@ -518,6 +518,26 @@
                     )
                 </if>
             </if>
+            <if test="vo.hasZeroAmountDetail != null">
+                <choose>
+                    <when test="vo.hasZeroAmountDetail">
+                        AND EXISTS (
+                        SELECT 1
+                        FROM tbl_sale_out_sheet_detail AS sd
+                        WHERE sd.sheet_id = s.id
+                        AND IFNULL(sd.tax_amount, 0) = 0
+                        )
+                    </when>
+                    <otherwise>
+                        AND NOT EXISTS (
+                        SELECT 1
+                        FROM tbl_sale_out_sheet_detail AS sd
+                        WHERE sd.sheet_id = s.id
+                        AND IFNULL(sd.tax_amount, 0) = 0
+                        )
+                    </otherwise>
+                </choose>
+            </if>
         </where>
         ORDER BY
         <choose>

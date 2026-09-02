@@ -162,6 +162,11 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
   onlyMultiPrice: boolean;
 
   /**
+   * 是否存在金额为0的明细
+   */
+  hasZeroAmountDetail: boolean;
+
+  /**
    * 商品分类ID列表
    */
   categoryIdList: string[];
