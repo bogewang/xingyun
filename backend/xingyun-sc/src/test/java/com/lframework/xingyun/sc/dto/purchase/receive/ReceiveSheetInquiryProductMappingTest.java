@@ -60,14 +60,17 @@ class ReceiveSheetInquiryProductMappingTest {
     assertFalse(new QueryReceiveSheetDetailBo(normalDetail).getInquiryProduct());
   }
 
-  /** 验证收货 SQL 从商品表选择询价标识并映射完整单据明细。 */
+  /** 验证采购入库明细查询按单据日期读取生效报价单中的询价标识。 */
   @Test
   void shouldSelectInquiryProductInReceiveMapperQueries() throws IOException {
-    String mapperXml = readMapperXml();
+    String detailSql = extractSqlBlock(readMapperXml(), "ReceiveSheetDetailDto_sql");
 
-    assertTrue(mapperXml.contains("NULL AS inquiry_product"));
-    assertTrue(mapperXml.contains("NULL AS detail_inquiry_product"));
-    assertTrue(mapperXml.contains("<result column=\"detail_inquiry_product\" property=\"inquiryProduct\"/>"));
+    assertTrue(detailSql.contains("qd.inquiry_product AS inquiry_product"));
+    assertTrue(detailSql.contains("LEFT JOIN tbl_quote_sheet AS q ON q.start_date &lt;= r.order_date"));
+    assertTrue(detailSql.contains("AND q.end_date >= r.order_date"));
+    assertTrue(detailSql.contains("LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = q.id"));
+    assertTrue(detailSql.contains("AND qd.product_id = d.product_id"));
+    assertFalse(detailSql.contains("NULL AS inquiry_product"));
   }
 
   /** 读取测试类路径中的收货 Mapper XML。 */
@@ -77,5 +80,12 @@ class ReceiveSheetInquiryProductMappingTest {
         Scanner scanner = new Scanner(input, StandardCharsets.UTF_8.name())) {
       return scanner.useDelimiter("\\A").next();
     }
+  }
+
+  /** 提取指定 SQL 片段，避免其他查询片段干扰断言。 */
+  private String extractSqlBlock(String mapperXml, String sqlId) {
+    int startIndex = mapperXml.indexOf("<sql id=\"" + sqlId + "\">");
+    int endIndex = mapperXml.indexOf("</sql>", startIndex);
+    return mapperXml.substring(startIndex, endIndex);
   }
 }

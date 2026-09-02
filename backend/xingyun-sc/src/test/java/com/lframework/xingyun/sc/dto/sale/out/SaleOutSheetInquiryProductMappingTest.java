@@ -65,12 +65,25 @@ class SaleOutSheetInquiryProductMappingTest {
   void shouldSelectInquiryProductFromSheetQuoteDetailInSaleOutFullDetail() throws IOException {
     String mapperXml = readMapperXml();
 
-        assertTrue(mapperXml.contains("LEFT JOIN tbl_quote_sheet AS q ON q.start_date &lt;= s.order_date"));
-        assertTrue(mapperXml.contains("AND q.end_date >= s.order_date"));
-        assertTrue(mapperXml.contains("LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = q.id"));
+    assertTrue(mapperXml.contains("LEFT JOIN tbl_quote_sheet AS q ON q.start_date &lt;= s.order_date"));
+    assertTrue(mapperXml.contains("AND q.end_date >= s.order_date"));
+    assertTrue(mapperXml.contains("LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = q.id"));
     assertTrue(mapperXml.contains("AND qd.product_id = d.product_id"));
     assertTrue(mapperXml.contains("qd.inquiry_product AS detail_inquiry_product"));
     assertTrue(mapperXml.contains("<result column=\"detail_inquiry_product\" property=\"inquiryProduct\"/>"));
+  }
+
+  /** 验证明细查询按单据日期读取生效报价单中的询价标识。 */
+  @Test
+  void shouldSelectInquiryProductFromQuoteDetailInSaleOutQueryDetail() throws IOException {
+    String detailSql = extractSqlBlock(readMapperXml(), "SaleOutSheetDetailDto_sql");
+
+    assertTrue(detailSql.contains("qd.inquiry_product AS inquiry_product"));
+    assertTrue(detailSql.contains("LEFT JOIN tbl_quote_sheet AS q ON q.start_date &lt;= s.order_date"));
+    assertTrue(detailSql.contains("AND q.end_date >= s.order_date"));
+    assertTrue(detailSql.contains("LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = q.id"));
+    assertTrue(detailSql.contains("AND qd.product_id = d.product_id"));
+    assertFalse(detailSql.contains("NULL AS inquiry_product"));
   }
 
   /** 读取测试类路径中的销售出库 Mapper XML。 */
@@ -80,5 +93,12 @@ class SaleOutSheetInquiryProductMappingTest {
         Scanner scanner = new Scanner(input, StandardCharsets.UTF_8.name())) {
       return scanner.useDelimiter("\\A").next();
     }
+  }
+
+  /** 提取指定 SQL 片段，避免其他查询片段干扰断言。 */
+  private String extractSqlBlock(String mapperXml, String sqlId) {
+    int startIndex = mapperXml.indexOf("<sql id=\"" + sqlId + "\">");
+    int endIndex = mapperXml.indexOf("</sql>", startIndex);
+    return mapperXml.substring(startIndex, endIndex);
   }
 }
