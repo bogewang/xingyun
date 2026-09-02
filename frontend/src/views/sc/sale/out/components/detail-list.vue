@@ -108,10 +108,10 @@
                   </a-select-option>
                 </a-select>
               </j-form-item>
-              <j-form-item label="是否已付完">
+              <j-form-item label="是否已收完款">
                 <a-select v-model:value="searchFormData.fullyPaid" placeholder="全部" allow-clear>
-                  <a-select-option :value="true">已付完</a-select-option>
-                  <a-select-option :value="false">未付完</a-select-option>
+                  <a-select-option :value="true">已收完款</a-select-option>
+                  <a-select-option :value="false">未收完款</a-select-option>
                 </a-select>
               </j-form-item>
             </j-form>

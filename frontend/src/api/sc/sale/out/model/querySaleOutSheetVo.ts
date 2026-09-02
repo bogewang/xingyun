@@ -112,7 +112,7 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
   settleStatus: number;
 
   /**
-   * 是否已付完
+   * 是否已收完款
    */
   fullyPaid: boolean;
 
