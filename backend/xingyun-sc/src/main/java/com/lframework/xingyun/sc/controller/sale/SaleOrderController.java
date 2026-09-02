@@ -327,7 +327,7 @@ public class SaleOrderController extends DefaultBaseController {
         }
 
         PageResult<SaleProductDto> pageResult = saleOrderService.querySaleByCondition(getPageIndex(),
-                getPageSize(), scId, condition, isReturn);
+                1000, scId, condition, isReturn);
         List<SaleProductDto> datas = pageResult.getDatas();
         if (CollectionUtil.isNotEmpty(datas)) {
             // 唯一报价模式下按单据日期过滤为报价商品，并用报价价覆盖售价
