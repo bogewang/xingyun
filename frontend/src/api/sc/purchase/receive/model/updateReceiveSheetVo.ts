@@ -5,4 +5,9 @@ export interface UpdateReceiveSheetVo extends CreateReceiveSheetVo {
    * 收货单ID
    */
   id: string;
+
+  /**
+   * 版本号
+   */
+  version: number;
 }
