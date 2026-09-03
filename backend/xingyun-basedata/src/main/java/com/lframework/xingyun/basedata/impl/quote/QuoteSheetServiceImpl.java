@@ -245,7 +245,10 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     public void enable(String id) {
         List<QuoteSheet> lockedSheets = lockQuoteSheets();
         QuoteSheet sheet = requireLockedSheet(id, lockedSheets);
-        List<QuoteSheetDetail> details = quoteSheetDetailMapper.selectList(Wrappers.lambdaQuery(QuoteSheetDetail.class).eq(QuoteSheetDetail::getQuoteSheetId, id));
+        List<QuoteSheetDetail> details = quoteSheetDetailMapper.selectList(Wrappers.lambdaQuery(QuoteSheetDetail.class)
+                .eq(QuoteSheetDetail::getQuoteSheetId, id)
+                .orderByAsc(QuoteSheetDetail::getOrderNo, QuoteSheetDetail::getCreateTime,
+                        QuoteSheetDetail::getId));
         validateSheetData(sheet.getStartDate(), sheet.getEndDate(), details.stream().map(QuoteSheetDetail::getProductId).collect(Collectors.toList()), id, lockedSheets);
         sheet.setStatus(QuoteSheetStatus.ENABLED);
         getBaseMapper().updateById(sheet);
@@ -341,7 +344,9 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
                         .in(Product::getId, products.stream().map(QuoteSheetProductVo::getProductId)
                                 .collect(Collectors.toSet())))
                 .stream().collect(Collectors.toMap(Product::getId, product -> product));
-        List<QuoteSheetDetail> details = products.stream().map(p -> {
+        List<QuoteSheetDetail> details = new ArrayList<>();
+        for (int index = 0; index < products.size(); index++) {
+            QuoteSheetProductVo p = products.get(index);
             Product product = productMap.get(p.getProductId());
             if (product == null) {
                 throw new DefaultClientException("商品不存在！");
@@ -350,8 +355,9 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
             d.setId(IdUtil.getId());
             d.setInquiryProduct(!Boolean.FALSE.equals(p.getInquiryProduct()));
             d.setProductSnapshot(JsonUtil.toJsonString(product));
-            return d;
-        }).collect(Collectors.toList());
+            d.setOrderNo(index + 1);
+            details.add(d);
+        }
         quoteSheetDetailMapper.batchInsert(details);
     }
 

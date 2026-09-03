@@ -78,7 +78,7 @@ public class QuoteSheetServiceImplTest {
   @Test public void shouldAllowUpdatingReferencedQuoteSheet() throws Exception { String source=new String(Files.readAllBytes(Paths.get("src/main/java/com/lframework/xingyun/basedata/impl/quote/QuoteSheetServiceImpl.java")),StandardCharsets.UTF_8); Assert.assertFalse(source.contains("报价单已被业务单据使用，不能修改！")); }
   /** 所有写流程共用的入口先锁定全部报价单。 */
   @Test public void shouldLockAllQuoteSheetsBeforeLocatingQuoteSheet() throws Exception { QuoteSheetServiceImpl service=new QuoteSheetServiceImpl(); QuoteSheetMapper mapper=Mockito.mock(QuoteSheetMapper.class); QuoteSheet sheet=sheet("quote-1","2026-08-01","2026-08-31"); Mockito.when(mapper.selectAllForUpdate()).thenReturn(Collections.singletonList(sheet)); setBaseMapper(service,mapper); Assert.assertEquals(QuoteSheetServiceImpl.requireLockedSheet("quote-1",service.lockQuoteSheets()),sheet); Mockito.verify(mapper).selectAllForUpdate(); }
-  /** 批量持久化不再向明细实体写入租户 ID。 */
+  /** 批量持久化应按请求商品的顺序写入明细排序号。 */
   @Test public void shouldBatchInsertDetailsWithoutTenantId() throws Exception {
     StaticApplicationContext applicationContext=new StaticApplicationContext();
     applicationContext.getBeanFactory().registerSingleton("objectMapper",new ObjectMapper());
@@ -92,12 +92,16 @@ public class QuoteSheetServiceImplTest {
     setField(service,"productMapper",productMapper);
     setField(service,"quoteSheetConverter",new QuoteSheetConverterImpl());
     QuoteSheetProductVo product=new QuoteSheetProductVo(); product.setProductId("product-1"); product.setSalePrice(BigDecimal.ONE);
+    QuoteSheetProductVo secondProduct=new QuoteSheetProductVo(); secondProduct.setProductId("product-2"); secondProduct.setSalePrice(BigDecimal.TEN);
     Product savedProduct=new Product(); savedProduct.setId("product-1"); savedProduct.setName("测试商品");
-    Mockito.when(productMapper.selectList(Mockito.any())).thenReturn(Collections.singletonList(savedProduct));
-    try (MockedStatic<com.lframework.starter.web.core.utils.IdUtil> idUtil=Mockito.mockStatic(com.lframework.starter.web.core.utils.IdUtil.class)) { idUtil.when(com.lframework.starter.web.core.utils.IdUtil::getId).thenReturn("detail-1"); service.saveDetails("quote-1",Collections.singletonList(product)); }
+    Product secondSavedProduct=new Product(); secondSavedProduct.setId("product-2"); secondSavedProduct.setName("测试商品2");
+    Mockito.when(productMapper.selectList(Mockito.any())).thenReturn(Arrays.asList(savedProduct,secondSavedProduct));
+    try (MockedStatic<com.lframework.starter.web.core.utils.IdUtil> idUtil=Mockito.mockStatic(com.lframework.starter.web.core.utils.IdUtil.class)) { idUtil.when(com.lframework.starter.web.core.utils.IdUtil::getId).thenReturn("detail-1","detail-2"); service.saveDetails("quote-1",Arrays.asList(product,secondProduct)); }
     Assert.assertNotNull(detailsRef.get());
     Assert.assertTrue(detailsRef.get().get(0).getInquiryProduct());
     Assert.assertNotNull(detailsRef.get().get(0).getProductSnapshot());
+    Assert.assertEquals(detailsRef.get().get(0).getOrderNo(),Integer.valueOf(1));
+    Assert.assertEquals(detailsRef.get().get(1).getOrderNo(),Integer.valueOf(2));
   }
   /** 构造报价单。 */
   private QuoteSheet sheet(String id,String start,String end) { QuoteSheet sheet=new QuoteSheet(); sheet.setId(id); sheet.setStartDate(date(start)); sheet.setEndDate(date(end)); sheet.setStatus(QuoteSheetStatus.ENABLED); return sheet; }
