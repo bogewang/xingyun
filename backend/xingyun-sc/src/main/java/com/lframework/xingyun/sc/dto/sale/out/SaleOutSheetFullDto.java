@@ -22,6 +22,11 @@ public class SaleOutSheetFullDto implements BaseDto, Serializable {
   private String id;
 
   /**
+   * 版本号
+   */
+  private Integer version;
+
+  /**
    * 单号
    */
   private String code;

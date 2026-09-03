@@ -44,6 +44,12 @@ public class GetSaleOutSheetBo extends BaseBo<SaleOutSheetFullDto> {
     private String id;
 
     /**
+     * 版本号
+     */
+    @ApiModelProperty("版本号")
+    private Integer version;
+
+    /**
      * 单号
      */
     @ApiModelProperty("单号")

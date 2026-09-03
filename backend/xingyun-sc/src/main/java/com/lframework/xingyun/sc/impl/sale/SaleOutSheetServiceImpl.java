@@ -1516,6 +1516,7 @@ public class SaleOutSheetServiceImpl extends
         SaleOutSheet sheet = new SaleOutSheet();
         sheet.setId(IdUtil.getId());
         sheet.setCode(generateCode());
+        sheet.setVersion(0);
 
         this.create(sheet, vo);
 
@@ -1547,6 +1548,10 @@ public class SaleOutSheetServiceImpl extends
             throw new InputErrorException("销售出库单不存在！");
         }
 
+        if (!Objects.equals(sheet.getVersion(), vo.getVersion())) {
+            throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
+        }
+
         checkApproveStatus(sheet, "销售出库单已审核通过，无法修改！", "销售出库单无法修改！");
         if (Arrays.asList(SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE,
                 SettleStatus.SETTLED).contains(sheet.getSettleStatus())) {
@@ -1567,8 +1572,9 @@ public class SaleOutSheetServiceImpl extends
         this.create(sheet, vo);
 
         sheet.setStatus(SaleOutSheetStatus.CREATED);
+        sheet.setVersion(vo.getVersion() + 1);
 
-        persistUpdatedSheet(sheet);
+        persistUpdatedSheet(sheet, vo.getVersion());
 
         clearApproveStatus(sheet);
         if (StringUtil.isBlank(sheet.getQuoteSheetId())) {
@@ -1594,9 +1600,13 @@ public class SaleOutSheetServiceImpl extends
      * 持久化修改后的销售出库主表，确保订单日期、报价单和金额汇总同步写入。
      *
      * @param sheet 已重算的销售出库主表
+     * @param version 修改前的版本号
      */
-    void persistUpdatedSheet(SaleOutSheet sheet) {
-        if (getBaseMapper().updateById(sheet) != 1) {
+    void persistUpdatedSheet(SaleOutSheet sheet, Integer version) {
+        Wrapper<SaleOutSheet> updateWrapper = Wrappers.lambdaUpdate(SaleOutSheet.class)
+                .eq(SaleOutSheet::getId, sheet.getId())
+                .eq(SaleOutSheet::getVersion, version);
+        if (getBaseMapper().updateAllColumn(sheet, updateWrapper) != 1) {
             throw new DefaultClientException("销售出库单信息已过期，请刷新重试！");
         }
     }
@@ -1718,6 +1728,7 @@ public class SaleOutSheetServiceImpl extends
     private UpdateSaleOutSheetVo buildMergeUpdateVo(SaleOutSheet target, List<SaleOutSheet> sheets) {
         UpdateSaleOutSheetVo updateVo = new UpdateSaleOutSheetVo();
         updateVo.setId(target.getId());
+        updateVo.setVersion(target.getVersion());
         updateVo.setScId(target.getScId());
         updateVo.setCustomerId(target.getCustomerId());
         updateVo.setSalerId(target.getSalerId());

@@ -33,6 +33,11 @@ public class SaleOutSheet extends BaseEntity implements BaseDto {
   private String id;
 
   /**
+   * 版本号
+   */
+  private Integer version;
+
+  /**
    * 单号
    */
   private String code;

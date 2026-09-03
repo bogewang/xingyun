@@ -663,6 +663,7 @@
           customer: {},
           saleOrder: {},
           salerId: '',
+          version: 0,
           orderDate: '',
           totalNum: 0,
           totalAmount: 0,
@@ -710,6 +711,7 @@
                 name: res.customerName,
               },
               salerId: res.salerId || '',
+              version: res.version,
               orderDate: res.orderDate || '',
               saleOrder: {
                 id: res.saleOrderId,
@@ -1201,6 +1203,7 @@
         const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
         const params = {
           id: this.id,
+          version: this.formData.version,
           scId: this.formData.sc.id,
           customerId: this.formData.customer.id,
           salerId: this.formData.salerId || '',
