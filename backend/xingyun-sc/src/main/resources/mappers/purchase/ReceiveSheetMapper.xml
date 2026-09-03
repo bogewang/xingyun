@@ -4,6 +4,7 @@
 
     <resultMap id="ReceiveSheet" type="com.lframework.xingyun.sc.entity.ReceiveSheet">
         <id column="id" property="id"/>
+        <result column="version" property="version"/>
         <result column="code" property="code"/>
         <result column="sc_id" property="scId"/>
         <result column="supplier_id" property="supplierId"/>
@@ -27,6 +28,7 @@
 
     <resultMap id="ReceiveSheetFullDto" type="com.lframework.xingyun.sc.dto.purchase.receive.ReceiveSheetFullDto">
         <id column="id" property="id"/>
+        <result column="version" property="version"/>
         <result column="code" property="code"/>
         <result column="sc_id" property="scId"/>
         <result column="supplier_id" property="supplierId"/>
@@ -95,6 +97,7 @@
     <sql id="ReceiveSheetDto_sql">
         SELECT
             r.id,
+            r.version,
             r.code,
             r.sc_id,
             r.supplier_id,
@@ -121,6 +124,7 @@
     <sql id="ReceiveSheetFullDto_sql">
         SELECT
             r.id,
+            r.version,
             r.code,
             r.sc_id,
             r.supplier_id,

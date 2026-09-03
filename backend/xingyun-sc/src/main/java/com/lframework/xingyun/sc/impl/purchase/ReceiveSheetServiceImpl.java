@@ -297,6 +297,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         ReceiveSheet sheet = new ReceiveSheet();
         sheet.setId(IdUtil.getId());
         sheet.setCode(generateCode());
+        sheet.setVersion(0);
 
         this.create(sheet, vo);
 
@@ -324,6 +325,10 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         ReceiveSheet sheet = getBaseMapper().selectById(vo.getId());
         if (sheet == null) {
             throw new InputErrorException("采购收货单不存在！");
+        }
+
+        if (!Objects.equals(sheet.getVersion(), vo.getVersion())) {
+            throw new DefaultClientException("采购收货单信息已过期，请刷新重试！");
         }
 
         if (sheet.getStatus() == ReceiveSheetStatus.APPROVE_PASS) {
@@ -355,6 +360,7 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         this.create(sheet, vo);
 
         sheet.setStatus(ReceiveSheetStatus.CREATED);
+        sheet.setVersion(vo.getVersion() + 1);
 
         List<ReceiveSheetStatus> statusList = new ArrayList<>();
         statusList.add(ReceiveSheetStatus.CREATED);
@@ -363,7 +369,9 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         Wrapper<ReceiveSheet> updateOrderWrapper = Wrappers.lambdaUpdate(ReceiveSheet.class)
                 .set(ReceiveSheet::getApproveBy, null).set(ReceiveSheet::getApproveTime, null)
                 .set(ReceiveSheet::getRefuseReason, StringPool.EMPTY_STR)
-                .eq(ReceiveSheet::getId, sheet.getId()).in(ReceiveSheet::getStatus, statusList);
+                .eq(ReceiveSheet::getId, sheet.getId())
+                .eq(ReceiveSheet::getVersion, vo.getVersion())
+                .in(ReceiveSheet::getStatus, statusList);
         if (getBaseMapper().updateAllColumn(sheet, updateOrderWrapper) != 1) {
             throw new DefaultClientException("采购收货单信息已过期，请刷新重试！");
         }

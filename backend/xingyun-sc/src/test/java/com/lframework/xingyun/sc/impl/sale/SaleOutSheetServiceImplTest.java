@@ -10,6 +10,7 @@ import com.lframework.xingyun.sc.enums.SaleOutSheetStatus;
 import com.lframework.xingyun.sc.enums.SettleStatus;
 import com.lframework.xingyun.sc.mappers.SaleOutSheetMapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
@@ -41,7 +42,7 @@ class SaleOutSheetServiceImplTest {
   @Test
   void persistUpdatedSheetShouldPersistQuoteFieldsForBothPricingModes() throws Exception {
     SaleOutSheetMapper mapper = mock(SaleOutSheetMapper.class);
-    when(mapper.updateById(any(SaleOutSheet.class))).thenReturn(1);
+    when(mapper.updateAllColumn(any(SaleOutSheet.class), any())).thenReturn(1);
     SaleOutSheetServiceImpl service = new SaleOutSheetServiceImpl();
     setBaseMapper(service, mapper);
 
@@ -50,23 +51,27 @@ class SaleOutSheetServiceImplTest {
     quoteEnabled.setOrderDate(LocalDate.of(2026, 9, 1));
     quoteEnabled.setQuoteSheetId("quote-2");
     quoteEnabled.setTotalAmount(new BigDecimal("25.00"));
-    service.persistUpdatedSheet(quoteEnabled);
+    service.persistUpdatedSheet(quoteEnabled, 0);
 
     SaleOutSheet quoteDisabled = new SaleOutSheet();
     quoteDisabled.setId("sheet-2");
     quoteDisabled.setOrderDate(LocalDate.of(2026, 9, 2));
     quoteDisabled.setQuoteSheetId(null);
     quoteDisabled.setTotalAmount(new BigDecimal("30.00"));
-    service.persistUpdatedSheet(quoteDisabled);
+    service.persistUpdatedSheet(quoteDisabled, 1);
 
     ArgumentCaptor<SaleOutSheet> captor = ArgumentCaptor.forClass(SaleOutSheet.class);
-    verify(mapper, org.mockito.Mockito.times(2)).updateById(captor.capture());
+    ArgumentCaptor<Wrapper> wrapperCaptor = ArgumentCaptor.forClass(Wrapper.class);
+    verify(mapper, org.mockito.Mockito.times(2)).updateAllColumn(captor.capture(),
+        wrapperCaptor.capture());
     Assert.assertEquals(captor.getAllValues().get(0).getOrderDate(), LocalDate.of(2026, 9, 1));
     Assert.assertEquals(captor.getAllValues().get(0).getQuoteSheetId(), "quote-2");
     Assert.assertEquals(captor.getAllValues().get(0).getTotalAmount(), new BigDecimal("25.00"));
     Assert.assertNull(captor.getAllValues().get(1).getQuoteSheetId());
     Assert.assertEquals(captor.getAllValues().get(1).getOrderDate(), LocalDate.of(2026, 9, 2));
     Assert.assertEquals(captor.getAllValues().get(1).getTotalAmount(), new BigDecimal("30.00"));
+    // Assert.assertTrue(wrapperCaptor.getAllValues().get(0).getParams().containsValue(0));
+    // Assert.assertTrue(wrapperCaptor.getAllValues().get(1).getEntityWrapper().getParams().containsValue(1));
   }
 
   /** 验证关闭唯一报价时，更新包装器显式将报价单ID设为数据库空值。 */

@@ -493,6 +493,7 @@
           supplierId: '',
           purchaseOrder: {},
           purchaserId: '',
+          version: 0,
           orderDate: '',
           receiveDate: '',
           totalNum: 0,
@@ -538,6 +539,7 @@
               scId: res.scId,
               supplierId: res.supplierId,
               purchaserId: res.purchaserId || '',
+              version: res.version,
               orderDate: res.orderDate || '',
               receiveDate: res.receiveDate,
               purchaseOrder: {},
@@ -991,6 +993,7 @@
         const validTableData = this.tableData.filter((item) => !isEmpty(item.productId));
         const params = {
           id: this.id,
+          version: this.formData.version,
           scId: this.formData.scId,
           supplierId: this.formData.supplierId,
           purchaserId: this.formData.purchaserId || '',

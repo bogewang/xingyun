@@ -192,6 +192,17 @@ class ReceiveSheetServiceImplTest {
     Assert.assertTrue(source.contains("data.setInquiryProduct(quoteProduct == null ? null"));
   }
 
+  /** 验证采购入库修改以版本号防止并发覆盖。 */
+  @Test
+  void updateShouldUseVersionForOptimisticLock() throws Exception {
+    String source = new String(Files.readAllBytes(Paths.get(
+        "src/main/java/com/lframework/xingyun/sc/impl/purchase/ReceiveSheetServiceImpl.java")),
+        StandardCharsets.UTF_8);
+
+    Assert.assertTrue(source.contains("sheet.setVersion(vo.getVersion() + 1);"));
+    Assert.assertTrue(source.contains(".eq(ReceiveSheet::getVersion, vo.getVersion())"));
+  }
+
   /** 构造报价商品。 */
   private QuoteProductBo createQuoteProduct(String productId, Boolean inquiryProduct) {
     QuoteProductBo quoteProduct = new QuoteProductBo();

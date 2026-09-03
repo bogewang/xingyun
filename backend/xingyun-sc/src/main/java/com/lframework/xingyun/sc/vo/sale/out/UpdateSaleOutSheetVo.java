@@ -8,6 +8,7 @@ import com.lframework.xingyun.sc.service.sale.SaleOutSheetService;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
@@ -21,6 +22,13 @@ public class UpdateSaleOutSheetVo extends CreateSaleOutSheetVo implements BaseVo
   @ApiModelProperty(value = "出库单ID", required = true)
   @NotBlank(message = "出库单ID不能为空！")
   private String id;
+
+  /**
+   * 版本号
+   */
+  @ApiModelProperty(value = "版本号", required = true)
+  @NotNull(message = "版本号不能为空！")
+  private Integer version;
 
   @Override
   public void validate() {

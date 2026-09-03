@@ -7,6 +7,11 @@ export interface GetReceiveSheetBo {
   id: string;
 
   /**
+   * 版本号
+   */
+  version: number;
+
+  /**
    * 单号
    */
   code: string;

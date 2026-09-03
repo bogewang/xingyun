@@ -5,4 +5,9 @@ export interface UpdateSaleOutSheetVo extends CreateSaleOutSheetVo {
    * 出库单ID
    */
   id: string;
+
+  /**
+   * 版本号
+   */
+  version: number;
 }

@@ -4,6 +4,7 @@
 
     <resultMap id="SaleOutSheet" type="com.lframework.xingyun.sc.entity.SaleOutSheet">
         <id column="id" property="id"/>
+        <result column="version" property="version"/>
         <result column="code" property="code"/>
         <result column="sc_id" property="scId"/>
         <result column="customer_id" property="customerId"/>
@@ -34,6 +35,7 @@
 
     <resultMap id="SaleOutSheetFullDto" type="com.lframework.xingyun.sc.dto.sale.out.SaleOutSheetFullDto">
         <id column="id" property="id"/>
+        <result column="version" property="version"/>
         <result column="code" property="code"/>
         <result column="sc_id" property="scId"/>
         <result column="customer_id" property="customerId"/>
@@ -115,6 +117,7 @@
     <sql id="SaleOutSheetDto_sql">
         SELECT
             s.id,
+            s.version,
             s.code,
             s.sc_id,
             s.customer_id,
@@ -149,6 +152,7 @@
     <sql id="SaleOutSheetFullDto_sql">
         SELECT
             s.id,
+            s.version,
             s.code,
             s.sc_id,
             s.customer_id,
