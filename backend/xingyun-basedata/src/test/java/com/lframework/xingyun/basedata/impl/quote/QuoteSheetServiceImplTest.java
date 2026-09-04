@@ -46,6 +46,10 @@ public class QuoteSheetServiceImplTest {
   @Test public void shouldNotTreatDisabledQuoteAsActive() { QuoteSheet disabled=sheet("quote-1","2026-08-01","2026-08-31"); disabled.setStatus(QuoteSheetStatus.DISABLED); Assert.assertFalse(QuoteSheetServiceImpl.isActiveOn(disabled,date("2026-08-15"))); }
   /** 服务层保存时空商品明细应被拒绝。 */
   @Test(expectedExceptions=DefaultClientException.class,expectedExceptionsMessageRegExp=".*商品明细不能为空.*") public void shouldRejectEmptyProductsInServiceLayer() { QuoteSheetServiceImpl.assertBasicSheetData(date("2026-08-01"),date("2026-08-31"),Collections.emptyList()); }
+  /** 商品排序号必须与前端数组顺序一致。 */
+  @Test(expectedExceptions=DefaultClientException.class,expectedExceptionsMessageRegExp=".*排序号不正确.*") public void shouldRejectNonSequentialProductOrderNumbers() { QuoteSheetProductVo product=new QuoteSheetProductVo(); product.setOrderNo(2); QuoteSheetServiceImpl.assertProductOrderNumbers(Collections.singletonList(product)); }
+  /** 旧版前端未传排序号时，服务端按数组顺序补齐。 */
+  @Test public void shouldFillProductOrderNumbersForLegacyRequest() { QuoteSheetProductVo first=new QuoteSheetProductVo(); QuoteSheetProductVo second=new QuoteSheetProductVo(); QuoteSheetServiceImpl.assertProductOrderNumbers(Arrays.asList(first,second)); Assert.assertEquals(first.getOrderNo(),Integer.valueOf(1)); Assert.assertEquals(second.getOrderNo(),Integer.valueOf(2)); }
   /** 启用前非法日期应被共用校验拒绝。 */
   @Test(expectedExceptions=DefaultClientException.class,expectedExceptionsMessageRegExp=".*开始日期不能晚于.*") public void shouldRejectInvalidDatesBeforeEnabling() { QuoteSheetServiceImpl.assertBasicSheetData(date("2026-08-31"),date("2026-08-01"),Collections.singletonList("product-1")); }
   /** 导入的是否询价商品留空时默认是，并支持显式填写否。 */
@@ -78,7 +82,7 @@ public class QuoteSheetServiceImplTest {
   @Test public void shouldAllowUpdatingReferencedQuoteSheet() throws Exception { String source=new String(Files.readAllBytes(Paths.get("src/main/java/com/lframework/xingyun/basedata/impl/quote/QuoteSheetServiceImpl.java")),StandardCharsets.UTF_8); Assert.assertFalse(source.contains("报价单已被业务单据使用，不能修改！")); }
   /** 所有写流程共用的入口先锁定全部报价单。 */
   @Test public void shouldLockAllQuoteSheetsBeforeLocatingQuoteSheet() throws Exception { QuoteSheetServiceImpl service=new QuoteSheetServiceImpl(); QuoteSheetMapper mapper=Mockito.mock(QuoteSheetMapper.class); QuoteSheet sheet=sheet("quote-1","2026-08-01","2026-08-31"); Mockito.when(mapper.selectAllForUpdate()).thenReturn(Collections.singletonList(sheet)); setBaseMapper(service,mapper); Assert.assertEquals(QuoteSheetServiceImpl.requireLockedSheet("quote-1",service.lockQuoteSheets()),sheet); Mockito.verify(mapper).selectAllForUpdate(); }
-  /** 批量持久化不再向明细实体写入租户 ID。 */
+  /** 批量持久化应按请求商品的顺序写入明细排序号。 */
   @Test public void shouldBatchInsertDetailsWithoutTenantId() throws Exception {
     StaticApplicationContext applicationContext=new StaticApplicationContext();
     applicationContext.getBeanFactory().registerSingleton("objectMapper",new ObjectMapper());
@@ -91,13 +95,38 @@ public class QuoteSheetServiceImplTest {
     setField(service,"quoteSheetDetailMapper",mapper);
     setField(service,"productMapper",productMapper);
     setField(service,"quoteSheetConverter",new QuoteSheetConverterImpl());
-    QuoteSheetProductVo product=new QuoteSheetProductVo(); product.setProductId("product-1"); product.setSalePrice(BigDecimal.ONE);
+    QuoteSheetProductVo product=new QuoteSheetProductVo(); product.setProductId("product-1"); product.setOrderNo(1); product.setSalePrice(BigDecimal.ONE);
+    QuoteSheetProductVo secondProduct=new QuoteSheetProductVo(); secondProduct.setProductId("product-2"); secondProduct.setOrderNo(2); secondProduct.setSalePrice(BigDecimal.TEN);
     Product savedProduct=new Product(); savedProduct.setId("product-1"); savedProduct.setName("测试商品");
-    Mockito.when(productMapper.selectList(Mockito.any())).thenReturn(Collections.singletonList(savedProduct));
-    try (MockedStatic<com.lframework.starter.web.core.utils.IdUtil> idUtil=Mockito.mockStatic(com.lframework.starter.web.core.utils.IdUtil.class)) { idUtil.when(com.lframework.starter.web.core.utils.IdUtil::getId).thenReturn("detail-1"); service.saveDetails("quote-1",Collections.singletonList(product)); }
+    Product secondSavedProduct=new Product(); secondSavedProduct.setId("product-2"); secondSavedProduct.setName("测试商品2");
+    Mockito.when(productMapper.selectList(Mockito.any())).thenReturn(Arrays.asList(savedProduct,secondSavedProduct));
+    try (MockedStatic<com.lframework.starter.web.core.utils.IdUtil> idUtil=Mockito.mockStatic(com.lframework.starter.web.core.utils.IdUtil.class)) { idUtil.when(com.lframework.starter.web.core.utils.IdUtil::getId).thenReturn("detail-1","detail-2"); service.saveDetails("quote-1",Arrays.asList(product,secondProduct)); }
     Assert.assertNotNull(detailsRef.get());
     Assert.assertTrue(detailsRef.get().get(0).getInquiryProduct());
     Assert.assertNotNull(detailsRef.get().get(0).getProductSnapshot());
+    Assert.assertEquals(detailsRef.get().get(0).getOrderNo(),Integer.valueOf(1));
+    Assert.assertEquals(detailsRef.get().get(1).getOrderNo(),Integer.valueOf(2));
+  }
+  /** 打开报价单时明细必须按排序号查询，保证重新打开的商品顺序与保存时一致。 */
+  @Test public void shouldOrderQuoteSheetDetailsByOrderNoWhenLoading() throws Exception {
+    // 初始化 MyBatis-Plus 表信息，使 Lambda 查询能够解析明细实体的列名。
+    com.baomidou.mybatisplus.core.metadata.TableInfoHelper.initTableInfo(new org.apache.ibatis.builder.MapperBuilderAssistant(new com.baomidou.mybatisplus.core.MybatisConfiguration(),""),com.lframework.xingyun.basedata.entity.quote.QuoteSheetDetail.class);
+    QuoteSheetServiceImpl service=new QuoteSheetServiceImpl();
+    QuoteSheetMapper sheetMapper=Mockito.mock(QuoteSheetMapper.class);
+    QuoteSheetDetailMapper detailMapper=Mockito.mock(QuoteSheetDetailMapper.class);
+    ProductMapper productMapper=Mockito.mock(ProductMapper.class);
+    Mockito.when(sheetMapper.selectById("quote-1")).thenReturn(sheet("quote-1","2026-08-01","2026-08-31"));
+    Mockito.when(detailMapper.selectList(Mockito.any())).thenReturn(Collections.emptyList());
+    setBaseMapper(service,sheetMapper);
+    setField(service,"quoteSheetDetailMapper",detailMapper);
+    setField(service,"productMapper",productMapper);
+    setField(service,"quoteSheetConverter",new QuoteSheetConverterImpl());
+    service.get("quote-1");
+    ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.Wrapper> captor=ArgumentCaptor.forClass(com.baomidou.mybatisplus.core.conditions.Wrapper.class);
+    Mockito.verify(detailMapper).selectList(captor.capture());
+    String sql=captor.getValue().getSqlSegment();
+    Assert.assertTrue(sql.contains("ORDER BY"));
+    Assert.assertTrue(sql.contains("order_no"));
   }
   /** 构造报价单。 */
   private QuoteSheet sheet(String id,String start,String end) { QuoteSheet sheet=new QuoteSheet(); sheet.setId(id); sheet.setStartDate(date(start)); sheet.setEndDate(date(end)); sheet.setStatus(QuoteSheetStatus.ENABLED); return sheet; }

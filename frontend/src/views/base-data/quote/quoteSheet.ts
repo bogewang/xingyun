@@ -1,6 +1,7 @@
 /** 报价单编辑页的数据组装。 */
 export interface QuoteProductRow {
   productId: string;
+  orderNo?: number;
   code: string;
   name: string;
   shortName?: string;
@@ -19,8 +20,10 @@ export function buildQuoteSheetPayload(form: Record<string, any>) {
     startDate: form.startDate,
     endDate: form.endDate,
     description: form.description || '',
-    products: form.products.map((item: QuoteProductRow) => ({
+    // 以表格有效商品的当前顺序明确传递排序号，避免保存链路中重新推断顺序。
+    products: form.products.map((item: QuoteProductRow, index: number) => ({
       productId: item.productId,
+      orderNo: index + 1,
       salePrice: item.salePrice,
       inquiryProduct: item.inquiryProduct !== false,
     })),

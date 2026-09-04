@@ -24,16 +24,25 @@ public class QuoteSheetMigrationContractTest {
         Assert.assertFalse(sql.contains("tenant_id"));
         Assert.assertTrue(sql.contains("uk_quote_sheet_detail_sheet_product"));
         Assert.assertTrue(sql.contains("ALTER TABLE `tbl_sale_out_sheet`"));
-        Assert.assertFalse(sql.contains("ALTER TABLE `tbl_sale_out_sheet_detail`"));
+        Assert.assertTrue(sql.contains("ALTER TABLE `tbl_sale_out_sheet_detail`"));
         Assert.assertTrue(sql.contains("`quote_sheet_id` varchar(32) NULL DEFAULT NULL"));
     }
 
     /**
-     * 校验 V3.1 迁移删除报价单编号列。
+     * 校验 V3.1 迁移删除已废弃的商品销售价和询价字段。
      */
     @Test
-    public void shouldDropQuoteSheetCodeColumn() throws Exception {
-        String sql = new String(Files.readAllBytes(Paths.get("src/main/resources/db/migration/tenant/V3.1-quote-sheet-drop-code.sql")), StandardCharsets.UTF_8);
-        Assert.assertTrue(sql.contains("ALTER TABLE `tbl_quote_sheet` DROP COLUMN `code`"));
+    public void shouldDropDeprecatedProductPriceAndInquiryColumns() throws Exception {
+        String sql = new String(Files.readAllBytes(Paths.get("src/main/resources/db/migration/tenant/V3.1-remove-product-sale-price-and-inquiry-product.sql")), StandardCharsets.UTF_8);
+        Assert.assertTrue(sql.contains("DROP COLUMN `sale_price`"));
+        Assert.assertTrue(sql.contains("DROP COLUMN `inquiry_product`"));
+    }
+
+    /** 校验报价单明细排序号迁移存在。 */
+    @Test
+    public void shouldContainQuoteSheetDetailOrderMigration() throws Exception {
+        String sql = new String(Files.readAllBytes(Paths.get("src/main/resources/db/migration/tenant/V3.5-quote-sheet-detail-order.sql")), StandardCharsets.UTF_8);
+        Assert.assertTrue(sql.contains("ADD COLUMN `order_no` int NOT NULL DEFAULT 0"));
+        Assert.assertTrue(sql.contains("idx_quote_sheet_detail_order"));
     }
 }

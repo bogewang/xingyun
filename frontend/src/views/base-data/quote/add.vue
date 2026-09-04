@@ -360,6 +360,16 @@
           });
       },
       validProducts() {
+        // 已填写或已展示商品信息但没有商品 ID 的行，不能被静默当作空行过滤。
+        const incompleteIndex = this.tableData.findIndex(
+          (item) =>
+            isEmpty(item.productId) &&
+            (!isEmpty(item.code) || !isEmpty(item.name) || !isEmpty(item.productQuery)),
+        );
+        if (incompleteIndex >= 0) {
+          createError(`第${incompleteIndex + 1}行商品未完成选择，请重新选择后保存！`);
+          return null;
+        }
         // 未选择商品的空行不参与保存
         const products = this.tableData.filter((t) => !isEmpty(t.productId));
         if (isEmpty(products)) {

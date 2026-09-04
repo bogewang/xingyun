@@ -13,6 +13,9 @@ public class QuoteSheetProductVo {
     @NotBlank(message = "商品ID不能为空！")
     private String productId;
 
+    /** 页面明细排序号。 */
+    private Integer orderNo;
+
     @NotNull(message = "销售单价不能为空！")
     @DecimalMin(value = "0", message = "销售单价不能小于0！")
     private BigDecimal salePrice;
