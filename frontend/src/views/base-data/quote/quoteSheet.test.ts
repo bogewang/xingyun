@@ -77,7 +77,7 @@ describe('报价单编辑数据', () => {
     expect(source).toContain("import { multiplePageMix } from '@/mixins/multiplePageMix';");
   });
 
-  it('保存时只提交报价单接口需要的有效期、商品单价和是否询价字段，不包含编号', () => {
+  it('保存时按当前商品数组顺序提交连续排序号，不包含商品编号', () => {
     expect(
       buildQuoteSheetPayload({
         id: 'q1',
@@ -94,7 +94,7 @@ describe('报价单编辑数据', () => {
       startDate: '2026-09-01',
       endDate: '2026-09-30',
       description: '测试',
-      products: [{ productId: 'p1', salePrice: '12.50', inquiryProduct: true }],
+      products: [{ productId: 'p1', orderNo: 1, salePrice: '12.50', inquiryProduct: true }],
     });
   });
 
@@ -105,6 +105,14 @@ describe('报价单编辑数据', () => {
     expect(addSource).toContain('inquiryProduct: true');
     expect(addSource).toContain('v-model:checked="row.inquiryProduct"');
     expect(modifySource).toContain('inquiryProduct: item.inquiryProduct !== false');
+  });
+
+  it('保存时不能静默过滤未完成商品选择的非空行', () => {
+    const addSource = readFileSync(new URL('./add.vue', import.meta.url), 'utf-8');
+    const modifySource = readFileSync(new URL('./modify.vue', import.meta.url), 'utf-8');
+
+    expect(addSource).toContain('商品未完成选择，请重新选择后保存！');
+    expect(modifySource).toContain('商品未完成选择，请重新选择后保存！');
   });
 
   it('编辑页必须通过下拉框提供报价单状态切换入口', () => {

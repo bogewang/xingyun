@@ -271,7 +271,8 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     @Override
     public GetQuoteSheetBo get(String id) {
         QuoteSheet sheet = requireSheet(id);
-        List<QuoteSheetDetail> details = quoteSheetDetailMapper.selectList(Wrappers.lambdaQuery(QuoteSheetDetail.class).eq(QuoteSheetDetail::getQuoteSheetId, id));
+        // 按排序号查询明细，保证重新打开时商品顺序与保存时一致。
+        List<QuoteSheetDetail> details = quoteSheetDetailMapper.selectList(Wrappers.lambdaQuery(QuoteSheetDetail.class).eq(QuoteSheetDetail::getQuoteSheetId, id).orderByAsc(QuoteSheetDetail::getOrderNo, QuoteSheetDetail::getCreateTime, QuoteSheetDetail::getId));
         Map<String, Product> products = details.isEmpty() ? Collections.emptyMap() : productMapper.selectList(Wrappers.lambdaQuery(Product.class).in(Product::getId, details.stream().map(QuoteSheetDetail::getProductId).collect(Collectors.toSet()))).stream().collect(Collectors.toMap(Product::getId, p -> p));
         List<QuoteProductBo> result = details.stream().map(detail -> {
             Product product = StringUtil.isBlank(detail.getProductSnapshot())
@@ -325,6 +326,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     private void validateSave(CreateQuoteSheetVo vo, String excludeId, List<QuoteSheet> lockedSheets) {
         if (vo == null) throw new DefaultClientException("报价单不能为空！");
         List<QuoteSheetProductVo> products = vo.getProducts();
+        assertProductOrderNumbers(products);
         validateSheetData(vo.getStartDate(), vo.getEndDate(), products == null ? Collections.emptyList() : products.stream().map(QuoteSheetProductVo::getProductId).collect(Collectors.toList()), excludeId, lockedSheets);
     }
 
@@ -355,10 +357,32 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
             d.setId(IdUtil.getId());
             d.setInquiryProduct(!Boolean.FALSE.equals(p.getInquiryProduct()));
             d.setProductSnapshot(JsonUtil.toJsonString(product));
-            d.setOrderNo(index + 1);
+            d.setOrderNo(p.getOrderNo());
             details.add(d);
         }
         quoteSheetDetailMapper.batchInsert(details);
+    }
+
+    /**
+     * 规范并校验商品排序号。兼容尚未传递排序号的旧版前端请求，按数组顺序补齐。
+     *
+     * @param products 商品明细
+     */
+    static void assertProductOrderNumbers(List<QuoteSheetProductVo> products) {
+        if (CollectionUtils.isEmpty(products)) {
+            return;
+        }
+        boolean hasOrderNo = products.stream().anyMatch(item -> item.getOrderNo() != null);
+        for (int index = 0; index < products.size(); index++) {
+            Integer orderNo = products.get(index).getOrderNo();
+            if (!hasOrderNo) {
+                products.get(index).setOrderNo(index + 1);
+                continue;
+            }
+            if (!Objects.equals(orderNo, index + 1)) {
+                throw new DefaultClientException("第" + (index + 1) + "行商品排序号不正确！");
+            }
+        }
     }
 
     /**
