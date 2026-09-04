@@ -4,6 +4,10 @@ import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.xingyun.basedata.bo.quote.QuoteProductBo;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductUnit;
+import com.lframework.xingyun.basedata.service.product.ProductService;
+import com.lframework.xingyun.basedata.service.product.ProductUnitService;
+import com.lframework.xingyun.basedata.service.quote.QuoteSheetService;
+import com.lframework.xingyun.basedata.vo.quote.QueryQuoteProductVo;
 import com.lframework.xingyun.sc.entity.SaleOutSheet;
 import com.lframework.xingyun.sc.entity.SaleOutSheetDetail;
 import com.lframework.xingyun.sc.enums.SaleOutSheetStatus;
@@ -139,6 +143,47 @@ class SaleOutSheetServiceImplTest {
 
     Assert.assertEquals(model.getOrderNum(), BigDecimal.ZERO);
     Assert.assertEquals(model.getConfirmNum(), BigDecimal.ZERO);
+  }
+
+  /** 验证查询导入未填写单价时，按销售日期匹配生效报价并换算单位售价。 */
+  @Test
+  void checkImportDataShouldFillBlankPriceFromQuoteAtOrderDate() throws Exception {
+    Product product = new Product();
+    product.setId("product-1");
+    product.setName("测试商品");
+    product.setCode("P-001");
+    ProductUnit unit = new ProductUnit();
+    unit.setId("unit-1");
+    unit.setUnitName("箱");
+    unit.setConversionRate(new BigDecimal("2"));
+    QuoteProductBo quoteProduct = new QuoteProductBo();
+    quoteProduct.setProductId("product-1");
+    quoteProduct.setSalePrice(new BigDecimal("12.50"));
+
+    ProductService productService = mock(ProductService.class);
+    when(productService.selectByProductName(any())).thenReturn(Arrays.asList(product));
+    ProductUnitService productUnitService = mock(ProductUnitService.class);
+    when(productUnitService.getAvailableByProductId("product-1")).thenReturn(Arrays.asList(unit));
+    when(productUnitService.getAvailableByUnitName("product-1", "箱")).thenReturn(unit);
+    QuoteSheetService quoteSheetService = mock(QuoteSheetService.class);
+    when(quoteSheetService.getActiveQuoteProducts(any())).thenReturn(Arrays.asList(quoteProduct));
+
+    SaleOutSheetServiceImpl service = new SaleOutSheetServiceImpl();
+    setField(service, "productService", productService);
+    setField(service, "productUnitService", productUnitService);
+    setField(service, "quoteSheetService", quoteSheetService);
+    SaleOutSheetImportModel model = createModel(BigDecimal.ONE, null, null);
+    model.setProductName("测试商品");
+    model.setUnit("箱");
+
+    List<String> errors = service.checkImportData(Arrays.asList(model), LocalDate.of(2026, 9, 1));
+
+    Assert.assertTrue(errors.isEmpty());
+    Assert.assertEquals(model.getTaxPrice(), new BigDecimal("25.00"));
+    Assert.assertEquals(model.getOriPrice(), new BigDecimal("25.00"));
+    ArgumentCaptor<QueryQuoteProductVo> quoteCaptor = ArgumentCaptor.forClass(QueryQuoteProductVo.class);
+    verify(quoteSheetService).getActiveQuoteProducts(quoteCaptor.capture());
+    Assert.assertEquals(quoteCaptor.getValue().getOrderDate(), LocalDate.of(2026, 9, 1));
   }
 
   @Test
@@ -379,6 +424,14 @@ class SaleOutSheetServiceImplTest {
       }
     }
     throw new AssertionError("未找到 BaseMapper 字段");
+  }
+
+  /** 为单元测试注入销售出库服务依赖。 */
+  private void setField(SaleOutSheetServiceImpl service, String fieldName, Object value)
+      throws Exception {
+    Field field = SaleOutSheetServiceImpl.class.getDeclaredField(fieldName);
+    field.setAccessible(true);
+    field.set(service, value);
   }
 
   /** 初始化 LambdaUpdateWrapper 解析实体字段所需的 MyBatis 元数据。 */

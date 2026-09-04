@@ -2881,16 +2881,24 @@ public class SaleOutSheetServiceImpl extends
         return customers.get(0);
     }
 
+    /**
+     * 构建查询页导入的出库商品，并按照该单据销售日期匹配生效报价。
+     *
+     * @param list 同一销售日期、同一客户的导入明细
+     * @return 可创建出库单的商品明细
+     */
     private List<SaleOutProductVo> buildImportProducts(List<SaleOutSheetQueryImportModel> list) {
         if (CollectionUtils.isEmpty(list)) {
             return Lists.newArrayList();
         }
 
+        LocalDate orderDate = DateUtil.parseDate(list.get(0).getOrderDate(), "yyyyMMdd");
         List<SaleOutSheetImportModel> collect = list.stream()
                 .map(item -> BeanUtil.copyProperties(item, SaleOutSheetImportModel.class))
                 .collect(Collectors.toList());
-        List<SaleOutProductVo> checked = checkImportData(collect);
-        List<SaleOutProductVo> products = checked.stream()
+        List<String> errors = checkImportData(collect, orderDate);
+        Assert.isTrue(CollectionUtils.isEmpty(errors), StringUtils.join(errors, ";\r\n"));
+        List<SaleOutProductVo> products = collect.stream()
                 .map(item -> BeanUtil.copyProperties(item, SaleOutProductVo.class))
                 .collect(Collectors.toList());
 
@@ -2944,7 +2952,7 @@ public class SaleOutSheetServiceImpl extends
      * @param orderDate 订单日期；为空时不限制询价表
      * @return 校验错误信息
      */
-    private List<String> checkImportData(List<SaleOutSheetImportModel> list, LocalDate orderDate) {
+    List<String> checkImportData(List<SaleOutSheetImportModel> list, LocalDate orderDate) {
         List<String> productNames = list.stream().map(SaleOutSheetImportModel::getProductName)
                 .filter(StringUtils::isNotBlank)
                 .map(StringUtils::trim)
