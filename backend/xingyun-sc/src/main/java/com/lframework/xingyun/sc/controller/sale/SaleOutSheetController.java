@@ -180,6 +180,24 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
+     * 获取销售出库计划日期展示配置。
+     *
+     * @return 是否展示计划日期
+     */
+    @ApiOperation("获取销售出库计划日期展示配置")
+    @HasPermission({ "sale:out:query" })
+    @GetMapping("/plan-date/display/config")
+    public InvokeResult<Boolean> getPlanDateDisplayConfig() {
+
+        try {
+            return InvokeResultBuilder.success(saleOutSheetService.getPlanDateDisplayConfig());
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    /**
      * 按订单日期查询销售可选报价商品。
      *
      * @param vo 查询参数

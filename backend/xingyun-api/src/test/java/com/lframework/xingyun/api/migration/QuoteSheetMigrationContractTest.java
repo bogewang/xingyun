@@ -45,4 +45,12 @@ public class QuoteSheetMigrationContractTest {
         Assert.assertTrue(sql.contains("ADD COLUMN `order_no` int NOT NULL DEFAULT 0"));
         Assert.assertTrue(sql.contains("idx_quote_sheet_detail_order"));
     }
+
+    /** 校验销售出库计划日期展示参数迁移存在。 */
+    @Test
+    public void shouldContainSaleOutPlanDateDisplayMigration() throws Exception {
+        String sql = new String(Files.readAllBytes(Paths.get("src/main/resources/db/migration/tenant/V3.6-sale-out-plan-date-display.sql")), StandardCharsets.UTF_8);
+        Assert.assertTrue(sql.contains("INSERT IGNORE INTO `sys_parameter`"));
+        Assert.assertTrue(sql.contains("'sale_out_show_plan_date', 'true'"));
+    }
 }

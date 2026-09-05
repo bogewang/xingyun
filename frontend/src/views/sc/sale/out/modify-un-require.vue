@@ -49,7 +49,7 @@
           row-id="id"
           height="100%"
           :data="tableData"
-          :columns="tableColumn"
+          :columns="visibleTableColumn"
           :row-class-name="getTableRowClassName"
           :cell-class-name="getCellClassName"
           :toolbar-config="toolbarConfig"
@@ -543,11 +543,18 @@
         ],
         tableData: [],
         useUniquePrice: false,
+        showPlanDate: true,
         customerOptions: [],
         customerOptionMap: {},
       };
     },
-    computed: {},
+    computed: {
+      visibleTableColumn() {
+        return this.tableColumn.filter(
+          (column) => column.field !== 'planDate' || this.showPlanDate,
+        );
+      },
+    },
     watch: {
       'formData.orderDate'() {
         this.validateQuoteProductsByOrderDate();
@@ -627,7 +634,7 @@
         this.paidAmountDirty = false;
         this.originalFillAllCost = false;
         this.tableData = [];
-        await this.loadUseUniquePrice();
+        await Promise.all([this.loadUseUniquePrice(), this.loadShowPlanDate()]);
       },
       /** 加载销售出库唯一售价配置。 */
       async loadUseUniquePrice() {
@@ -635,6 +642,14 @@
           this.useUniquePrice = await api.getPriceUniqueConfig();
         } catch (e) {
           this.useUniquePrice = false;
+        }
+      },
+      /** 加载销售出库计划日期展示配置。 */
+      async loadShowPlanDate() {
+        try {
+          this.showPlanDate = await api.getPlanDateDisplayConfig();
+        } catch (e) {
+          this.showPlanDate = true;
         }
       },
       // 加载数据

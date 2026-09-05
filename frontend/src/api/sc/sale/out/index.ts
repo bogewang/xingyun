@@ -114,6 +114,18 @@ export function getPriceUniqueConfig(): Promise<boolean> {
   );
 }
 
+/** 获取销售出库计划日期展示配置。 */
+export function getPlanDateDisplayConfig(): Promise<boolean> {
+  return defHttp.get<boolean>(
+    {
+      url: baseUrl + '/plan-date/display/config',
+    },
+    {
+      region,
+    },
+  );
+}
+
 /**
  * 按订单日期查询生效报价单中的商品。
  */
