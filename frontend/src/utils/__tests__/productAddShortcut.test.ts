@@ -97,4 +97,32 @@ describe('表格输入框快捷键处理', () => {
     expect(source).toContain("event.key === 'ArrowUp'");
     expect(source).toContain('event.stopPropagation();');
   });
+
+  it('销售出库明细通过方向键切换行时同步高亮目标行', () => {
+    const pages = [
+      '../../views/sc/sale/out/add-un-require.vue',
+      '../../views/sc/sale/out/add-require.vue',
+      '../../views/sc/sale/out/modify-un-require.vue',
+      '../../views/sc/sale/out/modify-require.vue',
+    ];
+
+    pages.forEach((page) => {
+      const source = readFileSync(new URL(page, import.meta.url), 'utf-8');
+      expect(source).toContain('this.$refs.grid.setCurrentRow(this.tableData[targetRowIndex]);');
+    });
+  });
+
+  it('采购入库明细通过方向键切换行时同步高亮目标行', () => {
+    const pages = [
+      '../../views/sc/purchase/receive/add-un-require.vue',
+      '../../views/sc/purchase/receive/add-require.vue',
+      '../../views/sc/purchase/receive/modify-un-require.vue',
+      '../../views/sc/purchase/receive/modify-require.vue',
+    ];
+
+    pages.forEach((page) => {
+      const source = readFileSync(new URL(page, import.meta.url), 'utf-8');
+      expect(source).toContain('this.$refs.grid.setCurrentRow(this.tableData[targetRowIndex]);');
+    });
+  });
 });
