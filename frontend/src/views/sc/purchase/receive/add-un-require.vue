@@ -594,6 +594,7 @@
         }
 
         event.preventDefault();
+        this.$refs.grid.setCurrentRow(this.tableData[targetRowIndex]);
         if (await focusTableInput(this, refName, targetRowIndex)) {
           await this.$nextTick();
           this.getTableInputElement(refName, targetRowIndex)?.select?.();
