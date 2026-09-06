@@ -82,7 +82,8 @@
 
           <!-- 商品编号 列自定义内容 -->
           <template #productCode_default="{ row }">
-            <a-tag v-if="isImportUnmatchedProduct(row) || row.quoteUnmatched" color="error"
+            <a-tag v-if="row.available === false" color="error">已停用</a-tag>
+            <a-tag v-else-if="isImportUnmatchedProduct(row) || row.quoteUnmatched" color="error"
               >未匹配</a-tag
             >
             <span v-else>{{ row.productCode }}</span>

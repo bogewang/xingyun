@@ -47,6 +47,13 @@ class ReceiveSheetInquiryProductMappingTest {
         .getMethod("getInquiryProduct").getReturnType().equals(Boolean.class));
   }
 
+  /** 验证收货 API 完整单据明细对外暴露商品启停状态。 */
+  @Test
+  void shouldExposeProductAvailableInReceiveFullDetailResponse() throws NoSuchMethodException {
+    assertTrue(GetReceiveSheetBo.OrderDetailBo.class
+        .getMethod("getAvailable").getReturnType().equals(Boolean.class));
+  }
+
   /** 验证收货查询明细 BO 对外暴露 DTO 的询价标识。 */
   @Test
   void shouldExposeInquiryProductInReceiveQueryDetailResponse() {

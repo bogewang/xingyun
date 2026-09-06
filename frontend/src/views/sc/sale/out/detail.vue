@@ -192,6 +192,8 @@
         activeKey: 'detail',
         // 表单数据
         formData: {},
+        // 是否展示计划日期
+        showPlanDate: true,
         // 工具栏配置
         toolbarConfig: {
           zoom: false,
@@ -264,6 +266,7 @@
           // { field: 'taxRate', title: '税率（%）', align: 'right', width: 100 },
           { field: 'productRemark', title: '商品备注', width: 200 },
           { field: 'description', title: '备注', width: 200 },
+          { field: 'planDate', title: '计划日期', width: 130 },
         ],
         tableData: [],
       };
@@ -273,6 +276,9 @@
         return this.tableColumn.filter((column) => {
           if (['costAmount', 'totalProfit', 'profitRate'].includes(column.field)) {
             return this.hasPermission('sale:out:profit', false);
+          }
+          if (column.field === 'planDate') {
+            return this.showPlanDate;
           }
           return true;
         });
@@ -315,6 +321,14 @@
 
         this.tableData = [];
       },
+      /** 加载销售出库计划日期展示配置。 */
+      async loadShowPlanDate() {
+        try {
+          this.showPlanDate = await api.getPlanDateDisplayConfig();
+        } catch (e) {
+          this.showPlanDate = true;
+        }
+      },
       // 加载数据
       loadData() {
         this.loading = true;
@@ -352,6 +366,7 @@
       open() {
         // 初始化表单数据
         this.initFormData();
+        this.loadShowPlanDate();
         this.loadData();
       },
       // 计算汇总数据

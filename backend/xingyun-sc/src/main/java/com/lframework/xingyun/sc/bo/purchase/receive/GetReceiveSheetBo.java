@@ -306,6 +306,12 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
     private Boolean inquiryProduct;
 
     /**
+     * 商品是否启用。
+     */
+    @ApiModelProperty("商品是否启用")
+    private Boolean available;
+
+    /**
      * SKU编号
      */
     @ApiModelProperty("SKU编号")
@@ -460,6 +466,7 @@ public class GetReceiveSheetBo extends BaseBo<ReceiveSheetFullDto> {
 
       this.productCode = product.getCode();
       this.productName = product.getName();
+      this.available = product.getAvailable();
       this.skuCode = product.getSkuCode();
       this.externalCode = product.getExternalCode();
       ProductUnit baseUnit = product.getUnits() == null ? null : product.getUnits().stream()

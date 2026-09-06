@@ -17,4 +17,12 @@ class GetSaleOutSheetBoTest {
 
     assertNotNull(taxAmount);
   }
+
+  /** 验证销售出库明细对外暴露商品启停状态。 */
+  @Test
+  void orderDetailShouldExposeProductAvailable() throws NoSuchFieldException {
+    Field available = GetSaleOutSheetBo.OrderDetailBo.class.getDeclaredField("available");
+
+    assertNotNull(available);
+  }
 }

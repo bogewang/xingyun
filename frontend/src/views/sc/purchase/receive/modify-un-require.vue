@@ -77,7 +77,8 @@
 
           <!-- 商品名称 列自定义内容 -->
           <template #productCode_default="{ row }">
-            <a-tag v-if="row.quoteUnmatched" color="error">未匹配</a-tag>
+            <a-tag v-if="row.available === false" color="error">已停用</a-tag>
+            <a-tag v-else-if="row.quoteUnmatched" color="error">未匹配</a-tag>
             <span v-else>{{ row.productCode }}</span>
           </template>
 

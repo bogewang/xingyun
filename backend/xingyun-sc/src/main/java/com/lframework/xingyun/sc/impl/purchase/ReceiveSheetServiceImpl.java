@@ -344,9 +344,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             throw new DefaultClientException("采购收货单无法修改！");
         }
 
-        validateQuoteProductCoverage(vo);
-
         List<ReceiveSheetDetail> oldDetails = receiveSheetDetailService.getBySheetId(sheet.getId());
+        validateQuoteProductCoverage(vo, oldDetails);
         boolean stockSynced = hasStockSynced(sheet.getId());
         if (stockSynced) {
             rollbackStock(sheet, oldDetails);
@@ -765,13 +764,36 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
      * @param vo 采购入库保存参数
      */
     private void validateQuoteProductCoverage(CreateReceiveSheetVo vo) {
+        validateQuoteProductCoverage(vo, Collections.emptyList());
+    }
+
+    /**
+     * 唯一报价模式下校验采购入库明细；历史单据中已停用的商品允许保留并保存。
+     *
+     * @param vo 采购入库保存参数
+     * @param oldDetails 修改前的单据明细
+     */
+    private void validateQuoteProductCoverage(CreateReceiveSheetVo vo,
+            List<ReceiveSheetDetail> oldDetails) {
         if (!Boolean.TRUE.equals(saleOutSheetService.getPriceUniqueConfig())) {
+            return;
+        }
+
+        Set<String> oldProductIds = oldDetails.stream().map(ReceiveSheetDetail::getProductId)
+                .filter(StringUtil::isNotBlank).collect(Collectors.toSet());
+        Set<String> disabledOldProductIds = productService.selectByIds(new ArrayList<>(oldProductIds)).stream()
+                .filter(product -> Boolean.FALSE.equals(product.getAvailable()))
+                .map(product -> product.getId()).collect(Collectors.toSet());
+        List<ReceiveProductVo> productsNeedQuoteCheck = vo.getProducts().stream()
+                .filter(product -> !disabledOldProductIds.contains(product.getProductId()))
+                .collect(Collectors.toList());
+        if (productsNeedQuoteCheck.isEmpty()) {
             return;
         }
 
         QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
         quoteProductVo.setOrderDate(vo.getOrderDate());
-        validateQuoteProductCoverage(vo.getProducts(),
+        validateQuoteProductCoverage(productsNeedQuoteCheck,
                 saleOutSheetService.queryQuoteProducts(quoteProductVo));
     }
 

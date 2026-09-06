@@ -98,6 +98,7 @@ public class SaleOutSheetServiceImpl extends
 
     private static final String COST_PRICE_SOURCE_USE_STOCK_PRICE_PM_KEY = "sale_out_cost_price_use_stock_price";
     private static final String PRODUCT_SALE_PRICE_UNIQUE_PM_KEY = "sale_out_price_use_unique_price";
+    private static final String SALE_OUT_SHOW_PLAN_DATE_PM_KEY = "sale_out_show_plan_date";
     private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER = DateTimeFormatter
             .ofPattern("yyyy-MM-dd");
 
@@ -387,6 +388,24 @@ public class SaleOutSheetServiceImpl extends
         List<SysParameter> list = sysParameterService.query(sysParameterVo);
         if (CollectionUtil.isEmpty(list)) {
             return Boolean.FALSE;
+        }
+
+        return BooleanUtil.toBoolean(list.get(0).getPmValue());
+    }
+
+    /**
+     * 获取销售出库计划日期展示配置，参数未配置时默认展示以兼容历史数据。
+     *
+     * @return 是否展示计划日期
+     */
+    @Override
+    public Boolean getPlanDateDisplayConfig() {
+
+        QuerySysParameterVo sysParameterVo = new QuerySysParameterVo();
+        sysParameterVo.setPmKey(SALE_OUT_SHOW_PLAN_DATE_PM_KEY);
+        List<SysParameter> list = sysParameterService.query(sysParameterVo);
+        if (CollectionUtil.isEmpty(list)) {
+            return Boolean.TRUE;
         }
 
         return BooleanUtil.toBoolean(list.get(0).getPmValue());

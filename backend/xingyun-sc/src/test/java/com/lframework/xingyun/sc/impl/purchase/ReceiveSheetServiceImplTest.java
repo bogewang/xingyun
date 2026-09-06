@@ -132,6 +132,18 @@ class ReceiveSheetServiceImplTest {
         Collections.singletonList(quoteProduct));
   }
 
+  /** 验证修改采购入库单时，历史停用商品不会参与报价覆盖校验。 */
+  @Test
+  void updateShouldIgnoreExistingDisabledProductInQuoteCoverage() throws Exception {
+    String source = new String(Files.readAllBytes(Paths.get(
+        "src/main/java/com/lframework/xingyun/sc/impl/purchase/ReceiveSheetServiceImpl.java")),
+        StandardCharsets.UTF_8);
+
+    Assert.assertTrue(source.contains("validateQuoteProductCoverage(vo, oldDetails);"));
+    Assert.assertTrue(source.contains("Boolean.FALSE.equals(product.getAvailable())"));
+    Assert.assertTrue(source.contains("!disabledOldProductIds.contains(product.getProductId())"));
+  }
+
   /** 验证导入匹配到商品后回填商品档案名称。 */
   @Test
   void importProductMatchShouldFillProductName() throws Exception {
