@@ -805,6 +805,7 @@
 
         event.preventDefault();
         event.stopPropagation();
+        this.$refs.grid.setCurrentRow(this.tableData[targetRowIndex]);
         await this.focusAndSelectTableInput(refName, targetRowIndex);
       },
       // 选择商品（从表格中点击）
