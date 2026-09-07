@@ -340,7 +340,6 @@
         // 表单数据
         formData: {},
         paidAmountDirty: false,
-        totalAmountDirty: false,
         // 工具栏配置
         toolbarConfig: {
           // 缩放
@@ -509,7 +508,6 @@
         };
 
         this.paidAmountDirty = false;
-        this.totalAmountDirty = false;
         this.tableData = [];
       },
 
@@ -721,7 +719,6 @@
       },
       totalAmountInput(value) {
         this.formData.totalAmount = value;
-        this.totalAmountDirty = true;
       },
       purchasePriceInput(row, value) {
         row.purchasePrice = value;
@@ -761,9 +758,7 @@
           });
 
         this.formData.totalNum = totalNum;
-        if (!this.totalAmountDirty) {
-          this.formData.totalAmount = totalAmount;
-        }
+        this.formData.totalAmount = totalAmount;
       },
       // 批量录入数量
       batchInputReceiveNum() {
