@@ -330,7 +330,6 @@
         // 表单数据
         formData: {},
         paidAmountDirty: false,
-        totalAmountDirty: false,
         timelineVisible: false,
         supplierOptions: [],
         supplierOptionMap: {},
@@ -504,7 +503,6 @@
         };
 
         this.paidAmountDirty = false;
-        this.totalAmountDirty = false;
         this.tableData = [];
       },
       // 加载数据
@@ -556,7 +554,6 @@
               totalAmount: res.totalAmount || 0,
             });
             this.paidAmountDirty = false;
-            this.totalAmountDirty = false;
 
             if (!isEmpty(res.supplierId) && !isEmpty(res.supplierName)) {
               const selectedSupplierOptions = [
@@ -737,7 +734,6 @@
       },
       totalAmountInput(value) {
         this.formData.totalAmount = value;
-        this.totalAmountDirty = true;
       },
       paidAmountInput(value) {
         this.formData.paidAmount = value;
@@ -809,9 +805,7 @@
           });
 
         this.formData.totalNum = totalNum;
-        if (!this.totalAmountDirty) {
-          this.formData.totalAmount = totalAmount;
-        }
+        this.formData.totalAmount = totalAmount;
       },
       // 批量录入数量
       batchInputReceiveNum() {
