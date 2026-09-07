@@ -16,11 +16,7 @@ import java.math.RoundingMode;
 
 @Data
 public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetailDto> implements ExcelModel {
-    /**
-     * 计划日期。
-     */
-    @ExcelProperty("计划日期")
-    private String planDate;
+
 
     @ExcelProperty("订单日期")
     private String orderDate;
@@ -48,14 +44,14 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
     @ExcelProperty("数量")
     private BigDecimal orderNum;
 
-    @ExcelProperty("验收数量")
-    private BigDecimal confirmNum;
-
     @ExcelProperty("售价")
     private BigDecimal taxPrice;
 
     @ExcelProperty("备注")
     private String description;
+
+    @ExcelProperty("销售额")
+    private BigDecimal taxAmount;
 
     /**
      * 商品备注。
@@ -69,11 +65,17 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
     @ExcelProperty("备注二")
     private String productRemark2;
 
-    @ExcelProperty("销售额")
-    private BigDecimal taxAmount;
+    @ExcelProperty("验收数量")
+    private BigDecimal confirmNum;
 
     @ExcelProperty("验收金额")
     private BigDecimal confirmAmt;
+
+    /**
+     * 计划日期。
+     */
+    @ExcelProperty("计划日期")
+    private String planDate;
 
     @ExcelProperty("进价")
     private BigDecimal costPrice;
