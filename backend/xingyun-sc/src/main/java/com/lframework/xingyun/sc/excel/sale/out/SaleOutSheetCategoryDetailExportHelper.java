@@ -103,12 +103,13 @@ public final class SaleOutSheetCategoryDetailExportHelper {
    * @throws IOException 编码失败时抛出
    */
   private static void prepareResponse(HttpServletResponse response) throws IOException {
-    String fileName = "销售出库分类明细.xlsx";
+    String fileName = "销售出库商品分类汇总.xlsx";
     String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8.name())
         .replace("+", "%20");
     response.reset();
     response.setCharacterEncoding(StandardCharsets.UTF_8.name());
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    response.setHeader("filename", encodedFileName);
     response.setHeader("Content-Disposition",
         "attachment;filename=" + encodedFileName + ";filename*=utf-8''" + encodedFileName);
   }
@@ -236,7 +237,7 @@ public final class SaleOutSheetCategoryDetailExportHelper {
    */
   private static void setAmountCell(Row row, int columnIndex, BigDecimal value, CellStyle style) {
     Cell cell = row.createCell(columnIndex);
-    if (value != null) {
+    if (value != null && value.compareTo(BigDecimal.ZERO) != 0) {
       cell.setCellValue(value.doubleValue());
     }
     cell.setCellStyle(style);

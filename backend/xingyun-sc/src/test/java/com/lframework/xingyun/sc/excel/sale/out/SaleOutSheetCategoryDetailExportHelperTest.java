@@ -1,6 +1,7 @@
 package com.lframework.xingyun.sc.excel.sale.out;
 
 import com.lframework.xingyun.sc.dto.sale.out.QuerySaleOutSheetDetailDto;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.Assert;
 import org.junit.Test;
@@ -8,6 +9,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Arrays;
 
@@ -35,6 +38,8 @@ public class SaleOutSheetCategoryDetailExportHelperTest {
         Arrays.asList(frozenDetail, condimentDetail, otherCustomerDetail),
         LocalDate.of(2026, 8, 11), LocalDate.of(2026, 8, 12), response);
 
+    Assert.assertEquals("销售出库商品备注二汇总.xlsx",
+        URLDecoder.decode(response.getHeader("filename"), StandardCharsets.UTF_8.name()));
     try (XSSFWorkbook workbook = new XSSFWorkbook(
         new ByteArrayInputStream(response.getContentAsByteArray()))) {
       Assert.assertEquals(2, workbook.getNumberOfSheets());
@@ -57,6 +62,10 @@ public class SaleOutSheetCategoryDetailExportHelperTest {
           .getStringCellValue());
       Assert.assertEquals("生活服务中心：", workbook.getSheet("300分队").getRow(6).getCell(0)
           .getStringCellValue());
+      Assert.assertEquals(Cell.CELL_TYPE_BLANK, workbook.getSheet("400分队").getRow(3).getCell(1)
+          .getCellType());
+      Assert.assertEquals(Cell.CELL_TYPE_BLANK, workbook.getSheet("400分队").getRow(4).getCell(1)
+          .getCellType());
     }
   }
 
