@@ -173,6 +173,7 @@ public final class SaleOutSheetCategoryDetailExportHelper {
     Row capitalRow = sheet.createRow(rowIndex++);
     setTextCell(capitalRow, 0, "大写：", styles.totalLabel);
     setTextCell(capitalRow, 1, toChineseCurrency(grandTotal), styles.capital);
+    setMergedCellsStyle(capitalRow, 1, columnCount - 1, styles.capital);
     merge(sheet, rowIndex - 1, rowIndex - 1, 1, columnCount - 1);
 
     Row footerRow = sheet.createRow(rowIndex);
@@ -250,6 +251,25 @@ public final class SaleOutSheetCategoryDetailExportHelper {
       int lastColumn) {
     if (firstColumn < lastColumn) {
       sheet.addMergedRegion(new CellRangeAddress(firstRow, lastRow, firstColumn, lastColumn));
+    }
+  }
+
+  /**
+   * 为合并前的每个单元格设置样式，确保合并区域右侧边框能够写入工作簿。
+   *
+   * @param row 行
+   * @param firstColumn 起始列
+   * @param lastColumn 结束列
+   * @param style 单元格样式
+   */
+  private static void setMergedCellsStyle(Row row, int firstColumn, int lastColumn,
+      CellStyle style) {
+    for (int columnIndex = firstColumn; columnIndex <= lastColumn; columnIndex++) {
+      Cell cell = row.getCell(columnIndex);
+      if (cell == null) {
+        cell = row.createCell(columnIndex);
+      }
+      cell.setCellStyle(style);
     }
   }
 
