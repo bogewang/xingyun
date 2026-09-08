@@ -198,6 +198,23 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
+     * 获取销售出库分类汇总导出开关。
+     *
+     * @return 是否启用分类汇总导出
+     */
+    @ApiOperation("获取销售出库分类汇总导出开关")
+    @HasPermission({ "sale:out:query" })
+    @GetMapping("/export-detail/category/config")
+    public InvokeResult<Boolean> getCategoryDetailExportConfig() {
+        try {
+            return InvokeResultBuilder.success(saleOutSheetService.getCategoryDetailExportConfig());
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    /**
      * 按订单日期查询销售可选报价商品。
      *
      * @param vo 查询参数
@@ -460,6 +477,24 @@ public class SaleOutSheetController extends DefaultBaseController {
         } catch (Exception e) {
             log.error("按天汇总导出销售出库明细失败", e);
             throw new DefaultClientException(e.getMessage());
+        }
+    }
+
+    /**
+     * 导出按客户、日期及商品分类汇总的销售出库明细。
+     */
+    @ApiOperation("导出分类汇总")
+    @HasPermission({ "sale:out:export" })
+    @PostMapping("/exportDetail/category")
+    public void exportCategoryDetail(@RequestBody @Valid QuerySaleOutSheetVo vo,
+            HttpServletResponse response) {
+        try {
+            saleOutSheetService.exportCategoryDetail(vo, response);
+        } catch (DefaultClientException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("导出销售出库分类明细失败", e);
+            throw new DefaultClientException("导出分类汇总失败！");
         }
     }
 

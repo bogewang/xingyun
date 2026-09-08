@@ -126,6 +126,18 @@ export function getPlanDateDisplayConfig(): Promise<boolean> {
   );
 }
 
+/** 获取销售出库分类汇总导出开关。 */
+export function getCategoryDetailExportConfig(): Promise<boolean> {
+  return defHttp.get<boolean>(
+    {
+      url: baseUrl + '/export-detail/category/config',
+    },
+    {
+      region,
+    },
+  );
+}
+
 /**
  * 按订单日期查询生效报价单中的商品。
  */
@@ -374,6 +386,21 @@ export function exportDetailDailySummary(data: QuerySaleOutSheetVo): Promise<voi
   return defHttp.post<void>(
     {
       url: baseUrl + '/exportDetail/dailySummary',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+      responseType: ResponseEnum.BLOB,
+    },
+  );
+}
+
+/** 导出按客户、日期及商品分类汇总的销售出库明细。 */
+export function exportCategoryDetail(data: QuerySaleOutSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/exportDetail/category',
       data,
     },
     {

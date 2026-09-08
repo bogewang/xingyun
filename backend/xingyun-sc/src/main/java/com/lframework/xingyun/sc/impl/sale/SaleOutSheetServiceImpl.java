@@ -99,6 +99,8 @@ public class SaleOutSheetServiceImpl extends
     private static final String COST_PRICE_SOURCE_USE_STOCK_PRICE_PM_KEY = "sale_out_cost_price_use_stock_price";
     private static final String PRODUCT_SALE_PRICE_UNIQUE_PM_KEY = "sale_out_price_use_unique_price";
     private static final String SALE_OUT_SHOW_PLAN_DATE_PM_KEY = "sale_out_show_plan_date";
+    private static final String CATEGORY_DETAIL_EXPORT_ENABLED_PM_KEY =
+            "sale_out_category_detail_export_enabled";
     private static final String TAG_PRINT_APPEND_SPEC_CATEGORY_PM_KEY = "sale_out_tag_print_append_spec_category";
     private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER = DateTimeFormatter
             .ofPattern("yyyy-MM-dd");
@@ -478,6 +480,22 @@ public class SaleOutSheetServiceImpl extends
     }
 
     /**
+     * 获取销售出库分类汇总导出开关，未配置时默认关闭。
+     *
+     * @return 是否启用分类汇总导出
+     */
+    @Override
+    public Boolean getCategoryDetailExportConfig() {
+        QuerySysParameterVo sysParameterVo = new QuerySysParameterVo();
+        sysParameterVo.setPmKey(CATEGORY_DETAIL_EXPORT_ENABLED_PM_KEY);
+        List<SysParameter> list = sysParameterService.query(sysParameterVo);
+        if (CollectionUtil.isEmpty(list)) {
+            return Boolean.FALSE;
+        }
+        return BooleanUtil.toBoolean(list.get(0).getPmValue());
+    }
+
+    /**
      * 按订单日期查询销售可用报价商品。
      *
      * @param vo 查询参数
@@ -687,6 +705,47 @@ public class SaleOutSheetServiceImpl extends
                 .collect(Collectors.toList());
 
         ExcelUtil.writeWithSheets("销售出库单明细按天汇总", sortedDatas);
+    }
+
+    /**
+     * 按客户、日期及商品分类导出销售出库明细。
+     *
+     * @param vo 查询参数
+     * @param response HTTP 响应
+     */
+    @Override
+    public void exportCategoryDetail(QuerySaleOutSheetVo vo, HttpServletResponse response) {
+        validateCategoryDetailExportDate(vo);
+        List<QuerySaleOutSheetDetailDto> details = getBaseMapper().queryDetail(vo);
+        if (CollectionUtils.isEmpty(details)) {
+            throw new DefaultClientException("未查询到可导出的销售出库明细！");
+        }
+        try {
+            SaleOutSheetCategoryDetailExportHelper.export(details, vo.getOrderDateStart(),
+                    vo.getOrderDateEnd(), response);
+        } catch (IOException e) {
+            throw new DefaultClientException("导出分类汇总失败！");
+        }
+    }
+
+    /**
+     * 校验分类明细导出的日期范围必须完整且在同一个自然月内。
+     *
+     * @param vo 查询参数
+     */
+    private void validateCategoryDetailExportDate(QuerySaleOutSheetVo vo) {
+        LocalDate startDate = vo.getOrderDateStart();
+        LocalDate endDate = vo.getOrderDateEnd();
+        if (startDate == null || endDate == null) {
+            throw new DefaultClientException("请选择订单日期范围！");
+        }
+        if (startDate.isAfter(endDate)) {
+            throw new DefaultClientException("订单开始日期不能晚于结束日期！");
+        }
+        if (startDate.getYear() != endDate.getYear()
+                || startDate.getMonthValue() != endDate.getMonthValue()) {
+            throw new DefaultClientException("导出分类汇总的订单日期不能跨月份！");
+        }
     }
 
     /**
