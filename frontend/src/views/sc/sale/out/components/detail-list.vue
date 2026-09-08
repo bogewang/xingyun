@@ -87,7 +87,11 @@
                 </a-select>
               </j-form-item>
               <j-form-item label="是否询价商品">
-                <a-select v-model:value="searchFormData.inquiryProduct" placeholder="全部" allow-clear>
+                <a-select
+                  v-model:value="searchFormData.inquiryProduct"
+                  placeholder="全部"
+                  allow-clear
+                >
                   <a-select-option :value="true">是</a-select-option>
                   <a-select-option :value="false">否</a-select-option>
                 </a-select>
@@ -127,6 +131,13 @@
               @click="exportDetailDailySummary"
             >
               按天汇总导出
+            </a-button>
+            <a-button
+              v-permission="['sale:out:export']"
+              :icon="h(DownloadOutlined)"
+              @click="exportCategoryDetail"
+            >
+              导出分类明细
             </a-button>
             <a-button
               v-permission="['sale:out:export']"
@@ -328,7 +339,12 @@
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
   import { SETTLE_STATUS } from '@/enums/biz/settleStatus';
   import { SALE_OUT_SHEET_STATUS } from '@/enums/biz/saleOutSheetStatus';
-  import { createError, createSuccess, createSuccessAutoClose } from '@/hooks/web/msg';
+  import {
+    createError,
+    createSuccess,
+    createSuccessAutoClose,
+    createWarning,
+  } from '@/hooks/web/msg';
   import { usePermission } from '/@/hooks/web/usePermission';
   import { formatInquiryProduct } from '@/views/sc/components/inquiryProduct';
   import { calcSaleOutProfitRateByProfit } from './saleOutProfit';
@@ -996,6 +1012,19 @@
       },
       exportDetailDailySummary() {
         api.exportDetailDailySummary(this.buildSearchFormData());
+      },
+      /** 按客户、日期及商品分类导出销售出库明细。 */
+      exportCategoryDetail() {
+        const [startDate, endDate] = this.orderDateRange || [];
+        if (!startDate || !endDate) {
+          createWarning('请选择订单日期范围！');
+          return;
+        }
+        if (!moment(startDate).isSame(endDate, 'month')) {
+          createWarning('导出分类明细的订单日期不能跨月份！');
+          return;
+        }
+        api.exportCategoryDetail(this.buildSearchFormData());
       },
       /** 按当前筛选条件导出按商品和单位汇总的开票明细。 */
       exportInvoiceDetail() {

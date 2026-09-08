@@ -384,6 +384,21 @@ export function exportDetailDailySummary(data: QuerySaleOutSheetVo): Promise<voi
   );
 }
 
+/** 导出按客户、日期及商品分类汇总的销售出库明细。 */
+export function exportCategoryDetail(data: QuerySaleOutSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    {
+      url: baseUrl + '/exportDetail/category',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+      responseType: ResponseEnum.BLOB,
+    },
+  );
+}
+
 /**
  * 导出开票明细。
  */

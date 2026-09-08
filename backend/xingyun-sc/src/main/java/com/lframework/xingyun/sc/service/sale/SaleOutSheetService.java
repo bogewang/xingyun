@@ -337,6 +337,14 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   void exportDetailDailySummary(QuerySaleOutSheetVo vo);
 
   /**
+   * 按客户、日期及商品分类导出销售出库明细。
+   *
+   * @param vo 查询参数
+   * @param response HTTP 响应
+   */
+  void exportCategoryDetail(QuerySaleOutSheetVo vo, HttpServletResponse response);
+
+  /**
    * 查询已按商品和单位汇总的开票明细。
    *
    * @param vo 查询参数

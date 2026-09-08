@@ -690,6 +690,47 @@ public class SaleOutSheetServiceImpl extends
     }
 
     /**
+     * 按客户、日期及商品分类导出销售出库明细。
+     *
+     * @param vo 查询参数
+     * @param response HTTP 响应
+     */
+    @Override
+    public void exportCategoryDetail(QuerySaleOutSheetVo vo, HttpServletResponse response) {
+        validateCategoryDetailExportDate(vo);
+        List<QuerySaleOutSheetDetailDto> details = getBaseMapper().queryDetail(vo);
+        if (CollectionUtils.isEmpty(details)) {
+            throw new DefaultClientException("未查询到可导出的销售出库明细！");
+        }
+        try {
+            SaleOutSheetCategoryDetailExportHelper.export(details, vo.getOrderDateStart(),
+                    vo.getOrderDateEnd(), response);
+        } catch (IOException e) {
+            throw new DefaultClientException("导出分类明细失败！");
+        }
+    }
+
+    /**
+     * 校验分类明细导出的日期范围必须完整且在同一个自然月内。
+     *
+     * @param vo 查询参数
+     */
+    private void validateCategoryDetailExportDate(QuerySaleOutSheetVo vo) {
+        LocalDate startDate = vo.getOrderDateStart();
+        LocalDate endDate = vo.getOrderDateEnd();
+        if (startDate == null || endDate == null) {
+            throw new DefaultClientException("请选择订单日期范围！");
+        }
+        if (startDate.isAfter(endDate)) {
+            throw new DefaultClientException("订单开始日期不能晚于结束日期！");
+        }
+        if (startDate.getYear() != endDate.getYear()
+                || startDate.getMonthValue() != endDate.getMonthValue()) {
+            throw new DefaultClientException("导出分类明细的订单日期不能跨月份！");
+        }
+    }
+
+    /**
      * 查询开票明细；同一商品的不同单位分别汇总。
      *
      * @param vo 查询参数

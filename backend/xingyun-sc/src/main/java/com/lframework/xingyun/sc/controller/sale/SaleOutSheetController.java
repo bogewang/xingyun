@@ -464,6 +464,24 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
+     * 导出按客户、日期及商品分类汇总的销售出库明细。
+     */
+    @ApiOperation("导出分类明细")
+    @HasPermission({ "sale:out:export" })
+    @PostMapping("/exportDetail/category")
+    public void exportCategoryDetail(@RequestBody @Valid QuerySaleOutSheetVo vo,
+            HttpServletResponse response) {
+        try {
+            saleOutSheetService.exportCategoryDetail(vo, response);
+        } catch (DefaultClientException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("导出销售出库分类明细失败", e);
+            throw new DefaultClientException("导出分类明细失败！");
+        }
+    }
+
+    /**
      * 导出开票明细。
      */
     @ApiOperation("导出开票明细")
