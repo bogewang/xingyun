@@ -99,6 +99,7 @@ public class SaleOutSheetServiceImpl extends
     private static final String COST_PRICE_SOURCE_USE_STOCK_PRICE_PM_KEY = "sale_out_cost_price_use_stock_price";
     private static final String PRODUCT_SALE_PRICE_UNIQUE_PM_KEY = "sale_out_price_use_unique_price";
     private static final String SALE_OUT_SHOW_PLAN_DATE_PM_KEY = "sale_out_show_plan_date";
+    private static final String TAG_PRINT_APPEND_SPEC_CATEGORY_PM_KEY = "sale_out_tag_print_append_spec_category";
     private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER = DateTimeFormatter
             .ofPattern("yyyy-MM-dd");
 
@@ -295,6 +296,8 @@ public class SaleOutSheetServiceImpl extends
             return Lists.newArrayList();
         }
 
+        Set<String> appendSpecCategoryIds = getTagPrintAppendSpecCategoryIds();
+
         List<PrintSaleTagBo> res = Lists.newArrayList();
         result.getDatas().forEach(item -> {
             Customer customer = customerService.findById(item.getCustomerId());
@@ -327,15 +330,13 @@ public class SaleOutSheetServiceImpl extends
                         PrintSaleTagBo bo = new PrintSaleTagBo();
                         bo.setCustomerSimpleName(
                                 customer.getNickName() == null ? customer.getName() : customer.getNickName());
-                        bo.setProductName(product.getName());
+                        bo.setProductName(buildTagPrintProductName(product,
+                                appendSpecCategoryIds));
 
                         String format = formatTagPrintNum(detail.getBusinessNum());
                         String unitName = detail.getUnitName();
-                        // 添加备注
-                        if (StringUtils.isNotBlank(detail.getDescription())) {
-                            unitName = String.format("%s（%s）", unitName, detail.getDescription());
-                        }
-                        bo.setOrderNum(String.format("%s%s", format, unitName));
+                        bo.setOrderNum(buildTagPrintOrderNum(format, unitName,
+                                detail.getDescription()));
                         bo.setOrderDate(item.getOrderDate().toString());
                         bo.setCategoryId(product.getCategoryId());
 
@@ -362,6 +363,71 @@ public class SaleOutSheetServiceImpl extends
      */
     static String formatTagPrintNum(BigDecimal num) {
         return num.setScale(1, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+    }
+
+    /**
+     * 组装标签打印商品名称；命中配置分类时将商品规格追加至商品名称。
+     *
+     * @param product 商品
+     * @param appendSpecCategoryIds 需要追加规格的分类 ID 集合
+     * @return 标签展示商品名称
+     */
+    static String buildTagPrintProductName(Product product, Set<String> appendSpecCategoryIds) {
+        if (appendSpecCategoryIds.contains(product.getCategoryId())
+                && StringUtils.isNotBlank(product.getSpec())) {
+            return String.format("%s（%s）", product.getName(), product.getSpec());
+        }
+        return product.getName();
+    }
+
+    /**
+     * 获取标签打印时需要追加商品规格的分类 ID 集合。
+     *
+     * @return 已配置分类对应的 ID 集合
+     */
+    private Set<String> getTagPrintAppendSpecCategoryIds() {
+        QuerySysParameterVo parameterVo = new QuerySysParameterVo();
+        parameterVo.setPmKey(TAG_PRINT_APPEND_SPEC_CATEGORY_PM_KEY);
+        List<SysParameter> parameters = sysParameterService.query(parameterVo);
+        if (CollectionUtil.isEmpty(parameters)
+                || StringUtils.isBlank(parameters.get(0).getPmValue())) {
+            return Collections.emptySet();
+        }
+
+        Set<String> categoryNames = parseTagPrintAppendSpecCategoryNames(parameters.get(0).getPmValue());
+        return productCategoryService.getAllProductCategories().stream()
+                .filter(category -> categoryNames.contains(category.getName()))
+                .map(ProductCategory::getId)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * 解析标签打印追加规格的商品分类名称，支持中英文逗号分隔。
+     *
+     * @param categoryNames 配置的商品分类名称
+     * @return 去除空白后的商品分类名称集合
+     */
+    static Set<String> parseTagPrintAppendSpecCategoryNames(String categoryNames) {
+        return Arrays.stream(categoryNames.split("[,，]"))
+                .map(String::trim)
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * 组装标签打印数量，将销售明细备注追加至单位后。
+     *
+     * @param formatNum 格式化后的数量
+     * @param unitName 单位
+     * @param description 销售明细备注
+     * @return 标签展示数量
+     */
+    static String buildTagPrintOrderNum(String formatNum, String unitName, String description) {
+        String orderNum = String.format("%s%s", formatNum, unitName);
+        if (StringUtils.isNotBlank(description)) {
+            return String.format("%s（%s）", orderNum, description);
+        }
+        return orderNum;
     }
 
     /**
