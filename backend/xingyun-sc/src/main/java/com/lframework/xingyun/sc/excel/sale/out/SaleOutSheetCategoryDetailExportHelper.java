@@ -89,11 +89,36 @@ public final class SaleOutSheetCategoryDetailExportHelper {
    */
   private static Set<String> collectCategories(List<QuerySaleOutSheetDetailDto> details) {
     List<String> categoryList = new ArrayList<>();
+    BigDecimal unremarkedTotal = calculateUnremarkedTotal(details);
     for (QuerySaleOutSheetDetailDto detail : details) {
-      categoryList.add(summaryName(detail));
+      String summaryName = summaryName(detail);
+      if (!UNREMARKED.equals(summaryName) || unremarkedTotal.compareTo(BigDecimal.ZERO) != 0) {
+        categoryList.add(summaryName);
+      }
     }
     categoryList.sort(String::compareTo);
     return new LinkedHashSet<>(categoryList);
+  }
+
+  /**
+   * 计算未分类明细的汇总金额，用于决定是否展示未分类列。
+   *
+   * @param details 销售出库明细
+   * @return 未分类明细合计金额
+   */
+  private static BigDecimal calculateUnremarkedTotal(List<QuerySaleOutSheetDetailDto> details) {
+    BigDecimal total = BigDecimal.ZERO;
+    for (QuerySaleOutSheetDetailDto detail : details) {
+      if (!UNREMARKED.equals(summaryName(detail))) {
+        continue;
+      }
+      BigDecimal amount = detail.getConfirmAmt() == null ? detail.getTaxAmount()
+          : detail.getConfirmAmt();
+      if (amount != null) {
+        total = total.add(amount);
+      }
+    }
+    return total;
   }
 
   /**

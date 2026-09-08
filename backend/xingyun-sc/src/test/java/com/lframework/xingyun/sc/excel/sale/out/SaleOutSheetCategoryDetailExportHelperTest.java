@@ -33,10 +33,12 @@ public class SaleOutSheetCategoryDetailExportHelperTest {
         new BigDecimal("20"), null);
     QuerySaleOutSheetDetailDto otherCustomerDetail = createDetail("400分队", "2026-08-12", "备注二A",
         new BigDecimal("30"), new BigDecimal("0"));
+    QuerySaleOutSheetDetailDto unremarkedZeroDetail = createDetail("300分队", "2026-08-12", null,
+        new BigDecimal("30"), new BigDecimal("0"));
     MockHttpServletResponse response = new MockHttpServletResponse();
 
     SaleOutSheetCategoryDetailExportHelper.export(
-        Arrays.asList(frozenDetail, condimentDetail, otherCustomerDetail),
+        Arrays.asList(frozenDetail, condimentDetail, otherCustomerDetail, unremarkedZeroDetail),
         LocalDate.of(2026, 8, 11), LocalDate.of(2026, 8, 12), response);
 
     Assert.assertEquals("销售出库商品分类汇总.xlsx",
@@ -50,6 +52,8 @@ public class SaleOutSheetCategoryDetailExportHelperTest {
       Assert.assertEquals("备注二A", workbook.getSheet("300分队").getRow(1).getCell(1)
           .getStringCellValue());
       Assert.assertEquals("备注二B", workbook.getSheet("300分队").getRow(1).getCell(2)
+          .getStringCellValue());
+      Assert.assertEquals("合计", workbook.getSheet("300分队").getRow(1).getCell(3)
           .getStringCellValue());
       Assert.assertEquals(80D, workbook.getSheet("300分队").getRow(2).getCell(1)
           .getNumericCellValue(), 0.001D);

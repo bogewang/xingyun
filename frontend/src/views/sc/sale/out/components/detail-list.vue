@@ -119,6 +119,7 @@
               检查产品询价是否唯一
             </a-button>
             <a-button
+              v-if="showCategoryDetailExport"
               v-permission="['sale:out:export']"
               :icon="h(DownloadOutlined)"
               @click="exportDetails"
@@ -401,6 +402,7 @@
         id: '',
         saleOrderId: '',
         showPriceUniqueCheck: false,
+        showCategoryDetailExport: false,
         priceCheckVisible: false,
         batchUpdatePriceVisible: false,
         batchUpdatePriceSubmitting: false,
@@ -637,6 +639,7 @@
     created() {
       this.orderDateRange = this.getDefaultOrderDateRange();
       this.loadPriceUniqueConfig();
+      this.loadCategoryDetailExportConfig();
     },
     mounted() {
       window.addEventListener('resize', this.handleViewportResize);
@@ -656,6 +659,14 @@
           this.showPriceUniqueCheck = await api.getPriceUniqueConfig();
         } catch (e) {
           this.showPriceUniqueCheck = false;
+        }
+      },
+      /** 加载销售出库分类汇总导出开关。 */
+      async loadCategoryDetailExportConfig() {
+        try {
+          this.showCategoryDetailExport = await api.getCategoryDetailExportConfig();
+        } catch (e) {
+          this.showCategoryDetailExport = false;
         }
       },
       footerMethod({ columns, data }) {

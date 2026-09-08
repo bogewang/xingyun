@@ -309,6 +309,13 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   Boolean getPlanDateDisplayConfig();
 
   /**
+   * 是否启用销售出库分类汇总导出。
+   *
+   * @return 是否启用
+   */
+  Boolean getCategoryDetailExportConfig();
+
+  /**
    * 按订单日期查询可用于销售出库的报价商品。
    *
    * @param vo 查询参数

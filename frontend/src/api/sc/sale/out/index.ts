@@ -126,6 +126,18 @@ export function getPlanDateDisplayConfig(): Promise<boolean> {
   );
 }
 
+/** 获取销售出库分类汇总导出开关。 */
+export function getCategoryDetailExportConfig(): Promise<boolean> {
+  return defHttp.get<boolean>(
+    {
+      url: baseUrl + '/export-detail/category/config',
+    },
+    {
+      region,
+    },
+  );
+}
+
 /**
  * 按订单日期查询生效报价单中的商品。
  */

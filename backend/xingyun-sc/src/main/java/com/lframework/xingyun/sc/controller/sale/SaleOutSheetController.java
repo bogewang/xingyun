@@ -198,6 +198,23 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
+     * 获取销售出库分类汇总导出开关。
+     *
+     * @return 是否启用分类汇总导出
+     */
+    @ApiOperation("获取销售出库分类汇总导出开关")
+    @HasPermission({ "sale:out:query" })
+    @GetMapping("/export-detail/category/config")
+    public InvokeResult<Boolean> getCategoryDetailExportConfig() {
+        try {
+            return InvokeResultBuilder.success(saleOutSheetService.getCategoryDetailExportConfig());
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    /**
      * 按订单日期查询销售可选报价商品。
      *
      * @param vo 查询参数
