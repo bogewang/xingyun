@@ -47,7 +47,7 @@ public class SaleOutSheetCategoryDetailExportHelperTest {
         new ByteArrayInputStream(response.getContentAsByteArray()))) {
       Assert.assertEquals(2, workbook.getNumberOfSheets());
       Assert.assertNotNull(workbook.getSheet("300分队"));
-      Assert.assertEquals("300分队8月份汇总表",
+      Assert.assertEquals("300分队 8月份汇总表",
           workbook.getSheet("300分队").getRow(0).getCell(0).getStringCellValue());
       Assert.assertEquals("备注二A", workbook.getSheet("300分队").getRow(1).getCell(1)
           .getStringCellValue());

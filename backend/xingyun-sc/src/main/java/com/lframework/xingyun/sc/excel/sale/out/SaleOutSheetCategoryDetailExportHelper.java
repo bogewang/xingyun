@@ -151,7 +151,8 @@ public final class SaleOutSheetCategoryDetailExportHelper {
 
     Row titleRow = sheet.createRow(0);
     titleRow.setHeightInPoints(24);
-    setTextCell(titleRow, 0, customerName + startDate.getMonthValue() + "月份汇总表", styles.title);
+    setTextCell(titleRow, 0, customerName + " " + startDate.getMonthValue() + "月份汇总表",
+        styles.title);
     merge(sheet, 0, 0, 0, columnCount - 1);
 
     Row headerRow = sheet.createRow(1);
