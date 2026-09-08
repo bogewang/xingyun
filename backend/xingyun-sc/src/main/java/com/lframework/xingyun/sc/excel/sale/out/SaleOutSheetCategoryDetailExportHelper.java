@@ -35,7 +35,7 @@ import java.util.Set;
  */
 public final class SaleOutSheetCategoryDetailExportHelper {
 
-  private static final String UNREMARKED = "未填写备注二";
+  private static final String UNREMARKED = "未分类";
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
   private SaleOutSheetCategoryDetailExportHelper() {
