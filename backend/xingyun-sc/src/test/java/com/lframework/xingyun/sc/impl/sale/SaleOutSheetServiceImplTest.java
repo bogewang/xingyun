@@ -133,6 +133,59 @@ class SaleOutSheetServiceImplTest {
     Assert.assertEquals(SaleOutSheetServiceImpl.formatTagPrintNum(new BigDecimal("1.5")), "1.5");
   }
 
+  /** 验证命中配置分类的标签商品名称会追加商品规格。 */
+  @Test
+  void buildTagPrintProductNameShouldAppendSpecForConfiguredCategory() {
+    Product product = new Product();
+    product.setName("果汁");
+    product.setCategoryId("category-1");
+    product.setSpec("2L");
+
+    String productName = SaleOutSheetServiceImpl.buildTagPrintProductName(product,
+        java.util.Collections.singleton("category-1"));
+
+    Assert.assertEquals(productName, "果汁（2L）");
+  }
+
+  /** 验证未命中配置分类时标签商品名称不追加商品规格。 */
+  @Test
+  void buildTagPrintProductNameShouldNotAppendSpecForOtherCategory() {
+    Product product = new Product();
+    product.setName("果汁");
+    product.setCategoryId("category-2");
+    product.setSpec("2L");
+
+    String productName = SaleOutSheetServiceImpl.buildTagPrintProductName(product,
+        java.util.Collections.singleton("category-1"));
+
+    Assert.assertEquals(productName, "果汁");
+  }
+
+  /** 验证标签打印会将销售明细备注追加至数量字段。 */
+  @Test
+  void buildTagPrintOrderNumShouldAppendDetailDescription() {
+    String orderNum = SaleOutSheetServiceImpl.buildTagPrintOrderNum("10", "千克", "要温米线，不要米线");
+
+    Assert.assertEquals(orderNum, "10千克（要温米线，不要米线）");
+  }
+
+  /** 验证空销售明细备注不会影响标签数量字段。 */
+  @Test
+  void buildTagPrintOrderNumShouldKeepNumWhenDescriptionBlank() {
+    String orderNum = SaleOutSheetServiceImpl.buildTagPrintOrderNum("10", "千克", " ");
+
+    Assert.assertEquals(orderNum, "10千克");
+  }
+
+  /** 验证标签打印追加规格配置支持多个商品分类名称。 */
+  @Test
+  void parseTagPrintAppendSpecCategoryNamesShouldSupportMultipleNames() {
+    java.util.Set<String> categoryNames = SaleOutSheetServiceImpl
+        .parseTagPrintAppendSpecCategoryNames("水果, 饮料，零食");
+
+    Assert.assertEquals(categoryNames, new java.util.HashSet<>(Arrays.asList("水果", "饮料", "零食")));
+  }
+
   @Test
   void normalizeQueryImportNumbersShouldConvertNullQuantityToZero() {
     SaleOutSheetQueryImportModel model = new SaleOutSheetQueryImportModel();
