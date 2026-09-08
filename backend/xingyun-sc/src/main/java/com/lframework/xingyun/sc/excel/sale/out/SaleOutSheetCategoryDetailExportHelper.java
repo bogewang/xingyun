@@ -35,14 +35,14 @@ import java.util.Set;
  */
 public final class SaleOutSheetCategoryDetailExportHelper {
 
-  private static final String UNCLASSIFIED = "未分类";
+  private static final String UNREMARKED = "未填写备注二";
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
   private SaleOutSheetCategoryDetailExportHelper() {
   }
 
   /**
-   * 按客户生成分类汇总工作簿并写入响应。
+   * 按客户生成商品备注二汇总工作簿并写入响应。
    *
    * @param details 明细数据
    * @param startDate 开始日期
@@ -82,15 +82,15 @@ public final class SaleOutSheetCategoryDetailExportHelper {
   }
 
   /**
-   * 收集全部商品分类，保证同一文件中的工作表列结构一致。
+   * 收集全部商品备注二，保证同一文件中的工作表列结构一致。
    *
    * @param details 销售出库明细
-   * @return 有序分类集合
+   * @return 有序商品备注二集合
    */
   private static Set<String> collectCategories(List<QuerySaleOutSheetDetailDto> details) {
     List<String> categoryList = new ArrayList<>();
     for (QuerySaleOutSheetDetailDto detail : details) {
-      categoryList.add(categoryName(detail));
+      categoryList.add(summaryName(detail));
     }
     categoryList.sort(String::compareTo);
     return new LinkedHashSet<>(categoryList);
@@ -183,7 +183,7 @@ public final class SaleOutSheetCategoryDetailExportHelper {
   }
 
   /**
-   * 生成客户日期和分类维度的金额汇总。
+   * 生成客户日期和商品备注二维度的金额汇总。
    */
   private static Map<LocalDate, Map<String, BigDecimal>> buildAmountMap(
       List<QuerySaleOutSheetDetailDto> details) {
@@ -192,7 +192,7 @@ public final class SaleOutSheetCategoryDetailExportHelper {
       LocalDate orderDate = LocalDate.parse(detail.getOrderDate(), DATE_FORMATTER);
       Map<String, BigDecimal> categoryAmounts = result.computeIfAbsent(orderDate,
           key -> new LinkedHashMap<>());
-      String category = categoryName(detail);
+      String category = summaryName(detail);
       BigDecimal amount = detail.getConfirmAmt() == null ? detail.getTaxAmount() : detail.getConfirmAmt();
       if (amount != null) {
         categoryAmounts.merge(category, amount, BigDecimal::add);
@@ -260,10 +260,10 @@ public final class SaleOutSheetCategoryDetailExportHelper {
   }
 
   /**
-   * 获取可展示的商品分类名称。
+   * 获取可展示的商品备注二。
    */
-  private static String categoryName(QuerySaleOutSheetDetailDto detail) {
-    return StringUtils.defaultIfBlank(detail.getCategoryName(), UNCLASSIFIED);
+  private static String summaryName(QuerySaleOutSheetDetailDto detail) {
+    return StringUtils.defaultIfBlank(detail.getProductRemark2(), UNREMARKED);
   }
 
   /**

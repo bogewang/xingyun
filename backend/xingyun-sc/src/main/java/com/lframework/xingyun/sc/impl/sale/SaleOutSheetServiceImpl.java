@@ -706,7 +706,7 @@ public class SaleOutSheetServiceImpl extends
             SaleOutSheetCategoryDetailExportHelper.export(details, vo.getOrderDateStart(),
                     vo.getOrderDateEnd(), response);
         } catch (IOException e) {
-            throw new DefaultClientException("导出分类明细失败！");
+            throw new DefaultClientException("导出分类汇总失败！");
         }
     }
 
@@ -726,7 +726,7 @@ public class SaleOutSheetServiceImpl extends
         }
         if (startDate.getYear() != endDate.getYear()
                 || startDate.getMonthValue() != endDate.getMonthValue()) {
-            throw new DefaultClientException("导出分类明细的订单日期不能跨月份！");
+            throw new DefaultClientException("导出分类汇总的订单日期不能跨月份！");
         }
     }
 

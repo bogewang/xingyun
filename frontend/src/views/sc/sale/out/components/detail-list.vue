@@ -137,7 +137,7 @@
               :icon="h(DownloadOutlined)"
               @click="exportCategoryDetail"
             >
-              导出分类明细
+              导出分类汇总
             </a-button>
             <a-button
               v-permission="['sale:out:export']"
@@ -1021,7 +1021,7 @@
           return;
         }
         if (!moment(startDate).isSame(endDate, 'month')) {
-          createWarning('导出分类明细的订单日期不能跨月份！');
+          createWarning('导出分类汇总的订单日期不能跨月份！');
           return;
         }
         api.exportCategoryDetail(this.buildSearchFormData());
