@@ -119,7 +119,6 @@
               检查产品询价是否唯一
             </a-button>
             <a-button
-              v-if="showCategoryDetailExport"
               v-permission="['sale:out:export']"
               :icon="h(DownloadOutlined)"
               @click="exportDetails"
@@ -134,6 +133,7 @@
               按天汇总导出
             </a-button>
             <a-button
+              v-if="showCategoryDetailExport"
               v-permission="['sale:out:export']"
               :icon="h(DownloadOutlined)"
               @click="exportCategoryDetail"
