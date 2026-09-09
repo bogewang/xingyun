@@ -473,7 +473,7 @@ public class SaleOutSheetServiceImpl extends
         sysParameterVo.setPmKey(SALE_OUT_SHOW_PLAN_DATE_PM_KEY);
         List<SysParameter> list = sysParameterService.query(sysParameterVo);
         if (CollectionUtil.isEmpty(list)) {
-            return Boolean.TRUE;
+            return Boolean.FALSE;
         }
 
         return BooleanUtil.toBoolean(list.get(0).getPmValue());
