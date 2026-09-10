@@ -3,7 +3,7 @@ name: Deploy 101
 on:
   push:
     branches:
-      - codex/quote-sheet-management
+      - fix/0910_cahe_maven
   workflow_dispatch:
 
 concurrency:
@@ -29,7 +29,7 @@ jobs:
           git checkout -B "${{ github.ref_name }}" "origin/${{ github.ref_name }}"
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '8'
