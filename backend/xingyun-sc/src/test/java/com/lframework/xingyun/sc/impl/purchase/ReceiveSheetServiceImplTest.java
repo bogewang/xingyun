@@ -13,7 +13,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import com.lframework.xingyun.basedata.entity.Product;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -152,6 +155,24 @@ class ReceiveSheetServiceImplTest {
         StandardCharsets.UTF_8);
 
     Assert.assertTrue(source.contains("data.setProductName(product.getName());"));
+  }
+
+  /** 验证导入规格非空但与唯一候选商品规格不一致时，不能自动匹配商品。 */
+  @Test
+  void importProductMatchShouldRejectMismatchedNonBlankSpec() {
+    ReceiveSheetImportModel model = new ReceiveSheetImportModel();
+    model.setProductName("海天黄豆酱");
+    model.setUnit("瓶");
+    model.setSpec("6千克");
+
+    Product product = new Product();
+    product.setName("海天黄豆酱");
+    product.setSpec("800g/瓶");
+    Map<String, List<Product>> nameUnitMap = new HashMap<>();
+    nameUnitMap.put(ReceiveSheetServiceImpl.buildProductImportKey("海天黄豆酱", "瓶"),
+        Collections.singletonList(product));
+
+    Assert.assertNull(ReceiveSheetServiceImpl.matchImportProduct(model, nameUnitMap));
   }
 
   /** 验证采购入库导入按订单日期过滤非报价商品。 */

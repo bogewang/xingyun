@@ -3183,7 +3183,7 @@ public class SaleOutSheetServiceImpl extends
         return errors;
     }
 
-    private Product matchImportProduct(SaleOutSheetImportModel data,
+    static Product matchImportProduct(SaleOutSheetImportModel data,
             Map<String, List<Product>> nameUnitMap) {
         if (StringUtils.isBlank(data.getProductName()) || StringUtils.isBlank(data.getUnit())) {
             return null;
@@ -3194,11 +3194,18 @@ public class SaleOutSheetServiceImpl extends
             return null;
         }
 
+        String spec = StringUtils.trimToEmpty(data.getSpec());
+        if (StringUtils.isNotBlank(spec)) {
+            return candidates.stream()
+                    .filter(item -> StringUtils.equals(StringUtils.trimToEmpty(item.getSpec()), spec))
+                    .findFirst()
+                    .orElse(null);
+        }
+
         if (candidates.size() == 1) {
             return candidates.get(0);
         }
 
-        String spec = StringUtils.trimToEmpty(data.getSpec());
         List<Product> specMatchedProducts = candidates.stream()
                 .filter(item -> StringUtils.equals(StringUtils.trimToEmpty(item.getSpec()), spec))
                 .collect(Collectors.toList());
