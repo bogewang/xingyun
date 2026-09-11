@@ -28,6 +28,8 @@ import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
@@ -39,8 +41,26 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static com.lframework.xingyun.basedata.impl.quote.QuoteSheetServiceImpl.buildProductImportKey;
 
 class SaleOutSheetServiceImplTest {
+
+  /** 验证导入规格非空但与唯一候选商品规格不一致时，不能自动匹配商品。 */
+  @Test
+  void importProductMatchShouldRejectMismatchedNonBlankSpec() {
+    SaleOutSheetImportModel model = new SaleOutSheetImportModel();
+    model.setProductName("海天黄豆酱");
+    model.setUnit("瓶");
+    model.setSpec("6千克");
+
+    Product product = new Product();
+    product.setName("海天黄豆酱");
+    product.setSpec("800g/瓶");
+    Map<String, List<Product>> nameUnitMap = new HashMap<>();
+    nameUnitMap.put(buildProductImportKey("海天黄豆酱", "瓶"), Collections.singletonList(product));
+
+    Assert.assertNull(SaleOutSheetServiceImpl.matchImportProduct(model, nameUnitMap));
+  }
 
   /** 验证修改单据后，唯一报价模式与关闭模式的主表关键字段都会持久化。 */
   @Test

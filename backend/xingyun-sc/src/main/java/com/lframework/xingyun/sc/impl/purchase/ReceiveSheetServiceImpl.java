@@ -1146,13 +1146,13 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         }
     }
 
-    private String buildProductImportKey(String productName, String unit) {
+    static String buildProductImportKey(String productName, String unit) {
         return StringUtils.trimToEmpty(productName) + StringPool.STR_SPLIT
                 + StringUtils.trimToEmpty(unit);
     }
 
-    private Product matchImportProduct(ReceiveSheetImportModel data,
-                                       Map<String, List<Product>> nameUnitMap) {
+    static Product matchImportProduct(ReceiveSheetImportModel data,
+                                      Map<String, List<Product>> nameUnitMap) {
         if (StringUtils.isBlank(data.getProductName()) || StringUtils.isBlank(data.getUnit())) {
             return null;
         }
@@ -1162,11 +1162,18 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             return null;
         }
 
+        String spec = StringUtils.trimToEmpty(data.getSpec());
+        if (StringUtils.isNotBlank(spec)) {
+            return candidates.stream()
+                    .filter(item -> StringUtils.equals(StringUtils.trimToEmpty(item.getSpec()), spec))
+                    .findFirst()
+                    .orElse(null);
+        }
+
         if (candidates.size() == 1) {
             return candidates.get(0);
         }
 
-        String spec = StringUtils.trimToEmpty(data.getSpec());
         List<Product> specMatchedProducts = candidates.stream()
                 .filter(item -> StringUtils.equals(StringUtils.trimToEmpty(item.getSpec()), spec))
                 .collect(Collectors.toList());
