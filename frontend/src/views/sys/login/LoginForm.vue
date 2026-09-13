@@ -8,6 +8,7 @@
       ref="formRef"
       v-show="getShow"
       @keypress.enter="handleLogin"
+      autocomplete="off"
     >
       <a-form-item v-if="showTenantField" name="tenantName" class="enter-x">
         <a-input
