@@ -125,4 +125,24 @@ describe('表格输入框快捷键处理', () => {
       expect(source).toContain('this.$refs.grid.setCurrentRow(this.tableData[targetRowIndex]);');
     });
   });
+
+  it('销售出库和采购入库明细在非商品名称列按回车时聚焦下一行商品名称', () => {
+    const pages = [
+      '../../views/sc/sale/out/add-un-require.vue',
+      '../../views/sc/sale/out/add-require.vue',
+      '../../views/sc/sale/out/modify-un-require.vue',
+      '../../views/sc/sale/out/modify-require.vue',
+      '../../views/sc/purchase/receive/add-un-require.vue',
+      '../../views/sc/purchase/receive/add-require.vue',
+      '../../views/sc/purchase/receive/modify-un-require.vue',
+      '../../views/sc/purchase/receive/modify-require.vue',
+    ];
+
+    pages.forEach((page) => {
+      const source = readFileSync(new URL(page, import.meta.url), 'utf-8');
+      expect(source).toContain("if (event.key === 'Enter')");
+      expect(source).toContain("await focusTableInput(this, 'productInputRef', targetRowIndex);");
+      expect(source).toContain('event.stopPropagation();');
+    });
+  });
 });
