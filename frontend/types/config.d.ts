@@ -153,4 +153,6 @@ export interface GlobEnvConfig {
   VITE_GLOB_API_URL: string;
   // Service interface url prefix
   VITE_GLOB_API_URL_PREFIX?: string;
+  // 登录页是否手动输入租户名称
+  VITE_GLOB_LOGIN_TENANT_INPUT: string;
 }
