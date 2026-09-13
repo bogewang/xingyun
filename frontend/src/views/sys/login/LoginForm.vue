@@ -9,8 +9,17 @@
       v-show="getShow"
       @keypress.enter="handleLogin"
     >
-      <a-form-item name="tenantName" class="enter-x">
+      <a-form-item v-if="showTenantField" name="tenantName" class="enter-x">
+        <a-input
+          v-if="isTenantManualInput"
+          size="large"
+          ref="tenantInput"
+          v-model:value="formData.tenantName"
+          placeholder="请输入租户名称"
+          class="fix-auto-fill"
+        />
         <a-select
+          v-else
           size="large"
           ref="tenantInput"
           v-model:value="formData.tenantName"
@@ -64,7 +73,8 @@
   import { useUserStore } from '/@/store/modules/user';
   import { LoginStateEnum, useFormRules, useFormValid, useLoginState } from './useLogin';
   import { createSuccessTip } from '@/hooks/web/msg';
-  import { welcomeMsg } from '@/utils/utils';
+  import { isEmpty, welcomeMsg } from '@/utils/utils';
+  import { getAppEnvConfig } from '@/utils/env';
   import { TenantRequireBo } from '@/api/sys/model/tenantRequireBo';
   import { getTenantListApi } from '@/api/sys/user';
 
@@ -75,6 +85,8 @@
   const loading = ref(false);
   const requireTenant = ref({} as TenantRequireBo);
   const tenantOptions = ref([]);
+  const { VITE_GLOB_LOGIN_TENANT_INPUT } = getAppEnvConfig();
+  const isTenantManualInput = VITE_GLOB_LOGIN_TENANT_INPUT === 'true';
 
   const formData = reactive({
     tenantName: null,
@@ -86,9 +98,14 @@
 
   const loginCaptchaDialog = ref();
   const tenantInput = ref();
+  const usernameInput = ref();
 
   const focusInput = () => {
-    tenantInput.value?.focus?.();
+    if (showTenantField.value) {
+      tenantInput.value?.focus?.();
+      return;
+    }
+    usernameInput.value?.focus?.();
   };
 
   const filterTenantOption = (inputValue, option) => {
@@ -115,12 +132,17 @@
 
   onMounted(async () => {
     requireTenant.value = await userStore.getTenantRequire();
-    await loadTenantOptions();
+    if (showTenantField.value && !isTenantManualInput) {
+      await loadTenantOptions();
+    }
 
     focusInput();
   });
 
   const getShow = computed(() => unref(getLoginState) === LoginStateEnum.LOGIN);
+  const showTenantField = computed(
+    () => requireTenant.value.enable && isEmpty(requireTenant.value.tenantId),
+  );
 
   function loginSuccessTip(userInfo) {
     createSuccessTip(welcomeMsg(userInfo.name));

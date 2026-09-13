@@ -34,6 +34,7 @@ export function getAppEnvConfig() {
     VITE_GLOB_API_URL,
     VITE_GLOB_API_URL_PREFIX,
     VITE_GLOB_CLOUD_ENABLE,
+    VITE_GLOB_LOGIN_TENANT_INPUT,
   } = ENV;
 
   return {
@@ -41,6 +42,7 @@ export function getAppEnvConfig() {
     VITE_GLOB_API_URL,
     VITE_GLOB_API_URL_PREFIX,
     VITE_GLOB_CLOUD_ENABLE,
+    VITE_GLOB_LOGIN_TENANT_INPUT,
   };
 }
 

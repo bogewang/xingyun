@@ -99,6 +99,7 @@ jobs:
             rm -rf dist.new
             mkdir -p dist.new
             tar -xzf frontend-dist.tar.gz -C dist.new
+            rm -rf frontend-dist.tar.gz
             mkdir -p bak
             backup_file="bak/$(TZ=Asia/Shanghai date +%Y%m%d%H%M).tar.gz"
             tar -czf "$backup_file" dist xingyun-api.jar

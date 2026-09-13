@@ -498,8 +498,20 @@
         const target = Array.isArray(inputRef) ? inputRef[0] : inputRef;
         return target?.input || target?.$el?.querySelector?.('input,textarea') || null;
       },
-      /** 处理明细输入列上下方向键，跳转至本列相邻行并选中内容。 */
+      /** 处理明细输入列快捷键：上下键切换同列，回车跳转下一行商品名称。 */
       async handleTableInputKeyDown(event, refName, rowIndex) {
+        if (event.key === 'Enter') {
+          const targetRowIndex = rowIndex + 1;
+          if (targetRowIndex >= this.tableData.length) {
+            return;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+          this.$refs.grid.setCurrentRow(this.tableData[targetRowIndex]);
+          await focusTableInput(this, 'productInputRef', targetRowIndex);
+          return;
+        }
         const rowOffset = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
         const targetRowIndex = rowIndex + rowOffset;
         if (!rowOffset || targetRowIndex < 0 || targetRowIndex >= this.tableData.length) {
