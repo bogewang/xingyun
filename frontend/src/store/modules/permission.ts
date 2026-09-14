@@ -153,7 +153,7 @@ export const usePermissionStore = defineStore({
             path: '/dashboard',
             name: 'Dashboard',
             component: 'LAYOUT',
-            redirect: '/dashboard/analysis',
+            redirect: '/dashboard/workbench',
             meta: {
               title: 'routes.dashboard.dashboard',
               icon: 'bx:bx-home',
@@ -165,6 +165,7 @@ export const usePermissionStore = defineStore({
                 component: '/dashboard/analysis/index',
                 meta: {
                   title: 'routes.dashboard.analysis',
+                  hideMenu: true,
                 },
               },
               {
