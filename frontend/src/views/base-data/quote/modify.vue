@@ -84,8 +84,12 @@
         </template>
 
         <!-- 销售单价 列自定义内容 -->
-        <template #salePrice_default="{ row }">
-          <a-input v-model:value="row.salePrice" class="number-input" />
+        <template #salePrice_default="{ row, rowIndex }">
+          <a-input
+            :ref="'salePriceInputRef' + rowIndex"
+            v-model:value="row.salePrice"
+            class="number-input"
+          />
         </template>
         <template #inquiryProduct_default="{ row }">
           <a-checkbox v-model:checked="row.inquiryProduct">是</a-checkbox>
@@ -237,7 +241,7 @@
           this.tableData = (data.products || []).map((item) => ({
             ...item,
             unit: this.getUnitName(item.unit),
-            inquiryProduct: item.inquiryProduct !== false,
+            inquiryProduct: item.inquiryProduct === true,
             id: uuid(),
             editingProduct: false,
             productQuery: '',
@@ -276,8 +280,8 @@
           skuCode: '',
           spec: '',
           unit: '',
-          salePrice: '',
-          inquiryProduct: true,
+          salePrice: 0,
+          inquiryProduct: false,
           editingProduct: false,
           productQuery: '',
           products: [],
@@ -334,6 +338,15 @@
           productQuery: '',
         });
         resetInlineProductSelect(this.tableData[index]);
+        this.focusSalePriceInput(index);
+      },
+      /** 商品选择完成后，将焦点移至同一行的销售单价输入框。 */
+      focusSalePriceInput(index) {
+        this.$nextTick(() => {
+          const inputRef = this.$refs['salePriceInputRef' + index];
+          const input = Array.isArray(inputRef) ? inputRef[0] : inputRef;
+          input?.focus();
+        });
       },
       // 删除勾选商品
       delProduct() {

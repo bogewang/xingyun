@@ -83,8 +83,12 @@
         </template>
 
         <!-- 销售单价 列自定义内容 -->
-        <template #salePrice_default="{ row }">
-          <a-input v-model:value="row.salePrice" class="number-input" />
+        <template #salePrice_default="{ row, rowIndex }">
+          <a-input
+            :ref="'salePriceInputRef' + rowIndex"
+            v-model:value="row.salePrice"
+            class="number-input"
+          />
         </template>
         <template #inquiryProduct_default="{ row }">
           <a-checkbox v-model:checked="row.inquiryProduct">是</a-checkbox>
@@ -225,7 +229,7 @@
       isImportUnmatchedProduct(row) { return row.importUnmatched && isEmpty(row.productId); },
       handleImportConfirm(res) {
         const items = res?.data || res?.datas || res || [];
-        this.tableData = (Array.isArray(items) ? items : []).map((item) => Object.assign(this.emptyProduct(), item, { id: uuid(), inquiryProduct: item.inquiryProduct !== false, importUnmatched: isEmpty(item.productId), productQuery: isEmpty(item.productId) ? item.name : '' }));
+        this.tableData = (Array.isArray(items) ? items : []).map((item) => Object.assign(this.emptyProduct(), item, { id: uuid(), inquiryProduct: item.inquiryProduct === true, importUnmatched: isEmpty(item.productId), productQuery: isEmpty(item.productId) ? item.name : '' }));
       },
       // 加载计量单位名称，避免报价单商品行展示单位 ID。
       loadUnitNames() {
@@ -252,8 +256,8 @@
           skuCode: '',
           spec: '',
           unit: '',
-          salePrice: '',
-          inquiryProduct: true,
+          salePrice: 0,
+          inquiryProduct: false,
           editingProduct: false,
           productQuery: '',
           products: [],
@@ -310,6 +314,15 @@
           productQuery: '',
         });
         resetInlineProductSelect(this.tableData[index]);
+        this.focusSalePriceInput(index);
+      },
+      /** 商品选择完成后，将焦点移至同一行的销售单价输入框。 */
+      focusSalePriceInput(index) {
+        this.$nextTick(() => {
+          const inputRef = this.$refs['salePriceInputRef' + index];
+          const input = Array.isArray(inputRef) ? inputRef[0] : inputRef;
+          input?.focus();
+        });
       },
       // 删除勾选商品
       delProduct() {

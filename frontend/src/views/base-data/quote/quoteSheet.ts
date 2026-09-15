@@ -25,7 +25,7 @@ export function buildQuoteSheetPayload(form: Record<string, any>) {
       productId: item.productId,
       orderNo: index + 1,
       salePrice: item.salePrice,
-      inquiryProduct: item.inquiryProduct !== false,
+      inquiryProduct: item.inquiryProduct === true,
     })),
   };
 }
