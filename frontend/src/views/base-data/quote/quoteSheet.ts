@@ -29,7 +29,7 @@ export function buildQuoteSheetPayload(form: Record<string, any>) {
       displayName: item.displayName || item.name,
       orderNo: index + 1,
       salePrice: item.salePrice,
-      inquiryProduct: item.inquiryProduct !== false,
+      inquiryProduct: item.inquiryProduct === true,
     })),
   };
 }

@@ -98,13 +98,26 @@ describe('报价单编辑数据', () => {
     });
   });
 
-  it('新增报价单明细时是否询价默认选中，并在保存时传递该字段', () => {
+  it('新增报价单明细默认是非询价商品且销售单价为0，并在保存时传递该字段', () => {
     const addSource = readFileSync(new URL('./add.vue', import.meta.url), 'utf-8');
     const modifySource = readFileSync(new URL('./modify.vue', import.meta.url), 'utf-8');
 
-    expect(addSource).toContain('inquiryProduct: true');
+    expect(addSource).toContain('salePrice: 0');
+    expect(addSource).toContain('inquiryProduct: false');
     expect(addSource).toContain('v-model:checked="row.inquiryProduct"');
-    expect(modifySource).toContain('inquiryProduct: item.inquiryProduct !== false');
+    expect(modifySource).toContain('salePrice: 0');
+    expect(modifySource).toContain('inquiryProduct: false');
+    expect(modifySource).toContain('inquiryProduct: item.inquiryProduct === true');
+  });
+
+  it('选择商品后自动聚焦同一行销售单价输入框', () => {
+    const addSource = readFileSync(new URL('./add.vue', import.meta.url), 'utf-8');
+    const modifySource = readFileSync(new URL('./modify.vue', import.meta.url), 'utf-8');
+
+    expect(addSource).toContain(":ref=\"'salePriceInputRef' + rowIndex\"");
+    expect(addSource).toContain('this.focusSalePriceInput(index)');
+    expect(modifySource).toContain(":ref=\"'salePriceInputRef' + rowIndex\"");
+    expect(modifySource).toContain('this.focusSalePriceInput(index)');
   });
 
   it('保存时不能静默过滤未完成商品选择的非空行', () => {
