@@ -4,6 +4,7 @@
 
     <resultMap id="CustomerDto" type="com.lframework.xingyun.basedata.entity.Customer">
         <id column="id" property="id"/>
+        <result column="project_id" property="projectId"/>
         <result column="code" property="code"/>
         <result column="name" property="name"/>
         <result column="nick_name" property="nickName"/>
@@ -34,6 +35,7 @@
     <sql id="CustomerDto_sql">
         SELECT
             id,
+            project_id,
             code,
             name,
             nick_name,
@@ -66,6 +68,9 @@
         <include refid="CustomerDto_sql"/>
         <where>
             <if test="vo != null">
+                <if test="vo.projectId != null and vo.projectId != ''">
+                    AND project_id = #{vo.projectId}
+                </if>
                 <if test="vo.code != null and vo.code != ''">
                     AND code = #{vo.code}
                 </if>
@@ -88,6 +93,9 @@
         <include refid="CustomerDto_sql"/>
         <where>
             <if test="vo != null">
+                <if test="vo.projectId != null and vo.projectId != ''">
+                    AND project_id = #{vo.projectId}
+                </if>
                 <if test="vo.code != null and vo.code != ''">
                     AND code = #{vo.code}
                 </if>

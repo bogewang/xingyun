@@ -18,6 +18,9 @@ public class QueryCustomerSelectorVo extends PageVo implements BaseVo, Serializa
 
   private static final long serialVersionUID = 1L;
 
+  /** 项目ID。 */
+  private String projectId;
+
   /**
    * 显示标签
    */

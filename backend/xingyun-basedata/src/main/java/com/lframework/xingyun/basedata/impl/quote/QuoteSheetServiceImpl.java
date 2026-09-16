@@ -215,9 +215,13 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     public void update(UpdateQuoteSheetVo vo) {
         List<QuoteSheet> lockedSheets = lockQuoteSheets();
         QuoteSheet existed = requireLockedSheet(vo.getId(), lockedSheets);
+        if (!Objects.equals(vo.getProjectId(), existed.getProjectId())) {
+            throw new DefaultClientException("报价单不允许变更所属项目！");
+        }
         validateSave(vo, vo.getId(), lockedSheets);
         QuoteSheet sheet = quoteSheetConverter.toEntity(vo);
         sheet.setId(existed.getId());
+        sheet.setProjectId(existed.getProjectId());
         sheet.setStatus(existed.getStatus());
         getBaseMapper().updateById(sheet);
         quoteSheetDetailMapper.delete(Wrappers.lambdaQuery(QuoteSheetDetail.class).eq(QuoteSheetDetail::getQuoteSheetId, vo.getId()));
@@ -249,7 +253,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
                 .eq(QuoteSheetDetail::getQuoteSheetId, id)
                 .orderByAsc(QuoteSheetDetail::getOrderNo, QuoteSheetDetail::getCreateTime,
                         QuoteSheetDetail::getId));
-        validateSheetData(sheet.getStartDate(), sheet.getEndDate(), details.stream().map(QuoteSheetDetail::getProductId).collect(Collectors.toList()), id, lockedSheets);
+        validateSheetData(sheet.getStartDate(), sheet.getEndDate(), details.stream().map(QuoteSheetDetail::getProductId).collect(Collectors.toList()), id, sheet.getProjectId(), lockedSheets);
         sheet.setStatus(QuoteSheetStatus.ENABLED);
         getBaseMapper().updateById(sheet);
     }
@@ -280,6 +284,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
                     : JsonUtil.parseObject(detail.getProductSnapshot(), Product.class);
             QuoteProductBo productBo = quoteSheetConverter.toProductBo(product,
                     detail.getSalePrice(), detail.getQuoteSheetId());
+            productBo.setName(detail.getDisplayName());
             productBo.setSourceId(detail.getId());
             productBo.setInquiryProduct(detail.getInquiryProduct());
             return productBo;
@@ -295,7 +300,14 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     @Override
     public PageResult<QuoteSheet> query(Integer pageIndex, Integer pageSize, QueryQuoteSheetVo vo) {
         PageHelperUtil.startPage(pageIndex, pageSize);
-        return PageResultUtil.convert(new PageInfo<>(getBaseMapper().selectList(Wrappers.lambdaQuery(QuoteSheet.class).in(CollectionUtils.isNotEmpty(vo.getIdList()), QuoteSheet::getId, vo.getIdList()).eq(vo.getStatus() != null, QuoteSheet::getStatus, vo.getStatus()).like(StringUtil.isNotBlank(vo.getName()), QuoteSheet::getName, vo.getName()).ge(vo.getStartDate() != null, QuoteSheet::getStartDate, vo.getStartDate()).le(vo.getEndDate() != null, QuoteSheet::getEndDate, vo.getEndDate()).orderByDesc(QuoteSheet::getCreateTime))));
+        return PageResultUtil.convert(new PageInfo<>(getBaseMapper().selectList(Wrappers.lambdaQuery(QuoteSheet.class)
+                .eq(QuoteSheet::getProjectId, vo.getProjectId())
+                .in(CollectionUtils.isNotEmpty(vo.getIdList()), QuoteSheet::getId, vo.getIdList())
+                .eq(vo.getStatus() != null, QuoteSheet::getStatus, vo.getStatus())
+                .like(StringUtil.isNotBlank(vo.getName()), QuoteSheet::getName, vo.getName())
+                .ge(vo.getStartDate() != null, QuoteSheet::getStartDate, vo.getStartDate())
+                .le(vo.getEndDate() != null, QuoteSheet::getEndDate, vo.getEndDate())
+                .orderByDesc(QuoteSheet::getCreateTime))));
     }
 
     /** 分页查询报价单商品明细。 */
@@ -327,15 +339,17 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
         if (vo == null) throw new DefaultClientException("报价单不能为空！");
         List<QuoteSheetProductVo> products = vo.getProducts();
         assertProductOrderNumbers(products);
-        validateSheetData(vo.getStartDate(), vo.getEndDate(), products == null ? Collections.emptyList() : products.stream().map(QuoteSheetProductVo::getProductId).collect(Collectors.toList()), excludeId, lockedSheets);
+        validateSheetData(vo.getStartDate(), vo.getEndDate(), products == null ? Collections.emptyList() : products.stream().map(QuoteSheetProductVo::getProductId).collect(Collectors.toList()), excludeId, vo.getProjectId(), lockedSheets);
     }
 
     /**
      * 校验报价单日期、商品明细、重复商品及周期。
      */
-    private void validateSheetData(LocalDate startDate, LocalDate endDate, List<String> productIds, String excludeId, List<QuoteSheet> lockedSheets) {
+    private void validateSheetData(LocalDate startDate, LocalDate endDate, List<String> productIds, String excludeId, String projectId, List<QuoteSheet> lockedSheets) {
         assertBasicSheetData(startDate, endDate, productIds);
-        assertNoDateRangeOverlap(excludeId, startDate, endDate, lockedSheets);
+        assertNoDateRangeOverlap(excludeId, startDate, endDate, lockedSheets.stream()
+                .filter(item -> Objects.equals(projectId, item.getProjectId()))
+                .collect(Collectors.toList()));
     }
 
     /**
@@ -355,6 +369,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
             }
             QuoteSheetDetail d = quoteSheetConverter.toDetail(p, quoteSheetId);
             d.setId(IdUtil.getId());
+            d.setDisplayName(StringUtil.isBlank(p.getDisplayName()) ? product.getName() : p.getDisplayName().trim());
             d.setInquiryProduct(!Boolean.FALSE.equals(p.getInquiryProduct()));
             d.setProductSnapshot(JsonUtil.toJsonString(product));
             d.setOrderNo(p.getOrderNo());

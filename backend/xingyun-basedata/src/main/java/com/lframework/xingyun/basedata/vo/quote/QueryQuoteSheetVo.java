@@ -4,11 +4,15 @@ import com.lframework.starter.web.core.vo.SortPageVo;
 import com.lframework.xingyun.basedata.enums.quote.QuoteSheetStatus;
 import java.time.LocalDate;
 import java.util.List;
+import javax.validation.constraints.NotBlank;
 import lombok.Data;
 
 /** 报价单查询请求。 */
 @Data
 public class QueryQuoteSheetVo extends SortPageVo {
+  /** 项目ID。 */
+  @NotBlank(message = "项目ID不能为空！")
+  private String projectId;
   private String name;
   private QuoteSheetStatus status;
   private LocalDate startDate;

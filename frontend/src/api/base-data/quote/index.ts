@@ -8,21 +8,23 @@ import {
   QuoteSheetDetailBo,
   QuoteSheetVo,
 } from './model/quoteSheet';
+import { getCurrentProjectId } from '@/utils/currentProject';
 
 const baseUrl = '/basedata/quote';
 const region = 'cloud-api';
+const currentProjectId = () => getCurrentProjectId();
 
 /** 查询报价单列表。 */
 export function query(data: QueryQuoteSheetVo): Promise<PageResult<QuoteSheetBo>> {
   return defHttp.post<PageResult<QuoteSheetBo>>(
-    { url: `${baseUrl}/query`, data },
+    { url: `${baseUrl}/query`, data: { projectId: currentProjectId(), ...data } },
     { contentType: ContentTypeEnum.JSON, region },
   );
 }
 /** 查询报价单商品明细。 */
 export function queryDetail(data: QueryQuoteSheetDetailVo): Promise<PageResult<QuoteSheetDetailBo>> {
   return defHttp.post<PageResult<QuoteSheetDetailBo>>(
-    { url: `${baseUrl}/detail/query`, data },
+    { url: `${baseUrl}/detail/query`, data: { projectId: currentProjectId(), ...data } },
     { contentType: ContentTypeEnum.JSON, region },
   );
 }
@@ -71,7 +73,7 @@ export function disable(id: string): Promise<void> {
 /** 创建报价单商品明细导出任务。 */
 export function exportDetail(data: QueryQuoteSheetVo): Promise<void> {
   return defHttp.post<void>(
-    { url: `${baseUrl}/exportDetail`, data },
+    { url: `${baseUrl}/exportDetail`, data: { projectId: currentProjectId(), ...data } },
     { contentType: ContentTypeEnum.JSON, region },
   );
 }

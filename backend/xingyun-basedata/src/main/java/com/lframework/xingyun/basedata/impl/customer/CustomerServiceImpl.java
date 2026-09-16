@@ -114,6 +114,7 @@ public class CustomerServiceImpl extends BaseMpServiceImpl<CustomerMapper, Custo
     String code = StringUtil.isBlank(vo.getCode()) ? generateCode() : vo.getCode();
 
     Wrapper<Customer> checkWrapper = Wrappers.lambdaQuery(Customer.class)
+        .eq(Customer::getProjectId, vo.getProjectId())
         .eq(Customer::getCode, code)
         .eq(Customer::getAvailable, Boolean.TRUE);
     if (getBaseMapper().selectCount(checkWrapper) > 0) {
@@ -122,6 +123,7 @@ public class CustomerServiceImpl extends BaseMpServiceImpl<CustomerMapper, Custo
 
     Customer data = new Customer();
     data.setId(IdUtil.getId());
+    data.setProjectId(vo.getProjectId());
     data.setCode(code);
     data.setName(vo.getName());
     if (!StringUtil.isBlank(vo.getNickName())) {
@@ -256,7 +258,7 @@ public class CustomerServiceImpl extends BaseMpServiceImpl<CustomerMapper, Custo
       String code = generateCodeService.generate(CUSTOMER_CODE_TYPE);
 
       Wrapper<Customer> checkWrapper = Wrappers.lambdaQuery(Customer.class)
-          .eq(Customer::getCode, code)
+        .eq(Customer::getCode, code)
           .eq(Customer::getAvailable, Boolean.TRUE);
       if (getBaseMapper().selectCount(checkWrapper) == 0) {
         return code;

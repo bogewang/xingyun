@@ -2,6 +2,7 @@ import { PageVo } from '@/api/model/pageVo';
 
 /** 报价单查询参数。 */
 export interface QueryQuoteSheetVo extends PageVo {
+  projectId?: string;
   name?: string;
   status?: 'ENABLED' | 'DISABLED';
   startDate?: string;
@@ -11,6 +12,7 @@ export interface QueryQuoteSheetVo extends PageVo {
 
 /** 报价单商品明细查询参数。 */
 export interface QueryQuoteSheetDetailVo extends PageVo {
+  projectId?: string;
   quoteSheetName?: string;
   status?: 'ENABLED' | 'DISABLED';
   inquiryProduct?: boolean;
@@ -39,6 +41,7 @@ export interface QuoteSheetDetailBo {
 /** 报价单商品。 */
 export interface QuoteSheetProductVo {
   productId: string;
+  displayName?: string;
   salePrice: string | number;
   inquiryProduct?: boolean;
 }
@@ -46,6 +49,7 @@ export interface QuoteSheetProductVo {
 /** 报价单保存参数。 */
 export interface QuoteSheetVo {
   id?: string;
+  projectId?: string;
   name: string;
   startDate: string;
   endDate: string;

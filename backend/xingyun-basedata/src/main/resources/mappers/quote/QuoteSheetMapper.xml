@@ -9,7 +9,7 @@
                d.id AS source_id,
                d.product_id,
                p.code,
-               p.name,
+               d.display_name AS name,
                p.short_name,
                p.sku_code,
                p.spec,
@@ -20,6 +20,7 @@
                  INNER JOIN tbl_quote_sheet_detail d ON d.quote_sheet_id = q.id
                  INNER JOIN base_data_product p ON p.id = d.product_id
         WHERE q.status = 1
+          <if test="vo.projectId != null and vo.projectId != ''">AND q.project_id = #{vo.projectId}</if>
           AND p.available = TRUE
           AND q.start_date &lt;= #{vo.orderDate}
           AND q.end_date &gt;= #{vo.orderDate}

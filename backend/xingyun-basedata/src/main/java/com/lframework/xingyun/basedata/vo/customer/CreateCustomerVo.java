@@ -12,6 +12,11 @@ public class CreateCustomerVo implements BaseVo, Serializable {
 
   private static final long serialVersionUID = 1L;
 
+  /** 项目ID。 */
+  @ApiModelProperty(value = "项目ID", required = true)
+  @NotBlank(message = "项目ID不能为空！")
+  private String projectId;
+
   /**
    * 编号
    */

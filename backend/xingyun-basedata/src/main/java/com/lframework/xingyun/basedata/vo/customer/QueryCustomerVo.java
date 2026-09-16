@@ -11,6 +11,9 @@ public class QueryCustomerVo extends SortPageVo implements BaseVo, Serializable 
 
   private static final long serialVersionUID = 1L;
 
+  /** 项目ID。 */
+  private String projectId;
+
   /**
    * 编号
    */

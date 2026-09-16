@@ -9,16 +9,18 @@ import { QueryCustomerVo } from '@/api/base-data/customer/model/queryCustomerVo'
 import { QueryCustomerBo } from '@/api/base-data/customer/model/queryCustomerBo';
 import { SelectorBo } from '@/api/common/SelectorBo';
 import { CustomerSelectorBo } from '@/api/base-data/customer/model/customerSelectorBo';
+import { getCurrentProjectId } from '@/utils/currentProject';
 
 const baseUrl = '/basedata/customer';
 const selectorBaseUrl = '/selector';
 const region = 'cloud-api';
+const currentProjectId = () => getCurrentProjectId();
 
 export function selector(params: QueryCustomerSelectorVo): Promise<PageResult<CustomerSelectorBo>> {
   return defHttp.get<PageResult<CustomerSelectorBo>>(
     {
       url: selectorBaseUrl + '/customer',
-      params,
+      params: { projectId: currentProjectId(), ...params },
     },
     {
       region,
@@ -46,7 +48,7 @@ export function query(params: QueryCustomerVo): Promise<PageResult<QueryCustomer
   return defHttp.get<PageResult<QueryCustomerBo>>(
     {
       url: baseUrl + '/query',
-      params,
+      params: { projectId: currentProjectId(), ...params },
     },
     {
       region,
@@ -94,7 +96,7 @@ export function create(data: CreateCustomerVo): Promise<void> {
   return defHttp.post<void>(
     {
       url: baseUrl,
-      data,
+      data: { projectId: currentProjectId(), ...data },
     },
     {
       contentType: ContentTypeEnum.FORM_URLENCODED,
@@ -111,7 +113,7 @@ export function update(data: UpdateCustomerVo): Promise<void> {
   return defHttp.put<void>(
     {
       url: baseUrl,
-      data,
+      data: { projectId: currentProjectId(), ...data },
     },
     {
       contentType: ContentTypeEnum.FORM_URLENCODED,
@@ -142,7 +144,7 @@ export function importExcel(data: { id: string; file: Blob }): Promise<void> {
   return defHttp.post<void>(
     {
       url: baseUrl + '/import',
-      data,
+      data: { projectId: currentProjectId(), ...data },
     },
     {
       contentType: ContentTypeEnum.BLOB,

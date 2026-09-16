@@ -13,6 +13,10 @@ public class QuoteSheetProductVo {
     @NotBlank(message = "商品ID不能为空！")
     private String productId;
 
+    /** 本次报价使用的品名，留空时使用共享商品名称。 */
+    @Size(max = 128, message = "报价品名长度不能超过128位！")
+    private String displayName;
+
     /** 页面明细排序号。 */
     private Integer orderNo;
 

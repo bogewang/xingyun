@@ -4,6 +4,7 @@ export interface QuoteProductRow {
   orderNo?: number;
   code: string;
   name: string;
+  displayName?: string;
   shortName?: string;
   skuCode?: string;
   spec?: string;
@@ -16,6 +17,8 @@ export interface QuoteProductRow {
 export function buildQuoteSheetPayload(form: Record<string, any>) {
   return {
     ...(form.id ? { id: form.id } : {}),
+    // 旧页面尚未接入项目切换器时，历史报价单继续归属默认项目。
+    projectId: form.projectId || localStorage.getItem('xingyun-current-project-id') || 'default-project',
     name: form.name,
     startDate: form.startDate,
     endDate: form.endDate,
@@ -23,6 +26,7 @@ export function buildQuoteSheetPayload(form: Record<string, any>) {
     // 以表格有效商品的当前顺序明确传递排序号，避免保存链路中重新推断顺序。
     products: form.products.map((item: QuoteProductRow, index: number) => ({
       productId: item.productId,
+      displayName: item.displayName || item.name,
       orderNo: index + 1,
       salePrice: item.salePrice,
       inquiryProduct: item.inquiryProduct !== false,

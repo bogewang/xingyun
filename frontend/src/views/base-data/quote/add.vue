@@ -86,6 +86,9 @@
         <template #salePrice_default="{ row }">
           <a-input v-model:value="row.salePrice" class="number-input" />
         </template>
+        <template #displayName_default="{ row }">
+          <a-input v-model:value.trim="row.displayName" maxlength="128" placeholder="默认使用商品名称" />
+        </template>
         <template #inquiryProduct_default="{ row }">
           <a-checkbox v-model:checked="row.inquiryProduct">是</a-checkbox>
         </template>
@@ -188,6 +191,7 @@
             width: 300,
             slots: { default: 'productName_default' },
           },
+          { field: 'displayName', title: '报价品名', width: 220, slots: { default: 'displayName_default' } },
           { field: 'spec', title: '规格', width: 80 },
           { field: 'unit', title: '单位', width: 80 },
           {
@@ -249,6 +253,7 @@
           productId: '',
           code: '',
           name: '',
+          displayName: '',
           skuCode: '',
           spec: '',
           unit: '',
@@ -303,6 +308,7 @@
           productId: product.id,
           code: product.code,
           name: product.name,
+          displayName: product.name,
           skuCode: product.skuCode,
           spec: product.spec,
           unit: this.getUnitName(product.unit),

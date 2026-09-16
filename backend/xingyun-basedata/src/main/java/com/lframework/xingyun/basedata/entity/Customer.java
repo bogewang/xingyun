@@ -29,6 +29,9 @@ public class Customer extends BaseEntity implements BaseDto {
    */
   private String id;
 
+  /** 项目ID。 */
+  private String projectId;
+
   /**
    * 编号
    */

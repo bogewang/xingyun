@@ -37,6 +37,17 @@
         <span :class="`${prefixCls}-tenant__label`">租户</span>
         <span :class="`${prefixCls}-tenant__name`">{{ tenantName }}</span>
       </div>
+      <a-select
+        v-if="projects.length"
+        v-model:value="currentProjectId"
+        size="small"
+        style="min-width: 180px; margin-right: 8px"
+        @change="changeProject"
+      >
+        <a-select-option v-for="project in projects" :key="project.id" :value="project.id">
+          项目：{{ project.name }}
+        </a-select-option>
+      </a-select>
 
       <AppSearch v-if="getShowSearch" :class="`${prefixCls}-action__item `" />
 
@@ -52,7 +63,7 @@
 </template>
 <script lang="ts" setup>
   import { Layout } from 'ant-design-vue';
-  import { computed, unref } from 'vue';
+  import { computed, onMounted, ref, unref } from 'vue';
 
   import { AppLogo, AppSearch } from '@/components/Application';
   import { SettingButtonPositionEnum } from '@/enums/appEnum';
@@ -64,6 +75,8 @@
   import { useAppInject } from '@/hooks/web/useAppInject';
   import { useDesign } from '@/hooks/web/useDesign';
   import { propTypes } from '@/utils/propTypes';
+  import { selector, type ProjectSelectorItem } from '@/api/base-data/project';
+  import { getCurrentProjectId, setCurrentProjectId } from '@/utils/currentProject';
 
   import LayoutMenu from '../menu/index.vue';
   import LayoutTrigger from '../trigger/index.vue';
@@ -140,6 +153,23 @@
   });
 
   const tenantName = computed(() => userStore.getUserInfo?.tenantName || '');
+  const projects = ref<ProjectSelectorItem[]>([]);
+  const currentProjectId = ref(getCurrentProjectId());
+
+  /** 加载项目，并确保当前项目仍可用。 */
+  onMounted(async () => {
+    projects.value = await selector();
+    if (!projects.value.some((item) => item.id === currentProjectId.value) && projects.value.length) {
+      currentProjectId.value = projects.value[0].id;
+      setCurrentProjectId(currentProjectId.value);
+    }
+  });
+
+  /** 切换项目后刷新，清除项目范围页面中的旧数据。 */
+  function changeProject(projectId: string) {
+    setCurrentProjectId(projectId);
+    window.location.reload();
+  }
 </script>
 <style lang="less">
   @import url('./index.less');
