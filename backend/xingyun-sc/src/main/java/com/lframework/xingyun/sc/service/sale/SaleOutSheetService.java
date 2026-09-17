@@ -155,6 +155,13 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   String merge(MergeSaleOutSheetVo vo);
 
   /**
+   * 按订单日期范围合并每张销售出库单内的相同商品。
+   *
+   * @param vo 日期范围参数
+   */
+  void mergeProducts(MergeSaleOutSheetProductVo vo);
+
+  /**
    * 修改备注
    *
    * @param vo
@@ -314,6 +321,13 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
    * @return 是否启用
    */
   Boolean getCategoryDetailExportConfig();
+
+  /**
+   * 是否启用销售出库合并商品功能。
+   *
+   * @return 是否启用
+   */
+  Boolean getMergeProductConfig();
 
   /**
    * 按订单日期查询可用于销售出库的报价商品。

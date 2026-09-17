@@ -23,6 +23,7 @@ import { ApproveRefuseSaleOutSheetVo } from '@/api/sc/sale/out/model/approveRefu
 import { BatchUpdateSaleOutSheetPriceVo } from '@/api/sc/sale/out/model/batchUpdateSaleOutSheetPriceVo';
 import { SyncInquirySalePriceVo } from '@/api/sc/sale/out/model/syncInquirySalePriceVo';
 import { MergeSaleOutSheetVo } from '@/api/sc/sale/out/model/mergeSaleOutSheetVo';
+import { MergeSaleOutSheetProductVo } from '@/api/sc/sale/out/model/mergeSaleOutSheetProductVo';
 import { PrintSaleOrderBo } from '@/api/sc/sale/order/model/printSaleOrderBo';
 import { PrintSaleTagBo } from '@/api/sc/sale/order/model/PrintSaleTagBo';
 
@@ -131,6 +132,18 @@ export function getCategoryDetailExportConfig(): Promise<boolean> {
   return defHttp.get<boolean>(
     {
       url: baseUrl + '/export-detail/category/config',
+    },
+    {
+      region,
+    },
+  );
+}
+
+/** 获取销售出库合并商品开关。 */
+export function getMergeProductConfig(): Promise<boolean> {
+  return defHttp.get<boolean>(
+    {
+      url: baseUrl + '/merge-product/config',
     },
     {
       region,
@@ -760,6 +773,20 @@ export function merge(data: MergeSaleOutSheetVo): Promise<string> {
   return defHttp.patch<string>(
     {
       url: baseUrl + '/merge',
+      data,
+    },
+    {
+      region,
+      contentType: ContentTypeEnum.JSON,
+    },
+  );
+}
+
+/** 按订单日期范围合并每张销售出库单中的相同商品。 */
+export function mergeProducts(data: MergeSaleOutSheetProductVo): Promise<void> {
+  return defHttp.patch<void>(
+    {
+      url: baseUrl + '/merge-product',
       data,
     },
     {

@@ -200,6 +200,13 @@
                       合并订单
                     </a-menu-item>
                     <a-menu-item
+                      v-if="showMergeProduct && hasPermission('sale:out:modify', false)"
+                      key="mergeProducts"
+                      :icon="h(MergeCellsOutlined)"
+                    >
+                      合并商品
+                    </a-menu-item>
+                    <a-menu-item
                       v-if="hasPermission('sale:out:modify', false)"
                       key="batchDelivery"
                       :icon="h(CheckOutlined)"
@@ -333,6 +340,27 @@
             />
           </a-form-item>
         </a-form>
+      </a-modal>
+
+      <a-modal
+        v-model:open="mergeProductModal.visible"
+        title="合并商品"
+        ok-text="合并"
+        :confirm-loading="mergeProductModal.loading"
+        @ok="submitMergeProduct"
+        @cancel="closeMergeProduct"
+      >
+        <a-form layout="vertical">
+          <a-form-item label="订单日期范围" required>
+            <a-range-picker
+              v-model:value="mergeProductModal.dateRange"
+              value-format="YYYY-MM-DD"
+              :placeholder="['开始日期', '结束日期']"
+              style="width: 100%"
+            />
+          </a-form-item>
+        </a-form>
+        <div>将每张未审核且未对账、未结算的销售出库单内相同商品合并为一行。</div>
       </a-modal>
 
       <!-- 批量操作 -->
@@ -716,6 +744,12 @@
           loading: false,
           dateRange: this.getDefaultOrderDateRange(),
         },
+        showMergeProduct: false,
+        mergeProductModal: {
+          visible: false,
+          loading: false,
+          dateRange: this.getMonthStartToTodayRange(),
+        },
         // 浏览器打印模板选择弹窗
         browserPrintModal: {
           visible: false,
@@ -761,6 +795,7 @@
     },
     created() {
       this.applyRouteQuery();
+      this.loadMergeProductConfig();
     },
     methods: {
       getImporterContainer() {
@@ -861,6 +896,56 @@
       getDefaultOrderDateRange() {
         const today = moment().format('YYYY-MM-DD');
         return [today, today];
+      },
+      /** 获取当月月初至当天的日期范围。 */
+      getMonthStartToTodayRange() {
+        const today = moment();
+        return [today.clone().startOf('month').format('YYYY-MM-DD'), today.format('YYYY-MM-DD')];
+      },
+      /** 加载合并商品功能开关，未开启时不展示入口。 */
+      async loadMergeProductConfig() {
+        try {
+          this.showMergeProduct = await api.getMergeProductConfig();
+        } catch (e) {
+          this.showMergeProduct = false;
+        }
+      },
+      /** 打开合并商品窗口。 */
+      openMergeProduct() {
+        this.mergeProductModal = {
+          visible: true,
+          loading: false,
+          dateRange: this.getMonthStartToTodayRange(),
+        };
+      },
+      /** 关闭合并商品窗口。 */
+      closeMergeProduct() {
+        this.mergeProductModal.visible = false;
+        this.mergeProductModal.loading = false;
+      },
+      /** 提交合并商品请求。 */
+      submitMergeProduct() {
+        const dateRange = this.mergeProductModal.dateRange;
+        if (!dateRange || dateRange.length !== 2 || !dateRange[0] || !dateRange[1]) {
+          createError('请选择订单日期范围！');
+          return;
+        }
+        this.mergeProductModal.loading = true;
+        this.loading = true;
+        api
+          .mergeProducts({
+            startDate: dateRange[0],
+            endDate: dateRange[1],
+          })
+          .then(() => {
+            createSuccess('商品合并成功！');
+            this.closeMergeProduct();
+            this.search();
+          })
+          .finally(() => {
+            this.mergeProductModal.loading = false;
+            this.loading = false;
+          });
       },
       resetSearchForm() {
         this.searchFormData = {
@@ -1031,6 +1116,7 @@
           batchExportDetails: () => this.batchExportDetails(),
           marketBuySummary2: () => this.marketBuySummary2(),
           mergeOrders: () => this.mergeOrders(),
+          mergeProducts: () => this.openMergeProduct(),
           batchDelivery: () => this.batchDelivery(),
           updateDescription: () => this.openBatchDescriptionDialog(),
           openInquiryPriceSync: () => this.openInquiryPriceSync(),
