@@ -215,6 +215,23 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
+     * 获取销售出库合并商品开关。
+     *
+     * @return 是否启用
+     */
+    @ApiOperation("获取销售出库合并商品开关")
+    @HasPermission({ "sale:out:query" })
+    @GetMapping("/merge-product/config")
+    public InvokeResult<Boolean> getMergeProductConfig() {
+        try {
+            return InvokeResultBuilder.success(saleOutSheetService.getMergeProductConfig());
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    /**
      * 按订单日期查询销售可选报价商品。
      *
      * @param vo 查询参数
@@ -700,6 +717,25 @@ public class SaleOutSheetController extends DefaultBaseController {
         } catch (Exception e) {
             log.error("请求出错", e);
             return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    /**
+     * 合并指定订单日期范围内每张销售出库单的相同商品。
+     *
+     * @param vo 日期范围参数
+     * @return 响应结果
+     */
+    @ApiOperation("合并商品")
+    @HasPermission({ "sale:out:modify" })
+    @PatchMapping("/merge-product")
+    public InvokeResult<Void> mergeProducts(@RequestBody @Valid MergeSaleOutSheetProductVo vo) {
+        try {
+            saleOutSheetService.mergeProducts(vo);
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage());
         }
     }
 
