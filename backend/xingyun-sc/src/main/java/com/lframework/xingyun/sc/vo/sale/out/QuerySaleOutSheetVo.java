@@ -163,11 +163,10 @@ public class QuerySaleOutSheetVo extends SortPageVo {
   private String saleOrderCode;
 
   /**
-   * 结算状态
+   * 结算状态列表
    */
-  @ApiModelProperty("结算状态")
-  @IsEnum(message = "结算状态格式不正确！", enumClass = SettleStatus.class)
-  private Integer settleStatus;
+  @ApiModelProperty("结算状态列表")
+  private List<Integer> settleStatusList;
 
   /**
    * 是否仅查询未被结算交易占用的单据

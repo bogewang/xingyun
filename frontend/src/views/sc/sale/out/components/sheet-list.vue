@@ -84,7 +84,8 @@
                 </j-form-item>
                 <j-form-item label="结算状态">
                   <a-select
-                    v-model:value="searchFormData.settleStatus"
+                    v-model:value="searchFormData.settleStatusList"
+                    mode="multiple"
                     placeholder="全部"
                     allow-clear
                   >
@@ -601,7 +602,7 @@
           status: undefined,
           saler: '',
           saleOrderCode: '',
-          settleStatus: undefined,
+          settleStatusList: [],
           fillAllCost: undefined,
           delivered: undefined,
           hasZeroAmountDetail: undefined,
@@ -911,7 +912,7 @@
           status: undefined,
           saler: '',
           saleOrderCode: '',
-          settleStatus: undefined,
+          settleStatusList: [],
           fillAllCost: undefined,
           delivered: undefined,
           hasZeroAmountDetail: undefined,
