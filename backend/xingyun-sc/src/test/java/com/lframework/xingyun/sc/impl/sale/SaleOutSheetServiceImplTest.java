@@ -398,6 +398,48 @@ class SaleOutSheetServiceImplTest {
   }
 
   /**
+   * 验证多客户合并必须指定勾选单据中的一个客户作为最终归属客户。
+   */
+  @Test
+  void resolveMergeCustomerIdShouldUseSelectedCustomerFromMergeSheets() {
+    SaleOutSheet first = createMergeSheet("sale-1", LocalDate.of(2026, 8, 12));
+    SaleOutSheet second = createMergeSheet("sale-2", LocalDate.of(2026, 8, 13));
+    second.setCustomerId("customer-2");
+
+    String customerId = SaleOutSheetServiceImpl.resolveMergeCustomerId("customer-2", null,
+        Arrays.asList(first, second));
+
+    Assert.assertEquals(customerId, "customer-2");
+  }
+
+  /**
+   * 验证多客户合并未选择最终客户时拒绝提交。
+   */
+  @Test(expectedExceptions = DefaultClientException.class)
+  void resolveMergeCustomerIdShouldRequireCustomerForMultipleCustomers() {
+    SaleOutSheet first = createMergeSheet("sale-1", LocalDate.of(2026, 8, 12));
+    SaleOutSheet second = createMergeSheet("sale-2", LocalDate.of(2026, 8, 13));
+    second.setCustomerId("customer-2");
+
+    SaleOutSheetServiceImpl.resolveMergeCustomerId(null, null, Arrays.asList(first, second));
+  }
+
+  /**
+   * 验证可通过已勾选来源单据确定多客户合并的最终归属客户。
+   */
+  @Test
+  void resolveMergeCustomerIdShouldUseTargetSheetCustomer() {
+    SaleOutSheet first = createMergeSheet("sale-1", LocalDate.of(2026, 8, 12));
+    SaleOutSheet second = createMergeSheet("sale-2", LocalDate.of(2026, 8, 13));
+    second.setCustomerId("customer-2");
+
+    String customerId = SaleOutSheetServiceImpl.resolveMergeCustomerId(null, "sale-2",
+        Arrays.asList(first, second));
+
+    Assert.assertEquals(customerId, "customer-2");
+  }
+
+  /**
    * 验证合并订单时明细计划日期使用原订单日期。
    */
   @Test
@@ -408,6 +450,49 @@ class SaleOutSheetServiceImplTest {
     SaleOutProductVo product = SaleOutSheetServiceImpl.toMergeProductVo(detail, orderDate, 1);
 
     Assert.assertEquals(product.getPlanDate(), orderDate);
+  }
+
+  /** 验证相同商品和单位保存时合并数量、备注及单价。 */
+  @Test
+  void mergeSameProductProductsShouldMergeQuantityDescriptionAndPrice() {
+    SaleOutProductVo first = new SaleOutProductVo();
+    first.setSeq(4);
+    first.setProductId("product-1");
+    first.setUnitId("unit-1");
+    first.setUnit("千克");
+    first.setOrderNum(new BigDecimal("3"));
+    first.setConfirmNum(new BigDecimal("1"));
+    first.setTaxPrice(new BigDecimal("10"));
+    first.setOriPrice(new BigDecimal("12"));
+    first.setDescription("1个");
+    SaleOutProductVo second = new SaleOutProductVo();
+    second.setSeq(8);
+    second.setProductId("product-1");
+    second.setUnitId("unit-1");
+    second.setUnit("千克");
+    second.setOrderNum(new BigDecimal("2"));
+    second.setConfirmNum(new BigDecimal("2"));
+    second.setTaxPrice(new BigDecimal("20"));
+    second.setOriPrice(new BigDecimal("24"));
+    second.setDescription("");
+
+    List<SaleOutProductVo> products = SaleOutSheetServiceImpl.mergeSameProductProducts(
+        Arrays.asList(first, second));
+
+    Assert.assertEquals(products.size(), 1);
+    Assert.assertEquals(products.get(0).getSeq(), Integer.valueOf(1));
+    Assert.assertEquals(products.get(0).getOrderNum(), new BigDecimal("5"));
+    Assert.assertEquals(products.get(0).getConfirmNum(), new BigDecimal("3"));
+    Assert.assertEquals(products.get(0).getTaxPrice(), new BigDecimal("14.000000"));
+    Assert.assertEquals(products.get(0).getOriPrice(), new BigDecimal("16.800000"));
+    Assert.assertEquals(products.get(0).getDescription(), "3kg（1个）@2kg");
+  }
+
+  /** 验证空备注不会产生多余分隔符。 */
+  @Test
+  void mergeProductDescriptionShouldSkipBlankDescription() {
+    Assert.assertEquals(SaleOutSheetServiceImpl.mergeProductDescription("", "备注"), "备注");
+    Assert.assertEquals(SaleOutSheetServiceImpl.mergeProductDescription("备注", " "), "备注");
   }
 
   /**

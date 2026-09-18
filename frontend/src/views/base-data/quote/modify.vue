@@ -34,7 +34,7 @@
           keep-source
           row-id="id"
           height="100%"
-          :scroll-y="{ enabled: false }"
+          :scroll-y="{ enabled: true, gt: 50 }"
           @wheel.capture.stop
           :data="tableData"
           :columns="tableColumn"

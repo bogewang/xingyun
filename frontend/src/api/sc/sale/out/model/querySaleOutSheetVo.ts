@@ -107,9 +107,9 @@ export interface QuerySaleOutSheetVo extends SortPageVo {
   saleOrderCode: string;
 
   /**
-   * 结算状态
+   * 结算状态列表
    */
-  settleStatus: number;
+  settleStatusList: number[];
 
   /**
    * 是否已收完款

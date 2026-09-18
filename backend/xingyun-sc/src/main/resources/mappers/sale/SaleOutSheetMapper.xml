@@ -345,8 +345,11 @@
                 <if test="vo.saleOrderCode != null and vo.saleOrderCode != ''">
                     AND o.code = #{vo.saleOrderCode}
                 </if>
-                <if test="vo.settleStatus != null">
-                    AND s.settle_status = #{vo.settleStatus}
+                <if test="vo.settleStatusList != null and vo.settleStatusList.size() > 0">
+                    AND s.settle_status IN
+                    <foreach collection="vo.settleStatusList" item="settleStatus" open="(" separator="," close=")">
+                        #{settleStatus}
+                    </foreach>
                 </if>
                 <if test="vo.requireTxIdNull != null and vo.requireTxIdNull">
                     AND s.tx_id IS NULL
@@ -485,8 +488,11 @@
                 <if test="vo.saleOrderCode != null and vo.saleOrderCode != ''">
                     AND o.code = #{vo.saleOrderCode}
                 </if>
-                <if test="vo.settleStatus != null">
-                    AND s.settle_status = #{vo.settleStatus}
+                <if test="vo.settleStatusList != null and vo.settleStatusList.size() > 0">
+                    AND s.settle_status IN
+                    <foreach collection="vo.settleStatusList" item="settleStatus" open="(" separator="," close=")">
+                        #{settleStatus}
+                    </foreach>
                 </if>
                 <if test="vo.fullyPaid != null">
                     <choose>
@@ -651,8 +657,11 @@
                 <if test="vo.saleOrderCode != null and vo.saleOrderCode != ''">
                     AND o.code = #{vo.saleOrderCode}
                 </if>
-                <if test="vo.settleStatus != null">
-                    AND s.settle_status = #{vo.settleStatus}
+                <if test="vo.settleStatusList != null and vo.settleStatusList.size() > 0">
+                    AND s.settle_status IN
+                    <foreach collection="vo.settleStatusList" item="settleStatus" open="(" separator="," close=")">
+                        #{settleStatus}
+                    </foreach>
                 </if>
                 <if test="vo.fullyPaid != null">
                     <choose>
@@ -748,8 +757,11 @@
                 <if test="vo.saleOrderCode != null and vo.saleOrderCode != ''">
                     AND o.code = #{vo.saleOrderCode}
                 </if>
-                <if test="vo.settleStatus != null">
-                    AND s.settle_status = #{vo.settleStatus}
+                <if test="vo.settleStatusList != null and vo.settleStatusList.size() > 0">
+                    AND s.settle_status IN
+                    <foreach collection="vo.settleStatusList" item="settleStatus" open="(" separator="," close=")">
+                        #{settleStatus}
+                    </foreach>
                 </if>
                 <if test="vo.fullyPaid != null">
                     <choose>
@@ -847,8 +859,11 @@
                 <if test="vo.saleOrderCode != null and vo.saleOrderCode != ''">
                     AND o.code = #{vo.saleOrderCode}
                 </if>
-                <if test="vo.settleStatus != null">
-                    AND s.settle_status = #{vo.settleStatus}
+                <if test="vo.settleStatusList != null and vo.settleStatusList.size() > 0">
+                    AND s.settle_status IN
+                    <foreach collection="vo.settleStatusList" item="settleStatus" open="(" separator="," close=")">
+                        #{settleStatus}
+                    </foreach>
                 </if>
                 <if test="vo.fullyPaid != null">
                     <choose>
@@ -937,8 +952,11 @@
                 <if test="vo.saleOrderCode != null and vo.saleOrderCode != ''">
                     AND o.code = #{vo.saleOrderCode}
                 </if>
-                <if test="vo.settleStatus != null">
-                    AND s.settle_status = #{vo.settleStatus}
+                <if test="vo.settleStatusList != null and vo.settleStatusList.size() > 0">
+                    AND s.settle_status IN
+                    <foreach collection="vo.settleStatusList" item="settleStatus" open="(" separator="," close=")">
+                        #{settleStatus}
+                    </foreach>
                 </if>
                 <if test="vo.fullyPaid != null">
                     <choose>
@@ -1038,8 +1056,11 @@
                 <if test="vo.saleOrderCode != null and vo.saleOrderCode != ''">
                     AND o.code = #{vo.saleOrderCode}
                 </if>
-                <if test="vo.settleStatus != null">
-                    AND s.settle_status = #{vo.settleStatus}
+                <if test="vo.settleStatusList != null and vo.settleStatusList.size() > 0">
+                    AND s.settle_status IN
+                    <foreach collection="vo.settleStatusList" item="settleStatus" open="(" separator="," close=")">
+                        #{settleStatus}
+                    </foreach>
                 </if>
                 <if test="vo.fullyPaid != null">
                     <choose>
@@ -1124,8 +1145,11 @@
                           <if test="vo.saleOrderCode != null and vo.saleOrderCode != ''">
                               AND o1.code = #{vo.saleOrderCode}
                           </if>
-                          <if test="vo.settleStatus != null">
-                              AND s1.settle_status = #{vo.settleStatus}
+                          <if test="vo.settleStatusList != null and vo.settleStatusList.size() > 0">
+                              AND s1.settle_status IN
+                              <foreach collection="vo.settleStatusList" item="settleStatus" open="(" separator="," close=")">
+                                  #{settleStatus}
+                              </foreach>
                           </if>
                           <if test="vo.fullyPaid != null">
                               <choose>
@@ -1215,8 +1239,11 @@
                 <if test="vo.saleOrderCode != null and vo.saleOrderCode != ''">
                     AND o.code = #{vo.saleOrderCode}
                 </if>
-                <if test="vo.settleStatus != null">
-                    AND s.settle_status = #{vo.settleStatus}
+                <if test="vo.settleStatusList != null and vo.settleStatusList.size() > 0">
+                    AND s.settle_status IN
+                    <foreach collection="vo.settleStatusList" item="settleStatus" open="(" separator="," close=")">
+                        #{settleStatus}
+                    </foreach>
                 </if>
                 <if test="vo.fullyPaid != null">
                     <choose>

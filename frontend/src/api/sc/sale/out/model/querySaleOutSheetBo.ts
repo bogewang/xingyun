@@ -20,6 +20,11 @@ export interface QuerySaleOutSheetBo {
   scName: string;
 
   /**
+   * 客户ID
+   */
+  customerId: string;
+
+  /**
    * 客户编号
    */
   customerCode: string;

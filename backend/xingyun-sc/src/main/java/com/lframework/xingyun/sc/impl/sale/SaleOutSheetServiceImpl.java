@@ -101,6 +101,7 @@ public class SaleOutSheetServiceImpl extends
     private static final String SALE_OUT_SHOW_PLAN_DATE_PM_KEY = "sale_out_show_plan_date";
     private static final String CATEGORY_DETAIL_EXPORT_ENABLED_PM_KEY =
             "sale_out_category_detail_export_enabled";
+    private static final String MERGE_PRODUCT_ENABLED_PM_KEY = "sale_out_merge_product_enabled";
     private static final String TAG_PRINT_APPEND_SPEC_CATEGORY_PM_KEY = "sale_out_tag_print_append_spec_category";
     private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER = DateTimeFormatter
             .ofPattern("yyyy-MM-dd");
@@ -488,6 +489,22 @@ public class SaleOutSheetServiceImpl extends
     public Boolean getCategoryDetailExportConfig() {
         QuerySysParameterVo sysParameterVo = new QuerySysParameterVo();
         sysParameterVo.setPmKey(CATEGORY_DETAIL_EXPORT_ENABLED_PM_KEY);
+        List<SysParameter> list = sysParameterService.query(sysParameterVo);
+        if (CollectionUtil.isEmpty(list)) {
+            return Boolean.FALSE;
+        }
+        return BooleanUtil.toBoolean(list.get(0).getPmValue());
+    }
+
+    /**
+     * 获取销售出库合并商品开关，未配置时默认关闭。
+     *
+     * @return 是否启用
+     */
+    @Override
+    public Boolean getMergeProductConfig() {
+        QuerySysParameterVo sysParameterVo = new QuerySysParameterVo();
+        sysParameterVo.setPmKey(MERGE_PRODUCT_ENABLED_PM_KEY);
         List<SysParameter> list = sysParameterService.query(sysParameterVo);
         if (CollectionUtil.isEmpty(list)) {
             return Boolean.FALSE;
@@ -1794,8 +1811,11 @@ public class SaleOutSheetServiceImpl extends
 
         SaleOutSheet target = sheets.get(0);
         validateMergeSheets(target, sheets);
+        String customerId = resolveMergeCustomerId(vo.getCustomerId(), vo.getTargetSheetId(), sheets);
 
         UpdateSaleOutSheetVo updateVo = buildMergeUpdateVo(target, sheets);
+        updateVo.setCustomerId(customerId);
+        mergeSameProductWhenEnabled(updateVo);
         updateVo.validate();
 
         SaleOutSheetService thisService = getThis(this.getClass());
@@ -1808,6 +1828,209 @@ public class SaleOutSheetServiceImpl extends
         }
 
         return target.getId();
+    }
+
+    /**
+     * 合并指定销售出库单内相同商品。
+     *
+     * @param vo 单据ID参数
+     */
+    @OpLog(type = SaleOpLogType.class, name = "合并销售出库商品")
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void mergeProducts(MergeSaleOutSheetProductVo vo) {
+        assertMergeProductEnabled();
+        List<String> sheetIds = vo.getIds().stream().filter(StringUtils::isNotBlank).distinct()
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(sheetIds)) {
+            throw new DefaultClientException("请选择要合并商品的销售出库单！");
+        }
+        List<SaleOutSheet> sheets = listByIds(sheetIds);
+        if (sheets.size() != sheetIds.size()) {
+            throw new DefaultClientException("部分销售出库单不存在，请刷新后重试！");
+        }
+        for (SaleOutSheet sheet : sheets) {
+            checkApproveStatus(sheet, "销售出库单已审核通过，无法合并商品！", "销售出库单无法合并商品！");
+            if (Arrays.asList(SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE,
+                    SettleStatus.SETTLED).contains(sheet.getSettleStatus())) {
+                throw new DefaultClientException("销售出库单已对账或已结算，无法合并商品！");
+            }
+        }
+
+        SaleOutSheetService thisService = getThis(this.getClass());
+        for (SaleOutSheet sheet : sheets) {
+            List<SaleOutSheetDetail> details = getSheetDetails(sheet.getId());
+            List<SaleOutProductVo> products = mergeSameProductProducts(
+                    details.stream().map(this::toProductVo).collect(Collectors.toList()));
+            if (products.size() == details.size()) {
+                continue;
+            }
+            UpdateSaleOutSheetVo updateVo = buildMergeProductUpdateVo(sheet, products);
+            updateVo.validate();
+            thisService.update(updateVo);
+        }
+        OpLogUtil.setExtra(vo);
+    }
+
+    /**
+     * 由明细构建商品保存参数，保留原有计划日期与配送日期。
+     *
+     * @param detail 销售出库明细
+     * @return 商品保存参数
+     */
+    private SaleOutProductVo toProductVo(SaleOutSheetDetail detail) {
+        SaleOutProductVo productVo = toMergeProductVo(detail, detail.getPlanDate(), detail.getOrderNo());
+        productVo.setPlanDate(detail.getPlanDate());
+        return productVo;
+    }
+
+    /**
+     * 构建合并商品后的单据修改参数。
+     *
+     * @param sheet 销售出库单
+     * @param products 合并后的商品
+     * @return 修改参数
+     */
+    private UpdateSaleOutSheetVo buildMergeProductUpdateVo(SaleOutSheet sheet,
+            List<SaleOutProductVo> products) {
+        UpdateSaleOutSheetVo updateVo = new UpdateSaleOutSheetVo();
+        updateVo.setId(sheet.getId());
+        updateVo.setVersion(sheet.getVersion());
+        updateVo.setScId(sheet.getScId());
+        updateVo.setCustomerId(sheet.getCustomerId());
+        updateVo.setSalerId(sheet.getSalerId());
+        updateVo.setOrderDate(sheet.getOrderDate());
+        updateVo.setPaymentDate(sheet.getPaymentDate());
+        updateVo.setSaleOrderId(sheet.getSaleOrderId());
+        updateVo.setDescription(sheet.getDescription());
+        updateVo.setRequired(StringUtil.isNotBlank(sheet.getSaleOrderId()));
+        updateVo.setPaidAmount(sheet.getPaidAmount());
+        updateVo.setProducts(products);
+        return updateVo;
+    }
+
+    /**
+     * 开关启用时，在保存前合并相同商品。
+     *
+     * @param vo 销售出库保存参数
+     */
+    private void mergeSameProductWhenEnabled(CreateSaleOutSheetVo vo) {
+        if (Boolean.TRUE.equals(getMergeProductConfig())) {
+            vo.setProducts(mergeSameProductProducts(vo.getProducts()));
+        }
+    }
+
+    /**
+     * 断言合并商品功能已经启用。
+     */
+    private void assertMergeProductEnabled() {
+        if (!Boolean.TRUE.equals(getMergeProductConfig())) {
+            throw new DefaultClientException("销售出库合并商品功能未启用！");
+        }
+    }
+
+    /**
+     * 按商品和交易单位合并商品行，并使用加权单价保证合并前后的金额一致。
+     *
+     * @param products 原始商品行
+     * @return 合并后的商品行
+     */
+    static List<SaleOutProductVo> mergeSameProductProducts(List<SaleOutProductVo> products) {
+        Map<String, SaleOutProductVo> productMap = new LinkedHashMap<>();
+        Map<String, String> mergedDescriptionMap = new HashMap<>();
+        Set<String> mergedProductKeys = new HashSet<>();
+        for (SaleOutProductVo product : products) {
+            String unitKey = StringUtils.defaultIfBlank(product.getUnitId(), product.getUnit());
+            String key = StringUtils.defaultString(product.getProductId()) + "\u0000" + unitKey;
+            SaleOutProductVo existed = productMap.get(key);
+            if (existed == null) {
+                productMap.put(key, product);
+                mergedDescriptionMap.put(key, buildMergeProductDescription(product));
+                continue;
+            }
+            mergeProductNumbers(existed, product);
+            mergedProductKeys.add(key);
+            mergedDescriptionMap.put(key, mergeProductDescription(mergedDescriptionMap.get(key),
+                    buildMergeProductDescription(product)));
+        }
+        for (String key : mergedProductKeys) {
+            productMap.get(key).setDescription(mergedDescriptionMap.get(key));
+        }
+        List<SaleOutProductVo> mergedProducts = new ArrayList<>(productMap.values());
+        for (int index = 0; index < mergedProducts.size(); index++) {
+            mergedProducts.get(index).setSeq(index + 1);
+        }
+        return mergedProducts;
+    }
+
+    /**
+     * 构建合并后备注中的原始商品行描述，数量与单位固定在备注前部。
+     *
+     * @param product 商品行
+     * @return 原始商品行描述
+     */
+    private static String buildMergeProductDescription(SaleOutProductVo product) {
+        String quantityWithUnit = product.getOrderNum().stripTrailingZeros().toPlainString()
+                + formatUnit(product.getUnit());
+        return StringUtils.isBlank(product.getDescription()) ? quantityWithUnit
+                : quantityWithUnit + "（" + product.getDescription() + "）";
+    }
+
+    /**
+     * 合并商品数量并以数量加权方式计算单价。
+     *
+     * @param existed 已保留的商品行
+     * @param current 当前商品行
+     */
+    private static void mergeProductNumbers(SaleOutProductVo existed, SaleOutProductVo current) {
+        BigDecimal existedNum = existed.getOrderNum();
+        BigDecimal currentNum = current.getOrderNum();
+        BigDecimal totalNum = NumberUtil.add(existedNum, currentNum);
+        existed.setTaxPrice(calculateWeightedPrice(existed.getTaxPrice(), existedNum,
+                current.getTaxPrice(), currentNum, totalNum));
+        existed.setOriPrice(calculateWeightedPrice(existed.getOriPrice(), existedNum,
+                current.getOriPrice(), currentNum, totalNum));
+        existed.setOrderNum(totalNum);
+        existed.setConfirmNum(NumberUtil.add(NumberUtil.getDefaultValue(existed.getConfirmNum()),
+                NumberUtil.getDefaultValue(current.getConfirmNum())));
+    }
+
+    /**
+     * 计算合并商品的数量加权单价。
+     *
+     * @param firstPrice 第一行单价
+     * @param firstNum 第一行数量
+     * @param secondPrice 第二行单价
+     * @param secondNum 第二行数量
+     * @param totalNum 合计数量
+     * @return 加权单价
+     */
+    private static BigDecimal calculateWeightedPrice(BigDecimal firstPrice, BigDecimal firstNum,
+            BigDecimal secondPrice, BigDecimal secondNum, BigDecimal totalNum) {
+        if (totalNum.compareTo(BigDecimal.ZERO) == 0) {
+            return firstPrice;
+        }
+        BigDecimal totalAmount = NumberUtil.add(
+                NumberUtil.mul(NumberUtil.getDefaultValue(firstPrice), firstNum),
+                NumberUtil.mul(NumberUtil.getDefaultValue(secondPrice), secondNum));
+        return totalAmount.divide(totalNum, 6, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * 合并两条商品备注，仅保留非空备注并使用@分隔。
+     *
+     * @param firstDescription 第一条备注
+     * @param secondDescription 第二条备注
+     * @return 合并后的备注
+     */
+    static String mergeProductDescription(String firstDescription, String secondDescription) {
+        if (StringUtils.isBlank(firstDescription)) {
+            return secondDescription;
+        }
+        if (StringUtils.isBlank(secondDescription)) {
+            return firstDescription;
+        }
+        return firstDescription + " + " + secondDescription;
     }
 
     /**
@@ -1850,9 +2073,6 @@ public class SaleOutSheetServiceImpl extends
                 throw new DefaultClientException("销售出库单已对账或已结算，无法合并！");
             }
 
-            if (!StringUtil.equals(target.getCustomerId(), sheet.getCustomerId())) {
-                throw new DefaultClientException("仅允许合并相同客户的销售出库单！");
-            }
             if (!StringUtil.equals(target.getScId(), sheet.getScId())) {
                 throw new DefaultClientException("仅允许合并相同仓库的销售出库单！");
             }
@@ -1860,6 +2080,39 @@ public class SaleOutSheetServiceImpl extends
                 throw new DefaultClientException("仅允许合并相同销售订单来源的销售出库单！");
             }
         }
+    }
+
+    /**
+     * 解析合并后单据的归属客户，多客户合并时必须从已勾选客户中选择。
+     *
+     * @param requestedCustomerId 用户选择的归属客户ID
+     * @param targetSheetId 用户选择的客户来源单据ID
+     * @param sheets 待合并单据
+     * @return 合并后归属客户ID
+     */
+    static String resolveMergeCustomerId(String requestedCustomerId, String targetSheetId,
+            List<SaleOutSheet> sheets) {
+        if (StringUtil.isNotBlank(targetSheetId)) {
+            return sheets.stream().filter(sheet -> StringUtil.equals(targetSheetId, sheet.getId()))
+                    .findFirst().map(SaleOutSheet::getCustomerId)
+                    .orElseThrow(() -> new DefaultClientException("归属客户来源单据必须为已勾选的销售出库单！"));
+        }
+        List<String> customerIds = sheets.stream().map(SaleOutSheet::getCustomerId).distinct()
+                .collect(Collectors.toList());
+        if (customerIds.size() == 1) {
+            if (StringUtil.isNotBlank(requestedCustomerId)
+                    && !StringUtil.equals(requestedCustomerId, customerIds.get(0))) {
+                throw new DefaultClientException("合并客户必须为已勾选单据的客户！");
+            }
+            return customerIds.get(0);
+        }
+        if (StringUtil.isBlank(requestedCustomerId)) {
+            throw new DefaultClientException("请选择合并后单据归属的客户！");
+        }
+        if (!customerIds.contains(requestedCustomerId)) {
+            throw new DefaultClientException("合并客户必须为已勾选单据的客户！");
+        }
+        return requestedCustomerId;
     }
 
     /**

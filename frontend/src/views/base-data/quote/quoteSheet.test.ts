@@ -184,12 +184,17 @@ describe('报价单编辑数据', () => {
       expect(source).toContain('<div class="sheet-editor-grid-wrapper">');
       expect(source).toContain('height="100%"');
       expect(source).not.toContain('height="auto"');
-      expect(source).toContain(':scroll-y="{ enabled: false }"');
       expect(source).toContain('@wheel.capture.stop');
       expect(source).toContain('.sheet-editor-grid-wrapper {\n    flex: 1;');
       expect(source).toContain('.sheet-editor-grid {\n    height: 100%;');
       expect(source).toContain('min-height: 0;');
     }
+  });
+
+  it('编辑页应对大量报价商品启用纵向虚拟滚动，避免全量创建行内编辑控件', () => {
+    const source = readFileSync(new URL('./modify.vue', import.meta.url), 'utf-8');
+
+    expect(source).toContain(':scroll-y="{ enabled: true, gt: 50 }"');
   });
 
   it('报价单商品下拉不展示 SKU，并将单位 ID 转为单位名称', () => {
