@@ -721,7 +721,7 @@ public class SaleOutSheetController extends DefaultBaseController {
     }
 
     /**
-     * 合并指定订单日期范围内每张销售出库单的相同商品。
+     * 合并指定销售出库单内的相同商品。
      *
      * @param vo 日期范围参数
      * @return 响应结果

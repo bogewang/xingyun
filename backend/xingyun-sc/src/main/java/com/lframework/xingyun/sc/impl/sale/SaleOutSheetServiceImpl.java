@@ -1829,23 +1829,23 @@ public class SaleOutSheetServiceImpl extends
     }
 
     /**
-     * 按订单日期范围合并每张销售出库单内相同商品。
+     * 合并指定销售出库单内相同商品。
      *
-     * @param vo 日期范围参数
+     * @param vo 单据ID参数
      */
     @OpLog(type = SaleOpLogType.class, name = "合并销售出库商品")
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void mergeProducts(MergeSaleOutSheetProductVo vo) {
         assertMergeProductEnabled();
-        if (vo.getStartDate().isAfter(vo.getEndDate())) {
-            throw new DefaultClientException("订单开始日期不能晚于结束日期！");
+        List<String> sheetIds = vo.getIds().stream().filter(StringUtils::isNotBlank).distinct()
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(sheetIds)) {
+            throw new DefaultClientException("请选择要合并商品的销售出库单！");
         }
-
-        List<SaleOutSheet> sheets = list(Wrappers.lambdaQuery(SaleOutSheet.class)
-                .between(SaleOutSheet::getOrderDate, vo.getStartDate(), vo.getEndDate()));
-        if (CollectionUtils.isEmpty(sheets)) {
-            throw new DefaultClientException("所选订单日期范围内没有销售出库单！");
+        List<SaleOutSheet> sheets = listByIds(sheetIds);
+        if (sheets.size() != sheetIds.size()) {
+            throw new DefaultClientException("部分销售出库单不存在，请刷新后重试！");
         }
         for (SaleOutSheet sheet : sheets) {
             checkApproveStatus(sheet, "销售出库单已审核通过，无法合并商品！", "销售出库单无法合并商品！");
