@@ -251,4 +251,7 @@ public class QuerySaleOutSheetVo extends SortPageVo {
    */
   @ApiModelProperty("商品分类ID列表")
   private List<String> categoryIdList;
+
+  @ApiModelProperty("结算状态")
+  private Integer settleStatus;
 }
