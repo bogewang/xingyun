@@ -1671,8 +1671,6 @@ public class SaleOutSheetServiceImpl extends
     @Override
     public String create(CreateSaleOutSheetVo vo) {
 
-        mergeSameProductWhenEnabled(vo);
-
         productService.assertAvailable(vo.getProducts().stream()
                 .map(SaleOutProductVo::getProductId).collect(Collectors.toList()));
 
@@ -1705,8 +1703,6 @@ public class SaleOutSheetServiceImpl extends
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void update(UpdateSaleOutSheetVo vo) {
-
-        mergeSameProductWhenEnabled(vo);
 
         SaleOutSheet sheet = getBaseMapper().selectById(vo.getId());
         if (sheet == null) {
