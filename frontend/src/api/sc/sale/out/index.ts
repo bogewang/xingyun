@@ -782,7 +782,7 @@ export function merge(data: MergeSaleOutSheetVo): Promise<string> {
   );
 }
 
-/** 按订单日期范围合并每张销售出库单中的相同商品。 */
+/** 合并指定销售出库单中的相同商品。 */
 export function mergeProducts(data: MergeSaleOutSheetProductVo): Promise<void> {
   return defHttp.patch<void>(
     {
