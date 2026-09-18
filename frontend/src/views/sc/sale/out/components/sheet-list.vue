@@ -1,5 +1,21 @@
 <template>
   <div ref="importerContainer" class="excel-importer-local-container">
+    <a-modal
+      v-model:open="mergeCustomerModal.visible"
+      title="选择合并后客户"
+      :confirm-loading="mergeCustomerModal.loading"
+      @ok="confirmMergeCustomer"
+    >
+      <p>
+        所选单据包含多个客户，请选择合并后单据归属的客户。确认后系统将保留创建时间最早的单据，并删除其余单据。
+      </p>
+      <a-select
+        v-model:value="mergeCustomerModal.targetSheetId"
+        :options="mergeCustomerModal.options"
+        placeholder="请选择客户"
+        style="width: 100%"
+      />
+    </a-modal>
     <div v-permission="['sale:out:query']">
       <page-wrapper content-full-height fixed-height>
         <!-- 数据列表 -->
@@ -587,6 +603,14 @@
           mergeSameDayCustomerProduct: false,
           pendingRecords: [],
         },
+        // 多客户合并时的最终归属客户选择
+        mergeCustomerModal: {
+          visible: false,
+          loading: false,
+          targetSheetId: undefined,
+          options: [],
+          records: [],
+        },
         // 当前行数据
         id: '',
         saleOrderId: '',
@@ -1167,7 +1191,6 @@
           return;
         }
 
-        const first = records[0];
         for (let i = 0; i < records.length; i++) {
           if (SALE_OUT_SHEET_STATUS.APPROVE_PASS.equalsCode(records[i].status)) {
             createError('第' + (i + 1) + '个销售出库单已审核通过，不允许合并！');
@@ -1177,34 +1200,70 @@
             createError('第' + (i + 1) + '个销售出库单已对账或已结算，不允许合并！');
             return;
           }
-          if (records[i].customerName !== first.customerName) {
-            createError('仅允许合并相同客户的销售出库单！');
-            return;
-          }
-          if (records[i].scName !== first.scName) {
+          if (records[i].scName !== records[0].scName) {
             createError('仅允许合并相同仓库的销售出库单！');
             return;
           }
         }
 
+        const customerMap = new Map();
+        records.forEach((item) => {
+          if (!customerMap.has(item.customerName)) {
+            customerMap.set(item.customerName, { value: item.id, label: item.customerName });
+          }
+        });
+        if (customerMap.size > 1) {
+          this.mergeCustomerModal = {
+            visible: true,
+            loading: false,
+            targetSheetId: records[0].id,
+            options: Array.from(customerMap.values()),
+            records,
+          };
+          return;
+        }
+
+        this.confirmMergeOrders(records, records[0].id);
+      },
+      /** 确认多客户合并的最终归属客户。 */
+      confirmMergeCustomer() {
+        if (!this.mergeCustomerModal.targetSheetId) {
+          createError('请选择合并后单据归属的客户！');
+          return;
+        }
+        const { records, targetSheetId } = this.mergeCustomerModal;
+        this.mergeCustomerModal.loading = true;
+        this.submitMergeOrders(records, targetSheetId)
+          .then(() => {
+            this.mergeCustomerModal.visible = false;
+          })
+          .finally(() => {
+            this.mergeCustomerModal.loading = false;
+          });
+      },
+      /** 确认同客户销售出库单合并。 */
+      confirmMergeOrders(records, targetSheetId) {
         createConfirm(
           '确认合并选中的' +
             records.length +
             '张销售出库单？系统将保留创建时间最早的单据，并删除其余单据。',
-        ).then(() => {
-          this.loading = true;
-          api
-            .merge({
-              ids: records.map((item) => item.id),
-            })
-            .then(() => {
-              createSuccess('合并成功！');
-              this.search();
-            })
-            .finally(() => {
-              this.loading = false;
-            });
-        });
+        ).then(() => this.submitMergeOrders(records, targetSheetId));
+      },
+      /** 提交销售出库单合并。 */
+      submitMergeOrders(records, targetSheetId) {
+        this.loading = true;
+        return api
+          .merge({
+            ids: records.map((item) => item.id),
+            targetSheetId,
+          })
+          .then(() => {
+            createSuccess('合并成功！');
+            this.search();
+          })
+          .finally(() => {
+            this.loading = false;
+          });
       },
       doBatchApprovePass(row) {
         return api.batchApprovePass({

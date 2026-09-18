@@ -47,6 +47,12 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
     private String scName;
 
     /**
+     * 客户ID
+     */
+    @ApiModelProperty("客户ID")
+    private String customerId;
+
+    /**
      * 客户编号
      */
     @ApiModelProperty("客户编号")

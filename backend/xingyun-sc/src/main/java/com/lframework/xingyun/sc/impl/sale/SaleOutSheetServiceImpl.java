@@ -1811,8 +1811,10 @@ public class SaleOutSheetServiceImpl extends
 
         SaleOutSheet target = sheets.get(0);
         validateMergeSheets(target, sheets);
+        String customerId = resolveMergeCustomerId(vo.getCustomerId(), vo.getTargetSheetId(), sheets);
 
         UpdateSaleOutSheetVo updateVo = buildMergeUpdateVo(target, sheets);
+        updateVo.setCustomerId(customerId);
         mergeSameProductWhenEnabled(updateVo);
         updateVo.validate();
 
@@ -2071,9 +2073,6 @@ public class SaleOutSheetServiceImpl extends
                 throw new DefaultClientException("销售出库单已对账或已结算，无法合并！");
             }
 
-            if (!StringUtil.equals(target.getCustomerId(), sheet.getCustomerId())) {
-                throw new DefaultClientException("仅允许合并相同客户的销售出库单！");
-            }
             if (!StringUtil.equals(target.getScId(), sheet.getScId())) {
                 throw new DefaultClientException("仅允许合并相同仓库的销售出库单！");
             }
@@ -2081,6 +2080,39 @@ public class SaleOutSheetServiceImpl extends
                 throw new DefaultClientException("仅允许合并相同销售订单来源的销售出库单！");
             }
         }
+    }
+
+    /**
+     * 解析合并后单据的归属客户，多客户合并时必须从已勾选客户中选择。
+     *
+     * @param requestedCustomerId 用户选择的归属客户ID
+     * @param targetSheetId 用户选择的客户来源单据ID
+     * @param sheets 待合并单据
+     * @return 合并后归属客户ID
+     */
+    static String resolveMergeCustomerId(String requestedCustomerId, String targetSheetId,
+            List<SaleOutSheet> sheets) {
+        if (StringUtil.isNotBlank(targetSheetId)) {
+            return sheets.stream().filter(sheet -> StringUtil.equals(targetSheetId, sheet.getId()))
+                    .findFirst().map(SaleOutSheet::getCustomerId)
+                    .orElseThrow(() -> new DefaultClientException("归属客户来源单据必须为已勾选的销售出库单！"));
+        }
+        List<String> customerIds = sheets.stream().map(SaleOutSheet::getCustomerId).distinct()
+                .collect(Collectors.toList());
+        if (customerIds.size() == 1) {
+            if (StringUtil.isNotBlank(requestedCustomerId)
+                    && !StringUtil.equals(requestedCustomerId, customerIds.get(0))) {
+                throw new DefaultClientException("合并客户必须为已勾选单据的客户！");
+            }
+            return customerIds.get(0);
+        }
+        if (StringUtil.isBlank(requestedCustomerId)) {
+            throw new DefaultClientException("请选择合并后单据归属的客户！");
+        }
+        if (!customerIds.contains(requestedCustomerId)) {
+            throw new DefaultClientException("合并客户必须为已勾选单据的客户！");
+        }
+        return requestedCustomerId;
     }
 
     /**

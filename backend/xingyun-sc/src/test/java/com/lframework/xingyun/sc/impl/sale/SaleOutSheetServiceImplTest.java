@@ -398,6 +398,48 @@ class SaleOutSheetServiceImplTest {
   }
 
   /**
+   * 验证多客户合并必须指定勾选单据中的一个客户作为最终归属客户。
+   */
+  @Test
+  void resolveMergeCustomerIdShouldUseSelectedCustomerFromMergeSheets() {
+    SaleOutSheet first = createMergeSheet("sale-1", LocalDate.of(2026, 8, 12));
+    SaleOutSheet second = createMergeSheet("sale-2", LocalDate.of(2026, 8, 13));
+    second.setCustomerId("customer-2");
+
+    String customerId = SaleOutSheetServiceImpl.resolveMergeCustomerId("customer-2", null,
+        Arrays.asList(first, second));
+
+    Assert.assertEquals(customerId, "customer-2");
+  }
+
+  /**
+   * 验证多客户合并未选择最终客户时拒绝提交。
+   */
+  @Test(expectedExceptions = DefaultClientException.class)
+  void resolveMergeCustomerIdShouldRequireCustomerForMultipleCustomers() {
+    SaleOutSheet first = createMergeSheet("sale-1", LocalDate.of(2026, 8, 12));
+    SaleOutSheet second = createMergeSheet("sale-2", LocalDate.of(2026, 8, 13));
+    second.setCustomerId("customer-2");
+
+    SaleOutSheetServiceImpl.resolveMergeCustomerId(null, null, Arrays.asList(first, second));
+  }
+
+  /**
+   * 验证可通过已勾选来源单据确定多客户合并的最终归属客户。
+   */
+  @Test
+  void resolveMergeCustomerIdShouldUseTargetSheetCustomer() {
+    SaleOutSheet first = createMergeSheet("sale-1", LocalDate.of(2026, 8, 12));
+    SaleOutSheet second = createMergeSheet("sale-2", LocalDate.of(2026, 8, 13));
+    second.setCustomerId("customer-2");
+
+    String customerId = SaleOutSheetServiceImpl.resolveMergeCustomerId(null, "sale-2",
+        Arrays.asList(first, second));
+
+    Assert.assertEquals(customerId, "customer-2");
+  }
+
+  /**
    * 验证合并订单时明细计划日期使用原订单日期。
    */
   @Test
