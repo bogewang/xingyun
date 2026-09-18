@@ -1851,13 +1851,13 @@ public class SaleOutSheetServiceImpl extends
         if (CollectionUtils.isEmpty(sheets)) {
             throw new DefaultClientException("所选订单日期范围内没有销售出库单！");
         }
-        // for (SaleOutSheet sheet : sheets) {
-        //     checkApproveStatus(sheet, "销售出库单已审核通过，无法合并商品！", "销售出库单无法合并商品！");
-        //     if (Arrays.asList(SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE,
-        //             SettleStatus.SETTLED).contains(sheet.getSettleStatus())) {
-        //         throw new DefaultClientException("销售出库单已对账或已结算，无法合并商品！");
-        //     }
-        // }
+        for (SaleOutSheet sheet : sheets) {
+            checkApproveStatus(sheet, "销售出库单已审核通过，无法合并商品！", "销售出库单无法合并商品！");
+            if (Arrays.asList(SettleStatus.UN_SETTLE, SettleStatus.PART_SETTLE,
+                    SettleStatus.SETTLED).contains(sheet.getSettleStatus())) {
+                throw new DefaultClientException("销售出库单已对账或已结算，无法合并商品！");
+            }
+        }
 
         SaleOutSheetService thisService = getThis(this.getClass());
         for (SaleOutSheet sheet : sheets) {
