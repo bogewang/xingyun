@@ -207,9 +207,7 @@
             c.name AS category_name
         FROM tbl_sale_out_sheet AS s
         LEFT JOIN tbl_sale_out_sheet_detail AS d ON d.sheet_id = s.id
-        LEFT JOIN tbl_quote_sheet AS q ON q.start_date &lt;= s.order_date
-            AND q.end_date >= s.order_date
-        LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = q.id
+        LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = s.quote_sheet_id
             AND qd.product_id = d.product_id
         LEFT JOIN tbl_sale_out_sheet_detail_bundle AS b ON b.sheet_id = s.id AND b.product_detail_id = d.id
         LEFT JOIN base_data_product AS g ON g.id = d.product_id
@@ -266,9 +264,7 @@
             d.supplier_id
         FROM tbl_sale_out_sheet AS s
         INNER JOIN tbl_sale_out_sheet_detail AS d ON d.sheet_id = s.id
-        LEFT JOIN tbl_quote_sheet AS q ON q.start_date &lt;= s.order_date
-            AND q.end_date >= s.order_date
-        LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = q.id
+        LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = s.quote_sheet_id
             AND qd.product_id = d.product_id
         LEFT JOIN tbl_sale_order AS o ON o.id = s.sale_order_id
         LEFT JOIN base_data_customer AS cu ON cu.id = s.customer_id
