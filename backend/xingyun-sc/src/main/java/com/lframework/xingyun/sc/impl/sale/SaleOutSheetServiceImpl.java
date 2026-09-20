@@ -1815,7 +1815,6 @@ public class SaleOutSheetServiceImpl extends
 
         UpdateSaleOutSheetVo updateVo = buildMergeUpdateVo(target, sheets);
         updateVo.setCustomerId(customerId);
-        mergeSameProductWhenEnabled(updateVo);
         updateVo.validate();
 
         SaleOutSheetService thisService = getThis(this.getClass());
