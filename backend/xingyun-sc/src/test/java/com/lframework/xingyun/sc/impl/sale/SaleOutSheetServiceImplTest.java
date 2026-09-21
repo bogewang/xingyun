@@ -45,6 +45,17 @@ import static com.lframework.xingyun.basedata.impl.quote.QuoteSheetServiceImpl.b
 
 class SaleOutSheetServiceImplTest {
 
+  /** 验证从生效报价商品中提取报价单ID。 */
+  @Test
+  void resolveQuoteSheetIdShouldReturnActiveQuoteSheetId() {
+    QuoteProductBo quoteProduct = new QuoteProductBo();
+    quoteProduct.setProductId("product-1");
+    quoteProduct.setQuoteSheetId("quote-sheet-1");
+
+    Assert.assertEquals(SaleOutSheetServiceImpl.resolveQuoteSheetId(
+        Collections.singletonList(quoteProduct)), "quote-sheet-1");
+  }
+
   /** 验证导入规格非空但与唯一候选商品规格不一致时，不能自动匹配商品。 */
   @Test
   void importProductMatchShouldRejectMismatchedNonBlankSpec() {

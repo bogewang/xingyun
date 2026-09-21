@@ -2839,6 +2839,7 @@ public class SaleOutSheetServiceImpl extends
         QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
         quoteProductVo.setOrderDate(vo.getOrderDate());
         List<QuoteProductBo> quoteProducts = queryQuoteProducts(quoteProductVo);
+        sheet.setQuoteSheetId(resolveQuoteSheetId(quoteProducts));
         Map<String, String> quoteSourceIds = quoteProducts.stream().collect(Collectors.toMap(
                 QuoteProductBo::getProductId, QuoteProductBo::getSourceId,
                 (first, ignored) -> first));
@@ -2862,6 +2863,22 @@ public class SaleOutSheetServiceImpl extends
         sheet.setSettleStatus(this.getInitSettleStatus(customer));
         SaleOutSheetAmtCalculator.calculateSheet(sheet, details);
         sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), sheet.getTotalAmount()));
+    }
+
+    /**
+     * 从生效报价商品中提取唯一报价单ID。
+     *
+     * @param quoteProducts 生效报价商品
+     * @return 唯一报价单ID；不存在或存在多个报价单时返回空值
+     */
+    static String resolveQuoteSheetId(List<QuoteProductBo> quoteProducts) {
+        if (CollectionUtil.isEmpty(quoteProducts)) {
+            return null;
+        }
+
+        Set<String> quoteSheetIds = quoteProducts.stream().map(QuoteProductBo::getQuoteSheetId)
+                .filter(StringUtil::isNotBlank).collect(Collectors.toSet());
+        return quoteSheetIds.size() == 1 ? quoteSheetIds.iterator().next() : null;
     }
 
     private SaleOutSheetDetail buildDetail(SaleOutSheet sheet,
