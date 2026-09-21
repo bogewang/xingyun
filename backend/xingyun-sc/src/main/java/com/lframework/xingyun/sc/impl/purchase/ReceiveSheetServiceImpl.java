@@ -694,7 +694,12 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         sheet.setOrderDate(vo.getOrderDate());
         sheet.setReceiveDate(vo.getReceiveDate());
-        populateQuoteSheetId(sheet, vo.getOrderDate());
+        QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
+        quoteProductVo.setOrderDate(vo.getOrderDate());
+        List<QuoteProductBo> quoteProducts = saleOutSheetService.queryQuoteProducts(quoteProductVo);
+        populateQuoteSheetId(sheet, quoteProducts);
+        Map<String, String> quoteSourceIds = resolveQuoteSourceIds(sheet.getQuoteSheetId(),
+                quoteProducts);
 
         BigDecimal purchaseNum = BigDecimal.ZERO;
         BigDecimal businessTotalNum = BigDecimal.ZERO;
@@ -731,7 +736,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             }
 
             detail.setProductId(productVo.getProductId());
-            detail.setSourceId(productVo.getSourceId());
+            detail.setSourceId(StringUtil.isNotBlank(productVo.getSourceId())
+                    ? productVo.getSourceId() : quoteSourceIds.get(productVo.getProductId()));
             detail.setOrderNum(baseNum);
             detail.setUnitId(unit.getId());
             detail.setUnitName(unit.getUnitName());
@@ -763,13 +769,10 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
      * 将订单日期唯一生效的报价单ID固化到采购收货单主表。
      *
      * @param sheet 采购收货单
-     * @param orderDate 订单日期
+     * @param quoteProducts 订单日期生效的报价商品
      */
-    private void populateQuoteSheetId(ReceiveSheet sheet, LocalDate orderDate) {
-        QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
-        quoteProductVo.setOrderDate(orderDate);
-        String quoteSheetId = resolveQuoteSheetId(
-                saleOutSheetService.queryQuoteProducts(quoteProductVo));
+    private void populateQuoteSheetId(ReceiveSheet sheet, List<QuoteProductBo> quoteProducts) {
+        String quoteSheetId = resolveQuoteSheetId(quoteProducts);
         if (StringUtil.isNotBlank(quoteSheetId)) {
             sheet.setQuoteSheetId(quoteSheetId);
         }
@@ -789,6 +792,27 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         Set<String> quoteSheetIds = quoteProducts.stream().map(QuoteProductBo::getQuoteSheetId)
                 .filter(StringUtil::isNotBlank).collect(Collectors.toSet());
         return quoteSheetIds.size() == 1 ? quoteSheetIds.iterator().next() : null;
+    }
+
+    /**
+     * 按报价单ID构建商品与报价明细ID的映射。
+     *
+     * @param quoteSheetId 报价单ID
+     * @param quoteProducts 报价商品
+     * @return 商品ID与报价明细ID的映射
+     */
+    static Map<String, String> resolveQuoteSourceIds(String quoteSheetId,
+            List<QuoteProductBo> quoteProducts) {
+        if (StringUtil.isBlank(quoteSheetId) || CollectionUtil.isEmpty(quoteProducts)) {
+            return Collections.emptyMap();
+        }
+
+        return quoteProducts.stream()
+                .filter(item -> StringUtil.equals(quoteSheetId, item.getQuoteSheetId()))
+                .filter(item -> StringUtil.isNotBlank(item.getProductId()))
+                .filter(item -> StringUtil.isNotBlank(item.getSourceId()))
+                .collect(Collectors.toMap(QuoteProductBo::getProductId, QuoteProductBo::getSourceId,
+                        (first, ignored) -> first));
     }
 
     /**

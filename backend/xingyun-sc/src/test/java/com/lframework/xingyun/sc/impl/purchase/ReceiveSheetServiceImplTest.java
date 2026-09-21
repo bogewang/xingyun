@@ -145,6 +145,20 @@ class ReceiveSheetServiceImplTest {
         Collections.singletonList(quoteProduct)), "quote-1");
   }
 
+  /** 验证采购收货明细按报价单和商品匹配来源报价明细ID。 */
+  @Test
+  void resolveQuoteSourceIdsShouldMatchQuoteDetailByProduct() {
+    QuoteProductBo quoteProduct = new QuoteProductBo();
+    quoteProduct.setQuoteSheetId("quote-1");
+    quoteProduct.setProductId("product-1");
+    quoteProduct.setSourceId("quote-detail-1");
+
+    Map<String, String> sourceIds = ReceiveSheetServiceImpl.resolveQuoteSourceIds("quote-1",
+        Collections.singletonList(quoteProduct));
+
+    Assert.assertEquals(sourceIds.get("product-1"), "quote-detail-1");
+  }
+
   /** 验证修改采购入库单时，历史停用商品不会参与报价覆盖校验。 */
   @Test
   void updateShouldIgnoreExistingDisabledProductInQuoteCoverage() throws Exception {
