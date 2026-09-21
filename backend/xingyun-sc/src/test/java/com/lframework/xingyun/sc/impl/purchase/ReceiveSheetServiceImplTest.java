@@ -135,6 +135,16 @@ class ReceiveSheetServiceImplTest {
         Collections.singletonList(quoteProduct));
   }
 
+  /** 验证采购收货单从唯一生效报价商品中提取报价单ID。 */
+  @Test
+  void resolveQuoteSheetIdShouldReturnUniqueQuoteSheetId() {
+    QuoteProductBo quoteProduct = new QuoteProductBo();
+    quoteProduct.setQuoteSheetId("quote-1");
+
+    Assert.assertEquals(ReceiveSheetServiceImpl.resolveQuoteSheetId(
+        Collections.singletonList(quoteProduct)), "quote-1");
+  }
+
   /** 验证修改采购入库单时，历史停用商品不会参与报价覆盖校验。 */
   @Test
   void updateShouldIgnoreExistingDisabledProductInQuoteCoverage() throws Exception {

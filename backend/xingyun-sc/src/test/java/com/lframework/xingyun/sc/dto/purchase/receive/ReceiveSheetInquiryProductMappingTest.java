@@ -74,10 +74,9 @@ class ReceiveSheetInquiryProductMappingTest {
     String detailSql = extractSqlBlock(readMapperXml(), "ReceiveSheetDetailDto_sql");
 
     assertTrue(detailSql.contains("qd.inquiry_product AS inquiry_product"));
-    assertTrue(detailSql.contains("LEFT JOIN tbl_quote_sheet AS q ON q.start_date &lt;= r.order_date"));
-    assertTrue(detailSql.contains("AND q.end_date >= r.order_date"));
-    assertTrue(detailSql.contains("LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = q.id"));
+    assertTrue(detailSql.contains("LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = r.quote_sheet_id"));
     assertTrue(detailSql.contains("AND qd.product_id = d.product_id"));
+    assertFalse(detailSql.contains("LEFT JOIN tbl_quote_sheet AS q"));
     assertFalse(detailSql.contains("NULL AS inquiry_product"));
   }
 
