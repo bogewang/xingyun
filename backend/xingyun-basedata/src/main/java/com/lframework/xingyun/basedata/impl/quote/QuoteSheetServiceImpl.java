@@ -428,7 +428,6 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
                 d.setId(IdUtil.getId());
             }
             d.setSalePrice(p.getSalePrice());
-            QuoteSheetDetail d = quoteSheetConverter.toDetail(p, quoteSheetId);
             d.setId(IdUtil.getId());
             d.setDisplayName(StringUtil.isBlank(p.getDisplayName()) ? product.getName() : p.getDisplayName().trim());
             d.setInquiryProduct(!Boolean.FALSE.equals(p.getInquiryProduct()));
