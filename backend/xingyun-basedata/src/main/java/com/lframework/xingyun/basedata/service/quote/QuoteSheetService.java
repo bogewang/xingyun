@@ -33,4 +33,7 @@ public interface QuoteSheetService extends BaseMpService<QuoteSheet> {
     List<QuoteProductBo> getActiveQuoteProducts(QueryQuoteProductVo vo);
 
     List<QuoteSheetImportModel> checkImport(List<QuoteSheetImportModel> items);
+
+    /** 获取已填充当前报价单明细的编辑页导入模板数据。 */
+    List<QuoteSheetImportModel> getDetailImportTemplate(String id);
 }

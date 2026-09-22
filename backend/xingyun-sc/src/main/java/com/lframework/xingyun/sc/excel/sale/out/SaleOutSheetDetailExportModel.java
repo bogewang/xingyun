@@ -44,6 +44,9 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
     @ExcelProperty("数量")
     private BigDecimal orderNum;
 
+    @ExcelProperty("验收数量")
+    private BigDecimal confirmNum;
+
     @ExcelProperty("售价")
     private BigDecimal taxPrice;
 
@@ -52,6 +55,9 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
 
     @ExcelProperty("销售额")
     private BigDecimal taxAmount;
+
+    @ExcelProperty("验收金额")
+    private BigDecimal confirmAmt;
 
     /**
      * 商品备注。
@@ -64,12 +70,6 @@ public class SaleOutSheetDetailExportModel extends BaseBo<QuerySaleOutSheetDetai
      */
     @ExcelProperty("备注二")
     private String productRemark2;
-
-    @ExcelProperty("验收数量")
-    private BigDecimal confirmNum;
-
-    @ExcelProperty("验收金额")
-    private BigDecimal confirmAmt;
 
     /**
      * 计划日期。

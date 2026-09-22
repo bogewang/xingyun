@@ -1,5 +1,8 @@
 <template>
-  <div class="app-card-container sheet-editor-page">
+  <div
+    ref="importerContainer"
+    class="app-card-container sheet-editor-page excel-importer-local-container"
+  >
     <div class="sheet-editor-content" v-permission="['base-data:quote:modify']" v-loading="loading">
       <j-border>
         <j-form bordered>
@@ -41,47 +44,52 @@
           :toolbar-config="toolbarConfig"
           :custom-config="{}"
         >
-        <!-- 工具栏 -->
-        <template #toolbar_buttons>
-          <a-space>
-            <a-button type="primary" :icon="h(PlusOutlined)" @click="addProduct">新增</a-button>
-            <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
-            <a-button :icon="h(PlusOutlined)" @click="openBatchAddProductDialog">批量添加商品</a-button>
-          </a-space>
-        </template>
+          <!-- 工具栏 -->
+          <template #toolbar_buttons>
+            <a-space>
+              <a-button type="primary" :icon="h(PlusOutlined)" @click="addProduct">新增</a-button>
+              <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
+              <a-button :icon="h(PlusOutlined)" @click="openBatchAddProductDialog"
+                >批量添加商品</a-button
+              >
+              <a-button :icon="h(CloudUploadOutlined)" @click="$refs.importer.openDialog()"
+                >导入Excel</a-button
+              >
+            </a-space>
+          </template>
 
-        <!-- 操作 列自定义内容 -->
-        <template #operation_default="{ row, rowIndex }">
-          <a-space size="small">
-            <a-button
-              type="link"
-              size="small"
-              :icon="h(PlusCircleTwoTone)"
-              @click="insertProduct(rowIndex)"
-            />
-            <a-button
-              type="link"
-              size="small"
-              danger
-              :icon="h(MinusCircleTwoTone)"
-              @click="removeCurrentProduct(row)"
-            />
-          </a-space>
-        </template>
+          <!-- 操作 列自定义内容 -->
+          <template #operation_default="{ row, rowIndex }">
+            <a-space size="small">
+              <a-button
+                type="link"
+                size="small"
+                :icon="h(PlusCircleTwoTone)"
+                @click="insertProduct(rowIndex)"
+              />
+              <a-button
+                type="link"
+                size="small"
+                danger
+                :icon="h(MinusCircleTwoTone)"
+                @click="removeCurrentProduct(row)"
+              />
+            </a-space>
+          </template>
 
-        <!-- 商品名称 列自定义内容 -->
-        <template #productName_default="{ row, rowIndex }">
-          <InlineProductSelect
-            :ref="'productInputRef' + rowIndex"
-            biz-type="quote"
-            mode="unrequire"
-            :row="row"
-            :row-index="rowIndex"
-            :unit-name-map="unitNameMap"
-            @select="handleSelectProduct"
-            @add-product="addProduct"
-          />
-        </template>
+          <!-- 商品名称 列自定义内容 -->
+          <template #productName_default="{ row, rowIndex }">
+            <InlineProductSelect
+              :ref="'productInputRef' + rowIndex"
+              biz-type="quote"
+              mode="unrequire"
+              :row="row"
+              :row-index="rowIndex"
+              :unit-name-map="unitNameMap"
+              @select="handleSelectProduct"
+              @add-product="addProduct"
+            />
+          </template>
 
         <!-- 销售单价 列自定义内容 -->
         <template #salePrice_default="{ row, rowIndex }">
@@ -114,6 +122,13 @@
         :quote-sheet-id="formData.id"
         @confirm="batchAddProduct"
       />
+      <quote-sheet-detail-importer
+        ref="importer"
+        :get-container="getImporterContainer"
+        :quote-sheet-id="formData.id"
+        local-container
+        @confirm="handleImportConfirm"
+      />
 
       <div
         class="sheet-editor-actions"
@@ -134,6 +149,7 @@
     MinusCircleTwoTone,
     PlusCircleTwoTone,
     PlusOutlined,
+    CloudUploadOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/base-data/quote';
   import * as unitApi from '@/api/base-data/unit';
@@ -144,12 +160,14 @@
   import { buildQuoteSheetPayload } from './quoteSheet';
   import InlineProductSelect from '@/views/sc/shared/inline-product-select.vue';
   import SharedBatchAddProduct from '@/views/sc/shared/batch-add-product.vue';
+  import QuoteSheetDetailImporter from '@/components/Importor/QuoteSheetDetailImporter.vue';
 
   export default defineComponent({
     name: 'QuoteSheetModify',
     components: {
       InlineProductSelect,
       SharedBatchAddProduct,
+      QuoteSheetDetailImporter,
     },
     mixins: [multiplePageMix],
     setup() {
@@ -159,6 +177,7 @@
         DeleteOutlined,
         PlusCircleTwoTone,
         MinusCircleTwoTone,
+        CloudUploadOutlined,
       };
     },
     data() {
@@ -209,7 +228,12 @@
             width: 140,
             slots: { default: 'salePrice_default' },
           },
-          { field: 'inquiryProduct', title: '是否询价', width: 100, slots: { default: 'inquiryProduct_default' } },
+          {
+            field: 'inquiryProduct',
+            title: '是否询价',
+            width: 100,
+            slots: { default: 'inquiryProduct_default' },
+          },
         ],
         tableData: [],
       };
@@ -259,6 +283,36 @@
         });
     },
     methods: {
+      /** 获取本页容器，使导入弹窗在当前报价单标签页内展示。 */
+      getImporterContainer() {
+        return this.$refs.importerContainer;
+      },
+      /**
+       * 按匹配出的商品合并导入明细；已存在时更新单价和是否询价，不存在时新增。
+       *
+       * @param res 导入组件返回的数据
+       */
+      handleImportConfirm(res) {
+        const items = res?.data || res?.datas || res || [];
+        (Array.isArray(items) ? items : []).forEach((item) => {
+          const existed = this.tableData.find(
+            (row) => item.productId && row.productId === item.productId,
+          );
+          if (existed) {
+            existed.salePrice = item.salePrice;
+            existed.inquiryProduct = item.inquiryProduct === true;
+            return;
+          }
+          this.tableData.push(
+            Object.assign(this.emptyProduct(), item, {
+              id: uuid(),
+              inquiryProduct: item.inquiryProduct === true,
+              unit: this.getUnitName(item.unit),
+              productQuery: item.productId ? '' : item.name,
+            }),
+          );
+        });
+      },
       // 加载计量单位名称，避免报价单商品行展示单位 ID。
       loadUnitNames() {
         unitApi.query({ pageIndex: 1, pageSize: 1000 }).then((data) => {

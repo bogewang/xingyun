@@ -2,8 +2,11 @@ package com.lframework.xingyun.basedata.impl.quote;
 
 import com.lframework.starter.common.exceptions.impl.DefaultClientException;
 import com.lframework.xingyun.basedata.entity.quote.QuoteSheet;
+import com.lframework.xingyun.basedata.entity.quote.QuoteSheetDetail;
 import com.lframework.xingyun.basedata.enums.quote.QuoteSheetStatus;
 import com.lframework.xingyun.basedata.vo.quote.QuoteSheetProductVo;
+import com.lframework.xingyun.basedata.bo.quote.GetQuoteSheetBo;
+import com.lframework.xingyun.basedata.bo.quote.QuoteProductBo;
 import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverter;
 import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverterImpl;
 import com.lframework.xingyun.basedata.entity.Product;
@@ -42,6 +45,8 @@ public class QuoteSheetServiceImplTest {
   @Test public void shouldExcludeCurrentQuoteSheetFromOverlapCheck() { QuoteSheetServiceImpl.assertNoDateRangeOverlap("quote-1",date("2026-08-01"),date("2026-08-31"),Collections.singletonList(sheet("quote-1","2026-08-01","2026-08-31"))); }
   /** 同单重复商品应拒绝。 */
   @Test(expectedExceptions=DefaultClientException.class,expectedExceptionsMessageRegExp=".*商品不能重复.*") public void shouldRejectDuplicatedProducts() { QuoteSheetProductVo first=new QuoteSheetProductVo(); first.setProductId("product-1"); QuoteSheetProductVo second=new QuoteSheetProductVo(); second.setProductId("product-1"); QuoteSheetServiceImpl.assertNoDuplicatedProducts(Arrays.asList(first,second)); }
+  /** 保存时仅识别被移除的商品明细，保留同商品的历史明细 ID。 */
+  @Test public void shouldOnlyRemoveDetailsForProductsAbsentFromUpdateRequest() { QuoteSheetDetail kept=new QuoteSheetDetail(); kept.setId("detail-1"); kept.setProductId("product-1"); QuoteSheetDetail removed=new QuoteSheetDetail(); removed.setId("detail-2"); removed.setProductId("product-2"); QuoteSheetProductVo current=new QuoteSheetProductVo(); current.setProductId("product-1"); Assert.assertEquals(QuoteSheetServiceImpl.getRemovedDetailIds(Arrays.asList(kept,removed),Collections.singletonList(current)),Collections.singletonList("detail-2")); }
   /** 停用报价单不参与生效报价查询。 */
   @Test public void shouldNotTreatDisabledQuoteAsActive() { QuoteSheet disabled=sheet("quote-1","2026-08-01","2026-08-31"); disabled.setStatus(QuoteSheetStatus.DISABLED); Assert.assertFalse(QuoteSheetServiceImpl.isActiveOn(disabled,date("2026-08-15"))); }
   /** 服务层保存时空商品明细应被拒绝。 */
@@ -56,6 +61,10 @@ public class QuoteSheetServiceImplTest {
   @Test public void shouldParseImportInquiryProductWithDefaultTrue() { Assert.assertTrue(QuoteSheetServiceImpl.parseImportInquiryProduct(null,2)); Assert.assertTrue(QuoteSheetServiceImpl.parseImportInquiryProduct("是",2)); Assert.assertFalse(QuoteSheetServiceImpl.parseImportInquiryProduct("否",2)); }
   /** 导入的是否询价商品仅允许填写是或否。 */
   @Test(expectedExceptions=DefaultClientException.class,expectedExceptionsMessageRegExp=".*是否询价商品.*只能填写.*") public void shouldRejectInvalidImportInquiryProduct() { QuoteSheetServiceImpl.parseImportInquiryProduct("未知",2); }
+  /** 编辑页导入的单价为必填，并沿用单价精度校验。 */
+  @Test public void shouldValidateDetailImportSalePrice() { Assert.assertTrue(QuoteSheetServiceImpl.validateImportSalePrice(BigDecimal.ONE,2).isEmpty()); Assert.assertFalse(QuoteSheetServiceImpl.validateImportSalePrice(new BigDecimal("-0.01"),2).isEmpty()); }
+  /** 导出模板应预填当前报价单商品的名称、规格、单位、单价和是否询价。 */
+  @Test public void shouldFillCurrentQuoteSheetDetailsIntoImportTemplate() throws Exception { QuoteSheetServiceImpl service=Mockito.spy(new QuoteSheetServiceImpl()); com.lframework.xingyun.basedata.service.UnitService unitService=Mockito.mock(com.lframework.xingyun.basedata.service.UnitService.class); GetQuoteSheetBo sheet=new GetQuoteSheetBo(); QuoteProductBo product=new QuoteProductBo(); product.setProductId("product-1"); product.setName("测试商品"); product.setSpec("500ml"); product.setUnit("unit-1"); product.setSalePrice(BigDecimal.TEN); product.setInquiryProduct(true); com.lframework.xingyun.basedata.entity.Unit unit=new com.lframework.xingyun.basedata.entity.Unit(); unit.setId("unit-1"); unit.setName("箱"); sheet.setProducts(Collections.singletonList(product)); Mockito.doReturn(sheet).when(service).get("quote-1"); Mockito.when(unitService.list(Mockito.any())).thenReturn(Collections.singletonList(unit)); setField(service,"unitService",unitService); com.lframework.xingyun.basedata.excel.quote.QuoteSheetImportModel item=service.getDetailImportTemplate("quote-1").get(0); Assert.assertEquals(item.getName(),"测试商品"); Assert.assertEquals(item.getSpec(),"500ml"); Assert.assertEquals(item.getUnit(),"箱"); Assert.assertEquals(item.getSalePrice(),BigDecimal.TEN); Assert.assertEquals(item.getInquiryProductText(),"是"); }
   /** 导入匹配到商品后，返回页面的商品名称必须以商品主数据为准。 */
   @Test public void shouldFillProductNameAfterMatchingQuoteSheetImport() throws Exception {
     QuoteSheetServiceImpl service=new QuoteSheetServiceImpl();
@@ -77,7 +86,7 @@ public class QuoteSheetServiceImplTest {
   /** 商品选择器仅接收报价单 ID，并由数据库查询该报价单的已有明细。 */
   @Test public void shouldExcludeQuoteSheetDetailsByQuoteSheetId() throws Exception { String sql=new String(Files.readAllBytes(Paths.get("src/main/resources/mappers/product/ProductMapper.xml")),StandardCharsets.UTF_8); Assert.assertTrue(sql.contains("vo.quoteSheetId")); Assert.assertTrue(sql.contains("NOT EXISTS")); Assert.assertTrue(sql.contains("tbl_quote_sheet_detail")); Assert.assertFalse(sql.contains("excludeProductIds")); }
   /** 报价单明细批量保存必须包含是否询价字段。 */
-  @Test public void shouldPersistInquiryProductInQuoteSheetDetail() throws Exception { String sql=new String(Files.readAllBytes(Paths.get("src/main/resources/mappers/quote/QuoteSheetDetailMapper.xml")),StandardCharsets.UTF_8); Assert.assertTrue(sql.contains("inquiry_product")); Assert.assertTrue(sql.contains("#{item.inquiryProduct}")); }
+  @Test public void shouldPersistInquiryProductInQuoteSheetDetail() throws Exception { String sql=new String(Files.readAllBytes(Paths.get("src/main/resources/mappers/quote/QuoteSheetDetailMapper.xml")),StandardCharsets.UTF_8); Assert.assertTrue(sql.contains("inquiry_product")); Assert.assertTrue(sql.contains("#{item.inquiryProduct}")); Assert.assertTrue(sql.contains("ON DUPLICATE KEY UPDATE")); }
   /** 已被引用的报价单仍允许修改，删除限制由删除流程单独处理。 */
   @Test public void shouldAllowUpdatingReferencedQuoteSheet() throws Exception { String source=new String(Files.readAllBytes(Paths.get("src/main/java/com/lframework/xingyun/basedata/impl/quote/QuoteSheetServiceImpl.java")),StandardCharsets.UTF_8); Assert.assertFalse(source.contains("报价单已被业务单据使用，不能修改！")); }
   /** 所有写流程共用的入口先锁定全部报价单。 */

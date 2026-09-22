@@ -61,29 +61,28 @@ class SaleOutSheetInquiryProductMappingTest {
     assertFalse(new QuerySaleOutSheetDetailBo(normalDetail).getInquiryProduct());
   }
 
-  /** 验证销售出库详情从单据报价单及商品读取询价标识。 */
+  /** 验证销售出库详情仅从单据实际关联的报价单及商品读取询价标识。 */
   @Test
   void shouldSelectInquiryProductFromSheetQuoteDetailInSaleOutFullDetail() throws IOException {
     String mapperXml = readMapperXml();
 
-    assertTrue(mapperXml.contains("LEFT JOIN tbl_quote_sheet AS q ON q.start_date &lt;= s.order_date"));
-    assertTrue(mapperXml.contains("AND q.end_date >= s.order_date"));
-    assertTrue(mapperXml.contains("LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = q.id"));
+    assertTrue(mapperXml.contains(
+        "LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = s.quote_sheet_id"));
     assertTrue(mapperXml.contains("AND qd.product_id = d.product_id"));
     assertTrue(mapperXml.contains("qd.inquiry_product AS detail_inquiry_product"));
     assertTrue(mapperXml.contains("<result column=\"detail_inquiry_product\" property=\"inquiryProduct\"/>"));
   }
 
-  /** 验证明细查询按单据日期读取生效报价单中的询价标识。 */
+  /** 验证明细查询仅关联单据实际使用的报价单，避免重叠报价单重复明细。 */
   @Test
   void shouldSelectInquiryProductFromQuoteDetailInSaleOutQueryDetail() throws IOException {
     String detailSql = extractSqlBlock(readMapperXml(), "SaleOutSheetDetailDto_sql");
 
     assertTrue(detailSql.contains("qd.inquiry_product AS inquiry_product"));
-    assertTrue(detailSql.contains("LEFT JOIN tbl_quote_sheet AS q ON q.start_date &lt;= s.order_date"));
-    assertTrue(detailSql.contains("AND q.end_date >= s.order_date"));
-    assertTrue(detailSql.contains("LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = q.id"));
+    assertTrue(detailSql.contains(
+        "LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = s.quote_sheet_id"));
     assertTrue(detailSql.contains("AND qd.product_id = d.product_id"));
+    assertFalse(detailSql.contains("LEFT JOIN tbl_quote_sheet AS q"));
     assertFalse(detailSql.contains("NULL AS inquiry_product"));
   }
 

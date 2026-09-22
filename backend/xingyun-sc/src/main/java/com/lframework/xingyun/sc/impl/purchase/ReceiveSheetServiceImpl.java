@@ -694,6 +694,12 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
 
         sheet.setOrderDate(vo.getOrderDate());
         sheet.setReceiveDate(vo.getReceiveDate());
+        QueryQuoteProductVo quoteProductVo = new QueryQuoteProductVo();
+        quoteProductVo.setOrderDate(vo.getOrderDate());
+        List<QuoteProductBo> quoteProducts = saleOutSheetService.queryQuoteProducts(quoteProductVo);
+        populateQuoteSheetId(sheet, quoteProducts);
+        Map<String, String> quoteSourceIds = resolveQuoteSourceIds(sheet.getQuoteSheetId(),
+                quoteProducts);
 
         BigDecimal purchaseNum = BigDecimal.ZERO;
         BigDecimal businessTotalNum = BigDecimal.ZERO;
@@ -730,7 +736,8 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
             }
 
             detail.setProductId(productVo.getProductId());
-            detail.setSourceId(productVo.getSourceId());
+            detail.setSourceId(StringUtil.isNotBlank(productVo.getSourceId())
+                    ? productVo.getSourceId() : quoteSourceIds.get(productVo.getProductId()));
             detail.setOrderNum(baseNum);
             detail.setUnitId(unit.getId());
             detail.setUnitName(unit.getUnitName());
@@ -756,6 +763,56 @@ public class ReceiveSheetServiceImpl extends BaseMpServiceImpl<ReceiveSheetMappe
         sheet.setPaidAmount(this.normalizePaidAmount(vo.getPaidAmount(), actualTotalAmount));
         sheet.setDescription(StringUtil.isBlank(vo.getDescription()) ? StringPool.EMPTY_STR : vo.getDescription());
         sheet.setSettleStatus(this.getInitSettleStatus(supplier));
+    }
+
+    /**
+     * 将订单日期唯一生效的报价单ID固化到采购收货单主表。
+     *
+     * @param sheet 采购收货单
+     * @param quoteProducts 订单日期生效的报价商品
+     */
+    private void populateQuoteSheetId(ReceiveSheet sheet, List<QuoteProductBo> quoteProducts) {
+        String quoteSheetId = resolveQuoteSheetId(quoteProducts);
+        if (StringUtil.isNotBlank(quoteSheetId)) {
+            sheet.setQuoteSheetId(quoteSheetId);
+        }
+    }
+
+    /**
+     * 从报价商品中提取唯一报价单ID。
+     *
+     * @param quoteProducts 报价商品
+     * @return 唯一报价单ID；不存在或存在多个报价单时返回空值
+     */
+    static String resolveQuoteSheetId(List<QuoteProductBo> quoteProducts) {
+        if (CollectionUtil.isEmpty(quoteProducts)) {
+            return null;
+        }
+
+        Set<String> quoteSheetIds = quoteProducts.stream().map(QuoteProductBo::getQuoteSheetId)
+                .filter(StringUtil::isNotBlank).collect(Collectors.toSet());
+        return quoteSheetIds.size() == 1 ? quoteSheetIds.iterator().next() : null;
+    }
+
+    /**
+     * 按报价单ID构建商品与报价明细ID的映射。
+     *
+     * @param quoteSheetId 报价单ID
+     * @param quoteProducts 报价商品
+     * @return 商品ID与报价明细ID的映射
+     */
+    static Map<String, String> resolveQuoteSourceIds(String quoteSheetId,
+            List<QuoteProductBo> quoteProducts) {
+        if (StringUtil.isBlank(quoteSheetId) || CollectionUtil.isEmpty(quoteProducts)) {
+            return Collections.emptyMap();
+        }
+
+        return quoteProducts.stream()
+                .filter(item -> StringUtil.equals(quoteSheetId, item.getQuoteSheetId()))
+                .filter(item -> StringUtil.isNotBlank(item.getProductId()))
+                .filter(item -> StringUtil.isNotBlank(item.getSourceId()))
+                .collect(Collectors.toMap(QuoteProductBo::getProductId, QuoteProductBo::getSourceId,
+                        (first, ignored) -> first));
     }
 
     /**

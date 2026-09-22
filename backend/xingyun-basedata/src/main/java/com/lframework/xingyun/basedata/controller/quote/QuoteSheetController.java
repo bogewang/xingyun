@@ -60,6 +60,27 @@ public class QuoteSheetController extends DefaultBaseController {
         }
     }
 
+    /** 下载报价单编辑页明细导入模板。 */
+    @GetMapping("/detail/import/template")
+    @HasPermission("base-data:quote:modify")
+    public void downloadDetailImportTemplate(@RequestParam @NotBlank(message = "ID不能为空！") String id) {
+        ExcelUtil.export("报价单明细导入模板", QuoteSheetImportModel.class,
+                quoteSheetService.getDetailImportTemplate(id));
+    }
+
+    /** 解析并校验报价单编辑页明细导入文件。 */
+    @PostMapping("/detail/import")
+    @HasPermission("base-data:quote:modify")
+    public InvokeResult<List<QuoteSheetImportModel>> importDetailExcel(@RequestParam MultipartFile file) {
+        try {
+            List<QuoteSheetImportModel> models = quoteSheetService.checkImport(
+                    EasyExcelUtils.syncReadModel(file.getInputStream(), QuoteSheetImportModel.class));
+            return InvokeResultBuilder.success(models);
+        } catch (Exception e) {
+            return fail(e);
+        }
+    }
+
     /**
      * 分页查询报价单。
      */

@@ -227,9 +227,7 @@
             r.status
         FROM tbl_receive_sheet AS r
         INNER JOIN tbl_receive_sheet_detail AS d ON d.sheet_id = r.id
-        LEFT JOIN tbl_quote_sheet AS q ON q.start_date &lt;= r.order_date
-            AND q.end_date >= r.order_date
-        LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = q.id
+        LEFT JOIN tbl_quote_sheet_detail AS qd ON qd.quote_sheet_id = r.quote_sheet_id
             AND qd.product_id = d.product_id
         LEFT JOIN tbl_purchase_order AS o ON o.id = r.purchase_order_id
         LEFT JOIN base_data_supplier AS su ON su.id = r.supplier_id
