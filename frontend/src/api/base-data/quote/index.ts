@@ -20,7 +20,9 @@ export function query(data: QueryQuoteSheetVo): Promise<PageResult<QuoteSheetBo>
   );
 }
 /** 查询报价单商品明细。 */
-export function queryDetail(data: QueryQuoteSheetDetailVo): Promise<PageResult<QuoteSheetDetailBo>> {
+export function queryDetail(
+  data: QueryQuoteSheetDetailVo,
+): Promise<PageResult<QuoteSheetDetailBo>> {
   return defHttp.post<PageResult<QuoteSheetDetailBo>>(
     { url: `${baseUrl}/detail/query`, data },
     { contentType: ContentTypeEnum.JSON, region },
@@ -76,6 +78,28 @@ export function exportDetail(data: QueryQuoteSheetVo): Promise<void> {
   );
 }
 export function downloadImportTemplate(): Promise<void> {
-  return defHttp.get<void>({ url: `${baseUrl}/import/template` }, { responseType: ResponseEnum.BLOB, region });
+  return defHttp.get<void>(
+    { url: `${baseUrl}/import/template` },
+    { responseType: ResponseEnum.BLOB, region },
+  );
 }
-export function importExcel(data: { file: Blob }): Promise<any[]> { return defHttp.post<any[]>({ url: `${baseUrl}/import`, data }, { contentType: ContentTypeEnum.BLOB, region }); }
+export function importExcel(data: { file: Blob }): Promise<any[]> {
+  return defHttp.post<any[]>(
+    { url: `${baseUrl}/import`, data },
+    { contentType: ContentTypeEnum.BLOB, region },
+  );
+}
+/** 下载报价单编辑页明细导入模板。 */
+export function downloadDetailImportTemplate(id: string): Promise<void> {
+  return defHttp.get<void>(
+    { url: `${baseUrl}/detail/import/template`, params: { id } },
+    { responseType: ResponseEnum.BLOB, region },
+  );
+}
+/** 导入报价单编辑页明细。 */
+export function importDetailExcel(data: { file: Blob }): Promise<any[]> {
+  return defHttp.post<any[]>(
+    { url: `${baseUrl}/detail/import`, data },
+    { contentType: ContentTypeEnum.BLOB, region },
+  );
+}

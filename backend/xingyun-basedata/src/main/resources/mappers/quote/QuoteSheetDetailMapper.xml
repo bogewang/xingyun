@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lframework.xingyun.basedata.mappers.quote.QuoteSheetDetailMapper">
-  <insert id="batchInsert">INSERT INTO tbl_quote_sheet_detail (id, quote_sheet_id, product_id, product_snapshot, sale_price, inquiry_product, order_no) VALUES <foreach collection="details" item="item" separator=",">(#{item.id}, #{item.quoteSheetId}, #{item.productId}, #{item.productSnapshot}, #{item.salePrice}, #{item.inquiryProduct}, #{item.orderNo})</foreach></insert>
+  <insert id="batchInsert">INSERT INTO tbl_quote_sheet_detail (id, quote_sheet_id, product_id, product_snapshot, sale_price, inquiry_product, order_no) VALUES <foreach collection="details" item="item" separator=",">(#{item.id}, #{item.quoteSheetId}, #{item.productId}, #{item.productSnapshot}, #{item.salePrice}, #{item.inquiryProduct}, #{item.orderNo})</foreach> ON DUPLICATE KEY UPDATE product_snapshot = VALUES(product_snapshot), sale_price = VALUES(sale_price), inquiry_product = VALUES(inquiry_product), order_no = VALUES(order_no)</insert>
   <select id="queryDetails" resultType="com.lframework.xingyun.basedata.bo.quote.QueryQuoteSheetDetailBo">
     SELECT q.id AS quote_sheet_id, q.name AS quote_sheet_name, q.start_date, q.end_date, q.status,
            d.id AS detail_id, d.product_id, p.code AS product_code, p.name AS product_name,

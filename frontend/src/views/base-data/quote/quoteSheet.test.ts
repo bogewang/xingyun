@@ -159,6 +159,25 @@ describe('报价单编辑数据', () => {
     expect(batchSource).toContain('pageSizes: [100, 200, 500, 1000]');
   });
 
+  it('编辑页导入明细时应按名称、规格和单位匹配商品，并更新已有行或追加新行', () => {
+    const source = readFileSync(new URL('./modify.vue', import.meta.url), 'utf-8');
+    const importerSource = readFileSync(
+      new URL('../../../components/Importor/QuoteSheetDetailImporter.vue', import.meta.url),
+      'utf-8',
+    );
+
+    expect(source).toContain('<quote-sheet-detail-importer');
+    expect(source).toContain('@confirm="handleImportConfirm"');
+    expect(source).toContain('item.productId && row.productId === item.productId');
+    expect(source).toContain('existed.salePrice = item.salePrice');
+    expect(source).toContain('Object.assign(this.emptyProduct(), item');
+    expect(source).toContain(':quote-sheet-id="formData.id"');
+    expect(importerSource).toContain(':form-data="{ quoteSheetId }"');
+    expect(importerSource).toContain('api.downloadDetailImportTemplate(formData.quoteSheetId)');
+    expect(importerSource).toContain('api.importDetailExcel(params)');
+    expect(importerSource).toContain('商品名称、规格、单位、销售单价和是否询价商品');
+  });
+
   it('编辑页保存或关闭时必须通过多标签页机制关闭当前标签', () => {
     const source = readFileSync(new URL('./modify.vue', import.meta.url), 'utf-8');
 

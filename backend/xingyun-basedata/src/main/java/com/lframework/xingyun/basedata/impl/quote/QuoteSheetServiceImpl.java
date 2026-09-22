@@ -19,6 +19,7 @@ import com.lframework.xingyun.basedata.bo.quote.*;
 import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverter;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.ProductUnit;
+import com.lframework.xingyun.basedata.entity.Unit;
 import com.lframework.xingyun.basedata.excel.quote.QuoteSheetImportModel;
 import com.lframework.xingyun.basedata.entity.quote.*;
 import com.lframework.xingyun.basedata.enums.quote.QuoteSheetStatus;
@@ -26,6 +27,7 @@ import com.lframework.xingyun.basedata.mappers.ProductMapper;
 import com.lframework.xingyun.basedata.mappers.quote.*;
 import com.lframework.xingyun.basedata.service.product.ProductService;
 import com.lframework.xingyun.basedata.service.product.ProductUnitService;
+import com.lframework.xingyun.basedata.service.UnitService;
 import com.lframework.xingyun.basedata.service.quote.*;
 import com.lframework.xingyun.basedata.vo.quote.*;
 
@@ -58,6 +60,8 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     private ProductService productService;
     @Autowired
     private ProductUnitService productUnitService;
+    @Autowired
+    private UnitService unitService;
     /**
      * 校验导入商品，仅匹配非停用商品。
      */
@@ -74,6 +78,30 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
         Assert.isTrue(CollectionUtils.isEmpty(errors), StringUtils.join(errors, ";\r\n"));
 
         return list;
+    }
+
+    /**
+     * 获取已填充当前报价单明细的编辑页导入模板数据。
+     *
+     * @param id 报价单 ID
+     * @return 可直接修改后再导入的明细行
+     */
+    @Override
+    public List<QuoteSheetImportModel> getDetailImportTemplate(String id) {
+        List<QuoteProductBo> products = get(id).getProducts();
+        Map<String, String> unitNameMap = unitService.list(Wrappers.lambdaQuery(Unit.class)
+                        .in(Unit::getId, products.stream().map(QuoteProductBo::getUnit)
+                                .filter(StringUtils::isNotBlank).collect(Collectors.toSet())))
+                .stream().collect(Collectors.toMap(Unit::getId, Unit::getName));
+        return products.stream().map(product -> {
+            QuoteSheetImportModel item = new QuoteSheetImportModel();
+            item.setName(product.getName());
+            item.setSpec(product.getSpec());
+            item.setUnit(unitNameMap.getOrDefault(product.getUnit(), product.getUnit()));
+            item.setSalePrice(product.getSalePrice());
+            item.setInquiryProductText(Boolean.TRUE.equals(product.getInquiryProduct()) ? "是" : "否");
+            return item;
+        }).collect(Collectors.toList());
     }
 
     private List<String> checkImportData(List<QuoteSheetImportModel> list) {
@@ -150,12 +178,17 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
     }
 
     static List<String> validateImportNumbers(QuoteSheetImportModel data) {
+        return data.getSalePrice() == null ? Lists.newArrayList()
+                : validateImportSalePrice(data.getSalePrice(), data.getSeq());
+    }
+
+    /** 校验导入单价范围和精度。 */
+    static List<String> validateImportSalePrice(BigDecimal salePrice, int rowIndex) {
         List<String> errors = Lists.newArrayList();
-        int rowIndex = data.getSeq();
-        if (data.getSalePrice() != null && NumberUtil.lt(data.getSalePrice(), BigDecimal.ZERO)) {
+        if (NumberUtil.lt(salePrice, BigDecimal.ZERO)) {
             errors.add("第" + rowIndex + "行“单价”不允许小于0");
         }
-        if (data.getSalePrice() != null && !NumberUtil.isNumberPrecision(data.getSalePrice(), 6)) {
+        if (!NumberUtil.isNumberPrecision(salePrice, 6)) {
             errors.add("第" + rowIndex + "行“单价”最多允许6位小数");
         }
         return errors;
@@ -216,12 +249,22 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
         List<QuoteSheet> lockedSheets = lockQuoteSheets();
         QuoteSheet existed = requireLockedSheet(vo.getId(), lockedSheets);
         validateSave(vo, vo.getId(), lockedSheets);
+        List<QuoteSheetDetail> existedDetails = quoteSheetDetailMapper.selectList(Wrappers
+                .lambdaQuery(QuoteSheetDetail.class).eq(QuoteSheetDetail::getQuoteSheetId, vo.getId()));
+        List<String> removedDetailIds = getRemovedDetailIds(existedDetails, vo.getProducts());
+        if (!removedDetailIds.isEmpty() && quoteSheetReferenceCheckers.stream()
+                .anyMatch(checker -> checker.hasDetailReference(removedDetailIds))) {
+            throw new DefaultClientException("报价单明细已被业务单据引用，不能删除！");
+        }
         QuoteSheet sheet = quoteSheetConverter.toEntity(vo);
         sheet.setId(existed.getId());
         sheet.setStatus(existed.getStatus());
         getBaseMapper().updateById(sheet);
-        quoteSheetDetailMapper.delete(Wrappers.lambdaQuery(QuoteSheetDetail.class).eq(QuoteSheetDetail::getQuoteSheetId, vo.getId()));
-        saveDetails(vo.getId(), vo.getProducts());
+        if (!removedDetailIds.isEmpty()) {
+            quoteSheetDetailMapper.deleteBatchIds(removedDetailIds);
+        }
+        saveDetails(vo.getId(), vo.getProducts(), existedDetails.stream().collect(Collectors.toMap(
+                QuoteSheetDetail::getProductId, detail -> detail)));
     }
 
     /**
@@ -342,6 +385,18 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
      * 批量保存报价单明细。
      */
     void saveDetails(String quoteSheetId, List<QuoteSheetProductVo> products) {
+        saveDetails(quoteSheetId, products, Collections.emptyMap());
+    }
+
+    /**
+     * 批量保存报价单明细；已有商品沿用原明细 ID，新增商品才生成新 ID。
+     *
+     * @param quoteSheetId 报价单 ID
+     * @param products 页面商品明细
+     * @param existedDetails 已存在明细，键为商品 ID
+     */
+    private void saveDetails(String quoteSheetId, List<QuoteSheetProductVo> products,
+            Map<String, QuoteSheetDetail> existedDetails) {
         Map<String, Product> productMap = productMapper.selectList(Wrappers.lambdaQuery(Product.class)
                         .in(Product::getId, products.stream().map(QuoteSheetProductVo::getProductId)
                                 .collect(Collectors.toSet())))
@@ -353,14 +408,27 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
             if (product == null) {
                 throw new DefaultClientException("商品不存在！");
             }
-            QuoteSheetDetail d = quoteSheetConverter.toDetail(p, quoteSheetId);
-            d.setId(IdUtil.getId());
+            QuoteSheetDetail d = existedDetails.get(p.getProductId());
+            if (d == null) {
+                d = quoteSheetConverter.toDetail(p, quoteSheetId);
+                d.setId(IdUtil.getId());
+            }
+            d.setSalePrice(p.getSalePrice());
             d.setInquiryProduct(!Boolean.FALSE.equals(p.getInquiryProduct()));
             d.setProductSnapshot(JsonUtil.toJsonString(product));
             d.setOrderNo(p.getOrderNo());
             details.add(d);
         }
         quoteSheetDetailMapper.batchInsert(details);
+    }
+
+    /** 获取当前保存请求中被移除的历史报价单明细 ID。 */
+    static List<String> getRemovedDetailIds(List<QuoteSheetDetail> existedDetails,
+            List<QuoteSheetProductVo> products) {
+        Set<String> productIds = products.stream().map(QuoteSheetProductVo::getProductId)
+                .collect(Collectors.toSet());
+        return existedDetails.stream().filter(detail -> !productIds.contains(detail.getProductId()))
+                .map(QuoteSheetDetail::getId).collect(Collectors.toList());
     }
 
     /**

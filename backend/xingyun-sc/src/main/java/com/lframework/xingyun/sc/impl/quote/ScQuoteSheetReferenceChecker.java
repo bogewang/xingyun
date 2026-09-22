@@ -43,9 +43,16 @@ public class ScQuoteSheetReferenceChecker implements QuoteSheetReferenceChecker 
         .lambdaQuery(QuoteSheetDetail.class).select(QuoteSheetDetail::getId)
         .eq(QuoteSheetDetail::getQuoteSheetId, quoteSheetId)).stream()
         .map(QuoteSheetDetail::getId).collect(Collectors.toList());
-    return !detailIds.isEmpty() && (saleOutSheetDetailMapper.selectCount(Wrappers
-        .lambdaQuery(SaleOutSheetDetail.class).in(SaleOutSheetDetail::getSourceId, detailIds)) > 0
-        || receiveSheetDetailMapper.selectCount(Wrappers.lambdaQuery(ReceiveSheetDetail.class)
-        .in(ReceiveSheetDetail::getSourceId, detailIds)) > 0);
+    return hasDetailReference(detailIds);
+  }
+
+  /** 判断报价单明细是否已被销售出库或采购收货明细引用。 */
+  @Override
+  public boolean hasDetailReference(List<String> quoteSheetDetailIds) {
+    return !quoteSheetDetailIds.isEmpty() && (saleOutSheetDetailMapper.selectCount(Wrappers
+        .lambdaQuery(SaleOutSheetDetail.class).in(SaleOutSheetDetail::getSourceId,
+            quoteSheetDetailIds)) > 0 || receiveSheetDetailMapper.selectCount(Wrappers
+        .lambdaQuery(ReceiveSheetDetail.class).in(ReceiveSheetDetail::getSourceId,
+            quoteSheetDetailIds)) > 0);
   }
 }
