@@ -9,17 +9,6 @@
         :rules="rules"
       >
         <a-row>
-          <a-col :md="12" :sm="24">
-            <a-form-item
-              label="报价单"
-              name="quoteSheetIds"
-              extra="追加到所选报价单，已存在的商品保留原报价"
-            >
-              <product-quote-selector v-model:value="formData.quoteSheetIds" />
-            </a-form-item>
-          </a-col>
-        </a-row>
-        <a-row>
           <a-col :md="6" :sm="24">
             <a-form-item label="编号" name="code">
               <a-input v-model:value="formData.code" allow-clear />
@@ -160,6 +149,14 @@
               <a-textarea v-model:value="formData.alias" allow-clear :rows="2" />
             </a-form-item>
           </a-col>
+          <a-col :md="6" :sm="24">
+            <a-form-item label="报价单" name="quoteSheetIds">
+              <a-button @click="$refs.quoteDialog.openDialog(formData.id)">添加到报价单</a-button>
+              <span v-if="formData.quotes" style="margin-left: 8px"
+                >已选择 {{ formData.quotes.length }} 个报价单</span
+              >
+            </a-form-item>
+          </a-col>
         </a-row>
         <a-row>
           <a-col v-for="modelor in modelorList" :key="modelor.id" :md="6" :sm="24">
@@ -230,6 +227,7 @@
         </a-space>
       </div>
     </div>
+    <product-quote-dialog ref="quoteDialog" v-model:value="formData.quotes" deferred />
   </div>
 </template>
 <script>
@@ -242,7 +240,7 @@
   import { isEmpty, isFloat, isFloatGeZero, isNumberPrecision, isArray } from '@/utils/utils';
   import { createError, createSuccess } from '@/hooks/web/msg';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
-  import ProductQuoteSelector from '@/components/Selector/ProductQuoteSelector.vue';
+  import ProductQuoteDialog from './ProductQuoteDialog.vue';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
   import { COLUMN_TYPE } from '@/enums/biz/columnType';
   import { COLUMN_DATA_TYPE } from '@/enums/biz/columnDataType';
@@ -251,7 +249,7 @@
     name: 'ModifyProduct',
     // 使用组件
     components: {
-      ProductQuoteSelector,
+      ProductQuoteDialog,
       ProductCategorySelector,
       SupplierSelector,
     },

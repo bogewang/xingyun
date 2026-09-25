@@ -1,6 +1,7 @@
 package com.lframework.xingyun.basedata.impl.product;
 
 import com.lframework.xingyun.basedata.service.quote.ProductQuoteService;
+import com.lframework.xingyun.basedata.vo.product.info.SaveProductQuoteVo;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -384,7 +385,14 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             }
         }
 
-        productQuoteService.addProduct(data.getId(), vo.getQuoteSheetIds());
+        if (vo.getQuotes() != null && !vo.getQuotes().isEmpty()) {
+            SaveProductQuoteVo quoteVo = new SaveProductQuoteVo();
+            quoteVo.setProductId(data.getId());
+            quoteVo.setQuotes(vo.getQuotes());
+            productQuoteService.saveProductQuotes(quoteVo);
+        } else {
+            productQuoteService.addProduct(data.getId(), vo.getQuoteSheetIds());
+        }
         return data.getId();
     }
 
@@ -537,7 +545,14 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             }
         }
 
-        productQuoteService.addProduct(data.getId(), vo.getQuoteSheetIds());
+        if (vo.getQuotes() != null && !vo.getQuotes().isEmpty()) {
+            SaveProductQuoteVo quoteVo = new SaveProductQuoteVo();
+            quoteVo.setProductId(data.getId());
+            quoteVo.setQuotes(vo.getQuotes());
+            productQuoteService.saveProductQuotes(quoteVo);
+        } else {
+            productQuoteService.addProduct(data.getId(), vo.getQuoteSheetIds());
+        }
         OpLogUtil.setVariable("id", data.getId());
         OpLogUtil.setVariable("code", vo.getCode());
         OpLogUtil.setExtra(vo);

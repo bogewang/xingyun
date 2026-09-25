@@ -13,11 +13,16 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
+import com.lframework.xingyun.basedata.vo.product.info.SaveProductQuoteVo.QuoteRow;
 
 @Data
 public class UpdateProductVo implements BaseVo, Serializable {
 
   private static final long serialVersionUID = 1L;
+
+  /** 随商品保存的报价编辑数据。 */
+  @Valid
+  private List<QuoteRow> quotes;
 
   /** 保存时追加到的报价单，不删除既有报价明细。 */
   private List<@NotBlank(message = "报价单ID不能为空！") String> quoteSheetIds;

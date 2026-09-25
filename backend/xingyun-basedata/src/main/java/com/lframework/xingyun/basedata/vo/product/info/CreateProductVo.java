@@ -4,6 +4,7 @@ import com.lframework.starter.web.core.components.validation.IsCode;
 import com.lframework.starter.web.core.vo.BaseVo;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import com.lframework.xingyun.basedata.vo.product.info.SaveProductQuoteVo.QuoteRow;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Digits;
@@ -17,6 +18,10 @@ import java.util.List;
 public class CreateProductVo implements BaseVo, Serializable {
 
   private static final long serialVersionUID = 1L;
+
+  /** 随商品保存的报价编辑数据。 */
+  @Valid
+  private List<QuoteRow> quotes;
 
   /** 保存时追加到的报价单，不删除既有报价明细。 */
   private List<@NotBlank(message = "报价单ID不能为空！") String> quoteSheetIds;
