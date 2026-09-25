@@ -19,6 +19,9 @@ public class UpdateProductVo implements BaseVo, Serializable {
 
   private static final long serialVersionUID = 1L;
 
+  /** 保存时追加到的报价单，不删除既有报价明细。 */
+  private List<@NotBlank(message = "报价单ID不能为空！") String> quoteSheetIds;
+
   /**
    * ID
    */

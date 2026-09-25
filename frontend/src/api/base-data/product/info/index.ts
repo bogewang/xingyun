@@ -203,3 +203,17 @@ export function exportList(data: QueryProductVo): Promise<void> {
     },
   );
 }
+
+/** 获取商品可追加的报价单。 */
+export function quoteOptions(): Promise<
+  { id: string; name: string; startDate: string; endDate: string }[]
+> {
+  return defHttp.post({ url: `${baseUrl}/quote/options` }, { region });
+}
+/** 将商品追加到多个报价单。 */
+export function addToQuotes(productId: string, quoteSheetIds: string[]): Promise<void> {
+  return defHttp.post(
+    { url: `${baseUrl}/quote/add`, data: { productId, quoteSheetIds } },
+    { contentType: ContentTypeEnum.JSON, region },
+  );
+}

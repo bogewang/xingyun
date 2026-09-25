@@ -163,11 +163,24 @@
       :handle-fn="doBatchAvailableItem"
       :batch-handle-fn="batchDisableHandle"
     />
+    <a-modal
+      v-model:open="quoteVisible"
+      title="添加到报价单"
+      :confirm-loading="quoteSaving"
+      :closable="!quoteSaving"
+      :mask-closable="!quoteSaving"
+      :cancel-button-props="{ disabled: quoteSaving }"
+      @ok="saveProductQuotes"
+    >
+      <product-quote-selector v-if="quoteVisible" v-model:value="quoteSheetIds" />
+      <p style="margin-top: 12px">支持多选，已存在的商品保留原报价；新增明细默认询价，单价为0。</p>
+    </a-modal>
   </div>
 </template>
 
 <script>
   import { defineComponent, h } from 'vue';
+  import ProductQuoteSelector from '@/components/Selector/ProductQuoteSelector.vue';
   import Detail from './detail.vue';
   import * as api from '@/api/base-data/product/info';
   import {
@@ -200,6 +213,7 @@
   export default defineComponent({
     name: 'ProductInfo',
     components: {
+      ProductQuoteSelector,
       TableAction,
       JForm,
       JBorder,
@@ -230,6 +244,10 @@
     },
     data() {
       return {
+        quoteVisible: false,
+        quoteSaving: false,
+        quoteProductId: '',
+        quoteSheetIds: [],
         loading: false,
         visible: true,
         // 当前行数据
@@ -271,7 +289,7 @@
           { field: 'brandName', title: '品牌', minWidth: 120 },
           { field: 'createTime', title: '创建时间', width: 170, sortable: true },
           { field: 'updateTime', title: '修改时间', width: 170, sortable: true },
-          { title: '操作', minWidth: 250, fixed: 'right', slots: { default: 'action_default' } },
+          { title: '操作', minWidth: 360, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -293,6 +311,28 @@
     },
     created() {},
     methods: {
+      /** 打开商品追加报价单窗口。 */
+      openProductQuotes(row) {
+        this.quoteProductId = row.id;
+        this.quoteSheetIds = [];
+        this.quoteVisible = true;
+      },
+      /** 一次保存所选报价单，失败时保留选择以便重试。 */
+      async saveProductQuotes() {
+        if (this.quoteSaving) return;
+        if (!this.quoteSheetIds.length) {
+          createError('请选择报价单！');
+          return;
+        }
+        this.quoteSaving = true;
+        try {
+          await api.addToQuotes(this.quoteProductId, this.quoteSheetIds);
+          createSuccess('添加成功！');
+          this.quoteVisible = false;
+        } finally {
+          this.quoteSaving = false;
+        }
+      },
       // 列表发生查询时的事件
       search() {
         this.$refs.grid.commitProxy('reload');
@@ -433,6 +473,11 @@
               this.id = row.id;
               this.$nextTick(() => this.$refs.viewDialog.openDialog());
             },
+          },
+          {
+            permission: ['base-data:product:info:modify'],
+            label: '添加到报价单',
+            onClick: () => this.openProductQuotes(row),
           },
           {
             permission: ['base-data:product:info:modify'],
