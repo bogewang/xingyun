@@ -16,6 +16,8 @@ import com.lframework.xingyun.basedata.mappers.quote.QuoteSheetMapper;
 import com.lframework.xingyun.basedata.mappers.quote.QuoteSheetDetailMapper;
 import java.util.*;
 import java.math.BigDecimal;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.lframework.xingyun.basedata.enums.quote.QuoteSheetStatus;
 import com.lframework.xingyun.basedata.vo.product.info.SaveProductQuoteVo;
 import com.lframework.xingyun.basedata.vo.product.info.SaveProductQuoteVo.QuoteRow;
 import org.junit.jupiter.api.Test;
@@ -198,6 +200,28 @@ class ProductQuoteServiceTest {
             assertThrows(DefaultClientException.class, () -> service(sheets, details, products).saveProductQuotes(vo));
         }
         verifyNoInteractions(sheets, details, products);
+    }
+
+    /** 列表关联报价单查询必须限制启用状态，避免停用报价出现在名称及回显ID中。 */
+    @Test
+    void filtersDisabledSheetsInProductList() {
+        QuoteSheetMapper sheets = mock(QuoteSheetMapper.class);
+        QuoteSheetDetailMapper details = mock(QuoteSheetDetailMapper.class);
+        ProductMapper products = mock(ProductMapper.class);
+        QuoteSheetDetail detail = new QuoteSheetDetail();
+        detail.setProductId("p"); detail.setQuoteSheetId("disabled");
+        when(details.selectList(any())).thenReturn(Collections.singletonList(detail));
+        when(sheets.selectList(any())).thenAnswer(invocation -> {
+            LambdaQueryWrapper<QuoteSheet> query = invocation.getArgument(0);
+            assertTrue(query.getSqlSegment().contains("status ="));
+            assertTrue(query.getParamNameValuePairs().containsValue(QuoteSheetStatus.ENABLED));
+            return Collections.emptyList();
+        });
+        QueryProductBo product = new QueryProductBo(); product.setId("p");
+        service(sheets, details, products).fillQuoteSheetNames(Collections.singletonList(product));
+        assertEquals("", product.getQuoteSheetNames());
+        assertTrue(product.getQuoteSheetIds().isEmpty());
+        verify(sheets).selectList(any());
     }
 
     /** 构建隔离数据库依赖的服务。 */

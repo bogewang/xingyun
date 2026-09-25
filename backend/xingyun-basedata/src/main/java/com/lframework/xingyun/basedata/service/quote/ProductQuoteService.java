@@ -32,7 +32,7 @@ public class ProductQuoteService {
     @Autowired private ProductMapper productMapper;
     @Autowired private QuoteSheetConverter converter;
 
-    /** 批量补全当前页商品所在报价单，包含已停用和已过期的报价单。 */
+    /** 批量补全当前页商品所在的已启用报价单。 */
     public void fillQuoteSheetNames(List<QueryProductBo> products) {
         if (products == null || products.isEmpty()) return;
         products.forEach(product -> {
@@ -47,6 +47,7 @@ public class ProductQuoteService {
         Set<String> sheetIds = details.stream().map(QuoteSheetDetail::getQuoteSheetId).collect(Collectors.toSet());
         List<QuoteSheet> sheets = sheetMapper.selectList(Wrappers.lambdaQuery(QuoteSheet.class)
                 .select(QuoteSheet::getId, QuoteSheet::getName)
+                .eq(QuoteSheet::getStatus, QuoteSheetStatus.ENABLED)
                 .in(QuoteSheet::getId, sheetIds).orderByDesc(QuoteSheet::getCreateTime)
                 .orderByAsc(QuoteSheet::getId));
         Map<String, Set<String>> productSheets = new HashMap<>();
