@@ -1,5 +1,10 @@
 package com.lframework.xingyun.basedata.controller;
 
+import com.lframework.xingyun.basedata.service.quote.ProductQuoteService;
+import com.lframework.xingyun.basedata.vo.product.info.AddProductQuoteVo;
+import com.lframework.xingyun.basedata.vo.product.info.SaveProductQuoteVo;
+import com.lframework.xingyun.basedata.bo.quote.QueryQuoteSheetBo;
+import com.lframework.xingyun.basedata.bo.quote.QuoteProductBo;
 import com.lframework.starter.mq.core.utils.ExportTaskUtil;
 import com.lframework.starter.web.core.annotations.security.HasPermission;
 import com.lframework.starter.web.core.components.resp.InvokeResult;
@@ -52,6 +57,59 @@ public class ProductController extends DefaultBaseController {
 
     @Autowired
     private ProductService productService;
+    @Autowired
+    private ProductQuoteService productQuoteService;
+
+    /** 查询商品维护可选报价单。 */
+    @PostMapping("/quote/options")
+    @HasPermission({"base-data:product:info:add", "base-data:product:info:modify"})
+    public InvokeResult<List<QueryQuoteSheetBo>> quoteOptions() {
+        try {
+            return InvokeResultBuilder.success(productQuoteService.options());
+        } catch (Exception e) {
+            log.error("查询报价单失败", e);
+            return (InvokeResult<List<QueryQuoteSheetBo>>) (InvokeResult<?>) InvokeResultBuilder.fail(e.getMessage());
+        }
+    }
+
+    /** 回显商品在各报价单中的价格和询价状态。 */
+    @PostMapping("/quote/details")
+    @HasPermission({"base-data:product:info:add", "base-data:product:info:modify"})
+    public InvokeResult<List<QuoteProductBo>> productQuoteDetails(@NotBlank String productId) {
+        try {
+            return InvokeResultBuilder.success(productQuoteService.productDetails(productId));
+        } catch (Exception e) {
+            log.error("查询商品报价失败", e);
+            return (InvokeResult<List<QuoteProductBo>>) (InvokeResult<?>) InvokeResultBuilder.fail(e.getMessage());
+        }
+    }
+
+    /** 保存商品在各报价单中的价格和询价状态。 */
+    @PostMapping("/quote/save")
+    @HasPermission("base-data:product:info:modify")
+    public InvokeResult<Void> saveProductQuotes(@Valid @RequestBody SaveProductQuoteVo vo) {
+        try {
+            productQuoteService.saveProductQuotes(vo);
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("保存商品报价失败", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
+    }
+
+    /** 将商品追加到所选报价单。 */
+    @PostMapping("/quote/add")
+    @HasPermission("base-data:product:info:modify")
+    public InvokeResult<Void> addToQuotes(@Valid @RequestBody AddProductQuoteVo vo) {
+        try {
+            productQuoteService.addProduct(vo.getProductId(), vo.getQuoteSheetIds());
+            return InvokeResultBuilder.success();
+        } catch (Exception e) {
+            log.error("添加商品到报价单失败", e);
+            return InvokeResultBuilder.fail(e.getMessage());
+        }
+    }
+
 
     @Autowired
     private ProductBundleService productBundleService;
@@ -69,6 +127,7 @@ public class ProductController extends DefaultBaseController {
         PageResult<Product> pageResult = productService.query(getPageIndex(vo), getPageSize(vo), vo);
 
         List<QueryProductBo> results = ProductConverter.DO2BOList(pageResult.getDatas(), vo.getScId());
+        productQuoteService.fillQuoteSheetNames(results);
 
         return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
     }

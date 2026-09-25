@@ -1,5 +1,8 @@
 package com.lframework.xingyun.basedata.impl.product;
 
+import com.lframework.xingyun.basedata.service.quote.ProductQuoteService;
+import com.lframework.xingyun.basedata.vo.product.info.SaveProductQuoteVo;
+
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -58,6 +61,9 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
     private static final DateTimeFormatter PRODUCT_CODE_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
 
     private static final Integer PRODUCT_CODE_TYPE = 10;
+
+    @Autowired
+    private ProductQuoteService productQuoteService;
 
     @Autowired
     private RecursionMappingService recursionMappingService;
@@ -379,6 +385,14 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             }
         }
 
+        if (vo.getQuotes() != null && !vo.getQuotes().isEmpty()) {
+            SaveProductQuoteVo quoteVo = new SaveProductQuoteVo();
+            quoteVo.setProductId(data.getId());
+            quoteVo.setQuotes(vo.getQuotes());
+            productQuoteService.saveProductQuotes(quoteVo);
+        } else {
+            productQuoteService.addProduct(data.getId(), vo.getQuoteSheetIds());
+        }
         return data.getId();
     }
 
@@ -531,6 +545,14 @@ public class ProductServiceImpl extends BaseMpServiceImpl<ProductMapper, Product
             }
         }
 
+        if (vo.getQuotes() != null && !vo.getQuotes().isEmpty()) {
+            SaveProductQuoteVo quoteVo = new SaveProductQuoteVo();
+            quoteVo.setProductId(data.getId());
+            quoteVo.setQuotes(vo.getQuotes());
+            productQuoteService.saveProductQuotes(quoteVo);
+        } else {
+            productQuoteService.addProduct(data.getId(), vo.getQuoteSheetIds());
+        }
         OpLogUtil.setVariable("id", data.getId());
         OpLogUtil.setVariable("code", vo.getCode());
         OpLogUtil.setExtra(vo);

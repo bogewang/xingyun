@@ -163,12 +163,14 @@
       :handle-fn="doBatchAvailableItem"
       :batch-handle-fn="batchDisableHandle"
     />
+    <product-quote-dialog ref="quoteDialog" @confirm="search" />
   </div>
 </template>
 
 <script>
   import { defineComponent, h } from 'vue';
   import Detail from './detail.vue';
+  import ProductQuoteDialog from './ProductQuoteDialog.vue';
   import * as api from '@/api/base-data/product/info';
   import {
     CloudUploadOutlined,
@@ -200,6 +202,7 @@
   export default defineComponent({
     name: 'ProductInfo',
     components: {
+      ProductQuoteDialog,
       TableAction,
       JForm,
       JBorder,
@@ -259,6 +262,7 @@
           { field: 'name', title: '名称', minWidth: 160, sortable: true },
           { field: 'alias', title: '别名', minWidth: 180 },
           { field: 'categoryName', title: '分类', width: 120 },
+          { field: 'quoteSheetNames', title: '所在报价单', minWidth: 220 },
           { field: 'spec', title: '规格', width: 120 },
           { field: 'unit', title: '单位', width: 100 },
           { field: 'available', title: '状态', width: 80, slots: { default: 'available_default' } },
@@ -271,7 +275,7 @@
           { field: 'brandName', title: '品牌', minWidth: 120 },
           { field: 'createTime', title: '创建时间', width: 170, sortable: true },
           { field: 'updateTime', title: '修改时间', width: 170, sortable: true },
-          { title: '操作', minWidth: 250, fixed: 'right', slots: { default: 'action_default' } },
+          { title: '操作', minWidth: 360, fixed: 'right', slots: { default: 'action_default' } },
         ],
         // 请求接口配置
         proxyConfig: {
@@ -293,6 +297,10 @@
     },
     created() {},
     methods: {
+      /** 打开商品报价编辑弹窗。 */
+      openProductQuotes(row) {
+        this.$refs.quoteDialog.openDialog(row.id);
+      },
       // 列表发生查询时的事件
       search() {
         this.$refs.grid.commitProxy('reload');
@@ -433,6 +441,11 @@
               this.id = row.id;
               this.$nextTick(() => this.$refs.viewDialog.openDialog());
             },
+          },
+          {
+            permission: ['base-data:product:info:modify'],
+            label: '添加到报价单',
+            onClick: () => this.openProductQuotes(row),
           },
           {
             permission: ['base-data:product:info:modify'],

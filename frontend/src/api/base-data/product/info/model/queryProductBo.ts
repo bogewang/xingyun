@@ -1,4 +1,8 @@
 export interface QueryProductBo {
+  /** 商品已关联的报价单ID。 */
+  quoteSheetIds: string[];
+  /** 商品所在的全部报价单名称。 */
+  quoteSheetNames: string;
   /**
    * ID
    */
