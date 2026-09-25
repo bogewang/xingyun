@@ -76,12 +76,6 @@
               <a-input v-model:value="formData.purchasePrice" allow-clear />
             </a-form-item>
           </a-col>
-
-          <a-col :md="6" :sm="24">
-            <a-form-item label="零售价（元）" name="retailPrice">
-              <a-input v-model:value="formData.retailPrice" allow-clear />
-            </a-form-item>
-          </a-col>
         </a-row>
         <a-row v-if="formData.multiUnitEnabled">
           <a-col :span="24">
@@ -365,25 +359,6 @@
               },
             },
           ],
-          retailPrice: [
-            {
-              validator: (rule, value) => {
-                if (!isEmpty(value)) {
-                  if (!isFloat(value)) {
-                    return Promise.reject('零售价（元）必须是数字');
-                  }
-                  if (!isFloatGeZero(value)) {
-                    return Promise.reject('零售价（元）不允许小于0');
-                  }
-                  if (!isNumberPrecision(value, 6)) {
-                    return Promise.reject('零售价（元）最多允许6位小数');
-                  }
-                }
-
-                return Promise.resolve();
-              },
-            },
-          ],
         },
       };
     },
@@ -518,6 +493,8 @@
           properties: properties,
           units: this.buildUnits(),
         });
+        // 售价由报价单维护，商品保存时不提交历史零售价。
+        delete params.retailPrice;
 
         this.loading = true;
         api
