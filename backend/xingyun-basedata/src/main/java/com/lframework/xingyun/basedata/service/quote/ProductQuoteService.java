@@ -11,6 +11,7 @@ import com.lframework.xingyun.basedata.converter.quote.QuoteSheetConverter;
 import com.lframework.xingyun.basedata.entity.Product;
 import com.lframework.xingyun.basedata.entity.quote.QuoteSheet;
 import com.lframework.xingyun.basedata.entity.quote.QuoteSheetDetail;
+import com.lframework.xingyun.basedata.enums.quote.QuoteSheetStatus;
 import com.lframework.xingyun.basedata.mappers.ProductMapper;
 import com.lframework.xingyun.basedata.mappers.quote.QuoteSheetMapper;
 import com.lframework.xingyun.basedata.mappers.quote.QuoteSheetDetailMapper;
@@ -68,9 +69,10 @@ public class ProductQuoteService {
                 .eq(QuoteSheetDetail::getProductId, productId)));
     }
 
-    /** 返回商品维护页面可选报价单。 */
+    /** 返回商品维护页面可选的已启用报价单。 */
     public List<QueryQuoteSheetBo> options() {
         return sheetMapper.selectList(Wrappers.lambdaQuery(QuoteSheet.class)
+                .eq(QuoteSheet::getStatus, QuoteSheetStatus.ENABLED)
                 .orderByDesc(QuoteSheet::getCreateTime)).stream()
                 .map(converter::toQueryBo).collect(Collectors.toList());
     }
