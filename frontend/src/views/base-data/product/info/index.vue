@@ -166,21 +166,61 @@
     <a-modal
       v-model:open="quoteVisible"
       title="添加到报价单"
+      :width="850"
       :confirm-loading="quoteSaving"
-      :closable="!quoteSaving"
-      :mask-closable="!quoteSaving"
-      :cancel-button-props="{ disabled: quoteSaving }"
+      :ok-button-props="{ disabled: quoteLoading || quoteLoadFailed }"
+      :closable="!quoteSaving && !quoteLoading"
+      :mask-closable="!quoteSaving && !quoteLoading"
+      :cancel-button-props="{ disabled: quoteSaving || quoteLoading }"
       @ok="saveProductQuotes"
     >
-      <product-quote-selector v-if="quoteVisible" v-model:value="quoteSheetIds" />
-      <p style="margin-top: 12px">支持多选，已存在的商品保留原报价；新增明细默认询价，单价为0。</p>
+      <a-alert v-if="quoteLoadFailed" type="error" message="报价加载失败，请关闭后重试" show-icon />
+      <a-table
+        :loading="quoteLoading"
+        :data-source="quoteRows"
+        :pagination="false"
+        row-key="id"
+        :scroll="{ y: 360 }"
+        :columns="[
+          { title: '报价单', dataIndex: 'name' },
+          { title: '有效期', dataIndex: 'period', width: 220 },
+          { title: '价格', dataIndex: 'salePrice', width: 160 },
+          { title: '是否询价', dataIndex: 'inquiryProduct', width: 100 },
+        ]"
+        :row-selection="{
+          selectedRowKeys: quoteSheetIds,
+          onChange: selectQuoteRows,
+          getCheckboxProps: quoteCheckboxProps,
+        }"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.dataIndex === 'salePrice'">
+            <a-input-number
+              v-model:value="record.salePrice"
+              :min="0"
+              :precision="2"
+              string-mode
+              :disabled="quoteSaving || !quoteSheetIds.includes(record.id)"
+              style="width: 100%"
+            />
+          </template>
+          <template v-else-if="column.dataIndex === 'inquiryProduct'">
+            <a-switch
+              v-model:checked="record.inquiryProduct"
+              checked-children="是"
+              un-checked-children="否"
+              :disabled="quoteSaving || !quoteSheetIds.includes(record.id)"
+            />
+          </template>
+        </template>
+      </a-table>
+      <p style="margin-top: 12px">可修改已勾选报价单的价格和是否询价，点击确定后统一保存。</p>
     </a-modal>
   </div>
 </template>
 
 <script>
   import { defineComponent, h } from 'vue';
-  import ProductQuoteSelector from '@/components/Selector/ProductQuoteSelector.vue';
   import Detail from './detail.vue';
   import * as api from '@/api/base-data/product/info';
   import {
@@ -213,7 +253,6 @@
   export default defineComponent({
     name: 'ProductInfo',
     components: {
-      ProductQuoteSelector,
       TableAction,
       JForm,
       JBorder,
@@ -244,6 +283,9 @@
     },
     data() {
       return {
+        quoteLoading: false,
+        quoteLoadFailed: false,
+        quoteRows: [],
         quoteVisible: false,
         quoteSaving: false,
         quoteProductId: '',
@@ -277,6 +319,7 @@
           { field: 'name', title: '名称', minWidth: 160, sortable: true },
           { field: 'alias', title: '别名', minWidth: 180 },
           { field: 'categoryName', title: '分类', width: 120 },
+          { field: 'quoteSheetNames', title: '所在报价单', minWidth: 220 },
           { field: 'spec', title: '规格', width: 120 },
           { field: 'unit', title: '单位', width: 100 },
           { field: 'available', title: '状态', width: 80, slots: { default: 'available_default' } },
@@ -312,23 +355,78 @@
     created() {},
     methods: {
       /** 打开商品追加报价单窗口。 */
-      openProductQuotes(row) {
+      async openProductQuotes(row) {
         this.quoteProductId = row.id;
         this.quoteSheetIds = [];
+        this.quoteRows = [];
         this.quoteVisible = true;
+        this.quoteLoading = true;
+        this.quoteLoadFailed = false;
+        try {
+          const [options, details] = await Promise.all([
+            api.quoteOptions(),
+            api.productQuoteDetails(row.id),
+          ]);
+          if (this.quoteProductId !== row.id) return;
+          const existing = new Map(details.map((item) => [item.quoteSheetId, item]));
+          this.quoteRows = options
+            .map((item) => {
+              const detail = existing.get(item.id);
+              return {
+                ...item,
+                period: `${item.startDate} ~ ${item.endDate}`,
+                salePrice: detail ? detail.salePrice : 0,
+                inquiryProduct: detail ? detail.inquiryProduct === true : true,
+                existing: !!detail,
+              };
+            })
+            .sort((a, b) => Number(b.existing) - Number(a.existing));
+          this.quoteSheetIds = this.quoteRows
+            .filter((item) => item.existing)
+            .map((item) => item.id);
+        } catch {
+          this.quoteLoadFailed = true;
+        } finally {
+          this.quoteLoading = false;
+        }
+      },
+      /** 更新要追加的报价单选择。 */
+      selectQuoteRows(keys) {
+        this.quoteSheetIds = keys;
+      },
+      /** 既有报价只回显，防止取消勾选被误认为删除。 */
+      quoteCheckboxProps(row) {
+        return { disabled: row.existing || this.quoteSaving };
       },
       /** 一次保存所选报价单，失败时保留选择以便重试。 */
       async saveProductQuotes() {
-        if (this.quoteSaving) return;
+        if (this.quoteSaving || this.quoteLoading || this.quoteLoadFailed) return;
         if (!this.quoteSheetIds.length) {
           createError('请选择报价单！');
           return;
         }
         this.quoteSaving = true;
         try {
-          await api.addToQuotes(this.quoteProductId, this.quoteSheetIds);
-          createSuccess('添加成功！');
+          const quotes = this.quoteRows
+            .filter((item) => this.quoteSheetIds.includes(item.id))
+            .map((item) => ({
+              quoteSheetId: item.id,
+              salePrice: item.salePrice,
+              inquiryProduct: item.inquiryProduct,
+            }));
+          if (
+            quotes.some(
+              (item) =>
+                item.salePrice === null || item.salePrice === '' || Number(item.salePrice) < 0,
+            )
+          ) {
+            createError('请填写有效的非负价格！');
+            return;
+          }
+          await api.saveProductQuotes(this.quoteProductId, quotes);
+          createSuccess('保存成功！');
           this.quoteVisible = false;
+          this.search();
         } finally {
           this.quoteSaving = false;
         }

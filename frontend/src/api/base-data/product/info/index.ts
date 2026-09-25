@@ -217,3 +217,24 @@ export function addToQuotes(productId: string, quoteSheetIds: string[]): Promise
     { contentType: ContentTypeEnum.JSON, region },
   );
 }
+
+/** 查询商品各报价单的价格和询价状态。 */
+export function productQuoteDetails(
+  productId: string,
+): Promise<{ quoteSheetId: string; salePrice: number | string; inquiryProduct: boolean }[]> {
+  return defHttp.post(
+    { url: `${baseUrl}/quote/details`, data: { productId } },
+    { contentType: ContentTypeEnum.FORM_URLENCODED, region },
+  );
+}
+
+/** 保存商品所选报价单的价格和询价状态。 */
+export function saveProductQuotes(
+  productId: string,
+  quotes: { quoteSheetId: string; salePrice: string | number; inquiryProduct: boolean }[],
+): Promise<void> {
+  return defHttp.post(
+    { url: `${baseUrl}/quote/save`, data: { productId, quotes } },
+    { contentType: ContentTypeEnum.JSON, region },
+  );
+}

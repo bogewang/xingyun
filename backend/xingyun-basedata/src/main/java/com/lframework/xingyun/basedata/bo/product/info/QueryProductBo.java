@@ -12,6 +12,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.time.LocalDateTime;
 
 @Data
@@ -22,6 +23,13 @@ public class QueryProductBo extends BaseBo<Product> {
      */
     @ApiModelProperty("ID")
     private String id;
+
+    /** 商品所在的全部报价单名称。 */
+    @ApiModelProperty("所在报价单")
+    private String quoteSheetNames;
+
+    /** 商品已关联的报价单ID，用于多选框回显。 */
+    private List<String> quoteSheetIds;
 
     /**
      * 编号
