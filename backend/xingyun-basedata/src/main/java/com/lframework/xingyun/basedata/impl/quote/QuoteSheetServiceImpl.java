@@ -155,6 +155,7 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
         return errors;
     }
 
+    /** 按名称、规格和单位严格匹配唯一商品，单个候选也必须校验规格。 */
     private Product matchImportProduct(QuoteSheetImportModel data, Map<String, List<Product>> nameUnitMap) {
         if (StringUtils.isBlank(data.getName()) || StringUtils.isBlank(data.getUnit())) {
             return null;
@@ -163,10 +164,6 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
         List<Product> candidates = nameUnitMap.get(buildProductImportKey(data.getName(), data.getUnit()));
         if (CollectionUtils.isEmpty(candidates)) {
             return null;
-        }
-
-        if (candidates.size() == 1) {
-            return candidates.get(0);
         }
 
         String spec = StringUtils.trimToEmpty(data.getSpec());

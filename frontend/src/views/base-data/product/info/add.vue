@@ -175,6 +175,14 @@
               <a-textarea v-model:value="formData.alias" allow-clear :rows="2" />
             </a-form-item>
           </a-col>
+          <a-col :md="6" :sm="24">
+            <a-form-item label="报价单" name="quoteSheetIds">
+              <a-button @click="$refs.quoteDialog.openDialog(formData.id)">添加到报价单</a-button>
+              <span v-if="formData.quotes" style="margin-left: 8px"
+                >已选择 {{ formData.quotes.length }} 个报价单</span
+              >
+            </a-form-item>
+          </a-col>
         </a-row>
         <a-row>
           <a-col v-for="modelor in modelorList" :key="modelor.id" :md="6" :sm="24">
@@ -246,6 +254,7 @@
         </a-space>
       </div>
     </div>
+    <product-quote-dialog ref="quoteDialog" v-model:value="formData.quotes" deferred />
   </div>
 </template>
 <script>
@@ -259,6 +268,7 @@
   import { createError, createSuccessAutoClose } from '@/hooks/web/msg';
   import ProductBrandSelector from '@/components/Selector/ProductBrandSelector.vue';
   import ProductCategorySelector from '@/components/Selector/ProductCategorySelector.vue';
+  import ProductQuoteDialog from './ProductQuoteDialog.vue';
   import SupplierSelector from '@/components/Selector/SupplierSelector.vue';
   import { COLUMN_TYPE } from '@/enums/biz/columnType';
   import { COLUMN_DATA_TYPE } from '@/enums/biz/columnDataType';
@@ -266,6 +276,7 @@
   export default defineComponent({
     name: 'AddProduct',
     components: {
+      ProductQuoteDialog,
       ProductBrandSelector,
       ProductCategorySelector,
       SupplierSelector,
@@ -403,7 +414,10 @@
         if (this.unitSearchTimer) {
           clearTimeout(this.unitSearchTimer);
         }
-        this.unitSearchTimer = setTimeout(() => this.loadUnitOptions(String(keyword || '').trim()), 300);
+        this.unitSearchTimer = setTimeout(
+          () => this.loadUnitOptions(String(keyword || '').trim()),
+          300,
+        );
       },
       getBaseUnitName() {
         return this.unitOptions.find((item) => item.id === this.formData.unit)?.name || '主单位';
@@ -430,7 +444,7 @@
       },
       // 初始化表单数据
       initFormData() {
-        this.formData = { multiUnitEnabled: false, auxiliaryUnits: [] };
+        this.formData = { multiUnitEnabled: false, auxiliaryUnits: [], quoteSheetIds: [] };
         this.modelorList = [];
 
         this.onGenerateCode();

@@ -1,6 +1,10 @@
 import { ProductPropertyRelationVo } from '@/api/base-data/product/info/model/productPropertyRelationVo';
 
 export interface UpdateProductVo {
+  /** 保存时追加到所选报价单。 */
+  quoteSheetIds?: string[];
+  /** 随商品保存的报价明细。 */
+  quotes?: { quoteSheetId: string; salePrice: string | number; inquiryProduct: boolean }[];
   /**
    * ID
    */
