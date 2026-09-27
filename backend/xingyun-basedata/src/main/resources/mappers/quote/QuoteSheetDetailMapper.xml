@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lframework.xingyun.basedata.mappers.quote.QuoteSheetDetailMapper">
-  <insert id="batchInsert">INSERT INTO tbl_quote_sheet_detail (id, quote_sheet_id, product_id, display_name, product_snapshot, sale_price, inquiry_product, order_no) VALUES <foreach collection="details" item="item" separator=",">(#{item.id}, #{item.quoteSheetId}, #{item.productId}, #{item.displayName}, #{item.productSnapshot}, #{item.salePrice}, #{item.inquiryProduct}, #{item.orderNo})</foreach>ON DUPLICATE KEY UPDATE product_snapshot = VALUES(product_snapshot), sale_price = VALUES(sale_price), inquiry_product = VALUES(inquiry_product), order_no = VALUES(order_no)</insert>
+  <insert id="batchInsert">INSERT INTO tbl_quote_sheet_detail (id, quote_sheet_id, product_id, product_name, spec, unit_id, unit_name, conversion_rate, product_snapshot, sale_price, inquiry_product, order_no) VALUES <foreach collection="details" item="item" separator=",">(#{item.id}, #{item.quoteSheetId}, #{item.productId}, #{item.productName}, #{item.spec}, #{item.unitId}, #{item.unitName}, #{item.conversionRate}, #{item.productSnapshot}, #{item.salePrice}, #{item.inquiryProduct}, #{item.orderNo})</foreach>ON DUPLICATE KEY UPDATE product_name = VALUES(product_name), spec = VALUES(spec), unit_id = VALUES(unit_id), unit_name = VALUES(unit_name), conversion_rate = VALUES(conversion_rate), product_snapshot = VALUES(product_snapshot), sale_price = VALUES(sale_price), inquiry_product = VALUES(inquiry_product), order_no = VALUES(order_no)</insert>
   <select id="queryDetails" resultType="com.lframework.xingyun.basedata.bo.quote.QueryQuoteSheetDetailBo">
     SELECT q.id AS quote_sheet_id, q.name AS quote_sheet_name, q.start_date, q.end_date, q.status,
-           d.id AS detail_id, d.product_id, p.code AS product_code, d.display_name AS product_name,
-           p.spec, u.name AS unit, d.sale_price, d.inquiry_product
+           d.id AS detail_id, d.product_id, p.code AS product_code, d.product_name AS product_name,
+           d.spec, d.unit_name AS unit, d.sale_price, d.inquiry_product
     FROM tbl_quote_sheet_detail d
     INNER JOIN tbl_quote_sheet q ON q.id = d.quote_sheet_id
     LEFT JOIN base_data_product p ON p.id = d.product_id
@@ -17,7 +17,7 @@
       <if test="vo.inquiryProduct != null">AND d.inquiry_product = #{vo.inquiryProduct}</if>
       <if test="vo.startDate != null">AND q.start_date &gt;= #{vo.startDate}</if>
       <if test="vo.endDate != null">AND q.end_date &lt;= #{vo.endDate}</if>
-      <if test="vo.productKeyword != null and vo.productKeyword != ''">AND (d.display_name LIKE CONCAT('%', #{vo.productKeyword}, '%') OR p.code LIKE CONCAT('%', #{vo.productKeyword}, '%'))</if>
+      <if test="vo.productKeyword != null and vo.productKeyword != ''">AND (d.product_name LIKE CONCAT('%', #{vo.productKeyword}, '%') OR p.code LIKE CONCAT('%', #{vo.productKeyword}, '%'))</if>
     </where>
     ORDER BY q.create_time DESC, d.order_no ASC, d.create_time ASC, d.id ASC
   </select>

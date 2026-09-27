@@ -147,8 +147,9 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
                 data.setCode(product.getCode());
                 data.setName(product.getName());
                 data.setProductId(product.getId());
-                // data.setUnitId(unit.getId());
-                data.setSpec(product.getSpec());
+                data.setUnitId(unit.getId());
+                data.setConversionRate(unit.getConversionRate());
+                // 保留Excel填写的规格，包括明确空规格。
                 data.setUnit(unit.getUnitName());
             }
         }
@@ -324,7 +325,12 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
                     : JsonUtil.parseObject(detail.getProductSnapshot(), Product.class);
             QuoteProductBo productBo = quoteSheetConverter.toProductBo(product,
                     detail.getSalePrice(), detail.getQuoteSheetId());
-            productBo.setName(detail.getDisplayName());
+            productBo.setName(detail.getProductName());
+            productBo.setSpec(detail.getSpec());
+            productBo.setUnit(detail.getUnitName());
+            productBo.setUnitId(detail.getUnitId());
+            productBo.setUnitName(detail.getUnitName());
+            productBo.setConversionRate(detail.getConversionRate());
             productBo.setSourceId(detail.getId());
             productBo.setInquiryProduct(detail.getInquiryProduct());
             return productBo;
@@ -425,8 +431,15 @@ public class QuoteSheetServiceImpl extends BaseMpServiceImpl<QuoteSheetMapper, Q
                 d.setId(IdUtil.getId());
             }
             d.setSalePrice(p.getSalePrice());
-            d.setId(IdUtil.getId());
-            d.setDisplayName(StringUtil.isBlank(p.getDisplayName()) ? product.getName() : p.getDisplayName().trim());
+            d.setProductName(StringUtil.isBlank(p.getProductName()) ? product.getName() : p.getProductName().trim());
+            if (p.getConversionRate() != null && (p.getConversionRate().signum() <= 0
+                    || p.getConversionRate().scale() > 8)) {
+                throw new DefaultClientException("单位换算率必须大于0且最多8位小数！");
+            }
+            d.setSpec(p.getSpec());
+            d.setUnitId(p.getUnitId());
+            d.setUnitName(p.getUnitName());
+            d.setConversionRate(p.getConversionRate());
             d.setInquiryProduct(!Boolean.FALSE.equals(p.getInquiryProduct()));
             d.setProductSnapshot(JsonUtil.toJsonString(product));
             d.setOrderNo(p.getOrderNo());

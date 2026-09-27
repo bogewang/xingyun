@@ -137,10 +137,10 @@ public class QuoteSheetDetailExportTaskWorker implements
     result.setStatus(sheet.getStatus().getDesc());
     result.setDescription(sheet.getDescription());
     result.setProductCode(product == null ? null : product.getCode());
-    result.setProductName(product == null ? null : product.getName());
+    result.setProductName(detail.getProductName());
     result.setShortName(product == null ? null : product.getShortName());
-    result.setSpec(product == null ? null : product.getSpec());
-    result.setUnit(product == null ? null : resolveUnitName(product.getUnit(), unitNameMap));
+    result.setSpec(detail.getSpec());
+    result.setUnit(detail.getUnitName());
     result.setSalePrice(detail.getSalePrice());
     result.setInquiryProduct(detail.getInquiryProduct());
     return result;

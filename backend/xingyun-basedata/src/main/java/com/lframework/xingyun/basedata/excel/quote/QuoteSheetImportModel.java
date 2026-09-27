@@ -25,8 +25,12 @@ public class QuoteSheetImportModel implements ExcelModel {
     @ExcelProperty("单位")
     private String unit;
 
-    // @ExcelProperty("单位ID")
-    // private String unitId;
+    /** 匹配后的商品单位ID。 */
+    @ExcelIgnore
+    private String unitId;
+    /** 匹配后的单位换算率。 */
+    @ExcelIgnore
+    private BigDecimal conversionRate;
 
     @ExcelProperty("销售单价")
     private BigDecimal salePrice;

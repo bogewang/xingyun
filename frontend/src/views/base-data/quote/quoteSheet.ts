@@ -4,7 +4,9 @@ export interface QuoteProductRow {
   orderNo?: number;
   code: string;
   name: string;
-  displayName?: string;
+  unitId?: string;
+  unitName?: string;
+  conversionRate?: string | number | null;
   shortName?: string;
   skuCode?: string;
   spec?: string;
@@ -26,7 +28,11 @@ export function buildQuoteSheetPayload(form: Record<string, any>) {
     // 以表格有效商品的当前顺序明确传递排序号，避免保存链路中重新推断顺序。
     products: form.products.map((item: QuoteProductRow, index: number) => ({
       productId: item.productId,
-      displayName: item.displayName || item.name,
+      productName: item.name,
+      spec: item.spec ?? null,
+      unitId: item.unitId || null,
+      unitName: item.unitName ?? item.unit ?? null,
+      conversionRate: item.conversionRate ?? null,
       orderNo: index + 1,
       salePrice: item.salePrice,
       inquiryProduct: item.inquiryProduct === true,

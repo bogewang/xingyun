@@ -106,11 +106,16 @@ public class QuoteSheetServiceImplTest {
     setField(service,"quoteSheetConverter",new QuoteSheetConverterImpl());
     QuoteSheetProductVo product=new QuoteSheetProductVo(); product.setProductId("product-1"); product.setOrderNo(1); product.setSalePrice(BigDecimal.ONE);
     QuoteSheetProductVo secondProduct=new QuoteSheetProductVo(); secondProduct.setProductId("product-2"); secondProduct.setOrderNo(2); secondProduct.setSalePrice(BigDecimal.TEN);
+    product.setProductName("项目专用品名"); product.setSpec(""); product.setUnitName("件"); product.setConversionRate(new BigDecimal("20"));
     Product savedProduct=new Product(); savedProduct.setId("product-1"); savedProduct.setName("测试商品");
     Product secondSavedProduct=new Product(); secondSavedProduct.setId("product-2"); secondSavedProduct.setName("测试商品2");
     Mockito.when(productMapper.selectList(Mockito.any())).thenReturn(Arrays.asList(savedProduct,secondSavedProduct));
     try (MockedStatic<com.lframework.starter.web.core.utils.IdUtil> idUtil=Mockito.mockStatic(com.lframework.starter.web.core.utils.IdUtil.class)) { idUtil.when(com.lframework.starter.web.core.utils.IdUtil::getId).thenReturn("detail-1","detail-2"); service.saveDetails("quote-1",Arrays.asList(product,secondProduct)); }
     Assert.assertNotNull(detailsRef.get());
+    Assert.assertEquals(detailsRef.get().get(0).getProductName(), "项目专用品名");
+    Assert.assertEquals(detailsRef.get().get(0).getSpec(), "");
+    Assert.assertEquals(detailsRef.get().get(0).getConversionRate(), new BigDecimal("20"));
+    Assert.assertEquals(savedProduct.getName(), "测试商品");
     Assert.assertTrue(detailsRef.get().get(0).getInquiryProduct());
     Assert.assertNotNull(detailsRef.get().get(0).getProductSnapshot());
     Assert.assertEquals(detailsRef.get().get(0).getOrderNo(),Integer.valueOf(1));

@@ -41,7 +41,11 @@ export interface QuoteSheetDetailBo {
 /** 报价单商品。 */
 export interface QuoteSheetProductVo {
   productId: string;
-  displayName?: string;
+  productName?: string;
+  spec?: string | null;
+  unitId?: string | null;
+  unitName?: string | null;
+  conversionRate?: string | number | null;
   salePrice: string | number;
   inquiryProduct?: boolean;
 }

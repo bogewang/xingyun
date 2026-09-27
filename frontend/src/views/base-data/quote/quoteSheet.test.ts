@@ -81,6 +81,7 @@ describe('报价单编辑数据', () => {
     expect(
       buildQuoteSheetPayload({
         id: 'q1',
+        projectId: 'default-project',
         name: '九月报价',
         startDate: '2026-09-01',
         endDate: '2026-09-30',
@@ -90,11 +91,12 @@ describe('报价单编辑数据', () => {
       }),
     ).toEqual({
       id: 'q1',
+      projectId: 'default-project',
       name: '九月报价',
       startDate: '2026-09-01',
       endDate: '2026-09-30',
       description: '测试',
-      products: [{ productId: 'p1', orderNo: 1, salePrice: '12.50', inquiryProduct: true }],
+      products: [{ productId: 'p1', productName: '商品', spec: null, unitId: null, unitName: null, conversionRate: null, orderNo: 1, salePrice: '12.50', inquiryProduct: true }],
     });
   });
 

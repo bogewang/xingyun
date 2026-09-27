@@ -79,7 +79,9 @@
 
           <!-- 商品名称 列自定义内容 -->
           <template #productName_default="{ row, rowIndex }">
-            <InlineProductSelect
+            <a-input v-if="row.productId && !row.editingProduct" v-model:value.trim="row.name" maxlength="128" />
+          <a-button v-if="row.productId && !row.editingProduct" type="link" size="small" @click="row.editingProduct = true">更换商品</a-button>
+          <InlineProductSelect v-else
               :ref="'productInputRef' + rowIndex"
               biz-type="quote"
               mode="unrequire"
@@ -99,9 +101,9 @@
             class="number-input"
           />
         </template>
-        <template #displayName_default="{ row }">
-          <a-input v-model:value.trim="row.displayName" maxlength="128" placeholder="默认使用商品名称" />
-        </template>
+        <template #spec_default="{ row }"><a-input v-model:value="row.spec" maxlength="128" /></template>
+        <template #unit_default="{ row }"><a-input v-model:value.trim="row.unit" maxlength="64" @change="row.unitName = row.unit" /></template>
+        <template #conversionRate_default="{ row }"><a-input-number v-model:value="row.conversionRate" :min="0.00000001" :precision="8" placeholder="待确认" /></template>
         <template #inquiryProduct_default="{ row }">
           <a-checkbox v-model:checked="row.inquiryProduct">是</a-checkbox>
         </template>
@@ -218,9 +220,9 @@
             width: 300,
             slots: { default: 'productName_default' },
           },
-          { field: 'displayName', title: '报价品名', width: 220, slots: { default: 'displayName_default' } },
-          { field: 'spec', title: '规格', width: 80 },
-          { field: 'unit', title: '单位', width: 80 },
+          { field: 'conversionRate', title: '换算率', width: 150, slots: { default: 'conversionRate_default' } },
+          { field: 'spec', title: '规格', width: 120, slots: { default: 'spec_default' } },
+          { field: 'unit', title: '单位', width: 100, slots: { default: 'unit_default' } },
           {
             field: 'salePrice',
             title: '销售单价（元）',
@@ -260,6 +262,7 @@
         .then((data) => {
           this.formData = {
             id: data.id,
+            projectId: data.projectId,
             name: data.name,
             startDate: data.startDate,
             endDate: data.endDate,
@@ -299,6 +302,12 @@
             (row) => item.productId && row.productId === item.productId,
           );
           if (existed) {
+            existed.name = item.name;
+            existed.spec = item.spec;
+            existed.unit = item.unit;
+            existed.unitName = item.unit;
+            existed.unitId = item.unitId;
+            existed.conversionRate = item.conversionRate;
             existed.salePrice = item.salePrice;
             existed.inquiryProduct = item.inquiryProduct === true;
             return;
@@ -335,7 +344,9 @@
           productId: '',
           code: '',
           name: '',
-          displayName: '',
+          unitId: null,
+          unitName: null,
+          conversionRate: null,
           skuCode: '',
           spec: '',
           unit: '',
@@ -390,7 +401,9 @@
           productId: product.id,
           code: product.code,
           name: product.name,
-          displayName: product.name,
+          unitId: null,
+          unitName: this.getUnitName(product.unit),
+          conversionRate: null,
           skuCode: product.skuCode,
           spec: product.spec,
           unit: this.getUnitName(product.unit),

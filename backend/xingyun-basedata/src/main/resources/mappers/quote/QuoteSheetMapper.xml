@@ -9,11 +9,12 @@
                d.id AS source_id,
                d.product_id,
                p.code,
-               d.display_name AS name,
+               d.product_name AS name,
                p.short_name,
                p.sku_code,
-               p.spec,
-               p.unit,
+               d.spec,
+               d.unit_name AS unit,
+               d.unit_id, d.unit_name, d.conversion_rate,
                d.sale_price,
                d.inquiry_product
         FROM tbl_quote_sheet q

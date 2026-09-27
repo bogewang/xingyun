@@ -135,6 +135,8 @@ public class ProductQuoteService {
             detail.setId(IdUtil.getId());
             detail.setQuoteSheetId(id);
             detail.setProductId(productId);
+            detail.setProductName(product.getName());
+            detail.setSpec(product.getSpec());
             detail.setProductSnapshot(JsonUtil.toJsonString(product));
             detail.setOrderNo(maxOrder.getOrDefault(id, 0) + 1);
             detail.setSalePrice(row == null ? BigDecimal.ZERO : row.getSalePrice());
