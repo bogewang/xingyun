@@ -553,6 +553,22 @@ public class SaleOutSheetController extends DefaultBaseController {
         return InvokeResultBuilder.success();
     }
 
+    /** 导出订单汇总，文件流沿用现有 Excel 下载接口约定。 */
+    @ApiOperation("导出订单汇总")
+    @HasPermission({ "sale:out:export" })
+    @PostMapping("/export/order-summary")
+    public void exportOrderSummary(@RequestBody @Valid QuerySaleOutSheetVo vo,
+                                  HttpServletResponse response) {
+        try {
+            saleOutSheetService.exportOrderSummary(vo, response);
+        } catch (DefaultClientException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("订单汇总导出失败", e);
+            throw new DefaultClientException("订单汇总导出失败！");
+        }
+    }
+
     /**
      * 文山销售单导出
      */

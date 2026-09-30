@@ -777,6 +777,26 @@ public class SaleOutSheetServiceImpl extends
         return buildInvoiceDetailExportModels(details, useProductSalePriceForInvoiceDetail());
     }
 
+    /** 导出选中单据的订单汇总，批量查询明细避免逐单访问数据库。 */
+    @Override
+    public void exportOrderSummary(QuerySaleOutSheetVo vo, HttpServletResponse response) {
+        if (CollectionUtils.isEmpty(vo.getIdList())) {
+            throw new DefaultClientException("请选择要导出的销售出库单！");
+        }
+        QuerySaleOutSheetVo query = new QuerySaleOutSheetVo();
+        query.setIdList(vo.getIdList());
+        List<QuerySaleOutSheetDetailDto> details = getBaseMapper().queryDetail(query);
+        if (CollectionUtils.isEmpty(details)) {
+            throw new DefaultClientException("未查询到可导出的销售出库明细！");
+        }
+        try {
+            SaleOutSheetOrderSummaryExportHelper.export(details, response);
+        } catch (IOException e) {
+            log.error("订单汇总导出失败", e);
+            throw new DefaultClientException("订单汇总导出失败！");
+        }
+    }
+
     @Override
     public void exportSales(QuerySaleOutSheetVo vo, HttpServletResponse response) {
         List<SaleOutSheet> sheets = this.query(vo);
