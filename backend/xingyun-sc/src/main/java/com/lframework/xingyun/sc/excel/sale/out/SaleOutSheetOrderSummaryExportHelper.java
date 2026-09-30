@@ -47,7 +47,7 @@ public final class SaleOutSheetOrderSummaryExportHelper {
   public static XSSFWorkbook buildWorkbook(List<QuerySaleOutSheetDetailDto> details) {
     XSSFWorkbook workbook = new XSSFWorkbook();
     Sheet sheet = workbook.createSheet("订单汇总");
-    double[] widths = {5, 16, 5, 9, 9, 9, 10, 9, 7};
+    double[] widths = {6, 19, 6, 11, 11, 11, 12, 11, 8};
     for (int i = 0; i < widths.length; i++) {
       sheet.setColumnWidth(i, (int) (widths[i] * 256));
     }
@@ -117,6 +117,9 @@ public final class SaleOutSheetOrderSummaryExportHelper {
     sheet.getPrintSetup().setFitWidth((short) 1);
     sheet.getPrintSetup().setFitHeight((short) 0);
     sheet.setFitToPage(true);
+    // 缩小左右页边距，让单页宽度适配时充分使用纸张的可打印区域。
+    sheet.setMargin(Sheet.LeftMargin, 0.25);
+    sheet.setMargin(Sheet.RightMargin, 0.25);
     return workbook;
   }
 
