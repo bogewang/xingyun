@@ -1,4 +1,6 @@
 export interface GetProductBo {
+  /** 商品已配置的交易单位。 */
+  units?: { id: string; unitName: string; conversionRate: string | number; available?: boolean }[];
   /**
    * ID
    */

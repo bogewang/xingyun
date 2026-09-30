@@ -62,6 +62,11 @@
                 >新增</a-button
               >
               <a-button danger :icon="h(DeleteOutlined)" @click="delProduct">删除</a-button>
+              <a-tooltip title="按已保存的数据打印勾选明细的标签，修改后请先保存">
+                <a-button :icon="h(PrinterOutlined)" :loading="loading" @click="tagPrint">
+                  标签打印
+                </a-button>
+              </a-tooltip>
               <a-button :icon="h(PlusOutlined)" @click="openBatchAddProductDialog"
                 >批量添加商品
               </a-button>
@@ -312,6 +317,7 @@
     NumberOutlined,
     EditOutlined,
     CheckSquareOutlined,
+    PrinterOutlined,
   } from '@ant-design/icons-vue';
   import * as api from '@/api/sc/sale/out';
   import { multiplePageMix } from '@/mixins/multiplePageMix';
@@ -382,6 +388,7 @@
         NumberOutlined,
         EditOutlined,
         CheckSquareOutlined,
+        PrinterOutlined,
         isEmpty,
         isFloatGeZero,
         mul,
@@ -411,6 +418,8 @@
         // 表单数据
         formData: {},
         originalFillAllCost: false,
+        // 已保存的明细ID，用于拦截尚未保存的新增行打印。
+        savedDetailIds: [],
         paidAmountDirty: false,
         timelineVisible: false,
         // 工具栏配置
@@ -705,6 +714,7 @@
               );
             }
             const tableData = res.details || [];
+            this.savedDetailIds = tableData.map((item) => item.id);
             tableData.forEach((item) => {
               item.isFixed = false;
 
@@ -1150,6 +1160,33 @@
         }
 
         return true;
+      },
+      /** 使用销售标签模板打印勾选的已保存明细。 */
+      async tagPrint() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要打印标签的销售明细！');
+          return;
+        }
+        if (records.some((item) => !this.savedDetailIds.includes(item.id))) {
+          createError('勾选的明细包含未保存的新增行，请先保存后再打印标签！');
+          return;
+        }
+
+        this.loading = true;
+        try {
+          const res = await api.tagPrint({
+            idList: [this.id],
+            detailIdList: records.map((item) => item.id),
+          });
+          if (isEmpty(res)) {
+            createError('勾选的明细暂无可打印的标签数据！');
+            return;
+          }
+          await this.vgDefaultBrowserPrint(PRINT_TYPE.SALE_TAG.code, res);
+        } finally {
+          this.loading = false;
+        }
       },
       // 打印
       async print() {

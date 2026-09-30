@@ -93,8 +93,8 @@
           />
         </template>
         <template #spec_default="{ row }"><a-input v-model:value="row.spec" maxlength="128" /></template>
-        <template #unit_default="{ row }"><a-input v-model:value.trim="row.unit" maxlength="64" @change="row.unitName = row.unit" /></template>
-        <template #conversionRate_default="{ row }"><a-input-number v-model:value="row.conversionRate" :min="0.00000001" :precision="8" placeholder="待确认" /></template>
+        <template #unit_default="{ row }"><QuoteUnitSelect :row="row" :unit-name-map="unitNameMap" /></template>
+        <template #conversionRate_default="{ row }"><a-input-number v-model:value="row.conversionRate" :min="0.01" :precision="2" placeholder="待确认" /></template>
         <template #inquiryProduct_default="{ row }">
           <a-checkbox v-model:checked="row.inquiryProduct">是</a-checkbox>
         </template>
@@ -141,11 +141,13 @@
   import { buildQuoteSheetPayload } from './quoteSheet';
   import InlineProductSelect from '@/views/sc/shared/inline-product-select.vue';
   import QuoteSheetImporter from '@/components/Importor/QuoteSheetImporter.vue';
+  import QuoteUnitSelect from './components/quote-unit-select.vue';
 
   export default defineComponent({
     name: 'QuoteSheetAdd',
     mixins: [multiplePageMix],
     components: {
+      QuoteUnitSelect,
       InlineProductSelect,
       QuoteSheetImporter,
     },
