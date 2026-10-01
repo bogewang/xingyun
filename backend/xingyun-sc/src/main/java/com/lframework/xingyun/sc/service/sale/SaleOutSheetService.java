@@ -322,6 +322,9 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
    */
   Boolean getCategoryDetailExportConfig();
 
+  /** 获取订单汇总导出按钮开关，未配置时默认显示。 */
+  Boolean getOrderSummaryJsExportConfig();
+
   /**
    * 是否启用销售出库合并商品功能。
    *
@@ -374,6 +377,9 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   List<SaleOutSheetInvoiceDetailExportModel> queryInvoiceDetail(QuerySaleOutSheetVo vo);
 
   void exportSales(QuerySaleOutSheetVo vo, HttpServletResponse response);
+
+  /** 导出选中销售出库单的订单汇总。 */
+  void exportOrderSummaryJs(QuerySaleOutSheetVo vo, HttpServletResponse response);
 
   /**
    * 刷新成本(当天成本价）

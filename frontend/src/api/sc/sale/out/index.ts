@@ -139,6 +139,11 @@ export function getCategoryDetailExportConfig(): Promise<boolean> {
   );
 }
 
+/** 获取订单汇总导出按钮显示开关。 */
+export function getOrderSummaryExportConfig(): Promise<boolean> {
+  return defHttp.post<boolean>({ url: baseUrl + '/export/order-summary/js/config' }, { region });
+}
+
 /** 获取销售出库合并商品开关。 */
 export function getMergeProductConfig(): Promise<boolean> {
   return defHttp.get<boolean>(
@@ -469,6 +474,14 @@ export function exportProductProfit(data: QuerySaleOutSheetVo): Promise<void> {
       region,
       contentType: ContentTypeEnum.JSON,
     },
+  );
+}
+
+/** 导出选中销售出库单的订单汇总。 */
+export function exportOrderSummary(data: QuerySaleOutSheetVo): Promise<void> {
+  return defHttp.post<void>(
+    { url: baseUrl + '/export/order-summary/js', data },
+    { region, contentType: ContentTypeEnum.JSON, responseType: ResponseEnum.BLOB },
   );
 }
 

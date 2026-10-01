@@ -155,6 +155,13 @@
                 >导出</a-button
               >
               <a-button
+                v-if="showOrderSummaryExport"
+                v-permission="['sale:out:export']"
+                :icon="h(DownloadOutlined)"
+                @click="exportOrderSummary"
+                >导出订单汇总</a-button
+              >
+              <a-button
                 v-permission="['wenshan:sale:out:saleexport']"
                 :icon="h(DownloadOutlined)"
                 @click="exportSales"
@@ -749,6 +756,7 @@
           dateRange: this.getDefaultOrderDateRange(),
         },
         showMergeProduct: false,
+        showOrderSummaryExport: false,
         // 浏览器打印模板选择弹窗
         browserPrintModal: {
           visible: false,
@@ -795,6 +803,7 @@
     created() {
       this.applyRouteQuery();
       this.loadMergeProductConfig();
+      this.loadOrderSummaryExportConfig();
     },
     methods: {
       getImporterContainer() {
@@ -895,6 +904,15 @@
       getDefaultOrderDateRange() {
         const today = moment().format('YYYY-MM-DD');
         return [today, today];
+      },
+      /** 加载订单汇总导出显示开关，读取失败时隐藏按钮。 */
+      async loadOrderSummaryExportConfig() {
+        try {
+          this.showOrderSummaryExport = await api.getOrderSummaryExportConfig();
+        } catch (e) {
+          this.showOrderSummaryExport = false;
+          console.warn('读取订单汇总导出按钮配置失败', e);
+        }
       },
       /** 加载合并商品功能开关，未开启时不展示入口。 */
       async loadMergeProductConfig() {
@@ -1397,6 +1415,20 @@
           .finally(() => {
             this.loading = false;
           });
+      },
+      /** 导出选中的单据，未选择时提示用户。 */
+      async exportOrderSummary() {
+        const records = this.$refs.grid.getCheckboxRecords();
+        if (isEmpty(records)) {
+          createError('请选择要导出订单汇总的销售出库单！');
+          return;
+        }
+        this.loading = true;
+        try {
+          await api.exportOrderSummary({ idList: records.map((item) => item.id) });
+        } finally {
+          this.loading = false;
+        }
       },
       exportSales() {
         const records = this.$refs.grid.getCheckboxRecords();

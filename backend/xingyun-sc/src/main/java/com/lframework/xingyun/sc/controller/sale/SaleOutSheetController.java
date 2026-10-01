@@ -214,11 +214,20 @@ public class SaleOutSheetController extends DefaultBaseController {
         }
     }
 
-    /**
-     * 获取销售出库合并商品开关。
-     *
-     * @return 是否启用
-     */
+    /** 获取订单汇总导出按钮显示开关。 */
+    @ApiOperation("获取订单汇总导出按钮开关")
+    @HasPermission({ "sale:out:query" })
+    @PostMapping("/export/order-summary/js/config")
+    public InvokeResult<Boolean> getOrderSummaryExportConfig() {
+        try {
+            return InvokeResultBuilder.success(saleOutSheetService.getOrderSummaryJsExportConfig());
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    /** 获取销售出库合并商品开关。 */
     @ApiOperation("获取销售出库合并商品开关")
     @HasPermission({ "sale:out:query" })
     @GetMapping("/merge-product/config")
@@ -551,6 +560,22 @@ public class SaleOutSheetController extends DefaultBaseController {
                 vo);
 
         return InvokeResultBuilder.success();
+    }
+
+    /** 导出订单汇总，文件流沿用现有 Excel 下载接口约定。 建水专门模板，各个单位使用模板不一致*/
+    @ApiOperation("导出订单汇总")
+    @HasPermission({ "sale:out:export" })
+    @PostMapping("/export/order-summary/js")
+    public void exportOrderSummaryJs(@RequestBody @Valid QuerySaleOutSheetVo vo,
+                                     HttpServletResponse response) {
+        try {
+            saleOutSheetService.exportOrderSummaryJs(vo, response);
+        } catch (DefaultClientException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("订单汇总导出失败", e);
+            throw new DefaultClientException("订单汇总导出失败！");
+        }
     }
 
     /**

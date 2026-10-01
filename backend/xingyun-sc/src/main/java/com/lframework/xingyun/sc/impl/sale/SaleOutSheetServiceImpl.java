@@ -102,6 +102,8 @@ public class SaleOutSheetServiceImpl extends
     private static final String CATEGORY_DETAIL_EXPORT_ENABLED_PM_KEY =
             "sale_out_category_detail_export_enabled";
     private static final String MERGE_PRODUCT_ENABLED_PM_KEY = "sale_out_merge_product_enabled";
+    private static final String ORDER_SUMMARY_EXPORT_ENABLED_PM_KEY =
+            "sale_out_order_summary_js_export_enabled";
     private static final String TAG_PRINT_APPEND_SPEC_CATEGORY_PM_KEY = "sale_out_tag_print_append_spec_category";
     private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER = DateTimeFormatter
             .ofPattern("yyyy-MM-dd");
@@ -512,6 +514,20 @@ public class SaleOutSheetServiceImpl extends
         return BooleanUtil.toBoolean(list.get(0).getPmValue());
     }
 
+    /** 获取订单汇总导出按钮开关，未配置时默认显示。 */
+    @Override
+    public Boolean getOrderSummaryJsExportConfig() {
+        QuerySysParameterVo vo = new QuerySysParameterVo();
+        vo.setPmKey(ORDER_SUMMARY_EXPORT_ENABLED_PM_KEY);
+        List<SysParameter> parameters = sysParameterService.query(vo);
+
+        if (CollectionUtil.isEmpty(parameters)) {
+            return false;
+        }
+
+        return BooleanUtil.toBoolean(parameters.get(0).getPmValue());
+    }
+
     /**
      * 按订单日期查询销售可用报价商品。
      *
@@ -775,6 +791,31 @@ public class SaleOutSheetServiceImpl extends
     public List<SaleOutSheetInvoiceDetailExportModel> queryInvoiceDetail(QuerySaleOutSheetVo vo) {
         List<QuerySaleOutSheetDetailDto> details = getBaseMapper().queryDetail(vo);
         return buildInvoiceDetailExportModels(details, useProductSalePriceForInvoiceDetail());
+    }
+
+    /** 导出选中单据的订单汇总，批量查询明细避免逐单访问数据库。 */
+    @Override
+    public void exportOrderSummaryJs(QuerySaleOutSheetVo vo, HttpServletResponse response) {
+        if (CollectionUtils.isEmpty(vo.getIdList())) {
+            throw new DefaultClientException("请选择要导出的销售出库单！");
+        }
+        QuerySaleOutSheetVo query = new QuerySaleOutSheetVo();
+        query.setIdList(vo.getIdList());
+        List<QuerySaleOutSheetDetailDto> details = getBaseMapper().queryDetail(query);
+        if (CollectionUtils.isEmpty(details)) {
+            throw new DefaultClientException("未查询到可导出的销售出库明细！");
+        }
+        try {
+            // 固定按订单日期正序导出，同一天及单内明细保留原查询顺序。
+            List<QuerySaleOutSheetDetailDto> orderedDetails = details.stream()
+                    .sorted(Comparator.comparing(QuerySaleOutSheetDetailDto::getOrderDate,
+                            Comparator.nullsLast(Comparator.naturalOrder())))
+                    .collect(Collectors.toList());
+            SaleOutSheetOrderSummaryJsExportHelper.export(orderedDetails, response);
+        } catch (IOException e) {
+            log.error("订单汇总导出失败", e);
+            throw new DefaultClientException("订单汇总导出失败！");
+        }
     }
 
     @Override
