@@ -32,7 +32,7 @@ class SaleOutSheetOrderSummaryExportTest {
     QuerySaleOutSheetVo vo = new QuerySaleOutSheetVo();
     vo.setIdList(Arrays.asList("2", "1"));
     MockHttpServletResponse response = new MockHttpServletResponse();
-    service.exportOrderSummary(vo, response);
+    service.exportOrderSummaryJs(vo, response);
     try (XSSFWorkbook workbook = new XSSFWorkbook(
         new ByteArrayInputStream(response.getContentAsByteArray()))) {
       Sheet sheet = workbook.getSheetAt(0);

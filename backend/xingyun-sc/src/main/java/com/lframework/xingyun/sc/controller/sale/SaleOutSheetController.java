@@ -553,14 +553,14 @@ public class SaleOutSheetController extends DefaultBaseController {
         return InvokeResultBuilder.success();
     }
 
-    /** 导出订单汇总，文件流沿用现有 Excel 下载接口约定。 */
+    /** 导出订单汇总，文件流沿用现有 Excel 下载接口约定。 建水专门模板，各个单位使用模板不一致*/
     @ApiOperation("导出订单汇总")
     @HasPermission({ "sale:out:export" })
-    @PostMapping("/export/order-summary")
-    public void exportOrderSummary(@RequestBody @Valid QuerySaleOutSheetVo vo,
-                                  HttpServletResponse response) {
+    @PostMapping("/export/order-summary/js")
+    public void exportOrderSummaryJs(@RequestBody @Valid QuerySaleOutSheetVo vo,
+                                     HttpServletResponse response) {
         try {
-            saleOutSheetService.exportOrderSummary(vo, response);
+            saleOutSheetService.exportOrderSummaryJs(vo, response);
         } catch (DefaultClientException e) {
             throw e;
         } catch (Exception e) {

@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** 验证模板布局、单据分组和金额精度。 */
-class SaleOutSheetOrderSummaryExportHelperTest {
+class SaleOutSheetOrderSummaryJsExportHelperTest {
 
   /** 验证长名称及手动换行自动撑高，保存后的行高和自动换行样式仍然保留。 */
   @Test
@@ -33,7 +33,7 @@ class SaleOutSheetOrderSummaryExportHelperTest {
     QuerySaleOutSheetDetailDto emptyName = detail("1", "3.12");
     emptyName.setProductName(null);
     ByteArrayOutputStream output = new ByteArrayOutputStream();
-    try (XSSFWorkbook workbook = SaleOutSheetOrderSummaryExportHelper.buildWorkbook(
+    try (XSSFWorkbook workbook = SaleOutSheetOrderSummaryJsExportHelper.buildWorkbook(
         Arrays.asList(shortName, longName, manualBreak, englishName, emptyName))) {
       workbook.write(output);
     }
@@ -55,7 +55,7 @@ class SaleOutSheetOrderSummaryExportHelperTest {
   void shouldFormatIntegersWithoutTrailingDecimalPoint() throws Exception {
     QuerySaleOutSheetDetailDto integer = detail("1", "3.00");
     integer.setOrderNum(new BigDecimal("10.0000"));
-    try (XSSFWorkbook workbook = SaleOutSheetOrderSummaryExportHelper.buildWorkbook(
+    try (XSSFWorkbook workbook = SaleOutSheetOrderSummaryJsExportHelper.buildWorkbook(
         Arrays.asList(integer, detail("1", "4.56")))) {
       Sheet sheet = workbook.getSheetAt(0);
       DataFormatter formatter = new DataFormatter();
@@ -71,7 +71,7 @@ class SaleOutSheetOrderSummaryExportHelperTest {
   @Test
   void shouldPreserveMergedRegionBordersAfterSaving() throws Exception {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
-    try (XSSFWorkbook workbook = SaleOutSheetOrderSummaryExportHelper.buildWorkbook(
+    try (XSSFWorkbook workbook = SaleOutSheetOrderSummaryJsExportHelper.buildWorkbook(
         Arrays.asList(detail("1", "3.12"), detail("2", "4.56")))) {
       workbook.write(output);
     }
@@ -103,7 +103,7 @@ class SaleOutSheetOrderSummaryExportHelperTest {
   /** 验证同一客户的多张单据仍然分开排列，每张单据页码固定。 */
   @Test
   void shouldKeepOrdersSeparateAndWriteNumericAmounts() throws Exception {
-    try (XSSFWorkbook workbook = SaleOutSheetOrderSummaryExportHelper.buildWorkbook(
+    try (XSSFWorkbook workbook = SaleOutSheetOrderSummaryJsExportHelper.buildWorkbook(
         Arrays.asList(detail("1", "3.12"), detail("1", "4.56"), detail("2", "8.90")))) {
       assertEquals(1, workbook.getNumberOfSheets());
       Sheet sheet = workbook.getSheetAt(0);

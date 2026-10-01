@@ -779,7 +779,7 @@ public class SaleOutSheetServiceImpl extends
 
     /** 导出选中单据的订单汇总，批量查询明细避免逐单访问数据库。 */
     @Override
-    public void exportOrderSummary(QuerySaleOutSheetVo vo, HttpServletResponse response) {
+    public void exportOrderSummaryJs(QuerySaleOutSheetVo vo, HttpServletResponse response) {
         if (CollectionUtils.isEmpty(vo.getIdList())) {
             throw new DefaultClientException("请选择要导出的销售出库单！");
         }
@@ -795,7 +795,7 @@ public class SaleOutSheetServiceImpl extends
                     .sorted(Comparator.comparing(QuerySaleOutSheetDetailDto::getOrderDate,
                             Comparator.nullsLast(Comparator.naturalOrder())))
                     .collect(Collectors.toList());
-            SaleOutSheetOrderSummaryExportHelper.export(orderedDetails, response);
+            SaleOutSheetOrderSummaryJsExportHelper.export(orderedDetails, response);
         } catch (IOException e) {
             log.error("订单汇总导出失败", e);
             throw new DefaultClientException("订单汇总导出失败！");

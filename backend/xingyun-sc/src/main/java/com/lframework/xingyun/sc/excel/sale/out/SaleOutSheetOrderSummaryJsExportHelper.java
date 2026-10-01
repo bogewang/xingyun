@@ -23,10 +23,10 @@ import org.apache.poi.ss.util.RegionUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /** 按采购结算单模板导出选中的销售出库单。 */
-public final class SaleOutSheetOrderSummaryExportHelper {
+public final class SaleOutSheetOrderSummaryJsExportHelper {
 
   /** 禁止实例化工具类。 */
-  private SaleOutSheetOrderSummaryExportHelper() {
+  private SaleOutSheetOrderSummaryJsExportHelper() {
   }
 
   /** 输出订单汇总文件。 */

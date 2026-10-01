@@ -475,7 +475,7 @@ export function exportProductProfit(data: QuerySaleOutSheetVo): Promise<void> {
 /** 导出选中销售出库单的订单汇总。 */
 export function exportOrderSummary(data: QuerySaleOutSheetVo): Promise<void> {
   return defHttp.post<void>(
-    { url: baseUrl + '/export/order-summary', data },
+    { url: baseUrl + '/export/order-summary/js', data },
     { region, contentType: ContentTypeEnum.JSON, responseType: ResponseEnum.BLOB },
   );
 }

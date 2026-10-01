@@ -376,7 +376,7 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
   void exportSales(QuerySaleOutSheetVo vo, HttpServletResponse response);
 
   /** 导出选中销售出库单的订单汇总。 */
-  void exportOrderSummary(QuerySaleOutSheetVo vo, HttpServletResponse response);
+  void exportOrderSummaryJs(QuerySaleOutSheetVo vo, HttpServletResponse response);
 
   /**
    * 刷新成本(当天成本价）
