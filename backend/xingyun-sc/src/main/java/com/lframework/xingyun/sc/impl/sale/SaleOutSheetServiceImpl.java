@@ -790,7 +790,12 @@ public class SaleOutSheetServiceImpl extends
             throw new DefaultClientException("未查询到可导出的销售出库明细！");
         }
         try {
-            SaleOutSheetOrderSummaryExportHelper.export(details, response);
+            // 固定按订单日期正序导出，同一天及单内明细保留原查询顺序。
+            List<QuerySaleOutSheetDetailDto> orderedDetails = details.stream()
+                    .sorted(Comparator.comparing(QuerySaleOutSheetDetailDto::getOrderDate,
+                            Comparator.nullsLast(Comparator.naturalOrder())))
+                    .collect(Collectors.toList());
+            SaleOutSheetOrderSummaryExportHelper.export(orderedDetails, response);
         } catch (IOException e) {
             log.error("订单汇总导出失败", e);
             throw new DefaultClientException("订单汇总导出失败！");

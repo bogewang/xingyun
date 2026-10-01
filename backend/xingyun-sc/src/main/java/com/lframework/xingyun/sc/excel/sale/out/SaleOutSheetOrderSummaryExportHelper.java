@@ -76,7 +76,7 @@ public final class SaleOutSheetOrderSummaryExportHelper {
       merged(sheet, row++, 0, 8, "日期：" + first.getOrderDate(), info);
       merged(sheet, row++, 0, 8, "客户名称：" + first.getCustomerName(), info);
       Row header = sheet.createRow(row++);
-      header.setHeightInPoints(28);
+      header.setHeightInPoints(32);
       for (int i = 0; i < headers.length; i++) {
         cell(header, i, headers[i], body);
       }
@@ -84,7 +84,7 @@ public final class SaleOutSheetOrderSummaryExportHelper {
       int sequence = 1;
       for (QuerySaleOutSheetDetailDto detail : group) {
         Row line = sheet.createRow(row++);
-        line.setHeightInPoints(25);
+        line.setHeightInPoints(productNameRowHeight(sheet, body, detail.getProductName()));
         cell(line, 0, sequence++, number);
         cell(line, 1, detail.getProductName(), body);
         cell(line, 2, detail.getUnit(), body);
@@ -99,7 +99,7 @@ public final class SaleOutSheetOrderSummaryExportHelper {
           total = total.add(detail.getTaxAmount());
         }
       }
-      merged(sheet, row, 0, 4, "第1 / 共1页", summary);
+      merged(sheet, row, 0, 4, "第1页 / 共1页", summary);
       merged(sheet, row++, 5, 8,
           "下单金额合计" + total.setScale(2, RoundingMode.HALF_UP).toPlainString(), summary);
       merged(sheet, row, 0, 2, "生活服务中心签字：", info);
@@ -123,11 +123,44 @@ public final class SaleOutSheetOrderSummaryExportHelper {
     return workbook;
   }
 
+  /** 根据名称列宽及字号估算换行数，兼容中文、英文和手动换行。 */
+  private static float productNameRowHeight(Sheet sheet, CellStyle style, String name) {
+    if (name == null || name.isEmpty()) {
+      return 25;
+    }
+    Font font = sheet.getWorkbook().getFontAt(style.getFontIndex());
+    float fontSize = font.getFontHeightInPoints();
+    // Excel 列宽以默认字体字符宽度计量，扣除单元格留白后按像素估算。
+    double availableWidth = Math.max(1, sheet.getColumnWidth(1) / 256.0 * 7 - 8);
+    double fullWidth = fontSize * 96.0 / 72;
+    int lines = 1;
+    double usedWidth = 0;
+    String normalized = name.replace("\r\n", "\n").replace('\r', '\n');
+    for (int offset = 0; offset < normalized.length();) {
+      int character = normalized.codePointAt(offset);
+      offset += Character.charCount(character);
+      if (character == '\n') {
+        lines++;
+        usedWidth = 0;
+        continue;
+      }
+      double width = character == '\t' ? fullWidth * 2
+          : character < 128 ? fullWidth / 2 : fullWidth;
+      if (usedWidth > 0 && usedWidth + width > availableWidth) {
+        lines++;
+        usedWidth = 0;
+      }
+      usedWidth += width;
+    }
+    // 每行预留字体行距，上下增加留白，并遵守 Excel 最大行高限制。
+    return Math.min(409, Math.max(25, lines * fontSize * 1.4f + 4));
+  }
+
   /** 创建与模板一致的字体、对齐和边框。 */
   private static CellStyle style(XSSFWorkbook workbook, boolean bold, boolean border) {
     Font font = workbook.createFont();
     font.setFontName("宋体");
-    font.setFontHeightInPoints((short) (bold ? 14 : 9));
+    font.setFontHeightInPoints((short) (bold ? 20 : 14));
     font.setBold(bold);
     CellStyle style = workbook.createCellStyle();
     style.setFont(font);

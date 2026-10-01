@@ -19,6 +19,37 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** 验证模板布局、单据分组和金额精度。 */
 class SaleOutSheetOrderSummaryExportHelperTest {
 
+  /** 验证长名称及手动换行自动撑高，保存后的行高和自动换行样式仍然保留。 */
+  @Test
+  void shouldIncreaseRowHeightForWrappedProductNames() throws Exception {
+    QuerySaleOutSheetDetailDto shortName = detail("1", "3.12");
+    shortName.setProductName("西红柿");
+    QuerySaleOutSheetDetailDto longName = detail("1", "3.12");
+    longName.setProductName("农夫水溶（多种口味混合装）");
+    QuerySaleOutSheetDetailDto manualBreak = detail("1", "3.12");
+    manualBreak.setProductName("苹果\r\n香蕉\n橙子");
+    QuerySaleOutSheetDetailDto englishName = detail("1", "3.12");
+    englishName.setProductName("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+    QuerySaleOutSheetDetailDto emptyName = detail("1", "3.12");
+    emptyName.setProductName(null);
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    try (XSSFWorkbook workbook = SaleOutSheetOrderSummaryExportHelper.buildWorkbook(
+        Arrays.asList(shortName, longName, manualBreak, englishName, emptyName))) {
+      workbook.write(output);
+    }
+    try (XSSFWorkbook workbook = new XSSFWorkbook(
+        new ByteArrayInputStream(output.toByteArray()))) {
+      Sheet sheet = workbook.getSheetAt(0);
+      assertEquals(25f, sheet.getRow(4).getHeightInPoints());
+      assertTrue(sheet.getRow(5).getHeightInPoints() >= 60);
+      assertTrue(sheet.getRow(6).getHeightInPoints() >= 60);
+      assertTrue(sheet.getRow(7).getHeightInPoints() > 25);
+      assertEquals(25f, sheet.getRow(8).getHeightInPoints());
+      assertTrue(sheet.getRow(5).getCell(1).getCellStyle().getWrapText());
+      assertEquals(longName.getProductName(), sheet.getRow(5).getCell(1).getStringCellValue());
+    }
+  }
+
   /** 验证整数不带末尾小数点，小数数量和两位金额正常显示。 */
   @Test
   void shouldFormatIntegersWithoutTrailingDecimalPoint() throws Exception {
