@@ -102,6 +102,8 @@ public class SaleOutSheetServiceImpl extends
     private static final String CATEGORY_DETAIL_EXPORT_ENABLED_PM_KEY =
             "sale_out_category_detail_export_enabled";
     private static final String MERGE_PRODUCT_ENABLED_PM_KEY = "sale_out_merge_product_enabled";
+    private static final String ORDER_SUMMARY_EXPORT_ENABLED_PM_KEY =
+            "sale_out_order_summary_js_export_enabled";
     private static final String TAG_PRINT_APPEND_SPEC_CATEGORY_PM_KEY = "sale_out_tag_print_append_spec_category";
     private static final DateTimeFormatter QUERY_IMPORT_ACTUAL_DATE_FORMATTER = DateTimeFormatter
             .ofPattern("yyyy-MM-dd");
@@ -510,6 +512,20 @@ public class SaleOutSheetServiceImpl extends
             return Boolean.FALSE;
         }
         return BooleanUtil.toBoolean(list.get(0).getPmValue());
+    }
+
+    /** 获取订单汇总导出按钮开关，未配置时默认显示。 */
+    @Override
+    public Boolean getOrderSummaryJsExportConfig() {
+        QuerySysParameterVo vo = new QuerySysParameterVo();
+        vo.setPmKey(ORDER_SUMMARY_EXPORT_ENABLED_PM_KEY);
+        List<SysParameter> parameters = sysParameterService.query(vo);
+
+        if (CollectionUtil.isEmpty(parameters)) {
+            return false;
+        }
+
+        return BooleanUtil.toBoolean(parameters.get(0).getPmValue());
     }
 
     /**

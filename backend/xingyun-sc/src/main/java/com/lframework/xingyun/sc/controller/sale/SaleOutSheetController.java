@@ -214,11 +214,20 @@ public class SaleOutSheetController extends DefaultBaseController {
         }
     }
 
-    /**
-     * 获取销售出库合并商品开关。
-     *
-     * @return 是否启用
-     */
+    /** 获取订单汇总导出按钮显示开关。 */
+    @ApiOperation("获取订单汇总导出按钮开关")
+    @HasPermission({ "sale:out:query" })
+    @PostMapping("/export/order-summary/js/config")
+    public InvokeResult<Boolean> getOrderSummaryExportConfig() {
+        try {
+            return InvokeResultBuilder.success(saleOutSheetService.getOrderSummaryJsExportConfig());
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
+        }
+    }
+
+    /** 获取销售出库合并商品开关。 */
     @ApiOperation("获取销售出库合并商品开关")
     @HasPermission({ "sale:out:query" })
     @GetMapping("/merge-product/config")

@@ -322,6 +322,9 @@ public interface SaleOutSheetService extends BaseMpService<SaleOutSheet> {
    */
   Boolean getCategoryDetailExportConfig();
 
+  /** 获取订单汇总导出按钮开关，未配置时默认显示。 */
+  Boolean getOrderSummaryJsExportConfig();
+
   /**
    * 是否启用销售出库合并商品功能。
    *

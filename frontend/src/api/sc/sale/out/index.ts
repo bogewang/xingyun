@@ -139,6 +139,11 @@ export function getCategoryDetailExportConfig(): Promise<boolean> {
   );
 }
 
+/** 获取订单汇总导出按钮显示开关。 */
+export function getOrderSummaryExportConfig(): Promise<boolean> {
+  return defHttp.post<boolean>({ url: baseUrl + '/export/order-summary/js/config' }, { region });
+}
+
 /** 获取销售出库合并商品开关。 */
 export function getMergeProductConfig(): Promise<boolean> {
   return defHttp.get<boolean>(
