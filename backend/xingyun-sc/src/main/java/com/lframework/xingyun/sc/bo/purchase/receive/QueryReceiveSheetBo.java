@@ -149,6 +149,11 @@ public class QueryReceiveSheetBo extends BaseBo<ReceiveSheet> {
     @JsonFormat(pattern = StringPool.DATE_TIME_PATTERN)
     private LocalDateTime createTime;
 
+    /** 最后更新时间。 */
+    @ApiModelProperty("最后更新时间")
+    @JsonFormat(pattern = StringPool.DATE_TIME_PATTERN)
+    private LocalDateTime updateTime;
+
     /**
      * 审核人
      */
