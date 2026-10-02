@@ -20,6 +20,7 @@
         <result column="description" property="description"/>
         <result column="create_by" property="createBy"/>
         <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
         <result column="approve_by" property="approveBy"/>
         <result column="approve_time" property="approveTime"/>
         <result column="status" property="status"/>
@@ -113,6 +114,7 @@
             r.description,
             r.create_by,
             r.create_time,
+            r.update_time,
             r.approve_by,
             r.approve_time,
             r.status,

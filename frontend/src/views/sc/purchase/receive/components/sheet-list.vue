@@ -428,7 +428,7 @@
               return resolveReceiveSheetPaymentAmounts(row).unpaidAmount.toFixed(2);
             },
           },
-          { field: 'createTime', title: '操作时间', width: 170, sortable: true },
+          { field: 'updateTime', title: '最后更新时间', width: 170, sortable: true },
           { field: 'createBy', title: '操作人', width: 100 },
           {
             field: 'settleStatus',

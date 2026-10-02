@@ -30,6 +30,11 @@ import { PrintSaleTagBo } from '@/api/sc/sale/order/model/PrintSaleTagBo';
 const baseUrl = '/sale/out/sheet';
 const region = 'cloud-api';
 
+/** 查询响应附带后端计算的当前页合计毛利率。 */
+type SaleOutSheetQueryPage = Omit<PageResult<QuerySaleOutSheetBo>, 'extra'> & {
+  extra: { profitRate: number };
+};
+
 type TagPrintParams = QuerySaleOutSheetVo & {
   idList?: string[];
   detailIdList?: string[];
@@ -61,8 +66,8 @@ export function print(id: string): Promise<PrintSaleOrderBo> {
 /**
  * 订单列表
  */
-export function query(params: QuerySaleOutSheetVo): Promise<PageResult<QuerySaleOutSheetBo>> {
-  return defHttp.post<PageResult<QuerySaleOutSheetBo>>(
+export function query(params: QuerySaleOutSheetVo): Promise<SaleOutSheetQueryPage> {
+  return defHttp.post<SaleOutSheetQueryPage>(
     {
       url: baseUrl + '/query',
       data: params,

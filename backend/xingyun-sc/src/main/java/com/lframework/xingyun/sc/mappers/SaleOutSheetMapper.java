@@ -43,6 +43,7 @@ public interface SaleOutSheetMapper extends BaseMapper<SaleOutSheet> {
       @Sort(value = "code", alias = "s", autoParse = true),
       @Sort(value = "orderDate", alias = "s", autoParse = true),
       @Sort(value = "createTime", alias = "s", autoParse = true),
+      @Sort(value = "updateTime", alias = "s", autoParse = true),
       @Sort(value = "approveTime", alias = "s", autoParse = true),
   })
   @DataPermissions(type = OrderDataPermissionDataPermissionType.class, value = {

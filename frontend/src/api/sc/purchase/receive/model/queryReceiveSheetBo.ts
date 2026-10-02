@@ -99,6 +99,9 @@ export interface QueryReceiveSheetBo {
    */
   createTime: string;
 
+  /** 最后更新时间。 */
+  updateTime: string;
+
   /**
    * 审核人
    */

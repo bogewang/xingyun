@@ -137,6 +137,10 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
     @ApiModelProperty("总利润")
     private BigDecimal totalProfit;
 
+    /** 毛利率百分数，由查询服务计算。 */
+    @ApiModelProperty("毛利率（%）")
+    private BigDecimal profitRate;
+
     /**
      * 是否录完所有成本
      */
@@ -167,6 +171,11 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
     @ApiModelProperty("创建时间")
     @JsonFormat(pattern = StringPool.DATE_TIME_PATTERN)
     private LocalDateTime createTime;
+
+    /** 最后更新日期。 */
+    @ApiModelProperty("最后更新日期")
+    @JsonFormat(pattern = StringPool.DATE_TIME_PATTERN)
+    private LocalDateTime updateTime;
 
     /**
      * 审核人
