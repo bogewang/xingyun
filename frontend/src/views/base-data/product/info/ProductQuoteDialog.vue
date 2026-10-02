@@ -101,7 +101,7 @@
                 ...item,
                 period: `${item.startDate} ~ ${item.endDate}`,
                 salePrice: detail ? detail.salePrice : 0,
-                inquiryProduct: detail ? detail.inquiryProduct === true : true,
+                inquiryProduct: detail ? detail.inquiryProduct === true : false,
                 existing: existing.has(item.id),
                 selected: values.has(item.id) || existing.has(item.id),
               };
