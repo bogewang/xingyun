@@ -137,6 +137,10 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
     @ApiModelProperty("总利润")
     private BigDecimal totalProfit;
 
+    /** 毛利率百分数，由查询服务计算。 */
+    @ApiModelProperty("毛利率（%）")
+    private BigDecimal profitRate;
+
     /**
      * 是否录完所有成本
      */

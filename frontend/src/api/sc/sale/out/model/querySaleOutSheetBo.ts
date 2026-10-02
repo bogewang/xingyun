@@ -104,6 +104,9 @@ export interface QuerySaleOutSheetBo {
    */
   totalProfit: number;
 
+  /** 后端计算的毛利率百分数。 */
+  profitRate: number;
+
   /**
    * 是否录完所有成本
    */

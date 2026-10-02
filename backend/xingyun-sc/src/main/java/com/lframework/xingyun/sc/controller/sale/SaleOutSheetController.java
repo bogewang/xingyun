@@ -17,6 +17,7 @@ import com.lframework.xingyun.sc.bo.sale.PrintSaleTagBo;
 import com.lframework.xingyun.sc.bo.sale.out.GetSaleOutSheetBo;
 import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetDetailBo;
 import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetBo;
+import com.lframework.xingyun.sc.service.sale.SaleOutSheetQueryService;
 import com.lframework.xingyun.sc.bo.sale.out.QuerySaleOutSheetWithReturnBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitBo;
 import com.lframework.xingyun.sc.bo.sale.out.SaleOutSheetProductProfitSummaryBo;
@@ -85,6 +86,9 @@ public class SaleOutSheetController extends DefaultBaseController {
     private SaleOutSheetService saleOutSheetService;
 
     @Autowired
+    private SaleOutSheetQueryService saleOutSheetQueryService;
+
+    @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
     private static final String TAG_PRINT_CATEGORY_CACHE_KEY = "sale:out:tagPrint:category:";
@@ -116,16 +120,12 @@ public class SaleOutSheetController extends DefaultBaseController {
     @HasPermission({ "sale:out:query" })
     @PostMapping("/query")
     public InvokeResult<PageResult<QuerySaleOutSheetBo>> query(@Valid @RequestBody QuerySaleOutSheetVo vo) {
-
-        PageResult<SaleOutSheet> pageResult = saleOutSheetService.query(getPageIndex(vo),
-                getPageSize(vo), vo);
-
-        List<QuerySaleOutSheetBo> results = null;
-        if (!CollectionUtil.isEmpty(pageResult.getDatas())) {
-            results = pageResult.getDatas().stream().map(QuerySaleOutSheetBo::new).collect(Collectors.toList());
+        try {
+            return InvokeResultBuilder.success(saleOutSheetQueryService.query(getPageIndex(vo), getPageSize(vo), vo));
+        } catch (Exception e) {
+            log.error("请求出错", e);
+            return InvokeResultBuilder.fail(e.getMessage(), null);
         }
-
-        return InvokeResultBuilder.success(PageResultUtil.rebuild(pageResult, results));
     }
 
     @ApiOperation("订单明细列表")

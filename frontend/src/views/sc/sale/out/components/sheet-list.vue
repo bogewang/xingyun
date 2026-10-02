@@ -292,7 +292,7 @@
           </template>
 
           <template #profit_rate="{ row }">
-            {{ calcProfitRate(row.totalAmount, row.confirmAmt, row.totalCost) }}
+            {{ formatProfitRate(row.profitRate) }}
           </template>
 
           <template #fillAllCost_default="{ row }">
@@ -559,7 +559,6 @@
     buildMarketBuySummary2Params,
     buildMarketBuySummaryParams,
   } from './saleOutMarketBuySummary';
-  import { calcSaleOutProfitRateByCost } from './saleOutProfit';
   import { costRecalculateMixin } from '@/mixins/costRecalculateMixin';
 
   /** 是否显示行内“更多”菜单中的打印操作，当前固定隐藏。 */
@@ -602,6 +601,7 @@
     data() {
       return {
         loading: false,
+        summaryProfitRate: null,
         // 买菜汇总导出选项
         marketBuySummaryModal: {
           visible: false,
@@ -737,7 +737,11 @@
           ajax: {
             // 查询接口
             query: ({ page, sorts }) => {
-              return api.query(this.buildQueryParams(page, sorts));
+              this.summaryProfitRate = null;
+              return api.query(this.buildQueryParams(page, sorts)).then((res) => {
+                this.summaryProfitRate = res.extra?.profitRate ?? null;
+                return res;
+              });
             },
           },
         },
@@ -823,15 +827,9 @@
         const paidAmount = this.sumByField(data, 'paidAmount');
         const unpaidAmount = this.sumByField(data, 'unpaidAmount');
         const totalProfit = this.sumByField(data, 'totalProfit');
-        const totalCost = this.sumByField(data, 'totalCost');
         const totalNum = this.sumByField(data, 'totalNum');
         const confirmNum = this.sumByField(data, 'confirmNum');
         const confirmAmt = this.sumByField(data, 'confirmAmt');
-        const totalProfitBaseAmount = (data || []).reduce((total, item) => {
-          const confirmAmount = Number(item?.confirmAmt || 0);
-          const saleAmount = Number(item?.totalAmount || 0);
-          return total + (confirmAmount !== 0 ? confirmAmount : saleAmount);
-        }, 0);
 
         return [
           columns.map((column) => {
@@ -860,7 +858,7 @@
 
             if (column.field === 'profitRate') {
               return this.canViewProfit
-                ? this.calcProfitRate(totalProfitBaseAmount, 0, totalCost)
+                ? this.formatProfitRate(this.summaryProfitRate)
                 : '';
             }
 
@@ -890,8 +888,9 @@
       formatQuantity(value) {
         return this.toFixedNumber(value, 2, true);
       },
-      calcProfitRate(amount, confirmAmt, totalCost) {
-        return calcSaleOutProfitRateByCost(amount, confirmAmt, totalCost);
+      /** 仅格式化后端返回的毛利率百分数，缺失时显示占位符。 */
+      formatProfitRate(value) {
+        return value === null || value === undefined ? '-' : `${Number(value).toFixed(2)}%`;
       },
       toFixedNumber(value, digits = 2, trimZero = false) {
         const text = Number(value || 0).toFixed(digits);
