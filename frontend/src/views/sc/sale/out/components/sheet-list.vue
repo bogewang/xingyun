@@ -722,7 +722,7 @@
             slots: { default: 'fillAllCost_default' },
           },
 
-          { field: 'createTime', title: '操作时间', width: 150, sortable: true },
+          { field: 'updateTime', title: '最后更新日期', width: 150, sortable: true },
           { field: 'createBy', title: '操作人', width: 80 },
           { title: '操作', minWidth: 300, fixed: 'right', slots: { default: 'action_default' } },
         ],
@@ -857,9 +857,7 @@
             }
 
             if (column.field === 'profitRate') {
-              return this.canViewProfit
-                ? this.formatProfitRate(this.summaryProfitRate)
-                : '';
+              return this.canViewProfit ? this.formatProfitRate(this.summaryProfitRate) : '';
             }
 
             if (column.field === 'totalNum') {

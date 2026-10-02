@@ -172,6 +172,11 @@ public class QuerySaleOutSheetBo extends BaseBo<SaleOutSheet> {
     @JsonFormat(pattern = StringPool.DATE_TIME_PATTERN)
     private LocalDateTime createTime;
 
+    /** 最后更新日期。 */
+    @ApiModelProperty("最后更新日期")
+    @JsonFormat(pattern = StringPool.DATE_TIME_PATTERN)
+    private LocalDateTime updateTime;
+
     /**
      * 审核人
      */

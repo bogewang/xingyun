@@ -132,6 +132,9 @@ export interface QuerySaleOutSheetBo {
    */
   createTime: string;
 
+  /** 最后更新日期。 */
+  updateTime: string;
+
   /**
    * 审核人
    */
